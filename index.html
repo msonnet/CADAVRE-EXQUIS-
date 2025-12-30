@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cadavre exquis</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="top">
+    <h1>CADAVRE EXQUIS</h1>
+
+    <!-- Règle (2 phrases, esprit surréaliste) -->
+    <p class="rules">
+      Écris un vers sans voir les autres : seule la dernière trace te guide dans la brume.
+      L’ordinateur répond dans la même nuit ; ensemble vous révélez la strophe.
+    </p>
+
+    <div class="controls">
+      <label>
+        Mode
+        <select id="previewMode">
+          <option value="lastWordFog" selected>Brume + dernier mot</option>
+          <option value="none">Aucun aperçu</option>
+        </select>
+      </label>
+
+      <button id="btnNew" type="button">Nouvelle partie</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="panel">
+      <div class="metaRow">
+        <div><strong id="who">—</strong></div>
+        <div id="meta">—</div>
+      </div>
+
+      <div id="hint" class="hint">—</div>
+
+      <pre id="silhouette" class="fog"></pre>
+
+      <div class="inputRow">
+        <input id="input" type="text" autocomplete="off" placeholder="Ton vers…" />
+        <button id="btnSend" type="button">Valider</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <section id="revealPanel" class="reveal" hidden>
+        <h2>Révélation</h2>
+        <pre id="finalText"></pre>
+        <div class="revealBtns">
+          <button id="btnCopy" type="button">Copier</button>
+          <button id="btnAgain" type="button">Rejouer</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel">
+      <h2>Historique</h2>
+      <div id="historyList" class="history"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
