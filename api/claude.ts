@@ -41,7 +41,7 @@ const FALLBACKS: Record<TypeCase, string[]> = {
   'adverbe': ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore'],
   'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un vide pesant'],
   'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit'],
-  'proposition': ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?'],
+  'proposition': ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?'],
   'libre': ['quelque chose demeure', 'rien ne se perd', 'la nuit garde tout'],
 }
 
@@ -85,11 +85,18 @@ export default async function handler(req: any, res: any): Promise<void> {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: maxTokens,
+        stop_sequences: ['\n', '.', '!', '?', ';'],
         system: voix.systemPrompt,
-        messages: [{
-          role: 'user',
-          content: `Fragment à noter : ${consigne}. Longueur : ${contrainte}. Texte brut uniquement. Aucune explication.`,
-        }],
+        messages: [
+          {
+            role: 'user',
+            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nLongueur absolue : ${contrainte}.\nRéponds avec le fragment seul.`,
+          },
+          {
+            role: 'assistant',
+            content: '',
+          },
+        ],
       }),
     })
 
@@ -104,6 +111,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       .replace(/#+\s*/g, '')
       .replace(/\n+/g, ' ')
       .replace(/\d{1,2}\s+\w+\s+\d{4}/g, '')
+      .replace(/[.!?;,]+$/, '')
       .trim()
 
     res.status(200).json({ texte: texte || pickFallback(type as TypeCase) })
