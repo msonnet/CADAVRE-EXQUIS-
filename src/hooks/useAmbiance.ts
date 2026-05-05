@@ -44,34 +44,30 @@ export function useAmbiance() {
     return ctx
   }, [])
 
-  const doFadeIn = useCallback(() => {
-    const ctx = ctxRef.current
-    const master = masterRef.current
-    if (!ctx || !master) return
-    const t = ctx.currentTime
-    master.gain.cancelScheduledValues(t)
-    master.gain.setValueAtTime(master.gain.value, t)
-    master.gain.linearRampToValueAtTime(VOLUME, t + 4)
-  }, [])
-
   const start = useCallback(() => {
     if (muted) return
     const ctx = buildContext()
 
-    if (ctx.state === 'running') {
-      doFadeIn()
-      return
+    const fadeIn = () => {
+      const master = masterRef.current!
+      const t = ctx.currentTime
+      master.gain.cancelScheduledValues(t)
+      master.gain.setValueAtTime(master.gain.value, t)
+      master.gain.linearRampToValueAtTime(VOLUME, t + 4)
     }
 
-    // iOS Safari blocks AudioContext until a user gesture — wait for first tap
-    const unlock = () => {
-      ctx.resume().then(() => doFadeIn())
-      document.removeEventListener('touchstart', unlock)
-      document.removeEventListener('mousedown', unlock)
+    if (ctx.state === 'running') {
+      fadeIn()
+    } else {
+      const unlock = () => {
+        ctx.resume().then(fadeIn)
+        document.removeEventListener('touchstart', unlock)
+        document.removeEventListener('mousedown', unlock)
+      }
+      document.addEventListener('touchstart', unlock, { once: true, passive: true })
+      document.addEventListener('mousedown', unlock, { once: true })
     }
-    document.addEventListener('touchstart', unlock, { once: true, passive: true })
-    document.addEventListener('mousedown', unlock, { once: true })
-  }, [muted, buildContext, doFadeIn])
+  }, [muted, buildContext])
 
   const stop = useCallback(() => {
     const ctx = ctxRef.current
@@ -97,7 +93,7 @@ export function useAmbiance() {
             master.gain.setValueAtTime(master.gain.value, t)
             master.gain.linearRampToValueAtTime(VOLUME, t + 1)
           })
-        } else if (ctx && master) {
+        } else {
           const t = ctx.currentTime
           master.gain.cancelScheduledValues(t)
           master.gain.setValueAtTime(master.gain.value, t)
