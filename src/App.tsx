@@ -7,6 +7,7 @@ import FinDePartie from './pages/FinDePartie'
 import Bibliotheque from './pages/Bibliotheque'
 import PoemeDetail from './pages/PoemeDetail'
 import Reglages from './pages/Reglages'
+import Aide from './pages/Aide'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/bibliotheque" element={<Bibliotheque />} />
           <Route path="/bibliotheque/:id" element={<PoemeDetail />} />
           <Route path="/reglages" element={<Reglages />} />
+          <Route path="/aide" element={<Aide />} />
         </Routes>
       </AnimatePresence>
     </BrowserRouter>

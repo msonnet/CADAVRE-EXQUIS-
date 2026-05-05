@@ -16,6 +16,7 @@ export default function Accueil() {
   const liens = [
     { to: '/config', label: 'Nouvelle partie' },
     { to: '/bibliotheque', label: 'Mes poèmes' },
+    { to: '/aide', label: 'Comment jouer' },
     { to: '/reglages', label: 'Réglages' },
   ]
 
