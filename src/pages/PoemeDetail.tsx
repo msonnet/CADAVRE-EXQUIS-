@@ -6,6 +6,7 @@ import SeparateurOr from '../components/SeparateurOr'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import type { Poeme } from '../types'
+import { useTTS } from '../hooks/useTTS'
 
 export default function PoemeDetail() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function PoemeDetail() {
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppression, setConfirmSuppression] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { parler, arreter, parlant } = useTTS()
 
   useEffect(() => {
     if (!id) return
@@ -87,6 +89,7 @@ export default function PoemeDetail() {
         ← Mes poèmes
       </button>
 
+      {/* Titre — éditable */}
       <div className="mb-6">
         {editionTitre ? (
           <div className="flex gap-2 items-center">
@@ -127,6 +130,7 @@ export default function PoemeDetail() {
 
       <SeparateurOr />
 
+      {/* Poème reconstitué */}
       <motion.div
         className="my-8 text-center"
         initial={{ opacity: 0, y: 8 }}
@@ -140,8 +144,18 @@ export default function PoemeDetail() {
         ))}
       </motion.div>
 
+      <div className="flex justify-center mb-2">
+        <button
+          onClick={() => parlant ? arreter() : parler(texte)}
+          className="nav-discrete hover:text-encre transition-colors"
+        >
+          {parlant ? '◾ Arrêter' : '▶ Écouter'}
+        </button>
+      </div>
+
       <SeparateurOr />
 
+      {/* Cases détaillées */}
       <button
         onClick={() => setCasesVisibles(v => !v)}
         className="nav-discrete mt-6 w-full text-center hover:text-encre transition-colors"
@@ -179,6 +193,7 @@ export default function PoemeDetail() {
         )}
       </AnimatePresence>
 
+      {/* Actions */}
       <div className="mt-12 flex flex-col items-center gap-4">
         <button onClick={() => navigate('/config')} className="btn-primaire">
           Nouvelle partie
@@ -202,7 +217,7 @@ export default function PoemeDetail() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <span className="nav-discrete">Supprimer définitivement ?</span>
+              <span className="nav-discrete">Supprimer définitivement ?</span>
               <button
                 onClick={supprimer}
                 className="nav-discrete text-red-400 hover:text-red-600 transition-colors"

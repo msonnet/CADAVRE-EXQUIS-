@@ -9,6 +9,7 @@ import { validerCase } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
+import { useAmbiance } from '../hooks/useAmbiance'
 
 const CONFIG_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -49,7 +50,7 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
   adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs'],
   'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un souffle perdu', 'la pierre blanche', 'un vide pesant'],
   'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit', 'demeure immobile'],
-  proposition: ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?', 'Quand reviendra le froid ?'],
+  proposition: ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?', 'Quand reviendra le froid ?'],
   libre: ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout', 'le silence répond'],
 }
 
@@ -111,6 +112,13 @@ export default function Jeu() {
   const sauvegardeFaite = useRef(false)
   const fallback = useRef(makeFallbackPicker())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
+
+  useEffect(() => {
+    ambianceStart()
+    return () => ambianceStop()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const defActuelle: DefinitionCase | undefined = caseDefs[caseIndex]
   const auteurActuel: 'humain' | 'ia' | undefined = auteurs[caseIndex]
@@ -259,12 +267,21 @@ export default function Jeu() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
-      <button
-        onClick={() => navigate('/')}
-        className="nav-discrete mb-8 hover:text-encre transition-colors"
-      >
-        ← Abandonner
-      </button>
+      <div className="flex items-center justify-between mb-8">
+        <button
+          onClick={() => navigate('/')}
+          className="nav-discrete hover:text-encre transition-colors"
+        >
+          ← Abandonner
+        </button>
+        <button
+          onClick={toggleMute}
+          title={muted ? 'Activer le son' : 'Couper le son'}
+          className={`nav-discrete transition-opacity ${muted ? 'opacity-25' : 'opacity-60 hover:opacity-100'}`}
+        >
+          ♪
+        </button>
+      </div>
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -336,7 +353,7 @@ export default function Jeu() {
 
           {hintQuestion && (
             <p className="text-xs text-gris italic mt-1 opacity-60">
-              Les questions se terminent par un ?
+              Les questions se terminent par un ?
             </p>
           )}
           {erreur && (
