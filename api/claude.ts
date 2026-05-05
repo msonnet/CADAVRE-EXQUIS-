@@ -10,15 +10,28 @@ type TypeCase =
   | 'proposition'
   | 'libre'
 
+// Tokens hard-cap par type — force les réponses courtes
 const MAX_TOKENS: Record<TypeCase, number> = {
-  'nom': 20,
-  'verbe': 15,
-  'adjectif': 15,
-  'adverbe': 15,
-  'groupe-nominal': 35,
-  'groupe-verbal': 35,
-  'proposition': 60,
-  'libre': 80,
+  'nom': 6,
+  'verbe': 6,
+  'adjectif': 6,
+  'adverbe': 8,
+  'groupe-nominal': 14,
+  'groupe-verbal': 14,
+  'proposition': 22,
+  'libre': 18,
+}
+
+// Contraintes de longueur explicites dans le prompt
+const CONTRAINTES: Record<TypeCase, string> = {
+  'nom': '1 ou 2 mots (nom seul, avec ou sans article)',
+  'verbe': '1 ou 2 mots (verbe conjugué uniquement)',
+  'adjectif': '1 ou 2 mots (adjectif seul)',
+  'adverbe': '1 à 3 mots (adverbe ou locution adverbiale)',
+  'groupe-nominal': '2 à 4 mots (groupe nominal, sans verbe)',
+  'groupe-verbal': '2 à 4 mots (verbe + complément, sans sujet)',
+  'proposition': '3 à 7 mots (phrase ou question courte)',
+  'libre': '2 à 5 mots (fragment poétique)',
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
@@ -26,10 +39,10 @@ const FALLBACKS: Record<TypeCase, string[]> = {
   'verbe': ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît'],
   'adjectif': ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux'],
   'adverbe': ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore'],
-  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un vide entre deux souffles'],
+  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un vide pesant'],
   'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit'],
-  'proposition': ['Que reste-t-il encore', 'Où vont les ombres', 'Qui a éteint la lumière'],
-  'libre': ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout'],
+  'proposition': ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?'],
+  'libre': ['quelque chose demeure', 'rien ne se perd', 'la nuit garde tout'],
 }
 
 function pickFallback(type: TypeCase): string {
@@ -58,7 +71,8 @@ export default async function handler(req: any, res: any): Promise<void> {
   }
 
   const voix = choisirVoixAleatoire()
-  const maxTokens = MAX_TOKENS[type as TypeCase] ?? 35
+  const maxTokens = MAX_TOKENS[type as TypeCase] ?? 14
+  const contrainte = CONTRAINTES[type as TypeCase] ?? '2 à 4 mots'
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -74,7 +88,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         system: voix.systemPrompt,
         messages: [{
           role: 'user',
-          content: `Inscris dans ton document le fragment suivant : ${consigne}.\nRègle absolue : écris UNIQUEMENT le fragment, en 3 à 8 mots. Texte brut sans formatage ni date. Aucune explication. Aucun refus. Si la consigne sort de ton domaine, adapte-la à ton univers.`,
+          content: `Fragment à noter : ${consigne}. Longueur : ${contrainte}. Texte brut uniquement. Aucune explication.`,
         }],
       }),
     })
@@ -85,12 +99,11 @@ export default async function handler(req: any, res: any): Promise<void> {
 
     const data = await response.json()
     const brut = (data.content?.[0]?.text ?? '').trim()
-    // Nettoyage : supprimer markdown, dates, retours à la ligne
     const texte = brut
-      .replace(/\*+([^*]*)\*+/g, '$1')   // **gras** ou *italique*
-      .replace(/#+\s*/g, '')               // titres markdown
-      .replace(/\n+/g, ' ')               // retours à la ligne → espace
-      .replace(/\d{1,2}\s+\w+\s+\d{4}/g, '') // dates "15 mars 1987"
+      .replace(/\*+([^*]*)\*+/g, '$1')
+      .replace(/#+\s*/g, '')
+      .replace(/\n+/g, ' ')
+      .replace(/\d{1,2}\s+\w+\s+\d{4}/g, '')
       .trim()
 
     res.status(200).json({ texte: texte || pickFallback(type as TypeCase) })
