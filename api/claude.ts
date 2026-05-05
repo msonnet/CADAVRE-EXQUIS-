@@ -74,7 +74,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         system: voix.systemPrompt,
         messages: [{
           role: 'user',
-          content: `Inscris dans ton document le fragment suivant : ${consigne}.\nRègle absolue : écris UNIQUEMENT le fragment lui-même (quelques mots). Aucune explication. Aucun refus. Si la consigne sort de ton domaine habituel, adapte-la librement à ton univers et écris quand même quelque chose.`,
+          content: `Inscris dans ton document le fragment suivant : ${consigne}.\nRègle absolue : écris UNIQUEMENT le fragment lui-même, en 3 à 8 mots maximum. Une seule courte phrase ou expression. Aucune explication. Aucun refus. Si la consigne sort de ton domaine habituel, adapte-la librement à ton univers.`,
         }],
       }),
     })
