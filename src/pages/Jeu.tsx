@@ -19,6 +19,17 @@ const CONFIG_DEFAUT: ConfigPartie = {
 
 const DUREE_HYPNOTIQUE = 30
 
+const MESSAGES_IA = [
+  "Une voix s'avance…",
+  "Une autre voix prend le relais…",
+  "Une troisième présence écrit…",
+  "Une nouvelle voix murmure…",
+  "Quelqu'un d'autre continue…",
+  "Une voix inconnue reprend…",
+  "Un inconnu pose sa main…",
+  "Une présence prend le mot…",
+]
+
 function computeAuteurs(
   total: number,
   premierJoueur: 'humain' | 'ia'
@@ -358,7 +369,9 @@ export default function Jeu() {
           >
             ✦
           </motion.span>
-          <p className="nav-discrete">Une voix écrit…</p>
+          <p className="nav-discrete">
+            {MESSAGES_IA[cases.filter(c => c.auteur === 'ia').length % MESSAGES_IA.length]}
+          </p>
         </motion.div>
       )}
     </PageTransition>
