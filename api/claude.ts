@@ -21,15 +21,20 @@ const MAX_TOKENS: Record<TypeCase, number> = {
   'libre': 80,
 }
 
-const FALLBACK: Record<TypeCase, string> = {
-  'nom': "l'ombre",
-  'verbe': 'glisse',
-  'adjectif': 'immobile',
-  'adverbe': 'lentement',
-  'groupe-nominal': 'le silence',
-  'groupe-verbal': 'traverse la nuit',
-  'proposition': 'Que reste-t-il',
-  'libre': 'quelque chose demeure',
+const FALLBACKS: Record<TypeCase, string[]> = {
+  'nom': ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'le froid'],
+  'verbe': ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît'],
+  'adjectif': ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux'],
+  'adverbe': ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore'],
+  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un vide entre deux souffles'],
+  'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit'],
+  'proposition': ['Que reste-t-il encore', 'Où vont les ombres', 'Qui a éteint la lumière'],
+  'libre': ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout'],
+}
+
+function pickFallback(type: TypeCase): string {
+  const arr = FALLBACKS[type] ?? ['quelque chose']
+  return arr[Math.floor(Math.random() * arr.length)]
 }
 
 export default async function handler(req: any, res: any): Promise<void> {
@@ -46,10 +51,9 @@ export default async function handler(req: any, res: any): Promise<void> {
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
-  const fallback = FALLBACK[type as TypeCase] ?? 'quelque chose'
 
   if (!apiKey) {
-    res.status(200).json({ texte: fallback })
+    res.status(200).json({ texte: pickFallback(type as TypeCase) })
     return
   }
 
@@ -82,9 +86,9 @@ export default async function handler(req: any, res: any): Promise<void> {
     const data = await response.json()
     const texte = (data.content?.[0]?.text ?? '').trim()
 
-    res.status(200).json({ texte: texte || fallback })
+    res.status(200).json({ texte: texte || pickFallback(type as TypeCase) })
   } catch (err) {
     console.error('Erreur Claude API:', err)
-    res.status(200).json({ texte: fallback })
+    res.status(200).json({ texte: pickFallback(type as TypeCase) })
   }
 }

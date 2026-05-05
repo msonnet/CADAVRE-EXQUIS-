@@ -29,18 +29,20 @@ function computeAuteurs(
   })
 }
 
+const FALLBACKS_CLIENT: Record<string, string[]> = {
+  nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre'],
+  verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait'],
+  adjectif: ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne'],
+  adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais'],
+  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un souffle perdu'],
+  'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre"],
+  proposition: ['Que reste-t-il encore', 'Où vont les ombres', 'Qui a éteint la lumière'],
+  libre: ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout'],
+}
+
 function fallbackType(type: string): string {
-  const map: Record<string, string> = {
-    nom: "l'ombre",
-    verbe: 'glisse',
-    adjectif: 'silencieux',
-    adverbe: 'doucement',
-    'groupe-nominal': 'le silence profond',
-    'groupe-verbal': 'traverse la nuit',
-    proposition: 'Que reste-t-il encore',
-    libre: 'quelque chose persiste',
-  }
-  return map[type] ?? 'quelque chose'
+  const arr = FALLBACKS_CLIENT[type] ?? ['quelque chose']
+  return arr[Math.floor(Math.random() * arr.length)]
 }
 
 export default function Jeu() {
