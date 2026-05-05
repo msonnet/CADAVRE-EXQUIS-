@@ -1,4 +1,4 @@
-import { choisirVoixAleatoire } from './_voices'
+import { choisirVoixAleatoire } from './_voices.js'
 
 type TypeCase =
   | 'nom'
