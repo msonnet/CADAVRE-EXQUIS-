@@ -74,7 +74,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         system: voix.systemPrompt,
         messages: [{
           role: 'user',
-          content: `Inscris dans ton document le fragment suivant : ${consigne}.\nRègle absolue : écris UNIQUEMENT le fragment lui-même, en 3 à 8 mots maximum. Une seule courte phrase ou expression. Aucune explication. Aucun refus. Si la consigne sort de ton domaine habituel, adapte-la librement à ton univers.`,
+          content: `Inscris dans ton document le fragment suivant : ${consigne}.\nRègle absolue : écris UNIQUEMENT le fragment, en 3 à 8 mots. Texte brut sans formatage ni date. Aucune explication. Aucun refus. Si la consigne sort de ton domaine, adapte-la à ton univers.`,
         }],
       }),
     })
@@ -84,7 +84,14 @@ export default async function handler(req: any, res: any): Promise<void> {
     }
 
     const data = await response.json()
-    const texte = (data.content?.[0]?.text ?? '').trim()
+    const brut = (data.content?.[0]?.text ?? '').trim()
+    // Nettoyage : supprimer markdown, dates, retours à la ligne
+    const texte = brut
+      .replace(/\*+([^*]*)\*+/g, '$1')   // **gras** ou *italique*
+      .replace(/#+\s*/g, '')               // titres markdown
+      .replace(/\n+/g, ' ')               // retours à la ligne → espace
+      .replace(/\d{1,2}\s+\w+\s+\d{4}/g, '') // dates "15 mars 1987"
+      .trim()
 
     res.status(200).json({ texte: texte || pickFallback(type as TypeCase) })
   } catch (err) {
