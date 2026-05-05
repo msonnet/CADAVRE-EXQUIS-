@@ -17,7 +17,6 @@ export function useAmbiance() {
     masterRef.current = master
     ctxRef.current = ctx
 
-    // Three slightly detuned sine oscillators — a low atmospheric drone
     const specs = [
       { freq: 55,   gain: 0.45, lfoRate: 0.04 },
       { freq: 55.4, gain: 0.40, lfoRate: 0.06 },
@@ -27,11 +26,8 @@ export function useAmbiance() {
       const osc = ctx.createOscillator()
       osc.type = 'sine'
       osc.frequency.value = s.freq
-
       const oscGain = ctx.createGain()
       oscGain.gain.value = s.gain
-
-      // Subtle pitch tremolo via LFO
       const lfo = ctx.createOscillator()
       lfo.type = 'sine'
       lfo.frequency.value = s.lfoRate
@@ -40,7 +36,6 @@ export function useAmbiance() {
       lfo.connect(lfoGain)
       lfoGain.connect(osc.frequency)
       lfo.start()
-
       osc.connect(oscGain)
       oscGain.connect(master)
       osc.start()
@@ -49,16 +44,34 @@ export function useAmbiance() {
     return ctx
   }, [])
 
-  const start = useCallback(() => {
-    if (muted) return
-    const ctx = buildContext()
-    if (ctx.state === 'suspended') ctx.resume()
-    const master = masterRef.current!
+  const doFadeIn = useCallback(() => {
+    const ctx = ctxRef.current
+    const master = masterRef.current
+    if (!ctx || !master) return
     const t = ctx.currentTime
     master.gain.cancelScheduledValues(t)
     master.gain.setValueAtTime(master.gain.value, t)
     master.gain.linearRampToValueAtTime(VOLUME, t + 4)
-  }, [muted, buildContext])
+  }, [])
+
+  const start = useCallback(() => {
+    if (muted) return
+    const ctx = buildContext()
+
+    if (ctx.state === 'running') {
+      doFadeIn()
+      return
+    }
+
+    // iOS Safari blocks AudioContext until a user gesture — wait for first tap
+    const unlock = () => {
+      ctx.resume().then(() => doFadeIn())
+      document.removeEventListener('touchstart', unlock)
+      document.removeEventListener('mousedown', unlock)
+    }
+    document.addEventListener('touchstart', unlock, { once: true, passive: true })
+    document.addEventListener('mousedown', unlock, { once: true })
+  }, [muted, buildContext, doFadeIn])
 
   const stop = useCallback(() => {
     const ctx = ctxRef.current
@@ -77,10 +90,19 @@ export function useAmbiance() {
       const ctx = ctxRef.current
       const master = masterRef.current
       if (ctx && master) {
-        const t = ctx.currentTime
-        master.gain.cancelScheduledValues(t)
-        master.gain.setValueAtTime(master.gain.value, t)
-        master.gain.linearRampToValueAtTime(next ? 0 : VOLUME, t + 1)
+        if (!next && ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            const t = ctx.currentTime
+            master.gain.cancelScheduledValues(t)
+            master.gain.setValueAtTime(master.gain.value, t)
+            master.gain.linearRampToValueAtTime(VOLUME, t + 1)
+          })
+        } else if (ctx && master) {
+          const t = ctx.currentTime
+          master.gain.cancelScheduledValues(t)
+          master.gain.setValueAtTime(master.gain.value, t)
+          master.gain.linearRampToValueAtTime(next ? 0 : VOLUME, t + 1)
+        }
       }
       return next
     })
