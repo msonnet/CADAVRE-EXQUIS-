@@ -59,12 +59,20 @@ export default function Configuration() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
-      <button
-        onClick={() => navigate('/')}
-        className="nav-discrete mb-8 flex items-center gap-2 hover:text-encre transition-colors"
-      >
-        ← Accueil
-      </button>
+      <div className="flex items-center justify-between mb-8">
+        <button
+          onClick={() => navigate('/')}
+          className="nav-discrete hover:text-encre transition-colors"
+        >
+          ← Accueil
+        </button>
+        <button
+          onClick={() => navigate('/aide')}
+          className="nav-discrete hover:text-encre transition-colors"
+        >
+          ? Règles
+        </button>
+      </div>
 
       <h2 className="font-garamond italic text-2xl text-encre mb-1">
         Nouvelle partie
