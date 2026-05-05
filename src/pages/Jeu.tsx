@@ -17,6 +17,8 @@ const CONFIG_DEFAUT: ConfigPartie = {
   mode: 'standard',
 }
 
+const DUREE_HYPNOTIQUE = 30
+
 function computeAuteurs(
   total: number,
   premierJoueur: 'humain' | 'ia'
@@ -29,7 +31,6 @@ function computeAuteurs(
   })
 }
 
-// Fallbacks variés — anti-répétition par type
 const FALLBACKS_CLIENT: Record<string, string[]> = {
   nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume'],
   verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse'],
@@ -37,7 +38,7 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
   adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs'],
   'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un souffle perdu', 'la pierre blanche', 'un vide pesant'],
   'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit', 'demeure immobile'],
-  proposition: ['Que reste-t-il encore', 'Où vont les ombres', 'Qui a éteint la lumière', 'Quand reviendra le froid'],
+  proposition: ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?', 'Quand reviendra le froid ?'],
   libre: ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout', 'le silence répond'],
 }
 
@@ -53,7 +54,6 @@ function makeFallbackPicker() {
   }
 }
 
-// Contexte visible pour le joueur humain selon la visibilité choisie
 function getContexteVisible(cases: Case[], visibilite: Visibilite): string | null {
   if (cases.length === 0) return null
   const derniere = cases[cases.length - 1]
@@ -65,6 +65,12 @@ function getContexteVisible(cases: Case[], visibilite: Visibilite): string | nul
     return derniere.texte.trim()
   }
   return null
+}
+
+function couleurTimer(t: number): string {
+  if (t <= 5) return 'text-red-400'
+  if (t <= 10) return 'text-amber-400'
+  return 'text-or'
 }
 
 export default function Jeu() {
@@ -88,16 +94,19 @@ export default function Jeu() {
   const [inputValue, setInputValue] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
   const [iaChargement, setIaChargement] = useState(false)
+  const [tempsRestant, setTempsRestant] = useState<number | null>(null)
 
   const casesTraitees = useRef(new Set<number>())
   const sauvegardeFaite = useRef(false)
   const fallback = useRef(makeFallbackPicker())
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const defActuelle: DefinitionCase | undefined = caseDefs[caseIndex]
   const auteurActuel: 'humain' | 'ia' | undefined = auteurs[caseIndex]
   const contexteVisible = auteurActuel === 'humain'
     ? getContexteVisible(cases, config.visibilite)
     : null
+  const modeHypnotique = config.mode === 'hypnotique'
 
   // Tour IA
   useEffect(() => {
@@ -114,6 +123,30 @@ export default function Jeu() {
       .then(texte => avancer(idx, def, texte.trim() || fallback.current(def.type)))
       .catch(() => avancer(idx, def, fallback.current(def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Timer hypnotique — démarre à chaque tour humain
+  useEffect(() => {
+    if (!modeHypnotique || auteurActuel !== 'humain' || !defActuelle) {
+      setTempsRestant(null)
+      return
+    }
+
+    setTempsRestant(DUREE_HYPNOTIQUE)
+    timerRef.current = setInterval(() => {
+      setTempsRestant(prev => (prev !== null && prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-soumission à expiration
+  useEffect(() => {
+    if (tempsRestant !== 0) return
+    if (timerRef.current) clearInterval(timerRef.current)
+    soumettreHypnotique()
+  }, [tempsRestant]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function avancer(idx: number, def: DefinitionCase, texte: string) {
     const c: Case = {
@@ -151,19 +184,14 @@ export default function Jeu() {
       .finally(() => navigate('/fin', { state: { poeme } }))
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function soumettre() {
-    if (!defActuelle || !inputValue.trim()) return
-    const v = validerCase(inputValue, defActuelle.type, 'souple')
-    if (!v.valide) {
-      setErreur(v.message ?? 'Texte invalide.')
-      return
-    }
+  function pousserCase(texte: string) {
+    if (!defActuelle) return
     const c: Case = {
       numero: caseIndex + 1,
       fonction: defActuelle.fonction,
       consigne: defActuelle.consigne,
       auteur: 'humain',
-      texte: inputValue.trim(),
+      texte,
       ts: Date.now(),
     }
     setCases(prev => [...prev, c])
@@ -172,12 +200,33 @@ export default function Jeu() {
     setCaseIndex(prev => prev + 1)
   }
 
+  function soumettre() {
+    if (!defActuelle || !inputValue.trim()) return
+    const v = validerCase(inputValue, defActuelle.type, 'souple')
+    if (!v.valide) {
+      setErreur(v.message ?? 'Texte invalide.')
+      return
+    }
+    pousserCase(inputValue.trim())
+  }
+
+  function soumettreHypnotique() {
+    if (!defActuelle) return
+    const texte = inputValue.trim() || fallback.current(defActuelle.type)
+    pousserCase(texte)
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       soumettre()
     }
   }
+
+  const hintQuestion =
+    defActuelle?.type === 'proposition' &&
+    inputValue.length > 0 &&
+    !inputValue.includes('?')
 
   // Écran de transition (fin de partie ou sauvegarde)
   if (!defActuelle || cases.length >= total) {
@@ -229,6 +278,25 @@ export default function Jeu() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
+          {/* Timer hypnotique */}
+          {modeHypnotique && tempsRestant !== null && (
+            <motion.div
+              className="flex items-center justify-end mb-3 gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <motion.span
+                className={`font-cormorant text-3xl tabular-nums transition-colors duration-500 ${couleurTimer(tempsRestant)}`}
+                animate={tempsRestant <= 5 ? { scale: [1, 1.15, 1] } : {}}
+                transition={{ duration: 0.5, repeat: tempsRestant <= 5 ? Infinity : 0 }}
+              >
+                {tempsRestant}
+              </motion.span>
+              <span className="nav-discrete">s</span>
+            </motion.div>
+          )}
+
           {contexteVisible && (
             <motion.div
               className="mb-3 pl-3 border-l-2 border-or/40"
@@ -254,9 +322,16 @@ export default function Jeu() {
             autoFocus
             rows={3}
           />
+
+          {hintQuestion && (
+            <p className="text-xs text-gris italic mt-1 opacity-60">
+              Les questions se terminent par un ?
+            </p>
+          )}
           {erreur && (
             <p className="text-sm text-gris italic mt-2">{erreur}</p>
           )}
+
           <motion.div className="flex justify-end mt-4" whileTap={{ scale: 0.97 }}>
             <button
               onClick={soumettre}
