@@ -8,7 +8,7 @@ import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
 import { sauvegarderPoeme } from '../db'
-import type { ConfigPartie, Case, Poeme } from '../types'
+import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 
 const CONFIG_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -29,20 +29,42 @@ function computeAuteurs(
   })
 }
 
+// Fallbacks variés — anti-répétition par type
 const FALLBACKS_CLIENT: Record<string, string[]> = {
-  nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre'],
-  verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait'],
-  adjectif: ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne'],
-  adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais'],
-  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un souffle perdu'],
-  'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre"],
-  proposition: ['Que reste-t-il encore', 'Où vont les ombres', 'Qui a éteint la lumière'],
-  libre: ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout'],
+  nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume'],
+  verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse'],
+  adjectif: ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux', 'lourd'],
+  adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs'],
+  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un souffle perdu', 'la pierre blanche', 'un vide pesant'],
+  'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit', 'demeure immobile'],
+  proposition: ['Que reste-t-il encore', 'Où vont les ombres', 'Qui a éteint la lumière', 'Quand reviendra le froid'],
+  libre: ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout', 'le silence répond'],
 }
 
-function fallbackType(type: string): string {
-  const arr = FALLBACKS_CLIENT[type] ?? ['quelque chose']
-  return arr[Math.floor(Math.random() * arr.length)]
+function makeFallbackPicker() {
+  const derniers: Record<string, string> = {}
+  return function pick(type: string): string {
+    const arr = FALLBACKS_CLIENT[type] ?? ['quelque chose']
+    const dernier = derniers[type]
+    const candidats = arr.length > 1 ? arr.filter(v => v !== dernier) : arr
+    const choix = candidats[Math.floor(Math.random() * candidats.length)]
+    derniers[type] = choix
+    return choix
+  }
+}
+
+// Contexte visible pour le joueur humain selon la visibilité choisie
+function getContexteVisible(cases: Case[], visibilite: Visibilite): string | null {
+  if (cases.length === 0) return null
+  const derniere = cases[cases.length - 1]
+  if (visibilite === 'dernier-mot') {
+    const mots = derniere.texte.trim().split(/\s+/).filter(Boolean)
+    return mots[mots.length - 1] ?? null
+  }
+  if (visibilite === 'derniere-case') {
+    return derniere.texte.trim()
+  }
+  return null
 }
 
 export default function Jeu() {
@@ -69,9 +91,13 @@ export default function Jeu() {
 
   const casesTraitees = useRef(new Set<number>())
   const sauvegardeFaite = useRef(false)
+  const fallback = useRef(makeFallbackPicker())
 
   const defActuelle: DefinitionCase | undefined = caseDefs[caseIndex]
   const auteurActuel: 'humain' | 'ia' | undefined = auteurs[caseIndex]
+  const contexteVisible = auteurActuel === 'humain'
+    ? getContexteVisible(cases, config.visibilite)
+    : null
 
   // Tour IA
   useEffect(() => {
@@ -85,8 +111,8 @@ export default function Jeu() {
     const idx = caseIndex
 
     demanderFragmentIA({ consigne: def.consigne, type: def.type })
-      .then(texte => avancer(idx, def, texte.trim() || fallbackType(def.type)))
-      .catch(() => avancer(idx, def, fallbackType(def.type)))
+      .then(texte => avancer(idx, def, texte.trim() || fallback.current(def.type)))
+      .catch(() => avancer(idx, def, fallback.current(def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function avancer(idx: number, def: DefinitionCase, texte: string) {
@@ -203,6 +229,22 @@ export default function Jeu() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
+          {contexteVisible && (
+            <motion.div
+              className="mb-3 pl-3 border-l-2 border-or/40"
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <p className="nav-discrete mb-0.5">
+                {config.visibilite === 'dernier-mot' ? 'Dernier mot' : 'Case précédente'}
+              </p>
+              <p className="font-cormorant italic text-encre text-lg leading-snug">
+                …{contexteVisible}
+              </p>
+            </motion.div>
+          )}
+
           <textarea
             className="champ-carnet w-full min-h-[96px] resize-none mt-2"
             value={inputValue}
