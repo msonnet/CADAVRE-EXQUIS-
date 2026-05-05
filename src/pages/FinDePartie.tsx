@@ -6,6 +6,7 @@ import SeparateurOr from '../components/SeparateurOr'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoemes } from '../db'
 import type { Poeme } from '../types'
+import { useTTS } from '../hooks/useTTS'
 
 export default function FinDePartie() {
   const navigate = useNavigate()
@@ -14,6 +15,7 @@ export default function FinDePartie() {
     (location.state as { poeme?: Poeme } | null)?.poeme ?? null
   )
   const [casesVisibles, setCasesVisibles] = useState(false)
+  const { parler, arreter, parlant } = useTTS()
 
   useEffect(() => {
     if (!poeme) {
@@ -59,9 +61,23 @@ export default function FinDePartie() {
       >
         {lignes.map((ligne, i) => (
           <p key={i} className="vers-jeu leading-relaxed">
-            {ligne || ' '}
+            {ligne || ' '}
           </p>
         ))}
+      </motion.div>
+
+      <motion.div
+        className="flex justify-center mt-2 mb-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.0 }}
+      >
+        <button
+          onClick={() => parlant ? arreter() : parler(texte)}
+          className="nav-discrete hover:text-encre transition-colors"
+        >
+          {parlant ? '◾ Arrêter' : '▶ Écouter'}
+        </button>
       </motion.div>
 
       <SeparateurOr />

@@ -6,6 +6,7 @@ import SeparateurOr from '../components/SeparateurOr'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import type { Poeme } from '../types'
+import { useTTS } from '../hooks/useTTS'
 
 export default function PoemeDetail() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function PoemeDetail() {
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppression, setConfirmSuppression] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { parler, arreter, parlant } = useTTS()
 
   useEffect(() => {
     if (!id) return
@@ -137,10 +139,19 @@ export default function PoemeDetail() {
       >
         {lignes.map((ligne, i) => (
           <p key={i} className="vers-jeu leading-relaxed">
-            {ligne || ' '}
+            {ligne || ' '}
           </p>
         ))}
       </motion.div>
+
+      <div className="flex justify-center mb-2">
+        <button
+          onClick={() => parlant ? arreter() : parler(texte)}
+          className="nav-discrete hover:text-encre transition-colors"
+        >
+          {parlant ? '◾ Arrêter' : '▶ Écouter'}
+        </button>
+      </div>
 
       <SeparateurOr />
 
