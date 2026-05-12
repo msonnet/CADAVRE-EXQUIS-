@@ -92,10 +92,6 @@ export default async function handler(req: any, res: any): Promise<void> {
             role: 'user',
             content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nLongueur absolue : ${contrainte}.\nRéponds avec le fragment seul.`,
           },
-          {
-            role: 'assistant',
-            content: '',
-          },
         ],
       }),
     })
