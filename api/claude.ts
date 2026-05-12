@@ -12,26 +12,26 @@ type TypeCase =
 
 // Tokens hard-cap par type — force les réponses courtes
 const MAX_TOKENS: Record<TypeCase, number> = {
-  'nom': 6,
-  'verbe': 6,
-  'adjectif': 6,
-  'adverbe': 8,
-  'groupe-nominal': 14,
-  'groupe-verbal': 14,
-  'proposition': 22,
-  'libre': 18,
+  'nom': 4,
+  'verbe': 4,
+  'adjectif': 4,
+  'adverbe': 6,
+  'groupe-nominal': 7,
+  'groupe-verbal': 8,
+  'proposition': 18,
+  'libre': 12,
 }
 
 // Contraintes de longueur explicites dans le prompt
 const CONTRAINTES: Record<TypeCase, string> = {
-  'nom': '1 ou 2 mots (nom seul, avec ou sans article)',
-  'verbe': '1 ou 2 mots (verbe conjugué uniquement)',
-  'adjectif': '1 ou 2 mots (adjectif seul)',
-  'adverbe': '1 à 3 mots (adverbe ou locution adverbiale)',
-  'groupe-nominal': '2 à 4 mots (groupe nominal, sans verbe)',
-  'groupe-verbal': '2 à 4 mots (verbe + complément, sans sujet)',
-  'proposition': '3 à 7 mots (phrase ou question courte)',
-  'libre': '2 à 5 mots (fragment poétique)',
+  'nom': '1 mot seul (nom sans article)',
+  'verbe': '1 mot (verbe conjugué, forme courte)',
+  'adjectif': '1 mot (adjectif seul)',
+  'adverbe': '1 à 2 mots',
+  'groupe-nominal': '2 mots (article + nom, ex: "le silence", "une ombre")',
+  'groupe-verbal': '2 mots (verbe + 1 complément court)',
+  'proposition': '4 à 6 mots (phrase courte)',
+  'libre': '2 à 3 mots',
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
