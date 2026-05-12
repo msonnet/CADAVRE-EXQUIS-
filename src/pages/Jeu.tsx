@@ -339,7 +339,7 @@ export default function Jeu() {
         <button
           onClick={toggleMute}
           title={muted ? 'Activer le son' : 'Couper le son'}
-          className={`nav-discrete transition-opacity ${muted ? 'opacity-40 line-through' : 'opacity-60 hover:opacity-100'}`}
+          className={`nav-discrete text-encre transition-opacity ${muted ? 'opacity-40 line-through' : 'opacity-70 hover:opacity-100'}`}
         >
           ♪
         </button>
