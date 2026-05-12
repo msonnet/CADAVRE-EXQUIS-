@@ -7,6 +7,7 @@ import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoemes } from '../db'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
+import { useSound } from '../hooks/useSound'
 
 export default function FinDePartie() {
   const navigate = useNavigate()
@@ -16,6 +17,11 @@ export default function FinDePartie() {
   )
   const [casesVisibles, setCasesVisibles] = useState(false)
   const { parler, arreter, parlant } = useTTS()
+  const { jouer } = useSound()
+
+  useEffect(() => {
+    jouer('revelation')
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!poeme) {

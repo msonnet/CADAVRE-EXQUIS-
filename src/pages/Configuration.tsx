@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
+import { useSound } from '../hooks/useSound'
 import type { ConfigPartie, StructureId, Visibilite, PremierJoueur, ModeJeu } from '../types'
 
 const STRUCTURES: { id: StructureId; label: string; description: string }[] = [
@@ -50,9 +51,11 @@ function Option({ label, description, active, onClick }: OptionProps) {
 
 export default function Configuration() {
   const navigate = useNavigate()
+  const { jouer } = useSound()
   const [config, setConfig] = useState<ConfigPartie>(CONFIG_PAR_DEFAUT)
 
   function demarrer() {
+    jouer('demarrage')
     sessionStorage.setItem('config-partie', JSON.stringify(config))
     navigate('/jeu')
   }

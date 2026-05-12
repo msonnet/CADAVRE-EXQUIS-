@@ -10,6 +10,7 @@ import { demanderFragmentIA } from '../api/claude'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
+import { useSound } from '../hooks/useSound'
 
 const CONFIG_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -115,6 +116,7 @@ export default function Jeu() {
   const textesUtilises = useRef(new Set<string>())
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
+  const { jouer } = useSound()
 
   useEffect(() => {
     ambianceStart()
@@ -140,6 +142,7 @@ export default function Jeu() {
     casesTraitees.current.add(caseIndex)
 
     setIaChargement(true)
+    jouer('ia')
 
     const def = defActuelle
     const idx = caseIndex
@@ -240,6 +243,7 @@ export default function Jeu() {
       setErreur(v.message ?? 'Texte invalide.')
       return
     }
+    jouer('soumettre')
     pousserCase(inputValue.trim())
   }
 
