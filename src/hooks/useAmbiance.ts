@@ -6,21 +6,16 @@ export function useAmbiance() {
   const [muted, setMuted] = useState(() => localStorage.getItem('ambiance-muted') === 'true')
   const ctxRef = useRef<AudioContext | null>(null)
   const masterRef = useRef<GainNode | null>(null)
+  const builtRef = useRef(false)
 
-  const buildContext = useCallback((): AudioContext => {
-    if (ctxRef.current) return ctxRef.current
-
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-    const master = ctx.createGain()
-    master.gain.value = 0
-    master.connect(ctx.destination)
-    masterRef.current = master
-    ctxRef.current = ctx
+  const buildOscillators = useCallback((ctx: AudioContext, master: GainNode) => {
+    if (builtRef.current) return
+    builtRef.current = true
 
     const specs = [
-      { freq: 55,   gain: 0.45, lfoRate: 0.04 },
-      { freq: 55.4, gain: 0.40, lfoRate: 0.06 },
-      { freq: 110.2,gain: 0.25, lfoRate: 0.03 },
+      { freq: 55,    gain: 0.45, lfoRate: 0.04 },
+      { freq: 55.4,  gain: 0.40, lfoRate: 0.06 },
+      { freq: 110.2, gain: 0.25, lfoRate: 0.03 },
     ]
     for (const s of specs) {
       const osc = ctx.createOscillator()
@@ -41,33 +36,40 @@ export function useAmbiance() {
       osc.start()
     }
 
-    return ctx
+    const t = ctx.currentTime
+    master.gain.cancelScheduledValues(t)
+    master.gain.setValueAtTime(0, t)
+    master.gain.linearRampToValueAtTime(VOLUME, t + 4)
   }, [])
 
   const start = useCallback(() => {
     if (muted) return
-    const ctx = buildContext()
 
-    const fadeIn = () => {
-      const master = masterRef.current!
-      const t = ctx.currentTime
-      master.gain.cancelScheduledValues(t)
-      master.gain.setValueAtTime(master.gain.value, t)
-      master.gain.linearRampToValueAtTime(VOLUME, t + 4)
-    }
+    const ctx = ctxRef.current ?? (() => {
+      const c = new (window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      const master = c.createGain()
+      master.gain.value = 0
+      master.connect(c.destination)
+      masterRef.current = master
+      ctxRef.current = c
+      return c
+    })()
+
+    const doStart = () => buildOscillators(ctx, masterRef.current!)
 
     if (ctx.state === 'running') {
-      fadeIn()
+      doStart()
     } else {
       const unlock = () => {
-        ctx.resume().then(fadeIn)
+        ctx.resume().then(doStart)
         document.removeEventListener('touchstart', unlock)
         document.removeEventListener('mousedown', unlock)
       }
       document.addEventListener('touchstart', unlock, { once: true, passive: true })
       document.addEventListener('mousedown', unlock, { once: true })
     }
-  }, [muted, buildContext])
+  }, [muted, buildOscillators])
 
   const stop = useCallback(() => {
     const ctx = ctxRef.current
@@ -87,12 +89,7 @@ export function useAmbiance() {
       const master = masterRef.current
       if (ctx && master) {
         if (!next && ctx.state === 'suspended') {
-          ctx.resume().then(() => {
-            const t = ctx.currentTime
-            master.gain.cancelScheduledValues(t)
-            master.gain.setValueAtTime(master.gain.value, t)
-            master.gain.linearRampToValueAtTime(VOLUME, t + 1)
-          })
+          ctx.resume().then(() => buildOscillators(ctx, master))
         } else {
           const t = ctx.currentTime
           master.gain.cancelScheduledValues(t)
@@ -102,7 +99,7 @@ export function useAmbiance() {
       }
       return next
     })
-  }, [])
+  }, [buildOscillators])
 
   return { start, stop, toggleMute, muted }
 }
