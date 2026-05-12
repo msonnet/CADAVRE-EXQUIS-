@@ -4,10 +4,11 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { chargerPoemes } from '../db'
+import { chargerPoemes, sauvegarderIllustration } from '../db'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
+import { genererIllustration } from '../api/illustration'
 
 export default function FinDePartie() {
   const navigate = useNavigate()
@@ -16,6 +17,8 @@ export default function FinDePartie() {
     (location.state as { poeme?: Poeme } | null)?.poeme ?? null
   )
   const [casesVisibles, setCasesVisibles] = useState(false)
+  const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
+  const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -30,6 +33,29 @@ export default function FinDePartie() {
         .catch(console.error)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Génération automatique de l'illustration après la révélation
+  useEffect(() => {
+    if (!poeme) return
+    if (poeme.illustration) {
+      setIllustrationUrl(poeme.illustration.url)
+      return
+    }
+
+    const structure = getStructure(poeme.structureId)
+    const texte = reconstruirePoeme(poeme.cases, structure)
+
+    setGeneratingIllustration(true)
+    genererIllustration(texte)
+      .then(url => {
+        if (url) {
+          setIllustrationUrl(url)
+          const illustration = { url, promptUtilise: texte, dateGeneration: Date.now() }
+          sauvegarderIllustration(poeme.id, illustration).catch(console.error)
+        }
+      })
+      .finally(() => setGeneratingIllustration(false))
+  }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!poeme) {
     return (
@@ -88,6 +114,45 @@ export default function FinDePartie() {
 
       <SeparateurOr />
 
+      {/* Illustration */}
+      {(illustrationUrl || generatingIllustration) && (
+        <motion.div
+          className="my-8 flex flex-col items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+        >
+          {generatingIllustration && !illustrationUrl && (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <motion.span
+                className="text-or text-2xl"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.8, repeat: Infinity }}
+              >
+                ✦
+              </motion.span>
+              <p className="nav-discrete">Une image prend forme…</p>
+            </div>
+          )}
+
+          {illustrationUrl && (
+            <motion.div
+              className="w-full max-w-xs"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.0 }}
+            >
+              <img
+                src={illustrationUrl}
+                alt="Illustration surréaliste du poème"
+                className="w-full rounded-sm border border-or/20 opacity-90"
+                style={{ filter: 'sepia(0.15) contrast(0.95)' }}
+              />
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -95,7 +160,7 @@ export default function FinDePartie() {
       >
         <button
           onClick={() => setCasesVisibles(v => !v)}
-          className="nav-discrete mt-6 w-full text-center hover:text-encre transition-colors"
+          className="nav-discrete mt-2 w-full text-center hover:text-encre transition-colors"
         >
           {casesVisibles ? '↑ Masquer les cases' : '↓ Voir case par case'}
         </button>
