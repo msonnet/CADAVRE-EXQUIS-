@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
+import { useSound } from '../hooks/useSound'
 
 const lienVariantes = {
   cache: { opacity: 0, y: 12 },
@@ -13,12 +14,20 @@ const lienVariantes = {
 }
 
 export default function Accueil() {
+  const navigate = useNavigate()
+  const { jouer } = useSound()
+
   const liens = [
     { to: '/config', label: 'Nouvelle partie' },
     { to: '/bibliotheque', label: 'Mes poèmes' },
     { to: '/aide', label: 'Comment jouer' },
     { to: '/reglages', label: 'Réglages' },
   ]
+
+  function naviguer(to: string) {
+    jouer('clic')
+    navigate(to)
+  }
 
   return (
     <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh text-center safe-top safe-bottom">
@@ -53,9 +62,9 @@ export default function Accueil() {
             initial="cache"
             animate="visible"
           >
-            <Link to={to} className="lien-texte text-lg tracking-widest">
+            <button onClick={() => naviguer(to)} className="lien-texte text-lg tracking-widest">
               {label}
-            </Link>
+            </button>
           </motion.div>
         ))}
       </nav>

@@ -65,7 +65,7 @@ export default function Aide() {
         transition={{ duration: 0.6 }}
       >
         <h2 className="font-garamond italic text-2xl text-encre mb-1">Comment jouer</h2>
-        <p className="sous-titre mb-6">Ègles et modes de jeu</p>
+        <p className="sous-titre mb-6">Règles et modes de jeu</p>
       </motion.div>
 
       <SeparateurOr />
@@ -78,7 +78,7 @@ export default function Aide() {
       >
         <p className="vers-jeu leading-relaxed text-center">
           Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920.
-          Chaque joueur écrit un fragment sans voir ce que l’autre a écrit.
+          Chaque joueur écrit un fragment sans voir ce que l'autre a écrit.
           Le poème révélé à la fin est toujours une surprise.
         </p>
         <p className="nav-discrete text-center mt-3">
@@ -93,7 +93,7 @@ export default function Aide() {
           <Ligne
             label="Phrase simple"
             description="3 cases — sujet, verbe, complément. La forme la plus courte."
-            exemple="L’ombre / glisse / dans la nuit froide"
+            exemple="L'ombre / glisse / dans la nuit froide"
           />
           <Ligne
             label="Phrase étoffée"
@@ -102,8 +102,8 @@ export default function Aide() {
           />
           <Ligne
             label="Conditionnelle"
-            description="8 cases — structure en « Si… alors… ». Deux propositions enchâinées."
-            exemple="Si le silence tombe / alors l’ombre répond"
+            description="8 cases — structure en « Si… alors… ». Deux propositions enchaînées."
+            exemple="Si le silence tombe / alors l'ombre répond"
           />
           <Ligne
             label="Comparative"
@@ -116,8 +116,8 @@ export default function Aide() {
           />
           <Ligne
             label="Question / Réponse"
-            description="Paires alternées — une voix pose, l’autre répond, sans jamais savoir quoi."
-            exemple="Où vont les ombres ? / Elles rejoignent le froid."
+            description="Paires alternées — une voix pose, l'autre répond, sans jamais savoir quoi."
+            exemple="Où vont les ombres ? / Elles rejoignent le froid."
           />
           <Ligne
             label="Vers libre"
@@ -147,11 +147,11 @@ export default function Aide() {
         <Bloc titre="Mode de jeu" delai={0.5}>
           <Ligne
             label="Standard"
-            description="Aucune contrainte de temps. Tu prends le temps qu’il faut pour chaque fragment."
+            description="Aucune contrainte de temps. Tu prends le temps qu'il faut pour chaque fragment."
           />
           <Ligne
             label="Sommeil hypnotique"
-            description="30 secondes par case. Le décompte s’affiche en haut à droite — il passe à l’ambre puis au rouge. À 0, le fragment en cours est soumis automatiquement. Si le champ est vide, une voix intérieure complète à ta place."
+            description="30 secondes par case. Le décompte s'affiche en haut à droite — il passe à l'ambre puis au rouge. À 0, le fragment en cours est soumis automatiquement. Si le champ est vide, une voix intérieure complète à ta place."
           />
         </Bloc>
 
@@ -164,7 +164,7 @@ export default function Aide() {
           />
           <Ligne
             label="Une voix"
-            description="Une des 40 voix anonymes écrit le premier fragment. Tu ne sais pas qui a ouvert — tu continues dans l’inconnu."
+            description="Une des 40 voix anonymes écrit le premier fragment. Tu ne sais pas qui a ouvert — tu continues dans l'inconnu."
           />
         </Bloc>
       </div>

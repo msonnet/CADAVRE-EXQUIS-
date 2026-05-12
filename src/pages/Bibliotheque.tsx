@@ -74,7 +74,7 @@ export default function Bibliotheque() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <p className="vers-jeu text-center opacity-40">Aucun poème pour l’instant.</p>
+          <p className="vers-jeu text-center opacity-40">Aucun poème pour l'instant.</p>
           <button
             onClick={() => navigate('/config')}
             className="btn-primaire mt-8"

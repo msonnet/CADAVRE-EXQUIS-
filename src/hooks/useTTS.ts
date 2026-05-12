@@ -1,12 +1,13 @@
 import { useState, useCallback, useRef } from 'react'
 
+// Ordre de préférence : voix haute qualité fr-CA (Amélie) > fr-FR (Thomas) > toute fr
 const VOICE_PRIORITY = [
-  'Amélie',
-  'Thomas',
-  'Marie',
-  'Audrey',
-  'HortenseNeural',
-  'DeniseNeural',
+  'Amélie',     // macOS/iOS fr-CA — très naturelle
+  'Thomas',     // macOS/iOS fr-FR — bonne qualité
+  'Marie',      // certains iOS
+  'Audrey',     // Windows fr-FR
+  'HortenseNeural', // Edge/Azure fr-BE
+  'DeniseNeural',   // Edge/Azure fr-FR
 ]
 
 function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
@@ -14,6 +15,7 @@ function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null 
     const v = voices.find(v => v.name.includes(name))
     if (v) return v
   }
+  // Fallback : toute voix fr-CA > fr-FR > fr-*
   return (
     voices.find(v => v.lang === 'fr-CA') ||
     voices.find(v => v.lang === 'fr-FR') ||
@@ -29,11 +31,14 @@ function parlerAvecVoix(texte: string, voices: SpeechSynthesisVoice[], onStart: 
   const voix = pickVoice(voices)
   if (voix) {
     u.voice = voix
+    // Ajuster selon la qualité de la voix
     if (voix.lang.startsWith('fr-CA') || voix.name.includes('Neural') || voix.name.includes('Amélie')) {
+      // Voix haute qualité : tempo naturel
       u.rate = 0.88
       u.pitch = 1.0
       u.volume = 1.0
     } else {
+      // Voix standard : légèrement plus lente pour compenser la robotisation
       u.rate = 0.82
       u.pitch = 0.95
       u.volume = 1.0
