@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
+import { useSound } from '../hooks/useSound'
 import type { ConfigPartie, StructureId, Visibilite, PremierJoueur, ModeJeu } from '../types'
 
 const STRUCTURES: { id: StructureId; label: string; description: string }[] = [
@@ -33,14 +34,13 @@ function Option({ label, description, active, onClick }: OptionProps) {
   return (
     <button
       onClick={onClick}
-      className={`text-left w-full px-4 py-3 border transition-all duration-200 ${
+      className={`w-full text-left px-4 py-3 rounded border transition-colors ${
         active
-          ? 'border-or bg-or/5 text-encre'
-          : 'border-gris-clair/40 text-gris hover:border-gris-clair hover:text-encre'
+          ? 'border-or/60 bg-or/8 text-encre'
+          : 'border-transparent hover:border-or/20 text-gris hover:text-encre'
       }`}
-      style={{ fontFamily: 'Lora, Georgia, serif' }}
     >
-      <span className="block text-sm tracking-wide">{label}</span>
+      <span className="font-cormorant italic text-lg">{label}</span>
       {description && (
         <span className="block text-xs mt-0.5 opacity-60">{description}</span>
       )}
@@ -50,9 +50,11 @@ function Option({ label, description, active, onClick }: OptionProps) {
 
 export default function Configuration() {
   const navigate = useNavigate()
+  const { jouer } = useSound()
   const [config, setConfig] = useState<ConfigPartie>(CONFIG_PAR_DEFAUT)
 
   function demarrer() {
+    jouer('demarrage')
     sessionStorage.setItem('config-partie', JSON.stringify(config))
     navigate('/jeu')
   }
@@ -60,31 +62,20 @@ export default function Configuration() {
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
       <div className="flex items-center justify-between mb-8">
-        <button
-          onClick={() => navigate('/')}
-          className="nav-discrete hover:text-encre transition-colors"
-        >
+        <button onClick={() => navigate('/')} className="nav-discrete hover:text-encre transition-colors">
           ← Accueil
-        </button>
-        <button
-          onClick={() => navigate('/aide')}
-          className="nav-discrete hover:text-encre transition-colors"
-        >
-          ? Règles
         </button>
       </div>
 
-      <h2 className="font-garamond italic text-2xl text-encre mb-1">
-        Nouvelle partie
-      </h2>
-      <p className="sous-titre mb-6">Configure ton cadavre exquis</p>
+      <h2 className="font-garamond italic text-2xl text-encre mb-1">Configurer la partie</h2>
+      <p className="sous-titre mb-6">Choisis ta structure et ton mode</p>
 
       <SeparateurOr />
 
-      <section className="mb-8">
+      <section className="mb-8 pt-6">
         <h3 className="consigne-grammaticale mb-4">Structure</h3>
         <div className="flex flex-col gap-2">
-          {STRUCTURES.map((s) => (
+          {STRUCTURES.map(s => (
             <Option
               key={s.id}
               label={s.label}
