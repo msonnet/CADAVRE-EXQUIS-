@@ -121,6 +121,11 @@ export default function Jeu() {
     return () => ambianceStop()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-démarre l'audio quand l'utilisateur active le son (cas : démarrage avec son désactivé)
+  useEffect(() => {
+    if (!muted) ambianceStart()
+  }, [muted, ambianceStart])
+
   const defActuelle: DefinitionCase | undefined = caseDefs[caseIndex]
   const auteurActuel: 'humain' | 'ia' | undefined = auteurs[caseIndex]
   const contexteVisible = auteurActuel === 'humain'
