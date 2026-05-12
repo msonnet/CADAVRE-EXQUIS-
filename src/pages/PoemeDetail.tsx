@@ -130,6 +130,23 @@ export default function PoemeDetail() {
 
       <SeparateurOr />
 
+      {/* Illustration */}
+      {poeme.illustration?.url && (
+        <motion.div
+          className="my-6 flex justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+        >
+          <img
+            src={poeme.illustration.url}
+            alt="Illustration surréaliste du poème"
+            className="w-full max-w-xs rounded-sm border border-or/20 opacity-90"
+            style={{ filter: 'sepia(0.15) contrast(0.95)' }}
+          />
+        </motion.div>
+      )}
+
       {/* Poème reconstitué */}
       <motion.div
         className="my-8 text-center"

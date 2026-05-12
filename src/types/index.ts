@@ -33,8 +33,7 @@ export interface Case {
 }
 
 export interface Illustration {
-  base64: string
-  style: string
+  url: string
   promptUtilise: string
   dateGeneration: number
 }

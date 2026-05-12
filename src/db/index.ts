@@ -33,3 +33,7 @@ export async function supprimerPoeme(id: string): Promise<void> {
 export async function mettreAJourTitre(id: string, titre: string): Promise<void> {
   await db.poemes.update(id, { titre, dateModification: Date.now() })
 }
+
+export async function sauvegarderIllustration(id: string, illustration: import('../types').Illustration): Promise<void> {
+  await db.poemes.update(id, { illustration, dateModification: Date.now() })
+}
