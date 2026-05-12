@@ -112,6 +112,7 @@ export default function Jeu() {
   const sauvegardeFaite = useRef(false)
   const fallback = useRef(makeFallbackPicker())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const textesUtilises = useRef(new Set<string>())
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
 
@@ -139,7 +140,15 @@ export default function Jeu() {
     const idx = caseIndex
 
     demanderFragmentIA({ consigne: def.consigne, type: def.type })
-      .then(texte => avancer(idx, def, texte.trim() || fallback.current(def.type)))
+      .then(texte => {
+        const t = texte.trim()
+        const key = t.toLowerCase()
+        const final = (t && !textesUtilises.current.has(key))
+          ? t
+          : fallback.current(def.type)
+        textesUtilises.current.add(final.toLowerCase())
+        avancer(idx, def, final)
+      })
       .catch(() => avancer(idx, def, fallback.current(def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
