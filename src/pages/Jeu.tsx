@@ -10,6 +10,7 @@ import { demanderFragmentIA } from '../api/claude'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
+import { useSound } from '../hooks/useSound'
 
 const CONFIG_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -115,13 +116,13 @@ export default function Jeu() {
   const textesUtilises = useRef(new Set<string>())
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
+  const { jouer } = useSound()
 
   useEffect(() => {
     ambianceStart()
     return () => ambianceStop()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-démarre l'audio quand l'utilisateur active le son (cas : démarrage avec son désactivé)
   useEffect(() => {
     if (!muted) ambianceStart()
   }, [muted, ambianceStart])
@@ -133,13 +134,13 @@ export default function Jeu() {
     : null
   const modeHypnotique = config.mode === 'hypnotique'
 
-  // Tour IA
   useEffect(() => {
     if (!defActuelle || auteurActuel !== 'ia') return
     if (casesTraitees.current.has(caseIndex)) return
     casesTraitees.current.add(caseIndex)
 
     setIaChargement(true)
+    jouer('ia')
 
     const def = defActuelle
     const idx = caseIndex
@@ -157,7 +158,6 @@ export default function Jeu() {
       .catch(() => avancer(idx, def, fallback.current(def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Timer hypnotique — démarre à chaque tour humain
   useEffect(() => {
     if (!modeHypnotique || auteurActuel !== 'humain' || !defActuelle) {
       setTempsRestant(null)
@@ -174,7 +174,6 @@ export default function Jeu() {
     }
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-soumission à expiration
   useEffect(() => {
     if (tempsRestant !== 0) return
     if (timerRef.current) clearInterval(timerRef.current)
@@ -195,7 +194,6 @@ export default function Jeu() {
     setIaChargement(false)
   }
 
-  // Sauvegarde et navigation en fin de partie
   useEffect(() => {
     if (cases.length < total) return
     if (sauvegardeFaite.current) return
@@ -240,6 +238,7 @@ export default function Jeu() {
       setErreur(v.message ?? 'Texte invalide.')
       return
     }
+    jouer('soumettre')
     pousserCase(inputValue.trim())
   }
 
@@ -261,7 +260,6 @@ export default function Jeu() {
     inputValue.length > 0 &&
     !inputValue.includes('?')
 
-  // Écran de transition (fin de partie ou sauvegarde)
   if (!defActuelle || cases.length >= total) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh">
@@ -320,7 +318,6 @@ export default function Jeu() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          {/* Timer hypnotique */}
           {modeHypnotique && tempsRestant !== null && (
             <motion.div
               className="flex items-center justify-end mb-3 gap-2"
