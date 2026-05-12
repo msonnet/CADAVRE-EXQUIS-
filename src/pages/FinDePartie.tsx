@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
 import { getStructure, reconstruirePoeme } from '../structures'
@@ -10,6 +10,14 @@ import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 
+const STYLES = [
+  { id: 'aquarelle',  label: 'Aquarelle' },
+  { id: 'craies',     label: 'Craies grasses' },
+  { id: 'fusain',     label: 'Fusain' },
+  { id: 'huile',      label: 'Peinture à l\'huile' },
+  { id: 'crayons',    label: 'Crayons de couleur' },
+]
+
 export default function FinDePartie() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -18,6 +26,7 @@ export default function FinDePartie() {
   )
   const [casesVisibles, setCasesVisibles] = useState(false)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
+  const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
@@ -34,28 +43,32 @@ export default function FinDePartie() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Génération automatique de l'illustration après la révélation
+  // Afficher l'illustration déjà sauvegardée si elle existe
   useEffect(() => {
-    if (!poeme) return
-    if (poeme.illustration) {
+    if (poeme?.illustration) {
       setIllustrationUrl(poeme.illustration.url)
-      return
+      setStyleChoisi(poeme.illustration.style)
     }
+  }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function choisirStyle(style: string) {
+    if (!poeme || generatingIllustration) return
+    setStyleChoisi(style)
+    setGeneratingIllustration(true)
 
     const structure = getStructure(poeme.structureId)
     const texte = reconstruirePoeme(poeme.cases, structure)
 
-    setGeneratingIllustration(true)
-    genererIllustration(texte)
+    genererIllustration(texte, style)
       .then(url => {
         if (url) {
           setIllustrationUrl(url)
-          const illustration = { url, promptUtilise: texte, dateGeneration: Date.now() }
+          const illustration = { url, style, promptUtilise: texte, dateGeneration: Date.now() }
           sauvegarderIllustration(poeme.id, illustration).catch(console.error)
         }
       })
       .finally(() => setGeneratingIllustration(false))
-  }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   if (!poeme) {
     return (
@@ -115,48 +128,85 @@ export default function FinDePartie() {
       <SeparateurOr />
 
       {/* Illustration */}
-      {(illustrationUrl || generatingIllustration) && (
-        <motion.div
-          className="my-8 flex flex-col items-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-        >
-          {generatingIllustration && !illustrationUrl && (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <motion.span
-                className="text-or text-2xl"
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 1.8, repeat: Infinity }}
-              >
-                ✦
-              </motion.span>
-              <p className="nav-discrete">Une image prend forme…</p>
-            </div>
-          )}
+      <AnimatePresence mode="wait">
 
-          {illustrationUrl && (
-            <motion.div
-              className="w-full max-w-xs"
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.0 }}
+        {/* Illustration déjà générée */}
+        {illustrationUrl && (
+          <motion.div
+            key="image"
+            className="my-8 flex flex-col items-center gap-3"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.0 }}
+          >
+            <img
+              src={illustrationUrl}
+              alt="Illustration surréaliste du poème"
+              className="w-full max-w-xs rounded-sm border border-or/20 opacity-90"
+              style={{ filter: 'sepia(0.15) contrast(0.95)' }}
+            />
+            {styleChoisi && (
+              <p className="nav-discrete opacity-50">
+                {STYLES.find(s => s.id === styleChoisi)?.label}
+              </p>
+            )}
+          </motion.div>
+        )}
+
+        {/* Spinner pendant génération */}
+        {generatingIllustration && !illustrationUrl && (
+          <motion.div
+            key="spinner"
+            className="my-8 flex flex-col items-center gap-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.span
+              className="text-or text-2xl"
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
             >
-              <img
-                src={illustrationUrl}
-                alt="Illustration surréaliste du poème"
-                className="w-full rounded-sm border border-or/20 opacity-90"
-                style={{ filter: 'sepia(0.15) contrast(0.95)' }}
-              />
-            </motion.div>
-          )}
-        </motion.div>
-      )}
+              ✦
+            </motion.span>
+            <p className="nav-discrete">
+              {STYLES.find(s => s.id === styleChoisi)?.label} en cours…
+            </p>
+          </motion.div>
+        )}
+
+        {/* Choix du médium */}
+        {!illustrationUrl && !generatingIllustration && (
+          <motion.div
+            key="picker"
+            className="my-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.3 }}
+          >
+            <p className="nav-discrete text-center mb-4">Illustrer ce poème</p>
+            <div className="flex flex-col gap-2">
+              {STYLES.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => choisirStyle(s.id)}
+                  className="nav-discrete text-encre py-3 border border-gris-clair/30 hover:border-or/60 hover:text-encre transition-all"
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+
+      <SeparateurOr />
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
+        transition={{ delay: 1.5 }}
       >
         <button
           onClick={() => setCasesVisibles(v => !v)}

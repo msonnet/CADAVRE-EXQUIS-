@@ -34,6 +34,7 @@ export interface Case {
 
 export interface Illustration {
   url: string
+  style: string
   promptUtilise: string
   dateGeneration: number
 }
