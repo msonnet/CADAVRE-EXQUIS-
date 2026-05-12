@@ -1,4 +1,4 @@
-export const config = { maxDuration: 30 }
+export const config = { maxDuration: 45 }
 
 const STYLE_PROMPTS: Record<string, string> = {
   aquarelle: 'delicate watercolor painting, soft translucent color washes, wet-on-wet technique, fluid dreamy edges, visible paper texture',
@@ -8,23 +8,56 @@ const STYLE_PROMPTS: Record<string, string> = {
   crayons: 'colored pencil illustration, fine hatching, soft blended hues, delicate precise detail, pencil grain visible',
 }
 
+async function poeticToVisual(poeme: string, anthropicKey: string): Promise<string> {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 80,
+        messages: [{
+          role: 'user',
+          content: `Ce poème surréaliste français va servir de base à une illustration. Décris en 1 à 2 phrases anglaises une scène visuelle unique et cohérente qui capture l'essence du poème (éléments concrets, composition unifiée, pas de mots abstraits).\n\nPoème : "${poeme}"`,
+        }],
+      }),
+    })
+    if (!response.ok) return poeme
+    const data = await response.json()
+    return (data.content?.[0]?.text ?? poeme).trim()
+  } catch {
+    return poeme
+  }
+}
+
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const { texte, style } = req.body ?? {}
   if (!texte) { res.status(400).json({ error: 'texte requis' }); return }
 
-  const apiKey = process.env.FAL_KEY
-  if (!apiKey) { res.status(200).json({ url: null }); return }
+  const falKey = process.env.FAL_KEY
+  if (!falKey) { res.status(200).json({ url: null }); return }
 
+  const anthropicKey = process.env.ANTHROPIC_API_KEY
   const stylePrompt = STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle
-  const prompt = `Surrealist poetic illustration, ${stylePrompt}, dreamlike and lyrical atmosphere, no text no letters no words no watermark no signature no copyright no writing: ${texte}`
+
+  // Transformer le poème en scène visuelle unifiée
+  const sceneVisuelle = anthropicKey
+    ? await poeticToVisual(texte, anthropicKey)
+    : texte
+
+  const prompt = `${stylePrompt}, surrealist dreamlike illustration, single unified scene: ${sceneVisuelle}. Poetic lyrical atmosphere, no text no letters no words no watermark no signature no writing`
 
   try {
     const response = await fetch('https://fal.run/fal-ai/flux/schnell', {
       method: 'POST',
       headers: {
-        'Authorization': `Key ${apiKey}`,
+        'Authorization': `Key ${falKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
