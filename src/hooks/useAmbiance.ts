@@ -1,16 +1,22 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { getAudioContext, onContextRunning } from '../audio/sharedCtx'
 
-const VOLUME = 0.05
+const VOLUME = 0.08
 
 export function useAmbiance() {
   const [muted, setMuted] = useState(() => localStorage.getItem('ambiance-muted') === 'true')
-  const ctxRef = useRef<AudioContext | null>(null)
   const masterRef = useRef<GainNode | null>(null)
   const builtRef = useRef(false)
 
-  const buildOscillators = useCallback((ctx: AudioContext, master: GainNode) => {
+  const buildOscillators = useCallback(() => {
     if (builtRef.current) return
     builtRef.current = true
+
+    const ctx = getAudioContext()
+    const master = ctx.createGain()
+    master.gain.value = 0
+    master.connect(ctx.destination)
+    masterRef.current = master
 
     const specs = [
       { freq: 55,    gain: 0.45, lfoRate: 0.04 },
@@ -36,45 +42,41 @@ export function useAmbiance() {
       osc.start()
     }
 
-    const t = ctx.currentTime
-    master.gain.cancelScheduledValues(t)
-    master.gain.setValueAtTime(0, t)
-    master.gain.linearRampToValueAtTime(VOLUME, t + 4)
-  }, [])
+    if (!muted) {
+      const t = ctx.currentTime
+      master.gain.cancelScheduledValues(t)
+      master.gain.setValueAtTime(0, t)
+      master.gain.linearRampToValueAtTime(VOLUME, t + 4)
+    }
+  }, [muted])
 
   const start = useCallback(() => {
     if (muted) return
-
-    const ctx = ctxRef.current ?? (() => {
-      const c = new (window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const master = c.createGain()
-      master.gain.value = 0
-      master.connect(c.destination)
-      masterRef.current = master
-      ctxRef.current = c
-      return c
-    })()
-
-    const doStart = () => buildOscillators(ctx, masterRef.current!)
+    const ctx = getAudioContext()
 
     if (ctx.state === 'running') {
-      doStart()
+      buildOscillators()
     } else {
+      // S'abonner au déverrouillage via useSound (geste utilisateur)
+      onContextRunning(buildOscillators)
+      // Fallback: listener direct sur le document
       const unlock = () => {
-        ctx.resume().then(doStart)
-        document.removeEventListener('touchstart', unlock)
-        document.removeEventListener('mousedown', unlock)
+        ctx.resume().then(buildOscillators)
       }
       document.addEventListener('touchstart', unlock, { once: true, passive: true })
       document.addEventListener('mousedown', unlock, { once: true })
     }
   }, [muted, buildOscillators])
 
+  // Re-démarrer quand l'utilisateur active le son
+  useEffect(() => {
+    if (!muted) start()
+  }, [muted, start])
+
   const stop = useCallback(() => {
-    const ctx = ctxRef.current
     const master = masterRef.current
-    if (!ctx || !master) return
+    const ctx = getAudioContext()
+    if (!master) return
     const t = ctx.currentTime
     master.gain.cancelScheduledValues(t)
     master.gain.setValueAtTime(master.gain.value, t)
@@ -85,21 +87,17 @@ export function useAmbiance() {
     setMuted(prev => {
       const next = !prev
       localStorage.setItem('ambiance-muted', String(next))
-      const ctx = ctxRef.current
       const master = masterRef.current
-      if (ctx && master) {
-        if (!next && ctx.state === 'suspended') {
-          ctx.resume().then(() => buildOscillators(ctx, master))
-        } else {
-          const t = ctx.currentTime
-          master.gain.cancelScheduledValues(t)
-          master.gain.setValueAtTime(master.gain.value, t)
-          master.gain.linearRampToValueAtTime(next ? 0 : VOLUME, t + 1)
-        }
+      const ctx = getAudioContext()
+      if (master) {
+        const t = ctx.currentTime
+        master.gain.cancelScheduledValues(t)
+        master.gain.setValueAtTime(master.gain.value, t)
+        master.gain.linearRampToValueAtTime(next ? 0 : VOLUME, t + 1)
       }
       return next
     })
-  }, [buildOscillators])
+  }, [])
 
   return { start, stop, toggleMute, muted }
 }

@@ -45,14 +45,41 @@ function computeAuteurs(
 }
 
 const FALLBACKS_CLIENT: Record<string, string[]> = {
-  nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume'],
-  verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse'],
-  adjectif: ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux', 'lourd'],
-  adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs'],
-  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un souffle perdu', 'la pierre blanche', 'un vide pesant'],
-  'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit', 'demeure immobile'],
-  proposition: ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?', 'Quand reviendra le froid ?'],
-  libre: ['quelque chose demeure', 'rien ne se perd vraiment', 'la nuit garde tout', 'le silence répond'],
+  nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
+        'le froid', 'la poussière', 'le vent', 'la pluie', 'l\'écho', 'la flamme', 'le seuil',
+        'l\'abîme', 'le vertige', 'la mousse', 'le givre', 'l\'encre', 'la boue'],
+  verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse',
+          'erre', 'veille', 'frôle', 'hante', 'effleure', 'résiste', 'chavire', 'murmure',
+          'vacille', 'sombre', 'rôde', 'dérive'],
+  adjectif: ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux', 'lourd',
+             'froid', 'sourd', 'amer', 'voilé', 'opaque', 'lent', 'nu', 'aigre',
+             'muet', 'dense', 'sombre', 'fragile'],
+  adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs',
+            'en vain', 'presque', 'toujours', 'parfois', 'nulle part', 'jadis', 'désormais'],
+  'groupe-nominal': [
+    "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
+    'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
+    'la pluie fine', 'le temps qui passe', 'un mur de brume', 'la main tendue',
+    'un silence épais', 'le bord du gouffre', 'une voix creuse', 'l\'eau noire',
+    'le corps absent', 'une ombre familière', 'la porte close', 'un feu mourant',
+  ],
+  'groupe-verbal': [
+    'traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit',
+    'demeure immobile', 'efface les traces', 'attend sans espoir', 'pèse sur le monde',
+    'hante les couloirs', 'frôle les murs', 'résiste au vent', 'se perd dans le brouillard',
+  ],
+  proposition: [
+    'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
+    'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
+    'Que cherche-t-on ici ?', 'Où finit la nuit ?', 'Qu\'y a-t-il derrière ?',
+    'Qui se souvient encore ?', 'Jusqu\'où va le vide ?', 'Quand cela s\'arrêtera-t-il ?',
+  ],
+  libre: [
+    'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
+    'rien ne disparaît vraiment', 'tout recommence ailleurs', 'l\'oubli protège',
+    'il reste toujours quelque chose', 'les mots s\'effacent', 'le temps hésite',
+    'l\'absence a une forme',
+  ],
 }
 
 function makeFallbackPicker() {
@@ -65,6 +92,13 @@ function makeFallbackPicker() {
     derniers[type] = choix
     return choix
   }
+}
+
+function pickUnused(type: string, used: Set<string>): string {
+  const pool = FALLBACKS_CLIENT[type] ?? ['quelque chose']
+  const unused = pool.filter(v => !used.has(v.toLowerCase()))
+  const source = unused.length > 0 ? unused : pool
+  return source[Math.floor(Math.random() * source.length)]
 }
 
 function getContexteVisible(cases: Case[], visibilite: Visibilite): string | null {
@@ -118,6 +152,18 @@ export default function Jeu() {
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
 
+  function choisirSansDuplique(texte: string, type: string): string {
+    const key = texte.toLowerCase()
+    let final: string
+    if (texte && !textesUtilises.current.has(key)) {
+      final = texte
+    } else {
+      final = pickUnused(type, textesUtilises.current)
+    }
+    textesUtilises.current.add(final.toLowerCase())
+    return final
+  }
+
   useEffect(() => {
     ambianceStart()
     return () => ambianceStop()
@@ -149,15 +195,9 @@ export default function Jeu() {
 
     demanderFragmentIA({ consigne: def.consigne, type: def.type })
       .then(texte => {
-        const t = texte.trim()
-        const key = t.toLowerCase()
-        const final = (t && !textesUtilises.current.has(key))
-          ? t
-          : fallback.current(def.type)
-        textesUtilises.current.add(final.toLowerCase())
-        avancer(idx, def, final)
+        avancer(idx, def, choisirSansDuplique(texte.trim(), def.type))
       })
-      .catch(() => avancer(idx, def, fallback.current(def.type)))
+      .catch(() => avancer(idx, def, choisirSansDuplique('', def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer hypnotique — démarre à chaque tour humain
@@ -243,6 +283,7 @@ export default function Jeu() {
       setErreur(v.message ?? 'Texte invalide.')
       return
     }
+    ambianceStart() // déverrouille le drone depuis ce geste utilisateur
     jouer('soumettre')
     pousserCase(inputValue.trim())
   }
@@ -295,7 +336,7 @@ export default function Jeu() {
         <button
           onClick={toggleMute}
           title={muted ? 'Activer le son' : 'Couper le son'}
-          className={`nav-discrete transition-opacity ${muted ? 'opacity-25' : 'opacity-60 hover:opacity-100'}`}
+          className={`nav-discrete transition-opacity ${muted ? 'opacity-40 line-through' : 'opacity-60 hover:opacity-100'}`}
         >
           ♪
         </button>
