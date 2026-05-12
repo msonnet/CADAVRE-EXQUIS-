@@ -147,7 +147,9 @@ export default function Jeu() {
   const sauvegardeFaite = useRef(false)
   const fallback = useRef(makeFallbackPicker())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const textesUtilises = useRef(new Set<string>())
+  const textesUtilises = useRef(new Set<string>(
+    JSON.parse(localStorage.getItem('textes-utilises') ?? '[]') as string[]
+  ))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
@@ -161,6 +163,7 @@ export default function Jeu() {
       final = pickUnused(type, textesUtilises.current)
     }
     textesUtilises.current.add(final.toLowerCase())
+    localStorage.setItem('textes-utilises', JSON.stringify([...textesUtilises.current]))
     return final
   }
 
