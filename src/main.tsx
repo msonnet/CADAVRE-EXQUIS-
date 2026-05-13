@@ -4,12 +4,21 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './index.css'
 
-// Recharge la page dès qu'une nouvelle version du service worker est prête
-registerSW({
+// immediate: true → enregistrement avant l'événement 'load', utile sur iOS
+const updateSW = registerSW({
+  immediate: true,
   onNeedRefresh() {
     window.location.reload()
   },
   onOfflineReady() {},
+})
+
+// iOS PWA : le SW ne vérifie pas les mises à jour quand l'app revient au premier plan.
+// On force la vérification à chaque retour de l'arrière-plan.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    updateSW()
+  }
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
