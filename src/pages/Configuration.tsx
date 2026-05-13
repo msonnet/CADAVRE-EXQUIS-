@@ -21,6 +21,8 @@ const CONFIG_PAR_DEFAUT: ConfigPartie = {
   visibilite: 'aveugle',
   premierJoueur: 'ia',
   mode: 'standard',
+  joueursHumains: 1,
+  voixIA: 1,
 }
 
 interface OptionProps {
@@ -109,12 +111,54 @@ export default function Configuration() {
       </section>
 
       <section className="mb-8">
+        <h3 className="consigne-grammaticale mb-4">Joueurs humains</h3>
+        <div className="flex gap-2">
+          {[1, 2, 3, 4].map(n => (
+            <button
+              key={n}
+              onClick={() => setConfig(c => ({ ...c, joueursHumains: n, voixIA: n > 1 ? (c.voixIA > 0 ? c.voixIA : 0) : c.voixIA }))}
+              className={`flex-1 py-3 border text-sm transition-all duration-200 ${
+                config.joueursHumains === n
+                  ? 'border-or bg-or/5 text-encre'
+                  : 'border-gris-clair/40 text-gris hover:border-gris-clair hover:text-encre'
+              }`}
+              style={{ fontFamily: 'Lora, Georgia, serif' }}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="mb-8">
+        <h3 className="consigne-grammaticale mb-4">Voix IA</h3>
+        <div className="flex gap-2">
+          {[0, 1, 2, 3].map(n => (
+            <button
+              key={n}
+              onClick={() => setConfig(c => ({ ...c, voixIA: n }))}
+              className={`flex-1 py-3 border text-sm transition-all duration-200 ${
+                config.voixIA === n
+                  ? 'border-or bg-or/5 text-encre'
+                  : 'border-gris-clair/40 text-gris hover:border-gris-clair hover:text-encre'
+              }`}
+              style={{ fontFamily: 'Lora, Georgia, serif' }}
+            >
+              {n === 0 ? 'Aucune' : n}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {config.joueursHumains === 1 && config.voixIA > 0 && (
+      <section className="mb-8">
         <h3 className="consigne-grammaticale mb-4">Premier joueur</h3>
         <div className="flex flex-col gap-2">
           <Option label="Moi" active={config.premierJoueur === 'humain'} onClick={() => setConfig((c) => ({ ...c, premierJoueur: 'humain' as PremierJoueur }))} />
           <Option label="Une voix" description="Une voix inconnue ouvre le poème" active={config.premierJoueur === 'ia'} onClick={() => setConfig((c) => ({ ...c, premierJoueur: 'ia' as PremierJoueur }))} />
         </div>
       </section>
+      )}
 
       <section className="mb-10">
         <h3 className="consigne-grammaticale mb-4">Mode</h3>

@@ -263,7 +263,7 @@ ${illustrationHtml ? '<hr>' : ''}
                   {c.fonction}
                   <span className="mx-2 opacity-40">—</span>
                   <span className="italic">
-                    {c.auteur === 'ia' ? `voix ${iaNum}` : 'toi'}
+                    {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
                   </span>
                 </p>
                 <p className="font-cormorant italic text-encre text-lg leading-snug">

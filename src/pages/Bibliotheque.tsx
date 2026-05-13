@@ -29,10 +29,15 @@ function extraitPoeme(poeme: Poeme): string {
   return premier.length > 60 ? premier.slice(0, 57) + '…' : premier
 }
 
+function normaliser(s: string): string {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 export default function Bibliotheque() {
   const navigate = useNavigate()
   const [poemes, setPoemes] = useState<Poeme[]>([])
   const [chargement, setChargement] = useState(true)
+  const [recherche, setRecherche] = useState('')
 
   useEffect(() => {
     chargerPoemes()
@@ -54,6 +59,18 @@ export default function Bibliotheque() {
       <p className="sous-titre mb-6">Ta bibliothèque personnelle</p>
 
       <SeparateurOr />
+
+      {!chargement && poemes.length > 0 && (
+        <div className="mt-4 mb-2">
+          <input
+            type="search"
+            value={recherche}
+            onChange={e => setRecherche(e.target.value)}
+            placeholder="Rechercher un poème…"
+            className="champ-carnet w-full"
+          />
+        </div>
+      )}
 
       {chargement && (
         <div className="flex justify-center py-20">
@@ -84,7 +101,16 @@ export default function Bibliotheque() {
         </motion.div>
       )}
 
-      {!chargement && poemes.length > 0 && (
+      {!chargement && poemes.length > 0 && (() => {
+        const termes = normaliser(recherche).split(/\s+/).filter(Boolean)
+        const poemesFiltres = termes.length
+          ? poemes.filter(p => {
+              const hay = normaliser([p.titre ?? '', ...p.cases.map(c => c.texte), NOMS_STRUCTURES[p.structureId] ?? ''].join(' '))
+              return termes.every(t => hay.includes(t))
+            })
+          : poemes
+
+        return (
         <AnimatePresence>
           <motion.div
             className="mt-4 flex flex-col gap-px"
@@ -92,7 +118,15 @@ export default function Bibliotheque() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            {poemes.map((poeme, i) => (
+            {termes.length > 0 && (
+              <p className="nav-discrete mb-2 opacity-50">
+                {poemesFiltres.length} résultat{poemesFiltres.length !== 1 ? 's' : ''}
+              </p>
+            )}
+            {poemesFiltres.length === 0 && (
+              <p className="vers-jeu text-center opacity-40 py-10">Aucun poème trouvé.</p>
+            )}
+            {poemesFiltres.map((poeme, i) => (
               <motion.button
                 key={poeme.id}
                 onClick={() => navigate(`/bibliotheque/${poeme.id}`)}
@@ -122,7 +156,8 @@ export default function Bibliotheque() {
             ))}
           </motion.div>
         </AnimatePresence>
-      )}
+        )
+      })()}
 
       {!chargement && poemes.length > 0 && (
         <motion.div

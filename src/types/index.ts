@@ -20,6 +20,8 @@ export interface ConfigPartie {
   visibilite: Visibilite
   premierJoueur: PremierJoueur
   mode: ModeJeu
+  joueursHumains: number  // 1–4
+  voixIA: number          // 0–4
 }
 
 export interface Case {
@@ -27,6 +29,7 @@ export interface Case {
   fonction: string
   consigne: string
   auteur: 'humain' | 'ia'
+  joueurNumero?: number   // numéro du joueur humain en mode multijoueur
   // PAS de voiceId — anonymat absolu
   texte: string
   ts: number
