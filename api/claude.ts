@@ -35,14 +35,41 @@ const CONTRAINTES: Record<TypeCase, string> = {
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
-  'nom': ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'le froid'],
-  'verbe': ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît'],
-  'adjectif': ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux'],
-  'adverbe': ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore'],
-  'groupe-nominal': ["l'ombre du soir", 'la nuit froide', 'le silence qui reste', 'un vide pesant'],
-  'groupe-verbal': ['traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit'],
-  'proposition': ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?'],
-  'libre': ['quelque chose demeure', 'rien ne se perd', 'la nuit garde tout'],
+  'nom': ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
+          'le froid', 'la poussière', 'le vent', 'la pluie', "l'écho", 'la flamme', 'le seuil',
+          "l'abîme", 'le vertige', 'la mousse', 'le givre', "l'encre", 'la boue'],
+  'verbe': ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse',
+            'erre', 'veille', 'frôle', 'hante', 'effleure', 'résiste', 'chavire', 'murmure',
+            'vacille', 'sombre', 'rôde', 'dérive'],
+  'adjectif': ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux', 'lourd',
+               'froid', 'sourd', 'amer', 'voilé', 'opaque', 'lent', 'nu', 'aigre',
+               'muet', 'dense', 'sombre', 'fragile'],
+  'adverbe': ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs',
+              'en vain', 'presque', 'toujours', 'parfois', 'nulle part', 'jadis', 'désormais'],
+  'groupe-nominal': [
+    "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
+    'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
+    'la pluie fine', 'le temps qui passe', 'un mur de brume', 'la main tendue',
+    'un silence épais', 'le bord du gouffre', 'une voix creuse', "l'eau noire",
+    'le corps absent', 'une ombre familière', 'la porte close', 'un feu mourant',
+  ],
+  'groupe-verbal': [
+    'traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit',
+    'demeure immobile', 'efface les traces', 'attend sans espoir', 'pèse sur le monde',
+    'hante les couloirs', 'frôle les murs', 'résiste au vent', 'se perd dans le brouillard',
+  ],
+  'proposition': [
+    'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
+    'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
+    'Que cherche-t-on ici ?', 'Où finit la nuit ?', "Qu'y a-t-il derrière ?",
+    'Qui se souvient encore ?', "Jusqu'où va le vide ?", "Quand cela s'arrêtera-t-il ?",
+  ],
+  'libre': [
+    'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
+    'rien ne disparaît vraiment', 'tout recommence ailleurs', "l'oubli protège",
+    "il reste toujours quelque chose", "les mots s'effacent", 'le temps hésite',
+    "l'absence a une forme",
+  ],
 }
 
 function pickFallback(type: TypeCase): string {

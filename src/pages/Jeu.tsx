@@ -150,7 +150,7 @@ function makeFallbackPicker() {
 
 function pickUnused(type: string, used: Set<string>): string {
   const pool = FALLBACKS_CLIENT[type] ?? ['quelque chose']
-  const unused = pool.filter(v => !used.has(v.toLowerCase()))
+  const unused = pool.filter(v => !used.has(normaliserCle(v)))
   const source = unused.length > 0 ? unused : pool
   return source[Math.floor(Math.random() * source.length)]
 }
@@ -207,6 +207,7 @@ export default function Jeu() {
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const caseIndexSoumis = useRef(-1)
   const textesUtilises  = useRef(new Set<string>())
+  const textesSession   = useRef(new Set<string>(JSON.parse(sessionStorage.getItem('textes-session') ?? '[]') as string[]))
   const voixUtilisees   = useRef(new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
@@ -238,13 +239,17 @@ export default function Jeu() {
 
   function choisirSansDuplique(texte: string, type: string): string {
     const key = normaliserCle(texte)
+    const totalUsed = new Set([...textesUtilises.current, ...textesSession.current])
     let final: string
-    if (texte && !textesUtilises.current.has(key)) {
+    if (texte && !totalUsed.has(key)) {
       final = texte
     } else {
-      final = pickUnused(type, textesUtilises.current)
+      final = pickUnused(type, totalUsed)
     }
-    textesUtilises.current.add(normaliserCle(final))
+    const finalKey = normaliserCle(final)
+    textesUtilises.current.add(finalKey)
+    textesSession.current.add(finalKey)
+    sessionStorage.setItem('textes-session', JSON.stringify([...textesSession.current]))
     return final
   }
 
