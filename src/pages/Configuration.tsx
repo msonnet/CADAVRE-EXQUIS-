@@ -133,7 +133,7 @@ export default function Configuration() {
       <section className="mb-8">
         <h3 className="consigne-grammaticale mb-4">Voix IA</h3>
         <div className="flex gap-2">
-          {[0, 1, 2, 3].map(n => (
+          {[0, 1, 2, 3, 4, 5, 6].map(n => (
             <button
               key={n}
               onClick={() => setConfig(c => ({ ...c, voixIA: n }))}
