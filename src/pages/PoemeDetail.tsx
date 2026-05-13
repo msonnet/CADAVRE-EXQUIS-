@@ -17,8 +17,22 @@ export default function PoemeDetail() {
   const [editionTitre, setEditionTitre] = useState(false)
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppression, setConfirmSuppression] = useState(false)
+  const [exportOk, setExportOk] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { parler, arreter, parlant } = useTTS()
+
+  function exporterPoeme() {
+    if (!poeme) return
+    const blob = new Blob([JSON.stringify(poeme, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${poeme.titre ?? 'cadavre-exquis'}-${poeme.id.slice(0, 8)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setExportOk(true)
+    setTimeout(() => setExportOk(false), 2000)
+  }
 
   useEffect(() => {
     if (!id) return
@@ -214,6 +228,13 @@ export default function PoemeDetail() {
       <div className="mt-12 flex flex-col items-center gap-4">
         <button onClick={() => navigate('/config')} className="btn-primaire">
           Nouvelle partie
+        </button>
+
+        <button
+          onClick={exporterPoeme}
+          className="nav-discrete hover:text-encre transition-colors"
+        >
+          {exportOk ? '✓ Téléchargé' : '↓ Exporter ce poème'}
         </button>
 
         <AnimatePresence mode="wait">

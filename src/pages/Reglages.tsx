@@ -2,15 +2,45 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
+import { chargerPoemes } from '../db'
+import type { NiveauValidation } from '../utils/validation'
+
+const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
+  { id: 'stricte',    label: 'Stricte',    desc: 'Avertit si le fragment ne correspond pas à la consigne' },
+  { id: 'souple',     label: 'Souple',     desc: 'Accepte tout texte non vide' },
+  { id: 'desactivee', label: 'Désactivée', desc: 'Aucune vérification' },
+]
 
 export default function Reglages() {
   const navigate = useNavigate()
   const [sonActif, setSonActif] = useState(() => localStorage.getItem('ambiance-muted') !== 'true')
+  const [validation, setValidation] = useState<NiveauValidation>(
+    () => (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
+  )
+  const [exportOk, setExportOk] = useState(false)
 
   function toggleSon() {
     const next = !sonActif
     setSonActif(next)
     localStorage.setItem('ambiance-muted', String(!next))
+  }
+
+  function changerValidation(niveau: NiveauValidation) {
+    setValidation(niveau)
+    localStorage.setItem('validation-niveau', niveau)
+  }
+
+  async function exporterPoemes() {
+    const poemes = await chargerPoemes()
+    const blob = new Blob([JSON.stringify(poemes, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `cadavre-exquis-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setExportOk(true)
+    setTimeout(() => setExportOk(false), 2000)
   }
 
   return (
@@ -25,6 +55,7 @@ export default function Reglages() {
       <SeparateurOr />
 
       <div className="flex flex-col gap-8 py-6">
+
         {/* Audio ambiant */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-0.5">
@@ -47,24 +78,47 @@ export default function Reglages() {
           </button>
         </div>
 
-        {/* Voix de lecture */}
-        <div className="flex flex-col gap-0.5">
-          <span className="consigne-grammaticale">Voix de lecture</span>
-          <span className="font-lora text-gris text-sm">
-            Bouton ▶ Écouter disponible sur chaque poème terminé
-          </span>
+        {/* Validation grammaticale */}
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-0.5">
+            <span className="consigne-grammaticale">Validation grammaticale</span>
+            <span className="font-lora text-gris text-sm">
+              {NIVEAUX.find(n => n.id === validation)?.desc}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            {NIVEAUX.map(n => (
+              <button
+                key={n.id}
+                onClick={() => changerValidation(n.id)}
+                className={`flex-1 py-2 text-xs border transition-all ${
+                  validation === n.id
+                    ? 'border-or/60 text-encre bg-or/10'
+                    : 'border-gris-clair/30 text-gris hover:border-or/30 hover:text-encre'
+                }`}
+              >
+                {n.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* À venir */}
-        <div className="flex flex-col gap-0.5 opacity-40">
-          <span className="consigne-grammaticale">Validation grammaticale</span>
-          <span className="font-lora text-gris text-sm">Disponible prochainement</span>
+        {/* Export JSON */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <span className="consigne-grammaticale">Exporter mes poèmes</span>
+            <span className="font-lora text-gris text-sm">
+              Télécharge tous les poèmes en JSON
+            </span>
+          </div>
+          <button
+            onClick={exporterPoemes}
+            className="nav-discrete hover:text-encre transition-colors px-3 py-1 border border-gris-clair/30 hover:border-or/40 text-sm"
+          >
+            {exportOk ? '✓ Téléchargé' : '↓ Exporter'}
+          </button>
         </div>
 
-        <div className="flex flex-col gap-0.5 opacity-40">
-          <span className="consigne-grammaticale">Export JSON</span>
-          <span className="font-lora text-gris text-sm">Disponible prochainement</span>
-        </div>
       </div>
 
       <SeparateurOr />

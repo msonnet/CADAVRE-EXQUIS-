@@ -6,6 +6,7 @@ import ConsigneCase from '../components/ConsigneCase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
+import type { NiveauValidation } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
@@ -142,6 +143,8 @@ export default function Jeu() {
   const [erreur, setErreur] = useState<string | null>(null)
   const [iaChargement, setIaChargement] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
+
+  const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
 
   const casesTraitees = useRef(new Set<number>())
   const sauvegardeFaite = useRef(false)
@@ -281,7 +284,7 @@ export default function Jeu() {
 
   function soumettre() {
     if (!defActuelle || !inputValue.trim()) return
-    const v = validerCase(inputValue, defActuelle.type, 'souple')
+    const v = validerCase(inputValue, defActuelle.type, niveauValidation)
     if (!v.valide) {
       setErreur(v.message ?? 'Texte invalide.')
       return
