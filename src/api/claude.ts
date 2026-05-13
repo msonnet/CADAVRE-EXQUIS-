@@ -3,6 +3,7 @@
 export interface RequeteIA {
   consigne: string
   type: string
+  voiceId?: string
 }
 
 export async function demanderFragmentIA(requete: RequeteIA): Promise<string> {

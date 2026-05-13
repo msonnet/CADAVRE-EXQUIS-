@@ -8,6 +8,7 @@ import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
 import type { NiveauValidation } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
+import { VOICE_IDS } from '../data/voiceIds'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
@@ -153,9 +154,25 @@ export default function Jeu() {
   const textesUtilises = useRef(new Set<string>(
     JSON.parse(localStorage.getItem('textes-utilises') ?? '[]') as string[]
   ))
+  const voixUtilisees = useRef(new Set<string>(
+    JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]
+  ))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
+
+  function choisirVoixSansRepetition(): string {
+    let unused = (VOICE_IDS as readonly string[]).filter(id => !voixUtilisees.current.has(id))
+    if (unused.length === 0) {
+      // Toutes les 40 voix utilisées — on repart d'un cycle vierge
+      voixUtilisees.current.clear()
+      unused = [...VOICE_IDS]
+    }
+    const choix = unused[Math.floor(Math.random() * unused.length)]
+    voixUtilisees.current.add(choix)
+    localStorage.setItem('voix-utilisees', JSON.stringify([...voixUtilisees.current]))
+    return choix
+  }
 
   function choisirSansDuplique(texte: string, type: string): string {
     const key = texte.toLowerCase()
@@ -199,7 +216,8 @@ export default function Jeu() {
     const def = defActuelle
     const idx = caseIndex
 
-    demanderFragmentIA({ consigne: def.consigne, type: def.type })
+    const voiceId = choisirVoixSansRepetition()
+    demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId })
       .then(texte => {
         avancer(idx, def, choisirSansDuplique(texte.trim(), def.type))
       })

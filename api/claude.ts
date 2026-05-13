@@ -1,4 +1,4 @@
-import { choisirVoixAleatoire } from './_voices.js'
+import { choisirVoixAleatoire, VOIX } from './_voices.js'
 
 type TypeCase =
   | 'nom'
@@ -56,7 +56,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type } = req.body ?? {}
+  const { consigne, type, voiceId } = req.body ?? {}
 
   if (!consigne || !type) {
     res.status(400).json({ error: 'Champs manquants : consigne et type requis.' })
@@ -70,7 +70,9 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const voix = choisirVoixAleatoire()
+  const voix = voiceId
+    ? (VOIX.find(v => v.id === voiceId) ?? choisirVoixAleatoire())
+    : choisirVoixAleatoire()
   const maxTokens = MAX_TOKENS[type as TypeCase] ?? 14
   const contrainte = CONTRAINTES[type as TypeCase] ?? '2 à 4 mots'
 
