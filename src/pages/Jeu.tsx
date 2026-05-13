@@ -206,7 +206,7 @@ export default function Jeu() {
   const fallback        = useRef(makeFallbackPicker())
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const caseIndexSoumis = useRef(-1)
-  const textesUtilises  = useRef(new Set<string>(JSON.parse(localStorage.getItem('textes-utilises') ?? '[]') as string[]))
+  const textesUtilises  = useRef(new Set<string>())
   const voixUtilisees   = useRef(new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
@@ -245,7 +245,6 @@ export default function Jeu() {
       final = pickUnused(type, textesUtilises.current)
     }
     textesUtilises.current.add(normaliserCle(final))
-    localStorage.setItem('textes-utilises', JSON.stringify([...textesUtilises.current]))
     return final
   }
 
@@ -357,6 +356,7 @@ export default function Jeu() {
   function pousserCase(texte: string, joueurNum?: number) {
     if (!defActuelle || caseIndex === caseIndexSoumis.current) return
     caseIndexSoumis.current = caseIndex
+    textesUtilises.current.add(normaliserCle(texte))
     const c: Case = {
       numero: caseIndex + 1,
       fonction: defActuelle.fonction,
