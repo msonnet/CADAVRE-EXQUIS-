@@ -2,13 +2,21 @@ import { motion } from 'framer-motion'
 import type { DefinitionCase } from '../structures'
 
 interface Props {
-  caseNum: number      // numero de la case (1-based)
-  total: number        // nombre total de cases
+  caseNum: number
+  total: number
   def: DefinitionCase
   auteur: 'humain' | 'ia'
+  joueurNum?: number      // numéro du joueur humain (mode multijoueur)
+  multiJoueurs?: boolean  // true si plusieurs humains jouent
 }
 
-export default function ConsigneCase({ caseNum, total, def, auteur }: Props) {
+export default function ConsigneCase({ caseNum, total, def, auteur, joueurNum, multiJoueurs }: Props) {
+  const labelTour = auteur === 'ia'
+    ? 'En attente…'
+    : multiJoueurs && joueurNum
+      ? `Joueur ${joueurNum}, c'est à toi :`
+      : "C'est à toi. Tu dois écrire :"
+
   return (
     <motion.div
       key={caseNum}
@@ -38,9 +46,7 @@ export default function ConsigneCase({ caseNum, total, def, auteur }: Props) {
       </div>
 
       {/* Consigne principale */}
-      <p className="consigne-grammaticale mb-1">
-        {auteur === 'humain' ? "C'est a toi. Tu dois ecrire :" : 'En attente…'}
-      </p>
+      <p className="consigne-grammaticale mb-1">{labelTour}</p>
       {auteur === 'humain' && (
         <p className="font-cormorant italic text-encre text-xl leading-snug">
           {def.consigne}
