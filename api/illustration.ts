@@ -48,14 +48,14 @@ export default async function handler(req: any, res: any): Promise<void> {
   const anthropicKey = process.env.ANTHROPIC_API_KEY
   const stylePrompt = STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle
 
-  const sceneVisuelle = anthropicKey
-    ? await poeticToVisual(texte, anthropicKey)
-    : texte
-
   let prompt: string
   if (promptLibre?.trim()) {
-    prompt = `${sceneVisuelle}. Artist's direction: ${promptLibre.trim()}. Rendered as ${stylePrompt}. No text, no letters, no watermark, no signature`
+    // Player's direction used as-is — no Claude reinterpretation
+    prompt = `${promptLibre.trim()}. Rendered as ${stylePrompt}. No text, no letters, no watermark, no signature`
   } else {
+    const sceneVisuelle = anthropicKey
+      ? await poeticToVisual(texte, anthropicKey)
+      : texte
     prompt = `${stylePrompt}, surrealist scene: ${sceneVisuelle}. No text, no letters, no watermark, no signature`
   }
 
