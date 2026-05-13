@@ -7,13 +7,9 @@ import { useSound } from '../hooks/useSound'
 import type { ConfigPartie, StructureId, Visibilite, PremierJoueur, ModeJeu } from '../types'
 
 const STRUCTURES: { id: StructureId; label: string; description: string }[] = [
-  { id: 'phrase-simple', label: 'Phrase simple', description: '3 cases — sujet, verbe, complément' },
+  { id: 'phrase-simple', label: 'Phrase courte', description: '3 cases — sujet, verbe, complément' },
   { id: 'phrase-etoffee', label: 'Phrase étoffée', description: '7 cases — la canonique de Breton' },
-  { id: 'conditionnelle', label: 'Conditionnelle', description: '8 cases — « si… alors »' },
-  { id: 'comparative', label: 'Comparative', description: '7 cases — « … comme … »' },
-  { id: 'enumerative', label: 'Énumérative', description: '5 à 8 cases libres' },
-  { id: 'question-reponse', label: 'Question / Réponse', description: 'Paires questions et réponses' },
-  { id: 'vers-libre', label: 'Vers libre', description: '4 à 12 tours sans contrainte fixe' },
+  { id: 'vers-libre', label: 'Vers libre', description: '4 à 12 vers sans contrainte' },
 ]
 
 const CONFIG_PAR_DEFAUT: ConfigPartie = {

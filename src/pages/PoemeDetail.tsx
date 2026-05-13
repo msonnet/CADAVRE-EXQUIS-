@@ -33,10 +33,11 @@ export default function PoemeDetail() {
       .join('')
 
     const MEDIUMS: Record<string, string> = {
-      aquarelle: 'Aquarelle', encre: 'Encre de Chine', gravure: 'Gravure sur cuivre',
+      aquarelle: 'Aquarelle', fusain: 'Fusain', huile: "Peinture à l'huile",
+      encre: 'Encre de Chine', gravure: 'Gravure',
       cyanotype: 'Cyanotype', linogravure: 'Linogravure', pastel: 'Pastel sec',
-      collage: 'Collage surréaliste', gouache: 'Gouache', sanguine: 'Sanguine',
-      mezzotinte: 'Mezzotinte', lavis: "Lavis à l'encre", serigraphie: 'Sérigraphie',
+      collage: 'Collage', gouache: 'Gouache', sanguine: 'Sanguine',
+      mezzotinte: 'Mezzotinte', lavis: 'Lavis', serigraphie: 'Sérigraphie',
     }
     const illustrationHtml = poeme.illustration?.url ? `
     <div class="illus">

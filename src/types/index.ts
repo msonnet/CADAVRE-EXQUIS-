@@ -3,10 +3,6 @@
 export type StructureId =
   | 'phrase-simple'
   | 'phrase-etoffee'
-  | 'conditionnelle'
-  | 'comparative'
-  | 'enumerative'
-  | 'question-reponse'
   | 'vers-libre'
 
 export type ModeJeu = 'standard' | 'hypnotique'
@@ -38,6 +34,7 @@ export interface Case {
 export interface Illustration {
   url: string
   style: string
+  promptLibre?: string
   promptUtilise: string
   dateGeneration: number
 }
