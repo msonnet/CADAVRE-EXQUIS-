@@ -1,7 +1,16 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './index.css'
+
+// Recharge la page dès qu'une nouvelle version du service worker est prête
+registerSW({
+  onNeedRefresh() {
+    window.location.reload()
+  },
+  onOfflineReady() {},
+})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

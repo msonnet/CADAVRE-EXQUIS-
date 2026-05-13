@@ -23,15 +23,24 @@ export default function PoemeDetail() {
   function imprimerPoeme() {
     if (!poeme) return
     const titre = poeme.titre ?? 'Cadavre Exquis'
-    const structure = getStructure(poeme.structureId)
-    const texte = reconstruirePoeme(poeme.cases, structure)
-    const lignes = texte.split('\n')
+    const struct = getStructure(poeme.structureId)
+    const texte = reconstruirePoeme(poeme.cases, struct)
     const date = new Date(poeme.dateCreation).toLocaleDateString('fr-FR', {
       year: 'numeric', month: 'long', day: 'numeric',
     })
-    const versHtml = lignes
+    const versHtml = texte.split('\n')
       .map(l => `<p class="vers">${l.trim() ? l.replace(/&/g,'&amp;').replace(/</g,'&lt;') : '&nbsp;'}</p>`)
       .join('')
+
+    const MEDIUMS: Record<string, string> = {
+      aquarelle: 'Aquarelle', craies: 'Craies grasses', fusain: 'Fusain',
+      huile: "Peinture à l'huile", crayons: 'Crayons de couleur',
+    }
+    const illustrationHtml = poeme.illustration?.url ? `
+    <div class="illus">
+      <img src="${poeme.illustration.url}" alt="Illustration" onerror="this.parentElement.style.display='none'">
+      <p class="medium">${MEDIUMS[poeme.illustration.style] ?? poeme.illustration.style}</p>
+    </div>` : ''
 
     const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -41,15 +50,18 @@ export default function PoemeDetail() {
 <title>${titre.replace(/</g,'&lt;')}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Georgia,'Times New Roman',serif;background:#faf8f3;color:#1a1714;padding:52px 44px;max-width:580px;margin:0 auto}
-.ornement{text-align:center;color:#c9a84c;letter-spacing:.5em;font-size:1.1em;margin-bottom:28px}
-h1{font-size:1.9em;font-style:italic;font-weight:400;text-align:center;margin-bottom:6px;line-height:1.3}
-.label{text-align:center;font-size:.72em;letter-spacing:.13em;text-transform:uppercase;color:#999;margin-bottom:36px}
-hr{border:none;border-top:1px solid #c9a84c;opacity:.35;margin:28px 0}
-.poeme{text-align:center;padding:8px 0}
-.vers{font-size:1.35em;font-style:italic;line-height:2.1}
-.footer{text-align:center;font-size:.68em;letter-spacing:.1em;text-transform:uppercase;color:#bbb;margin-top:52px}
-@media print{body{background:white;padding:18mm 14mm}}
+body{font-family:Georgia,'Times New Roman',serif;background:#faf8f3;color:#1a1714;padding:48px 40px;max-width:560px;margin:0 auto}
+.ornement{text-align:center;color:#c9a84c;letter-spacing:.5em;font-size:1.1em;margin-bottom:24px}
+h1{font-size:1.8em;font-style:italic;font-weight:400;text-align:center;margin-bottom:5px;line-height:1.3}
+.label{text-align:center;font-size:.72em;letter-spacing:.12em;text-transform:uppercase;color:#999;margin-bottom:28px}
+hr{border:none;border-top:1px solid #c9a84c;opacity:.35;margin:24px 0}
+.illus{text-align:center;margin:20px 0}
+.illus img{max-width:260px;width:100%;filter:sepia(0.12) contrast(0.95);border:1px solid rgba(201,168,76,.2)}
+.medium{font-size:.65em;letter-spacing:.1em;text-transform:uppercase;color:#bbb;margin-top:6px}
+.poeme{text-align:center;margin:12px 0}
+.vers{font-size:1.3em;font-style:italic;line-height:2.1}
+.footer{text-align:center;font-size:.65em;letter-spacing:.1em;text-transform:uppercase;color:#c0b8a8;margin-top:48px}
+@media print{body{background:white;padding:16mm 14mm}}
 </style>
 </head>
 <body>
@@ -57,10 +69,12 @@ hr{border:none;border-top:1px solid #c9a84c;opacity:.35;margin:28px 0}
 <h1>${titre.replace(/</g,'&lt;')}</h1>
 <p class="label">Cadavre exquis — ${date}</p>
 <hr>
+${illustrationHtml}
+${illustrationHtml ? '<hr>' : ''}
 <div class="poeme">${versHtml}</div>
 <hr>
 <p class="footer">Cadavre Exquis · Jeu surréaliste</p>
-<script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
+<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script>
 </body>
 </html>`
 

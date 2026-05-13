@@ -20,6 +20,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "node_modules/vite-plugin-pwa/vanillajs.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
