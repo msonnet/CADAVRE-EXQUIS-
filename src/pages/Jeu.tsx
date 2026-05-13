@@ -14,12 +14,12 @@ import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 
-// ─── Types internes ──────────────────────────────────────────────────────────
+// ─── Types internes ──────────────────────────────────────────────────────────────────
 
 type Participant = { type: 'humain'; num: number } | { type: 'ia' }
 type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number }
 
-// ─── Constantes ──────────────────────────────────────────────────────────────
+// ─── Constantes ─────────────────────────────────────────────────────────────────────
 
 const CONFIG_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -43,8 +43,13 @@ const MESSAGES_IA = [
   "Une présence prend le mot…",
 ]
 
-// ─── Fonctions pures ─────────────────────────────────────────────────────────
+// ─── Fonctions pures ───────────────────────────────────────────────────────────────────
 
+/**
+ * Construit la séquence de participants qui se répète sur toute la partie.
+ * H et IA sont entrelacés autant que possible : H1, IA, H2, IA, H3…
+ * En solo, premierJoueur détermine si H ou IA ouvre.
+ */
 function buildSequence(
   joueursHumains: number,
   voixIA: number,
@@ -56,6 +61,7 @@ function buildSequence(
 
   if (I.length === 0) return H
 
+  // Entrelacement : le tableau le plus court s'intercale dans le plus long
   const first  = nb >= I.length ? H : I
   const second = nb >= I.length ? I : H
   const seq: Participant[] = []
@@ -64,6 +70,7 @@ function buildSequence(
     if (i < second.length) seq.push(second[i])
   }
 
+  // Solo uniquement : rotation si l'IA doit ouvrir
   if (nb === 1 && premierJoueur === 'ia' && seq[0].type === 'humain') {
     const iaIdx = seq.findIndex(p => p.type === 'ia')
     if (iaIdx > 0) return [...seq.slice(iaIdx), ...seq.slice(0, iaIdx)]
@@ -89,7 +96,7 @@ function couleurTimer(t: number): string {
   return 'text-or'
 }
 
-// ─── Fallbacks client ────────────────────────────────────────────────────────
+// ─── Fallbacks client ────────────────────────────────────────────────────────────────────────
 
 const FALLBACKS_CLIENT: Record<string, string[]> = {
   nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
@@ -116,10 +123,10 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
     'hante les couloirs', 'frôle les murs', 'résiste au vent', 'se perd dans le brouillard',
   ],
   proposition: [
-    'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
-    'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
-    'Que cherche-t-on ici ?', 'Où finit la nuit ?', "Qu'y a-t-il derrière ?",
-    'Qui se souvient encore ?', "Jusqu'où va le vide ?", "Quand cela s'arrêtera-t-il ?",
+    'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
+    'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
+    'Que cherche-t-on ici ?', 'Où finit la nuit ?', "Qu'y a-t-il derrière ?",
+    'Qui se souvient encore ?', "Jusqu'où va le vide ?", "Quand cela s'arrêtera-t-il ?",
   ],
   libre: [
     'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
@@ -143,7 +150,7 @@ function makeFallbackPicker() {
 
 function pickUnused(type: string, used: Set<string>): string {
   const pool = FALLBACKS_CLIENT[type] ?? ['quelque chose']
-  const unused = pool.filter(v => !used.has(v.toLowerCase()))
+  const unused = pool.filter(v => !used.has(normaliserCle(v)))
   const source = unused.length > 0 ? unused : pool
   return source[Math.floor(Math.random() * source.length)]
 }
@@ -159,7 +166,7 @@ function getContexteVisible(cases: Case[], visibilite: Visibilite): string | nul
   return null
 }
 
-// ─── Composant ───────────────────────────────────────────────────────────────
+// ─── Composant ────────────────────────────────────────────────────────────────────────
 
 export default function Jeu() {
   const navigate = useNavigate()
@@ -199,13 +206,13 @@ export default function Jeu() {
   const fallback        = useRef(makeFallbackPicker())
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const caseIndexSoumis = useRef(-1)
-  const textesUtilises  = useRef(new Set<string>(JSON.parse(localStorage.getItem('textes-utilises') ?? '[]') as string[]))
+  const textesUtilises  = useRef(new Set<string>())
   const voixUtilisees   = useRef(new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
 
-  // ─── Dérivés ───────────────────────────────────────────────────────────────
+  // ─── Dérivés ───────────────────────────────────────────────────────────────────────
 
   const participantActuel: Participant | undefined = participants[caseIndex]
   const defActuelle: DefinitionCase | undefined    = caseDefs[caseIndex]
@@ -215,7 +222,7 @@ export default function Jeu() {
     ? getContexteVisible(cases, config.visibilite)
     : null
 
-  // ─── Fonctions utilitaires ─────────────────────────────────────────────────
+  // ─── Fonctions utilitaires ──────────────────────────────────────────────────────────────
 
   function choisirVoixSansRepetition(): string {
     let unused = (VOICE_IDS as readonly string[]).filter(id => !voixUtilisees.current.has(id))
@@ -238,7 +245,6 @@ export default function Jeu() {
       final = pickUnused(type, textesUtilises.current)
     }
     textesUtilises.current.add(normaliserCle(final))
-    localStorage.setItem('textes-utilises', JSON.stringify([...textesUtilises.current]))
     return final
   }
 
@@ -246,7 +252,7 @@ export default function Jeu() {
     localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: newCases, caseIndex: newIndex }))
   }
 
-  // ─── Effects ───────────────────────────────────────────────────────────────
+  // ─── Effects ────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     ambianceStart()
@@ -257,12 +263,14 @@ export default function Jeu() {
     if (!muted) ambianceStart()
   }, [muted, ambianceStart])
 
+  // Écran de passage en multijoueur
   useEffect(() => {
     if (multiJoueurs && participantActuel?.type === 'humain') {
       setAttendPassage(true)
     }
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Tour IA
   useEffect(() => {
     if (!defActuelle || participantActuel?.type !== 'ia') return
     if (casesTraitees.current.has(caseIndex)) return
@@ -280,6 +288,7 @@ export default function Jeu() {
       .catch(()  => avancer(idx, def, choisirSansDuplique('', def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Timer hypnotique
   useEffect(() => {
     if (!modeHypnotique || participantActuel?.type !== 'humain' || !defActuelle || attendPassage) {
       setTempsRestant(null)
@@ -292,12 +301,14 @@ export default function Jeu() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [caseIndex, attendPassage]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-soumission à expiration
   useEffect(() => {
     if (tempsRestant !== 0) return
     if (timerRef.current) clearInterval(timerRef.current)
     soumettreHypnotique()
   }, [tempsRestant]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sauvegarde et navigation en fin de partie
   useEffect(() => {
     if (cases.length < total) return
     if (sauvegardeFaite.current) return
@@ -322,7 +333,7 @@ export default function Jeu() {
       })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Fonctions de jeu ─────────────────────────────────────────────────────
+  // ─── Fonctions de jeu ───────────────────────────────────────────────────────────────────
 
   function avancer(idx: number, def: DefinitionCase, texte: string) {
     const c: Case = {
@@ -345,6 +356,7 @@ export default function Jeu() {
   function pousserCase(texte: string, joueurNum?: number) {
     if (!defActuelle || caseIndex === caseIndexSoumis.current) return
     caseIndexSoumis.current = caseIndex
+    textesUtilises.current.add(normaliserCle(texte))
     const c: Case = {
       numero: caseIndex + 1,
       fonction: defActuelle.fonction,
@@ -386,8 +398,9 @@ export default function Jeu() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); soumettre() }
   }
 
-  // ─── Rendu ─────────────────────────────────────────────────────────────────
+  // ─── Rendu ─────────────────────────────────────────────────────────────────────────
 
+  // Écran de fin / transition
   if (!defActuelle || cases.length >= total) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh">
@@ -405,6 +418,7 @@ export default function Jeu() {
     )
   }
 
+  // Écran de passage (multijoueur)
   if (attendPassage && participantActuel?.type === 'humain') {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
@@ -490,6 +504,7 @@ export default function Jeu() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
+          {/* Timer hypnotique */}
           {modeHypnotique && tempsRestant !== null && (
             <motion.div
               className="flex items-center justify-end mb-3 gap-2"
