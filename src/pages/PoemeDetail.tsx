@@ -33,8 +33,10 @@ export default function PoemeDetail() {
       .join('')
 
     const MEDIUMS: Record<string, string> = {
-      aquarelle: 'Aquarelle', craies: 'Craies grasses', fusain: 'Fusain',
-      huile: "Peinture à l'huile", crayons: 'Crayons de couleur',
+      aquarelle: 'Aquarelle', encre: 'Encre de Chine', gravure: 'Gravure sur cuivre',
+      cyanotype: 'Cyanotype', linogravure: 'Linogravure', pastel: 'Pastel sec',
+      collage: 'Collage surréaliste', gouache: 'Gouache', sanguine: 'Sanguine',
+      mezzotinte: 'Mezzotinte', lavis: "Lavis à l'encre", serigraphie: 'Sérigraphie',
     }
     const illustrationHtml = poeme.illustration?.url ? `
     <div class="illus">
@@ -153,7 +155,6 @@ ${illustrationHtml ? '<hr>' : ''}
         ← Mes poèmes
       </button>
 
-      {/* Titre — éditable */}
       <div className="mb-6">
         {editionTitre ? (
           <div className="flex gap-2 items-center">
@@ -194,7 +195,6 @@ ${illustrationHtml ? '<hr>' : ''}
 
       <SeparateurOr />
 
-      {/* Illustration */}
       {poeme.illustration?.url && (
         <motion.div
           className="my-6 flex justify-center"
@@ -211,7 +211,6 @@ ${illustrationHtml ? '<hr>' : ''}
         </motion.div>
       )}
 
-      {/* Poème reconstitué */}
       <motion.div
         className="my-8 text-center"
         initial={{ opacity: 0, y: 8 }}
@@ -236,7 +235,6 @@ ${illustrationHtml ? '<hr>' : ''}
 
       <SeparateurOr />
 
-      {/* Cases détaillées */}
       <button
         onClick={() => setCasesVisibles(v => !v)}
         className="nav-discrete mt-6 w-full text-center hover:text-encre transition-colors"
@@ -261,7 +259,7 @@ ${illustrationHtml ? '<hr>' : ''}
                   {c.fonction}
                   <span className="mx-2 opacity-40">—</span>
                   <span className="italic">
-                    {c.auteur === 'ia' ? `voix ${iaNum}` : 'toi'}
+                    {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
                   </span>
                 </p>
                 <p className="font-cormorant italic text-encre text-lg leading-snug">
@@ -274,7 +272,6 @@ ${illustrationHtml ? '<hr>' : ''}
         )}
       </AnimatePresence>
 
-      {/* Actions */}
       <div className="mt-12 flex flex-col items-center gap-4">
         <button onClick={() => navigate('/config')} className="btn-primaire">
           Nouvelle partie

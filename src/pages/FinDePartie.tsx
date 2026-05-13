@@ -21,7 +21,7 @@ const STYLES = [
   { id: 'gouache',     label: 'Gouache' },
   { id: 'sanguine',    label: 'Sanguine' },
   { id: 'mezzotinte',  label: 'Mezzotinte' },
-  { id: 'lavis',       label: 'Lavis à l\'encre' },
+  { id: 'lavis',       label: "Lavis à l'encre" },
   { id: 'serigraphie', label: 'Sérigraphie' },
 ]
 
@@ -51,7 +51,6 @@ export default function FinDePartie() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Afficher l'illustration déjà sauvegardée si elle existe
   useEffect(() => {
     if (poeme?.illustration) {
       setIllustrationUrl(poeme.illustration.url)
@@ -139,10 +138,8 @@ export default function FinDePartie() {
 
       <SeparateurOr />
 
-      {/* Illustration */}
       <AnimatePresence mode="wait">
 
-        {/* Illustration déjà générée */}
         {illustrationUrl && (
           <motion.div
             key="image"
@@ -165,7 +162,6 @@ export default function FinDePartie() {
           </motion.div>
         )}
 
-        {/* Spinner pendant génération */}
         {generatingIllustration && !illustrationUrl && (
           <motion.div
             key="spinner"
@@ -187,7 +183,6 @@ export default function FinDePartie() {
           </motion.div>
         )}
 
-        {/* Choix du médium */}
         {!illustrationUrl && !generatingIllustration && (
           <motion.div
             key="picker"
@@ -245,7 +240,7 @@ export default function FinDePartie() {
                   {c.fonction}
                   <span className="mx-2 opacity-40">—</span>
                   <span className="italic">
-                    {c.auteur === 'ia' ? `voix ${iaNum}` : 'toi'}
+                    {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
                   </span>
                 </p>
                 <p className="font-cormorant italic text-encre text-lg leading-snug">

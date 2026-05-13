@@ -14,11 +14,20 @@ import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 
+// ─── Types internes ──────────────────────────────────────────────────────────
+
+type Participant = { type: 'humain'; num: number } | { type: 'ia' }
+type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number }
+
+// ─── Constantes ──────────────────────────────────────────────────────────────
+
 const CONFIG_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
   visibilite: 'aveugle',
   premierJoueur: 'ia',
   mode: 'standard',
+  joueursHumains: 1,
+  voixIA: 1,
 }
 
 const DUREE_HYPNOTIQUE = 30
@@ -34,22 +43,58 @@ const MESSAGES_IA = [
   "Une présence prend le mot…",
 ]
 
-function computeAuteurs(
-  total: number,
+// ─── Fonctions pures ─────────────────────────────────────────────────────────
+
+function buildSequence(
+  joueursHumains: number,
+  voixIA: number,
   premierJoueur: 'humain' | 'ia'
-): Array<'humain' | 'ia'> {
-  return Array.from({ length: total }, (_, i) => {
-    const estPremier = i % 2 === 0
-    return estPremier
-      ? premierJoueur
-      : premierJoueur === 'humain' ? 'ia' : 'humain'
-  })
+): Participant[] {
+  const nb = Math.max(1, joueursHumains)
+  const H: Participant[] = Array.from({ length: nb }, (_, i) => ({ type: 'humain' as const, num: i + 1 }))
+  const I: Participant[] = Array.from({ length: voixIA }, () => ({ type: 'ia' as const }))
+
+  if (I.length === 0) return H
+
+  const first  = nb >= I.length ? H : I
+  const second = nb >= I.length ? I : H
+  const seq: Participant[] = []
+  for (let i = 0; i < first.length; i++) {
+    seq.push(first[i])
+    if (i < second.length) seq.push(second[i])
+  }
+
+  if (nb === 1 && premierJoueur === 'ia' && seq[0].type === 'humain') {
+    const iaIdx = seq.findIndex(p => p.type === 'ia')
+    if (iaIdx > 0) return [...seq.slice(iaIdx), ...seq.slice(0, iaIdx)]
+  }
+
+  return seq
 }
+
+function lireBrouillon(): BrouillonActuel | null {
+  try {
+    const raw = localStorage.getItem('brouillon-actuel')
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+function normaliserCle(t: string): string {
+  return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
+function couleurTimer(t: number): string {
+  if (t <= 5) return 'text-red-400'
+  if (t <= 10) return 'text-amber-400'
+  return 'text-or'
+}
+
+// ─── Fallbacks client ────────────────────────────────────────────────────────
 
 const FALLBACKS_CLIENT: Record<string, string[]> = {
   nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
-        'le froid', 'la poussière', 'le vent', 'la pluie', 'l\'écho', 'la flamme', 'le seuil',
-        'l\'abîme', 'le vertige', 'la mousse', 'le givre', 'l\'encre', 'la boue'],
+        'le froid', 'la poussière', 'le vent', 'la pluie', "l'écho", 'la flamme', 'le seuil',
+        "l'abîme", 'le vertige', 'la mousse', 'le givre', "l'encre", 'la boue'],
   verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse',
           'erre', 'veille', 'frôle', 'hante', 'effleure', 'résiste', 'chavire', 'murmure',
           'vacille', 'sombre', 'rôde', 'dérive'],
@@ -62,7 +107,7 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
     "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
     'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
     'la pluie fine', 'le temps qui passe', 'un mur de brume', 'la main tendue',
-    'un silence épais', 'le bord du gouffre', 'une voix creuse', 'l\'eau noire',
+    'un silence épais', 'le bord du gouffre', 'une voix creuse', "l'eau noire",
     'le corps absent', 'une ombre familière', 'la porte close', 'un feu mourant',
   ],
   'groupe-verbal': [
@@ -73,14 +118,14 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
   proposition: [
     'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
     'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
-    'Que cherche-t-on ici ?', 'Où finit la nuit ?', 'Qu\'y a-t-il derrière ?',
-    'Qui se souvient encore ?', 'Jusqu\'où va le vide ?', 'Quand cela s\'arrêtera-t-il ?',
+    'Que cherche-t-on ici ?', 'Où finit la nuit ?', "Qu'y a-t-il derrière ?",
+    'Qui se souvient encore ?', "Jusqu'où va le vide ?", "Quand cela s'arrêtera-t-il ?",
   ],
   libre: [
     'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
-    'rien ne disparaît vraiment', 'tout recommence ailleurs', 'l\'oubli protège',
-    'il reste toujours quelque chose', 'les mots s\'effacent', 'le temps hésite',
-    'l\'absence a une forme',
+    'rien ne disparaît vraiment', 'tout recommence ailleurs', "l'oubli protège",
+    'il reste toujours quelque chose', "les mots s'effacent", 'le temps hésite',
+    "l'absence a une forme",
   ],
 }
 
@@ -110,30 +155,11 @@ function getContexteVisible(cases: Case[], visibilite: Visibilite): string | nul
     const mots = derniere.texte.trim().split(/\s+/).filter(Boolean)
     return mots[mots.length - 1] ?? null
   }
-  if (visibilite === 'derniere-case') {
-    return derniere.texte.trim()
-  }
+  if (visibilite === 'derniere-case') return derniere.texte.trim()
   return null
 }
 
-function couleurTimer(t: number): string {
-  if (t <= 5) return 'text-red-400'
-  if (t <= 10) return 'text-amber-400'
-  return 'text-or'
-}
-
-type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number }
-
-function lireBrouillon(): BrouillonActuel | null {
-  try {
-    const raw = localStorage.getItem('brouillon-actuel')
-    return raw ? JSON.parse(raw) : null
-  } catch { return null }
-}
-
-function normaliserCle(t: string): string {
-  return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
+// ─── Composant ───────────────────────────────────────────────────────────────
 
 export default function Jeu() {
   const navigate = useNavigate()
@@ -141,49 +167,59 @@ export default function Jeu() {
   const [b] = useState<BrouillonActuel | null>(lireBrouillon)
 
   const [config] = useState<ConfigPartie>(() => {
-    if (b) return b.config
-    const raw = sessionStorage.getItem('config-partie')
-    return raw ? (JSON.parse(raw) as ConfigPartie) : CONFIG_DEFAUT
+    const raw = b?.config ?? (() => {
+      const r = sessionStorage.getItem('config-partie')
+      return r ? JSON.parse(r) : null
+    })()
+    if (!raw) return CONFIG_DEFAUT
+    return { joueursHumains: 1, voixIA: 1, ...raw } as ConfigPartie
   })
 
-  const [structure] = useState(() => getStructure(config.structureId))
-  const [total] = useState(() => nombreCasesEffectif(structure))
-  const [caseDefs] = useState<DefinitionCase[]>(() => structure.cases.slice(0, total))
-  const [auteurs] = useState<Array<'humain' | 'ia'>>(() =>
-    computeAuteurs(total, config.premierJoueur)
-  )
+  const [structure]  = useState(() => getStructure(config.structureId))
+  const [total]      = useState(() => nombreCasesEffectif(structure))
+  const [caseDefs]   = useState<DefinitionCase[]>(() => structure.cases.slice(0, total))
+  const [participants] = useState<Participant[]>(() => {
+    const seq = buildSequence(config.joueursHumains, config.voixIA, config.premierJoueur)
+    return Array.from({ length: total }, (_, i) => seq[i % seq.length])
+  })
   const [poemeId] = useState(() => b?.poemeId ?? crypto.randomUUID())
 
-  const [cases, setCases] = useState<Case[]>(() => b?.cases ?? [])
+  const [cases, setCases]       = useState<Case[]>(() => b?.cases ?? [])
   const [caseIndex, setCaseIndex] = useState(() => b?.caseIndex ?? 0)
   const [inputValue, setInputValue] = useState('')
-  const [erreur, setErreur] = useState<string | null>(null)
+  const [erreur, setErreur]       = useState<string | null>(null)
   const [iaChargement, setIaChargement] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
+  const [attendPassage, setAttendPassage] = useState(false)
 
   const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
 
-  const casesTraitees = useRef(new Set<number>(
-    b ? Array.from({ length: b.caseIndex }, (_, i) => i) : []
-  ))
+  const casesTraitees  = useRef(new Set<number>(b ? Array.from({ length: b.caseIndex }, (_, i) => i) : []))
   const sauvegardeFaite = useRef(false)
-  const fallback = useRef(makeFallbackPicker())
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fallback        = useRef(makeFallbackPicker())
+  const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const caseIndexSoumis = useRef(-1)
-  const textesUtilises = useRef(new Set<string>(
-    JSON.parse(localStorage.getItem('textes-utilises') ?? '[]') as string[]
-  ))
-  const voixUtilisees = useRef(new Set<string>(
-    JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]
-  ))
+  const textesUtilises  = useRef(new Set<string>(JSON.parse(localStorage.getItem('textes-utilises') ?? '[]') as string[]))
+  const voixUtilisees   = useRef(new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
 
+  // ─── Dérivés ───────────────────────────────────────────────────────────────
+
+  const participantActuel: Participant | undefined = participants[caseIndex]
+  const defActuelle: DefinitionCase | undefined    = caseDefs[caseIndex]
+  const modeHypnotique = config.mode === 'hypnotique'
+  const multiJoueurs   = config.joueursHumains > 1
+  const contexteVisible = participantActuel?.type === 'humain'
+    ? getContexteVisible(cases, config.visibilite)
+    : null
+
+  // ─── Fonctions utilitaires ─────────────────────────────────────────────────
+
   function choisirVoixSansRepetition(): string {
     let unused = (VOICE_IDS as readonly string[]).filter(id => !voixUtilisees.current.has(id))
     if (unused.length === 0) {
-      // Toutes les 40 voix utilisées — on repart d'un cycle vierge
       voixUtilisees.current.clear()
       unused = [...VOICE_IDS]
     }
@@ -206,26 +242,29 @@ export default function Jeu() {
     return final
   }
 
+  function sauvegarderBrouillon(newCases: Case[], newIndex: number) {
+    localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: newCases, caseIndex: newIndex }))
+  }
+
+  // ─── Effects ───────────────────────────────────────────────────────────────
+
   useEffect(() => {
     ambianceStart()
     return () => ambianceStop()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-démarre l'audio quand l'utilisateur active le son (cas : démarrage avec son désactivé)
   useEffect(() => {
     if (!muted) ambianceStart()
   }, [muted, ambianceStart])
 
-  const defActuelle: DefinitionCase | undefined = caseDefs[caseIndex]
-  const auteurActuel: 'humain' | 'ia' | undefined = auteurs[caseIndex]
-  const contexteVisible = auteurActuel === 'humain'
-    ? getContexteVisible(cases, config.visibilite)
-    : null
-  const modeHypnotique = config.mode === 'hypnotique'
-
-  // Tour IA
   useEffect(() => {
-    if (!defActuelle || auteurActuel !== 'ia') return
+    if (multiJoueurs && participantActuel?.type === 'humain') {
+      setAttendPassage(true)
+    }
+  }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!defActuelle || participantActuel?.type !== 'ia') return
     if (casesTraitees.current.has(caseIndex)) return
     casesTraitees.current.add(caseIndex)
 
@@ -234,58 +273,31 @@ export default function Jeu() {
 
     const def = defActuelle
     const idx = caseIndex
-
     const voiceId = choisirVoixSansRepetition()
+
     demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId })
-      .then(texte => {
-        avancer(idx, def, choisirSansDuplique(texte.trim(), def.type))
-      })
-      .catch(() => avancer(idx, def, choisirSansDuplique('', def.type)))
+      .then(texte => avancer(idx, def, choisirSansDuplique(texte.trim(), def.type)))
+      .catch(()  => avancer(idx, def, choisirSansDuplique('', def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Timer hypnotique — démarre à chaque tour humain
   useEffect(() => {
-    if (!modeHypnotique || auteurActuel !== 'humain' || !defActuelle) {
+    if (!modeHypnotique || participantActuel?.type !== 'humain' || !defActuelle || attendPassage) {
       setTempsRestant(null)
       return
     }
-
     setTempsRestant(DUREE_HYPNOTIQUE)
     timerRef.current = setInterval(() => {
       setTempsRestant(prev => (prev !== null && prev > 0 ? prev - 1 : 0))
     }, 1000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [caseIndex, attendPassage]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-soumission à expiration
   useEffect(() => {
     if (tempsRestant !== 0) return
     if (timerRef.current) clearInterval(timerRef.current)
     soumettreHypnotique()
   }, [tempsRestant]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function avancer(idx: number, def: DefinitionCase, texte: string) {
-    const c: Case = {
-      numero: idx + 1,
-      fonction: def.fonction,
-      consigne: def.consigne,
-      auteur: 'ia',
-      texte,
-      ts: Date.now(),
-    }
-    setCases(prev => {
-      const next = [...prev, c]
-      localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: next, caseIndex: idx + 1 }))
-      return next
-    })
-    setCaseIndex(idx + 1)
-    setIaChargement(false)
-  }
-
-  // Sauvegarde et navigation en fin de partie
   useEffect(() => {
     if (cases.length < total) return
     if (sauvegardeFaite.current) return
@@ -310,7 +322,27 @@ export default function Jeu() {
       })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function pousserCase(texte: string) {
+  // ─── Fonctions de jeu ─────────────────────────────────────────────────────
+
+  function avancer(idx: number, def: DefinitionCase, texte: string) {
+    const c: Case = {
+      numero: idx + 1,
+      fonction: def.fonction,
+      consigne: def.consigne,
+      auteur: 'ia',
+      texte,
+      ts: Date.now(),
+    }
+    setCases(prev => {
+      const next = [...prev, c]
+      sauvegarderBrouillon(next, idx + 1)
+      return next
+    })
+    setCaseIndex(idx + 1)
+    setIaChargement(false)
+  }
+
+  function pousserCase(texte: string, joueurNum?: number) {
     if (!defActuelle || caseIndex === caseIndexSoumis.current) return
     caseIndexSoumis.current = caseIndex
     const c: Case = {
@@ -318,13 +350,14 @@ export default function Jeu() {
       fonction: defActuelle.fonction,
       consigne: defActuelle.consigne,
       auteur: 'humain',
+      joueurNumero: joueurNum,
       texte,
       ts: Date.now(),
     }
     const nextIndex = caseIndex + 1
     setCases(prev => {
       const next = [...prev, c]
-      localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: next, caseIndex: nextIndex }))
+      sauvegarderBrouillon(next, nextIndex)
       return next
     })
     setInputValue('')
@@ -335,34 +368,26 @@ export default function Jeu() {
   function soumettre() {
     if (!defActuelle || !inputValue.trim()) return
     const v = validerCase(inputValue, defActuelle.type, niveauValidation)
-    if (!v.valide) {
-      setErreur(v.message ?? 'Texte invalide.')
-      return
-    }
-    ambianceStart() // déverrouille le drone depuis ce geste utilisateur
+    if (!v.valide) { setErreur(v.message ?? 'Texte invalide.'); return }
+    ambianceStart()
     jouer('soumettre')
-    pousserCase(inputValue.trim())
+    const joueurNum = participantActuel?.type === 'humain' ? participantActuel.num : undefined
+    pousserCase(inputValue.trim(), joueurNum)
   }
 
   function soumettreHypnotique() {
     if (!defActuelle) return
     const texte = inputValue.trim() || fallback.current(defActuelle.type)
-    pousserCase(texte)
+    const joueurNum = participantActuel?.type === 'humain' ? participantActuel.num : undefined
+    pousserCase(texte, joueurNum)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      soumettre()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); soumettre() }
   }
 
-  const hintQuestion =
-    defActuelle?.type === 'proposition' &&
-    inputValue.length > 0 &&
-    !inputValue.includes('?')
+  // ─── Rendu ─────────────────────────────────────────────────────────────────
 
-  // Écran de transition (fin de partie ou sauvegarde)
   if (!defActuelle || cases.length >= total) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh">
@@ -379,6 +404,48 @@ export default function Jeu() {
       </PageTransition>
     )
   }
+
+  if (attendPassage && participantActuel?.type === 'humain') {
+    return (
+      <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
+        <motion.p
+          className="nav-discrete mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          Passe le téléphone à
+        </motion.p>
+        <motion.p
+          className="font-garamond italic text-5xl text-encre"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          Joueur {participantActuel.num}
+        </motion.p>
+        <motion.div
+          className="mt-16"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <button
+            onClick={() => setAttendPassage(false)}
+            className="btn-primaire"
+          >
+            C'est à moi →
+          </button>
+        </motion.div>
+      </PageTransition>
+    )
+  }
+
+  const hintQuestion =
+    defActuelle?.type === 'proposition' &&
+    inputValue.length > 0 &&
+    !inputValue.includes('?')
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
@@ -410,18 +477,19 @@ export default function Jeu() {
             caseNum={caseIndex + 1}
             total={total}
             def={defActuelle}
-            auteur={auteurActuel}
+            auteur={participantActuel?.type ?? 'ia'}
+            joueurNum={participantActuel?.type === 'humain' ? participantActuel.num : undefined}
+            multiJoueurs={multiJoueurs}
           />
         </motion.div>
       </AnimatePresence>
 
-      {auteurActuel === 'humain' && (
+      {participantActuel?.type === 'humain' && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          {/* Timer hypnotique */}
           {modeHypnotique && tempsRestant !== null && (
             <motion.div
               className="flex items-center justify-end mb-3 gap-2"
@@ -487,7 +555,7 @@ export default function Jeu() {
         </motion.div>
       )}
 
-      {auteurActuel === 'ia' && iaChargement && (
+      {participantActuel?.type === 'ia' && iaChargement && (
         <motion.div
           className="mt-12 flex flex-col items-center gap-3"
           initial={{ opacity: 0 }}
