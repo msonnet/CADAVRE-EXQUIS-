@@ -11,11 +11,13 @@ import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 
 const STYLES = [
-  { id: 'aquarelle', label: 'Aquarelle' },
-  { id: 'fusain',    label: 'Fusain' },
-  { id: 'huile',     label: "Peinture à l'huile" },
-  { id: 'encre',     label: 'Encre de Chine' },
-  { id: 'gravure',   label: 'Gravure' },
+  { id: 'aquarelle',     label: 'Aquarelle' },
+  { id: 'fusain',        label: 'Fusain' },
+  { id: 'huile',         label: "Peinture à l'huile" },
+  { id: 'encre',         label: 'Encre de Chine' },
+  { id: 'gravure',       label: 'Gravure' },
+  { id: 'hyperrealisme', label: 'Hyperréalisme' },
+  { id: 'libre',         label: 'Libre' },
 ]
 
 export default function FinDePartie() {
@@ -30,6 +32,7 @@ export default function FinDePartie() {
   const [promptLibre, setPromptLibre] = useState('')
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
+  const [changerMedium, setChangerMedium] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -56,6 +59,7 @@ export default function FinDePartie() {
     if (!poeme || generatingIllustration) return
     setStyleChoisi(style)
     setErreurIllustration(null)
+    setChangerMedium(false)
     setGeneratingIllustration(true)
 
     const structure = getStructure(poeme.structureId)
@@ -76,6 +80,10 @@ export default function FinDePartie() {
       .finally(() => setGeneratingIllustration(false))
   }
 
+  function relancer() {
+    if (styleChoisi) choisirStyle(styleChoisi)
+  }
+
   if (!poeme) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
@@ -90,6 +98,8 @@ export default function FinDePartie() {
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
   const lignes = texte.split('\n')
+
+  const labelStyle = STYLES.find(s => s.id === styleChoisi)?.label
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
@@ -133,36 +143,34 @@ export default function FinDePartie() {
 
       <SeparateurOr />
 
-      <AnimatePresence mode="wait">
+      {/* ── Zone illustration ── */}
 
-        {/* Image générée */}
-        {illustrationUrl && (
-          <motion.div
-            key="image"
-            className="my-8 flex flex-col items-center gap-3"
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.0 }}
-          >
-            <img
-              src={illustrationUrl}
-              alt="Illustration du poème"
-              className="w-full max-w-xs rounded-sm border border-or/20 opacity-92"
-              style={{ filter: 'contrast(0.97)' }}
-            />
-            {styleChoisi && (
-              <p className="nav-discrete opacity-50">
-                {STYLES.find(s => s.id === styleChoisi)?.label}
-              </p>
-            )}
-          </motion.div>
-        )}
+      {/* Image générée — visible même pendant régénération, atténuée */}
+      {illustrationUrl && (
+        <motion.div
+          className="my-6 flex flex-col items-center gap-3"
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <img
+            src={illustrationUrl}
+            alt="Illustration du poème"
+            className="w-full max-w-xs rounded-sm border border-or/20 transition-opacity duration-500"
+            style={{ filter: 'contrast(0.97)', opacity: generatingIllustration ? 0.4 : 1 }}
+          />
+          {labelStyle && !generatingIllustration && (
+            <p className="nav-discrete opacity-50">{labelStyle}</p>
+          )}
+        </motion.div>
+      )}
 
-        {/* Spinner */}
-        {generatingIllustration && !illustrationUrl && (
+      {/* Spinner pendant génération */}
+      <AnimatePresence>
+        {generatingIllustration && (
           <motion.div
             key="spinner"
-            className="my-8 flex flex-col items-center gap-3"
+            className="flex flex-col items-center gap-2 my-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -175,21 +183,49 @@ export default function FinDePartie() {
               ✦
             </motion.span>
             <p className="nav-discrete">
-              {STYLES.find(s => s.id === styleChoisi)?.label} en cours…
+              {labelStyle} en cours…
             </p>
           </motion.div>
         )}
+      </AnimatePresence>
 
-        {/* Sélecteur médium + prompt libre */}
-        {!illustrationUrl && !generatingIllustration && (
+      {/* Contrôles post-génération */}
+      {illustrationUrl && !generatingIllustration && (
+        <motion.div
+          className="flex justify-center gap-6 mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <button
+            onClick={relancer}
+            className="nav-discrete hover:text-encre transition-colors"
+          >
+            ↺ Relancer
+          </button>
+          <button
+            onClick={() => setChangerMedium(v => !v)}
+            className="nav-discrete hover:text-encre transition-colors"
+          >
+            {changerMedium ? '↑ Fermer' : '⊞ Changer'}
+          </button>
+        </motion.div>
+      )}
+
+      {/* Sélecteur — affiché si pas encore d'image OU si le joueur veut changer */}
+      <AnimatePresence>
+        {(!illustrationUrl || changerMedium) && !generatingIllustration && (
           <motion.div
             key="picker"
-            className="my-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.3 }}
+            className="my-4"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ delay: illustrationUrl ? 0 : 1.3, duration: 0.25 }}
           >
-            <p className="nav-discrete text-center mb-4">Illustrer ce poème</p>
+            {!illustrationUrl && (
+              <p className="nav-discrete text-center mb-4">Illustrer ce poème</p>
+            )}
 
             <div className="mb-5">
               <input
@@ -209,7 +245,11 @@ export default function FinDePartie() {
                 <button
                   key={s.id}
                   onClick={() => choisirStyle(s.id)}
-                  className="nav-discrete text-encre py-3 border border-gris-clair/30 hover:border-or/60 hover:text-encre transition-all"
+                  className={`nav-discrete py-3 border transition-all ${
+                    styleChoisi === s.id && illustrationUrl
+                      ? 'border-or/60 text-encre'
+                      : 'border-gris-clair/30 text-encre hover:border-or/60 hover:text-encre'
+                  }`}
                 >
                   {s.label}
                 </button>
@@ -217,7 +257,6 @@ export default function FinDePartie() {
             </div>
           </motion.div>
         )}
-
       </AnimatePresence>
 
       <SeparateurOr />

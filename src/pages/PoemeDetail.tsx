@@ -35,6 +35,7 @@ export default function PoemeDetail() {
     const MEDIUMS: Record<string, string> = {
       aquarelle: 'Aquarelle', fusain: 'Fusain', huile: "Peinture à l'huile",
       encre: 'Encre de Chine', gravure: 'Gravure',
+      hyperrealisme: 'Hyperréalisme', libre: 'Libre',
       cyanotype: 'Cyanotype', linogravure: 'Linogravure', pastel: 'Pastel sec',
       collage: 'Collage', gouache: 'Gouache', sanguine: 'Sanguine',
       mezzotinte: 'Mezzotinte', lavis: 'Lavis', serigraphie: 'Sérigraphie',
