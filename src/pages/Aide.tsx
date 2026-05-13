@@ -91,37 +91,18 @@ export default function Aide() {
       <div className="mt-8">
         <Bloc titre="Structures" delai={0.3}>
           <Ligne
-            label="Phrase simple"
-            description="3 cases — sujet, verbe, complément. La forme la plus courte."
+            label="Phrase courte"
+            description="3 cases — sujet, verbe, complément. La forme la plus immédiate."
             exemple="L'ombre / glisse / dans la nuit froide"
           />
           <Ligne
             label="Phrase étoffée"
-            description="7 cases — la structure canonique de Breton, avec déterminants et qualificatifs."
-            exemple="Le / beau / soleil / caresse / lentement / la / mer endormie"
-          />
-          <Ligne
-            label="Conditionnelle"
-            description="8 cases — structure en « Si… alors… ». Deux propositions enchaînées."
-            exemple="Si le silence tombe / alors l'ombre répond"
-          />
-          <Ligne
-            label="Comparative"
-            description="7 cases — structure en « … comme … ». Une image par analogie."
-            exemple="La nuit est douce / comme / un souffle oublié"
-          />
-          <Ligne
-            label="Énumérative"
-            description="5 à 8 cases libres — accumulation de fragments. Le nombre de cases varie à chaque partie."
-          />
-          <Ligne
-            label="Question / Réponse"
-            description="Paires alternées — une voix pose, l'autre répond, sans jamais savoir quoi."
-            exemple="Où vont les ombres ? / Elles rejoignent le froid."
+            description="7 cases — la structure canonique pratiquée par Breton, avec déterminants et qualificatifs de part et d'autre du verbe."
+            exemple="Un / beau / soleil / caressera / lentement / une / mer endormie"
           />
           <Ligne
             label="Vers libre"
-            description="4 à 12 tours sans contrainte fixe. La structure la plus ouverte."
+            description="4 à 12 vers sans contrainte syntaxique. Chaque tour : un vers, ce qui vient. Le nombre de tours change à chaque partie."
           />
         </Bloc>
 
@@ -151,7 +132,7 @@ export default function Aide() {
           />
           <Ligne
             label="Sommeil hypnotique"
-            description="30 secondes par case. Le décompte s'affiche en haut à droite — il passe à l'ambre puis au rouge. À 0, le fragment en cours est soumis automatiquement. Si le champ est vide, une voix intérieure complète à ta place."
+            description="30 secondes par case. Le décompte passe à l'ambre puis au rouge. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place si le champ est vide."
           />
         </Bloc>
 
@@ -164,7 +145,7 @@ export default function Aide() {
           />
           <Ligne
             label="Une voix"
-            description="Une des 40 voix anonymes écrit le premier fragment. Tu ne sais pas qui a ouvert — tu continues dans l'inconnu."
+            description="Une des 40 voix anonymes écrit le premier fragment. Tu continues dans l'inconnu."
           />
         </Bloc>
       </div>

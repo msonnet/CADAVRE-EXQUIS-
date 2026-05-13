@@ -12,14 +12,14 @@ interface Props {
 }
 
 const EXEMPLES: Record<string, string> = {
-  'nom':            '« le corbeau », « une étoile », « l\'ombre »',
-  'verbe':          '« dévore », « disparaît », « dort »',
-  'adjectif':       '« lumineux », « brisé », « profond »',
-  'adverbe':        '« doucement », « en silence », « à jamais »',
-  'groupe-nominal': '« le vieux manteau », « une lueur blanche »',
-  'groupe-verbal':  '« traverse la forêt », « brûle en silence »',
-  'proposition':    '« Où va l\'ombre ? », « Qui a éteint le feu ? »',
-  'libre':          '« quelque chose demeure », « la nuit garde tout »',
+  'nom':            '« le corbeau », « une étoile », « l\'ombre »',
+  'verbe':          '« dévore », « disparaît », « dort »',
+  'adjectif':       '« lumineux », « brisé », « profond »',
+  'adverbe':        '« doucement », « en silence », « à jamais »',
+  'groupe-nominal': '« le vieux manteau », « une lueur blanche »',
+  'groupe-verbal':  '« traverse la forêt », « brûle en silence »',
+  'proposition':    '« Où va l\'ombre ? », « Qui a éteint le feu ? »',
+  'libre':          '« quelque chose demeure », « la nuit garde tout »',
 }
 
 export default function ConsigneCase({ caseNum, total, def, auteur, joueurNum, multiJoueurs }: Props) {
@@ -28,8 +28,8 @@ export default function ConsigneCase({ caseNum, total, def, auteur, joueurNum, m
   const labelTour = auteur === 'ia'
     ? 'En attente…'
     : multiJoueurs && joueurNum
-      ? `Joueur ${joueurNum}, c'est à toi :`
-      : "C'est à toi. Tu dois écrire :"
+      ? `Joueur ${joueurNum}, c'est à toi :`
+      : "C'est à toi. Tu dois écrire :"
 
   const exemple = EXEMPLES[def.type]
 
@@ -88,7 +88,7 @@ export default function ConsigneCase({ caseNum, total, def, auteur, joueurNum, m
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.2 }}
               >
-                ex. : {exemple}
+                ex. : {exemple}
               </motion.p>
             )}
           </AnimatePresence>

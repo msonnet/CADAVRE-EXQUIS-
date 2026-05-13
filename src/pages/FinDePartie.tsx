@@ -11,18 +11,11 @@ import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 
 const STYLES = [
-  { id: 'aquarelle',   label: 'Aquarelle' },
-  { id: 'encre',       label: 'Encre de Chine' },
-  { id: 'gravure',     label: 'Gravure sur cuivre' },
-  { id: 'cyanotype',   label: 'Cyanotype' },
-  { id: 'linogravure', label: 'Linogravure' },
-  { id: 'pastel',      label: 'Pastel sec' },
-  { id: 'collage',     label: 'Collage surréaliste' },
-  { id: 'gouache',     label: 'Gouache' },
-  { id: 'sanguine',    label: 'Sanguine' },
-  { id: 'mezzotinte',  label: 'Mezzotinte' },
-  { id: 'lavis',       label: "Lavis à l'encre" },
-  { id: 'serigraphie', label: 'Sérigraphie' },
+  { id: 'aquarelle', label: 'Aquarelle' },
+  { id: 'fusain',    label: 'Fusain' },
+  { id: 'huile',     label: "Peinture à l'huile" },
+  { id: 'encre',     label: 'Encre de Chine' },
+  { id: 'gravure',   label: 'Gravure' },
 ]
 
 export default function FinDePartie() {
@@ -34,6 +27,7 @@ export default function FinDePartie() {
   const [casesVisibles, setCasesVisibles] = useState(false)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
+  const [promptLibre, setPromptLibre] = useState('')
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
   const { parler, arreter, parlant } = useTTS()
@@ -66,12 +60,13 @@ export default function FinDePartie() {
 
     const structure = getStructure(poeme.structureId)
     const texte = reconstruirePoeme(poeme.cases, structure)
+    const pl = promptLibre.trim() || undefined
 
-    genererIllustration(texte, style)
+    genererIllustration(texte, style, pl)
       .then(url => {
         if (url) {
           setIllustrationUrl(url)
-          const illustration = { url, style, promptUtilise: texte, dateGeneration: Date.now() }
+          const illustration = { url, style, promptLibre: pl, promptUtilise: texte, dateGeneration: Date.now() }
           sauvegarderIllustration(poeme.id, illustration).catch(console.error)
         } else {
           setErreurIllustration('Illustration indisponible — vérifiez votre connexion')
@@ -140,6 +135,7 @@ export default function FinDePartie() {
 
       <AnimatePresence mode="wait">
 
+        {/* Image générée */}
         {illustrationUrl && (
           <motion.div
             key="image"
@@ -150,9 +146,9 @@ export default function FinDePartie() {
           >
             <img
               src={illustrationUrl}
-              alt="Illustration surréaliste du poème"
-              className="w-full max-w-xs rounded-sm border border-or/20 opacity-90"
-              style={{ filter: 'sepia(0.15) contrast(0.95)' }}
+              alt="Illustration du poème"
+              className="w-full max-w-xs rounded-sm border border-or/20 opacity-92"
+              style={{ filter: 'contrast(0.97)' }}
             />
             {styleChoisi && (
               <p className="nav-discrete opacity-50">
@@ -162,6 +158,7 @@ export default function FinDePartie() {
           </motion.div>
         )}
 
+        {/* Spinner */}
         {generatingIllustration && !illustrationUrl && (
           <motion.div
             key="spinner"
@@ -183,6 +180,7 @@ export default function FinDePartie() {
           </motion.div>
         )}
 
+        {/* Sélecteur médium + prompt libre */}
         {!illustrationUrl && !generatingIllustration && (
           <motion.div
             key="picker"
@@ -192,6 +190,17 @@ export default function FinDePartie() {
             transition={{ delay: 1.3 }}
           >
             <p className="nav-discrete text-center mb-4">Illustrer ce poème</p>
+
+            <div className="mb-5">
+              <input
+                type="text"
+                value={promptLibre}
+                onChange={e => setPromptLibre(e.target.value)}
+                placeholder="Direction artistique libre… (ex. : sombre et organique, couleurs acides)"
+                className="champ-carnet w-full text-sm"
+              />
+            </div>
+
             {erreurIllustration && (
               <p className="nav-discrete text-center opacity-50 mb-3 italic">{erreurIllustration}</p>
             )}

@@ -3,10 +3,6 @@
 export type StructureId =
   | 'phrase-simple'
   | 'phrase-etoffee'
-  | 'conditionnelle'
-  | 'comparative'
-  | 'enumerative'
-  | 'question-reponse'
   | 'vers-libre'
 
 export type ModeJeu = 'standard' | 'hypnotique'
@@ -21,7 +17,7 @@ export interface ConfigPartie {
   premierJoueur: PremierJoueur
   mode: ModeJeu
   joueursHumains: number  // 1–4
-  voixIA: number          // 0–4
+  voixIA: number          // 0–6
 }
 
 export interface Case {
@@ -38,6 +34,7 @@ export interface Case {
 export interface Illustration {
   url: string
   style: string
+  promptLibre?: string
   promptUtilise: string
   dateGeneration: number
 }
