@@ -1,11 +1,18 @@
 export const config = { maxDuration: 45 }
 
 const STYLE_PROMPTS: Record<string, string> = {
-  aquarelle: 'delicate watercolor painting, soft translucent color washes, wet-on-wet technique, fluid dreamy edges, visible paper texture',
-  craies: 'oil pastel artwork, bold expressive strokes, rich layered pigments, vibrant textured marks, grainy surface',
-  fusain: 'charcoal drawing on paper, smudged grays, expressive gestural marks, soft tonal gradients, subtle contrast',
-  huile: 'oil painting, visible brushstrokes, rich color, warm luminous light, classic painterly technique, canvas texture',
-  crayons: 'colored pencil illustration, fine hatching, soft blended hues, delicate precise detail, pencil grain visible',
+  aquarelle:   'delicate watercolor painting, soft translucent color washes, wet-on-wet bleeding edges, visible paper grain, luminous and airy',
+  encre:       'indian ink brush drawing, bold expressive black strokes on white paper, stark contrast, gestural sumi-e marks, ink pooling and bleeding',
+  gravure:     'intaglio copper plate etching, dense fine cross-hatching, warm sepia and black tones, antique engraving detail, deep aquatint shadows',
+  cyanotype:   'cyanotype photographic print, prussian blue and bright white only, ghostly photogram silhouettes, blueprint otherworldly quality',
+  linogravure: 'linocut woodblock print, bold carved graphic shapes, rough-edged marks, stark black and white, visible printing pressure texture',
+  pastel:      'soft dry pastel drawing, powdery blended chalky pigments, gentle sfumato transitions, velvety matte surface, dreamy soft focus',
+  collage:     'surrealist paper collage, vintage engraving and book page fragments cut and assembled, Max Ernst frottage style, uncanny juxtapositions',
+  gouache:     'gouache poster illustration, flat opaque matte colors, bold graphic shapes, simplified forms, mid-century modern design aesthetic',
+  sanguine:    'sanguine red chalk drawing, warm terracotta lines on ivory paper, Renaissance old master study, hatching and stumping technique',
+  mezzotinte:  'mezzotint engraving, extremely rich velvety black shadows, soft luminous highlights emerging from deep darkness, dramatic chiaroscuro',
+  lavis:       'ink wash painting, monochrome diluted sepia ink, Chinese brush calligraphy style, soft gradients, rice paper texture, contemplative',
+  serigraphie: 'silkscreen screen print, flat graphic limited three-color palette, bold simplified shapes, pop art poster aesthetic',
 }
 
 async function poeticToVisual(poeme: string, anthropicKey: string): Promise<string> {

@@ -11,11 +11,18 @@ import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 
 const STYLES = [
-  { id: 'aquarelle',  label: 'Aquarelle' },
-  { id: 'craies',     label: 'Craies grasses' },
-  { id: 'fusain',     label: 'Fusain' },
-  { id: 'huile',      label: 'Peinture à l\'huile' },
-  { id: 'crayons',    label: 'Crayons de couleur' },
+  { id: 'aquarelle',   label: 'Aquarelle' },
+  { id: 'encre',       label: 'Encre de Chine' },
+  { id: 'gravure',     label: 'Gravure sur cuivre' },
+  { id: 'cyanotype',   label: 'Cyanotype' },
+  { id: 'linogravure', label: 'Linogravure' },
+  { id: 'pastel',      label: 'Pastel sec' },
+  { id: 'collage',     label: 'Collage surréaliste' },
+  { id: 'gouache',     label: 'Gouache' },
+  { id: 'sanguine',    label: 'Sanguine' },
+  { id: 'mezzotinte',  label: 'Mezzotinte' },
+  { id: 'lavis',       label: 'Lavis à l\'encre' },
+  { id: 'serigraphie', label: 'Sérigraphie' },
 ]
 
 export default function FinDePartie() {
