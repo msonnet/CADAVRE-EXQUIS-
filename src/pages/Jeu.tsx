@@ -6,6 +6,7 @@ import ConsigneCase from '../components/ConsigneCase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
+import type { NiveauValidation } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
@@ -46,8 +47,8 @@ function computeAuteurs(
 
 const FALLBACKS_CLIENT: Record<string, string[]> = {
   nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
-        'le froid', 'la poussière', 'le vent', 'la pluie', "l'écho", 'la flamme', 'le seuil',
-        "l'abîme", 'le vertige', 'la mousse', 'le givre', "l'encre", 'la boue'],
+        'le froid', 'la poussière', 'le vent', 'la pluie', 'l\'écho', 'la flamme', 'le seuil',
+        'l\'abîme', 'le vertige', 'la mousse', 'le givre', 'l\'encre', 'la boue'],
   verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse',
           'erre', 'veille', 'frôle', 'hante', 'effleure', 'résiste', 'chavire', 'murmure',
           'vacille', 'sombre', 'rôde', 'dérive'],
@@ -60,7 +61,7 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
     "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
     'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
     'la pluie fine', 'le temps qui passe', 'un mur de brume', 'la main tendue',
-    'un silence épais', 'le bord du gouffre', 'une voix creuse', "l'eau noire",
+    'un silence épais', 'le bord du gouffre', 'une voix creuse', 'l\'eau noire',
     'le corps absent', 'une ombre familière', 'la porte close', 'un feu mourant',
   ],
   'groupe-verbal': [
@@ -71,14 +72,14 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
   proposition: [
     'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
     'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
-    'Que cherche-t-on ici ?', 'Où finit la nuit ?', "Qu'y a-t-il derrière ?",
-    'Qui se souvient encore ?', "Jusqu'où va le vide ?", "Quand cela s'arrêtera-t-il ?",
+    'Que cherche-t-on ici ?', 'Où finit la nuit ?', 'Qu\'y a-t-il derrière ?',
+    'Qui se souvient encore ?', 'Jusqu\'où va le vide ?', 'Quand cela s\'arrêtera-t-il ?',
   ],
   libre: [
     'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
-    'rien ne disparaît vraiment', 'tout recommence ailleurs', "l'oubli protège",
-    'il reste toujours quelque chose', "les mots s'effacent", 'le temps hésite',
-    "l'absence a une forme",
+    'rien ne disparaît vraiment', 'tout recommence ailleurs', 'l\'oubli protège',
+    'il reste toujours quelque chose', 'les mots s\'effacent', 'le temps hésite',
+    'l\'absence a une forme',
   ],
 }
 
@@ -143,6 +144,8 @@ export default function Jeu() {
   const [iaChargement, setIaChargement] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
 
+  const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
+
   const casesTraitees = useRef(new Set<number>())
   const sauvegardeFaite = useRef(false)
   const fallback = useRef(makeFallbackPicker())
@@ -172,6 +175,7 @@ export default function Jeu() {
     return () => ambianceStop()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-démarre l'audio quand l'utilisateur active le son (cas : démarrage avec son désactivé)
   useEffect(() => {
     if (!muted) ambianceStart()
   }, [muted, ambianceStart])
@@ -183,6 +187,7 @@ export default function Jeu() {
     : null
   const modeHypnotique = config.mode === 'hypnotique'
 
+  // Tour IA
   useEffect(() => {
     if (!defActuelle || auteurActuel !== 'ia') return
     if (casesTraitees.current.has(caseIndex)) return
@@ -201,6 +206,7 @@ export default function Jeu() {
       .catch(() => avancer(idx, def, choisirSansDuplique('', def.type)))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Timer hypnotique — démarre à chaque tour humain
   useEffect(() => {
     if (!modeHypnotique || auteurActuel !== 'humain' || !defActuelle) {
       setTempsRestant(null)
@@ -217,6 +223,7 @@ export default function Jeu() {
     }
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-soumission à expiration
   useEffect(() => {
     if (tempsRestant !== 0) return
     if (timerRef.current) clearInterval(timerRef.current)
@@ -237,6 +244,7 @@ export default function Jeu() {
     setIaChargement(false)
   }
 
+  // Sauvegarde et navigation en fin de partie
   useEffect(() => {
     if (cases.length < total) return
     if (sauvegardeFaite.current) return
@@ -276,12 +284,12 @@ export default function Jeu() {
 
   function soumettre() {
     if (!defActuelle || !inputValue.trim()) return
-    const v = validerCase(inputValue, defActuelle.type, 'souple')
+    const v = validerCase(inputValue, defActuelle.type, niveauValidation)
     if (!v.valide) {
       setErreur(v.message ?? 'Texte invalide.')
       return
     }
-    ambianceStart()
+    ambianceStart() // déverrouille le drone depuis ce geste utilisateur
     jouer('soumettre')
     pousserCase(inputValue.trim())
   }
@@ -304,6 +312,7 @@ export default function Jeu() {
     inputValue.length > 0 &&
     !inputValue.includes('?')
 
+  // Écran de transition (fin de partie ou sauvegarde)
   if (!defActuelle || cases.length >= total) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh">
@@ -362,6 +371,7 @@ export default function Jeu() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
+          {/* Timer hypnotique */}
           {modeHypnotique && tempsRestant !== null && (
             <motion.div
               className="flex items-center justify-end mb-3 gap-2"
