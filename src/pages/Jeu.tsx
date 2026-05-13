@@ -14,12 +14,12 @@ import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 
-// ─── Types internes ──────────────────────────────────────────────────────────────────
+// ─── Types internes ──────────────────────────────────────────────────────────
 
 type Participant = { type: 'humain'; num: number } | { type: 'ia' }
 type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number }
 
-// ─── Constantes ─────────────────────────────────────────────────────────────────────
+// ─── Constantes ──────────────────────────────────────────────────────────────
 
 const CONFIG_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -43,7 +43,7 @@ const MESSAGES_IA = [
   "Une présence prend le mot…",
 ]
 
-// ─── Fonctions pures ───────────────────────────────────────────────────────────────────
+// ─── Fonctions pures ─────────────────────────────────────────────────────────
 
 /**
  * Construit la séquence de participants qui se répète sur toute la partie.
@@ -96,7 +96,7 @@ function couleurTimer(t: number): string {
   return 'text-or'
 }
 
-// ─── Fallbacks client ────────────────────────────────────────────────────────────────────────
+// ─── Fallbacks client ────────────────────────────────────────────────────────
 
 const FALLBACKS_CLIENT: Record<string, string[]> = {
   nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
@@ -123,10 +123,10 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
     'hante les couloirs', 'frôle les murs', 'résiste au vent', 'se perd dans le brouillard',
   ],
   proposition: [
-    'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
-    'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
-    'Que cherche-t-on ici ?', 'Où finit la nuit ?', "Qu'y a-t-il derrière ?",
-    'Qui se souvient encore ?', "Jusqu'où va le vide ?", "Quand cela s'arrêtera-t-il ?",
+    'Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui a éteint la lumière ?',
+    'Quand reviendra le froid ?', 'Pourquoi ce silence ?', 'Qui veille encore ?',
+    'Que cherche-t-on ici ?', 'Où finit la nuit ?', "Qu'y a-t-il derrière ?",
+    'Qui se souvient encore ?', "Jusqu'où va le vide ?", "Quand cela s'arrêtera-t-il ?",
   ],
   libre: [
     'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
@@ -166,7 +166,7 @@ function getContexteVisible(cases: Case[], visibilite: Visibilite): string | nul
   return null
 }
 
-// ─── Composant ────────────────────────────────────────────────────────────────────────
+// ─── Composant ───────────────────────────────────────────────────────────────
 
 export default function Jeu() {
   const navigate = useNavigate()
@@ -207,12 +207,13 @@ export default function Jeu() {
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const caseIndexSoumis = useRef(-1)
   const textesUtilises  = useRef(new Set<string>())
+  const textesSession   = useRef(new Set<string>(JSON.parse(sessionStorage.getItem('textes-session') ?? '[]') as string[]))
   const voixUtilisees   = useRef(new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
 
-  // ─── Dérivés ───────────────────────────────────────────────────────────────────────
+  // ─── Dérivés ───────────────────────────────────────────────────────────────
 
   const participantActuel: Participant | undefined = participants[caseIndex]
   const defActuelle: DefinitionCase | undefined    = caseDefs[caseIndex]
@@ -222,7 +223,7 @@ export default function Jeu() {
     ? getContexteVisible(cases, config.visibilite)
     : null
 
-  // ─── Fonctions utilitaires ──────────────────────────────────────────────────────────────
+  // ─── Fonctions utilitaires ─────────────────────────────────────────────────
 
   function choisirVoixSansRepetition(): string {
     let unused = (VOICE_IDS as readonly string[]).filter(id => !voixUtilisees.current.has(id))
@@ -238,13 +239,17 @@ export default function Jeu() {
 
   function choisirSansDuplique(texte: string, type: string): string {
     const key = normaliserCle(texte)
+    const totalUsed = new Set([...textesUtilises.current, ...textesSession.current])
     let final: string
-    if (texte && !textesUtilises.current.has(key)) {
+    if (texte && !totalUsed.has(key)) {
       final = texte
     } else {
-      final = pickUnused(type, textesUtilises.current)
+      final = pickUnused(type, totalUsed)
     }
-    textesUtilises.current.add(normaliserCle(final))
+    const finalKey = normaliserCle(final)
+    textesUtilises.current.add(finalKey)
+    textesSession.current.add(finalKey)
+    sessionStorage.setItem('textes-session', JSON.stringify([...textesSession.current]))
     return final
   }
 
@@ -252,7 +257,7 @@ export default function Jeu() {
     localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: newCases, caseIndex: newIndex }))
   }
 
-  // ─── Effects ────────────────────────────────────────────────────────────────────────
+  // ─── Effects ───────────────────────────────────────────────────────────────
 
   useEffect(() => {
     ambianceStart()
@@ -333,7 +338,7 @@ export default function Jeu() {
       })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Fonctions de jeu ───────────────────────────────────────────────────────────────────
+  // ─── Fonctions de jeu ─────────────────────────────────────────────────────
 
   function avancer(idx: number, def: DefinitionCase, texte: string) {
     const c: Case = {
@@ -398,7 +403,7 @@ export default function Jeu() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); soumettre() }
   }
 
-  // ─── Rendu ─────────────────────────────────────────────────────────────────────────
+  // ─── Rendu ─────────────────────────────────────────────────────────────────
 
   // Écran de fin / transition
   if (!defActuelle || cases.length >= total) {
