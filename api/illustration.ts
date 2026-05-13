@@ -1,11 +1,12 @@
 export const config = { maxDuration: 55 }
 
 const STYLE_PROMPTS: Record<string, string> = {
-  aquarelle: 'traditional watercolor painting on cold press paper, wet-on-wet color blooms and granulation, cauliflower bleeds at edges, translucent glazed layers, crisp dry-brush detail in shadows, visible paper grain and texture, colors merging naturally, professional fine art watercolor technique',
-  fusain:    'raw charcoal drawing on rough textured paper, heavy smudging and blending with fingers, velvety deep blacks, powdery chalky texture, erased white highlights carved from darkness, gestural expressionist marks, Käthe Kollwitz dark emotional energy, visible paper fibres and grain',
-  huile:     'thick impasto oil painting, heavy palette knife and bristle brush texture, oil paint ridges catching raking light, rich Old Master dark shadows, layered glazes over thick ground, cracked and aged surface, visible canvas weave through thin passages, Rembrandt dramatic chiaroscuro',
-  encre:     'pure india ink on white paper, bold gestural brush strokes varying from hairline to broad, spontaneous ink splatter and bleed marks, stark white negative space, calligraphic line energy, accidental marks embraced, raw directness, high contrast black and white only',
-  gravure:   'copper plate intaglio etching, ultra-precise cross-hatching and stippling, aquatint tonal gradients, bitten metal plate texture, warm sepia plate tone on aged paper, Piranesi and Dürer precision, deeply worked shadows through layered hatching, fine burr marks',
+  aquarelle:     'traditional watercolor painting on cold press paper, wet-on-wet color blooms and granulation, cauliflower bleeds at edges, translucent glazed layers, crisp dry-brush detail in shadows, visible paper grain and texture, colors merging naturally, professional fine art watercolor technique',
+  fusain:        'raw charcoal drawing on rough textured paper, heavy smudging and blending with fingers, velvety deep blacks, powdery chalky texture, erased white highlights carved from darkness, gestural expressionist marks, Käthe Kollwitz dark emotional energy, visible paper fibres and grain',
+  huile:         'thick impasto oil painting, heavy palette knife and bristle brush texture, oil paint ridges catching raking light, rich Old Master dark shadows, layered glazes over thick ground, cracked and aged surface, visible canvas weave through thin passages, Rembrandt dramatic chiaroscuro',
+  encre:         'pure india ink on white paper, bold gestural brush strokes varying from hairline to broad, spontaneous ink splatter and bleed marks, stark white negative space, calligraphic line energy, accidental marks embraced, raw directness, high contrast black and white only',
+  gravure:       'copper plate intaglio etching, ultra-precise cross-hatching and stippling, aquatint tonal gradients, bitten metal plate texture, warm sepia plate tone on aged paper, Piranesi and Dürer precision, deeply worked shadows through layered hatching, fine burr marks',
+  hyperrealisme: 'ultra-photorealistic hyperdetailed rendering, 8K resolution, sharp critical focus, physically accurate materials and lighting, subsurface scattering on organic surfaces, ray-traced reflections and global illumination, every texture rendered with perfect fidelity, indistinguishable from a photograph',
 }
 
 async function poeticToVisual(poeme: string, anthropicKey: string): Promise<string> {
@@ -36,6 +37,32 @@ Poème : "${poeme}"`,
   }
 }
 
+async function traduireDirection(direction: string, anthropicKey: string): Promise<string> {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 60,
+        messages: [{
+          role: 'user',
+          content: `Translate this artistic direction to concise English. Return only the translation, no explanation.\n\n"${direction}"`,
+        }],
+      }),
+    })
+    if (!response.ok) return direction
+    const data = await response.json()
+    return (data.content?.[0]?.text ?? direction).trim()
+  } catch {
+    return direction
+  }
+}
+
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
@@ -46,17 +73,30 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (!falKey) { res.status(200).json({ url: null }); return }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
-  const stylePrompt = STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle
+  // 'libre' = aucun médium imposé
+  const stylePrompt = style !== 'libre' ? (STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle) : ''
 
   let prompt: string
+  let guidance_scale: number
+
   if (promptLibre?.trim()) {
-    // Player's direction used as-is — no Claude reinterpretation
-    prompt = `${promptLibre.trim()}. Rendered as ${stylePrompt}. No text, no letters, no watermark, no signature`
+    // Direction du joueur traduite en anglais, utilisée telle quelle — guidance élevé pour la respecter
+    const direction = anthropicKey
+      ? await traduireDirection(promptLibre.trim(), anthropicKey)
+      : promptLibre.trim()
+    prompt = stylePrompt
+      ? `${direction}, treated as ${stylePrompt}. No text, no letters, no watermark, no signature`
+      : `${direction}. No text, no letters, no watermark, no signature`
+    guidance_scale = 6.0
   } else {
+    // Aucune direction : interprétation surréaliste par Claude — guidance libre pour surprendre
     const sceneVisuelle = anthropicKey
       ? await poeticToVisual(texte, anthropicKey)
       : texte
-    prompt = `${stylePrompt}, surrealist scene: ${sceneVisuelle}. No text, no letters, no watermark, no signature`
+    prompt = stylePrompt
+      ? `${stylePrompt}, surrealist scene: ${sceneVisuelle}. No text, no letters, no watermark, no signature`
+      : `surrealist scene: ${sceneVisuelle}. No text, no letters, no watermark, no signature`
+    guidance_scale = 3.5
   }
 
   try {
@@ -70,7 +110,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         prompt,
         image_size: 'portrait_4_3',
         num_inference_steps: 28,
-        guidance_scale: 3.5,
+        guidance_scale,
         num_images: 1,
       }),
     })
