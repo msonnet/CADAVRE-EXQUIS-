@@ -122,10 +122,26 @@ function couleurTimer(t: number): string {
   return 'text-or'
 }
 
+type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number }
+
+function lireBrouillon(): BrouillonActuel | null {
+  try {
+    const raw = localStorage.getItem('brouillon-actuel')
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+function normaliserCle(t: string): string {
+  return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 export default function Jeu() {
   const navigate = useNavigate()
 
+  const [b] = useState<BrouillonActuel | null>(lireBrouillon)
+
   const [config] = useState<ConfigPartie>(() => {
+    if (b) return b.config
     const raw = sessionStorage.getItem('config-partie')
     return raw ? (JSON.parse(raw) as ConfigPartie) : CONFIG_DEFAUT
   })
@@ -136,10 +152,10 @@ export default function Jeu() {
   const [auteurs] = useState<Array<'humain' | 'ia'>>(() =>
     computeAuteurs(total, config.premierJoueur)
   )
-  const [poemeId] = useState(() => crypto.randomUUID())
+  const [poemeId] = useState(() => b?.poemeId ?? crypto.randomUUID())
 
-  const [cases, setCases] = useState<Case[]>([])
-  const [caseIndex, setCaseIndex] = useState(0)
+  const [cases, setCases] = useState<Case[]>(() => b?.cases ?? [])
+  const [caseIndex, setCaseIndex] = useState(() => b?.caseIndex ?? 0)
   const [inputValue, setInputValue] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
   const [iaChargement, setIaChargement] = useState(false)
@@ -147,10 +163,13 @@ export default function Jeu() {
 
   const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
 
-  const casesTraitees = useRef(new Set<number>())
+  const casesTraitees = useRef(new Set<number>(
+    b ? Array.from({ length: b.caseIndex }, (_, i) => i) : []
+  ))
   const sauvegardeFaite = useRef(false)
   const fallback = useRef(makeFallbackPicker())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const caseIndexSoumis = useRef(-1)
   const textesUtilises = useRef(new Set<string>(
     JSON.parse(localStorage.getItem('textes-utilises') ?? '[]') as string[]
   ))
@@ -175,14 +194,14 @@ export default function Jeu() {
   }
 
   function choisirSansDuplique(texte: string, type: string): string {
-    const key = texte.toLowerCase()
+    const key = normaliserCle(texte)
     let final: string
     if (texte && !textesUtilises.current.has(key)) {
       final = texte
     } else {
       final = pickUnused(type, textesUtilises.current)
     }
-    textesUtilises.current.add(final.toLowerCase())
+    textesUtilises.current.add(normaliserCle(final))
     localStorage.setItem('textes-utilises', JSON.stringify([...textesUtilises.current]))
     return final
   }
@@ -257,7 +276,11 @@ export default function Jeu() {
       texte,
       ts: Date.now(),
     }
-    setCases(prev => [...prev, c])
+    setCases(prev => {
+      const next = [...prev, c]
+      localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: next, caseIndex: idx + 1 }))
+      return next
+    })
     setCaseIndex(idx + 1)
     setIaChargement(false)
   }
@@ -281,11 +304,15 @@ export default function Jeu() {
 
     sauvegarderPoeme(poeme)
       .catch(console.error)
-      .finally(() => navigate('/fin', { state: { poeme } }))
+      .finally(() => {
+        localStorage.removeItem('brouillon-actuel')
+        navigate('/fin', { state: { poeme } })
+      })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function pousserCase(texte: string) {
-    if (!defActuelle) return
+    if (!defActuelle || caseIndex === caseIndexSoumis.current) return
+    caseIndexSoumis.current = caseIndex
     const c: Case = {
       numero: caseIndex + 1,
       fonction: defActuelle.fonction,
@@ -294,10 +321,15 @@ export default function Jeu() {
       texte,
       ts: Date.now(),
     }
-    setCases(prev => [...prev, c])
+    const nextIndex = caseIndex + 1
+    setCases(prev => {
+      const next = [...prev, c]
+      localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: next, caseIndex: nextIndex }))
+      return next
+    })
     setInputValue('')
     setErreur(null)
-    setCaseIndex(prev => prev + 1)
+    setCaseIndex(nextIndex)
   }
 
   function soumettre() {
@@ -352,7 +384,7 @@ export default function Jeu() {
     <PageTransition className="page-carnet safe-top safe-bottom">
       <div className="flex items-center justify-between mb-8">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => { localStorage.removeItem('brouillon-actuel'); navigate('/') }}
           className="nav-discrete hover:text-encre transition-colors"
         >
           ← Abandonner

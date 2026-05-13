@@ -21,7 +21,7 @@ const STYLES = [
   { id: 'gouache',     label: 'Gouache' },
   { id: 'sanguine',    label: 'Sanguine' },
   { id: 'mezzotinte',  label: 'Mezzotinte' },
-  { id: 'lavis',       label: "Lavis à l'encre" },
+  { id: 'lavis',       label: 'Lavis à l\'encre' },
   { id: 'serigraphie', label: 'Sérigraphie' },
 ]
 
@@ -35,6 +35,7 @@ export default function FinDePartie() {
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
+  const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -61,6 +62,7 @@ export default function FinDePartie() {
   function choisirStyle(style: string) {
     if (!poeme || generatingIllustration) return
     setStyleChoisi(style)
+    setErreurIllustration(null)
     setGeneratingIllustration(true)
 
     const structure = getStructure(poeme.structureId)
@@ -72,6 +74,9 @@ export default function FinDePartie() {
           setIllustrationUrl(url)
           const illustration = { url, style, promptUtilise: texte, dateGeneration: Date.now() }
           sauvegarderIllustration(poeme.id, illustration).catch(console.error)
+        } else {
+          setErreurIllustration('Illustration indisponible — vérifiez votre connexion')
+          setStyleChoisi(null)
         }
       })
       .finally(() => setGeneratingIllustration(false))
@@ -192,6 +197,9 @@ export default function FinDePartie() {
             transition={{ delay: 1.3 }}
           >
             <p className="nav-discrete text-center mb-4">Illustrer ce poème</p>
+            {erreurIllustration && (
+              <p className="nav-discrete text-center opacity-50 mb-3 italic">{erreurIllustration}</p>
+            )}
             <div className="flex flex-col gap-2">
               {STYLES.map(s => (
                 <button
