@@ -32,13 +32,19 @@ export default function Reglages() {
 
   async function exporterPoemes() {
     const poemes = await chargerPoemes()
-    const blob = new Blob([JSON.stringify(poemes, null, 2)], { type: 'application/json' })
+    const json = JSON.stringify(poemes, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `cadavre-exquis-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
     a.click()
-    URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    // iOS Safari ne supporte pas <a download> sur blob: — ouvrir dans un nouvel onglet en fallback
+    setTimeout(() => {
+      URL.revokeObjectURL(url)
+    }, 5000)
     setExportOk(true)
     setTimeout(() => setExportOk(false), 2000)
   }

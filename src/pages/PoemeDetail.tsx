@@ -17,21 +17,57 @@ export default function PoemeDetail() {
   const [editionTitre, setEditionTitre] = useState(false)
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppression, setConfirmSuppression] = useState(false)
-  const [exportOk, setExportOk] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { parler, arreter, parlant } = useTTS()
 
-  function exporterPoeme() {
+  function imprimerPoeme() {
     if (!poeme) return
-    const blob = new Blob([JSON.stringify(poeme, null, 2)], { type: 'application/json' })
+    const titre = poeme.titre ?? 'Cadavre Exquis'
+    const structure = getStructure(poeme.structureId)
+    const texte = reconstruirePoeme(poeme.cases, structure)
+    const lignes = texte.split('\n')
+    const date = new Date(poeme.dateCreation).toLocaleDateString('fr-FR', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    })
+    const versHtml = lignes
+      .map(l => `<p class="vers">${l.trim() ? l.replace(/&/g,'&amp;').replace(/</g,'&lt;') : '&nbsp;'}</p>`)
+      .join('')
+
+    const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${titre.replace(/</g,'&lt;')}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Georgia,'Times New Roman',serif;background:#faf8f3;color:#1a1714;padding:52px 44px;max-width:580px;margin:0 auto}
+.ornement{text-align:center;color:#c9a84c;letter-spacing:.5em;font-size:1.1em;margin-bottom:28px}
+h1{font-size:1.9em;font-style:italic;font-weight:400;text-align:center;margin-bottom:6px;line-height:1.3}
+.label{text-align:center;font-size:.72em;letter-spacing:.13em;text-transform:uppercase;color:#999;margin-bottom:36px}
+hr{border:none;border-top:1px solid #c9a84c;opacity:.35;margin:28px 0}
+.poeme{text-align:center;padding:8px 0}
+.vers{font-size:1.35em;font-style:italic;line-height:2.1}
+.footer{text-align:center;font-size:.68em;letter-spacing:.1em;text-transform:uppercase;color:#bbb;margin-top:52px}
+@media print{body{background:white;padding:18mm 14mm}}
+</style>
+</head>
+<body>
+<div class="ornement">✦ &nbsp; ✦ &nbsp; ✦</div>
+<h1>${titre.replace(/</g,'&lt;')}</h1>
+<p class="label">Cadavre exquis — ${date}</p>
+<hr>
+<div class="poeme">${versHtml}</div>
+<hr>
+<p class="footer">Cadavre Exquis · Jeu surréaliste</p>
+<script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
+</body>
+</html>`
+
+    const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${poeme.titre ?? 'cadavre-exquis'}-${poeme.id.slice(0, 8)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    setExportOk(true)
-    setTimeout(() => setExportOk(false), 2000)
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
   }
 
   useEffect(() => {
@@ -231,10 +267,10 @@ export default function PoemeDetail() {
         </button>
 
         <button
-          onClick={exporterPoeme}
+          onClick={imprimerPoeme}
           className="nav-discrete hover:text-encre transition-colors"
         >
-          {exportOk ? '✓ Téléchargé' : '↓ Exporter ce poème'}
+          ↓ Télécharger en PDF
         </button>
 
         <AnimatePresence mode="wait">
