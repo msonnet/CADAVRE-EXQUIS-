@@ -9,8 +9,8 @@ import type { ConfigPartie, StructureId, Visibilite, PremierJoueur, ModeJeu } fr
 const STRUCTURES: { id: StructureId; label: string; description: string }[] = [
   { id: 'phrase-simple', label: 'Phrase simple', description: '3 cases — sujet, verbe, complément' },
   { id: 'phrase-etoffee', label: 'Phrase étoffée', description: '7 cases — la canonique de Breton' },
-  { id: 'conditionnelle', label: 'Conditionnelle', description: '8 cases — « si… alors »' },
-  { id: 'comparative', label: 'Comparative', description: '7 cases — « … comme … »' },
+  { id: 'conditionnelle', label: 'Conditionnelle', description: '8 cases — « si… alors »' },
+  { id: 'comparative', label: 'Comparative', description: '7 cases — « … comme … »' },
   { id: 'enumerative', label: 'Énumérative', description: '5 à 8 cases libres' },
   { id: 'question-reponse', label: 'Question / Réponse', description: 'Paires questions et réponses' },
   { id: 'vers-libre', label: 'Vers libre', description: '4 à 12 tours sans contrainte fixe' },
@@ -133,7 +133,7 @@ export default function Configuration() {
       <section className="mb-8">
         <h3 className="consigne-grammaticale mb-4">Voix IA</h3>
         <div className="flex gap-2">
-          {[0, 1, 2, 3].map(n => (
+          {[0, 1, 2, 3, 4, 5, 6].map(n => (
             <button
               key={n}
               onClick={() => setConfig(c => ({ ...c, voixIA: n }))}
