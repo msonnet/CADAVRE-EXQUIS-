@@ -215,7 +215,7 @@ ${illustrationHtml ? '<hr>' : ''}
         </motion.div>
       )}
 
-      {/* Poème reconstitué */}
+      {/* Poème reconstituté */}
       <motion.div
         className="my-8 text-center"
         initial={{ opacity: 0, y: 8 }}
@@ -258,7 +258,7 @@ ${illustrationHtml ? '<hr>' : ''}
             transition={{ duration: 0.25 }}
           >
             {poeme.cases.map((c, i) => {
-              const iaNum = poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
+              const iaNum = c.voixSlot ?? poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
               return (
               <div key={i} className="border-l-2 border-or/30 pl-4 py-1">
                 <p className="nav-discrete mb-1">

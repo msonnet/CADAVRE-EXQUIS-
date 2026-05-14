@@ -17,7 +17,7 @@ import { useSound } from '../hooks/useSound'
 // ─── Types internes ──────────────────────────────────────────────────────────
 
 type Participant = { type: 'humain'; num: number } | { type: 'ia' }
-type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number }
+type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number; voixParSlot?: Record<number, string> }
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ const MESSAGES_IA = [
 // ─── Fonctions pures ─────────────────────────────────────────────────────────
 
 /**
- * Construit la séquence de participants qui se répète sur toute la partie.
+ * Construit la séquence de participants qui se rèpete sur toute la partie.
  * H et IA sont entrelacés autant que possible : H1, IA, H2, IA, H3…
  * En solo, premierJoueur détermine si H ou IA ouvre.
  */
@@ -185,11 +185,37 @@ export default function Jeu() {
   const [structure]  = useState(() => getStructure(config.structureId))
   const [total]      = useState(() => nombreCasesEffectif(structure))
   const [caseDefs]   = useState<DefinitionCase[]>(() => structure.cases.slice(0, total))
-  const [participants] = useState<Participant[]>(() => {
-    const seq = buildSequence(config.joueursHumains, config.voixIA, config.premierJoueur)
-    return Array.from({ length: total }, (_, i) => seq[i % seq.length])
-  })
+  const [seq]        = useState(() => buildSequence(config.joueursHumains, config.voixIA, config.premierJoueur))
+  const [participants] = useState<Participant[]>(() =>
+    Array.from({ length: total }, (_, i) => seq[i % seq.length])
+  )
   const [poemeId] = useState(() => b?.poemeId ?? crypto.randomUUID())
+
+  // Pré-assigne une voix stable à chaque slot IA de la séquence, une fois pour toute la partie
+  const [voixParSlot] = useState<Record<number, string>>(() => {
+    if (b?.voixParSlot) return b.voixParSlot
+    const used = new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[])
+    const map: Record<number, string> = {}
+    seq.forEach((p, idx) => {
+      if (p.type === 'ia') {
+        let avail = (VOICE_IDS as readonly string[]).filter(id => !used.has(id))
+        if (avail.length === 0) { used.clear(); avail = [...VOICE_IDS] }
+        const choix = avail[Math.floor(Math.random() * avail.length)]
+        used.add(choix)
+        map[idx] = choix
+      }
+    })
+    localStorage.setItem('voix-utilisees', JSON.stringify([...used]))
+    return map
+  })
+
+  // Numéro d'affichage de chaque slot IA (position dans seq → numéro 1-based)
+  const [iaSlotNums] = useState<Record<number, number>>(() => {
+    const map: Record<number, number> = {}
+    let count = 0
+    seq.forEach((p, idx) => { if (p.type === 'ia') map[idx] = ++count })
+    return map
+  })
 
   const [cases, setCases]       = useState<Case[]>(() => b?.cases ?? [])
   const [caseIndex, setCaseIndex] = useState(() => b?.caseIndex ?? 0)
@@ -208,7 +234,6 @@ export default function Jeu() {
   const caseIndexSoumis = useRef(-1)
   const textesUtilises  = useRef(new Set<string>())
   const textesSession   = useRef(new Set<string>(JSON.parse(sessionStorage.getItem('textes-session') ?? '[]') as string[]))
-  const voixUtilisees   = useRef(new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[]))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
@@ -224,18 +249,6 @@ export default function Jeu() {
     : null
 
   // ─── Fonctions utilitaires ─────────────────────────────────────────────────
-
-  function choisirVoixSansRepetition(): string {
-    let unused = (VOICE_IDS as readonly string[]).filter(id => !voixUtilisees.current.has(id))
-    if (unused.length === 0) {
-      voixUtilisees.current.clear()
-      unused = [...VOICE_IDS]
-    }
-    const choix = unused[Math.floor(Math.random() * unused.length)]
-    voixUtilisees.current.add(choix)
-    localStorage.setItem('voix-utilisees', JSON.stringify([...voixUtilisees.current]))
-    return choix
-  }
 
   function choisirSansDuplique(texte: string, type: string): string {
     const key = normaliserCle(texte)
@@ -254,7 +267,7 @@ export default function Jeu() {
   }
 
   function sauvegarderBrouillon(newCases: Case[], newIndex: number) {
-    localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: newCases, caseIndex: newIndex }))
+    localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: newCases, caseIndex: newIndex, voixParSlot }))
   }
 
   // ─── Effects ───────────────────────────────────────────────────────────────
@@ -286,11 +299,13 @@ export default function Jeu() {
 
     const def = defActuelle
     const idx = caseIndex
-    const voiceId = choisirVoixSansRepetition()
+    const seqPos = caseIndex % seq.length
+    const voiceId = voixParSlot[seqPos]
+    const slotNum = iaSlotNums[seqPos]
 
     demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId })
-      .then(texte => avancer(idx, def, choisirSansDuplique(texte.trim(), def.type)))
-      .catch(()  => avancer(idx, def, choisirSansDuplique('', def.type)))
+      .then(texte => avancer(idx, def, choisirSansDuplique(texte.trim(), def.type), slotNum))
+      .catch(()  => avancer(idx, def, choisirSansDuplique('', def.type), slotNum))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer hypnotique
@@ -340,12 +355,13 @@ export default function Jeu() {
 
   // ─── Fonctions de jeu ─────────────────────────────────────────────────────
 
-  function avancer(idx: number, def: DefinitionCase, texte: string) {
+  function avancer(idx: number, def: DefinitionCase, texte: string, slotNum?: number) {
     const c: Case = {
       numero: idx + 1,
       fonction: def.fonction,
       consigne: def.consigne,
       auteur: 'ia',
+      voixSlot: slotNum,
       texte,
       ts: Date.now(),
     }
