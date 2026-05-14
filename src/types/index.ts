@@ -26,7 +26,7 @@ export interface Case {
   consigne: string
   auteur: 'humain' | 'ia'
   joueurNumero?: number   // numéro du joueur humain en mode multijoueur
-  // PAS de voiceId — anonymat absolu
+  voixSlot?: number       // slot IA stable dans la séquence (1-based) — pour affichage cohérent
   texte: string
   ts: number
 }
