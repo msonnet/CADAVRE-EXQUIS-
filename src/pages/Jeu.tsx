@@ -13,6 +13,7 @@ import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
+import { Decor } from '../reve'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -484,6 +485,7 @@ export default function Jeu() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="jeu" hideDereglement />
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={() => { localStorage.removeItem('brouillon-actuel'); navigate('/') }}

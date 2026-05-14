@@ -9,6 +9,7 @@ import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
+import { Decor } from '../reve'
 
 const STYLES = [
   { id: 'aquarelle',     label: 'Aquarelle' },
@@ -103,6 +104,7 @@ export default function FinDePartie() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="fin" />
       <motion.p
         className="nav-discrete text-center mb-6"
         initial={{ opacity: 0 }}

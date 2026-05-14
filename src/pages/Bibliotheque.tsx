@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
 import { chargerPoemes } from '../db'
+import { Decor } from '../reve'
 import type { Poeme } from '../types'
 
 const NOMS_STRUCTURES: Record<string, string> = {
@@ -48,6 +49,7 @@ export default function Bibliotheque() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="biblio" />
       <button
         onClick={() => navigate('/')}
         className="nav-discrete mb-8 hover:text-encre transition-colors"
