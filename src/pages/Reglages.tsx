@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
 import { chargerPoemes } from '../db'
+import { Decor } from '../reve'
 import type { NiveauValidation } from '../utils/validation'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
@@ -51,6 +52,7 @@ export default function Reglages() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="config" />
       <button onClick={() => navigate('/')} className="nav-discrete mb-8 hover:text-encre transition-colors">
         ← Accueil
       </button>

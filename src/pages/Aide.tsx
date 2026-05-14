@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
+import { Decor } from '../reve'
 
 interface BlocProps {
   titre: string
@@ -52,6 +53,7 @@ export default function Aide() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="biblio" />
       <button
         onClick={() => navigate(-1)}
         className="nav-discrete mb-8 hover:text-encre transition-colors"

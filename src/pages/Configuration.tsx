@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SeparateurOr from '../components/SeparateurOr'
 import { useSound } from '../hooks/useSound'
+import { Decor } from '../reve'
 import type { ConfigPartie, StructureId, Visibilite, PremierJoueur, ModeJeu } from '../types'
 
 const STRUCTURES: { id: StructureId; label: string; description: string }[] = [
@@ -60,6 +61,7 @@ export default function Configuration() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="config" />
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={() => navigate('/')}

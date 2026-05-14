@@ -7,6 +7,7 @@ import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
+import { Decor } from '../reve'
 
 export default function PoemeDetail() {
   const navigate = useNavigate()
@@ -150,6 +151,7 @@ ${illustrationHtml ? '<hr>' : ''}
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="detail" />
       <button
         onClick={() => navigate('/bibliotheque')}
         className="nav-discrete mb-8 hover:text-encre transition-colors"
@@ -215,7 +217,7 @@ ${illustrationHtml ? '<hr>' : ''}
         </motion.div>
       )}
 
-      {/* Poème reconstituté */}
+      {/* Poème reconstitué */}
       <motion.div
         className="my-8 text-center"
         initial={{ opacity: 0, y: 8 }}

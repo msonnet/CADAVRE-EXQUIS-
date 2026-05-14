@@ -13,6 +13,7 @@ import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
+import { Decor } from '../reve'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -46,7 +47,7 @@ const MESSAGES_IA = [
 // ─── Fonctions pures ─────────────────────────────────────────────────────────
 
 /**
- * Construit la séquence de participants qui se rèpete sur toute la partie.
+ * Construit la séquence de participants qui se répète sur toute la partie.
  * H et IA sont entrelacés autant que possible : H1, IA, H2, IA, H3…
  * En solo, premierJoueur détermine si H ou IA ouvre.
  */
@@ -131,7 +132,7 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
   libre: [
     'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
     'rien ne disparaît vraiment', 'tout recommence ailleurs', "l'oubli protège",
-    'il reste toujours quelque chose', "les mots s'effacent", 'le temps hésite',
+    'il reste toujours quelque chose', 'les mots s\'effacent', 'le temps hésite',
     "l'absence a une forme",
   ],
 }
@@ -484,6 +485,7 @@ export default function Jeu() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
+      <Decor variant="jeu" hideDereglement />
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={() => { localStorage.removeItem('brouillon-actuel'); navigate('/') }}
