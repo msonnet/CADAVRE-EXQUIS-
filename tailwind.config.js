@@ -17,16 +17,15 @@ export default {
         'or-clair': '#c9a85d',
 
         // ───── COMPATIBILITÉ ancienne ─────
-        // garde-fous pour les pages pas encore migrées
         ivoire: '#ede2c8',
         'or-fonce': '#7a5a20',
       },
       fontFamily: {
         // ───── TYPOGRAPHIE ALMANACH ─────
-        bodoni: ['"Bodoni Moda"', 'Georgia', 'serif'],        // titres-affiche
-        fell: ['"IM Fell English"', 'Georgia', 'serif'],      // texte courant
-        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'], // vers + italiques
-        caveat: ['"Caveat"', 'cursive'],                       // marginalia rouges
+        bodoni: ['"Bodoni Moda"', 'Georgia', 'serif'],
+        fell: ['"IM Fell English"', 'Georgia', 'serif'],
+        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        caveat: ['"Caveat"', 'cursive'],
 
         // ───── COMPATIBILITÉ ancienne ─────
         garamond: ['"Bodoni Moda"', 'Georgia', 'serif'],
