@@ -2,25 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Texture papier SVG en fond ── */
+/* ──────────────────────────────────────────────
+   ALMANACH SURRÉALISTE — système de design
+   ────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500&family=IM+Fell+English:ital@0;1&family=IM+Fell+DW+Pica:ital@0;1&family=Caveat:wght@400;600&display=swap');
+
 @layer base {
   :root {
-    --ivoire: #FAF6EE;
-    --encre: #1A1A1A;
-    --or: #B8956A;
-    --papier: #F0E9D8;
-    --gris: #6B6560;
+    --papier: #ede2c8;
+    --papier-fonce: #d9c9a5;
+    --encre: #1a1410;
+    --encre-claire: #3a302a;
+    --gris: #6b5d4f;
+    --gris-clair: #a08e7a;
+    --rouge: #a8332a;
+    --rouge-fonce: #7a2620;
+    --or: #9a7d3a;
+    --or-clair: #c9a85d;
   }
 
-  html {
-    height: 100%;
-  }
+  html { height: 100%; }
 
   body {
-    background-color: var(--ivoire);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    background-color: var(--papier);
+    background-image:
+      radial-gradient(ellipse at 30% 20%, rgba(154,125,58,0.06), transparent 50%),
+      radial-gradient(ellipse at 70% 80%, rgba(168,51,42,0.04), transparent 50%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
     color: var(--encre);
-    font-family: 'Lora', Georgia, serif;
+    font-family: 'IM Fell English', Georgia, serif;
     min-height: 100%;
     min-height: 100dvh;
     overflow-x: hidden;
@@ -31,141 +42,235 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
   ::selection {
-    background-color: #B8956A33;
+    background-color: rgba(168, 51, 42, 0.2);
   }
 }
 
 @layer components {
+  /* ───── Typographie ───── */
   .titre-principal {
-    @apply font-garamond italic text-encre;
-    font-size: clamp(2rem, 8vw, 3.5rem);
-    letter-spacing: 0.02em;
-    line-height: 1.1;
+    @apply font-bodoni italic text-encre;
+    font-weight: 900;
+    font-size: clamp(2.5rem, 9vw, 4rem);
+    letter-spacing: -0.005em;
+    line-height: 0.95;
+  }
+
+  .titre-rouge {
+    @apply font-bodoni italic;
+    color: var(--rouge);
+    font-weight: 900;
+    line-height: 0.95;
   }
 
   .sous-titre {
-    @apply font-lora text-gris;
-    font-size: clamp(0.85rem, 3vw, 1rem);
-    letter-spacing: 0.05em;
+    @apply font-cormorant italic text-encre-claire;
+    font-size: clamp(1rem, 3.2vw, 1.15rem);
+    line-height: 1.5;
   }
 
   .vers-jeu {
     @apply font-cormorant italic text-encre;
-    font-size: clamp(1.1rem, 4vw, 1.4rem);
-    line-height: 1.7;
-    letter-spacing: 0.01em;
+    font-size: clamp(1.2rem, 4.5vw, 1.55rem);
+    line-height: 1.55;
+    letter-spacing: 0.005em;
+  }
+
+  .vers-grand {
+    @apply font-cormorant italic text-encre;
+    font-size: clamp(1.4rem, 5.5vw, 1.85rem);
+    line-height: 1.45;
+  }
+
+  .titre-section {
+    @apply font-bodoni italic text-encre;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.05;
   }
 
   .lien-texte {
-    @apply font-lora text-encre no-underline transition-colors duration-300;
-    font-size: clamp(0.95rem, 3.5vw, 1.1rem);
-    letter-spacing: 0.03em;
+    @apply font-fell italic text-encre no-underline transition-colors duration-300;
+    font-size: 1.05rem;
     border-bottom: 1px solid transparent;
-  }
-
-  .lien-texte:hover {
-    border-bottom-color: var(--or);
-    color: var(--or);
-  }
-
-  .separateur-or {
-    @apply my-6;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--or), transparent);
-    border: none;
-  }
-
-  .btn-primaire {
-    @apply font-lora text-encre transition-all duration-300 cursor-pointer;
-    font-size: clamp(0.85rem, 3vw, 0.95rem);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0.6em 1.8em;
-    border: 1px solid var(--encre);
     background: transparent;
+    cursor: pointer;
+  }
+  .lien-texte:hover {
+    border-bottom-color: var(--rouge);
+    color: var(--rouge);
   }
 
+  .nav-discrete {
+    @apply font-fell italic;
+    color: var(--gris);
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+  }
+
+  .folio {
+    @apply font-fell;
+    color: var(--gris);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .petite-cap {
+    @apply font-fell;
+    color: var(--encre-claire);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .petite-cap-rouge {
+    @apply font-fell;
+    color: var(--rouge);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .consigne-grammaticale {
+    @apply font-fell italic;
+    color: var(--encre-claire);
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+  }
+
+  /* ───── Filets typographiques ───── */
+  .filet-double {
+    border: none;
+    border-top: 1px solid var(--encre);
+    border-bottom: 1px solid var(--encre);
+    height: 3px;
+  }
+  .filet-simple {
+    border: none;
+    border-top: 1px solid var(--encre);
+    height: 1px;
+    margin: 0;
+  }
+  .filet-rouge {
+    border: none;
+    border-top: 1px solid var(--rouge);
+    height: 1px;
+    margin: 0;
+  }
+  .filet-fin {
+    border: none;
+    border-top: 0.5px solid var(--gris);
+    opacity: 0.6;
+    margin: 0;
+  }
+
+  /* compat ancien nom */
+  .separateur-or {
+    @apply filet-rouge;
+    margin: 1.5rem auto;
+  }
+
+  /* ───── Boutons ───── */
+  .btn-primaire {
+    @apply font-fell italic transition-all duration-200 cursor-pointer;
+    background: var(--rouge);
+    color: var(--papier);
+    font-size: 1.05rem;
+    letter-spacing: 0.05em;
+    padding: 0.7em 1.8em;
+    border: none;
+    font-weight: 500;
+  }
   .btn-primaire:hover {
-    background-color: var(--encre);
-    color: var(--ivoire);
+    background: var(--rouge-fonce);
   }
-
   .btn-primaire:active {
-    opacity: 0.8;
+    transform: scale(0.97);
+  }
+  .btn-primaire:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
+  .btn-secondaire {
+    @apply font-fell italic transition-all duration-200 cursor-pointer;
+    background: transparent;
+    color: var(--encre);
+    font-size: 1rem;
+    border: 1px solid var(--encre);
+    padding: 0.6em 1.5em;
+  }
+  .btn-secondaire:hover {
+    background: var(--encre);
+    color: var(--papier);
+  }
+
+  /* ───── Champ d'écriture ───── */
+  .champ-carnet {
+    @apply font-cormorant italic text-encre w-full;
+    font-size: 1.35rem;
+    line-height: 1.55;
+    background: rgba(255, 253, 247, 0.5);
+    border: none;
+    border-left: 2px solid var(--encre);
+    outline: none;
+    padding: 12px 16px;
+    caret-color: var(--rouge);
+    resize: none;
+  }
+  .champ-carnet::placeholder {
+    color: var(--gris);
+    opacity: 0.5;
+    font-style: italic;
+  }
+  .champ-carnet:focus {
+    border-left-color: var(--rouge);
+  }
+
+  /* ───── Cadre page ───── */
   .page-carnet {
     @apply mx-auto px-6 py-8;
     max-width: 42rem;
     min-height: 100dvh;
+    position: relative;
   }
 
-  .champ-carnet {
-    @apply font-cormorant italic text-encre w-full;
-    font-size: clamp(1.1rem, 4vw, 1.4rem);
-    line-height: 1.7;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--gris-clair, #C4BDB5);
-    outline: none;
-    padding: 0.4em 0;
-    caret-color: var(--or);
+  /* ───── Lettrine ───── */
+  .lettrine {
+    @apply font-bodoni italic;
+    font-weight: 900;
+    font-size: 3.6rem;
+    line-height: 0.85;
+    color: var(--rouge);
+    float: left;
+    margin: 6px 8px 0 0;
   }
 
-  .champ-carnet::placeholder {
-    color: var(--gris, #6B6560);
-    opacity: 0.5;
-    font-style: italic;
-  }
-
-  .consigne-grammaticale {
-    @apply font-lora text-gris;
-    font-size: clamp(0.8rem, 3vw, 0.9rem);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .nav-discrete {
-    @apply font-lora text-gris-clair;
-    font-size: 0.8rem;
-    letter-spacing: 0.04em;
-  }
-
+  /* ───── Animations ───── */
   .vers-apparition {
     animation: fadeInSlow 1.2s ease-in forwards;
     opacity: 0;
   }
-
-  .plume-animation {
-    display: inline-block;
-    animation: plume 2s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
 }
 
 @layer utilities {
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  .safe-bottom {
-    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
-  }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
   .safe-x {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
 }
 
-::-webkit-scrollbar {
-  width: 3px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* ───── Scrollbar discrète ───── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--gris-clair, #C4BDB5);
+  background: var(--gris-clair);
   border-radius: 2px;
 }

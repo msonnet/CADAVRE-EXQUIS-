@@ -4,27 +4,41 @@ export default {
   theme: {
     extend: {
       colors: {
-        ivoire: '#FAF6EE',
-        encre: '#1A1A1A',
-        or: '#B8956A',
-        'or-clair': '#D4AF87',
-        'or-fonce': '#8B6914',
-        papier: '#F0E9D8',
-        gris: '#6B6560',
-        'gris-clair': '#C4BDB5',
+        // ───── PALETTE ALMANACH SURRÉALISTE ─────
+        papier: '#ede2c8',       // papier ivoire bruni (fond principal)
+        'papier-fonce': '#d9c9a5',
+        encre: '#1a1410',        // encre noire (texte principal)
+        'encre-claire': '#3a302a',
+        gris: '#6b5d4f',         // gris cendre (méta, folios)
+        'gris-clair': '#a08e7a',
+        rouge: '#a8332a',        // rouge Breton (accent + manuscrit)
+        'rouge-fonce': '#7a2620',
+        or: '#9a7d3a',           // or terni (séparateurs subtils)
+        'or-clair': '#c9a85d',
+
+        // ───── COMPATIBILITÉ ancienne ─────
+        // garde-fous pour les pages pas encore migrées
+        ivoire: '#ede2c8',
+        'or-fonce': '#7a5a20',
       },
       fontFamily: {
-        garamond: ['"EB Garamond"', 'Georgia', 'serif'],
-        lora: ['Lora', 'Georgia', 'serif'],
-        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        // ───── TYPOGRAPHIE ALMANACH ─────
+        bodoni: ['"Bodoni Moda"', 'Georgia', 'serif'],        // titres-affiche
+        fell: ['"IM Fell English"', 'Georgia', 'serif'],      // texte courant
+        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'], // vers + italiques
+        caveat: ['"Caveat"', 'cursive'],                       // marginalia rouges
+
+        // ───── COMPATIBILITÉ ancienne ─────
+        garamond: ['"Bodoni Moda"', 'Georgia', 'serif'],
+        lora: ['"IM Fell English"', 'Georgia', 'serif'],
       },
-      lineHeight: {
-        relax: '1.6',
-      },
+      lineHeight: { relax: '1.6' },
       animation: {
         'fade-in-slow': 'fadeInSlow 1.2s ease-in forwards',
         'cursor-blink': 'cursorBlink 1.2s step-end infinite',
         'plume': 'plume 2s ease-in-out infinite',
+        'ink-bloom': 'inkBloom 0.9s ease-out forwards',
+        'collage-drop': 'collageDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) forwards',
       },
       keyframes: {
         fadeInSlow: {
@@ -38,6 +52,15 @@ export default {
         plume: {
           '0%, 100%': { transform: 'rotate(-5deg) translateY(0)' },
           '50%': { transform: 'rotate(5deg) translateY(-4px)' },
+        },
+        inkBloom: {
+          '0%': { opacity: '0', filter: 'blur(2px)' },
+          '100%': { opacity: '1', filter: 'blur(0)' },
+        },
+        collageDrop: {
+          '0%': { opacity: '0', transform: 'translateY(-30px) rotate(-20deg) scale(0.85)' },
+          '60%': { opacity: '1' },
+          '100%': { opacity: '1', transform: 'translateY(0) rotate(0) scale(1)' },
         },
       },
     },
