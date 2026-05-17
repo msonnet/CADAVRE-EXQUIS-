@@ -1,169 +1,160 @@
-# HANDOFF — Almanach surréaliste & Rêve nocturne
+# HANDOFF — Direction artistique finale (système rêve + couleurs aléatoires)
 
-Ce dossier contient le **système de design + le système « rêve nocturne »** prêt à intégrer dans ton projet React + TypeScript + Vite + Tailwind.
+Ce dossier contient le **système de design final** pour Cadavre Exquis, prêt à intégrer dans ton repo React + TypeScript + Vite + Tailwind.
 
 ---
 
-## 1 · Ce qui est livré
+## 1 · Ce qui change
+
+**Direction artistique : Dragonfly × papier déchiré × couleurs aléatoires**
+
+- À chaque ouverture (1 par jour, ou bouton « re-rêver ») l'app **tire un rêve unique** : 1 schéma chromatique parmi 8 + collages + marginalia + dérèglements
+- Les **dessins des collages** changent de couleur par rêve : rouge, bleu de Prusse, vert d'absinthe, ocre, sépia, pourpre, ardoise, cuivre
+- Les collages sont **posés sur des papiers déchirés**, parfois avec du scotch visible
+- **Mots-clés pipe-séparés** en bandeau supérieur (style Dragonfly)
+- **Typographie verticale** « CADAVRE » sur le côté
+- **Marginalia manuscrites** en marges, dans la couleur du rêve
+- **Dérèglements** : pâté d'encre, errata, tampon, coin corné, compteur fou — un seul par rêve
+- **Sanctuaire du jeu** : sur l'écran Jeu, pas de marginalia, juste un mini-collage très discret
+- **Positions en %** : adaptatif iPhone SE → Pro Max, plus de rognage
+- **Contraste WCAG** : la couleur du rêve est utilisée uniquement pour décor + accents, le texte courant reste sombre
+
+---
+
+## 2 · Fichiers livrés
 
 ```
 handoff/
-├── tailwind.config.js          # ↻ remplace le tien
+├── tailwind.config.js            # ↻ remplace le tien
 ├── src/
-│   ├── index.css                # ↻ remplace le tien
-│   ├── App.tsx                  # ↻ remplace le tien (wrap ReveProvider)
+│   ├── index.css                  # ↻ remplace le tien (+ animations rêve)
+│   ├── App.tsx                    # ↻ wrap dans <ReveProvider>
 │   ├── pages/
-│   │   └── Accueil.tsx          # ↻ exemple complet refait
-│   └── reve/                    # ← nouveau dossier à créer
+│   │   └── Accueil.tsx            # ↻ exemple complet refait
+│   └── reve/                      # ← copier tel quel
 │       ├── index.ts
 │       ├── Decor.tsx
-│       ├── collages.tsx         # 17 collages SVG référencés
-│       ├── pools.ts             # 25 marginalia + dérèglements
-│       └── prng.ts              # PRNG + mémoire localStorage
+│       ├── collages.tsx           # 17 collages référencés
+│       ├── pools.ts               # marginalia + dérèglements + couleurs
+│       └── prng.ts                # PRNG mulberry32 + mémoire
 ```
 
 ---
 
-## 2 · Instructions d'intégration (10 min)
+## 3 · Intégration (15 min)
 
-### Étape 1 — Remplacer la config Tailwind
-Copie `handoff/tailwind.config.js` → `tailwind.config.js` à la racine.
+### Étape 1 — Remplace `tailwind.config.js`, `src/index.css`, `src/App.tsx`
+Copie les 3 fichiers à leur place.
 
-→ La palette est élargie : `papier`, `encre`, `rouge`, `or`, `gris` (+ variantes).
-→ Les fontes ajoutées : `font-bodoni`, `font-fell`, `font-cormorant`, `font-caveat`.
-→ **Compat** : `font-garamond` et `font-lora` pointent vers les nouvelles, donc tes pages existantes ne cassent pas.
+### Étape 2 — Copie le dossier `src/reve/`
+Crée `src/reve/` dans ton repo, copie les 5 fichiers.
 
-### Étape 2 — Remplacer le CSS de base
-Copie `handoff/src/index.css` → `src/index.css`.
+### Étape 3 — Remplace `src/pages/Accueil.tsx`
+C'est l'exemple complet refait avec le nouveau système.
 
-→ Charge automatiquement les 4 fontes Google (Bodoni Moda, IM Fell English, Cormorant Garamond, Caveat).
-→ Définit toutes les classes utilitaires : `.titre-principal`, `.btn-primaire`, `.filet-double`, `.lettrine`, `.petite-cap`, `.folio`, etc.
-→ Le fond papier est doublé d'une texture SVG subtile.
-
-### Étape 3 — Créer le dossier `src/reve/`
-Copie le dossier complet `handoff/src/reve/` → `src/reve/`.
-
-```
-src/reve/
-├── index.ts        # exports
-├── Decor.tsx       # ReveProvider + composant Decor
-├── collages.tsx    # 17 SVGs
-├── pools.ts        # données
-└── prng.ts         # PRNG + mémoire
-```
-
-### Étape 4 — Wrap l'app dans `ReveProvider`
-Remplace ton `src/App.tsx` par celui livré, OU ajoute juste le wrap :
+### Étape 4 — Adapte les autres pages
+Pour chaque page, **5 lignes suffisent** :
 
 ```tsx
-import { ReveProvider } from './reve'
+import { Decor, HeaderKeywords, SignatureReve, useReve } from '../reve'
 
-export default function App() {
+export default function MaPage() {
   return (
-    <ReveProvider>
-      <BrowserRouter>
-        {/* routes */}
-      </BrowserRouter>
-    </ReveProvider>
-  )
-}
-```
+    <PageTransition className="page-carnet relative ... overflow-hidden">
+      <HeaderKeywords />
+      <Decor variant="config" />   {/* ← config | jeu | fin | biblio | detail */}
 
-### Étape 5 — Refaire la page Accueil
-Remplace `src/pages/Accueil.tsx` par `handoff/src/pages/Accueil.tsx`.
+      {/* le contenu existant */}
 
-→ C'est l'exemple complet : décor du rêve, lettre déréglée, folios, bouton « re-rêver ».
-
----
-
-## 3 · Adapter les autres pages (Configuration, Jeu, FinDePartie…)
-
-Pour chaque page, **3 lignes suffisent** :
-
-```tsx
-import { Decor, useReve } from '../reve'
-
-export default function Configuration() {
-  // ...
-  return (
-    <PageTransition className="page-carnet relative ...">
-      <Decor variant="config" />   {/* ← ajoute le décor */}
-
-      {/* le contenu existant, mais avec les nouvelles classes */}
+      <SignatureReve />
     </PageTransition>
   )
 }
 ```
 
-Le composant `<Decor variant="X" />` accepte :
-- `variant`: `'accueil' | 'config' | 'jeu' | 'fin' | 'biblio' | 'detail'`
-- `collageIndex` (optionnel) : forcer un collage précis (0..5)
-- `hideLabel`, `hideMarginalia`, `hideDereglement` : couper certains éléments
-
-**Le conteneur de la page doit avoir `position: relative` et `overflow: hidden`** pour que les collages placés en absolute se positionnent bien.
-
----
-
-## 4 · Mapping des classes anciennes → nouvelles
-
-Si tu veux migrer rapidement, voici la table d'équivalence :
-
-| Ancienne classe | Nouvelle classe | Rôle |
-|---|---|---|
-| `text-or` | `text-rouge` | accent principal |
-| `text-encre` | `text-encre` | inchangé |
-| `font-garamond` | `font-bodoni` (auto-aliasé) | titres |
-| `font-lora` | `font-fell` (auto-aliasé) | corps |
-| `bg-ivoire` | `bg-papier` | fond |
-| `.separateur-or` | `.filet-rouge` (auto-aliasé) | séparateur |
-| `.titre-principal` | `.titre-principal` | inchangé (mais fonte changée) |
-| `.btn-primaire` | `.btn-primaire` | inchangé (mais style refait) |
-| `.consigne-grammaticale` | `.consigne-grammaticale` | inchangé |
-| — | `.folio` | mini-texte en-tête « Tome I · Feuillet N » |
-| — | `.petite-cap` / `.petite-cap-rouge` | petites capitales |
-| — | `.lettrine` | grand B initial rouge |
-| — | `.filet-double` | filet ── ── (deux traits) |
+### Étape 5 — Page Jeu = sanctuaire
+Pour `Jeu.tsx`, utilise `<Decor variant="jeu" />` qui place automatiquement :
+- Aucune marginalia (concentration protégée)
+- Aucun dérèglement bruyant
+- Juste un mini-collage discret en bas (avec `size: 0.55`)
 
 ---
 
-## 5 · Tester en local
+## 4 · API du système rêve
+
+### `useReve()`
+Retourne la séance courante :
+
+```tsx
+const seance = useReve()
+
+seance.seed             // nombre unique du jour
+seance.collages         // CollageDef[6]
+seance.margs            // MargEntry[4]
+seance.derlg            // 'pate' | 'errata' | 'tampon' | 'coin' | 'compteur'
+seance.angleBiais       // angle aléatoire pour la lettre déréglée
+seance.idxBiais         // index de la lettre déréglée
+seance.colorKey         // 'rouge' | 'bleu' | 'vert' | ...
+seance.colorSchema.hex  // #e83830, #1d3a8c, etc.
+seance.retirer()        // bouton « re-rêver » : nouveau seed
+```
+
+### `<Decor variant="..." />`
+Place automatiquement collage + marginalia + dérèglement selon l'écran.
+
+| variant | placement collage | marginalia | dérèglement |
+|---|---|---|---|
+| `accueil` | grand, taped | 2 | oui |
+| `config` | normal | 1 | oui |
+| `jeu` | mini (sanctuaire) | 0 | non |
+| `fin` | grand, taped | 1 | oui |
+| `biblio` | mini | 1 | oui |
+| `detail` | normal, taped | 1 | oui |
+
+### `<HeaderKeywords count={8} />`
+Bandeau supérieur avec 8 mots-clés pipe-séparés, déterministes par seed.
+
+### `<VerticalAccent text="CADAVRE" side="right" />`
+Typographie verticale, couleur du rêve, sur le côté.
+
+### `<SignatureReve />`
+Petite signature « rêve № 17 » en bas à droite.
+
+---
+
+## 5 · Compatibilité
+
+- Toutes les classes Tailwind existantes (`text-or`, `font-garamond`, `bg-ivoire`, etc.) sont **conservées en alias** vers les nouvelles. **Aucune page ne casse.**
+- Migration progressive possible : tu peux n'adapter que l'Accueil au début, le reste de l'app continue de fonctionner avec ses anciennes classes.
+- Le système rêve est **opt-in** : si tu n'utilises pas `<Decor>` sur une page, elle reste comme avant.
+
+---
+
+## 6 · Tester en local
 
 ```bash
-npm install      # rien à installer en plus — tout est déjà là
 npm run dev
 ```
 
 Tu devrais voir :
-- L'Accueil avec un collage référencé (différent à chaque rafraîchissement de jour)
-- Un sous-titre « pour cerveaux d'urgence et amoureux »
-- Le bouton « ✦ re-rêver » qui change le tirage
-- En bas à droite : « rêve № 17 »
+- L'Accueil avec un collage coloré (rouge, bleu, vert, etc.) sur papier déchiré
+- Un bandeau de mots-clés en haut
+- Une typo verticale « CADAVRE » à droite
+- Le bouton « ✦ re-rêver » en bas à gauche
+- En bas à droite : « rêve № NNNNN »
+
+À chaque rafraîchissement du jour suivant (ou en cliquant « re-rêver »), tout change : couleur, collages, marginalia.
 
 ---
 
-## 6 · Roadmap suggérée pour les pages restantes
+## 7 · Roadmap pages restantes
 
-| Page | Priorité | Travail |
-|---|---|---|
-| Accueil | ✓ fait | Exemple livré |
-| Configuration | haute | Ajouter `<Decor variant="config" />` + remplacer les fontes (font-garamond → font-bodoni) |
-| Jeu | haute | Idem + champ d'écriture en `.champ-carnet` |
-| FinDePartie | haute | Lettrine rouge sur 1ʳᵉ lettre du poème, `<Decor variant="fin" />`, ornement entre vers |
-| Bibliotheque | moyenne | Items en numéros romains, `<Decor variant="biblio" />` |
-| PoemeDetail | moyenne | Lettrine + `<Decor variant="detail" />` |
-| Aide / Reglages | basse | Juste appliquer le nouveau Tailwind, ça suffit |
+Te suggère cet ordre :
+1. ✓ Accueil — livré
+2. Configuration — `<Decor variant="config" />`
+3. Jeu — `<Decor variant="jeu" />` (sanctuaire, automatique)
+4. FinDePartie — `<Decor variant="fin" />` + lettrine rouge sur 1ʳᵉ lettre du poème
+5. Bibliotheque — `<Decor variant="biblio" />` + items en numéros romains
+6. PoemeDetail — `<Decor variant="detail" />`
 
----
-
-## 7 · Notes techniques
-
-- **Le seed du rêve est stocké par jour** (`cadavre-seed-YYYY-MM-DD`) — l'app a le même rêve pendant 24h, change automatiquement le lendemain. Le bouton « re-rêver » force un nouveau tirage immédiat.
-- **La mémoire des collages** (`cadavre-memoire-collages`) garde un compteur d'apparitions par collage. Un collage tiré 3+ fois est temporairement exclu pour garantir la variété.
-- **Les animations** (`collageDrop`, `inkBloom`) sont définies dans Tailwind config — utilisables via `animate-collage-drop` / `animate-ink-bloom` si besoin.
-- **Aucune dépendance supplémentaire** : tout passe par les fontes Google déjà importées dans le CSS.
-
----
-
-## Questions / blocages ?
-
-Si tu veux que j'adapte d'autres pages, dis-moi lesquelles et je te livre les versions complètes dans un prochain dossier.
+Aide / Reglages : appliquer juste le nouveau Tailwind suffit.
