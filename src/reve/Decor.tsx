@@ -114,46 +114,45 @@ interface ZoneCollage {
   withTape?: boolean
 }
 
-// 4 zones candidates par variant — le seed en choisit une
+// 2-3 zones candidates par variant — le seed en choisit une
+// Règle : jamais au-dessus d'un élément interactif. Taille réduite (0.50-0.58).
 const ZONES_COLLAGE: Record<Variant, ZoneCollage[]> = {
   accueil: [
-    { top: '12%', left: '4%', rotation: -5, withTape: true },
-    { top: '14%', right: '4%', rotation: 6 },
-    { bottom: '24%', right: '5%', rotation: -6 },
-    { bottom: '22%', left: '5%', rotation: 8, withTape: true },
+    // Top-left uniquement : la droite est prise par VerticalAccent, le bas par les liens nav
+    { top: '9%', left: '3%', rotation: -5, size: 0.52, withTape: true },
+    { top: '9%', left: '3%', rotation: 8, size: 0.52 },
   ],
   config: [
-    { top: '12%', right: '4%', rotation: -6 },
-    { top: '14%', left: '4%', rotation: 5 },
-    { bottom: '28%', right: '5%', rotation: -8 },
+    // Bas de page : le haut est entièrement occupé par les options interactives
+    { bottom: '3%', right: '4%', rotation: -5, size: 0.44 },
+    { bottom: '3%', left: '4%', rotation: 6, size: 0.44, withTape: true },
   ],
   jeu: [
-    // SANCTUAIRE : très petit, en marge basse
-    { bottom: '8%', right: '4%', rotation: -4, size: 0.55 },
-    { bottom: '8%', left: '4%', rotation: 5, size: 0.55 },
+    { bottom: '8%', right: '4%', rotation: -4, size: 0.48 },
+    { bottom: '8%', left: '4%', rotation: 5, size: 0.48 },
   ],
   fin: [
-    { top: '10%', right: '4%', rotation: -7 },
-    { top: '14%', left: '4%', rotation: 6, withTape: true },
-    { bottom: '26%', right: '5%', rotation: -9 },
+    { top: '8%', right: '4%', rotation: -7, size: 0.56 },
+    { top: '8%', left: '4%', rotation: 6, size: 0.56, withTape: true },
+    { bottom: '4%', right: '5%', rotation: -9, size: 0.48 },
   ],
   biblio: [
-    { top: '12%', right: '4%', rotation: 6, size: 0.6 },
-    { bottom: '22%', right: '5%', rotation: -8, size: 0.55 },
+    { top: '10%', right: '4%', rotation: 6, size: 0.50 },
+    { bottom: '4%', right: '5%', rotation: -8, size: 0.46 },
   ],
   detail: [
-    { top: '12%', right: '4%', rotation: -6 },
-    { top: '14%', left: '4%', rotation: 7, withTape: true },
+    { top: '10%', right: '4%', rotation: -6, size: 0.56 },
+    { top: '10%', left: '4%', rotation: 7, size: 0.56, withTape: true },
   ],
 }
 
 const ZONES_MARG: Record<Variant, React.CSSProperties[]> = {
   accueil: [
-    { top: '38%', left: '6%', transform: 'rotate(-4deg)' },
-    { top: '60%', right: '6%', transform: 'rotate(3deg)', textAlign: 'right' as const },
+    // Entre HeaderKeywords (~7%) et le titre (~32%) — seule zone libre
+    { top: '16%', left: '5%', transform: 'rotate(-4deg)' },
   ],
   config: [
-    { bottom: '35%', left: '8%', transform: 'rotate(-3deg)' },
+    { bottom: '38%', left: '8%', transform: 'rotate(-3deg)' },
   ],
   jeu: [],  // sanctuaire — aucune
   fin: [
@@ -242,7 +241,7 @@ export function TornCollage({ collage, zone, colorFilter }: TornCollageProps) {
   if (!seance) return null
 
   const Draw = collage.draw
-  const size = collage.w * (zone.size ?? 0.88)
+  const size = collage.w * (zone.size ?? 0.58)
   const filter = colorFilter ?? seance.colorSchema.filter
   const clipIdx = (seance.seed + collage.id.length) % TORN_CLIPS.length
 
@@ -252,7 +251,7 @@ export function TornCollage({ collage, zone, colorFilter }: TornCollageProps) {
       top: zone.top, bottom: zone.bottom,
       left: zone.left, right: zone.right,
       transform: `rotate(${zone.rotation}deg)`,
-      maxWidth: '40%',
+      maxWidth: '26%',
       filter: 'drop-shadow(3px 4px 0 rgba(0,0,0,0.16))',
       animation: 'collageDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.3s both',
       opacity: 0,
