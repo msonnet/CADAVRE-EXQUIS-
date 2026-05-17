@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { Decor, SignatureReve, useReve } from '../reve'
+import { Decor, HeaderKeywords, VerticalAccent, SignatureReve, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 
 const lienVariantes = {
@@ -29,7 +29,7 @@ export default function Accueil() {
     navigate(to)
   }
 
-  // Casse-tête typographique : lettre déréglée selon le seed
+  const accentColor = seance?.colorSchema.hex ?? '#a8332a'
   const idxBiais = seance?.idxBiais ?? -1
   const angleBiais = seance?.angleBiais ?? 0
   const letters1 = 'Cadavre'
@@ -38,32 +38,18 @@ export default function Accueil() {
   return (
     <PageTransition className="page-carnet relative flex flex-col items-center justify-center min-h-dvh text-center safe-top safe-bottom overflow-hidden">
 
-      {/* Décor du rêve */}
+      <HeaderKeywords />
+
       <Decor variant="accueil" />
 
-      {/* En-tête manuscrit (folio) */}
-      <div className="absolute top-6 left-6 right-6 flex justify-between">
-        <span className="folio">Tome I · Feuillet I</span>
-        <span className="folio">— Frontispice —</span>
-      </div>
-      <hr className="filet-double absolute top-12 left-6 right-6" />
+      <VerticalAccent text="CADAVRE" side="right" />
 
-      {/* Petite-cap */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10"
-      >
-        <div className="petite-cap-rouge mb-4">— Almanach —</div>
-      </motion.div>
-
-      {/* Titre — avec lettre déréglée */}
+      {/* Titre */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.0 }}
-        className="relative z-10"
+        className="relative z-10 mt-8"
       >
         <h1 className="font-bodoni italic font-black text-encre leading-none" style={{ fontSize: 'clamp(2.5rem, 9vw, 4rem)' }}>
           {[...letters1].map((l, i) => (
@@ -74,7 +60,7 @@ export default function Accueil() {
             }}>{l}</span>
           ))}
         </h1>
-        <h1 className="font-bodoni italic font-black text-rouge leading-none -mt-1" style={{ fontSize: 'clamp(2.7rem, 9.5vw, 4.4rem)' }}>
+        <h1 className="font-bodoni italic font-black leading-none -mt-1" style={{ fontSize: 'clamp(2.7rem, 9.5vw, 4.4rem)', color: accentColor }}>
           {[...letters2].map((l, i) => (
             <span key={i} style={{
               display: 'inline-block',
@@ -85,7 +71,7 @@ export default function Accueil() {
         </h1>
       </motion.div>
 
-      <hr className="filet-rouge w-20 mt-5 mx-auto" />
+      <hr className="w-20 mt-5 mx-auto" style={{ border: 'none', borderTop: `1px solid ${accentColor}` }} />
 
       <motion.p
         className="sous-titre mt-4 px-8 max-w-sm relative z-10"
@@ -95,9 +81,8 @@ export default function Accueil() {
       >
         <em>« Jeu de plume à plusieurs mains,<br/>pour cerveaux d'urgence et amoureux. »</em>
       </motion.p>
-      <div className="petite-cap mt-2 text-[0.55rem]">— d'après le Iᵉʳ manifeste —</div>
 
-      <nav className="flex flex-col items-center gap-5 mt-10 relative z-10">
+      <nav className="flex flex-col items-center gap-5 mt-8 relative z-10">
         {liens.map(({ to, label }, i) => (
           <motion.div
             key={to}
@@ -113,10 +98,10 @@ export default function Accueil() {
         ))}
       </nav>
 
-      {/* Re-rêver */}
       <button
         onClick={() => seance?.retirer()}
-        className="absolute bottom-6 left-6 nav-discrete hover:text-rouge transition-colors"
+        className="absolute bottom-6 left-6 nav-discrete transition-colors hover:opacity-100"
+        style={{ color: accentColor, opacity: 0.65 }}
         title="Re-tirer un rêve"
       >
         ✦ re-rêver

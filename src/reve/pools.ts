@@ -1,13 +1,77 @@
 // ════════════════════════════════════════════════
-// Pools de données : marginalia, dérèglements, hachures
+// SCHÉMAS CHROMATIQUES — tirés au hasard par seed
+// Chaque rêve prend une teinte différente pour les dessins
 // ════════════════════════════════════════════════
 
+export type ColorKey =
+  | 'rouge' | 'bleu' | 'vert' | 'ocre'
+  | 'sepia' | 'pourpre' | 'ardoise' | 'cuivre'
+
+export interface ColorSchema {
+  /** Filtre CSS pour teinter les SVG noir vers cette couleur. */
+  filter: string
+  /** Hex de la couleur dominante (pour bordures, accents, marginalia). */
+  hex: string
+  /** Nom lisible. */
+  label: string
+}
+
+export const COLOR_SCHEMAS: Record<ColorKey, ColorSchema> = {
+  rouge: {
+    filter: 'brightness(0) saturate(100%) invert(25%) sepia(95%) saturate(4500%) hue-rotate(345deg) brightness(95%) contrast(98%)',
+    hex: '#e83830', label: 'Rouge écarlate',
+  },
+  bleu: {
+    filter: 'brightness(0) saturate(100%) invert(18%) sepia(70%) saturate(2200%) hue-rotate(218deg) brightness(85%) contrast(110%)',
+    hex: '#1d3a8c', label: 'Bleu de Prusse',
+  },
+  vert: {
+    filter: 'brightness(0) saturate(100%) invert(32%) sepia(60%) saturate(1500%) hue-rotate(115deg) brightness(75%) contrast(105%)',
+    hex: '#2a8a6d', label: "Vert d'absinthe",
+  },
+  ocre: {
+    filter: 'brightness(0) saturate(100%) invert(48%) sepia(85%) saturate(800%) hue-rotate(8deg) brightness(75%) contrast(105%)',
+    hex: '#c47a18', label: 'Ocre soufré',
+  },
+  sepia: {
+    filter: 'brightness(0) saturate(100%) invert(28%) sepia(95%) saturate(800%) hue-rotate(355deg) brightness(78%) contrast(95%)',
+    hex: '#6d3a18', label: 'Sépia',
+  },
+  pourpre: {
+    filter: 'brightness(0) saturate(100%) invert(20%) sepia(80%) saturate(1500%) hue-rotate(285deg) brightness(70%) contrast(105%)',
+    hex: '#5a1a6a', label: 'Pourpre cardinal',
+  },
+  ardoise: {
+    filter: 'brightness(0) saturate(100%) invert(15%) sepia(15%) saturate(800%) hue-rotate(180deg) brightness(60%) contrast(95%)',
+    hex: '#2a3a4a', label: 'Ardoise',
+  },
+  cuivre: {
+    filter: 'brightness(0) saturate(100%) invert(38%) sepia(85%) saturate(1500%) hue-rotate(355deg) brightness(70%) contrast(105%)',
+    hex: '#a85028', label: 'Cuivre',
+  },
+}
+
+/** Pool de couleurs candidates pour le tirage automatique. */
+export const COLOR_POOL: ColorKey[] = ['rouge', 'bleu', 'vert', 'ocre', 'sepia', 'pourpre', 'ardoise', 'cuivre']
+
+// ════════════════════════════════════════════════
+// MOTS-CLÉS POUR LE HEADER (pipe-séparés)
+// ════════════════════════════════════════════════
+export const KEYWORDS_POOL = [
+  'rêve', 'inconscient', 'sept voix', 'fragment',
+  'plume', 'anonyme', 'automatique', 'collage',
+  'cadavre', 'syntaxe', 'mémoire', 'écume',
+  'aurore', 'nocturne', 'absent', 'soluble',
+]
+
+// ════════════════════════════════════════════════
+// MARGINALIA & DÉRÈGLEMENTS (inchangés)
+// ════════════════════════════════════════════════
 export interface MargEntry {
   txt: string
   sub: string
 }
 
-/** Annotations manuscrites — pool ~25 entrées */
 export const MARGINALIA: MargEntry[] = [
   { txt: "d'après Breton, 1924", sub: "— Manifeste —" },
   { txt: "rêve du 7 mai", sub: "Tome III, p. 42" },
@@ -36,13 +100,7 @@ export const MARGINALIA: MargEntry[] = [
   { txt: "mot trouvé rue", sub: "de Tournon" },
 ]
 
-export type DereglementId =
-  | 'pate'      // pâté d'encre
-  | 'errata'    // bandeau d'errata
-  | 'tampon'    // tampon de censure
-  | 'coin'      // coin de page corné
-  | 'compteur'  // compteur fou
-  | 'biais'     // lettre déréglée
+export type DereglementId = 'pate' | 'errata' | 'tampon' | 'coin' | 'compteur' | 'biais'
 
 export const DERLG: DereglementId[] = ['pate', 'errata', 'tampon', 'coin', 'compteur']
 
