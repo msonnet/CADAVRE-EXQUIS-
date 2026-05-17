@@ -114,55 +114,65 @@ interface ZoneCollage {
   withTape?: boolean
 }
 
-// 2-3 zones candidates par variant — le seed en choisit une
-// Règle : jamais au-dessus d'un élément interactif. Taille réduite (0.50-0.58).
+// Toutes les zones sont rendues simultanément — chacune reçoit un collage différent du pool.
+// Le seed détermine quelle rotation/taille exacte mais TOUTES les zones apparaissent.
 const ZONES_COLLAGE: Record<Variant, ZoneCollage[]> = {
   accueil: [
-    // Top-left uniquement : la droite est prise par VerticalAccent, le bas par les liens nav
-    { top: '9%', left: '3%', rotation: -5, size: 0.52, withTape: true },
-    { top: '9%', left: '3%', rotation: 8, size: 0.52 },
+    { top: '9%',  left: '3%',  rotation: -5, size: 0.65, withTape: true },
+    { top: '8%',  right: '3%', rotation:  7, size: 0.60 },
+    { bottom: '20%', right: '2%', rotation: -6, size: 0.55 },
+    { bottom: '8%',  left: '3%', rotation:  5, size: 0.50, withTape: true },
   ],
   config: [
-    // Bas de page : le haut est entièrement occupé par les options interactives
-    { bottom: '3%', right: '4%', rotation: -5, size: 0.44 },
-    { bottom: '3%', left: '4%', rotation: 6, size: 0.44, withTape: true },
+    { top: '8%',  right: '3%', rotation: -6, size: 0.68 },
+    { top: '10%', left: '3%', rotation:  5, size: 0.60, withTape: true },
+    { bottom: '10%', right: '4%', rotation: -7, size: 0.52 },
+    { bottom: '30%', left: '3%', rotation:  8, size: 0.50 },
   ],
   jeu: [
-    { bottom: '8%', right: '4%', rotation: -4, size: 0.48 },
-    { bottom: '8%', left: '4%', rotation: 5, size: 0.48 },
+    { top: '5%',     right: '3%', rotation: -4, size: 0.52 },
+    { bottom: '10%', left: '3%', rotation:  5, size: 0.50 },
   ],
   fin: [
-    { top: '8%', right: '4%', rotation: -7, size: 0.56 },
-    { top: '8%', left: '4%', rotation: 6, size: 0.56, withTape: true },
-    { bottom: '4%', right: '5%', rotation: -9, size: 0.48 },
+    { top: '8%',  right: '4%', rotation: -7, size: 0.70, withTape: true },
+    { top: '12%', left: '4%', rotation:  6, size: 0.65 },
+    { bottom: '15%', right: '5%', rotation: -9, size: 0.55 },
+    { bottom: '32%', left: '4%', rotation:  7, size: 0.50, withTape: true },
   ],
   biblio: [
-    { top: '10%', right: '4%', rotation: 6, size: 0.50 },
-    { bottom: '4%', right: '5%', rotation: -8, size: 0.46 },
+    { top: '8%',  right: '4%', rotation:  6, size: 0.62 },
+    { top: '10%', left: '4%', rotation: -5, size: 0.58, withTape: true },
+    { bottom: '14%', right: '4%', rotation:  8, size: 0.52 },
+    { bottom: '36%', left: '4%', rotation: -6, size: 0.48 },
   ],
   detail: [
-    { top: '10%', right: '4%', rotation: -6, size: 0.56 },
-    { top: '10%', left: '4%', rotation: 7, size: 0.56, withTape: true },
+    { top: '8%',  right: '4%', rotation: -6, size: 0.68 },
+    { top: '12%', left: '4%', rotation:  7, size: 0.62, withTape: true },
+    { bottom: '18%', right: '5%', rotation: -5, size: 0.55 },
   ],
 }
 
 const ZONES_MARG: Record<Variant, React.CSSProperties[]> = {
   accueil: [
-    // Entre HeaderKeywords (~7%) et le titre (~32%) — seule zone libre
-    { top: '16%', left: '5%', transform: 'rotate(-4deg)' },
+    { top: '16%',    left: '5%',  transform: 'rotate(-4deg)' },
+    { top: '65%',    right: '5%', transform: 'rotate(3deg)', textAlign: 'right' as const },
   ],
   config: [
-    { bottom: '38%', left: '8%', transform: 'rotate(-3deg)' },
+    { top: '42%',    left: '6%',  transform: 'rotate(-3deg)' },
+    { bottom: '28%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
   ],
   jeu: [],  // sanctuaire — aucune
   fin: [
-    { top: '32%', left: '6%', transform: 'rotate(-4deg)' },
+    { top: '28%',    left: '6%',  transform: 'rotate(-4deg)' },
+    { bottom: '28%', right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
   ],
   biblio: [
-    { bottom: '20%', left: '8%', transform: 'rotate(-3deg)' },
+    { top: '28%',    left: '6%',  transform: 'rotate(-3deg)' },
+    { bottom: '22%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
   ],
   detail: [
-    { top: '30%', right: '6%', transform: 'rotate(3deg)', textAlign: 'right' as const },
+    { top: '28%',    right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
+    { bottom: '22%', left: '6%',  transform: 'rotate(-3deg)' },
   ],
 }
 
@@ -176,17 +186,15 @@ const TORN_CLIPS = [
 
 interface DecorProps {
   variant?: Variant
-  collageIndex?: number
   hideMarginalia?: boolean
   hideDereglement?: boolean
-  /** Force un collage particulier. Si omis, c'est le 1er du tirage rêve. */
   collageOverride?: CollageDef
 }
 
-/** Décor complet pour un écran. Doit être placé dans un parent position:relative + overflow:hidden. */
+/** Décor complet pour un écran. Rend TOUS les collages de la variante en cascade.
+ *  Doit être placé dans un parent position:relative + overflow:hidden. */
 export function Decor({
   variant = 'accueil',
-  collageIndex,
   hideMarginalia = false,
   hideDereglement = false,
   collageOverride,
@@ -197,14 +205,16 @@ export function Decor({
   const zones = ZONES_COLLAGE[variant]
   const margs = ZONES_MARG[variant]
 
-  // Le seed détermine quelle zone parmi les candidates
-  const zoneIdx = (collageIndex ?? Math.floor(seance.seed % zones.length))
-  const zone = zones[zoneIdx]
-  const collage = collageOverride || seance.collages[zoneIdx % seance.collages.length]
-
   return (
     <>
-      <TornCollage collage={collage} zone={zone} />
+      {zones.map((zone, i) => (
+        <TornCollage
+          key={i}
+          collage={collageOverride || seance.collages[i % seance.collages.length]}
+          zone={zone}
+          animDelay={0.2 + i * 0.18}
+        />
+      ))}
 
       {!hideMarginalia && margs.map((style, i) => (
         <Marginalia
@@ -232,11 +242,11 @@ export function Decor({
 interface TornCollageProps {
   collage: CollageDef
   zone: ZoneCollage
-  /** Override de la teinte. Par défaut, prend la couleur du rêve. */
   colorFilter?: string
+  animDelay?: number
 }
 
-export function TornCollage({ collage, zone, colorFilter }: TornCollageProps) {
+export function TornCollage({ collage, zone, colorFilter, animDelay = 0.3 }: TornCollageProps) {
   const seance = useReve()
   if (!seance) return null
 
@@ -251,9 +261,9 @@ export function TornCollage({ collage, zone, colorFilter }: TornCollageProps) {
       top: zone.top, bottom: zone.bottom,
       left: zone.left, right: zone.right,
       transform: `rotate(${zone.rotation}deg)`,
-      maxWidth: '26%',
+      maxWidth: '30%',
       filter: 'drop-shadow(3px 4px 0 rgba(0,0,0,0.16))',
-      animation: 'collageDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.3s both',
+      animation: `collageDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) ${animDelay}s both`,
       opacity: 0,
       pointerEvents: 'none',
       zIndex: 1,
