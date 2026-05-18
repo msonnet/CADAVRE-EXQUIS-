@@ -256,9 +256,18 @@ export default function FinDePartie() {
                 type="text"
                 value={promptLibre}
                 onChange={e => setPromptLibre(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && promptLibre.trim()) choisirStyle(styleChoisi || 'libre') }}
                 placeholder="Direction artistique libre… (ex. : sombre et organique, couleurs acides)"
                 className="champ-carnet w-full text-sm"
               />
+              {promptLibre.trim() && (
+                <button
+                  onClick={() => choisirStyle(styleChoisi || 'libre')}
+                  className="nav-discrete mt-2 w-full py-2 border border-or/50 text-encre hover:border-or transition-colors"
+                >
+                  ✦ Générer avec cette direction
+                </button>
+              )}
             </div>
 
             {erreurIllustration && (
