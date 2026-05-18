@@ -40,6 +40,7 @@ export default function PoemeDetail() {
       cyanotype: 'Cyanotype', linogravure: 'Linogravure', pastel: 'Pastel sec',
       collage: 'Collage', gouache: 'Gouache', sanguine: 'Sanguine',
       mezzotinte: 'Mezzotinte', lavis: 'Lavis', serigraphie: 'Sérigraphie',
+      collage_surrealiste: 'Collages surréalistes',
     }
     const illustrationHtml = poeme.illustration?.url ? `
     <div class="illus">
@@ -204,6 +205,7 @@ ${illustrationHtml ? '<hr>' : ''}
       {poeme.illustration?.url && (
         <motion.div
           className="my-6 flex justify-center"
+          style={{ position: 'relative', zIndex: 2 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.8 }}
@@ -220,6 +222,7 @@ ${illustrationHtml ? '<hr>' : ''}
       {/* Poème reconstitué */}
       <motion.div
         className="my-8 text-center"
+        style={{ position: 'relative', zIndex: 2 }}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.8 }}

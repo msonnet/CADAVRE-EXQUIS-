@@ -15,7 +15,8 @@ const STYLE_PROMPTS: Record<string, string> = {
   sanguine:      'red chalk sanguine drawing on cream paper, warm reddish-brown lines, hatching and cross-hatching, Renaissance drawing technique, Leonardo or Raphael study aesthetic',
   mezzotinte:    'mezzotint intaglio print, velvety dark tones burnished to create light, rich deep blacks, gradual tonal transitions from darkness to luminosity, romantic nocturnal atmosphere',
   lavis:         'ink wash painting, diluted ink in varying grey tones, fluid brushwork, Chinese or Japanese sumi-e influence, white paper showing through thin washes, spontaneous gestural quality',
-  serigraphie:   'silkscreen print, flat areas of separated solid colors, registration marks slightly off, bold graphic design, pop art influence, Warhol-style repetition and color separation',
+  serigraphie:        'silkscreen print, flat areas of separated solid colors, registration marks slightly off, bold graphic design, pop art influence, Warhol-style repetition and color separation',
+  collage_surrealiste: 'surrealist photomontage collage in the style of Max Ernst and Hannah Höch, cut-and-paste fragments of engravings and photographs, dreamlike juxtapositions of scale and context, torn paper edges, anatomical diagrams mixed with natural history prints, vintage typographic scraps, Dada composition, overlapping layers with visible paste marks and creases',
 }
 
 async function traduireDirection(direction: string, anthropicKey: string): Promise<string> {
@@ -63,15 +64,16 @@ export default async function handler(req: any, res: any): Promise<void> {
     const direction = anthropicKey
       ? await traduireDirection(promptLibre.trim(), anthropicKey)
       : promptLibre.trim()
+    // Texte en premier pour lui donner le plus de poids, direction artistique en modificateur
     prompt = stylePrompt
-      ? `${direction}, treated as ${stylePrompt}. ${texte}. No text, no letters, no watermark, no signature`
-      : `${direction}. ${texte}. No text, no letters, no watermark, no signature`
+      ? `${texte}. ${direction}, rendered as ${stylePrompt}. No text, no letters, no watermark, no signature`
+      : `${texte}. ${direction}. No text, no letters, no watermark, no signature`
     guidance_scale = 6.0
   } else {
-    // Texte du poème envoyé tel quel — aucune interprétation
+    // Texte du poème en premier, verbatim — aucune interprétation, aucun préfixe
     prompt = stylePrompt
-      ? `${stylePrompt}, surrealist scene: ${texte}. No text, no letters, no watermark, no signature`
-      : `surrealist scene: ${texte}. No text, no letters, no watermark, no signature`
+      ? `${texte}. ${stylePrompt}. No text, no letters, no watermark, no signature`
+      : `${texte}. No text, no letters, no watermark, no signature`
     guidance_scale = 3.5
   }
 

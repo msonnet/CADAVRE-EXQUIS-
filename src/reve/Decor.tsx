@@ -101,16 +101,21 @@ export function useReve(): SeanceReve | null {
 // Ils requièrent un parent en position: relative + overflow: hidden
 // ════════════════════════════════════════════════
 
+// ─── Variant configs : où placer collage / marginalia par écran ──
+// Toutes les positions sont en POURCENTAGE (adaptatif)
+
 type Variant = 'accueil' | 'config' | 'jeu' | 'fin' | 'biblio' | 'detail'
 
 interface ZoneCollage {
   top?: string; bottom?: string
   left?: string; right?: string
   rotation: number
-  size?: number
+  size?: number  // multiplicateur de taille (0.55 = sanctuaire, 0.88 = normal)
   withTape?: boolean
 }
 
+// Toutes les zones sont rendues simultanément — chacune reçoit un collage différent du pool.
+// Le seed détermine quelle rotation/taille exacte mais TOUTES les zones apparaissent.
 const ZONES_COLLAGE: Record<Variant, ZoneCollage[]> = {
   accueil: [
     { top: '9%',     left: '3%',  rotation: -5, size: 0.65, withTape: true },
@@ -152,7 +157,7 @@ const ZONES_MARG: Record<Variant, React.CSSProperties[]> = {
     { top: '42%',    left: '6%',  transform: 'rotate(-3deg)' },
     { bottom: '28%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
   ],
-  jeu: [],
+  jeu: [],  // sanctuaire — aucune
   fin: [
     { top: '28%',    left: '6%',  transform: 'rotate(-4deg)' },
     { bottom: '28%', right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
@@ -167,6 +172,7 @@ const ZONES_MARG: Record<Variant, React.CSSProperties[]> = {
   ],
 }
 
+// ─── Papier déchiré : 4 formes ──
 const TORN_CLIPS = [
   'polygon(2% 3%, 14% 0%, 28% 2%, 44% 0%, 58% 3%, 74% 0%, 89% 2%, 100% 5%, 98% 18%, 100% 32%, 99% 47%, 100% 62%, 98% 76%, 100% 90%, 92% 100%, 78% 98%, 60% 100%, 42% 98%, 22% 100%, 6% 96%, 0% 82%, 2% 65%, 0% 48%, 3% 30%, 0% 14%)',
   'polygon(0% 8%, 8% 2%, 22% 5%, 38% 1%, 56% 4%, 72% 0%, 88% 3%, 100% 7%, 98% 22%, 100% 40%, 98% 58%, 100% 76%, 98% 92%, 86% 100%, 68% 98%, 48% 100%, 28% 98%, 10% 100%, 2% 88%, 0% 70%, 3% 50%, 0% 32%, 2% 18%)',
@@ -181,6 +187,8 @@ interface DecorProps {
   collageOverride?: CollageDef
 }
 
+/** Décor complet pour un écran. Rend TOUS les collages de la variante en cascade.
+ *  Doit être placé dans un parent position:relative + overflow:hidden. */
 export function Decor({
   variant = 'accueil',
   hideMarginalia = false,
@@ -226,6 +234,7 @@ export function Decor({
   )
 }
 
+// ─── Collage sur papier déchiré, teinté selon la couleur du rêve ──
 interface TornCollageProps {
   collage: CollageDef
   zone: ZoneCollage
@@ -261,15 +270,18 @@ export function TornCollage({ collage, zone, colorFilter, animDelay = 0.3 }: Tor
         clipPath: TORN_CLIPS[clipIdx],
         position: 'relative',
       }}>
+        {/* Texture papier */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           backgroundImage: 'radial-gradient(ellipse 60px 40px at 20% 80%, rgba(120,80,40,0.08), transparent 70%), radial-gradient(ellipse 50px 35px at 80% 20%, rgba(100,60,30,0.06), transparent 70%)',
           mixBlendMode: 'multiply',
         }} />
+        {/* Le collage teinté */}
         <div style={{ filter, opacity: 0.92 }}>
           <Draw w={size} />
         </div>
       </div>
+      {/* Étiquette */}
       <div style={{
         marginTop: 4, marginLeft: 6,
         background: 'rgba(237, 226, 200, 0.94)',
@@ -285,6 +297,7 @@ export function TornCollage({ collage, zone, colorFilter, animDelay = 0.3 }: Tor
         <div style={{ fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 1 }}>{collage.label}</div>
         <div style={{ fontSize: 7.5, fontStyle: 'italic', color: '#3a302a' }}>{collage.ref}</div>
       </div>
+      {/* Scotch optionnel */}
       {zone.withTape && (
         <>
           <div style={{ position: 'absolute', top: -8, left: '20%', width: 50, height: 18, background: '#f4ecd6', opacity: 0.75, transform: 'rotate(-8deg)', boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.08), 1px 1px 2px rgba(0,0,0,0.15)', backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.4), transparent 50%)' }} />
@@ -294,6 +307,7 @@ export function TornCollage({ collage, zone, colorFilter, animDelay = 0.3 }: Tor
   )
 }
 
+// ─── Marginalia manuscrite ──
 function Marginalia({ marg, style, animDelay }: { marg: MargEntry; style: React.CSSProperties; animDelay: number }) {
   const seance = useReve()
   const color = seance?.colorSchema.hex ?? '#a8332a'
@@ -308,7 +322,7 @@ function Marginalia({ marg, style, animDelay }: { marg: MargEntry; style: React.
       pointerEvents: 'none',
       opacity: 0,
       animation: `inkBloom 0.9s ease-out ${animDelay}s forwards`,
-      zIndex: 2,
+      zIndex: 1,
       maxWidth: '42%',
       ...style,
     }}>
@@ -318,6 +332,7 @@ function Marginalia({ marg, style, animDelay }: { marg: MargEntry; style: React.
   )
 }
 
+// ─── Dérèglement ──
 function Dereglement({ id, motTrouve, txtTampon, txtErrata }: {
   id: DereglementId; variant: string; motTrouve: string; txtTampon: string; txtErrata: string;
 }) {
@@ -385,10 +400,15 @@ function Dereglement({ id, motTrouve, txtTampon, txtErrata }: {
   }
 }
 
+// ════════════════════════════════════════════════
+// HEADER PIPE-SÉPARÉ — à placer en haut de l'écran
+// ════════════════════════════════════════════════
+
 export function HeaderKeywords({ count = 8 }: { count?: number }) {
   const seance = useReve()
   if (!seance) return null
   const color = seance.colorSchema.hex
+  // Tire `count` mots-clés depuis le pool, déterministe par seed
   const rng = mulberry32(seance.seed + 999)
   const words = pickN(rng, KEYWORDS_POOL, count)
   const half = Math.ceil(count / 2)
@@ -407,6 +427,9 @@ export function HeaderKeywords({ count = 8 }: { count?: number }) {
   )
 }
 
+// ════════════════════════════════════════════════
+// VERTICAL ACCENT — typographie verticale latérale
+// ════════════════════════════════════════════════
 export function VerticalAccent({ text = 'CADAVRE', side = 'right' }: { text?: string; side?: 'left' | 'right' }) {
   const seance = useReve()
   if (!seance) return null
@@ -427,6 +450,9 @@ export function VerticalAccent({ text = 'CADAVRE', side = 'right' }: { text?: st
   )
 }
 
+// ════════════════════════════════════════════════
+// SIGNATURE DU RÊVE
+// ════════════════════════════════════════════════
 export function SignatureReve() {
   const s = useReve()
   if (!s) return null
