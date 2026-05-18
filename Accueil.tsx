@@ -1,7 +1,18 @@
+// Exemple d'utilisation du système Rêve sur l'écran d'Accueil
+// À copier dans src/pages/Accueil.tsx
+//
+// SAFE ZONES protégées :
+//   · Titre Cadavre/Exquis · centre — Decor ne s'y aventure jamais
+//   · 4 boutons de navigation · centre — protégés
+//   · CTA principal · si présent, en bas — protégé
+//
+// Le décor (symbole, étiquettes, rayures, citation, signature, titre vertical
+// CADAVRE en marge) est placé hors de ces zones.
+
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { Decor, HeaderKeywords, VerticalAccent, SignatureReve, useReve } from '../reve'
+import { Decor, HeaderKeywords, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 
 const lienVariantes = {
@@ -29,7 +40,7 @@ export default function Accueil() {
     navigate(to)
   }
 
-  const accentColor = seance?.colorSchema.hex ?? '#a8332a'
+  const accentColor = seance?.colorSchema.hex ?? '#b22c20'
   const idxBiais = seance?.idxBiais ?? -1
   const angleBiais = seance?.angleBiais ?? 0
   const letters1 = 'Cadavre'
@@ -38,13 +49,11 @@ export default function Accueil() {
   return (
     <PageTransition className="page-carnet relative flex flex-col items-center justify-center min-h-dvh text-center safe-top safe-bottom overflow-hidden">
 
+      {/* ── DÉCOR (en marges, hors zone centrale) ── */}
       <HeaderKeywords />
-
       <Decor variant="accueil" />
 
-      <VerticalAccent text="CADAVRE" side="right" />
-
-      {/* Titre */}
+      {/* ── ZONE PROTÉGÉE 1 : TITRE CADAVRE/EXQUIS ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -73,15 +82,7 @@ export default function Accueil() {
 
       <hr className="w-20 mt-5 mx-auto" style={{ border: 'none', borderTop: `1px solid ${accentColor}` }} />
 
-      <motion.p
-        className="sous-titre mt-4 px-8 max-w-sm relative z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.8 }}
-      >
-        <em>« Jeu de plume à plusieurs mains,<br/>pour cerveaux d'urgence et amoureux. »</em>
-      </motion.p>
-
+      {/* ── ZONE PROTÉGÉE 2 : NAVIGATION ── */}
       <nav className="flex flex-col items-center gap-5 mt-8 relative z-10">
         {liens.map(({ to, label }, i) => (
           <motion.div
@@ -98,16 +99,15 @@ export default function Accueil() {
         ))}
       </nav>
 
+      {/* ── Bouton « re-rêver » en bas à gauche (zone décor) ── */}
       <button
         onClick={() => seance?.retirer()}
         className="absolute bottom-6 left-6 nav-discrete transition-colors hover:opacity-100"
-        style={{ color: accentColor, opacity: 0.65 }}
+        style={{ color: accentColor, opacity: 0.65, zIndex: 7 }}
         title="Re-tirer un rêve"
       >
         ✦ re-rêver
       </button>
-
-      <SignatureReve />
     </PageTransition>
   )
 }

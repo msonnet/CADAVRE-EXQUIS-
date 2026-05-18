@@ -1,0 +1,47 @@
+/* ──────────────────────────────────────────────────
+   ANIMATIONS du système Rêve · Q v3
+   À ajouter dans src/index.css (à la fin)
+   ────────────────────────────────────────────────── */
+
+@keyframes fadeInQ {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes inkBloomQ {
+  from { opacity: 0; filter: blur(2.5px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@keyframes symbolDrop {
+  from { opacity: 0; transform: translateY(-22px) rotate(-15deg) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+
+@keyframes etiqDrop {
+  from { opacity: 0; transform: translateY(-8px) rotate(0deg); }
+  to   { opacity: 1; }
+}
+
+@keyframes stripesIn {
+  from { opacity: 0; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); }
+  to   { opacity: 0.72; }
+}
+
+@keyframes blinkCaret {
+  50% { opacity: 0; }
+}
+
+/* ──────────────────────────────────────────────────
+   PALETTE Q v3 — variables CSS
+   Ces variables varient selon le rêve courant.
+   Le composant <ReveProvider> les écrit sur <html> via une side-effect.
+   ────────────────────────────────────────────────── */
+:root {
+  --reve-papier: #e6d4b8;
+  --reve-encre:  #0f0805;
+  --reve-accent: #b22c20;
+}
+
+/* Pour la fonte des marginalia */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap');
