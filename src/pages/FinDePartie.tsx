@@ -106,6 +106,7 @@ export default function FinDePartie() {
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
       <Decor variant="fin" />
+      <div style={{ position: 'relative', zIndex: 2 }}>
       <motion.p
         className="nav-discrete text-center mb-6"
         initial={{ opacity: 0 }}
@@ -119,7 +120,6 @@ export default function FinDePartie() {
 
       <motion.div
         className="my-8 text-center"
-        style={{ position: 'relative', zIndex: 2 }}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, duration: 1 }}
@@ -153,7 +153,6 @@ export default function FinDePartie() {
       {illustrationUrl && (
         <motion.div
           className="my-6 flex flex-col items-center gap-3"
-          style={{ position: 'relative', zIndex: 2 }}
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
@@ -319,6 +318,7 @@ export default function FinDePartie() {
           </button>
         </div>
       </motion.div>
+      </div>
     </PageTransition>
   )
 }
