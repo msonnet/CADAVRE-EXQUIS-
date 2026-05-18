@@ -33,7 +33,7 @@ async function texteVersPromptVisuel(texte: string, anthropicKey: string): Promi
         max_tokens: 140,
         messages: [{
           role: 'user',
-          content: `Convert this French surrealist poem into a vivid English visual scene description for an AI image generator.\n\nRules:\n- Keep every subject and object\n- Make actions VISUALLY LITERAL with physical contact:\n  * "eats/devours/swallows" = "teeth sinking into [object], [object] held inside open mouth mid-bite, actively consuming [object] — NOT howling, NOT gazing at it"\n  * "flies" = "airborne, wings spread, not touching ground"\n  * "crushes" = "physically pressing [object] flat underfoot"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
+          content: `Convert this French surrealist poem into a vivid English visual scene description for a fine art image generator.\n\nRules:\n- Keep every subject and object\n- Make actions VISUALLY LITERAL with physical contact:\n  * "eats/devours/swallows" = "teeth sinking into [object], [object] held inside open mouth mid-bite, actively consuming [object] — NOT howling, NOT gazing at it"\n  * "flies" = "airborne, wings spread, not touching ground"\n  * "crushes" = "physically pressing [object] flat underfoot"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- Nudity: describe as classical fine art ("nude figure", "draped torso", "sculptural female form") — painterly and museum-quality, never explicit\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
         }],
       }),
     })
@@ -105,7 +105,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   }
 
   try {
-    const response = await fetch('https://fal.run/fal-ai/flux/dev', {
+    const response = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
       method: 'POST',
       headers: {
         'Authorization': `Key ${falKey}`,
@@ -116,6 +116,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         image_size: 'portrait_4_3',
         num_inference_steps: 28,
         guidance_scale,
+        safety_tolerance: '5',
         num_images: 1,
       }),
     })
