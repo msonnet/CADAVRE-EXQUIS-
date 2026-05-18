@@ -119,7 +119,7 @@ export default function FinDePartie() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
-      <Decor variant="fin" />
+      <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
       <div style={{ position: 'relative', zIndex: 2 }}>
       <motion.p
         className="nav-discrete text-center mb-6"

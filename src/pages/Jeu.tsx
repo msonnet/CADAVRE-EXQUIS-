@@ -486,7 +486,7 @@ export default function Jeu() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
-      <Decor variant="jeu" hideDereglement />
+      <Decor variant={participantActuel?.type === 'ia' ? 'jeu-ia' : 'jeu'} />
       <div style={{ position: 'relative', zIndex: 2 }}>
       <div className="flex items-center justify-between mb-8">
         <button

@@ -1,61 +1,74 @@
-import React, { useState, useEffect, useMemo, useCallback, createContext, useContext } from 'react'
-import { mulberry32, pickN, pickOne, filtrerMemoire, incrementerMemoire } from './prng'
+import React, { useState, useMemo, useCallback, createContext, useContext } from 'react'
+import { mulberry32, pickOne, pickN, filtrerMemoire, incrementerMemoire } from './prng'
 import { COLLAGES, type CollageDef, Hatches } from './collages'
 import {
-  MARGINALIA, DERLG, MOTS_TROUVES, TXT_TAMPONS, TXT_ERRATA,
-  COLOR_POOL, COLOR_SCHEMAS, KEYWORDS_POOL, type ColorKey, type ColorSchema,
-  type DereglementId, type MargEntry,
+  COLOR_POOL, COLOR_SCHEMAS, type ColorKey, type ColorSchema,
+  CITATIONS, ETIQ_POOL, HEURES_NOCTURNES, STRIPE_COMBOS,
+  MARGINALIA, type StripeSpec, type Citation, type MargEntry,
 } from './pools'
 
 // ════════════════════════════════════════════════
-// REVE PROVIDER + HOOK
+// SÉANCE — composition unique par seed
 // ════════════════════════════════════════════════
 
-interface SeanceReve {
+export interface SeanceReve {
   seed: number
-  collages: CollageDef[]
-  margs: MargEntry[]
-  derlg: DereglementId
-  motTrouve: string
-  txtTampon: string
-  txtErrata: string
-  angleBiais: number
-  idxBiais: number
-  // ▼ nouveau : palette tirée pour le rêve courant
   colorKey: ColorKey
   colorSchema: ColorSchema
+  /** Symbole principal pour l'écran (1er du tirage). */
+  symbole: CollageDef
+  symbolSide: 'left' | 'right'
+  /** Pour les écrans qui veulent placer 2-3 collages secondaires. */
+  collages: CollageDef[]
+  citation: Citation
+  etiqs: [string, string]
+  margs: MargEntry[]
+  stripes: StripeSpec[]
+  heure: string
+  titreRotation: number
+  subRotation: number
+  titreAccentVertical: boolean
+  /** Lettre du titre qui sera déréglée (0..13). */
+  idxBiais: number
+  angleBiais: number
   retirer: () => void
 }
 
 const ReveCtx = createContext<SeanceReve | null>(null)
 
-function getStorageKeyDuJour(): string {
+function getStorageKey(): string {
   const today = new Date().toISOString().slice(0, 10)
   return `cadavre-seed-${today}`
 }
 
 function composerSeance(seed: number): SeanceReve {
   const rng = mulberry32(seed)
-
-  const pool = filtrerMemoire(COLLAGES)
-  const collages = pickN(rng, pool, Math.min(8, pool.length))
-  collages.forEach(c => incrementerMemoire(c.id))
-
-  const margs = pickN(rng, MARGINALIA, 4)
-  const derlg = pickOne(rng, DERLG)
-  const motTrouve = pickOne(rng, MOTS_TROUVES)
-  const txtTampon = pickOne(rng, TXT_TAMPONS)
-  const txtErrata = pickOne(rng, TXT_ERRATA)
-  const angleBiais = rng() * 12 - 6
-  const idxBiais = Math.floor(rng() * 14)
   const colorKey = pickOne(rng, COLOR_POOL)
   const colorSchema = COLOR_SCHEMAS[colorKey]
 
+  // 6 collages — le premier est le "symbole" principal
+  const pool = filtrerMemoire(COLLAGES)
+  const collages = pickN(rng, pool.length >= 6 ? pool : COLLAGES, 6)
+  collages.forEach(c => incrementerMemoire(c.id))
+  const symbole = collages[0]
+  const symbolSide = rng() > 0.5 ? 'right' : 'left'
+
+  const citation = pickOne(rng, CITATIONS)
+  const etiqs = pickOne(rng, ETIQ_POOL)
+  const margs = pickN(rng, MARGINALIA, 4)
+  const stripes = pickOne(rng, STRIPE_COMBOS)
+  const heure = pickOne(rng, HEURES_NOCTURNES)
+  const titreRotation = rng() * 2 - 1
+  const subRotation = rng() * 3 - 1.5
+  const titreAccentVertical = rng() > 0.5
+  const idxBiais = Math.floor(rng() * 14)
+  const angleBiais = rng() * 12 - 6
+
   return {
-    seed, collages, margs, derlg,
-    motTrouve, txtTampon, txtErrata,
-    angleBiais, idxBiais,
-    colorKey, colorSchema,
+    seed, colorKey, colorSchema, symbole, symbolSide, collages,
+    citation, etiqs, margs, stripes, heure,
+    titreRotation, subRotation, titreAccentVertical,
+    idxBiais, angleBiais,
     retirer: () => {},
   }
 }
@@ -63,26 +76,23 @@ function composerSeance(seed: number): SeanceReve {
 export function ReveProvider({ children }: { children: React.ReactNode }) {
   const [seed, setSeed] = useState<number>(() => {
     if (typeof window === 'undefined') return 42
-    const key = getStorageKeyDuJour()
+    const key = getStorageKey()
     const saved = localStorage.getItem(key)
     if (saved) return parseInt(saved)
     const fresh = Math.floor(Math.random() * 100000)
     localStorage.setItem(key, String(fresh))
     return fresh
   })
-
   const retirer = useCallback(() => {
     const newSeed = Math.floor(Math.random() * 100000)
-    localStorage.setItem(getStorageKeyDuJour(), String(newSeed))
+    localStorage.setItem(getStorageKey(), String(newSeed))
     setSeed(newSeed)
   }, [])
-
   const seance = useMemo<SeanceReve>(() => {
     const s = composerSeance(seed)
     s.retirer = retirer
     return s
   }, [seed, retirer])
-
   return (
     <ReveCtx.Provider value={seance}>
       <Hatches />
@@ -96,377 +106,309 @@ export function useReve(): SeanceReve | null {
 }
 
 // ════════════════════════════════════════════════
-// COMPOSANTS DE DÉCOR
-// Tous les composants ci-dessous sont POSITIONNÉS ABSOLUMENT
-// Ils requièrent un parent en position: relative + overflow: hidden
+// ZONES PAR ÉCRAN — chaque écran a SES zones protégées
+// Les composants Décor respectent ces zones automatiquement
 // ════════════════════════════════════════════════
 
-// ─── Variant configs : où placer collage / marginalia par écran ──
-// Toutes les positions sont en POURCENTAGE (adaptatif)
+export type Variant = 'accueil' | 'config' | 'jeu' | 'jeu-ia' | 'fin' | 'fin-image' | 'biblio' | 'detail'
 
-type Variant = 'accueil' | 'config' | 'jeu' | 'fin' | 'biblio' | 'detail'
-
-interface ZoneCollage {
-  top?: string; bottom?: string
-  left?: string; right?: string
-  rotation: number
-  size?: number  // multiplicateur de taille (0.55 = sanctuaire, 0.88 = normal)
-  withTape?: boolean
+interface VariantZones {
+  symbol: { top?: string; bottom?: string; left?: string; right?: string; sizeMul: number } | null
+  etiqs: React.CSSProperties[]
+  stripesMax: number
+  verticalTitle: { side: 'left' | 'right' } | null
+  citation: boolean
+  signature: boolean
 }
 
-// Toutes les zones sont rendues simultanément — chacune reçoit un collage différent du pool.
-// Le seed détermine quelle rotation/taille exacte mais TOUTES les zones apparaissent.
-const ZONES_COLLAGE: Record<Variant, ZoneCollage[]> = {
-  accueil: [
-    { top: '9%',     left: '3%',  rotation: -5, size: 0.65, withTape: true },
-    { top: '8%',     right: '3%', rotation:  7, size: 0.60 },
-    { bottom: '10%', left: '3%',  rotation:  4, size: 0.52 },
-  ],
-  config: [
-    { top: '8%',     right: '3%', rotation: -6, size: 0.65 },
-    { top: '10%',    left: '3%',  rotation:  5, size: 0.60, withTape: true },
-    { bottom: '10%', right: '4%', rotation: -7, size: 0.50 },
-  ],
-  jeu: [
-    { top: '5%',     right: '3%', rotation: -4, size: 0.52 },
-    { bottom: '10%', left: '3%',  rotation:  5, size: 0.48 },
-  ],
-  fin: [
-    { top: '8%',     right: '4%', rotation: -7, size: 0.68, withTape: true },
-    { top: '12%',    left: '4%',  rotation:  6, size: 0.62 },
-    { bottom: '12%', right: '4%', rotation: -9, size: 0.54 },
-  ],
-  biblio: [
-    { top: '8%',     right: '4%', rotation:  6, size: 0.62 },
-    { top: '10%',    left: '4%',  rotation: -5, size: 0.58, withTape: true },
-    { bottom: '12%', right: '4%', rotation:  8, size: 0.50 },
-  ],
-  detail: [
-    { top: '8%',     right: '4%', rotation: -6, size: 0.68 },
-    { top: '12%',    left: '4%',  rotation:  7, size: 0.62, withTape: true },
-    { bottom: '16%', right: '5%', rotation: -5, size: 0.52 },
-  ],
+const ZONES: Record<Variant, VariantZones> = {
+  accueil: {
+    symbol: { top: '13%', sizeMul: 0.9 },
+    etiqs: [
+      { top: '62%', left: '30%', transform: 'rotate(-3deg)' },
+      { top: '66%', left: '36%', transform: 'rotate(2deg)' },
+    ],
+    stripesMax: 2,
+    verticalTitle: { side: 'right' },
+    citation: true,
+    signature: true,
+  },
+  config: {
+    symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
+    etiqs: [{ bottom: '32%', left: '8%', transform: 'rotate(-3deg)' }],
+    stripesMax: 1,
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
+  jeu: {
+    symbol: { bottom: '14%', right: '4%', sizeMul: 0.5 },
+    etiqs: [],
+    stripesMax: 0,
+    verticalTitle: null,
+    citation: false,
+    signature: false,
+  },
+  'jeu-ia': {
+    symbol: { top: '20%', sizeMul: 0.7 },
+    etiqs: [],
+    stripesMax: 1,
+    verticalTitle: null,
+    citation: false,
+    signature: false,
+  },
+  fin: {
+    symbol: { top: '12%', right: '5%', sizeMul: 0.55 },
+    etiqs: [{ bottom: '24%', left: '6%', transform: 'rotate(-2deg)' }],
+    stripesMax: 1,
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
+  'fin-image': {
+    symbol: null,
+    etiqs: [],
+    stripesMax: 1,
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
+  biblio: {
+    symbol: { top: '12%', right: '4%', sizeMul: 0.5 },
+    etiqs: [{ bottom: '20%', left: '6%', transform: 'rotate(-3deg)' }],
+    stripesMax: 1,
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
+  detail: {
+    symbol: { top: '14%', left: '4%', sizeMul: 0.5 },
+    etiqs: [],
+    stripesMax: 1,
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
 }
 
-const ZONES_MARG: Record<Variant, React.CSSProperties[]> = {
-  accueil: [
-    { top: '16%',    left: '5%',  transform: 'rotate(-4deg)' },
-    { bottom: '22%', right: '5%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
-  ],
-  config: [
-    { top: '42%',    left: '6%',  transform: 'rotate(-3deg)' },
-    { bottom: '26%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
-  ],
-  jeu: [],  // sanctuaire — aucune
-  fin: [
-    { top: '28%',    left: '6%',  transform: 'rotate(-4deg)' },
-    { bottom: '28%', right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
-  ],
-  biblio: [
-    { top: '28%',    left: '6%',  transform: 'rotate(-3deg)' },
-    { bottom: '22%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
-  ],
-  detail: [
-    { top: '28%',    right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
-    { bottom: '22%', left: '6%',  transform: 'rotate(-3deg)' },
-  ],
-}
-
-// ─── Papier déchiré : 4 formes ──
-const TORN_CLIPS = [
-  'polygon(2% 3%, 14% 0%, 28% 2%, 44% 0%, 58% 3%, 74% 0%, 89% 2%, 100% 5%, 98% 18%, 100% 32%, 99% 47%, 100% 62%, 98% 76%, 100% 90%, 92% 100%, 78% 98%, 60% 100%, 42% 98%, 22% 100%, 6% 96%, 0% 82%, 2% 65%, 0% 48%, 3% 30%, 0% 14%)',
-  'polygon(0% 8%, 8% 2%, 22% 5%, 38% 1%, 56% 4%, 72% 0%, 88% 3%, 100% 7%, 98% 22%, 100% 40%, 98% 58%, 100% 76%, 98% 92%, 86% 100%, 68% 98%, 48% 100%, 28% 98%, 10% 100%, 2% 88%, 0% 70%, 3% 50%, 0% 32%, 2% 18%)',
-  'polygon(4% 2%, 16% 0%, 35% 4%, 55% 0%, 75% 4%, 92% 0%, 100% 10%, 98% 28%, 100% 48%, 98% 68%, 100% 88%, 88% 100%, 68% 98%, 42% 100%, 18% 98%, 0% 92%, 4% 70%, 0% 45%, 3% 22%)',
-  'polygon(3% 5%, 18% 1%, 36% 3%, 58% 0%, 78% 3%, 95% 1%, 100% 12%, 98% 30%, 100% 52%, 98% 72%, 100% 90%, 90% 100%, 72% 98%, 48% 100%, 28% 98%, 8% 100%, 0% 88%, 3% 65%, 0% 42%, 2% 22%)',
-]
+// ════════════════════════════════════════════════
+// DECOR — composant central
+// ════════════════════════════════════════════════
 
 interface DecorProps {
-  variant?: Variant
-  hideMarginalia?: boolean
-  hideDereglement?: boolean
-  collageOverride?: CollageDef
+  variant: Variant
+  hideCitation?: boolean
+  hideSignature?: boolean
 }
 
-/** Décor complet pour un écran. Rend TOUS les collages de la variante en cascade.
- *  Doit être placé dans un parent position:relative + overflow:hidden. */
-export function Decor({
-  variant = 'accueil',
-  hideMarginalia = false,
-  hideDereglement = false,
-  collageOverride,
-}: DecorProps) {
+export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
   const seance = useReve()
   if (!seance) return null
+  const zones = ZONES[variant]
+  const c = seance.colorSchema
 
-  const zones = ZONES_COLLAGE[variant]
-  const margs = ZONES_MARG[variant]
+  let symbolPos = zones.symbol
+  if (variant === 'accueil' && symbolPos) {
+    symbolPos = { ...symbolPos, [seance.symbolSide]: '4%' } as VariantZones['symbol']
+  }
+  if (variant === 'jeu-ia' && symbolPos) {
+    symbolPos = { ...symbolPos, left: '50%' } as VariantZones['symbol']
+  }
 
   return (
     <>
-      {zones.map((zone, i) => (
-        <TornCollage
-          key={i}
-          collage={collageOverride || seance.collages[i % seance.collages.length]}
-          zone={zone}
-          animDelay={0.2 + i * 0.18}
-        />
+      {seance.stripes.slice(0, zones.stripesMax).map((s, i) => (
+        <Stripes key={i} pos={s.pos} size={s.size} height={s.height} color={c.encre} />
       ))}
 
-      {!hideMarginalia && margs.map((style, i) => (
-        <Marginalia
-          key={i}
-          marg={seance.margs[i % seance.margs.length]}
-          style={style}
-          animDelay={1.0 + i * 0.3}
+      {zones.verticalTitle && (
+        <VerticalAccent
+          side={seance.symbolSide === 'right' ? 'left' : 'right'}
+          color={seance.titreAccentVertical ? c.hex : c.encre}
+          rotation={seance.titreRotation}
         />
-      ))}
+      )}
 
-      {!hideDereglement && (
-        <Dereglement
-          id={seance.derlg}
+      {symbolPos && (
+        <SymboleAvecCartel
+          symbole={seance.symbole}
+          color={c.encre}
+          pos={symbolPos}
           variant={variant}
-          motTrouve={seance.motTrouve}
-          txtTampon={seance.txtTampon}
-          txtErrata={seance.txtErrata}
         />
+      )}
+
+      {zones.etiqs.map((style, i) => (
+        <Etiquette key={i} style={{ ...style, position: 'absolute' as const }} delay={0.9 + i * 0.2}>
+          {seance.etiqs[i % 2]}
+        </Etiquette>
+      ))}
+
+      {zones.citation && !hideCitation && (
+        <CitationManifeste citation={seance.citation} color={c.encre} accent={c.hex} />
+      )}
+
+      {zones.signature && !hideSignature && (
+        <SignatureReve seance={seance} />
       )}
     </>
   )
 }
 
-// ─── Collage sur papier déchiré, teinté selon la couleur du rêve ──
-interface TornCollageProps {
-  collage: CollageDef
-  zone: ZoneCollage
-  colorFilter?: string
-  animDelay?: number
+// ─── Composants internes ──
+
+function Stripes({ pos, size, height, color }: { pos: StripeSpec['pos']; size: number; height: number; color: string }) {
+  const positions = {
+    'top-right':    { top: 0, right: 0, clipPath: 'polygon(20% 0, 100% 0, 100% 70%, 60% 100%, 0 75%)', angle: 135 },
+    'bottom-left':  { bottom: 0, left: 0, clipPath: 'polygon(0 30%, 80% 60%, 100% 100%, 0 100%)', angle: 45 },
+    'top-left':     { top: 0, left: 0, clipPath: 'polygon(0 0, 100% 0, 70% 100%, 0 80%)', angle: 135 },
+    'bottom-right': { bottom: 0, right: 0, clipPath: 'polygon(0 30%, 100% 0, 100% 100%, 30% 100%)', angle: 45 },
+  }[pos]
+  return (
+    <div style={{
+      position: 'absolute', ...positions,
+      width: `${size}%`, height: `${height}%`,
+      background: `repeating-linear-gradient(${positions.angle}deg, ${color} 0px, ${color} 1px, transparent 1px, transparent 6px)`,
+      opacity: 0.72, pointerEvents: 'none', zIndex: 1,
+      animation: 'stripesIn 1.4s cubic-bezier(0.34, 1.2, 0.64, 1) 0.4s both',
+    }} />
+  )
 }
 
-export function TornCollage({ collage, zone, colorFilter, animDelay = 0.3 }: TornCollageProps) {
-  const seance = useReve()
-  if (!seance) return null
+function VerticalAccent({ side, color, rotation }: { side: 'left' | 'right'; color: string; rotation: number }) {
+  return (
+    <div style={{
+      position: 'absolute', top: '9%',
+      [side]: '3%',
+      writingMode: 'vertical-rl',
+      fontFamily: "'Bodoni Moda', serif",
+      fontWeight: 900,
+      fontSize: 'clamp(4.8rem, 17vw, 6.4rem)',
+      lineHeight: 0.82, letterSpacing: '-0.03em',
+      color, textTransform: 'uppercase',
+      transform: `rotate(${rotation}deg)`,
+      zIndex: 3, pointerEvents: 'none',
+      animation: 'inkBloomQ 1.2s 0.2s both',
+    } as React.CSSProperties}>CADAVRE</div>
+  )
+}
 
-  const Draw = collage.draw
-  const size = collage.w * (zone.size ?? 0.58)
-  const filter = colorFilter ?? seance.colorSchema.filter
-  const clipIdx = (seance.seed + collage.id.length) % TORN_CLIPS.length
-
+function SymboleAvecCartel({
+  symbole, color, pos, variant,
+}: {
+  symbole: CollageDef
+  color: string
+  pos: NonNullable<VariantZones['symbol']>
+  variant: Variant
+}) {
+  const Draw = symbole.draw
+  const size = symbole.w * pos.sizeMul
+  const isCentered = variant === 'jeu-ia'
   return (
     <div style={{
       position: 'absolute',
-      top: zone.top, bottom: zone.bottom,
-      left: zone.left, right: zone.right,
-      transform: `rotate(${zone.rotation}deg)`,
-      maxWidth: '30%',
-      filter: 'drop-shadow(3px 4px 0 rgba(0,0,0,0.16))',
-      animation: `collageDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) ${animDelay}s both`,
-      opacity: 0,
-      pointerEvents: 'none',
-      zIndex: 1,
+      top: pos.top, bottom: pos.bottom,
+      left: pos.left, right: pos.right,
+      transform: isCentered ? 'translateX(-50%)' : undefined,
+      zIndex: 3, opacity: 0, pointerEvents: 'none',
+      animation: 'symbolDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.5s both',
     }}>
-      <div style={{
-        background: '#fbf2dc',
-        padding: 12,
-        clipPath: TORN_CLIPS[clipIdx],
-        position: 'relative',
-      }}>
-        {/* Texture papier */}
+      <Draw w={size} />
+      {(variant === 'accueil' || variant === 'fin') && (
         <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: 'radial-gradient(ellipse 60px 40px at 20% 80%, rgba(120,80,40,0.08), transparent 70%), radial-gradient(ellipse 50px 35px at 80% 20%, rgba(100,60,30,0.06), transparent 70%)',
-          mixBlendMode: 'multiply',
-        }} />
-        {/* Le collage teinté */}
-        <div style={{ filter, opacity: 0.92 }}>
-          <Draw w={size} />
+          marginTop: 6,
+          background: 'rgba(240, 228, 204, 0.92)',
+          border: `0.5px solid ${color}`,
+          padding: '3px 7px 4px',
+          fontFamily: 'monospace',
+          color,
+          transform: 'rotate(-2deg)',
+          maxWidth: 130, lineHeight: 1.25,
+          boxShadow: '1px 1px 0 rgba(0,0,0,0.15)',
+        }}>
+          <div style={{ fontSize: 8.5, letterSpacing: '0.12em', fontWeight: 700 }}>{symbole.label.toUpperCase()}</div>
+          <div style={{ fontSize: 7.5, fontStyle: 'italic', opacity: 0.75, marginTop: 1 }}>{symbole.ref}</div>
         </div>
-      </div>
-      {/* Étiquette */}
-      <div style={{
-        marginTop: 4, marginLeft: 6,
-        background: 'rgba(237, 226, 200, 0.94)',
-        border: '0.5px solid #1a1410',
-        padding: '3px 7px 4px',
-        fontFamily: "'IM Fell English', serif",
-        color: '#1a1410',
-        transform: `rotate(${zone.rotation > 0 ? -2.5 : 2.5}deg)`,
-        maxWidth: 140,
-        lineHeight: 1.25,
-        boxShadow: '1px 1px 0 rgba(0,0,0,0.1)',
-      }}>
-        <div style={{ fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 1 }}>{collage.label}</div>
-        <div style={{ fontSize: 7.5, fontStyle: 'italic', color: '#3a302a' }}>{collage.ref}</div>
-      </div>
-      {/* Scotch optionnel */}
-      {zone.withTape && (
-        <>
-          <div style={{ position: 'absolute', top: -8, left: '20%', width: 50, height: 18, background: '#f4ecd6', opacity: 0.75, transform: 'rotate(-8deg)', boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.08), 1px 1px 2px rgba(0,0,0,0.15)', backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.4), transparent 50%)' }} />
-        </>
       )}
     </div>
   )
 }
 
-// ─── Marginalia manuscrite ──
-function Marginalia({ marg, style, animDelay }: { marg: MargEntry; style: React.CSSProperties; animDelay: number }) {
-  const seance = useReve()
-  const color = seance?.colorSchema.hex ?? '#a8332a'
+function Etiquette({ children, style, delay }: { children: React.ReactNode; style: React.CSSProperties; delay: number }) {
   return (
     <div style={{
-      position: 'absolute',
-      fontFamily: "'Caveat', cursive",
-      fontWeight: 600,
-      color,
-      fontSize: 17,
-      lineHeight: 1.15,
-      pointerEvents: 'none',
-      opacity: 0,
-      animation: `inkBloom 0.9s ease-out ${animDelay}s forwards`,
-      zIndex: 1,
-      maxWidth: '42%',
       ...style,
+      background: '#f0e4cc', padding: '4px 10px 5px',
+      fontFamily: 'monospace', fontSize: 11, lineHeight: 1.3,
+      color: '#0f0805',
+      boxShadow: '1px 2px 0 rgba(0,0,0,0.18)',
+      zIndex: 6, opacity: 0,
+      animation: `etiqDrop 0.7s ease-out ${delay}s both`,
+      pointerEvents: 'none',
+    }}>{children}</div>
+  )
+}
+
+function CitationManifeste({ citation, color, accent }: { citation: Citation; color: string; accent: string }) {
+  return (
+    <div style={{
+      position: 'absolute', bottom: '20%', left: '5%', right: '5%',
+      fontFamily: 'monospace', fontSize: 9.5, lineHeight: 1.5,
+      color, opacity: 0,
+      animation: 'fadeInQ 0.8s 1.3s both',
+      zIndex: 4, pointerEvents: 'none',
     }}>
-      {marg.txt}
-      <div style={{ fontSize: 13, opacity: 0.85, marginTop: 1 }}>{marg.sub}</div>
+      <em style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, opacity: 0.95 }}>
+        {citation.t}
+      </em>
+      <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, marginTop: 6 }}>
+        {citation.a}
+      </div>
     </div>
   )
 }
 
-// ─── Dérèglement ──
-function Dereglement({ id, motTrouve, txtTampon, txtErrata }: {
-  id: DereglementId; variant: string; motTrouve: string; txtTampon: string; txtErrata: string;
-}) {
-  const seance = useReve()
-  const color = seance?.colorSchema.hex ?? '#a8332a'
-  const base: React.CSSProperties = {
-    position: 'absolute',
-    opacity: 0,
-    animation: 'inkBloom 1.1s ease-out 1.5s forwards',
-    pointerEvents: 'none',
-    zIndex: 1,
-  }
-  switch (id) {
-    case 'pate':
-      return (
-        <svg style={{ ...base, top: '55%', right: '8%' }} width="38" height="38" viewBox="0 0 60 60">
-          <path d="M20,8 Q35,5 42,15 Q52,22 50,35 Q55,48 42,52 Q28,58 18,50 Q5,45 8,30 Q5,18 20,8 Z" fill="#1a1410" opacity="0.85" />
-          <circle cx="48" cy="20" r="2" fill="#1a1410" opacity="0.6" />
-          <circle cx="10" cy="48" r="1.5" fill="#1a1410" opacity="0.5" />
-        </svg>
-      )
-    case 'errata':
-      return (
-        <div style={{
-          ...base, bottom: '18%', left: '6%',
-          background: '#f4ecd6', border: '0.5px solid #1a1410',
-          padding: '4px 14px',
-          fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
-          fontSize: 12, color: '#1a1410',
-          transform: 'rotate(-2.5deg)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-        }}>{txtErrata}</div>
-      )
-    case 'tampon':
-      return (
-        <div style={{
-          ...base, top: '70%', left: '8%',
-          border: `2.5px solid ${color}`,
-          padding: '6px 18px 4px',
-          fontFamily: "'IM Fell English', serif",
-          fontWeight: 700, fontSize: 14,
-          letterSpacing: '0.18em', textTransform: 'uppercase',
-          color, background: 'transparent',
-          transform: 'rotate(-8deg)', opacity: 0.85,
-        }}>{txtTampon}</div>
-      )
-    case 'coin':
-      return (
-        <svg style={{ ...base, top: 0, right: 0 }} width="50" height="50" viewBox="0 0 60 60">
-          <path d="M60,0 L60,28 L32,0 Z" fill="#d8c8a8" stroke="#1a1410" strokeWidth="0.6" />
-          <path d="M60,28 L32,0" stroke="#1a1410" strokeWidth="0.6" />
-        </svg>
-      )
-    case 'compteur':
-      return (
-        <div style={{
-          ...base, top: '8%', right: '18%',
-          transform: 'rotate(3deg)',
-          fontFamily: "'Caveat', cursive",
-          color, fontSize: 17,
-        }}>Tome I ½</div>
-      )
-    default:
-      return null
-  }
+function SignatureReve({ seance }: { seance: SeanceReve }) {
+  return (
+    <div style={{
+      position: 'absolute', bottom: 4, right: 10,
+      fontFamily: "'Caveat', cursive",
+      color: seance.colorSchema.hex, fontSize: 10, opacity: 0.55,
+      pointerEvents: 'none', zIndex: 6,
+      animation: 'fadeInQ 0.8s 1.8s both',
+    }}>
+      rêvé à {seance.heure}
+    </div>
+  )
 }
 
 // ════════════════════════════════════════════════
-// HEADER PIPE-SÉPARÉ — à placer en haut de l'écran
+// HeaderKeywords — bandeau pipe-séparé
 // ════════════════════════════════════════════════
+const KEYWORDS_POOL = [
+  'rêve', 'inconscient', 'sept voix', 'fragment',
+  'plume', 'anonyme', 'automatique', 'collage',
+  'soluble', 'cadavre', 'syntaxe', 'mémoire',
+]
 
 export function HeaderKeywords({ count = 8 }: { count?: number }) {
   const seance = useReve()
   if (!seance) return null
-  const color = seance.colorSchema.hex
-  // Tire `count` mots-clés depuis le pool, déterministe par seed
   const rng = mulberry32(seance.seed + 999)
   const words = pickN(rng, KEYWORDS_POOL, count)
   const half = Math.ceil(count / 2)
   return (
-    <div style={{ position: 'absolute', top: '4%', left: '5%', right: '5%', zIndex: 3 }}>
+    <div style={{ position: 'absolute', top: '3%', left: '5%', right: '5%', zIndex: 3, pointerEvents: 'none' }}>
       <div style={{
         fontSize: 8.5,
         fontFamily: "'IM Fell English', serif",
-        color, lineHeight: 1.55, letterSpacing: '0.04em',
+        color: seance.colorSchema.hex,
+        lineHeight: 1.55, letterSpacing: '0.04em',
       }}>
-        {words.slice(0, half).join(' | ')}<br/>
+        {words.slice(0, half).join(' | ')}<br />
         {words.slice(half).join(' | ')}
       </div>
-      <hr style={{ border: 'none', borderTop: `1.3px solid ${color}`, marginTop: 6 }} />
-    </div>
-  )
-}
-
-// ════════════════════════════════════════════════
-// VERTICAL ACCENT — typographie verticale latérale
-// ════════════════════════════════════════════════
-export function VerticalAccent({ text = 'CADAVRE', side = 'right' }: { text?: string; side?: 'left' | 'right' }) {
-  const seance = useReve()
-  if (!seance) return null
-  const color = seance.colorSchema.hex
-  return (
-    <div style={{
-      position: 'absolute', top: '22%',
-      [side]: '4%',
-      writingMode: 'vertical-rl',
-      fontFamily: "'Bodoni Moda', serif",
-      fontWeight: 700, fontSize: 'clamp(1.8rem, 6vw, 2.6rem)',
-      color, letterSpacing: '0.42em',
-      textTransform: 'uppercase', lineHeight: 1,
-      zIndex: 3, pointerEvents: 'none',
-    } as React.CSSProperties}>
-      {text}
-    </div>
-  )
-}
-
-// ════════════════════════════════════════════════
-// SIGNATURE DU RÊVE
-// ════════════════════════════════════════════════
-export function SignatureReve() {
-  const s = useReve()
-  if (!s) return null
-  const color = s.colorSchema.hex
-  return (
-    <div style={{
-      position: 'absolute',
-      bottom: 6, right: 12,
-      fontFamily: "'Caveat', cursive",
-      color,
-      fontSize: 11, opacity: 0.55,
-      pointerEvents: 'none', zIndex: 4,
-    }}>
-      rêve № {s.seed}
+      <hr style={{ border: 'none', borderTop: `1.3px solid ${seance.colorSchema.hex}`, marginTop: 6 }} />
     </div>
   )
 }

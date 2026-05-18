@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { Decor, HeaderKeywords, VerticalAccent, SignatureReve, useReve } from '../reve'
+import { Decor, HeaderKeywords, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 
 const lienVariantes = {
@@ -39,10 +39,7 @@ export default function Accueil() {
     <PageTransition className="page-carnet relative flex flex-col items-center justify-center min-h-dvh text-center safe-top safe-bottom overflow-hidden">
 
       <HeaderKeywords />
-
       <Decor variant="accueil" />
-
-      <VerticalAccent text="CADAVRE" side="right" />
 
       {/* Titre */}
       <motion.div
@@ -73,15 +70,6 @@ export default function Accueil() {
 
       <hr className="w-20 mt-5 mx-auto" style={{ border: 'none', borderTop: `1px solid ${accentColor}` }} />
 
-      <motion.p
-        className="sous-titre mt-4 px-8 max-w-sm relative z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.8 }}
-      >
-        <em>« Jeu de plume à plusieurs mains,<br/>pour cerveaux d'urgence et amoureux. »</em>
-      </motion.p>
-
       <nav className="flex flex-col items-center gap-5 mt-8 relative z-10">
         {liens.map(({ to, label }, i) => (
           <motion.div
@@ -101,13 +89,11 @@ export default function Accueil() {
       <button
         onClick={() => seance?.retirer()}
         className="absolute bottom-6 left-6 nav-discrete transition-colors hover:opacity-100"
-        style={{ color: accentColor, opacity: 0.65 }}
+        style={{ color: accentColor, opacity: 0.65, zIndex: 7 }}
         title="Re-tirer un rêve"
       >
         ✦ re-rêver
       </button>
-
-      <SignatureReve />
     </PageTransition>
   )
 }
