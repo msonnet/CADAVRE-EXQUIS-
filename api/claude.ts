@@ -9,6 +9,7 @@ type TypeCase =
   | 'groupe-verbal'
   | 'proposition'
   | 'libre'
+  | 'article-adj'
 
 // Tokens hard-cap par type — force les réponses courtes
 const MAX_TOKENS: Record<TypeCase, number> = {
@@ -20,6 +21,7 @@ const MAX_TOKENS: Record<TypeCase, number> = {
   'groupe-verbal': 8,
   'proposition': 18,
   'libre': 18,
+  'article-adj': 5,
 }
 
 // Contraintes de longueur explicites dans le prompt
@@ -32,6 +34,7 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'groupe-verbal': '2 mots (verbe + 1 complément court)',
   'proposition': '4 à 6 mots (phrase courte)',
   'libre': '3 à 6 mots (un vers)',
+  'article-adj': "2 mots exactement : article + adjectif (ex: 'un sombre', 'le vieux', 'une pâle') — SANS nom",
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
@@ -69,6 +72,11 @@ const FALLBACKS: Record<TypeCase, string[]> = {
     'rien ne disparaît vraiment', 'tout recommence ailleurs', "l'oubli protège",
     "il reste toujours quelque chose", "les mots s'effacent", 'le temps hésite',
     "l'absence a une forme",
+  ],
+  'article-adj': [
+    'un sombre', 'une vieille', 'le froid', 'une pâle', 'un beau', 'la douce',
+    'un noir', 'une lente', 'le vieux', 'une étrange', 'un creux', 'la froide',
+    'un lourd', 'une brisée', 'le muet', 'une profonde', 'un nu', 'la dense',
   ],
 }
 
