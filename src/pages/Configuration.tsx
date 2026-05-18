@@ -62,6 +62,7 @@ export default function Configuration() {
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
       <Decor variant="config" />
+      <div style={{ position: 'relative', zIndex: 2 }}>
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={() => navigate('/')}
@@ -171,6 +172,7 @@ export default function Configuration() {
       <motion.div className="flex justify-center" whileTap={{ scale: 0.97 }}>
         <button onClick={demarrer} className="btn-primaire">Commencer</button>
       </motion.div>
+      </div>
     </PageTransition>
   )
 }
