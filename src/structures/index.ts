@@ -52,7 +52,7 @@ export const STRUCTURES: Structure[] = [
     description: '4 à 12 vers — aucune contrainte syntaxique',
     cases: Array.from({ length: 12 }, (_, i) => ({
       fonction: `vers ${i + 1}`,
-      consigne: 'un vers — ce qui te vient, dans ta langue',
+      consigne: 'un vers de 3 à 6 mots — une image physique et inattendue',
       type: 'libre' as const,
     })),
     nombreCasesVariable: { min: 4, max: 12 },

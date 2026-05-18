@@ -19,7 +19,7 @@ const MAX_TOKENS: Record<TypeCase, number> = {
   'groupe-nominal': 7,
   'groupe-verbal': 8,
   'proposition': 18,
-  'libre': 12,
+  'libre': 18,
 }
 
 // Contraintes de longueur explicites dans le prompt
@@ -31,7 +31,7 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'groupe-nominal': '2 mots (article + nom, ex: "le silence", "une ombre")',
   'groupe-verbal': '2 mots (verbe + 1 complément court)',
   'proposition': '4 à 6 mots (phrase courte)',
-  'libre': '2 à 3 mots',
+  'libre': '3 à 6 mots (un vers)',
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
@@ -83,7 +83,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type, voiceId } = req.body ?? {}
+  const { consigne, type, voiceId, contexte } = req.body ?? {}
 
   if (!consigne || !type) {
     res.status(400).json({ error: 'Champs manquants : consigne et type requis.' })
@@ -103,6 +103,10 @@ export default async function handler(req: any, res: any): Promise<void> {
   const maxTokens = MAX_TOKENS[type as TypeCase] ?? 14
   const contrainte = CONTRAINTES[type as TypeCase] ?? '2 à 4 mots'
 
+  const echoLine = contexte
+    ? `\nTu entends en écho : "${contexte}".`
+    : ''
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -112,14 +116,14 @@ export default async function handler(req: any, res: any): Promise<void> {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: maxTokens,
         stop_sequences: ['\n', '.', '!', '?', ';'],
         system: voix.systemPrompt,
         messages: [
           {
             role: 'user',
-            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nLongueur absolue : ${contrainte}.\nRéponds avec le fragment seul.`,
+            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nLongueur absolue : ${contrainte}.\nSois inattendu — choisis l'image concrète et physique qui ne vient pas en premier.${echoLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),
