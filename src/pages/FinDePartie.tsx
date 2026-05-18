@@ -9,6 +9,7 @@ import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
+import { corrigerAccords } from '../api/corriger'
 import { Decor } from '../reve'
 
 const STYLES = [
@@ -17,7 +18,7 @@ const STYLES = [
   { id: 'huile',              label: "Peinture à l'huile" },
   { id: 'encre',              label: 'Encre de Chine' },
   { id: 'gravure',            label: 'Gravure' },
-  { id: 'hyperrealisme',      label: 'Hyperréalisme' },
+  { id: 'hyperrealisme',      label: 'Hyperreéalisme' },
   { id: 'collage_surrealiste', label: 'Collages surréalistes' },
   { id: 'libre',              label: 'Libre' },
 ]
@@ -37,6 +38,7 @@ export default function FinDePartie() {
   const [changerMedium, setChangerMedium] = useState(false)
   const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
   const [promptVisible, setPromptVisible] = useState(false)
+  const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -57,6 +59,14 @@ export default function FinDePartie() {
       setIllustrationUrl(poeme.illustration.url)
       setStyleChoisi(poeme.illustration.style)
     }
+  }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!poeme) return
+    const structure = getStructure(poeme.structureId)
+    const brut = reconstruirePoeme(poeme.cases, structure)
+    setTexteCorrige(null)
+    corrigerAccords(brut, poeme.structureId).then(setTexteCorrige)
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function choisirStyle(style: string) {
@@ -102,7 +112,8 @@ export default function FinDePartie() {
 
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
-  const lignes = texte.split('\n')
+  const texteAffiche = texteCorrige ?? texte
+  const lignes = texteAffiche.split('\n')
 
   const labelStyle = STYLES.find(s => s.id === styleChoisi)?.label
 
@@ -141,7 +152,7 @@ export default function FinDePartie() {
         transition={{ delay: 1.0 }}
       >
         <button
-          onClick={() => parlant ? arreter() : parler(texte)}
+          onClick={() => parlant ? arreter() : parler(texteAffiche)}
           className="nav-discrete hover:text-encre transition-colors"
         >
           {parlant ? '◾ Arrêter' : '▶ Écouter'}
