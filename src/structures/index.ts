@@ -3,7 +3,7 @@ import type { StructureId, Case } from '../types'
 export interface DefinitionCase {
   fonction: string
   consigne: string
-  type: 'nom' | 'verbe' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre'
+  type: 'nom' | 'verbe' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj'
 }
 
 export interface Structure {
@@ -35,12 +35,12 @@ export const STRUCTURES: Structure[] = [
     nom: 'Phrase étoffée',
     description: '7 cases — la canonique de Breton',
     cases: [
-      { fonction: 'article + adjectif', consigne: "article + adjectif collés ensemble — ex : 'un sombre', 'une vieille', 'le noir'", type: 'groupe-nominal' },
-      { fonction: 'nom sujet', consigne: 'un nom commun seul, sans article — ex : "cœur", "nuage", "couteau"', type: 'nom' },
+      { fonction: 'article + adjectif', consigne: "article + adjectif — ex : 'un sombre', 'une vieille', 'le noir'", type: 'article-adj' },
+      { fonction: 'nom sujet', consigne: 'un nom seul, sans article — ex : "cœur", "nuage", "couteau"', type: 'nom' },
       { fonction: 'adjectif du sujet', consigne: 'un adjectif qui qualifie ce nom', type: 'adjectif' },
       { fonction: 'verbe', consigne: 'un verbe conjugué au futur', type: 'verbe' },
-      { fonction: 'article + adjectif', consigne: "article + adjectif collés ensemble — ex : 'un beau', 'la vieille', 'un long'", type: 'groupe-nominal' },
-      { fonction: 'nom COD', consigne: 'un nom commun seul, sans article — ex : "flamme", "miroir", "os"', type: 'nom' },
+      { fonction: 'article + adjectif', consigne: "article + adjectif — ex : 'un beau', 'la vieille', 'un long'", type: 'article-adj' },
+      { fonction: 'nom COD', consigne: 'un nom seul, sans article — ex : "flamme", "miroir", "os"', type: 'nom' },
       { fonction: 'adjectif du COD', consigne: 'un adjectif qui qualifie ce complément', type: 'adjectif' },
     ],
   },

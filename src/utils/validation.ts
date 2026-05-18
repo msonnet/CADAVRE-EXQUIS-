@@ -129,7 +129,7 @@ const MOTS_INTERROGATIFS = new Set([
   'quel','quelle','quels','quelles','lequel','laquelle','lesquels','lesquelles',
 ])
 
-export type TypeCase = 'nom' | 'verbe' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre'
+export type TypeCase = 'nom' | 'verbe' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj'
 export type NiveauValidation = 'stricte' | 'souple' | 'desactivee'
 
 export interface ResultatValidation {
@@ -220,6 +220,13 @@ export function validerCase(
 
     case 'proposition': {
       if (texte.includes('?') || contientMotInterrogatif(texte)) return { valide: true }
+      return { valide: true }
+    }
+
+    case 'article-adj': {
+      const ms = mots(texte)
+      if (ms.length === 2 && contientArticle(texte)) return { valide: true }
+      if (ms.length === 1 && contientArticle(texte)) return { valide: false, message: "Écris l'article ET l'adjectif (ex : 'un sombre', 'le vieux')." }
       return { valide: true }
     }
 
