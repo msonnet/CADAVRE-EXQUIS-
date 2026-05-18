@@ -1,20 +1,21 @@
-// Système « Rêve nocturne » — direction artistique surréaliste avec rêve unique par jour
+// Système Rêve nocturne · Q v3
+// Décore l'application surréaliste avec :
+//   · un rêve unique par jour (1 seed → palette + symbole + citation + heure + ...)
+//   · des zones de placement protégées par écran
+//   · animations d'entrée séquencées
+//   · contenu commercial-safe (auteurs domaine public, références stylistiques)
 //
-// Usage :
-//   import { ReveProvider, Decor, HeaderKeywords, VerticalAccent, SignatureReve, useReve } from '~/reve'
-//
-//   // dans App.tsx :
+// Usage minimal :
 //   <ReveProvider><BrowserRouter>…</BrowserRouter></ReveProvider>
 //
-//   // dans une page (avec position: relative + overflow: hidden) :
+//   // dans une page (parent en position:relative + overflow:hidden) :
 //   <HeaderKeywords />
 //   <Decor variant="accueil" />
-//   <VerticalAccent text="CADAVRE" />
-//   <SignatureReve />
 
-export {
-  ReveProvider, Decor, HeaderKeywords, VerticalAccent, SignatureReve,
-  TornCollage, useReve,
-} from './Decor'
+export { ReveProvider, Decor, HeaderKeywords, useReve, type SeanceReve, type Variant } from './Decor'
 export { COLLAGES, type CollageDef, Hatches } from './collages'
-export { MARGINALIA, COLOR_POOL, COLOR_SCHEMAS, type ColorKey, type MargEntry } from './pools'
+export {
+  COLOR_POOL, COLOR_SCHEMAS, CITATIONS, ETIQ_POOL, HEURES_NOCTURNES,
+  MARGINALIA, STRIPE_COMBOS,
+  type ColorKey, type ColorSchema, type Citation, type MargEntry, type StripeSpec,
+} from './pools'

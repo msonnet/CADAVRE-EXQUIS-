@@ -18,7 +18,7 @@ const STYLES = [
   { id: 'huile',              label: "Peinture à l'huile" },
   { id: 'encre',              label: 'Encre de Chine' },
   { id: 'gravure',            label: 'Gravure' },
-  { id: 'hyperrealisme',      label: 'Hyperreéalisme' },
+  { id: 'hyperrealisme',      label: 'Hyperréalisme' },
   { id: 'collage_surrealiste', label: 'Collages surréalistes' },
   { id: 'libre',              label: 'Libre' },
 ]
@@ -119,7 +119,7 @@ export default function FinDePartie() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
-      <Decor variant="fin" />
+      <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
       <div style={{ position: 'relative', zIndex: 2 }}>
       <motion.p
         className="nav-discrete text-center mb-6"

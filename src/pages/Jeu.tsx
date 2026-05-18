@@ -304,7 +304,8 @@ export default function Jeu() {
     const voiceId = voixParSlot[seqPos]
     const slotNum = iaSlotNums[seqPos]
 
-    demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId })
+    const contexteIA = getContexteVisible(cases, config.visibilite) ?? undefined
+    demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA })
       .then(texte => avancer(idx, def, choisirSansDuplique(texte.trim(), def.type), slotNum))
       .catch(()  => avancer(idx, def, choisirSansDuplique('', def.type), slotNum))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -485,7 +486,7 @@ export default function Jeu() {
 
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
-      <Decor variant="jeu" hideDereglement />
+      <Decor variant={participantActuel?.type === 'ia' ? 'jeu-ia' : 'jeu'} />
       <div style={{ position: 'relative', zIndex: 2 }}>
       <div className="flex items-center justify-between mb-8">
         <button
