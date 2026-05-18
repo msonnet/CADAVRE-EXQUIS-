@@ -38,7 +38,7 @@ function composerSeance(seed: number): SeanceReve {
   const rng = mulberry32(seed)
 
   const pool = filtrerMemoire(COLLAGES)
-  const collages = pickN(rng, pool, Math.min(6, pool.length))
+  const collages = pickN(rng, pool, Math.min(8, pool.length))
   collages.forEach(c => incrementerMemoire(c.id))
 
   const margs = pickN(rng, MARGINALIA, 4)
@@ -120,55 +120,82 @@ const ZONES_COLLAGE: Record<Variant, ZoneCollage[]> = {
   accueil: [
     { top: '9%',     left: '3%',  rotation: -5, size: 0.65, withTape: true },
     { top: '8%',     right: '3%', rotation:  7, size: 0.60 },
-    { bottom: '12%', left: '3%',  rotation:  5, size: 0.52, withTape: true },
+    { top: '44%',    left: '2%',  rotation:  4, size: 0.50 },
+    { top: '52%',    right: '2%', rotation: -8, size: 0.48, withTape: true },
+    { bottom: '8%',  left: '3%',  rotation:  5, size: 0.52 },
+    { bottom: '6%',  right: '3%', rotation: -4, size: 0.46 },
   ],
   config: [
     { top: '8%',     right: '3%', rotation: -6, size: 0.65 },
     { top: '10%',    left: '3%',  rotation:  5, size: 0.60, withTape: true },
-    { bottom: '12%', right: '4%', rotation: -7, size: 0.50 },
+    { top: '46%',    right: '2%', rotation:  7, size: 0.48 },
+    { top: '55%',    left: '2%',  rotation: -5, size: 0.46, withTape: true },
+    { bottom: '14%', right: '3%', rotation: -7, size: 0.52 },
+    { bottom: '6%',  left: '3%',  rotation:  4, size: 0.48 },
   ],
   jeu: [
     { top: '5%',     right: '3%', rotation: -4, size: 0.52 },
-    { bottom: '10%', left: '3%',  rotation:  5, size: 0.50 },
+    { top: '5%',     left: '2%',  rotation:  6, size: 0.48, withTape: true },
+    { bottom: '12%', right: '2%', rotation: -5, size: 0.50 },
+    { bottom: '8%',  left: '3%',  rotation:  5, size: 0.46 },
   ],
   fin: [
     { top: '8%',     right: '4%', rotation: -7, size: 0.68, withTape: true },
     { top: '12%',    left: '4%',  rotation:  6, size: 0.62 },
-    { bottom: '14%', right: '5%', rotation: -9, size: 0.54 },
+    { top: '52%',    left: '2%',  rotation: -4, size: 0.50 },
+    { top: '60%',    right: '3%', rotation:  7, size: 0.48, withTape: true },
+    { bottom: '16%', right: '4%', rotation: -9, size: 0.54 },
+    { bottom: '6%',  left: '3%',  rotation:  5, size: 0.48 },
   ],
   biblio: [
     { top: '8%',     right: '4%', rotation:  6, size: 0.62 },
     { top: '10%',    left: '4%',  rotation: -5, size: 0.58, withTape: true },
-    { bottom: '14%', right: '4%', rotation:  8, size: 0.50 },
+    { top: '45%',    right: '3%', rotation: -7, size: 0.50 },
+    { top: '55%',    left: '2%',  rotation:  4, size: 0.46, withTape: true },
+    { bottom: '16%', right: '3%', rotation:  8, size: 0.52 },
+    { bottom: '6%',  left: '4%',  rotation: -5, size: 0.48 },
   ],
   detail: [
     { top: '8%',     right: '4%', rotation: -6, size: 0.68 },
     { top: '12%',    left: '4%',  rotation:  7, size: 0.62, withTape: true },
-    { bottom: '18%', right: '5%', rotation: -5, size: 0.52 },
+    { top: '48%',    right: '3%', rotation:  5, size: 0.50 },
+    { top: '58%',    left: '2%',  rotation: -6, size: 0.48, withTape: true },
+    { bottom: '20%', right: '4%', rotation: -5, size: 0.54 },
+    { bottom: '6%',  left: '3%',  rotation:  4, size: 0.48 },
   ],
 }
 
 const ZONES_MARG: Record<Variant, React.CSSProperties[]> = {
   accueil: [
     { top: '16%',    left: '5%',  transform: 'rotate(-4deg)' },
-    { top: '65%',    right: '5%', transform: 'rotate(3deg)', textAlign: 'right' as const },
+    { top: '62%',    right: '5%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
+    { bottom: '18%', left: '5%',  transform: 'rotate(-2deg)' },
+    { bottom: '10%', right: '5%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
   ],
   config: [
-    { top: '42%',    left: '6%',  transform: 'rotate(-3deg)' },
-    { bottom: '28%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
+    { top: '38%',    left: '6%',  transform: 'rotate(-3deg)' },
+    { top: '62%',    right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
+    { bottom: '20%', left: '6%',  transform: 'rotate(-2deg)' },
+    { bottom: '10%', right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
   ],
   jeu: [],  // sanctuaire — aucune
   fin: [
-    { top: '28%',    left: '6%',  transform: 'rotate(-4deg)' },
-    { bottom: '28%', right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
+    { top: '20%',    left: '6%',  transform: 'rotate(-4deg)' },
+    { top: '55%',    right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
+    { bottom: '24%', left: '6%',  transform: 'rotate(-2deg)' },
+    { bottom: '10%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
   ],
   biblio: [
     { top: '28%',    left: '6%',  transform: 'rotate(-3deg)' },
-    { bottom: '22%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
+    { top: '52%',    right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
+    { bottom: '20%', left: '6%',  transform: 'rotate(-2deg)' },
+    { bottom: '10%', right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
   ],
   detail: [
-    { top: '28%',    right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
-    { bottom: '22%', left: '6%',  transform: 'rotate(-3deg)' },
+    { top: '20%',    right: '6%', transform: 'rotate(3deg)',  textAlign: 'right' as const },
+    { top: '52%',    left: '6%',  transform: 'rotate(-3deg)' },
+    { bottom: '20%', right: '6%', transform: 'rotate(2deg)',  textAlign: 'right' as const },
+    { bottom: '10%', left: '6%',  transform: 'rotate(-2deg)' },
   ],
 }
 

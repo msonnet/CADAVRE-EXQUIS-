@@ -53,6 +53,7 @@ export default function Reglages() {
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
       <Decor variant="config" />
+      <div style={{ position: 'relative', zIndex: 2 }}>
       <button onClick={() => navigate('/')} className="nav-discrete mb-8 hover:text-encre transition-colors">
         ← Accueil
       </button>
@@ -135,6 +136,7 @@ export default function Reglages() {
         Cadavre Exquis v1.0<br />
         Aucun tracking. Aucun compte. Tout reste local.
       </p>
+      </div>
     </PageTransition>
   )
 }

@@ -19,7 +19,7 @@ const STYLE_PROMPTS: Record<string, string> = {
   collage_surrealiste: 'surrealist photomontage collage in the style of Max Ernst and Hannah Höch, cut-and-paste fragments of engravings and photographs, dreamlike juxtapositions of scale and context, torn paper edges, anatomical diagrams mixed with natural history prints, vintage typographic scraps, Dada composition, overlapping layers with visible paste marks and creases',
 }
 
-async function traduireTexte(texte: string, anthropicKey: string): Promise<string> {
+async function texteVersPromptVisuel(texte: string, anthropicKey: string): Promise<string> {
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -30,10 +30,10 @@ async function traduireTexte(texte: string, anthropicKey: string): Promise<strin
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 150,
+        max_tokens: 120,
         messages: [{
           role: 'user',
-          content: `Translate this French text to English literally. Preserve every word and action verb exactly as-is. Return only the translation, no explanation.\n\n"${texte}"`,
+          content: `Convert this French surrealist poem into a vivid English visual scene description for an AI image generator.\n\nRules:\n- Keep every subject and object\n- Make actions VISUALLY LITERAL: "eats/devours" = "[subject] with jaws wide open biting and engulfing [object], [object] disappearing into its mouth"; "flies" = "soaring through air wings spread"; "sleeps" = "lying still eyes closed"\n- Surrealist impossible scenes happen literally — a fish CAN eat the moon\n- 20–30 words max, vivid and concrete\n- Return only the description\n\nFrench: "${texte}"`,
         }],
       }),
     })
@@ -83,8 +83,8 @@ export default async function handler(req: any, res: any): Promise<void> {
   const anthropicKey = process.env.ANTHROPIC_API_KEY
   const stylePrompt = style !== 'libre' ? (STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle) : ''
 
-  // Traduction littérale vers l'anglais pour que FLUX comprenne les verbes d'action
-  const textePrompt = anthropicKey ? await traduireTexte(texte, anthropicKey) : texte
+  // Description visuelle explicite : force FLUX à rendre les actions littéralement
+  const textePrompt = anthropicKey ? await texteVersPromptVisuel(texte, anthropicKey) : texte
 
   let prompt: string
   let guidance_scale: number
@@ -101,7 +101,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     prompt = stylePrompt
       ? `${textePrompt}. ${stylePrompt}. No text, no letters, no watermark, no signature`
       : `${textePrompt}. No text, no letters, no watermark, no signature`
-    guidance_scale = 3.5
+    guidance_scale = 4.5
   }
 
   try {
