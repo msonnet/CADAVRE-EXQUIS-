@@ -194,6 +194,9 @@ export function validerCase(
 
     case 'nom': {
       const ms = mots(texte)
+      if (ms.length > 1 && contientArticle(texte)) {
+        return { valide: false, message: "Écris le nom seul, sans article (ex : 'mousse', 'vent', 'cendre')." }
+      }
       if (contientVerbe(texte) && ms.length > 1) {
         return { valide: false, message: 'Es-tu sur ? La consigne demande un nom, pas une phrase.' }
       }

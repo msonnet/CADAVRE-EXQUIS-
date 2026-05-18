@@ -13,7 +13,7 @@ type TypeCase =
 
 // Tokens hard-cap par type — force les réponses courtes
 const MAX_TOKENS: Record<TypeCase, number> = {
-  'nom': 4,
+  'nom': 2,
   'verbe': 4,
   'adjectif': 4,
   'adverbe': 6,
@@ -26,7 +26,7 @@ const MAX_TOKENS: Record<TypeCase, number> = {
 
 // Contraintes de longueur explicites dans le prompt
 const CONTRAINTES: Record<TypeCase, string> = {
-  'nom': '1 mot seul (nom sans article)',
+  'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "œur", "nuage", "cendre", "os")',
   'verbe': '1 mot (verbe conjugué, forme courte)',
   'adjectif': '1 mot (adjectif seul)',
   'adverbe': '1 à 2 mots',
@@ -38,9 +38,9 @@ const CONTRAINTES: Record<TypeCase, string> = {
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
-  'nom': ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
-          'le froid', 'la poussière', 'le vent', 'la pluie', "l'écho", 'la flamme', 'le seuil',
-          "l'abîme", 'le vertige', 'la mousse', 'le givre', "l'encre", 'la boue'],
+  'nom': ['ombre', 'silence', 'nuit', 'cendre', 'vide', 'pierre', 'brume',
+          'froid', 'poussière', 'vent', 'pluie', 'écho', 'flamme', 'seuil',
+          'abîme', 'vertige', 'mousse', 'givre', 'encre', 'boue'],
   'verbe': ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse',
             'erre', 'veille', 'frôle', 'hante', 'effleure', 'résiste', 'chavire', 'murmure',
             'vacille', 'sombre', 'rôde', 'dérive'],
