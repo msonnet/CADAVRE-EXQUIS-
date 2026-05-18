@@ -30,10 +30,10 @@ async function texteVersPromptVisuel(texte: string, anthropicKey: string): Promi
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 120,
+        max_tokens: 140,
         messages: [{
           role: 'user',
-          content: `Convert this French surrealist poem into a vivid English visual scene description for an AI image generator.\n\nRules:\n- Keep every subject and object\n- Make actions VISUALLY LITERAL: "eats/devours" = "[subject] with jaws wide open biting and engulfing [object], [object] disappearing into its mouth"; "flies" = "soaring through air wings spread"; "sleeps" = "lying still eyes closed"\n- Surrealist impossible scenes happen literally — a fish CAN eat the moon\n- 20–30 words max, vivid and concrete\n- Return only the description\n\nFrench: "${texte}"`,
+          content: `Convert this French surrealist poem into a vivid English visual scene description for an AI image generator.\n\nRules:\n- Keep every subject and object\n- Make actions VISUALLY LITERAL with physical contact:\n  * "eats/devours/swallows" = "teeth sinking into [object], [object] held inside open mouth mid-bite, actively consuming [object] — NOT howling, NOT gazing at it"\n  * "flies" = "airborne, wings spread, not touching ground"\n  * "crushes" = "physically pressing [object] flat underfoot"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
         }],
       }),
     })
@@ -124,7 +124,7 @@ export default async function handler(req: any, res: any): Promise<void> {
 
     const data = await response.json()
     const url = data.images?.[0]?.url ?? null
-    res.status(200).json({ url })
+    res.status(200).json({ url, promptVisuel: textePrompt })
   } catch (err) {
     console.error('Erreur fal.ai:', err)
     res.status(200).json({ url: null })

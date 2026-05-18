@@ -35,6 +35,8 @@ export default function FinDePartie() {
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
   const [changerMedium, setChangerMedium] = useState(false)
+  const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
+  const [promptVisible, setPromptVisible] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -69,9 +71,10 @@ export default function FinDePartie() {
     const pl = promptLibre.trim() || undefined
 
     genererIllustration(texte, style, pl)
-      .then(url => {
+      .then(({ url, promptVisuel: pv }) => {
         if (url) {
           setIllustrationUrl(url)
+          if (pv) setPromptVisuel(pv)
           const illustration = { url, style, promptLibre: pl, promptUtilise: texte, dateGeneration: Date.now() }
           sauvegarderIllustration(poeme.id, illustration).catch(console.error)
         } else {
@@ -192,6 +195,23 @@ export default function FinDePartie() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Prompt envoyé à FLUX */}
+      {promptVisuel && !generatingIllustration && (
+        <div className="flex flex-col items-center mb-2">
+          <button
+            onClick={() => setPromptVisible(v => !v)}
+            className="nav-discrete opacity-40 hover:opacity-70 transition-opacity text-xs"
+          >
+            {promptVisible ? '↑ masquer le prompt' : '→ voir le prompt IA'}
+          </button>
+          {promptVisible && (
+            <p className="font-lora text-xs italic text-gris opacity-60 mt-2 text-center px-4 leading-relaxed max-w-xs">
+              {promptVisuel}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Contrôles post-génération */}
       {illustrationUrl && !generatingIllustration && (
