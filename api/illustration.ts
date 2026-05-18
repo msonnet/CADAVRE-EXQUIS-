@@ -7,34 +7,15 @@ const STYLE_PROMPTS: Record<string, string> = {
   encre:         'pure india ink on white paper, bold gestural brush strokes varying from hairline to broad, spontaneous ink splatter and bleed marks, stark white negative space, calligraphic line energy, accidental marks embraced, raw directness, high contrast black and white only',
   gravure:       'copper plate intaglio etching, ultra-precise cross-hatching and stippling, aquatint tonal gradients, bitten metal plate texture, warm sepia plate tone on aged paper, Piranesi and Dürer precision, deeply worked shadows through layered hatching, fine burr marks',
   hyperrealisme: 'ultra-photorealistic hyperdetailed rendering, 8K resolution, sharp critical focus, physically accurate materials and lighting, subsurface scattering on organic surfaces, ray-traced reflections and global illumination, every texture rendered with perfect fidelity, indistinguishable from a photograph',
-}
-
-async function poeticToVisual(poeme: string, anthropicKey: string): Promise<string> {
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 100,
-        messages: [{
-          role: 'user',
-          content: `Ce poème surréaliste va être illustré. Crée une interprétation visuelle INATTENDUE et DÉCALÉE : ne traduis pas les métaphores littéralement. Transforme l'atmosphère du poème en une scène concrète mais étrange, avec des associations surréalistes inattendues — objets détournés de leur contexte, échelles impossibles, juxtapositions troublantes à la Ernst ou Magritte. Décris en 2 phrases anglaises précises une seule scène unifiée et surprenante.
-
-Poème : "${poeme}"`,
-        }],
-      }),
-    })
-    if (!response.ok) return poeme
-    const data = await response.json()
-    return (data.content?.[0]?.text ?? poeme).trim()
-  } catch {
-    return poeme
-  }
+  cyanotype:     'cyanotype photogram on textured paper, prussian blue monochrome, white silhouettes of objects and plants, UV-contact print aesthetic, slightly uneven development marks, deep saturated blue shadows',
+  linogravure:   'linocut print, bold graphic reduction, strong black ink on cream paper, rough carved edges, hatching in parallel cuts, flat areas of solid ink, expressionist woodblock energy',
+  pastel:        'soft pastel drawing on tinted paper, chalky matte texture, blended color transitions with fingertip smudging, luminous highlights, delicate strokes layered over each other, Degas-like softness',
+  collage:       'dadaist paper collage, torn printed paper fragments, magazine clippings and newsprint, overlapping layers with visible edges, mixed typography and photographic scraps, glue spots and creases, Ernst or Heartfield assemblage',
+  gouache:       'opaque gouache illustration, flat matte color areas, clean sharp edges, poster-like graphic quality, mid-century illustration style, no transparency, rich saturated pigments',
+  sanguine:      'red chalk sanguine drawing on cream paper, warm reddish-brown lines, hatching and cross-hatching, Renaissance drawing technique, Leonardo or Raphael study aesthetic',
+  mezzotinte:    'mezzotint intaglio print, velvety dark tones burnished to create light, rich deep blacks, gradual tonal transitions from darkness to luminosity, romantic nocturnal atmosphere',
+  lavis:         'ink wash painting, diluted ink in varying grey tones, fluid brushwork, Chinese or Japanese sumi-e influence, white paper showing through thin washes, spontaneous gestural quality',
+  serigraphie:   'silkscreen print, flat areas of separated solid colors, registration marks slightly off, bold graphic design, pop art influence, Warhol-style repetition and color separation',
 }
 
 async function traduireDirection(direction: string, anthropicKey: string): Promise<string> {
@@ -73,29 +54,24 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (!falKey) { res.status(200).json({ url: null }); return }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
-  // 'libre' = aucun médium imposé
   const stylePrompt = style !== 'libre' ? (STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle) : ''
 
   let prompt: string
   let guidance_scale: number
 
   if (promptLibre?.trim()) {
-    // Direction du joueur traduite en anglais, utilisée telle quelle — guidance élevé pour la respecter
     const direction = anthropicKey
       ? await traduireDirection(promptLibre.trim(), anthropicKey)
       : promptLibre.trim()
     prompt = stylePrompt
-      ? `${direction}, treated as ${stylePrompt}. No text, no letters, no watermark, no signature`
-      : `${direction}. No text, no letters, no watermark, no signature`
+      ? `${direction}, treated as ${stylePrompt}. ${texte}. No text, no letters, no watermark, no signature`
+      : `${direction}. ${texte}. No text, no letters, no watermark, no signature`
     guidance_scale = 6.0
   } else {
-    // Aucune direction : interprétation surréaliste par Claude — guidance libre pour surprendre
-    const sceneVisuelle = anthropicKey
-      ? await poeticToVisual(texte, anthropicKey)
-      : texte
+    // Texte du poème envoyé tel quel — aucune interprétation
     prompt = stylePrompt
-      ? `${stylePrompt}, surrealist scene: ${sceneVisuelle}. No text, no letters, no watermark, no signature`
-      : `surrealist scene: ${sceneVisuelle}. No text, no letters, no watermark, no signature`
+      ? `${stylePrompt}, surrealist scene: ${texte}. No text, no letters, no watermark, no signature`
+      : `surrealist scene: ${texte}. No text, no letters, no watermark, no signature`
     guidance_scale = 3.5
   }
 
@@ -125,3 +101,4 @@ export default async function handler(req: any, res: any): Promise<void> {
     res.status(200).json({ url: null })
   }
 }
+

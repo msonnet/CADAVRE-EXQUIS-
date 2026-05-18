@@ -118,37 +118,33 @@ interface ZoneCollage {
 // Le seed détermine quelle rotation/taille exacte mais TOUTES les zones apparaissent.
 const ZONES_COLLAGE: Record<Variant, ZoneCollage[]> = {
   accueil: [
-    { top: '9%',  left: '3%',  rotation: -5, size: 0.65, withTape: true },
-    { top: '8%',  right: '3%', rotation:  7, size: 0.60 },
-    { bottom: '20%', right: '2%', rotation: -6, size: 0.55 },
-    { bottom: '8%',  left: '3%', rotation:  5, size: 0.50, withTape: true },
+    { top: '9%',     left: '3%',  rotation: -5, size: 0.65, withTape: true },
+    { top: '8%',     right: '3%', rotation:  7, size: 0.60 },
+    { bottom: '12%', left: '3%',  rotation:  5, size: 0.52, withTape: true },
   ],
   config: [
-    { top: '8%',  right: '3%', rotation: -6, size: 0.68 },
-    { top: '10%', left: '3%', rotation:  5, size: 0.60, withTape: true },
-    { bottom: '10%', right: '4%', rotation: -7, size: 0.52 },
-    { bottom: '30%', left: '3%', rotation:  8, size: 0.50 },
+    { top: '8%',     right: '3%', rotation: -6, size: 0.65 },
+    { top: '10%',    left: '3%',  rotation:  5, size: 0.60, withTape: true },
+    { bottom: '12%', right: '4%', rotation: -7, size: 0.50 },
   ],
   jeu: [
     { top: '5%',     right: '3%', rotation: -4, size: 0.52 },
-    { bottom: '10%', left: '3%', rotation:  5, size: 0.50 },
+    { bottom: '10%', left: '3%',  rotation:  5, size: 0.50 },
   ],
   fin: [
-    { top: '8%',  right: '4%', rotation: -7, size: 0.70, withTape: true },
-    { top: '12%', left: '4%', rotation:  6, size: 0.65 },
-    { bottom: '15%', right: '5%', rotation: -9, size: 0.55 },
-    { bottom: '32%', left: '4%', rotation:  7, size: 0.50, withTape: true },
+    { top: '8%',     right: '4%', rotation: -7, size: 0.68, withTape: true },
+    { top: '12%',    left: '4%',  rotation:  6, size: 0.62 },
+    { bottom: '14%', right: '5%', rotation: -9, size: 0.54 },
   ],
   biblio: [
-    { top: '8%',  right: '4%', rotation:  6, size: 0.62 },
-    { top: '10%', left: '4%', rotation: -5, size: 0.58, withTape: true },
-    { bottom: '14%', right: '4%', rotation:  8, size: 0.52 },
-    { bottom: '36%', left: '4%', rotation: -6, size: 0.48 },
+    { top: '8%',     right: '4%', rotation:  6, size: 0.62 },
+    { top: '10%',    left: '4%',  rotation: -5, size: 0.58, withTape: true },
+    { bottom: '14%', right: '4%', rotation:  8, size: 0.50 },
   ],
   detail: [
-    { top: '8%',  right: '4%', rotation: -6, size: 0.68 },
-    { top: '12%', left: '4%', rotation:  7, size: 0.62, withTape: true },
-    { bottom: '18%', right: '5%', rotation: -5, size: 0.55 },
+    { top: '8%',     right: '4%', rotation: -6, size: 0.68 },
+    { top: '12%',    left: '4%',  rotation:  7, size: 0.62, withTape: true },
+    { bottom: '18%', right: '5%', rotation: -5, size: 0.52 },
   ],
 }
 
