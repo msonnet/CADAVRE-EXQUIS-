@@ -322,7 +322,7 @@ function Marginalia({ marg, style, animDelay }: { marg: MargEntry; style: React.
       pointerEvents: 'none',
       opacity: 0,
       animation: `inkBloom 0.9s ease-out ${animDelay}s forwards`,
-      zIndex: 2,
+      zIndex: 1,
       maxWidth: '42%',
       ...style,
     }}>

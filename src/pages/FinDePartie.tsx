@@ -12,13 +12,14 @@ import { genererIllustration } from '../api/illustration'
 import { Decor } from '../reve'
 
 const STYLES = [
-  { id: 'aquarelle',     label: 'Aquarelle' },
-  { id: 'fusain',        label: 'Fusain' },
-  { id: 'huile',         label: "Peinture à l'huile" },
-  { id: 'encre',         label: 'Encre de Chine' },
-  { id: 'gravure',       label: 'Gravure' },
-  { id: 'hyperrealisme', label: 'Hyperréalisme' },
-  { id: 'libre',         label: 'Libre' },
+  { id: 'aquarelle',          label: 'Aquarelle' },
+  { id: 'fusain',             label: 'Fusain' },
+  { id: 'huile',              label: "Peinture à l'huile" },
+  { id: 'encre',              label: 'Encre de Chine' },
+  { id: 'gravure',            label: 'Gravure' },
+  { id: 'hyperrealisme',      label: 'Hyperréalisme' },
+  { id: 'collage_surrealiste', label: 'Collages surréalistes' },
+  { id: 'libre',              label: 'Libre' },
 ]
 
 export default function FinDePartie() {
@@ -118,6 +119,7 @@ export default function FinDePartie() {
 
       <motion.div
         className="my-8 text-center"
+        style={{ position: 'relative', zIndex: 2 }}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, duration: 1 }}
@@ -151,6 +153,7 @@ export default function FinDePartie() {
       {illustrationUrl && (
         <motion.div
           className="my-6 flex flex-col items-center gap-3"
+          style={{ position: 'relative', zIndex: 2 }}
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
