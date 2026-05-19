@@ -149,13 +149,19 @@ export default function Accueil() {
           onClick={() => nav('/bibliotheque')}
           style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          — LE RECUEIL —
+          — RECUEIL —
         </button>
         <button
           onClick={() => nav('/aide')}
           style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — RÈGLES —
+        </button>
+        <button
+          onClick={() => nav('/reglages')}
+          style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          — RÉGLAGES —
         </button>
       </motion.div>
 

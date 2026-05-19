@@ -1,24 +1,31 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import SeparateurOr from '../components/SeparateurOr'
 import { chargerPoemes } from '../db'
-import { Decor } from '../reve'
+import { Decor, useReve } from '../reve'
 import type { NiveauValidation } from '../utils/validation'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
-  { id: 'stricte',    label: 'Stricte',    desc: 'Avertit si le fragment ne correspond pas à la consigne' },
-  { id: 'souple',     label: 'Souple',     desc: 'Accepte tout texte non vide' },
-  { id: 'desactivee', label: 'Désactivée', desc: 'Aucune vérification' },
+  { id: 'stricte',    label: 'Stricte',    desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
+  { id: 'souple',     label: 'Souple',     desc: 'Accepte tout texte non vide.' },
+  { id: 'desactivee', label: 'Libre',      desc: 'Aucune vérification grammaticale.' },
 ]
 
 export default function Reglages() {
   const navigate = useNavigate()
+  const seance = useReve()
   const [sonActif, setSonActif] = useState(() => localStorage.getItem('ambiance-muted') !== 'true')
   const [validation, setValidation] = useState<NiveauValidation>(
     () => (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
   )
   const [exportOk, setExportOk] = useState(false)
+
+  const c = seance?.colorSchema
+  const accent = c?.hex ?? '#b22c20'
+  const encre = c?.encre ?? '#0f0805'
+  const colorLabel = c?.name.toUpperCase() ?? ''
+  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 
   function toggleSon() {
     const next = !sonActif
@@ -42,100 +49,165 @@ export default function Reglages() {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    // iOS Safari ne supporte pas <a download> sur blob: — ouvrir dans un nouvel onglet en fallback
-    setTimeout(() => {
-      URL.revokeObjectURL(url)
-    }, 5000)
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
     setExportOk(true)
-    setTimeout(() => setExportOk(false), 2000)
+    setTimeout(() => setExportOk(false), 2500)
   }
 
   return (
-    <PageTransition className="page-carnet safe-top safe-bottom">
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="config" />
-      <div style={{ position: 'relative', zIndex: 10 }}>
-      <button onClick={() => navigate('/')} className="nav-discrete mb-8 hover:text-encre transition-colors">
-        ← Accueil
-      </button>
 
-      <h2 className="font-garamond italic text-2xl text-encre mb-1">Réglages</h2>
-      <p className="sous-titre mb-6">Préférences de l'application</p>
+      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
-      <SeparateurOr />
-
-      <div className="flex flex-col gap-8 py-6">
-
-        {/* Audio ambiant */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <span className="consigne-grammaticale">Audio ambiant</span>
-            <span className="font-lora text-gris text-sm">
-              Drone atmosphérique pendant le jeu
-            </span>
-          </div>
+        {/* ── HEADER ── */}
+        <div className="flex justify-between items-baseline">
           <button
-            onClick={toggleSon}
-            className={`w-12 h-6 rounded-full transition-colors duration-300 relative flex-shrink-0 ${
-              sonActif ? 'bg-or/60' : 'bg-gris/30'
-            }`}
+            onClick={() => navigate('/')}
+            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            <span
-              className={`absolute top-0.5 w-5 h-5 rounded-full bg-encre transition-transform duration-300 ${
-                sonActif ? 'translate-x-6' : 'translate-x-0.5'
-              }`}
-            />
+            ← ACCUEIL
           </button>
+          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+        </div>
+        <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
+
+        {/* ── LABEL ── */}
+        <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
+          — RÉGLAGES —
         </div>
 
-        {/* Validation grammaticale */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-0.5">
-            <span className="consigne-grammaticale">Validation grammaticale</span>
-            <span className="font-lora text-gris text-sm">
-              {NIVEAUX.find(n => n.id === validation)?.desc}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            {NIVEAUX.map(n => (
-              <button
-                key={n.id}
-                onClick={() => changerValidation(n.id)}
-                className={`flex-1 py-2 text-xs border transition-all ${
-                  validation === n.id
-                    ? 'border-or/60 text-encre bg-or/10'
-                    : 'border-gris-clair/30 text-gris hover:border-or/30 hover:text-encre'
-                }`}
-              >
-                {n.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Export JSON */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <span className="consigne-grammaticale">Exporter mes poèmes</span>
-            <span className="font-lora text-gris text-sm">
-              Télécharge tous les poèmes en JSON
-            </span>
-          </div>
-          <button
-            onClick={exporterPoemes}
-            className="nav-discrete hover:text-encre transition-colors px-3 py-1 border border-gris-clair/30 hover:border-or/40 text-sm"
+        {/* ── TITRE ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{ marginBottom: 24 }}
+        >
+          <div
+            className="font-bodoni font-black italic leading-tight"
+            style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 4 }}
           >
-            {exportOk ? '✓ Téléchargé' : '↓ Exporter'}
-          </button>
+            Préférences <em style={{ color: accent }}>de séance.</em>
+          </div>
+        </motion.div>
+
+        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
+
+        {/* ── SON ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          style={{ marginBottom: 24 }}
+        >
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — SON —
+          </div>
+          <div className="flex justify-between items-center">
+            <div>
+              <div style={{ ...mono, fontSize: 9, color: encre, marginBottom: 3 }}>AUDIO AMBIANT</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
+                Drone atmosphérique pendant le jeu
+              </div>
+            </div>
+            <button
+              onClick={toggleSon}
+              style={{
+                width: 44, height: 24, borderRadius: 12, flexShrink: 0, marginLeft: 12,
+                background: sonActif ? accent : `${encre}20`,
+                border: 'none', cursor: 'pointer', position: 'relative',
+                transition: 'background 0.25s',
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 3, left: sonActif ? 23 : 3,
+                width: 18, height: 18, borderRadius: '50%',
+                background: sonActif ? '#e8d4b8' : encre,
+                transition: 'left 0.25s',
+              }} />
+            </button>
+          </div>
+        </motion.div>
+
+        {/* ── VALIDATION ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          style={{ marginBottom: 24 }}
+        >
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — VALIDATION —
+          </div>
+          <div className="flex gap-2 mb-3">
+            {NIVEAUX.map(n => {
+              const active = validation === n.id
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => changerValidation(n.id)}
+                  style={{
+                    flex: 1, padding: '8px 4px',
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    background: 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 8,
+                    color: active ? accent : `${encre}60`,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {n.label.toUpperCase()}
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
+            {NIVEAUX.find(n => n.id === validation)?.desc}
+          </div>
+        </motion.div>
+
+        {/* ── DONNÉES ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          style={{ marginBottom: 28 }}
+        >
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — DONNÉES —
+          </div>
+          <div className="flex justify-between items-center" style={{ paddingBottom: 12, borderBottom: `0.5px solid ${encre}10` }}>
+            <div>
+              <div style={{ ...mono, fontSize: 9, color: encre, marginBottom: 3 }}>EXPORTER MES POÈMES</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
+                Télécharge tous les poèmes en JSON
+              </div>
+            </div>
+            <button
+              onClick={exporterPoemes}
+              style={{
+                ...mono, fontSize: 8,
+                color: exportOk ? accent : encre,
+                background: 'none',
+                border: `0.5px solid ${exportOk ? accent : `${encre}30`}`,
+                padding: '7px 12px', cursor: 'pointer', flexShrink: 0, marginLeft: 12,
+                transition: 'all 0.2s',
+              }}
+            >
+              {exportOk ? '✓ EXPORTÉ' : '↓ JSON'}
+            </button>
+          </div>
+        </motion.div>
+
+        <div style={{ flex: 1 }} />
+
+        {/* ── VERSION ── */}
+        <div style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.3, textAlign: 'center', paddingBottom: 8, lineHeight: 1.6 }}>
+          CADAVRE EXQUIS · v1.0<br />
+          AUCUN TRACKING · AUCUN COMPTE · TOUT RESTE LOCAL
         </div>
 
-      </div>
-
-      <SeparateurOr />
-
-      <p className="font-lora text-gris text-xs text-center opacity-60 mt-4">
-        Cadavre Exquis v1.0<br />
-        Aucun tracking. Aucun compte. Tout reste local.
-      </p>
       </div>
     </PageTransition>
   )

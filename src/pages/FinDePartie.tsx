@@ -92,7 +92,6 @@ export default function FinDePartie() {
     if (!poeme || generatingIllustration) return
     setStyleChoisi(style)
     setErreurIllustration(null)
-    setActiveSection(null)
     setGeneratingIllustration(true)
     const structure = getStructure(poeme.structureId)
     const texte = reconstruirePoeme(poeme.cases, structure)
@@ -152,7 +151,12 @@ export default function FinDePartie() {
 
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
-          <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.55 }}>{feuilletLabel}</span>
+          <button
+            onClick={() => navigate('/')}
+            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            ← {feuilletLabel}
+          </button>
           <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />

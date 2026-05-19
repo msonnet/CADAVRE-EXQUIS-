@@ -175,8 +175,7 @@ const ZONES: Record<Variant, VariantZones> = {
     etiqs: [{ bottom: '24%', left: '6%', transform: 'rotate(-2deg)' }],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '4%', right: '0' }, size: 130, delay: 1.0 },
-      { pos: { top: '7%', left: '0' }, size: 75, delay: 1.5 },
+      { pos: { bottom: '0', right: '0' }, size: 70, delay: 1.2 },
     ],
     verticalTitle: null,
     citation: false,
@@ -187,7 +186,7 @@ const ZONES: Record<Variant, VariantZones> = {
     etiqs: [],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '5%', left: '0' }, size: 90, delay: 1.2 },
+      { pos: { bottom: '0', left: '0' }, size: 55, delay: 1.3 },
     ],
     verticalTitle: null,
     citation: false,
@@ -198,19 +197,18 @@ const ZONES: Record<Variant, VariantZones> = {
     etiqs: [{ bottom: '20%', left: '6%', transform: 'rotate(-3deg)' }],
     stripesMax: 0,
     inkBlots: [
-      { pos: { top: '6%', left: '0' }, size: 95, delay: 1.0 },
-      { pos: { bottom: '5%', right: '0' }, size: 70, delay: 1.6 },
+      { pos: { bottom: '0', right: '0' }, size: 65, delay: 1.0 },
     ],
     verticalTitle: null,
     citation: false,
     signature: true,
   },
   detail: {
-    symbol: { top: '14%', left: '4%', sizeMul: 0.5 },
+    symbol: null,
     etiqs: [],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '8%', right: '0' }, size: 100, delay: 1.0 },
+      { pos: { bottom: '0', right: '0' }, size: 60, delay: 1.0 },
     ],
     verticalTitle: null,
     citation: false,
@@ -250,7 +248,7 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
       ))}
 
       {zones.inkBlots.map((def, i) => (
-        <InkBlot key={i} def={def} color={c.encre} seed={seance.seed} idx={i} />
+        <InkBlot key={i} def={def} seed={seance.seed} idx={i} />
       ))}
 
       {zones.verticalTitle && (
@@ -289,6 +287,8 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 
 // ─── Composants internes ──
 
+const KLEIN_BLUE = '#002FA7'
+
 const BLOB_SHAPES = [
   '63% 37% 54% 46% / 55% 48% 52% 45%',
   '45% 55% 37% 63% / 40% 60% 48% 52%',
@@ -297,27 +297,30 @@ const BLOB_SHAPES = [
   '68% 32% 42% 58% / 52% 48% 38% 62%',
 ]
 
-function InkBlot({ def, color, seed, idx }: { def: InkBlotDef; color: string; seed: number; idx: number }) {
+function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: number }) {
   const shapeIdx = (seed * (idx + 3)) % BLOB_SHAPES.length
-  const sizeVar = 0.82 + ((seed * 7 + idx * 13) % 36) / 100
+  const sizeVar = 0.80 + ((seed * 7 + idx * 13) % 30) / 100
   const w = Math.round(def.size * sizeVar)
-  const h = Math.round(w * (0.65 + (seed % 4) * 0.1))
-  const rot = ((seed + idx * 17) % 50) - 25
-  const opacity = 0.045 + ((seed + idx * 11) % 5) / 100
+  const h = Math.round(w * (0.60 + (seed % 5) * 0.08))
+  const rot = ((seed + idx * 17) % 40) - 20
+  // Nested-div trick: outer fixes max opacity, inner animates 0→1 via fadeInQ (which ends at opacity:1)
+  // Result: blob fades from 0 to targetOpacity without the animation overriding it
+  const targetOpacity = 0.07 + ((seed + idx * 11) % 6) * 0.01
   return (
     <div style={{
-      position: 'absolute',
-      ...def.pos,
-      width: w,
-      height: h,
-      borderRadius: BLOB_SHAPES[shapeIdx],
-      background: color,
-      opacity,
-      pointerEvents: 'none',
-      zIndex: 1,
-      transform: `rotate(${rot}deg)`,
-      animation: `fadeInQ 1.8s ease-out ${def.delay}s both`,
-    }} />
+      position: 'absolute', ...def.pos,
+      opacity: targetOpacity,
+      pointerEvents: 'none', zIndex: 1,
+    }}>
+      <div style={{
+        width: w, height: h,
+        borderRadius: BLOB_SHAPES[shapeIdx],
+        background: KLEIN_BLUE,
+        transform: `rotate(${rot}deg)`,
+        filter: 'blur(2.5px)',
+        animation: `fadeInQ 2.4s ease-out ${def.delay}s both`,
+      }} />
+    </div>
   )
 }
 
