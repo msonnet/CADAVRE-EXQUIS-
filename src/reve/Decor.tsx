@@ -209,7 +209,8 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 
   let symbolPos = zones.symbol
   if (variant === 'accueil' && symbolPos) {
-    symbolPos = { ...symbolPos, [seance.symbolSide]: '4%' } as VariantZones['symbol']
+    // Symbol always on right so CADAVRE can own the left
+    symbolPos = { ...symbolPos, right: '4%' } as VariantZones['symbol']
   }
   if (variant === 'jeu-ia' && symbolPos) {
     symbolPos = { ...symbolPos, left: '50%' } as VariantZones['symbol']
@@ -223,9 +224,9 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 
       {zones.verticalTitle && (
         <VerticalAccent
-          side={seance.symbolSide === 'right' ? 'left' : 'right'}
-          color={seance.titreAccentVertical ? c.hex : c.encre}
-          rotation={seance.titreRotation}
+          side="left"
+          color={c.hex}
+          rotation={0}
         />
       )}
 
@@ -278,15 +279,15 @@ function Stripes({ pos, size, height, color }: { pos: StripeSpec['pos']; size: n
 function VerticalAccent({ side, color, rotation }: { side: 'left' | 'right'; color: string; rotation: number }) {
   return (
     <div style={{
-      position: 'absolute', top: '9%',
-      [side]: '3%',
+      position: 'absolute', top: '7%',
+      [side]: 0,
       writingMode: 'vertical-rl',
       fontFamily: "'Bodoni Moda', serif",
       fontWeight: 900,
-      fontSize: 'clamp(4.8rem, 17vw, 6.4rem)',
-      lineHeight: 0.82, letterSpacing: '-0.03em',
+      fontSize: 'clamp(5.5rem, 26vw, 10rem)',
+      lineHeight: 0.82, letterSpacing: '-0.04em',
       color, textTransform: 'uppercase',
-      transform: `rotate(${rotation}deg)`,
+      transform: rotation ? `rotate(${rotation}deg)` : undefined,
       zIndex: 3, pointerEvents: 'none',
       animation: 'inkBloomQ 1.2s 0.2s both',
     } as React.CSSProperties}>CADAVRE</div>
