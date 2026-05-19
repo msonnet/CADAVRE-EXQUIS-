@@ -32,17 +32,6 @@ const CONFIG_DEFAUT: ConfigPartie = {
 
 const DUREE_HYPNOTIQUE = 30
 
-const MESSAGES_IA = [
-  "Une voix s'avance…",
-  "Une autre voix prend le relais…",
-  "Une troisième présence écrit…",
-  "Une nouvelle voix murmure…",
-  "Quelqu'un d'autre continue…",
-  "Une voix inconnue reprend…",
-  "Un inconnu pose sa main…",
-  "Une présence prend le mot…",
-]
-
 // ─── Fonctions pures ─────────────────────────────────────────────────────────
 
 /**
@@ -124,12 +113,6 @@ function lireBrouillon(): BrouillonActuel | null {
 
 function normaliserCle(t: string): string {
   return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
-
-function couleurTimer(t: number): string {
-  if (t <= 5) return 'text-red-400'
-  if (t <= 10) return 'text-amber-400'
-  return 'text-or'
 }
 
 // ─── Fallbacks client ────────────────────────────────────────────────────────

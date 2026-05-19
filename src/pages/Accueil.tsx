@@ -35,7 +35,7 @@ export default function Accueil() {
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 
   return (
-    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
 
       {/* DÉCOR — stripes, symbole, étiquettes, signature (pas la citation) */}
       <Decor variant="accueil" hideCitation />
@@ -45,9 +45,18 @@ export default function Accueil() {
         <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6 }}>
           N° {num} · {annee}
         </span>
-        <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>
-          {colorLabel}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          <button
+            onClick={() => seance?.retirer()}
+            title="Re-tirer un rêve"
+            style={{ ...mono, fontSize: 14, color: accent, opacity: 0.65, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
+          >
+            ✦
+          </button>
+          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>
+            {colorLabel}
+          </span>
+        </div>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10 }} />
 
@@ -110,19 +119,21 @@ export default function Accueil() {
       >
         <button
           onClick={() => nav('/config')}
-          className="w-full flex items-center justify-center gap-3"
+          className="w-full flex flex-col items-center justify-center"
           style={{
             background: accent,
             color: '#e8d4b8',
             ...mono,
             fontSize: 11,
             textTransform: 'uppercase',
-            padding: '1.15em 1em',
+            padding: '1em 1em',
             border: 'none',
             cursor: 'pointer',
+            gap: 2,
           }}
         >
-          Convoquer le cadavre <span aria-hidden>→</span>
+          <span>Convoquer le cadavre</span>
+          <span aria-hidden style={{ fontSize: 14, opacity: 0.85 }}>→</span>
         </button>
       </motion.div>
 
@@ -139,13 +150,6 @@ export default function Accueil() {
           style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — LE RECUEIL —
-        </button>
-        <button
-          onClick={() => seance?.retirer()}
-          style={{ ...mono, fontSize: 13, color: accent, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
-          title="Re-tirer un rêve"
-        >
-          ✦
         </button>
         <button
           onClick={() => nav('/aide')}
