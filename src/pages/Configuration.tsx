@@ -62,7 +62,7 @@ export default function Configuration() {
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
       <Decor variant="config" />
-      <div style={{ position: 'relative', zIndex: 2 }}>
+      <div style={{ position: 'relative', zIndex: 10 }}>
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={() => navigate('/')}

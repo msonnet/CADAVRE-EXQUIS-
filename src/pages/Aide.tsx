@@ -54,7 +54,7 @@ export default function Aide() {
   return (
     <PageTransition className="page-carnet safe-top safe-bottom">
       <Decor variant="biblio" />
-      <div style={{ position: 'relative', zIndex: 2 }}>
+      <div style={{ position: 'relative', zIndex: 10 }}>
       <button
         onClick={() => navigate(-1)}
         className="nav-discrete mb-8 hover:text-encre transition-colors"
