@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { Decor, HeaderKeywords, useReve } from '../reve'
+import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 
-const lienVariantes = {
-  cache: { opacity: 0, y: 12 },
-  visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: 0.6 + i * 0.15, duration: 0.5 },
-  }),
+function toRomain(n: number): string {
+  const map: [number, string][] = [
+    [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
+    [50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I'],
+  ]
+  return map.reduce((r, [v, s]) => { while (n >= v) { r += s; n -= v } return r }, '')
 }
 
 export default function Accueil() {
@@ -17,83 +17,144 @@ export default function Accueil() {
   const seance = useReve()
   const { jouer } = useSound()
 
-  const liens = [
-    { to: '/config', label: 'Nouvelle partie' },
-    { to: '/bibliotheque', label: 'Mes poèmes' },
-    { to: '/aide', label: 'Comment jouer' },
-    { to: '/reglages', label: 'Réglages' },
-  ]
-
-  function naviguer(to: string) {
+  function nav(to: string) {
     jouer('clic')
     navigate(to)
   }
 
-  const accentColor = seance?.colorSchema.hex ?? '#a8332a'
+  const c = seance?.colorSchema
+  const accent = c?.hex ?? '#b22c20'
+  const encre = c?.encre ?? '#0f0805'
+  const colorLabel = c?.name.toUpperCase() ?? ''
+  const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
+  const annee = toRomain(new Date().getFullYear())
   const idxBiais = seance?.idxBiais ?? -1
   const angleBiais = seance?.angleBiais ?? 0
-  const letters1 = 'Cadavre'
-  const letters2 = 'Exquis'
+  const letters = 'Exquis.'
+
+  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 
   return (
-    <PageTransition className="page-carnet relative flex flex-col items-center justify-center min-h-dvh text-center safe-top safe-bottom overflow-hidden">
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
 
-      <HeaderKeywords />
-      <Decor variant="accueil" />
+      {/* DÉCOR — stripes, symbole, étiquettes, signature (pas la citation) */}
+      <Decor variant="accueil" hideCitation />
 
-      {/* Titre */}
+      {/* ── HEADER ── */}
+      <div className="relative flex justify-between items-baseline" style={{ zIndex: 10 }}>
+        <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6 }}>
+          N° {num} · {annee}
+        </span>
+        <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>
+          {colorLabel}
+        </span>
+      </div>
+      <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10 }} />
+
+      {/* ── ZONE CENTRALE — CADAVRE (Decor, absolu) + Exquis. (flux) ── */}
+      <div className="relative flex flex-col flex-1 justify-end" style={{ minHeight: '50vh', zIndex: 10 }}>
+        <motion.div
+          className="self-end mb-8 text-right"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.0, delay: 0.3 }}
+        >
+          <div
+            className="font-bodoni italic font-black leading-tight"
+            style={{ fontSize: 'clamp(3.4rem, 14vw, 5.8rem)', color: encre }}
+          >
+            {[...letters].map((l, i) => (
+              <span key={i} style={{
+                display: 'inline-block',
+                transform: (i + 7) === idxBiais
+                  ? `rotate(${angleBiais}deg) translateY(${angleBiais > 0 ? 2 : -2}px)`
+                  : 'none',
+                transformOrigin: 'center bottom',
+              }}>{l}</span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ── CITATION inline ── */}
+      {seance?.citation && (
+        <motion.div
+          className="relative mb-5"
+          style={{ zIndex: 10 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.3, duration: 0.7 }}
+        >
+          <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: '0.75rem' }} />
+          <em style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontStyle: 'italic', fontSize: 13, lineHeight: 1.55,
+            color: encre, display: 'block',
+          }}>
+            {seance.citation.t}
+          </em>
+          <div style={{ ...mono, fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: accent, marginTop: 5 }}>
+            {seance.citation.a}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── CTA ── */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.0 }}
-        className="relative z-10 mt-8"
+        className="relative mb-3"
+        style={{ zIndex: 10 }}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.5, duration: 0.4 }}
+        whileTap={{ scale: 0.98 }}
       >
-        <h1 className="font-bodoni italic font-black text-encre leading-none" style={{ fontSize: 'clamp(2.5rem, 9vw, 4rem)' }}>
-          {[...letters1].map((l, i) => (
-            <span key={i} style={{
-              display: 'inline-block',
-              transform: i === idxBiais ? `rotate(${angleBiais}deg) translateY(${angleBiais > 0 ? 2 : -2}px)` : 'none',
-              transformOrigin: 'center bottom',
-            }}>{l}</span>
-          ))}
-        </h1>
-        <h1 className="font-bodoni italic font-black leading-none -mt-1" style={{ fontSize: 'clamp(2.7rem, 9.5vw, 4.4rem)', color: accentColor }}>
-          {[...letters2].map((l, i) => (
-            <span key={i} style={{
-              display: 'inline-block',
-              transform: (i + 8) === idxBiais ? `rotate(${angleBiais}deg) translateY(${angleBiais > 0 ? 2 : -2}px)` : 'none',
-              transformOrigin: 'center bottom',
-            }}>{l}</span>
-          ))}
-        </h1>
+        <button
+          onClick={() => nav('/config')}
+          className="w-full flex items-center justify-center gap-3"
+          style={{
+            background: accent,
+            color: '#e8d4b8',
+            ...mono,
+            fontSize: 11,
+            textTransform: 'uppercase',
+            padding: '1.15em 1em',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Convoquer le cadavre <span aria-hidden>→</span>
+        </button>
       </motion.div>
 
-      <hr className="w-20 mt-5 mx-auto" style={{ border: 'none', borderTop: `1px solid ${accentColor}` }} />
-
-      <nav className="flex flex-col items-center gap-5 mt-8 relative z-10">
-        {liens.map(({ to, label }, i) => (
-          <motion.div
-            key={to}
-            custom={i}
-            variants={lienVariantes}
-            initial="cache"
-            animate="visible"
-          >
-            <button onClick={() => naviguer(to)} className="lien-texte text-lg tracking-wide">
-              {label}
-            </button>
-          </motion.div>
-        ))}
-      </nav>
-
-      <button
-        onClick={() => seance?.retirer()}
-        className="absolute bottom-6 left-6 nav-discrete transition-colors hover:opacity-100"
-        style={{ color: accentColor, opacity: 0.65, zIndex: 7 }}
-        title="Re-tirer un rêve"
+      {/* ── FOOTER ── */}
+      <motion.div
+        className="relative flex justify-between items-center pb-1"
+        style={{ zIndex: 10 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.7, duration: 0.4 }}
       >
-        ✦ re-rêver
-      </button>
+        <button
+          onClick={() => nav('/bibliotheque')}
+          style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          — LE RECUEIL —
+        </button>
+        <button
+          onClick={() => seance?.retirer()}
+          style={{ ...mono, fontSize: 13, color: accent, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
+          title="Re-tirer un rêve"
+        >
+          ✦
+        </button>
+        <button
+          onClick={() => nav('/aide')}
+          style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          — RÈGLES —
+        </button>
+      </motion.div>
+
     </PageTransition>
   )
 }
