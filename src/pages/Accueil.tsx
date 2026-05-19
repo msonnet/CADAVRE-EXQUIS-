@@ -75,7 +75,7 @@ export default function Accueil() {
             {[...letters].map((l, i) => (
               <span key={i} style={{
                 display: 'inline-block',
-                transform: (i + 7) === idxBiais
+                transform: i === (idxBiais % letters.length)
                   ? `rotate(${angleBiais}deg) translateY(${angleBiais > 0 ? 2 : -2}px)`
                   : 'none',
                 transformOrigin: 'center bottom',

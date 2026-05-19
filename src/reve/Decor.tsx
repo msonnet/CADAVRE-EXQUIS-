@@ -226,7 +226,7 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
         <VerticalAccent
           side="left"
           color={c.hex}
-          rotation={0}
+          rotation={seance.titreRotation}
         />
       )}
 
