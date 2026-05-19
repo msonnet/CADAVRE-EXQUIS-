@@ -150,7 +150,7 @@ const ZONES: Record<Variant, VariantZones> = {
     signature: false,
   },
   'jeu-ia': {
-    symbol: { top: '20%', sizeMul: 0.7 },
+    symbol: { top: '18%', sizeMul: 1.1 },
     etiqs: [],
     stripesMax: 1,
     verticalTitle: null,

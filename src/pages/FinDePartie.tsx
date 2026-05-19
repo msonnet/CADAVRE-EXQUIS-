@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import SeparateurOr from '../components/SeparateurOr'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoemes, sauvegarderIllustration } from '../db'
 import type { Poeme } from '../types'
@@ -10,37 +9,57 @@ import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 import { corrigerAccords } from '../api/corriger'
-import { Decor } from '../reve'
+import { Decor, useReve } from '../reve'
 
 const STYLES = [
-  { id: 'aquarelle',          label: 'Aquarelle' },
-  { id: 'fusain',             label: 'Fusain' },
-  { id: 'huile',              label: "Peinture à l'huile" },
-  { id: 'encre',              label: 'Encre de Chine' },
-  { id: 'gravure',            label: 'Gravure' },
-  { id: 'hyperrealisme',      label: 'Hyperréalisme' },
+  { id: 'aquarelle',           label: 'Aquarelle' },
+  { id: 'fusain',              label: 'Fusain' },
+  { id: 'huile',               label: "Peinture à l'huile" },
+  { id: 'encre',               label: 'Encre de Chine' },
+  { id: 'gravure',             label: 'Gravure' },
+  { id: 'hyperrealisme',       label: 'Hyperréalisme' },
   { id: 'collage_surrealiste', label: 'Collages surréalistes' },
-  { id: 'libre',              label: 'Libre' },
+  { id: 'libre',               label: 'Libre' },
 ]
+
+function toRomain(n: number): string {
+  const map: [number, string][] = [
+    [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
+    [50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I'],
+  ]
+  return map.reduce((r, [v, s]) => { while (n >= v) { r += s; n -= v } return r }, '')
+}
+
+const STRUCT_LABELS: Record<string, string> = {
+  'phrase-simple': 'Structure courte',
+  'phrase-etoffee': 'Structure étoffée',
+  'vers-libre': 'Vers libre',
+}
 
 export default function FinDePartie() {
   const navigate = useNavigate()
   const location = useLocation()
+  const seance = useReve()
   const [poeme, setPoeme] = useState<Poeme | null>(
     (location.state as { poeme?: Poeme } | null)?.poeme ?? null
   )
-  const [casesVisibles, setCasesVisibles] = useState(false)
+  const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [promptLibre, setPromptLibre] = useState('')
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
-  const [changerMedium, setChangerMedium] = useState(false)
   const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
   const [promptVisible, setPromptVisible] = useState(false)
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
+
+  const sc = seance?.colorSchema
+  const accent = sc?.hex ?? '#b22c20'
+  const encre = sc?.encre ?? '#0f0805'
+  const colorLabel = sc?.name.toUpperCase() ?? ''
+  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 
   useEffect(() => {
     jouer('revelation')
@@ -73,13 +92,10 @@ export default function FinDePartie() {
     if (!poeme || generatingIllustration) return
     setStyleChoisi(style)
     setErreurIllustration(null)
-    setChangerMedium(false)
     setGeneratingIllustration(true)
-
     const structure = getStructure(poeme.structureId)
     const texte = reconstruirePoeme(poeme.cases, structure)
     const pl = promptLibre.trim() || undefined
-
     genererIllustration(texte, style, pl)
       .then(({ url, promptVisuel: pv }) => {
         if (url) {
@@ -95,15 +111,16 @@ export default function FinDePartie() {
       .finally(() => setGeneratingIllustration(false))
   }
 
-  function relancer() {
-    if (styleChoisi) choisirStyle(styleChoisi)
-  }
-
   if (!poeme) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
-        <p className="vers-jeu text-center opacity-60">Aucun poème en cours.</p>
-        <button onClick={() => navigate('/config')} className="btn-primaire mt-8">
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.6, textAlign: 'center' }}>
+          Aucun poème en cours.
+        </p>
+        <button
+          onClick={() => navigate('/config')}
+          style={{ marginTop: 32, background: accent, color: '#e8d4b8', ...mono, fontSize: 11, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
+        >
           Nouvelle partie
         </button>
       </PageTransition>
@@ -114,250 +131,323 @@ export default function FinDePartie() {
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
   const lignes = texteAffiche.split('\n')
-
+  const lettrine = lignes[0]?.trim().charAt(0) ?? ''
+  const resteLigne0 = lignes[0]?.trim().slice(1) ?? ''
+  const voixCount = poeme.cases.length
+  const structLabel = STRUCT_LABELS[poeme.structureId] ?? poeme.structureId
+  const heureStr = new Date(poeme.dateCreation).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const feuilletLabel = `FEUILLET ${toRomain(voixCount)} · FIN`
   const labelStyle = STYLES.find(s => s.id === styleChoisi)?.label
 
   return (
-    <PageTransition className="page-carnet safe-top safe-bottom">
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
-      <div style={{ position: 'relative', zIndex: 10 }}>
-      <motion.p
-        className="nav-discrete text-center mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        Le cadavre exquis a parlé
-      </motion.p>
 
-      <SeparateurOr />
+      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
-      <motion.div
-        className="my-8 text-center"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 1 }}
-      >
-        {lignes.map((ligne, i) => (
-          <p key={i} className="vers-jeu leading-relaxed">
-            {ligne || ' '}
-          </p>
-        ))}
-      </motion.div>
-
-      <motion.div
-        className="flex justify-center mt-2 mb-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.0 }}
-      >
-        <button
-          onClick={() => parlant ? arreter() : parler(texteAffiche)}
-          className="nav-discrete hover:text-encre transition-colors"
-        >
-          {parlant ? '◾ Arrêter' : '▶ Écouter'}
-        </button>
-      </motion.div>
-
-      <SeparateurOr />
-
-      {/* ── Zone illustration ── */}
-
-      {/* Image générée — visible même pendant régénération, atténuée */}
-      {illustrationUrl && (
-        <motion.div
-          className="my-6 flex flex-col items-center gap-3"
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-        >
-          <img
-            src={illustrationUrl}
-            alt="Illustration du poème"
-            className="w-full max-w-xs rounded-sm border border-or/20 transition-opacity duration-500"
-            style={{ filter: 'contrast(0.97)', opacity: generatingIllustration ? 0.4 : 1 }}
-          />
-          {labelStyle && !generatingIllustration && (
-            <p className="nav-discrete opacity-50">{labelStyle}</p>
-          )}
-        </motion.div>
-      )}
-
-      {/* Spinner pendant génération */}
-      <AnimatePresence>
-        {generatingIllustration && (
-          <motion.div
-            key="spinner"
-            className="flex flex-col items-center gap-2 my-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.span
-              className="text-or text-2xl"
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-            >
-              ✦
-            </motion.span>
-            <p className="nav-discrete">
-              {labelStyle} en cours…
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Prompt envoyé à FLUX */}
-      {promptVisuel && !generatingIllustration && (
-        <div className="flex flex-col items-center mb-2">
-          <button
-            onClick={() => setPromptVisible(v => !v)}
-            className="nav-discrete opacity-40 hover:opacity-70 transition-opacity text-xs"
-          >
-            {promptVisible ? '↑ masquer le prompt' : '→ voir le prompt IA'}
-          </button>
-          {promptVisible && (
-            <p className="font-lora text-xs italic text-gris opacity-60 mt-2 text-center px-4 leading-relaxed max-w-xs">
-              {promptVisuel}
-            </p>
-          )}
+        {/* ── HEADER ── */}
+        <div className="flex justify-between items-baseline">
+          <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.55 }}>{feuilletLabel}</span>
+          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
-      )}
+        <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      {/* Contrôles post-génération */}
-      {illustrationUrl && !generatingIllustration && (
+        {/* ── TITLE ── */}
         <motion.div
-          className="flex justify-center gap-6 mb-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          className="mt-6 mb-4"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.7 }}
         >
-          <button
-            onClick={relancer}
-            className="nav-discrete hover:text-encre transition-colors"
+          <div
+            className="font-bodoni font-black italic leading-none"
+            style={{ fontSize: 'clamp(2rem, 9vw, 3rem)', color: encre }}
           >
-            ↺ Relancer
-          </button>
-          <button
-            onClick={() => setChangerMedium(v => !v)}
-            className="nav-discrete hover:text-encre transition-colors"
-          >
-            {changerMedium ? '↑ Fermer' : '⊞ Changer'}
-          </button>
+            <span style={{ display: 'block' }}>LE CADAVRE</span>
+            <span style={{ display: 'block' }}>
+              <em style={{ color: accent }}>est exquis.</em>
+            </span>
+          </div>
         </motion.div>
-      )}
 
-      {/* Sélecteur — affiché si pas encore d'image OU si le joueur veut changer */}
-      <AnimatePresence>
-        {(!illustrationUrl || changerMedium) && !generatingIllustration && (
-          <motion.div
-            key="picker"
-            className="my-4"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ delay: illustrationUrl ? 0 : 1.3, duration: 0.25 }}
-          >
-            {!illustrationUrl && (
-              <p className="nav-discrete text-center mb-4">Illustrer ce poème</p>
-            )}
+        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
-            <div className="mb-5">
-              <input
-                type="text"
-                value={promptLibre}
-                onChange={e => setPromptLibre(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && promptLibre.trim()) choisirStyle(styleChoisi || 'libre') }}
-                placeholder="Direction artistique libre… (ex. : sombre et organique, couleurs acides)"
-                className="champ-carnet w-full text-sm"
-              />
-              {promptLibre.trim() && (
-                <button
-                  onClick={() => choisirStyle(styleChoisi || 'libre')}
-                  className="nav-discrete mt-2 w-full py-2 border border-or/50 text-encre hover:border-or transition-colors"
-                >
-                  ✦ Générer avec cette direction
-                </button>
-              )}
-            </div>
-
-            {erreurIllustration && (
-              <p className="nav-discrete text-center opacity-50 mb-3 italic">{erreurIllustration}</p>
-            )}
-            <div className="flex flex-col gap-2">
-              {STYLES.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => choisirStyle(s.id)}
-                  className={`nav-discrete py-3 border transition-all ${
-                    styleChoisi === s.id && illustrationUrl
-                      ? 'border-or/60 text-encre'
-                      : 'border-gris-clair/30 text-encre hover:border-or/60 hover:text-encre'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <SeparateurOr />
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-      >
-        <button
-          onClick={() => setCasesVisibles(v => !v)}
-          className="nav-discrete mt-2 w-full text-center hover:text-encre transition-colors"
+        {/* ── POEM CARD ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.8 }}
+          style={{
+            border: `1px solid ${accent}40`,
+            borderLeft: `3px solid ${accent}`,
+            padding: '16px 16px 12px',
+            background: 'rgba(240,228,204,0.25)',
+            marginBottom: 20,
+          }}
         >
-          {casesVisibles ? '↑ Masquer les cases' : '↓ Voir case par case'}
-        </button>
+          {/* Poem title in mono */}
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
+          </div>
 
-        {casesVisibles && (
+          {/* Poem text with lettrine */}
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 15, lineHeight: 1.65 }}>
+            {lettrine && (
+              <span style={{
+                fontFamily: "'Bodoni Moda', serif",
+                fontWeight: 900, fontStyle: 'italic',
+                fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
+                lineHeight: 0.85, color: accent,
+                float: 'left', marginRight: 6, marginTop: 4,
+              }}>
+                {lettrine}
+              </span>
+            )}
+            {resteLigne0 && <span>{resteLigne0}</span>}
+            {lignes.slice(1).map((ligne, i) => (
+              <React.Fragment key={i}>
+                <br />
+                {ligne || ' '}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Card footer */}
+          <div style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.4, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
+            {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
+          </div>
+        </motion.div>
+
+        {/* ── IMAGE (if already generated) ── */}
+        {illustrationUrl && (
           <motion.div
-            className="mt-4 space-y-4"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            className="mb-5 flex flex-col items-center gap-2"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
           >
-            {poeme.cases.map((c, i) => {
-              const iaNum = c.voixSlot ?? poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
-              return (
-              <div key={i} className="border-l-2 border-or/30 pl-4 py-1">
-                <p className="nav-discrete mb-1">
-                  {c.fonction}
-                  <span className="mx-2 opacity-40">—</span>
-                  <span className="italic">
-                    {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
-                  </span>
-                </p>
-                <p className="font-cormorant italic text-encre text-lg leading-snug">
-                  {c.texte}
-                </p>
-              </div>
-              )
-            })}
+            <img
+              src={illustrationUrl}
+              alt="Illustration du poème"
+              className="w-full max-w-xs border"
+              style={{ borderColor: `${accent}30`, filter: 'contrast(0.97)', opacity: generatingIllustration ? 0.4 : 1, transition: 'opacity 0.5s' }}
+            />
+            {labelStyle && !generatingIllustration && (
+              <span style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.4 }}>{labelStyle.toUpperCase()}</span>
+            )}
           </motion.div>
         )}
 
-        <div className="flex flex-col items-center gap-4 mt-10">
-          <motion.div whileTap={{ scale: 0.97 }}>
-            <button onClick={() => navigate('/config')} className="btn-primaire">
-              Nouvelle partie
-            </button>
-          </motion.div>
+        {/* ── SPINNER ── */}
+        <AnimatePresence>
+          {generatingIllustration && (
+            <motion.div
+              key="spinner"
+              className="flex flex-col items-center gap-2 my-4"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            >
+              <motion.span
+                style={{ fontSize: 22, color: accent }}
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.8, repeat: Infinity }}
+              >✦</motion.span>
+              <p style={{ ...mono, fontSize: 8, color: encre, opacity: 0.5 }}>{labelStyle?.toUpperCase()} EN COURS…</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── SCELLER CTA ── */}
+        <motion.div
+          className="mb-3 mt-2"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2, duration: 0.4 }}
+          whileTap={{ scale: 0.98 }}
+        >
           <button
             onClick={() => navigate('/bibliotheque')}
-            className="nav-discrete hover:text-encre transition-colors"
+            className="w-full flex flex-col items-center justify-center"
+            style={{
+              background: accent, color: '#e8d4b8',
+              ...mono, fontSize: 11,
+              textTransform: 'uppercase',
+              padding: '1.15em 1em',
+              border: 'none', cursor: 'pointer',
+              gap: 2,
+            }}
           >
-            Ma bibliothèque →
+            <span>Sceller au recueil</span>
+            <span aria-hidden style={{ fontSize: 14, opacity: 0.85 }}>→</span>
           </button>
-        </div>
-      </motion.div>
+        </motion.div>
+
+        {/* ── FOOTER LINKS ── */}
+        <motion.div
+          className="flex justify-between items-center pb-1 mb-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5, duration: 0.4 }}
+        >
+          <button
+            onClick={() => parlant ? arreter() : parler(texteAffiche)}
+            style={{ ...mono, fontSize: 9, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
+          </button>
+          <button
+            onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
+            style={{ ...mono, fontSize: 9, color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            — COUTURES —
+          </button>
+          <button
+            onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
+            style={{ ...mono, fontSize: 9, color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            — IMAGE —
+          </button>
+        </motion.div>
+
+        {/* ── COUTURES PANEL ── */}
+        <AnimatePresence>
+          {activeSection === 'coutures' && (
+            <motion.div
+              key="coutures"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-4 mb-6"
+            >
+              <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.15 }} />
+              {poeme.cases.map((c, i) => {
+                const iaNum = c.voixSlot ?? poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
+                return (
+                  <div key={i} style={{ borderLeft: `2px solid ${accent}30`, paddingLeft: 12, paddingTop: 2, paddingBottom: 2 }}>
+                    <p style={{ ...mono, fontSize: 8, color: accent, opacity: 0.7, marginBottom: 3 }}>
+                      {c.fonction.toUpperCase()}
+                      <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
+                      <em style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic' }}>
+                        {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
+                      </em>
+                    </p>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 17, lineHeight: 1.4 }}>
+                      {c.texte}
+                    </p>
+                  </div>
+                )
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── IMAGE PANEL ── */}
+        <AnimatePresence>
+          {activeSection === 'image' && (
+            <motion.div
+              key="image"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25 }}
+              className="mb-6"
+            >
+              <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.15, marginBottom: 16 }} />
+
+              {/* Prompt libre */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  value={promptLibre}
+                  onChange={e => setPromptLibre(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && promptLibre.trim()) choisirStyle(styleChoisi || 'libre') }}
+                  placeholder="Direction artistique libre… (ex. : sombre et organique)"
+                  className="champ-carnet w-full text-sm"
+                  style={{ borderLeftColor: accent }}
+                />
+                {promptLibre.trim() && (
+                  <button
+                    onClick={() => choisirStyle(styleChoisi || 'libre')}
+                    style={{ ...mono, fontSize: 8, color: accent, background: 'none', border: `0.5px solid ${accent}50`, padding: '8px 12px', cursor: 'pointer', marginTop: 8, width: '100%' }}
+                  >
+                    ✦ GÉNÉRER AVEC CETTE DIRECTION
+                  </button>
+                )}
+              </div>
+
+              {erreurIllustration && (
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: accent, opacity: 0.7, textAlign: 'center', marginBottom: 10 }}>
+                  {erreurIllustration}
+                </p>
+              )}
+
+              {/* Style buttons */}
+              {!generatingIllustration && (
+                <div className="flex flex-col gap-2">
+                  {/* Regenerate if we have an image */}
+                  {illustrationUrl && (
+                    <button
+                      onClick={() => styleChoisi && choisirStyle(styleChoisi)}
+                      style={{ ...mono, fontSize: 8, color: encre, opacity: 0.5, background: 'none', border: `0.5px solid ${encre}20`, padding: '8px', cursor: 'pointer' }}
+                    >
+                      ↺ RELANCER
+                    </button>
+                  )}
+                  {STYLES.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => choisirStyle(s.id)}
+                      style={{
+                        ...mono, fontSize: 9,
+                        color: styleChoisi === s.id && illustrationUrl ? accent : encre,
+                        opacity: styleChoisi === s.id && illustrationUrl ? 0.9 : 0.55,
+                        background: 'transparent',
+                        border: `0.5px solid ${styleChoisi === s.id && illustrationUrl ? accent : `${encre}20`}`,
+                        padding: '10px 12px', cursor: 'pointer', textAlign: 'left',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {s.label.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Prompt IA reveal */}
+              {promptVisuel && !generatingIllustration && (
+                <div className="flex flex-col items-center mt-3">
+                  <button
+                    onClick={() => setPromptVisible(v => !v)}
+                    style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.35, background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    {promptVisible ? '↑ MASQUER LE PROMPT' : '→ VOIR LE PROMPT IA'}
+                  </button>
+                  {promptVisible && (
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: encre, opacity: 0.55, marginTop: 6, textAlign: 'center', lineHeight: 1.5, maxWidth: 280 }}>
+                      {promptVisuel}
+                    </p>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── NOUVELLE PARTIE ── */}
+        <motion.div
+          className="flex justify-center mt-4 pb-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.8 }}
+        >
+          <button
+            onClick={() => navigate('/config')}
+            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.4, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            — NOUVELLE PARTIE —
+          </button>
+        </motion.div>
+
       </div>
     </PageTransition>
   )

@@ -290,7 +290,36 @@ const Poupee: React.FC<SVGProps> = ({ w = 90 }) => (
   </svg>
 )
 
-// 17 · Ticket Merz — Schwitters
+// 17 · La Spirale — figure du sommeil hypnotique
+const Spirale: React.FC<SVGProps> = ({ w = 120 }) => {
+  const cx = 60, cy = 60
+  const ticks = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+  return (
+    <svg width={w} height={w} viewBox="0 0 120 120">
+      <circle cx={cx} cy={cy} r="52" fill="none" stroke={ENCRE} strokeWidth="0.8" />
+      <circle cx={cx} cy={cy} r="42" fill="none" stroke={ENCRE} strokeWidth="0.6" />
+      <circle cx={cx} cy={cy} r="32" fill="none" stroke={ENCRE} strokeWidth="0.55" />
+      <circle cx={cx} cy={cy} r="22" fill="none" stroke={ENCRE} strokeWidth="0.5" />
+      <circle cx={cx} cy={cy} r="12" fill="none" stroke={ENCRE} strokeWidth="0.4" />
+      <circle cx={cx} cy={cy} r="3.5" fill={ENCRE} />
+      {ticks.map((angle) => {
+        const rad = (angle - 90) * Math.PI / 180
+        return (
+          <line key={angle}
+            x1={cx + 46 * Math.cos(rad)} y1={cy + 46 * Math.sin(rad)}
+            x2={cx + 52 * Math.cos(rad)} y2={cy + 52 * Math.sin(rad)}
+            stroke={ENCRE} strokeWidth="0.8" />
+        )
+      })}
+      <text x="60" y="5" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>XII</text>
+      <text x="60" y="119" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>VI</text>
+      <text x="116" y="63" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>III</text>
+      <text x="4" y="63" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>IX</text>
+    </svg>
+  )
+}
+
+// 18 · Ticket Merz — Schwitters
 const TicketMerz: React.FC<SVGProps> = ({ w = 120 }) => (
   <svg width={w} height={w * 0.85} viewBox="0 0 120 102">
     <path d="M5,10 L100,5 L115,8 L108,55 L112,80 L98,95 L20,92 L8,85 L3,40 Z"
@@ -339,4 +368,5 @@ export const COLLAGES: CollageDef[] = [
   { id: 'mannequin',  label: "Le Mannequin métaphysique", ref: "d'après G. de Chirico · 1917",             draw: Mannequin,      w: 80  },
   { id: 'poupee',     label: "La Poupée articulée",      ref: "d'après H. Bellmer · 1934",                 draw: Poupee,         w: 90  },
   { id: 'merz',       label: "Ticket Merz",              ref: "d'après K. Schwitters · 1923",              draw: TicketMerz,     w: 120 },
+  { id: 'spirale',    label: "La Spirale",               ref: "figure du sommeil hypnotique",              draw: Spirale,        w: 120 },
 ]
