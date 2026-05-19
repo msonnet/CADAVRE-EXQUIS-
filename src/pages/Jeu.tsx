@@ -596,7 +596,8 @@ export default function Jeu() {
           <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5 }}>{acteLabel}</span>
           <button
             onClick={toggleMute}
-            title={muted ? 'Activer le son' : 'Couper le son'}
+            aria-label={muted ? 'Activer le son' : 'Couper le son'}
+            aria-pressed={!muted}
             style={{ ...mono, fontSize: 9, color: accent, opacity: muted ? 0.35 : 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             {colorLabel}
@@ -720,6 +721,7 @@ export default function Jeu() {
               <button
                 onClick={soumettre}
                 disabled={!inputValue.trim()}
+                aria-label="Sceller cette voix et passer à la suivante"
                 className="w-full flex flex-col items-center justify-center"
                 style={{
                   background: !inputValue.trim() ? `${encre}30` : accent,

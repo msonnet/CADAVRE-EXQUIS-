@@ -52,8 +52,16 @@ export default function FinDePartie() {
   const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
   const [promptVisible, setPromptVisible] = useState(false)
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
+  const [pleinEcran, setPleinEcran] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
+
+  useEffect(() => {
+    if (!pleinEcran) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setPleinEcran(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [pleinEcran])
 
   const sc = seance?.colorSchema
   const accent = sc?.hex ?? '#b22c20'
@@ -147,6 +155,47 @@ export default function FinDePartie() {
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
 
+      {/* ── PLEIN ÉCRAN ILLUSTRATION ── */}
+      <AnimatePresence>
+        {pleinEcran && illustrationUrl && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Illustration en plein écran"
+            style={{
+              position: 'fixed', inset: 0, zIndex: 200,
+              background: 'rgba(10,6,3,0.97)',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              cursor: 'zoom-out',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => setPleinEcran(false)}
+          >
+            <img
+              src={illustrationUrl}
+              alt="Illustration du poème en plein écran"
+              style={{ maxWidth: '95vw', maxHeight: '88vh', objectFit: 'contain' }}
+            />
+            {labelStyle && (
+              <p style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.4, marginTop: 12 }}>
+                {labelStyle.toUpperCase()}
+              </p>
+            )}
+            <button
+              aria-label="Fermer le plein écran"
+              onClick={e => { e.stopPropagation(); setPleinEcran(false) }}
+              style={{ position: 'absolute', top: 20, right: 20, fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              ✕ FERMER
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
         {/* ── HEADER ── */}
@@ -230,20 +279,35 @@ export default function FinDePartie() {
         {/* ── IMAGE (if already generated) ── */}
         {illustrationUrl && (
           <motion.div
-            className="mb-3 flex flex-col items-center gap-2"
+            className="mb-3 flex flex-col gap-1"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <img
-              src={illustrationUrl}
-              alt="Illustration du poème"
-              className="w-full max-w-xs border"
-              style={{ borderColor: `${accent}30`, filter: 'contrast(0.97)', opacity: generatingIllustration ? 0.4 : 1, transition: 'opacity 0.5s' }}
-            />
-            {labelStyle && !generatingIllustration && (
-              <span style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.4 }}>{labelStyle.toUpperCase()}</span>
-            )}
+            <button
+              onClick={() => !generatingIllustration && setPleinEcran(true)}
+              aria-label="Voir l'illustration en plein écran"
+              style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: generatingIllustration ? 'default' : 'zoom-in', width: '100%' }}
+            >
+              <img
+                src={illustrationUrl}
+                alt="Illustration du poème"
+                className="w-full border"
+                style={{ borderColor: `${accent}30`, filter: 'contrast(0.97)', opacity: generatingIllustration ? 0.4 : 1, transition: 'opacity 0.5s' }}
+              />
+            </button>
+            <div className="flex justify-between items-center">
+              {labelStyle && !generatingIllustration && (
+                <span style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.4 }}>{labelStyle.toUpperCase()}</span>
+              )}
+              {!generatingIllustration && (
+                <button
+                  onClick={() => setPleinEcran(true)}
+                  aria-label="Agrandir l'illustration"
+                  style={{ ...mono, fontSize: 7.5, color: accent, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                >↗ AGRANDIR</button>
+              )}
+            </div>
             {/* Prompt reveal — always visible after generation */}
             {promptVisuel && !generatingIllustration && (
               <div className="w-full">
@@ -272,10 +336,14 @@ export default function FinDePartie() {
           {generatingIllustration && (
             <motion.div
               key="spinner"
+              role="status"
+              aria-label={`Génération de l'illustration en cours`}
+              aria-live="polite"
               className="flex flex-col items-center gap-2 my-4"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <motion.span
+                aria-hidden
                 style={{ fontSize: 22, color: accent }}
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1.8, repeat: Infinity }}
