@@ -1,9 +1,15 @@
 import React from 'react'
 
+// ════════════════════════════════════════════════
+// COLLAGES — 17 gravures inspirées d'œuvres surréalistes
+// Chacune est un SVG inline, en hachures noires sur papier
+// ════════════════════════════════════════════════
+
 const ENCRE = '#1a1410'
 const PAPIER = '#ede2c8'
 const ROUGE = '#a8332a'
 
+/** Patterns de hachure — à inclure une seule fois dans l'app via <Hatches /> */
 export function Hatches() {
   return (
     <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
@@ -31,6 +37,7 @@ export function Hatches() {
 
 type SVGProps = { w?: number }
 
+// 1 · L'Œil tranché — Un Chien Andalou (Buñuel/Dalí, 1929)
 const OeilTranche: React.FC<SVGProps> = ({ w = 140 }) => (
   <svg width={w} height={w * 0.65} viewBox="0 0 200 130">
     <path d="M10,65 Q100,5 190,65" stroke={ENCRE} strokeWidth="1.3" fill="none" />
@@ -52,6 +59,7 @@ const OeilTranche: React.FC<SVGProps> = ({ w = 140 }) => (
   </svg>
 )
 
+// 2 · La Pipe — La Trahison des images (Magritte, 1929)
 const Pipe: React.FC<SVGProps> = ({ w = 140 }) => (
   <svg width={w} height={w * 0.45} viewBox="0 0 200 90">
     <path d="M15,55 L95,55 Q100,40 115,40 Q140,40 145,55 Q150,75 130,80 L120,82 Q105,82 100,72 L20,72 Q10,72 10,63 Q10,55 15,55 Z"
@@ -62,6 +70,7 @@ const Pipe: React.FC<SVGProps> = ({ w = 140 }) => (
   </svg>
 )
 
+// 3 · L'Horloge molle — Persistance de la mémoire (Dalí, 1931)
 const HorlogeMolle: React.FC<SVGProps> = ({ w = 130 }) => (
   <svg width={w} height={w * 0.95} viewBox="0 0 130 124">
     <path d="M10,40 Q15,30 35,32 Q60,38 80,55 Q100,75 110,95 Q115,108 102,110 Q85,108 70,98 Q50,82 30,75 Q12,66 8,52 Q6,44 10,40 Z"
@@ -76,6 +85,7 @@ const HorlogeMolle: React.FC<SVGProps> = ({ w = 130 }) => (
   </svg>
 )
 
+// 4 · L'Oiseau-cage — Magritte / Cornell
 const OiseauCage: React.FC<SVGProps> = ({ w = 100 }) => (
   <svg width={w} height={w * 1.4} viewBox="0 0 100 140">
     <rect x="15" y="20" width="70" height="100" fill="none" stroke={ENCRE} strokeWidth="1.2" />
@@ -96,6 +106,7 @@ const OiseauCage: React.FC<SVGProps> = ({ w = 100 }) => (
   </svg>
 )
 
+// 5 · La Clef — Une semaine de bonté (Max Ernst, 1934)
 const Clef: React.FC<SVGProps> = ({ w = 60 }) => (
   <svg width={w} height={w * 2.2} viewBox="0 0 60 132">
     <circle cx="30" cy="22" r="18" fill="url(#hcross)" stroke={ENCRE} strokeWidth="1.2" />
@@ -109,6 +120,7 @@ const Clef: React.FC<SVGProps> = ({ w = 60 }) => (
   </svg>
 )
 
+// 6 · Le Chapeau melon — Magritte
 const ChapeauMelon: React.FC<SVGProps> = ({ w = 120 }) => (
   <svg width={w} height={w * 0.65} viewBox="0 0 130 84">
     <path d="M30,55 Q30,15 65,15 Q100,15 100,55" fill="url(#h30)" stroke={ENCRE} strokeWidth="1.3" />
@@ -119,6 +131,7 @@ const ChapeauMelon: React.FC<SVGProps> = ({ w = 120 }) => (
   </svg>
 )
 
+// 7 · La Pomme — Le Fils de l'homme (Magritte, 1964)
 const Pomme: React.FC<SVGProps> = ({ w = 100 }) => (
   <svg width={w} height={w * 1.05} viewBox="0 0 100 105">
     <path d="M50,18 Q25,18 18,40 Q12,65 28,85 Q40,98 50,98 Q60,98 72,85 Q88,65 82,40 Q75,18 50,18 Q50,12 53,5"
@@ -129,6 +142,7 @@ const Pomme: React.FC<SVGProps> = ({ w = 100 }) => (
   </svg>
 )
 
+// 8 · La Main qui écrit — Bataille / Magritte
 const MainAnatomique: React.FC<SVGProps> = ({ w = 110 }) => (
   <svg width={w} height={w * 1.25} viewBox="0 0 100 125">
     <path d="M25,125 Q22,80 30,55 Q22,45 25,30 Q30,25 35,32 L37,55 Q40,30 45,15 Q52,12 54,20 L52,50 Q56,18 62,10 Q70,10 70,18 L66,52 Q72,25 78,22 Q85,25 82,35 L74,60 Q88,55 88,68 Q85,80 75,82 L70,90 Q72,115 65,125 Z"
@@ -138,6 +152,7 @@ const MainAnatomique: React.FC<SVGProps> = ({ w = 110 }) => (
   </svg>
 )
 
+// 9 · Le Papillon — Carrington / Brauner
 const Papillon: React.FC<SVGProps> = ({ w = 130 }) => (
   <svg width={w} height={w * 0.7} viewBox="0 0 130 90">
     <line x1="65" y1="15" x2="65" y2="75" stroke={ENCRE} strokeWidth="2" />
@@ -155,6 +170,7 @@ const Papillon: React.FC<SVGProps> = ({ w = 130 }) => (
   </svg>
 )
 
+// 10 · L'Œuf philosophal — Brauner
 const Oeuf: React.FC<SVGProps> = ({ w = 90 }) => (
   <svg width={w} height={w * 1.25} viewBox="0 0 90 112">
     <ellipse cx="45" cy="62" rx="38" ry="48" fill="url(#h60)" stroke={ENCRE} strokeWidth="1.3" />
@@ -162,6 +178,7 @@ const Oeuf: React.FC<SVGProps> = ({ w = 90 }) => (
   </svg>
 )
 
+// 11 · Le Poisson soluble — Breton
 const Poisson: React.FC<SVGProps> = ({ w = 140 }) => (
   <svg width={w} height={w * 0.55} viewBox="0 0 140 78">
     <path d="M115,40 Q120,15 100,18 Q70,22 35,38 Q15,42 10,38 Q5,40 8,42 L18,45 Q12,52 8,55 Q15,58 25,55 L35,52 Q70,58 100,62 Q120,65 115,40 Z"
@@ -178,6 +195,7 @@ const Poisson: React.FC<SVGProps> = ({ w = 140 }) => (
   </svg>
 )
 
+// 12 · La Lune absente — Desnos
 const Lune: React.FC<SVGProps> = ({ w = 100 }) => (
   <svg width={w} height={w} viewBox="0 0 100 100">
     <circle cx="50" cy="50" r="40" fill="url(#h45)" stroke={ENCRE} strokeWidth="1.3" />
@@ -189,6 +207,7 @@ const Lune: React.FC<SVGProps> = ({ w = 100 }) => (
   </svg>
 )
 
+// 13 · Mobile — Calder
 const Mobile: React.FC<SVGProps> = ({ w = 130 }) => (
   <svg width={w} height={w * 1.1} viewBox="0 0 130 144">
     <circle cx="65" cy="6" r="2" fill={ENCRE} />
@@ -211,6 +230,7 @@ const Mobile: React.FC<SVGProps> = ({ w = 130 }) => (
   </svg>
 )
 
+// 14 · Paysage biomorphique — Tanguy
 const PaysageTanguy: React.FC<SVGProps> = ({ w = 140 }) => (
   <svg width={w} height={w * 0.62} viewBox="0 0 140 88">
     <line x1="0" y1="50" x2="140" y2="50" stroke={ENCRE} strokeWidth="0.5" opacity="0.5" />
@@ -228,6 +248,7 @@ const PaysageTanguy: React.FC<SVGProps> = ({ w = 140 }) => (
   </svg>
 )
 
+// 15 · Le Mannequin métaphysique — de Chirico
 const Mannequin: React.FC<SVGProps> = ({ w = 80 }) => (
   <svg width={w} height={w * 1.5} viewBox="0 0 80 120">
     <ellipse cx="40" cy="20" rx="11" ry="14" fill="url(#h30)" stroke={ENCRE} strokeWidth="1" />
@@ -244,6 +265,7 @@ const Mannequin: React.FC<SVGProps> = ({ w = 80 }) => (
   </svg>
 )
 
+// 16 · La Poupée articulée — Bellmer
 const Poupee: React.FC<SVGProps> = ({ w = 90 }) => (
   <svg width={w} height={w * 1.35} viewBox="0 0 90 122">
     <circle cx="45" cy="14" r="11" fill="url(#h45)" stroke={ENCRE} strokeWidth="1.1" />
@@ -268,6 +290,36 @@ const Poupee: React.FC<SVGProps> = ({ w = 90 }) => (
   </svg>
 )
 
+// 17 · La Spirale — figure du sommeil hypnotique
+const Spirale: React.FC<SVGProps> = ({ w = 120 }) => {
+  const cx = 60, cy = 60
+  const ticks = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+  return (
+    <svg width={w} height={w} viewBox="0 0 120 120">
+      <circle cx={cx} cy={cy} r="52" fill="none" stroke={ENCRE} strokeWidth="0.8" />
+      <circle cx={cx} cy={cy} r="42" fill="none" stroke={ENCRE} strokeWidth="0.6" />
+      <circle cx={cx} cy={cy} r="32" fill="none" stroke={ENCRE} strokeWidth="0.55" />
+      <circle cx={cx} cy={cy} r="22" fill="none" stroke={ENCRE} strokeWidth="0.5" />
+      <circle cx={cx} cy={cy} r="12" fill="none" stroke={ENCRE} strokeWidth="0.4" />
+      <circle cx={cx} cy={cy} r="3.5" fill={ENCRE} />
+      {ticks.map((angle) => {
+        const rad = (angle - 90) * Math.PI / 180
+        return (
+          <line key={angle}
+            x1={cx + 46 * Math.cos(rad)} y1={cy + 46 * Math.sin(rad)}
+            x2={cx + 52 * Math.cos(rad)} y2={cy + 52 * Math.sin(rad)}
+            stroke={ENCRE} strokeWidth="0.8" />
+        )
+      })}
+      <text x="60" y="5" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>XII</text>
+      <text x="60" y="119" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>VI</text>
+      <text x="116" y="63" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>III</text>
+      <text x="4" y="63" textAnchor="middle" fontFamily="'Bodoni Moda',serif" fontSize="7" fontWeight="700" fill={ENCRE}>IX</text>
+    </svg>
+  )
+}
+
+// 18 · Ticket Merz — Schwitters
 const TicketMerz: React.FC<SVGProps> = ({ w = 120 }) => (
   <svg width={w} height={w * 0.85} viewBox="0 0 120 102">
     <path d="M5,10 L100,5 L115,8 L108,55 L112,80 L98,95 L20,92 L8,85 L3,40 Z"
@@ -287,6 +339,9 @@ const TicketMerz: React.FC<SVGProps> = ({ w = 120 }) => (
   </svg>
 )
 
+// ════════════════════════════════════════════════
+// CATALOGUE DES COLLAGES — { id, label, ref, draw, w }
+// ════════════════════════════════════════════════
 export interface CollageDef {
   id: string
   label: string
@@ -313,4 +368,5 @@ export const COLLAGES: CollageDef[] = [
   { id: 'mannequin',  label: "Le Mannequin métaphysique", ref: "d'après G. de Chirico · 1917",             draw: Mannequin,      w: 80  },
   { id: 'poupee',     label: "La Poupée articulée",      ref: "d'après H. Bellmer · 1934",                 draw: Poupee,         w: 90  },
   { id: 'merz',       label: "Ticket Merz",              ref: "d'après K. Schwitters · 1923",              draw: TicketMerz,     w: 120 },
+  { id: 'spirale',    label: "La Spirale",               ref: "figure du sommeil hypnotique",              draw: Spirale,        w: 120 },
 ]

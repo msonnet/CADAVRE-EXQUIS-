@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import ConsigneCase from '../components/ConsigneCase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
@@ -13,7 +12,7 @@ import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
-import { Decor } from '../reve'
+import { Decor, useReve } from '../reve'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -32,17 +31,6 @@ const CONFIG_DEFAUT: ConfigPartie = {
 }
 
 const DUREE_HYPNOTIQUE = 30
-
-const MESSAGES_IA = [
-  "Une voix s'avance…",
-  "Une autre voix prend le relais…",
-  "Une troisième présence écrit…",
-  "Une nouvelle voix murmure…",
-  "Quelqu'un d'autre continue…",
-  "Une voix inconnue reprend…",
-  "Un inconnu pose sa main…",
-  "Une présence prend le mot…",
-]
 
 // ─── Fonctions pures ─────────────────────────────────────────────────────────
 
@@ -80,6 +68,42 @@ function buildSequence(
   return seq
 }
 
+function toRomain(n: number): string {
+  const map: [number, string][] = [
+    [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
+    [50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I'],
+  ]
+  return map.reduce((r, [v, s]) => { while (n >= v) { r += s; n -= v } return r }, '')
+}
+
+const TYPE_SUBTITLE: Partial<Record<string, string>> = {
+  'nom':             "AVEC ARTICLE · OU SANS",
+  'verbe':           "À L'INFINITIF · OU CONJUGUÉ",
+  'adjectif':        "ÉPITHÈTE · OU ATTRIBUT",
+  'adverbe':         "DE MANIÈRE · OU DEGRÉ",
+  'groupe-nominal':  "DÉT. · NOM · ÉPITHÈTE",
+  'groupe-verbal':   "VERBE · COMPLÉMENT",
+  'proposition':     "PHRASE COMPLÈTE · AVEC PONCTUATION",
+  'libre':           "LIBRE · SANS CONTRAINTE",
+}
+
+function renderConsigneTitre(consigne: string, accent: string): React.ReactNode {
+  const idx = consigne.indexOf(' ')
+  if (idx === -1) {
+    const cap = consigne.charAt(0).toUpperCase() + consigne.slice(1)
+    return <em style={{ color: accent }}>{cap}.</em>
+  }
+  const article = consigne.slice(0, idx + 1)
+  const keyword = consigne.slice(idx + 1)
+  return (
+    <>
+      {article.charAt(0).toUpperCase() + article.slice(1)}
+      <em style={{ color: accent }}>{keyword}</em>
+      {'.'}
+    </>
+  )
+}
+
 function lireBrouillon(): BrouillonActuel | null {
   try {
     const raw = localStorage.getItem('brouillon-actuel')
@@ -89,12 +113,6 @@ function lireBrouillon(): BrouillonActuel | null {
 
 function normaliserCle(t: string): string {
   return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
-
-function couleurTimer(t: number): string {
-  if (t <= 5) return 'text-red-400'
-  if (t <= 10) return 'text-amber-400'
-  return 'text-or'
 }
 
 // ─── Fallbacks client ────────────────────────────────────────────────────────
@@ -238,6 +256,7 @@ export default function Jeu() {
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
+  const seance = useReve()
 
   // ─── Dérivés ───────────────────────────────────────────────────────────────
 
@@ -484,136 +503,247 @@ export default function Jeu() {
     inputValue.length > 0 &&
     !inputValue.includes('?')
 
-  return (
-    <PageTransition className="page-carnet safe-top safe-bottom">
-      <Decor variant={participantActuel?.type === 'ia' ? 'jeu-ia' : 'jeu'} />
-      <div style={{ position: 'relative', zIndex: 10 }}>
-      <div className="flex items-center justify-between mb-8">
-        <button
-          onClick={() => { localStorage.removeItem('brouillon-actuel'); navigate('/') }}
-          className="nav-discrete hover:text-encre transition-colors"
-        >
-          ← Abandonner
-        </button>
-        <button
-          onClick={toggleMute}
-          title={muted ? 'Activer le son' : 'Couper le son'}
-          className={`nav-discrete text-encre transition-opacity ${muted ? 'opacity-40 line-through' : 'opacity-70 hover:opacity-100'}`}
-        >
-          ♪
-        </button>
-      </div>
+  const sc = seance?.colorSchema
+  const accent = sc?.hex ?? '#b22c20'
+  const encre = sc?.encre ?? '#0f0805'
+  const colorLabel = sc?.name.toUpperCase() ?? ''
+  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
+  const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
+  const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={caseIndex}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.35 }}
-        >
-          <ConsigneCase
-            caseNum={caseIndex + 1}
-            total={total}
-            def={defActuelle}
-            auteur={participantActuel?.type ?? 'ia'}
-            joueurNum={participantActuel?.type === 'humain' ? participantActuel.num : undefined}
-            multiJoueurs={multiJoueurs}
-          />
-        </motion.div>
-      </AnimatePresence>
+  // ── IA loading screen ──────────────────────────────────────────────────────
+  if (participantActuel?.type === 'ia' && iaChargement) {
+    return (
+      <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
+        <Decor variant="jeu-ia" />
+        <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+          {/* Header */}
+          <div className="flex justify-between items-baseline">
+            <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5 }}>{acteLabel}</span>
+            <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          </div>
+          <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      {participantActuel?.type === 'humain' && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {/* Timer hypnotique */}
-          {modeHypnotique && tempsRestant !== null && (
+          <div className="flex flex-col items-center justify-center flex-1 text-center" style={{ paddingBottom: '20%' }}>
             <motion.div
-              className="flex items-center justify-end mb-3 gap-2"
+              style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 20 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              — LE CADAVRE SONGE —
+            </motion.div>
+
+            <motion.div
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontStyle: 'italic',
+                fontSize: 'clamp(1.4rem, 6vw, 1.9rem)',
+                color: encre,
+                marginBottom: 12,
+                lineHeight: 1.3,
+              }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <motion.span
-                className={`font-cormorant text-3xl tabular-nums transition-colors duration-500 ${couleurTimer(tempsRestant)}`}
-                animate={tempsRestant <= 5 ? { scale: [1, 1.15, 1] } : {}}
-                transition={{ duration: 0.5, repeat: tempsRestant <= 5 ? Infinity : 0 }}
-              >
-                {tempsRestant}
-              </motion.span>
-              <span className="nav-discrete">s</span>
+              {defActuelle?.consigne}
             </motion.div>
-          )}
 
-          {contexteVisible && (
             <motion.div
-              className="mb-3 pl-3 border-l-2 border-or/40"
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
+              style={{ ...mono, fontSize: 9, color: encre, opacity: 0.45, lineHeight: 1.8 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
             >
-              <p className="nav-discrete mb-0.5">
-                {config.visibilite === 'dernier-mot' ? 'Dernier mot' : 'Case précédente'}
-              </p>
-              <p className="font-cormorant italic text-encre text-lg leading-snug">
-                …{contexteVisible}
-              </p>
+              il puise dans les voix<br />qui l'ont précédé…
             </motion.div>
-          )}
 
-          <textarea
-            className="champ-carnet w-full min-h-[96px] resize-none mt-2"
-            value={inputValue}
-            onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
-            onKeyDown={handleKeyDown}
-            placeholder="…"
-            autoFocus
-            rows={3}
-          />
-
-          {hintQuestion && (
-            <p className="text-xs text-gris italic mt-1 opacity-60">
-              Les questions se terminent par un ?
-            </p>
-          )}
-          {erreur && (
-            <p className="text-sm text-gris italic mt-2">{erreur}</p>
-          )}
-
-          <motion.div className="flex justify-end mt-4" whileTap={{ scale: 0.97 }}>
-            <button
-              onClick={soumettre}
-              disabled={!inputValue.trim()}
-              className="btn-primaire disabled:opacity-40 disabled:cursor-not-allowed"
+            <motion.div
+              className="flex gap-2 mt-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.0 }}
             >
-              Continuer →
-            </button>
-          </motion.div>
-        </motion.div>
-      )}
+              {[0, 1, 2].map(i => (
+                <motion.span
+                  key={i}
+                  style={{ width: 5, height: 5, borderRadius: '50%', background: accent, display: 'inline-block' }}
+                  animate={{ opacity: [0.2, 1, 0.2] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.4 }}
+                />
+              ))}
+            </motion.div>
+          </div>
 
-      {participantActuel?.type === 'ia' && iaChargement && (
-        <motion.div
-          className="mt-12 flex flex-col items-center gap-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <motion.span
-            className="text-or text-2xl"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1.8, repeat: Infinity }}
+          {/* Footer */}
+          <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.35, textAlign: 'center', paddingBottom: 8 }}>
+            — NE PAS LE DÉRANGER —
+          </div>
+        </div>
+      </PageTransition>
+    )
+  }
+
+  // ── Human turn screen ──────────────────────────────────────────────────────
+  return (
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
+      <Decor variant="jeu" />
+      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+
+        {/* Header */}
+        <div className="flex justify-between items-baseline">
+          <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5 }}>{acteLabel}</span>
+          <button
+            onClick={toggleMute}
+            title={muted ? 'Activer le son' : 'Couper le son'}
+            style={{ ...mono, fontSize: 9, color: accent, opacity: muted ? 0.35 : 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ✦
-          </motion.span>
-          <p className="nav-discrete">
-            {MESSAGES_IA[cases.filter(c => c.auteur === 'ia').length % MESSAGES_IA.length]}
-          </p>
-        </motion.div>
-      )}
+            {colorLabel}
+          </button>
+        </div>
+        <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={caseIndex}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
+            className="flex flex-col flex-1"
+          >
+            {/* Previous voice */}
+            {contexteVisible && (
+              <motion.div
+                style={{ borderLeft: `3px solid ${accent}`, paddingLeft: 12, marginTop: 20, marginBottom: 18 }}
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                  — VOIX PRÉCÉDENTE · SCELLÉE —
+                </div>
+                <p style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontStyle: 'italic', fontSize: 15,
+                  color: encre, opacity: 0.7, lineHeight: 1.5,
+                }}>
+                  « {contexteVisible} »
+                </p>
+              </motion.div>
+            )}
+
+            {/* Consigne section */}
+            <motion.div
+              style={{ marginTop: contexteVisible ? 0 : 24 }}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+                — CONSIGNE —
+              </div>
+              <div
+                className="font-bodoni font-black italic leading-tight mb-1"
+                style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre }}
+              >
+                {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
+              </div>
+              {subtitle && (
+                <div style={{ ...mono, fontSize: 8.5, color: encre, opacity: 0.45, marginBottom: 18 }}>
+                  {subtitle}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Timer */}
+            {modeHypnotique && tempsRestant !== null && (
+              <motion.div
+                className="flex items-center justify-end mb-2 gap-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <motion.span
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: accent }}
+                  animate={tempsRestant <= 5 ? { scale: [1, 1.15, 1] } : {}}
+                  transition={{ duration: 0.5, repeat: tempsRestant <= 5 ? Infinity : 0 }}
+                >
+                  {tempsRestant}
+                </motion.span>
+                <span style={{ ...mono, fontSize: 8, color: encre, opacity: 0.4 }}>s</span>
+              </motion.div>
+            )}
+
+            {/* Textarea section */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35 }}
+            >
+              <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+                — ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —
+              </div>
+              <textarea
+                className="champ-carnet w-full min-h-[96px] resize-none"
+                style={{ borderLeftColor: accent }}
+                value={inputValue}
+                onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
+                onKeyDown={handleKeyDown}
+                placeholder="…"
+                autoFocus
+                rows={3}
+              />
+              {hintQuestion && (
+                <p style={{ ...mono, fontSize: 8, color: encre, opacity: 0.45, marginTop: 4 }}>
+                  LES QUESTIONS SE TERMINENT PAR UN ?
+                </p>
+              )}
+              {erreur && (
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: accent, marginTop: 6, opacity: 0.8 }}>
+                  {erreur}
+                </p>
+              )}
+            </motion.div>
+
+            <div style={{ flex: 1 }} />
+
+            {/* CTA */}
+            <motion.div
+              className="mt-4 mb-2"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <button
+                onClick={soumettre}
+                disabled={!inputValue.trim()}
+                className="w-full flex flex-col items-center justify-center"
+                style={{
+                  background: !inputValue.trim() ? `${encre}30` : accent,
+                  color: '#e8d4b8',
+                  ...mono, fontSize: 11,
+                  textTransform: 'uppercase',
+                  padding: '1.1em 1em',
+                  border: 'none',
+                  cursor: !inputValue.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s',
+                  gap: 2,
+                }}
+              >
+                <span>Sceller cette voix</span>
+                <span aria-hidden style={{ fontSize: 14, opacity: 0.85 }}>→</span>
+              </button>
+            </motion.div>
+
+            {/* Footer */}
+            <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.3, textAlign: 'center', paddingBottom: 4 }}>
+              — IRRÉVERSIBLE —
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </PageTransition>
   )

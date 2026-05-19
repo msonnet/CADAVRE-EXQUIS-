@@ -62,6 +62,7 @@ export function filtrerMemoire<T extends { id: string }>(pool: T[]): T[] {
   const m = lireMemoire()
   const filtre = pool.filter(c => (m[c.id] || 0) < MEMOIRE_SEUIL)
   if (filtre.length < 3) {
+    // tout le pool a été vu — on réinitialise
     ecrireMemoire({})
     return pool
   }

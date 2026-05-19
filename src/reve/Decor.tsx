@@ -125,8 +125,8 @@ const ZONES: Record<Variant, VariantZones> = {
   accueil: {
     symbol: { top: '13%', sizeMul: 0.9 },
     etiqs: [
-      { bottom: '26%', left: '4%', transform: 'rotate(-3deg)' },
-      { bottom: '20%', left: '8%', transform: 'rotate(2deg)' },
+      { top: '42%', left: '3%', transform: 'rotate(-3deg)' },
+      { top: '51%', left: '7%', transform: 'rotate(2deg)' },
     ],
     stripesMax: 2,
     verticalTitle: { side: 'right' },
@@ -135,7 +135,7 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   config: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
-    etiqs: [{ bottom: '32%', left: '8%', transform: 'rotate(-3deg)' }],
+    etiqs: [{ top: '65%', left: '4%', transform: 'rotate(-3deg)' }],
     stripesMax: 1,
     verticalTitle: null,
     citation: false,
@@ -150,7 +150,7 @@ const ZONES: Record<Variant, VariantZones> = {
     signature: false,
   },
   'jeu-ia': {
-    symbol: { top: '20%', sizeMul: 0.7 },
+    symbol: { top: '18%', sizeMul: 1.1 },
     etiqs: [],
     stripesMax: 1,
     verticalTitle: null,

@@ -26,7 +26,7 @@ const MAX_TOKENS: Record<TypeCase, number> = {
 
 // Contraintes de longueur explicites dans le prompt
 const CONTRAINTES: Record<TypeCase, string> = {
-  'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "œur", "nuage", "cendre", "os")',
+  'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "cœur", "nuage", "cendre", "os")',
   'verbe': '1 mot (verbe conjugué, forme courte)',
   'adjectif': '1 mot (adjectif seul)',
   'adverbe': '1 à 2 mots',

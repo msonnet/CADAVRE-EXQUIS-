@@ -44,7 +44,7 @@ Phrase : ${texte}`
     const data = await response.json()
     const corrige = (data.content?.[0]?.text ?? '')
       .trim()
-      .replace(/^[«"''“]|[«"''”]$/g, '')
+      .replace(/^[«"''"]|[«"''"]$/g, '')
       .trim()
 
     res.status(200).json({ texte: corrige || texte })
