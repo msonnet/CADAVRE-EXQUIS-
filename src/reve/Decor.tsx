@@ -125,8 +125,8 @@ const ZONES: Record<Variant, VariantZones> = {
   accueil: {
     symbol: { top: '13%', sizeMul: 0.9 },
     etiqs: [
-      { top: '62%', left: '30%', transform: 'rotate(-3deg)' },
-      { top: '66%', left: '36%', transform: 'rotate(2deg)' },
+      { bottom: '26%', left: '4%', transform: 'rotate(-3deg)' },
+      { bottom: '20%', left: '8%', transform: 'rotate(2deg)' },
     ],
     stripesMax: 2,
     verticalTitle: { side: 'right' },
