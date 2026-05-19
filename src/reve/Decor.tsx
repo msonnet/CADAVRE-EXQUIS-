@@ -112,10 +112,17 @@ export function useReve(): SeanceReve | null {
 
 export type Variant = 'accueil' | 'config' | 'jeu' | 'jeu-ia' | 'fin' | 'fin-image' | 'biblio' | 'detail'
 
+interface InkBlotDef {
+  pos: { top?: string; bottom?: string; left?: string; right?: string }
+  size: number
+  delay: number
+}
+
 interface VariantZones {
   symbol: { top?: string; bottom?: string; left?: string; right?: string; sizeMul: number } | null
   etiqs: React.CSSProperties[]
   stripesMax: number
+  inkBlots: InkBlotDef[]
   verticalTitle: { side: 'left' | 'right' } | null
   citation: boolean
   signature: boolean
@@ -129,6 +136,7 @@ const ZONES: Record<Variant, VariantZones> = {
       { top: '51%', left: '7%', transform: 'rotate(2deg)' },
     ],
     stripesMax: 2,
+    inkBlots: [],
     verticalTitle: { side: 'right' },
     citation: true,
     signature: true,
@@ -136,7 +144,10 @@ const ZONES: Record<Variant, VariantZones> = {
   config: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
     etiqs: [{ top: '65%', left: '4%', transform: 'rotate(-3deg)' }],
-    stripesMax: 1,
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { bottom: '6%', left: '0' }, size: 110, delay: 1.1 },
+    ],
     verticalTitle: null,
     citation: false,
     signature: true,
@@ -145,6 +156,7 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { bottom: '14%', right: '4%', sizeMul: 0.5 },
     etiqs: [],
     stripesMax: 0,
+    inkBlots: [],
     verticalTitle: null,
     citation: false,
     signature: false,
@@ -152,7 +164,8 @@ const ZONES: Record<Variant, VariantZones> = {
   'jeu-ia': {
     symbol: { top: '18%', sizeMul: 1.1 },
     etiqs: [],
-    stripesMax: 1,
+    stripesMax: 0,
+    inkBlots: [],
     verticalTitle: null,
     citation: false,
     signature: false,
@@ -160,7 +173,11 @@ const ZONES: Record<Variant, VariantZones> = {
   fin: {
     symbol: { top: '12%', right: '5%', sizeMul: 0.55 },
     etiqs: [{ bottom: '24%', left: '6%', transform: 'rotate(-2deg)' }],
-    stripesMax: 1,
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { bottom: '4%', right: '0' }, size: 130, delay: 1.0 },
+      { pos: { top: '7%', left: '0' }, size: 75, delay: 1.5 },
+    ],
     verticalTitle: null,
     citation: false,
     signature: true,
@@ -168,7 +185,10 @@ const ZONES: Record<Variant, VariantZones> = {
   'fin-image': {
     symbol: null,
     etiqs: [],
-    stripesMax: 1,
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { bottom: '5%', left: '0' }, size: 90, delay: 1.2 },
+    ],
     verticalTitle: null,
     citation: false,
     signature: true,
@@ -176,7 +196,11 @@ const ZONES: Record<Variant, VariantZones> = {
   biblio: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.5 },
     etiqs: [{ bottom: '20%', left: '6%', transform: 'rotate(-3deg)' }],
-    stripesMax: 1,
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { top: '6%', left: '0' }, size: 95, delay: 1.0 },
+      { pos: { bottom: '5%', right: '0' }, size: 70, delay: 1.6 },
+    ],
     verticalTitle: null,
     citation: false,
     signature: true,
@@ -184,7 +208,10 @@ const ZONES: Record<Variant, VariantZones> = {
   detail: {
     symbol: { top: '14%', left: '4%', sizeMul: 0.5 },
     etiqs: [],
-    stripesMax: 1,
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { bottom: '8%', right: '0' }, size: 100, delay: 1.0 },
+    ],
     verticalTitle: null,
     citation: false,
     signature: true,
@@ -222,6 +249,10 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
         <Stripes key={i} pos={s.pos} size={s.size} height={s.height} color={c.encre} />
       ))}
 
+      {zones.inkBlots.map((def, i) => (
+        <InkBlot key={i} def={def} color={c.encre} seed={seance.seed} idx={i} />
+      ))}
+
       {zones.verticalTitle && (
         <VerticalAccent
           side="left"
@@ -257,6 +288,38 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 }
 
 // ─── Composants internes ──
+
+const BLOB_SHAPES = [
+  '63% 37% 54% 46% / 55% 48% 52% 45%',
+  '45% 55% 37% 63% / 40% 60% 48% 52%',
+  '55% 45% 65% 35% / 62% 38% 42% 58%',
+  '35% 65% 48% 52% / 45% 55% 65% 35%',
+  '68% 32% 42% 58% / 52% 48% 38% 62%',
+]
+
+function InkBlot({ def, color, seed, idx }: { def: InkBlotDef; color: string; seed: number; idx: number }) {
+  const shapeIdx = (seed * (idx + 3)) % BLOB_SHAPES.length
+  const sizeVar = 0.82 + ((seed * 7 + idx * 13) % 36) / 100
+  const w = Math.round(def.size * sizeVar)
+  const h = Math.round(w * (0.65 + (seed % 4) * 0.1))
+  const rot = ((seed + idx * 17) % 50) - 25
+  const opacity = 0.045 + ((seed + idx * 11) % 5) / 100
+  return (
+    <div style={{
+      position: 'absolute',
+      ...def.pos,
+      width: w,
+      height: h,
+      borderRadius: BLOB_SHAPES[shapeIdx],
+      background: color,
+      opacity,
+      pointerEvents: 'none',
+      zIndex: 1,
+      transform: `rotate(${rot}deg)`,
+      animation: `fadeInQ 1.8s ease-out ${def.delay}s both`,
+    }} />
+  )
+}
 
 function Stripes({ pos, size, height, color }: { pos: StripeSpec['pos']; size: number; height: number; color: string }) {
   const positions = {

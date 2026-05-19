@@ -151,6 +151,35 @@ export default function Configuration() {
           </div>
         </div>
 
+        {/* ── JOUEURS ── */}
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+            — JOUEURS —
+          </div>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map(n => {
+              const active = config.joueursHumains === n
+              return (
+                <button
+                  key={n}
+                  onClick={() => setConfig(c => ({ ...c, joueursHumains: n }))}
+                  style={{
+                    flex: 1, padding: '8px 4px',
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    background: 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 11,
+                    color: active ? accent : `${encre}60`,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {n}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         {/* ── VOIX IA ── */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>

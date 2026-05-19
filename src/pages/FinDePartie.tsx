@@ -226,7 +226,7 @@ export default function FinDePartie() {
         {/* ── IMAGE (if already generated) ── */}
         {illustrationUrl && (
           <motion.div
-            className="mb-5 flex flex-col items-center gap-2"
+            className="mb-3 flex flex-col items-center gap-2"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
@@ -239,6 +239,26 @@ export default function FinDePartie() {
             />
             {labelStyle && !generatingIllustration && (
               <span style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.4 }}>{labelStyle.toUpperCase()}</span>
+            )}
+            {/* Prompt reveal — always visible after generation */}
+            {promptVisuel && !generatingIllustration && (
+              <div className="w-full">
+                <button
+                  onClick={() => setPromptVisible(v => !v)}
+                  style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  {promptVisible ? '↑ masquer le prompt' : '→ voir le prompt IA'}
+                </button>
+                {promptVisible && (
+                  <p style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontStyle: 'italic', fontSize: 12, color: encre,
+                    opacity: 0.55, marginTop: 6, lineHeight: 1.55,
+                  }}>
+                    {promptVisuel}
+                  </p>
+                )}
+              </div>
             )}
           </motion.div>
         )}

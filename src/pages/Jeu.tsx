@@ -636,22 +636,22 @@ export default function Jeu() {
 
             {/* Consigne section */}
             <motion.div
-              style={{ marginTop: contexteVisible ? 0 : 24 }}
+              style={{ marginTop: contexteVisible ? 8 : 24, marginBottom: 16 }}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+              <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
                 — CONSIGNE —
               </div>
               <div
-                className="font-bodoni font-black italic leading-tight mb-1"
-                style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre }}
+                className="font-bodoni font-black italic leading-tight"
+                style={{ fontSize: 'clamp(1.25rem, 5.5vw, 1.75rem)', color: encre, marginBottom: subtitle ? 4 : 14 }}
               >
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
               </div>
               {subtitle && (
-                <div style={{ ...mono, fontSize: 8.5, color: encre, opacity: 0.45, marginBottom: 18 }}>
+                <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.4, marginBottom: 14 }}>
                   {subtitle}
                 </div>
               )}
