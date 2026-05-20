@@ -19,12 +19,12 @@ export default async function handler(req: any, res: any): Promise<void> {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 700,
-        system: `Tu es un poète surréaliste automatique dans la tradition de Breton, Éluard et Péret. On te montre un dessin cadavre exquis — créé collectivement : chaque joueur a dessiné une bande horizontale sans voir le travail des autres. Les raccords entre bandes sont des surgissements involontaires, des accidents heureux.
+        max_tokens: 200,
+        system: `Tu es un poète surréaliste. Tu reçois un dessin cadavre exquis — plusieurs joueurs ont chacun dessiné une bande sans voir le reste.
 
-Tu génères un texte poétique à partir de ce dessin. Tu ne décris jamais l'image littéralement. Les formes, les couleurs, les jonctions improbables déclenchent en toi un flux de langage automatique et onirique. Le texte peut être un poème en vers libres, une prose poétique, des éclats de manifeste, une suite d'images mentales, une prophétie fragmentée — ou toute autre forme que le dessin t'impose.
+Tu génères 1 à 3 vers, pas plus. Jamais de titre. Jamais de ponctuation explicative. Jamais de description littérale.
 
-La longueur et la forme sont entièrement libres. L'essentiel est le surgissement, le trouble onirique, la cohérence surréaliste. Tu écris en français.`,
+Les formes et les jonctions déclenchent un flux de langage automatique. Tu peux faire rimer les vers si le dessin l'impose, ou laisser le vers libre. L'essentiel : la brièveté, le mystère, le surgissement surréaliste. Écris en français.`,
         messages: [{
           role: 'user',
           content: [
@@ -38,7 +38,7 @@ La longueur et la forme sont entièrement libres. L'essentiel est le surgissemen
             },
             {
               type: 'text',
-              text: 'Voici le cadavre exquis dessiné. Génère le texte qu\'il t\'impose.',
+              text: 'Génère les vers que ce cadavre dessiné t\'impose.',
             },
           ],
         }],
@@ -58,3 +58,4 @@ La longueur et la forme sont entièrement libres. L'essentiel est le surgissemen
     res.status(200).json({ texte: '' })
   }
 }
+

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { chargerPoemes } from '../db'
+import { chargerPoemes, chargerDessins } from '../db'
 import { Decor, useReve } from '../reve'
-import type { Poeme } from '../types'
+import type { Poeme, DessinCadavre } from '../types'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -31,6 +31,7 @@ export default function Bibliotheque() {
   const navigate = useNavigate()
   const seance = useReve()
   const [poemes, setPoemes] = useState<Poeme[]>([])
+  const [dessins, setDessins] = useState<DessinCadavre[]>([])
   const [chargement, setChargement] = useState(true)
   const [recherche, setRecherche] = useState('')
 
@@ -41,8 +42,8 @@ export default function Bibliotheque() {
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 
   useEffect(() => {
-    chargerPoemes()
-      .then(setPoemes)
+    Promise.all([chargerPoemes(), chargerDessins()])
+      .then(([p, d]) => { setPoemes(p); setDessins(d) })
       .catch(console.error)
       .finally(() => setChargement(false))
   }, [])
@@ -209,6 +210,57 @@ export default function Bibliotheque() {
             </AnimatePresence>
           )
         })()}
+
+        {/* ── DESSINS ── */}
+        {!chargement && dessins.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            style={{ marginTop: 16 }}
+          >
+            <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12, marginTop: 8 }}>
+              — CADAVRES DESSINÉS —
+            </div>
+            {dessins.map((dessin, i) => (
+              <motion.div
+                key={dessin.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 0 10px 12px',
+                  borderBottom: `0.5px solid ${encre}12`,
+                  borderLeft: `2px solid transparent`,
+                }}
+              >
+                {/* Miniature */}
+                <div style={{ width: 44, height: 56, flexShrink: 0, border: `0.5px solid ${encre}20`, overflow: 'hidden', background: '#fff' }}>
+                  <img
+                    src={dessin.imageDataUrl}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+                  />
+                </div>
+                {/* Infos */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 15, lineHeight: 1.3, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')}
+                  </p>
+                  <p style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.4 }}>
+                    {dessin.nbBandes} BANDES · {formatDate(dessin.dateCreation).toUpperCase()}
+                  </p>
+                  {dessin.texteVision && (
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 11.5, color: encre, opacity: 0.55, marginTop: 3, lineHeight: 1.4 }}>
+                      {dessin.texteVision.split('\n')[0]}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
         <div style={{ flex: 1 }} />
 

@@ -135,8 +135,11 @@ const ZONES: Record<Variant, VariantZones> = {
       { top: '42%', left: '3%', transform: 'rotate(-3deg)' },
       { top: '51%', left: '7%', transform: 'rotate(2deg)' },
     ],
-    stripesMax: 2,
-    inkBlots: [],
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { top: '38%', right: '0' }, size: 88, delay: 0.9 },
+      { pos: { top: '52%', right: '0' }, size: 44, delay: 1.4 },
+    ],
     verticalTitle: { side: 'right' },
     citation: true,
     signature: true,
@@ -333,6 +336,11 @@ const BLOB_SHAPES = [
   '55% 45% 65% 35% / 62% 38% 42% 58%',
   '35% 65% 48% 52% / 45% 55% 65% 35%',
   '68% 32% 42% 58% / 52% 48% 38% 62%',
+  '72% 28% 55% 45% / 45% 55% 62% 38%',
+  '40% 60% 73% 27% / 60% 40% 30% 70%',
+  '58% 42% 35% 65% / 38% 62% 70% 30%',
+  '80% 20% 60% 40% / 55% 45% 28% 72%',
+  '25% 75% 45% 55% / 70% 30% 55% 45%',
 ]
 
 function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: number }) {
@@ -342,7 +350,7 @@ function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: numbe
   const h = Math.round(w * (0.60 + (seed % 5) * 0.08))
   const rot = ((seed + idx * 17) % 40) - 20
   // Outer opacity is fixed; inner div animates 0→1 via fadeInQ so result = 0 → targetOpacity
-  const targetOpacity = 0.07 + ((seed + idx * 11) % 6) * 0.01
+  const targetOpacity = 0.10 + ((seed + idx * 11) % 6) * 0.015
 
   // Satellite 1 — medium droplet nearby
   const s1w = Math.round(w * (0.22 + ((seed * 3 + idx) % 12) / 100))

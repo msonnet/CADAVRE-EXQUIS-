@@ -72,15 +72,18 @@ export interface Reglages {
 // ── Mode dessin ──────────────────────────────────
 
 export interface ConfigDessin {
-  nbBandes: number      // 2–5 (= nombre de joueurs)
+  nbBandes: number                    // 2–5 : nombre de fragments
+  joueurs: number                     // 1–5 : nombre de joueurs (peut différer des bandes)
   visibilite: 'aveugle' | 'raccord'
 }
 
 export interface BandeDessin {
   joueurIdx: number
-  imageDataUrl: string  // data:image/png;base64,...
+  joueurNumero: number                // 1-based, cyclique si joueurs < nbBandes
+  imageDataUrl: string                // data:image/png;base64,...
   width: number
   height: number
+  lowestDrawnFraction: number         // 0–1 : fraction de hauteur du dernier pixel dessiné
   ts: number
 }
 

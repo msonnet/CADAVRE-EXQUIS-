@@ -110,55 +110,40 @@ export default function Accueil() {
 
       {/* ── CTA ── */}
       <motion.div
-        className="relative"
-        style={{ zIndex: 10, marginBottom: 8 }}
+        className="relative mb-3"
+        style={{ zIndex: 10 }}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.4 }}
-        whileTap={{ scale: 0.98 }}
       >
-        <button
-          onClick={() => nav('/config')}
-          className="w-full flex flex-col items-center justify-center"
-          style={{
-            background: accent,
-            color: '#e8d4b8',
-            ...mono,
-            fontSize: 11,
-            textTransform: 'uppercase',
-            padding: '1em 1em',
-            border: 'none',
-            cursor: 'pointer',
-            gap: 2,
-          }}
-        >
-          <span>Convoquer le cadavre</span>
-          <span aria-hidden style={{ fontSize: 14, opacity: 0.85 }}>→</span>
-        </button>
-      </motion.div>
-      <motion.div
-        className="relative mb-3"
-        style={{ zIndex: 10 }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.7, duration: 0.4 }}
-      >
-        <button
-          onClick={() => nav('/config-dessin')}
-          className="w-full"
-          style={{
-            background: 'transparent',
-            color: `${encre}70`,
-            ...mono,
-            fontSize: 9,
-            textTransform: 'uppercase',
-            padding: '0.7em 1em',
-            border: `0.5px solid ${encre}20`,
-            cursor: 'pointer',
-          }}
-        >
-          ✎ &nbsp;mode dessin cadavre exquis
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => nav('/config')}
+            style={{
+              flex: 1,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: accent, color: '#e8d4b8',
+              ...mono, fontSize: 10, textTransform: 'uppercase',
+              padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+            }}
+          >
+            <span>Cadavre Écrit</span>
+            <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✒</span>
+          </button>
+          <button
+            onClick={() => nav('/config-dessin')}
+            style={{
+              flex: 1,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: encre, color: '#e8d4b8',
+              ...mono, fontSize: 10, textTransform: 'uppercase',
+              padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+            }}
+          >
+            <span>Cadavre Dessiné</span>
+            <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✎</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* ── FOOTER ── */}
