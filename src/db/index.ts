@@ -1,13 +1,18 @@
 import Dexie, { type Table } from 'dexie'
-import type { Poeme } from '../types'
+import type { Poeme, DessinCadavre } from '../types'
 
 class CadavreExquisDB extends Dexie {
   poemes!: Table<Poeme>
+  dessins!: Table<DessinCadavre>
 
   constructor() {
     super('cadavre-exquis')
     this.version(1).stores({
       poemes: 'id, dateCreation, dateModification',
+    })
+    this.version(2).stores({
+      poemes: 'id, dateCreation, dateModification',
+      dessins: 'id, dateCreation, dateModification',
     })
   }
 }
@@ -36,4 +41,24 @@ export async function mettreAJourTitre(id: string, titre: string): Promise<void>
 
 export async function sauvegarderIllustration(id: string, illustration: import('../types').Illustration): Promise<void> {
   await db.poemes.update(id, { illustration, dateModification: Date.now() })
+}
+
+export async function sauvegarderDessin(dessin: DessinCadavre): Promise<void> {
+  await db.dessins.put(dessin)
+}
+
+export async function chargerDessins(): Promise<DessinCadavre[]> {
+  return db.dessins.orderBy('dateCreation').reverse().toArray()
+}
+
+export async function chargerDessin(id: string): Promise<DessinCadavre | undefined> {
+  return db.dessins.get(id)
+}
+
+export async function supprimerDessin(id: string): Promise<void> {
+  await db.dessins.delete(id)
+}
+
+export async function mettreAJourTitreDessin(id: string, titre: string): Promise<void> {
+  await db.dessins.update(id, { titre, dateModification: Date.now() })
 }

@@ -68,3 +68,28 @@ export interface Reglages {
   vitesseApparition: number
   validationGrammaticale: 'stricte' | 'souple' | 'desactivee'
 }
+
+// ── Mode dessin ──────────────────────────────────
+
+export interface ConfigDessin {
+  nbBandes: number      // 2–5 (= nombre de joueurs)
+  visibilite: 'aveugle' | 'raccord'
+}
+
+export interface BandeDessin {
+  joueurIdx: number
+  imageDataUrl: string  // data:image/png;base64,...
+  width: number
+  height: number
+  ts: number
+}
+
+export interface DessinCadavre {
+  id: string
+  titre: string | null
+  nbBandes: number
+  imageDataUrl: string  // dessin assemblé final
+  texteVision?: string  // texte généré par Claude Vision
+  dateCreation: number
+  dateModification: number
+}

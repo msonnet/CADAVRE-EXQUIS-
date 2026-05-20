@@ -110,7 +110,7 @@ export function useReve(): SeanceReve | null {
 // Les composants Décor respectent ces zones automatiquement
 // ════════════════════════════════════════════════
 
-export type Variant = 'accueil' | 'config' | 'jeu' | 'jeu-ia' | 'fin' | 'fin-image' | 'biblio' | 'detail'
+export type Variant = 'accueil' | 'config' | 'jeu' | 'jeu-ia' | 'fin' | 'fin-image' | 'biblio' | 'detail' | 'config-dessin' | 'jeu-dessin' | 'fin-dessin'
 
 interface InkBlotDef {
   pos: { top?: string; bottom?: string; left?: string; right?: string }
@@ -214,6 +214,39 @@ const ZONES: Record<Variant, VariantZones> = {
     inkBlots: [
       { pos: { bottom: '0', right: '0' }, size: 62, delay: 1.0 },
       { pos: { bottom: '0', left: '0' }, size: 34, delay: 1.8 },
+    ],
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
+  'config-dessin': {
+    symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
+    etiqs: [],
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { bottom: '0', left: '0' }, size: 68, delay: 1.1 },
+      { pos: { bottom: '0', right: '0' }, size: 36, delay: 1.85 },
+    ],
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
+  'jeu-dessin': {
+    symbol: null,
+    etiqs: [],
+    stripesMax: 0,
+    inkBlots: [],
+    verticalTitle: null,
+    citation: false,
+    signature: false,
+  },
+  'fin-dessin': {
+    symbol: { top: '12%', right: '5%', sizeMul: 0.55 },
+    etiqs: [],
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { bottom: '0', right: '0' }, size: 72, delay: 1.2 },
+      { pos: { top: '4%', left: '0' }, size: 36, delay: 2.0 },
     ],
     verticalTitle: null,
     citation: false,
