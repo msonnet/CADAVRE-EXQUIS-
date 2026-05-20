@@ -223,17 +223,22 @@ export default function Bibliotheque() {
               — CADAVRES DESSINÉS —
             </div>
             {dessins.map((dessin, i) => (
-              <motion.div
+              <motion.button
                 key={dessin.id}
+                onClick={() => navigate(`/bibliotheque/dessin/${dessin.id}`)}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 0 10px 12px',
+                  padding: '10px 0 10px 12px', width: '100%', textAlign: 'left',
                   borderBottom: `0.5px solid ${encre}12`,
                   borderLeft: `2px solid transparent`,
+                  background: 'transparent', cursor: 'pointer',
+                  transition: 'border-left-color 0.15s',
                 }}
+                onMouseEnter={e => (e.currentTarget.style.borderLeftColor = accent)}
+                onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
               >
                 {/* Miniature */}
                 <div style={{ width: 44, height: 56, flexShrink: 0, border: `0.5px solid ${encre}20`, overflow: 'hidden', background: '#fff' }}>
@@ -257,7 +262,7 @@ export default function Bibliotheque() {
                     </p>
                   )}
                 </div>
-              </motion.div>
+              </motion.button>
             ))}
           </motion.div>
         )}

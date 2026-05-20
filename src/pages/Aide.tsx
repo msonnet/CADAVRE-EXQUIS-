@@ -17,21 +17,13 @@ const VISIBILITE = [
 ]
 
 const MODES = [
-  { label: 'STANDARD',    detail: 'Aucune contrainte de temps. Tu prends le temps qu\'il faut.' },
-  { label: 'HYPNOTIQUE',  detail: '30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place.' },
+  { label: 'STANDARD',   detail: 'Aucune contrainte de temps. Tu prends le temps qu\'il faut.' },
+  { label: 'HYPNOTIQUE', detail: '30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place.' },
 ]
 
-const OUTILS_DESSIN = [
-  { label: 'PLUME',    detail: 'Trait fin et précis. Pour les détails, les hachures, l\'écriture.' },
-  { label: 'PINCEAU',  detail: 'Trait doux, légèrement flou. Pour les aplats, les zones d\'ombre.' },
-  { label: 'MARQUEUR', detail: 'Trait épais et couvrant. Pour les formes franches, les silhouettes.' },
-  { label: 'CRAYON',   detail: 'Trait granuleux et tendre. Pour les esquisses, les textures douces.' },
-  { label: 'GOMME',    detail: 'Efface. Pour révéler le blanc du papier.' },
-]
-
-const VISIBILITE_DESSIN = [
-  { label: 'AVEUGLE',  detail: 'Chaque bande commence dans l\'obscurité totale. Le monstre prend forme par hasard.' },
-  { label: 'RACCORD',  detail: 'Un léger liseret du fragment précédent est visible. Assez pour raccorder les corps, pas assez pour tout voir.' },
+const RACCORD_DESSIN = [
+  { label: 'AVEUGLE', detail: 'Chaque bande commence dans l\'obscurité totale. Le monstre prend forme par hasard.' },
+  { label: 'RACCORD', detail: 'Un liseret du fragment précédent reste visible jusqu\'au premier trait. Assez pour raccorder les corps, pas assez pour tout voir.' },
 ]
 
 export default function Aide() {
@@ -85,34 +77,44 @@ export default function Aide() {
             fontStyle: 'italic', fontSize: 14, color: encre,
             lineHeight: 1.65, marginBottom: 10,
           }}>
-            Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant écrit un fragment sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
-          </p>
-          <p style={{ ...mono, fontSize: 8, color: encre, opacity: 0.4, lineHeight: 1.7, letterSpacing: '0.16em' }}>
-            TU JOUES AVEC UNE DES 40 VOIX ANONYMES.
-            TU NE SAURAS JAMAIS LAQUELLE.
+            Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.
           </p>
         </motion.div>
 
-        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
+        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
 
-        {/* ── STRUCTURES ── */}
+        {/* ══════════════════════════════════════════
+            CADAVRE ÉCRIT  (couleur accent)
+        ══════════════════════════════════════════ */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-          style={{ marginBottom: 24 }}
+          transition={{ delay: 0.2 }}
+          style={{ marginBottom: 32 }}
         >
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+            — CADAVRE ÉCRIT —
+          </div>
+          <div
+            className="font-bodoni font-black italic leading-tight"
+            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: accent, marginBottom: 16 }}
+          >
+            Cadavre <em>Écrit.</em>
+          </div>
+          <p style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontStyle: 'italic', fontSize: 13, color: encre,
+            lineHeight: 1.65, opacity: 0.65, marginBottom: 20,
+          }}>
+            Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
+          </p>
+
+          {/* Structures */}
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — STRUCTURES —
           </div>
-          {STRUCTURES.map((s, i) => (
-            <div
-              key={s.romain}
-              style={{
-                display: 'flex', gap: 14, paddingBottom: 12,
-                borderBottom: `0.5px solid ${encre}10`, marginBottom: 12,
-              }}
-            >
+          {STRUCTURES.map(s => (
+            <div key={s.romain} style={{ display: 'flex', gap: 14, paddingBottom: 12, borderBottom: `0.5px solid ${encre}10`, marginBottom: 12 }}>
               <span style={{ ...mono, fontSize: 10, color: accent, fontWeight: 700, minWidth: 22 }}>{s.romain}.</span>
               <div>
                 <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 13, color: encre, marginBottom: 2 }}>
@@ -122,136 +124,82 @@ export default function Aide() {
                   {s.detail}
                 </div>
                 {s.exemple && (
-                  <div style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontStyle: 'italic', fontSize: 12, color: encre, opacity: 0.5,
-                  }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: encre, opacity: 0.5 }}>
                     « {s.exemple} »
                   </div>
                 )}
               </div>
             </div>
           ))}
-        </motion.div>
 
-        {/* ── VISIBILITÉ ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          style={{ marginBottom: 24 }}
-        >
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          {/* Visibilité */}
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
             — VISIBILITÉ —
           </div>
-          {VISIBILITE.map((v) => (
-            <div
-              key={v.label}
-              style={{
-                paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10,
-              }}
-            >
-              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6,
-              }}>{v.detail}</div>
+          {VISIBILITE.map(v => (
+            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+              <div style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6 }}>{v.detail}</div>
             </div>
           ))}
-        </motion.div>
 
-        {/* ── MODES ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
-          style={{ marginBottom: 28 }}
-        >
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          {/* Modes */}
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
             — MODES —
           </div>
-          {MODES.map((m) => (
-            <div
-              key={m.label}
-              style={{
-                paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10,
-              }}
-            >
-              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
-              <div style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6,
-              }}>{m.detail}</div>
+          {MODES.map(m => (
+            <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+              <div style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6 }}>{m.detail}</div>
             </div>
           ))}
         </motion.div>
 
-        {/* ── CADAVRE DESSINÉ ── */}
+        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
+
+        {/* ══════════════════════════════════════════
+            CADAVRE DESSINÉ  (couleur encre)
+        ══════════════════════════════════════════ */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.55 }}
-          style={{ marginBottom: 28 }}
+          transition={{ delay: 0.4 }}
+          style={{ marginBottom: 32 }}
         >
-          <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
-
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 8, color: encre, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — CADAVRE DESSINÉ —
+          </div>
+          <div
+            className="font-bodoni font-black italic leading-tight"
+            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: encre, marginBottom: 16 }}
+          >
+            Cadavre <em>Dessiné.</em>
           </div>
           <p style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontStyle: 'italic', fontSize: 13, color: encre,
-            lineHeight: 1.65, opacity: 0.7, marginBottom: 16,
+            lineHeight: 1.65, opacity: 0.65, marginBottom: 20,
           }}>
-            La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est commenté par une intelligence artificielle en vers surréalistes.
+            La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
           </p>
 
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — OUTILS —
-          </div>
-          {OUTILS_DESSIN.map((o) => (
-            <div
-              key={o.label}
-              style={{ paddingBottom: 8, borderBottom: `0.5px solid ${encre}10`, marginBottom: 8 }}
-            >
-              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 2 }}>{o.label}</div>
-              <div style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6,
-              }}>{o.detail}</div>
-            </div>
-          ))}
-
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 10 }}>
+          {/* Raccord */}
+          <div style={{ ...mono, fontSize: 8, color: encre, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — RACCORD —
           </div>
-          {VISIBILITE_DESSIN.map((v) => (
-            <div
-              key={v.label}
-              style={{ paddingBottom: 8, borderBottom: `0.5px solid ${encre}10`, marginBottom: 8 }}
-            >
-              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 2 }}>{v.label}</div>
-              <div style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6,
-              }}>{v.detail}</div>
+          {RACCORD_DESSIN.map(v => (
+            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6 }}>{v.detail}</div>
             </div>
           ))}
 
-          <div style={{
-            borderLeft: `1.5px solid ${accent}`,
-            paddingLeft: 12,
-            marginTop: 16,
-            opacity: 0.65,
-          }}>
-            <div style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontStyle: 'italic', fontSize: 13, lineHeight: 1.5,
-              color: encre, marginBottom: 4,
-            }}>
-              « Exquisite Corpse shall drink the new wine »
+          {/* Citation */}
+          <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20, opacity: 0.7 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, color: encre, marginBottom: 4 }}>
+              « Le cadavre exquis boira le vin nouveau »
             </div>
-            <div style={{ ...mono, fontSize: 7.5, color: accent, letterSpacing: '0.14em' }}>
+            <div style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.55, letterSpacing: '0.14em' }}>
               BRETON, ÉLUARD, MORISE, MAN RAY · 1925
             </div>
           </div>
@@ -262,7 +210,7 @@ export default function Aide() {
           className="mb-3"
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.6 }}
         >
           <div style={{ display: 'flex', gap: 8 }}>
             <button

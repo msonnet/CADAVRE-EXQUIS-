@@ -108,6 +108,7 @@ export default function JeuDessin() {
   const [raccordStyle, setRaccordStyle] = useState({ imgTop: 0, imgH: 400 })
   const [canvasReady, setCanvasReady] = useState(false)
   const [showTransition, setShowTransition] = useState(false)
+  const [showIntro, setShowIntro] = useState(true)
   const [nextPlayerNum, setNextPlayerNum] = useState(2)
   const [pendingBandes, setPendingBandes] = useState<BandeDessin[]>([])
   const [showColorPanel, setShowColorPanel] = useState(false)
@@ -121,7 +122,6 @@ export default function JeuDessin() {
   const containerRef = useRef<HTMLDivElement>(null)
   const isDrawing = useRef(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
-  const raccordTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const lastPinchDist = useRef<number | null>(null)
   const lastPinchMid = useRef<{ x: number; y: number } | null>(null)
@@ -168,26 +168,20 @@ export default function JeuDessin() {
     setCanvasReady(true)
   }, [bandeIdx])
 
-  // Raccord calculé sur le contenu réel
+  // Raccord calculé sur le contenu réel — persiste jusqu'au premier trait
   useEffect(() => {
     if (bandeIdx === 0 || config.visibilite === 'aveugle' || bandes.length === 0) return
     const prev = bandes[bandes.length - 1]
-    const centerY = prev.lowestDrawnFraction * prev.height
-    const WINDOW = 64
-    const imgTop = -(centerY - WINDOW / 2)
+    const lowestY = prev.lowestDrawnFraction * prev.height
+    const STRIP = 80
+    const imgTop = -(lowestY - STRIP + 10)
     setRaccordStyle({ imgTop, imgH: prev.height })
     setRaccordOpacity(1)
     setShowRaccord(true)
-    raccordTimer.current = setTimeout(() => {
-      setRaccordOpacity(0)
-      setTimeout(() => setShowRaccord(false), 700)
-    }, 6000)
-    return () => { if (raccordTimer.current) clearTimeout(raccordTimer.current) }
   }, [bandeIdx])
 
   function dismissRaccord() {
     if (!showRaccord) return
-    if (raccordTimer.current) clearTimeout(raccordTimer.current)
     setRaccordOpacity(0)
     setTimeout(() => setShowRaccord(false), 500)
   }
@@ -347,21 +341,25 @@ export default function JeuDessin() {
           <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: tool === 'eraser' ? 'cell' : 'crosshair' }} />
         </div>
 
-        {/* Raccord */}
+        {/* Raccord — persiste jusqu'au premier trait */}
         {showRaccord && prevBande && canvasReady && (
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 64,
+            position: 'absolute', top: 0, left: 0, right: 0, height: 80,
             overflow: 'hidden', opacity: raccordOpacity,
-            transition: 'opacity 0.7s ease', pointerEvents: 'none', zIndex: 5,
-            borderBottom: `1.5px dashed ${accent}44`,
+            transition: 'opacity 0.5s ease', pointerEvents: 'none', zIndex: 5,
+            borderBottom: `2px solid ${accent}55`,
           }}>
             <img src={prevBande.imageDataUrl} alt="" style={{
               position: 'absolute', left: 0,
-              width: prevBande.width, height: raccordStyle.imgH,
-              top: raccordStyle.imgTop, maxWidth: '100%',
+              width: '100%', height: raccordStyle.imgH,
+              top: raccordStyle.imgTop, objectFit: 'none', objectPosition: 'top left',
             }} />
-            <span style={{ position: 'absolute', bottom: 4, right: 8, ...mono, fontSize: 7, color: accent, background: 'rgba(255,255,255,0.9)', padding: '2px 6px' }}>
-              RACCORD
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, height: 20,
+              background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.7))',
+            }} />
+            <span style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', ...mono, fontSize: 7, color: accent, background: 'rgba(255,255,255,0.92)', padding: '2px 8px', letterSpacing: '0.18em' }}>
+              RACCORD · DESSINE ICI ↓
             </span>
           </div>
         )}
@@ -575,6 +573,41 @@ export default function JeuDessin() {
               </button>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ── INTRO JOUEUR 1 ── */}
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            onClick={() => setShowIntro(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 100, background: encre,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20,
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              style={{ textAlign: 'center' }}
+            >
+              <div style={{ ...mono, fontSize: 9, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
+                — BANDE 1/{config.nbBandes} —
+              </div>
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
+                Joueur 1.
+              </div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.5, marginTop: 12 }}>
+                Dessine la première bande.
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
+              style={{ ...mono, fontSize: 9, color: '#e8d4b8', opacity: 0.38, letterSpacing: '0.2em' }}>
+              TOUCHER POUR COMMENCER
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
