@@ -143,10 +143,11 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   config: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
-    etiqs: [{ top: '65%', left: '4%', transform: 'rotate(-3deg)' }],
+    etiqs: [],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '6%', left: '0' }, size: 110, delay: 1.1 },
+      { pos: { bottom: '0', left: '0' }, size: 78, delay: 1.1 },
+      { pos: { bottom: '0', right: '0' }, size: 38, delay: 1.85 },
     ],
     verticalTitle: null,
     citation: false,
@@ -172,10 +173,11 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   fin: {
     symbol: { top: '12%', right: '5%', sizeMul: 0.55 },
-    etiqs: [{ bottom: '24%', left: '6%', transform: 'rotate(-2deg)' }],
+    etiqs: [],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '0', right: '0' }, size: 70, delay: 1.2 },
+      { pos: { bottom: '0', right: '0' }, size: 72, delay: 1.2 },
+      { pos: { top: '4%', left: '0' }, size: 36, delay: 2.0 },
     ],
     verticalTitle: null,
     citation: false,
@@ -186,7 +188,8 @@ const ZONES: Record<Variant, VariantZones> = {
     etiqs: [],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '0', left: '0' }, size: 55, delay: 1.3 },
+      { pos: { bottom: '0', left: '0' }, size: 60, delay: 1.3 },
+      { pos: { bottom: '0', right: '0' }, size: 38, delay: 1.9 },
     ],
     verticalTitle: null,
     citation: false,
@@ -197,7 +200,8 @@ const ZONES: Record<Variant, VariantZones> = {
     etiqs: [{ bottom: '20%', left: '6%', transform: 'rotate(-3deg)' }],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '0', right: '0' }, size: 65, delay: 1.0 },
+      { pos: { bottom: '0', right: '0' }, size: 68, delay: 1.0 },
+      { pos: { bottom: '0', left: '0' }, size: 40, delay: 1.75 },
     ],
     verticalTitle: null,
     citation: false,
@@ -208,7 +212,8 @@ const ZONES: Record<Variant, VariantZones> = {
     etiqs: [],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '0', right: '0' }, size: 60, delay: 1.0 },
+      { pos: { bottom: '0', right: '0' }, size: 62, delay: 1.0 },
+      { pos: { bottom: '0', left: '0' }, size: 34, delay: 1.8 },
     ],
     verticalTitle: null,
     citation: false,
@@ -303,22 +308,54 @@ function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: numbe
   const w = Math.round(def.size * sizeVar)
   const h = Math.round(w * (0.60 + (seed % 5) * 0.08))
   const rot = ((seed + idx * 17) % 40) - 20
-  // Nested-div trick: outer fixes max opacity, inner animates 0→1 via fadeInQ (which ends at opacity:1)
-  // Result: blob fades from 0 to targetOpacity without the animation overriding it
+  // Outer opacity is fixed; inner div animates 0→1 via fadeInQ so result = 0 → targetOpacity
   const targetOpacity = 0.07 + ((seed + idx * 11) % 6) * 0.01
+
+  // Satellite 1 — medium droplet nearby
+  const s1w = Math.round(w * (0.22 + ((seed * 3 + idx) % 12) / 100))
+  const s1h = Math.round(s1w * (0.65 + (seed % 3) * 0.1))
+  const s1x = Math.round(w * 0.55 + ((seed * 11) % Math.max(1, w / 5)))
+  const s1y = Math.round(-h * 0.22 - ((seed * 5) % Math.max(1, h / 6)))
+
+  // Satellite 2 — small isolated droplet
+  const s2w = Math.round(w * (0.10 + ((seed * 9 + idx) % 8) / 100))
+  const s2h = Math.round(s2w * (0.75 + (seed % 4) * 0.07))
+  const s2x = Math.round(-w * 0.14 - ((seed * 7) % Math.max(1, w / 7)))
+  const s2y = Math.round(h * 0.62 + ((seed * 11) % Math.max(1, h / 8)))
+
   return (
     <div style={{
       position: 'absolute', ...def.pos,
       opacity: targetOpacity,
       pointerEvents: 'none', zIndex: 1,
     }}>
+      {/* Corps principal */}
       <div style={{
+        position: 'relative',
         width: w, height: h,
         borderRadius: BLOB_SHAPES[shapeIdx],
         background: KLEIN_BLUE,
         transform: `rotate(${rot}deg)`,
         filter: 'blur(2.5px)',
         animation: `fadeInQ 2.4s ease-out ${def.delay}s both`,
+      }} />
+      {/* Satellite 1 */}
+      <div style={{
+        position: 'absolute', left: s1x, top: s1y,
+        width: s1w, height: s1h,
+        borderRadius: BLOB_SHAPES[(shapeIdx + 2) % BLOB_SHAPES.length],
+        background: KLEIN_BLUE,
+        filter: 'blur(1.5px)',
+        animation: `fadeInQ 2.4s ease-out ${def.delay + 0.18}s both`,
+      }} />
+      {/* Satellite 2 */}
+      <div style={{
+        position: 'absolute', left: s2x, top: s2y,
+        width: s2w, height: s2h,
+        borderRadius: BLOB_SHAPES[(shapeIdx + 4) % BLOB_SHAPES.length],
+        background: KLEIN_BLUE,
+        filter: 'blur(0.8px)',
+        animation: `fadeInQ 2.4s ease-out ${def.delay + 0.32}s both`,
       }} />
     </div>
   )
