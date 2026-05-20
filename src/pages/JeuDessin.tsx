@@ -74,6 +74,7 @@ const TOOL_ICONS = { pen: IconPen, brush: IconBrush, marker: IconMarker, crayon:
 const TOOL_NAMES: Record<Tool, string> = { pen: 'Stylo', brush: 'Pinceau', marker: 'Marqueur', crayon: 'Crayon', eraser: 'Gomme' }
 
 const TOOLBAR_H = 164
+const RACCORD_H = 80
 
 function findLowestDrawnFraction(ctx: CanvasRenderingContext2D, w: number, h: number): number {
   const data = ctx.getImageData(0, 0, w, h).data
@@ -103,10 +104,8 @@ export default function JeuDessin() {
   const [color, setColor] = useState('#000000')
   const [undoStack, setUndoStack] = useState<ImageData[]>([])
   const [redoStack, setRedoStack] = useState<ImageData[]>([])
-  const [showRaccord, setShowRaccord] = useState(false)
-  const [raccordOpacity, setRaccordOpacity] = useState(1)
-  const [raccordStyle, setRaccordStyle] = useState({ imgTop: 0, imgH: 400 })
   const [canvasReady, setCanvasReady] = useState(false)
+  const [panMode, setPanMode] = useState(false)
   const [showTransition, setShowTransition] = useState(false)
   const [showIntro, setShowIntro] = useState(true)
   const [nextPlayerNum, setNextPlayerNum] = useState(2)
@@ -149,7 +148,7 @@ export default function JeuDessin() {
   // Ambiance
   useEffect(() => { startAmbiance(); return () => stopAmbiance() }, [])
 
-  // Initialiser canvas
+  // Initialiser canvas — pré-dessine le raccord si mode raccord
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -162,29 +161,28 @@ export default function JeuDessin() {
     const ctx = canvas.getContext('2d')!
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, w, h)
-    setUndoStack([ctx.getImageData(0, 0, w, h)])
-    setRedoStack([])
-    setZoom(1); setPanX(0); setPanY(0)
-    setCanvasReady(true)
-  }, [bandeIdx])
 
-  // Raccord calculé sur le contenu réel — persiste jusqu'au premier trait
-  useEffect(() => {
-    if (bandeIdx === 0 || config.visibilite === 'aveugle' || bandes.length === 0) return
-    const prev = bandes[bandes.length - 1]
-    const lowestY = prev.lowestDrawnFraction * prev.height
-    const STRIP = 80
-    const imgTop = -(lowestY - STRIP + 10)
-    setRaccordStyle({ imgTop, imgH: prev.height })
-    setRaccordOpacity(1)
-    setShowRaccord(true)
+    if (bandeIdx > 0 && config.visibilite === 'raccord' && bandes.length > 0) {
+      const prev = bandes[bandes.length - 1]
+      const lowestY = Math.floor(prev.lowestDrawnFraction * prev.height)
+      const srcY = Math.max(0, lowestY - RACCORD_H)
+      const img = new Image()
+      img.onload = () => {
+        // Copier les derniers RACCORD_H px du dessin précédent dans les premiers RACCORD_H px du nouveau canvas
+        ctx.drawImage(img, 0, srcY, prev.width, RACCORD_H, 0, 0, w, RACCORD_H)
+        setUndoStack([ctx.getImageData(0, 0, w, h)])
+        setRedoStack([])
+        setZoom(1); setPanX(0); setPanY(0)
+        setCanvasReady(true)
+      }
+      img.src = prev.imageDataUrl
+    } else {
+      setUndoStack([ctx.getImageData(0, 0, w, h)])
+      setRedoStack([])
+      setZoom(1); setPanX(0); setPanY(0)
+      setCanvasReady(true)
+    }
   }, [bandeIdx])
-
-  function dismissRaccord() {
-    if (!showRaccord) return
-    setRaccordOpacity(0)
-    setTimeout(() => setShowRaccord(false), 500)
-  }
 
   function getCanvasCoords(clientX: number, clientY: number) {
     const rect = canvasRef.current!.getBoundingClientRect()
@@ -254,9 +252,13 @@ export default function JeuDessin() {
   function onPointerDown(e: React.PointerEvent) {
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointersRef.current.size === 1) {
-      isDrawing.current = true
-      lastPos.current = getCanvasCoords(e.clientX, e.clientY)
-      saveSnapshot(); draw(e.clientX, e.clientY); dismissRaccord()
+      if (panMode) {
+        isDrawing.current = false
+      } else {
+        isDrawing.current = true
+        lastPos.current = getCanvasCoords(e.clientX, e.clientY)
+        saveSnapshot(); draw(e.clientX, e.clientY)
+      }
     } else {
       isDrawing.current = false; lastPos.current = null
       lastPinchDist.current = null; lastPinchMid.current = null
@@ -264,6 +266,7 @@ export default function JeuDessin() {
   }
 
   function onPointerMove(e: React.PointerEvent) {
+    const prevPt = pointersRef.current.get(e.pointerId)
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     const pts = [...pointersRef.current.values()]
     if (pts.length >= 2) {
@@ -273,7 +276,12 @@ export default function JeuDessin() {
       if (lastPinchDist.current !== null) setZoom(z => Math.max(1, Math.min(6, z * (dist / lastPinchDist.current!))))
       if (lastPinchMid.current !== null) { setPanX(x => x + mid.x - lastPinchMid.current!.x); setPanY(y => y + mid.y - lastPinchMid.current!.y) }
       lastPinchDist.current = dist; lastPinchMid.current = mid
-    } else if (isDrawing.current) draw(e.clientX, e.clientY)
+    } else if (panMode && prevPt) {
+      setPanX(x => x + e.clientX - prevPt.x)
+      setPanY(y => y + e.clientY - prevPt.y)
+    } else if (isDrawing.current) {
+      draw(e.clientX, e.clientY)
+    }
   }
 
   function onPointerUp(e: React.PointerEvent) {
@@ -338,28 +346,18 @@ export default function JeuDessin() {
           transformOrigin: 'center center',
           width: '100%', height: '100%',
         }}>
-          <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: tool === 'eraser' ? 'cell' : 'crosshair' }} />
+          <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: panMode ? (isDrawing.current ? 'grabbing' : 'grab') : (tool === 'eraser' ? 'cell' : 'crosshair') }} />
         </div>
 
-        {/* Raccord — persiste jusqu'au premier trait */}
-        {showRaccord && prevBande && canvasReady && (
+        {/* Ligne guide raccord */}
+        {bandeIdx > 0 && config.visibilite === 'raccord' && canvasReady && (
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 80,
-            overflow: 'hidden', opacity: raccordOpacity,
-            transition: 'opacity 0.5s ease', pointerEvents: 'none', zIndex: 5,
-            borderBottom: `2px solid ${accent}55`,
+            position: 'absolute', top: RACCORD_H, left: 0, right: 0,
+            height: 0, borderTop: `1.5px dashed ${accent}50`,
+            pointerEvents: 'none', zIndex: 5,
           }}>
-            <img src={prevBande.imageDataUrl} alt="" style={{
-              position: 'absolute', left: 0,
-              width: '100%', height: raccordStyle.imgH,
-              top: raccordStyle.imgTop, objectFit: 'none', objectPosition: 'top left',
-            }} />
-            <div style={{
-              position: 'absolute', bottom: 0, left: 0, right: 0, height: 20,
-              background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.7))',
-            }} />
-            <span style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', ...mono, fontSize: 7, color: accent, background: 'rgba(255,255,255,0.92)', padding: '2px 8px', letterSpacing: '0.18em' }}>
-              RACCORD · DESSINE ICI ↓
+            <span style={{ position: 'absolute', right: 8, top: -13, ...mono, fontSize: 7, color: accent, background: 'rgba(255,255,255,0.88)', padding: '1px 6px' }}>
+              ← RACCORD
             </span>
           </div>
         )}
@@ -493,6 +491,21 @@ export default function JeuDessin() {
           <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Son' : 'Muet'}
             style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: 'transparent', fontSize: 16, cursor: 'pointer', color: `${encre}50` }}>
             {muted ? '♪' : '♫'}
+          </button>
+          {/* Mode navigation */}
+          <button
+            onClick={() => setPanMode(p => !p)}
+            aria-pressed={panMode}
+            aria-label={panMode ? 'Retour au dessin' : 'Naviguer'}
+            title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
+            style={{
+              width: 34, height: 34, borderRadius: 8, border: 'none',
+              background: panMode ? `${accent}18` : 'transparent',
+              color: panMode ? accent : `${encre}45`,
+              fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              outline: panMode ? `1.5px solid ${accent}40` : 'none',
+            }}>
+            ✥
           </button>
           <div style={{ flex: 1 }} />
           <button onClick={validerBande} style={{

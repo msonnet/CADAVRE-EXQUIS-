@@ -6,24 +6,48 @@ import { Decor, useReve } from '../reve'
 import { sauvegarderDessin } from '../db'
 import type { BandeDessin, DessinCadavre } from '../types'
 
+const RACCORD_H = 80
+
 async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
   if (bandes.length === 0) return ''
   const w = bandes[0].width
-  const totalH = bandes.reduce((s, b) => s + b.height, 0)
+
+  // Calculer la hauteur utile de chaque bande (contenu dessiné + marge)
+  const MARGE = 24
+  const lowestYs = bandes.map(b => Math.min(
+    Math.ceil(b.lowestDrawnFraction * b.height) + MARGE,
+    b.height,
+  ))
+  // S'assurer que la bande 0 vaut au moins RACCORD_H pour que les suivantes aient quelque chose à chevaucher
+  lowestYs[0] = Math.max(lowestYs[0], RACCORD_H + MARGE)
+
+  // Hauteur totale : bande 0 pleine + chaque bande suivante moins le recouvrement RACCORD_H
+  const totalH = lowestYs[0] + lowestYs.slice(1).reduce((s, y) => s + Math.max(y - RACCORD_H, MARGE), 0)
+
   const canvas = document.createElement('canvas')
   canvas.width = w
   canvas.height = totalH
   const ctx = canvas.getContext('2d')!
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, w, totalH)
-  let y = 0
-  for (const bande of bandes) {
+
+  let assembledY = 0
+  for (let i = 0; i < bandes.length; i++) {
+    const bande = bandes[i]
+    const cropH = lowestYs[i]
     await new Promise<void>(res => {
       const img = new Image()
-      img.onload = () => { ctx.drawImage(img, 0, y, bande.width, bande.height); y += bande.height; res() }
+      img.onload = () => {
+        const drawY = i === 0 ? 0 : assembledY - RACCORD_H
+        // Dessiner les cropH premiers pixels de la bande à la position drawY
+        ctx.drawImage(img, 0, 0, bande.width, cropH, 0, drawY, w, cropH)
+        assembledY = i === 0 ? cropH : drawY + cropH
+        res()
+      }
       img.src = bande.imageDataUrl
     })
   }
+
   return canvas.toDataURL('image/png')
 }
 
