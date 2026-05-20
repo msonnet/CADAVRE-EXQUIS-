@@ -8,30 +8,72 @@ import type { ConfigDessin, BandeDessin } from '../types'
 type Tool = 'pen' | 'brush' | 'marker' | 'crayon' | 'eraser'
 const SIZES = [1.5, 4, 9, 17, 28]
 
-// Palette 32 couleurs : 4 rangées × 8
 const PALETTE = [
-  '#000000', '#222222', '#555555', '#888888', '#aaaaaa', '#cccccc', '#eeeeee', '#ffffff',
+  '#000000', '#1a1a1a', '#444444', '#777777', '#aaaaaa', '#cccccc', '#e8e8e8', '#ffffff',
   '#7B0000', '#C62828', '#EF5350', '#E65100', '#FB8C00', '#F9A825', '#558B2F', '#1B5E20',
   '#002FA7', '#1565C0', '#0288D1', '#006064', '#004D40', '#6A1B9A', '#AD1457', '#880E4F',
   '#4E342E', '#795548', '#546E7A', '#37474F', '#f0e4cc', '#FFF9C4', '#FCE4EC', '#F3E5F5',
 ]
 
-const TOOL_ICONS: Record<Tool, string> = {
-  pen: '✒',
-  brush: '⌬',
-  marker: '▮',
-  crayon: '✏',
-  eraser: '◻',
-}
-const TOOL_LABELS: Record<Tool, string> = {
-  pen: 'Stylo',
-  brush: 'Pinceau',
-  marker: 'Marqueur',
-  crayon: 'Crayon',
-  eraser: 'Gomme',
+// ── SVG tool icons ──────────────────────────────
+function IconPen({ color }: { color: string }) {
+  return (
+    <svg width="16" height="40" viewBox="0 0 16 40" fill="none">
+      <rect x="5" y="1" width="6" height="26" rx="3" fill={color}/>
+      <path d="M5 26 L11 26 L8 37" fill={color}/>
+      <circle cx="8" cy="38.5" r="1.2" fill={color} opacity="0.45"/>
+      <rect x="10" y="3.5" width="2.5" height="18" rx="1.2" fill={color} opacity="0.3"/>
+    </svg>
+  )
 }
 
-const TOOLBAR_H = 200
+function IconBrush({ color }: { color: string }) {
+  return (
+    <svg width="16" height="40" viewBox="0 0 16 40" fill="none">
+      <rect x="6.5" y="0" width="3" height="20" rx="1.5" fill={color}/>
+      <rect x="4.5" y="18" width="7" height="4" rx="1" fill={color} opacity="0.65"/>
+      <ellipse cx="8" cy="31.5" rx="5" ry="7.5" fill={color} opacity="0.85"/>
+      <path d="M6 37.5 Q8 40 10 37.5 L10.5 35.5 Q8 37 5.5 35.5 Z" fill={color}/>
+    </svg>
+  )
+}
+
+function IconMarker({ color }: { color: string }) {
+  return (
+    <svg width="20" height="40" viewBox="0 0 20 40" fill="none">
+      <rect x="4" y="1" width="12" height="22" rx="5" fill={color}/>
+      <rect x="5.5" y="21" width="9" height="8" rx="2" fill={color} opacity="0.8"/>
+      <rect x="7" y="29" width="6" height="8" rx="2" fill={color}/>
+      <rect x="3.5" y="7" width="13" height="2.5" rx="1.2" fill="white" opacity="0.18"/>
+    </svg>
+  )
+}
+
+function IconCrayon({ color }: { color: string }) {
+  return (
+    <svg width="16" height="40" viewBox="0 0 16 40" fill="none">
+      <rect x="4" y="0" width="8" height="4" rx="2" fill={color} opacity="0.4"/>
+      <rect x="4" y="4" width="8" height="24" rx="1" fill={color}/>
+      <path d="M4 27.5 L8 38 L12 27.5 Z" fill={color} opacity="0.8"/>
+      <line x1="4" y1="27.5" x2="12" y2="27.5" stroke={color} opacity="0.3" strokeWidth="0.5"/>
+    </svg>
+  )
+}
+
+function IconEraser({ color }: { color: string }) {
+  return (
+    <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
+      <rect x="1" y="3" width="26" height="16" rx="4" fill={color} opacity="0.85"/>
+      <rect x="1" y="3" width="26" height="8" rx="4" fill="white" opacity="0.14"/>
+      <rect x="1" y="12" width="26" height="3" fill={color} opacity="0.45"/>
+    </svg>
+  )
+}
+
+const TOOL_ICONS = { pen: IconPen, brush: IconBrush, marker: IconMarker, crayon: IconCrayon, eraser: IconEraser }
+const TOOL_NAMES: Record<Tool, string> = { pen: 'Stylo', brush: 'Pinceau', marker: 'Marqueur', crayon: 'Crayon', eraser: 'Gomme' }
+
+const TOOLBAR_H = 164
 
 function findLowestDrawnFraction(ctx: CanvasRenderingContext2D, w: number, h: number): number {
   const data = ctx.getImageData(0, 0, w, h).data
@@ -63,11 +105,12 @@ export default function JeuDessin() {
   const [redoStack, setRedoStack] = useState<ImageData[]>([])
   const [showRaccord, setShowRaccord] = useState(false)
   const [raccordOpacity, setRaccordOpacity] = useState(1)
-  const [raccordImgStyle, setRaccordImgStyle] = useState({ top: 0, height: 60 })
+  const [raccordStyle, setRaccordStyle] = useState({ imgTop: 0, imgH: 400 })
   const [canvasReady, setCanvasReady] = useState(false)
   const [showTransition, setShowTransition] = useState(false)
   const [nextPlayerNum, setNextPlayerNum] = useState(2)
   const [pendingBandes, setPendingBandes] = useState<BandeDessin[]>([])
+  const [showColorPanel, setShowColorPanel] = useState(false)
 
   // Zoom/pan
   const [zoom, setZoom] = useState(1)
@@ -84,31 +127,29 @@ export default function JeuDessin() {
   const lastPinchMid = useRef<{ x: number; y: number } | null>(null)
 
   const joueurActuel = (bandeIdx % config.joueurs) + 1
-
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 
-  // Prévenir swipe-back iOS pendant le dessin
+  // Prévenir swipe-back iOS — uniquement sur la zone canvas
   useEffect(() => {
-    const prevent = (e: TouchEvent) => { e.preventDefault() }
+    const prevent = (e: TouchEvent) => {
+      if (containerRef.current?.contains(e.target as Node)) e.preventDefault()
+    }
     const opts: AddEventListenerOptions = { passive: false }
     document.addEventListener('touchstart', prevent, opts)
     document.addEventListener('touchmove', prevent, opts)
     return () => {
-      document.removeEventListener('touchstart', prevent, opts)
-      document.removeEventListener('touchmove', prevent, opts)
+      document.removeEventListener('touchstart', prevent, opts as EventListenerOptions)
+      document.removeEventListener('touchmove', prevent, opts as EventListenerOptions)
     }
   }, [])
 
-  // Ambiance sonore
-  useEffect(() => {
-    startAmbiance()
-    return () => stopAmbiance()
-  }, [])
+  // Ambiance
+  useEffect(() => { startAmbiance(); return () => stopAmbiance() }, [])
 
-  // Initialiser le canvas à chaque nouvelle bande
+  // Initialiser canvas
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -127,16 +168,14 @@ export default function JeuDessin() {
     setCanvasReady(true)
   }, [bandeIdx])
 
-  // Raccord depuis la bande précédente (calculé sur le contenu réel)
+  // Raccord calculé sur le contenu réel
   useEffect(() => {
     if (bandeIdx === 0 || config.visibilite === 'aveugle' || bandes.length === 0) return
     const prev = bandes[bandes.length - 1]
-    const WINDOW_PX = 60
-    // Centre le raccord sur la dernière marque réelle
     const centerY = prev.lowestDrawnFraction * prev.height
-    const displayH = Math.min(WINDOW_PX, prev.height)
-    const imgTop = -(centerY - displayH / 2)
-    setRaccordImgStyle({ top: imgTop, height: prev.height })
+    const WINDOW = 64
+    const imgTop = -(centerY - WINDOW / 2)
+    setRaccordStyle({ imgTop, imgH: prev.height })
     setRaccordOpacity(1)
     setShowRaccord(true)
     raccordTimer.current = setTimeout(() => {
@@ -162,94 +201,58 @@ export default function JeuDessin() {
   }
 
   function saveSnapshot() {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
-    const snap = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    setUndoStack(prev => [...prev.slice(-29), snap])
+    setUndoStack(prev => [...prev.slice(-29), ctx.getImageData(0, 0, canvas.width, canvas.height)])
     setRedoStack([])
   }
 
   function undo() {
-    const canvas = canvasRef.current
-    if (!canvas || undoStack.length <= 1) return
+    const canvas = canvasRef.current; if (!canvas || undoStack.length <= 1) return
     const ctx = canvas.getContext('2d')!
-    const current = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    setRedoStack(prev => [...prev, current])
+    setRedoStack(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
     const prev = undoStack[undoStack.length - 2]
     setUndoStack(s => s.slice(0, -1))
     ctx.putImageData(prev, 0, 0)
   }
 
   function redo() {
-    const canvas = canvasRef.current
-    if (!canvas || redoStack.length === 0) return
+    const canvas = canvasRef.current; if (!canvas || redoStack.length === 0) return
     const ctx = canvas.getContext('2d')!
-    const current = ctx.getImageData(0, 0, canvas.width, canvas.height)
     const next = redoStack[redoStack.length - 1]
-    setUndoStack(prev => [...prev, current])
+    setUndoStack(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
     setRedoStack(s => s.slice(0, -1))
     ctx.putImageData(next, 0, 0)
   }
 
   const draw = useCallback((clientX: number, clientY: number) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
     const pos = getCanvasCoords(clientX, clientY)
     const prev = lastPos.current ?? pos
     const size = SIZES[sizeIdx]
-
-    ctx.save()
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
     if (tool === 'eraser') {
-      ctx.strokeStyle = '#ffffff'
-      ctx.lineWidth = size * 2.5
-      ctx.globalAlpha = 1
-      ctx.beginPath()
-      ctx.moveTo(prev.x, prev.y)
-      ctx.lineTo(pos.x, pos.y)
-      ctx.stroke()
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = size * 2.5; ctx.globalAlpha = 1
+      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
     } else if (tool === 'marker') {
-      ctx.strokeStyle = color
-      ctx.lineWidth = size * 2.2
-      ctx.globalAlpha = 0.55
-      ctx.beginPath()
-      ctx.moveTo(prev.x, prev.y)
-      ctx.lineTo(pos.x, pos.y)
-      ctx.stroke()
+      ctx.strokeStyle = color; ctx.lineWidth = size * 2.2; ctx.globalAlpha = 0.55
+      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
     } else if (tool === 'brush') {
-      ctx.strokeStyle = color
-      ctx.lineWidth = size * 1.8
-      ctx.globalAlpha = 0.80
-      ctx.beginPath()
-      ctx.moveTo(prev.x, prev.y)
-      ctx.quadraticCurveTo((prev.x + pos.x) / 2, (prev.y + pos.y) / 2, pos.x, pos.y)
-      ctx.stroke()
+      ctx.strokeStyle = color; ctx.lineWidth = size * 1.8; ctx.globalAlpha = 0.82
+      ctx.beginPath(); ctx.moveTo(prev.x, prev.y)
+      ctx.quadraticCurveTo((prev.x + pos.x) / 2, (prev.y + pos.y) / 2, pos.x, pos.y); ctx.stroke()
     } else if (tool === 'crayon') {
       ctx.globalAlpha = 0.32
       for (let i = 0; i < 6; i++) {
-        const ox = (Math.random() - 0.5) * size
-        const oy = (Math.random() - 0.5) * size
-        ctx.strokeStyle = color
-        ctx.lineWidth = 0.5 + Math.random() * size * 0.45
-        ctx.beginPath()
-        ctx.moveTo(prev.x + ox, prev.y + oy)
-        ctx.lineTo(pos.x + ox, pos.y + oy)
-        ctx.stroke()
+        const ox = (Math.random() - 0.5) * size; const oy = (Math.random() - 0.5) * size
+        ctx.strokeStyle = color; ctx.lineWidth = 0.5 + Math.random() * size * 0.45
+        ctx.beginPath(); ctx.moveTo(prev.x + ox, prev.y + oy); ctx.lineTo(pos.x + ox, pos.y + oy); ctx.stroke()
       }
     } else {
-      ctx.strokeStyle = color
-      ctx.lineWidth = size
-      ctx.globalAlpha = 1
-      ctx.beginPath()
-      ctx.moveTo(prev.x, prev.y)
-      ctx.lineTo(pos.x, pos.y)
-      ctx.stroke()
+      ctx.strokeStyle = color; ctx.lineWidth = size; ctx.globalAlpha = 1
+      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
     }
-
     ctx.restore()
     lastPos.current = pos
   }, [tool, sizeIdx, color])
@@ -259,173 +262,128 @@ export default function JeuDessin() {
     if (pointersRef.current.size === 1) {
       isDrawing.current = true
       lastPos.current = getCanvasCoords(e.clientX, e.clientY)
-      saveSnapshot()
-      draw(e.clientX, e.clientY)
-      dismissRaccord()
+      saveSnapshot(); draw(e.clientX, e.clientY); dismissRaccord()
     } else {
-      isDrawing.current = false
-      lastPos.current = null
-      lastPinchDist.current = null
-      lastPinchMid.current = null
+      isDrawing.current = false; lastPos.current = null
+      lastPinchDist.current = null; lastPinchMid.current = null
     }
   }
 
   function onPointerMove(e: React.PointerEvent) {
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     const pts = [...pointersRef.current.values()]
-
     if (pts.length >= 2) {
       isDrawing.current = false
       const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
       const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
-
-      if (lastPinchDist.current !== null) {
-        const delta = dist / lastPinchDist.current
-        setZoom(z => Math.max(1, Math.min(6, z * delta)))
-      }
-      if (lastPinchMid.current !== null) {
-        setPanX(x => x + mid.x - lastPinchMid.current!.x)
-        setPanY(y => y + mid.y - lastPinchMid.current!.y)
-      }
-      lastPinchDist.current = dist
-      lastPinchMid.current = mid
-    } else if (isDrawing.current) {
-      draw(e.clientX, e.clientY)
-    }
+      if (lastPinchDist.current !== null) setZoom(z => Math.max(1, Math.min(6, z * (dist / lastPinchDist.current!))))
+      if (lastPinchMid.current !== null) { setPanX(x => x + mid.x - lastPinchMid.current!.x); setPanY(y => y + mid.y - lastPinchMid.current!.y) }
+      lastPinchDist.current = dist; lastPinchMid.current = mid
+    } else if (isDrawing.current) draw(e.clientX, e.clientY)
   }
 
   function onPointerUp(e: React.PointerEvent) {
     pointersRef.current.delete(e.pointerId)
     if (pointersRef.current.size === 0) {
-      isDrawing.current = false
-      lastPos.current = null
-      lastPinchDist.current = null
-      lastPinchMid.current = null
+      isDrawing.current = false; lastPos.current = null
+      lastPinchDist.current = null; lastPinchMid.current = null
     }
-  }
-
-  function resetZoom() {
-    setZoom(1); setPanX(0); setPanY(0)
   }
 
   function validerBande() {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
     const lowestDrawnFraction = findLowestDrawnFraction(ctx, canvas.width, canvas.height)
-    const dataUrl = canvas.toDataURL('image/png')
     const bande: BandeDessin = {
-      joueurIdx: bandeIdx,
-      joueurNumero: joueurActuel,
-      imageDataUrl: dataUrl,
-      width: canvas.width,
-      height: canvas.height,
-      lowestDrawnFraction,
-      ts: Date.now(),
+      joueurIdx: bandeIdx, joueurNumero: joueurActuel,
+      imageDataUrl: canvas.toDataURL('image/png'),
+      width: canvas.width, height: canvas.height,
+      lowestDrawnFraction, ts: Date.now(),
     }
     const nouvellesBandes = [...bandes, bande]
     setBandes(nouvellesBandes)
-
     if (bandeIdx + 1 >= config.nbBandes) {
       sessionStorage.setItem('dessin-bandes', JSON.stringify(nouvellesBandes))
       navigate('/fin-dessin')
     } else {
-      const prochain = ((bandeIdx + 1) % config.joueurs) + 1
-      setNextPlayerNum(prochain)
+      setNextPlayerNum(((bandeIdx + 1) % config.joueurs) + 1)
       setPendingBandes(nouvellesBandes)
       setShowTransition(true)
     }
   }
 
   function demarrerProchainJoueur() {
-    setShowTransition(false)
-    setBandes(pendingBandes)
-    setBandeIdx(idx => idx + 1)
-    setCanvasReady(false)
+    setShowTransition(false); setBandes(pendingBandes)
+    setBandeIdx(idx => idx + 1); setCanvasReady(false)
   }
 
   const prevBande = bandes[bandes.length - 1] ?? null
+  const ToolIcon = TOOL_ICONS[tool]
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, background: '#ffffff', display: 'flex', flexDirection: 'column', touchAction: 'none', overscrollBehavior: 'none' }}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      style={{ position: 'fixed', inset: 0, background: '#ffffff', display: 'flex', flexDirection: 'column' }}
     >
-      {/* ── CANVAS AREA ── */}
+      {/* ── CANVAS ── */}
       <div
         ref={containerRef}
-        style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#ffffff' }}
+        style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#ffffff', touchAction: 'none' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        {/* Canvas avec transform zoom/pan */}
         <div style={{
           position: 'absolute', left: 0, top: 0,
           transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
           transformOrigin: 'center center',
           width: '100%', height: '100%',
         }}>
-          <canvas
-            ref={canvasRef}
-            style={{ display: 'block', touchAction: 'none', cursor: tool === 'eraser' ? 'cell' : 'crosshair' }}
-          />
+          <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: tool === 'eraser' ? 'cell' : 'crosshair' }} />
         </div>
 
-        {/* Raccord bande précédente */}
+        {/* Raccord */}
         {showRaccord && prevBande && canvasReady && (
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0,
-            height: 60, overflow: 'hidden',
-            opacity: raccordOpacity,
-            transition: 'opacity 0.7s ease',
-            pointerEvents: 'none', zIndex: 5,
-            borderBottom: `1.5px dashed ${accent}`,
+            position: 'absolute', top: 0, left: 0, right: 0, height: 64,
+            overflow: 'hidden', opacity: raccordOpacity,
+            transition: 'opacity 0.7s ease', pointerEvents: 'none', zIndex: 5,
+            borderBottom: `1.5px dashed ${accent}44`,
           }}>
-            <img
-              src={prevBande.imageDataUrl}
-              alt=""
-              style={{
-                position: 'absolute',
-                left: 0, width: prevBande.width,
-                height: raccordImgStyle.height,
-                top: raccordImgStyle.top,
-                maxWidth: '100%',
-              }}
-            />
-            <div style={{
-              position: 'absolute', bottom: 4, right: 8,
-              ...mono, fontSize: 7, color: accent,
-              background: 'rgba(255,255,255,0.88)', padding: '2px 6px',
-            }}>
+            <img src={prevBande.imageDataUrl} alt="" style={{
+              position: 'absolute', left: 0,
+              width: prevBande.width, height: raccordStyle.imgH,
+              top: raccordStyle.imgTop, maxWidth: '100%',
+            }} />
+            <span style={{ position: 'absolute', bottom: 4, right: 8, ...mono, fontSize: 7, color: accent, background: 'rgba(255,255,255,0.9)', padding: '2px 6px' }}>
               RACCORD
-            </div>
+            </span>
           </div>
         )}
 
-        {/* Indicateur joueur + bande */}
+        {/* Badge joueur */}
         <div style={{
           position: 'absolute', top: 10, left: 10,
           ...mono, fontSize: 8, color: encre,
-          background: 'rgba(255,255,255,0.85)', padding: '4px 9px',
-          border: `0.5px solid ${encre}18`, pointerEvents: 'none',
+          background: 'rgba(255,255,255,0.88)', padding: '4px 10px',
+          border: `0.5px solid ${encre}15`, pointerEvents: 'none',
         }}>
-          JOUEUR {joueurActuel} · BANDE {bandeIdx + 1}/{config.nbBandes}
+          JOUEUR {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
         </div>
 
-        {/* Bouton reset zoom (si zoomé) */}
+        {/* Reset zoom */}
         {zoom > 1.05 && (
-          <button
-            onClick={resetZoom}
-            style={{
-              position: 'absolute', top: 10, right: 10,
-              ...mono, fontSize: 8, color: encre,
-              background: 'rgba(255,255,255,0.85)',
-              border: `0.5px solid ${encre}20`, padding: '4px 9px',
-              cursor: 'pointer', zIndex: 10,
-            }}
-          >
+          <button onClick={() => { setZoom(1); setPanX(0); setPanY(0) }} style={{
+            position: 'absolute', top: 10, right: 10,
+            ...mono, fontSize: 8, color: encre,
+            background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
+            padding: '4px 10px', cursor: 'pointer', zIndex: 10,
+          }}>
             ↺ {Math.round(zoom * 100)}%
           </button>
         )}
@@ -433,54 +391,67 @@ export default function JeuDessin() {
 
       {/* ── TOOLBAR ── */}
       <div style={{
-        height: TOOLBAR_H, background: '#f9f6f1',
-        borderTop: `1px solid ${encre}12`,
-        display: 'flex', flexDirection: 'column',
-        padding: '8px 10px 10px', gap: 6, flexShrink: 0,
-        zIndex: 20,
+        height: TOOLBAR_H, flexShrink: 0, zIndex: 20,
+        background: '#ffffff',
+        boxShadow: '0 -2px 20px rgba(15,8,5,0.09)',
+        borderRadius: '18px 18px 0 0',
+        padding: '12px 16px 10px',
+        display: 'flex', flexDirection: 'column', gap: 8,
       }}>
 
-        {/* Rangée 1 : outils + undo/redo + muet */}
-        <div style={{ display: 'flex', gap: 4 }}>
-          <div style={{ display: 'flex', gap: 3, flex: 1 }}>
-            {(['pen', 'brush', 'marker', 'crayon', 'eraser'] as Tool[]).map(t => (
+        {/* Rangée outils */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {(['pen', 'brush', 'marker', 'crayon', 'eraser'] as Tool[]).map(t => {
+            const active = tool === t
+            const Icon = TOOL_ICONS[t]
+            return (
               <button
                 key={t}
                 onClick={() => setTool(t)}
-                aria-pressed={tool === t}
-                title={TOOL_LABELS[t]}
+                aria-pressed={active}
+                title={TOOL_NAMES[t]}
                 style={{
-                  flex: 1, padding: '6px 2px',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                  border: `0.5px solid ${tool === t ? accent : `${encre}18`}`,
-                  borderBottom: `2px solid ${tool === t ? accent : 'transparent'}`,
-                  background: tool === t ? `${accent}0E` : 'transparent',
-                  cursor: 'pointer', transition: 'all 0.12s',
+                  flex: 1, height: 58, paddingTop: 6, paddingBottom: 4,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
+                  background: active ? '#f5f0ea' : 'transparent',
+                  border: 'none',
+                  borderRadius: 12,
+                  cursor: 'pointer', transition: 'all 0.15s',
                 }}
               >
-                <span style={{ fontSize: 14, lineHeight: 1, color: tool === t ? accent : `${encre}80` }}>
-                  {TOOL_ICONS[t]}
-                </span>
-                <span style={{ ...mono, fontSize: 6.5, color: tool === t ? accent : `${encre}55` }}>
-                  {TOOL_LABELS[t].slice(0, 4).toUpperCase()}
-                </span>
+                <Icon color={active ? (tool === 'eraser' ? encre : color) : `${encre}55`} />
+                {/* Bande de couleur comme Freeform */}
+                <div style={{
+                  width: '60%', height: 3, borderRadius: 2,
+                  background: active && tool !== 'eraser' ? color : `${encre}18`,
+                  transition: 'background 0.15s',
+                }} />
               </button>
-            ))}
-          </div>
-          <div style={{ width: 1, background: `${encre}12`, margin: '0 3px', flexShrink: 0 }} />
-          <button onClick={undo} disabled={undoStack.length <= 1} aria-label="Annuler"
-            style={{ width: 32, height: 38, border: `0.5px solid ${encre}18`, background: 'transparent', cursor: undoStack.length > 1 ? 'pointer' : 'default', color: undoStack.length > 1 ? encre : `${encre}25`, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            ↩
-          </button>
-          <button onClick={redo} disabled={redoStack.length === 0} aria-label="Rétablir"
-            style={{ width: 32, height: 38, border: `0.5px solid ${encre}18`, background: 'transparent', cursor: redoStack.length > 0 ? 'pointer' : 'default', color: redoStack.length > 0 ? encre : `${encre}25`, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            ↪
-          </button>
+            )
+          })}
+
+          {/* Séparateur */}
+          <div style={{ width: 1, height: 36, background: `${encre}12`, margin: '0 2px', flexShrink: 0 }} />
+
+          {/* Bouton couleur */}
+          <button
+            onClick={() => setShowColorPanel(true)}
+            aria-label="Choisir une couleur"
+            style={{
+              width: 44, height: 44,
+              borderRadius: '50%',
+              background: tool === 'eraser' ? '#f0ede8' : color,
+              border: `2px solid ${tool === 'eraser' ? `${encre}20` : color === '#ffffff' || color === '#eeeeee' ? `${encre}30` : 'transparent'}`,
+              boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+              cursor: 'pointer', flexShrink: 0,
+              transition: 'background 0.15s, transform 0.1s',
+            }}
+          />
         </div>
 
-        {/* Rangée 2 : tailles */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ ...mono, fontSize: 7, color: `${encre}50`, flexShrink: 0 }}>TAILLE</span>
+        {/* Rangée tailles */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ ...mono, fontSize: 7, color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button
@@ -488,144 +459,159 @@ export default function JeuDessin() {
                 onClick={() => setSizeIdx(i)}
                 aria-pressed={sizeIdx === i}
                 style={{
-                  flex: 1, height: 32,
-                  border: `0.5px solid ${sizeIdx === i ? accent : `${encre}18`}`,
-                  borderBottom: `2px solid ${sizeIdx === i ? accent : 'transparent'}`,
-                  background: sizeIdx === i ? `${accent}0E` : 'transparent',
+                  flex: 1, height: 34,
+                  background: sizeIdx === i ? '#f5f0ea' : 'transparent',
+                  border: 'none', borderRadius: 8,
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.12s',
                 }}
               >
                 <div style={{
-                  width: Math.min(sz * 0.65 + 3, 20),
-                  height: Math.min(sz * 0.65 + 3, 20),
+                  width: Math.min(sz * 0.7 + 3, 22),
+                  height: Math.min(sz * 0.7 + 3, 22),
                   borderRadius: '50%',
-                  background: sizeIdx === i ? accent : `${encre}60`,
+                  background: sizeIdx === i ? (tool === 'eraser' ? encre : color) : `${encre}55`,
+                  transition: 'background 0.15s',
                 }} />
               </button>
             ))}
           </div>
-          {/* Couleur personnalisée */}
-          <div style={{ flexShrink: 0, position: 'relative' }}>
-            <input
-              type="color"
-              value={color === '#ffffff' || tool === 'eraser' ? '#000000' : color}
-              onChange={e => { setColor(e.target.value); if (tool === 'eraser') setTool('pen') }}
-              title="Couleur personnalisée"
-              style={{ width: 32, height: 32, padding: 2, border: `1px solid ${encre}30`, cursor: 'pointer', borderRadius: 2, background: 'transparent' }}
-            />
+          {/* Undo / redo */}
+          <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+            <button onClick={undo} disabled={undoStack.length <= 1} aria-label="Annuler"
+              style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: undoStack.length > 1 ? '#f5f0ea' : 'transparent', color: undoStack.length > 1 ? encre : `${encre}28`, fontSize: 18, cursor: undoStack.length > 1 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              ↩
+            </button>
+            <button onClick={redo} disabled={redoStack.length === 0} aria-label="Rétablir"
+              style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: redoStack.length > 0 ? '#f5f0ea' : 'transparent', color: redoStack.length > 0 ? encre : `${encre}28`, fontSize: 18, cursor: redoStack.length > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              ↪
+            </button>
           </div>
         </div>
 
-        {/* Rangée 3 : palette */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 3 }}>
-          {PALETTE.map((col) => (
-            <button
-              key={col}
-              onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen') }}
-              aria-label={col}
-              aria-pressed={color === col && tool !== 'eraser'}
-              style={{
-                height: 20,
-                background: col,
-                border: color === col && tool !== 'eraser'
-                  ? `2.5px solid ${accent}`
-                  : ['#ffffff', '#eeeeee', '#f0e4cc', '#FFF9C4', '#FCE4EC', '#F3E5F5'].includes(col)
-                    ? `1px solid ${encre}25`
-                    : '2.5px solid transparent',
-                cursor: 'pointer', borderRadius: 2,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Rangée 4 : aperçu + valider */}
+        {/* Rangée action */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{
-              width: 24, height: 24,
-              background: tool === 'eraser' ? '#fff' : color,
-              border: `1px solid ${encre}30`, borderRadius: 3, flexShrink: 0,
-            }} />
-            <span style={{ ...mono, fontSize: 7, color: `${encre}45` }}>
-              {tool === 'eraser' ? 'GOMME' : TOOL_LABELS[tool].toUpperCase()}
-            </span>
-          </div>
-          <div style={{ flex: 1 }} />
-          <button
-            onClick={toggleMute}
-            aria-pressed={muted}
-            aria-label={muted ? 'Activer le son' : 'Couper le son'}
-            style={{ ...mono, fontSize: 9, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', flexShrink: 0 }}
-          >
+          <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Son' : 'Muet'}
+            style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: 'transparent', fontSize: 16, cursor: 'pointer', color: `${encre}50` }}>
             {muted ? '♪' : '♫'}
           </button>
-          <button
-            onClick={validerBande}
-            style={{
-              ...mono, fontSize: 9,
-              background: encre, color: '#e8d4b8',
-              border: 'none', cursor: 'pointer',
-              padding: '9px 16px', flexShrink: 0,
-            }}
-          >
-            {bandeIdx + 1 < config.nbBandes ? `VALIDER →` : 'RÉVÉLER →'}
+          <div style={{ flex: 1 }} />
+          <button onClick={validerBande} style={{
+            ...mono, fontSize: 10,
+            background: encre, color: '#e8d4b8',
+            border: 'none', cursor: 'pointer',
+            padding: '10px 24px', borderRadius: 10,
+            letterSpacing: '0.16em',
+          }}>
+            {bandeIdx + 1 < config.nbBandes ? 'VALIDER →' : 'RÉVÉLER →'}
           </button>
         </div>
       </div>
+
+      {/* ── PANNEAU COULEUR ── */}
+      <AnimatePresence>
+        {showColorPanel && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowColorPanel(false)}
+              style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.2)' }}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 400 }}
+              style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+                background: '#ffffff', borderRadius: '20px 20px 0 0',
+                padding: '0 16px 24px',
+                boxShadow: '0 -4px 32px rgba(0,0,0,0.16)',
+              }}
+            >
+              {/* Handle */}
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: '#ddd', margin: '12px auto 16px' }} />
+
+              {/* Sélecteur natif + couleur custom */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
+                <span style={{ ...mono, fontSize: 8, color: encre, flex: 1, opacity: 0.6 }}>COULEUR PERSONNALISÉE</span>
+                <input
+                  type="color"
+                  value={color}
+                  onChange={e => { setColor(e.target.value); if (tool === 'eraser') setTool('pen') }}
+                  style={{ width: 36, height: 36, padding: 3, border: `1px solid ${encre}20`, borderRadius: 8, cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Grille 4×8 */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 5, marginBottom: 14 }}>
+                {PALETTE.map(col => (
+                  <button
+                    key={col}
+                    onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen'); setShowColorPanel(false) }}
+                    style={{
+                      height: 32, borderRadius: 6,
+                      background: col,
+                      border: color === col
+                        ? `2.5px solid ${accent}`
+                        : ['#ffffff', '#e8e8e8', '#f0e4cc', '#FFF9C4', '#FCE4EC', '#F3E5F5'].includes(col)
+                          ? `1px solid ${encre}22`
+                          : '2.5px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'transform 0.08s',
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button onClick={() => setShowColorPanel(false)} style={{
+                width: '100%', padding: '12px',
+                ...mono, fontSize: 9, background: '#f5f0ea', color: encre,
+                border: 'none', borderRadius: 10, cursor: 'pointer',
+              }}>
+                FERMER
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── TRANSITION JOUEUR ── */}
       <AnimatePresence>
         {showTransition && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
             onClick={demarrerProchainJoueur}
             style={{
-              position: 'fixed', inset: 0, zIndex: 100,
-              background: encre,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 20,
+              position: 'fixed', inset: 0, zIndex: 100, background: encre,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20,
             }}
           >
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 9, color: `${accent}`, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.7 }}>
+              <div style={{ ...mono, fontSize: 9, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 — BANDE {bandeIdx + 2}/{config.nbBandes} —
               </div>
-              <div style={{
-                fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',
-                fontSize: 'clamp(2.6rem, 12vw, 4.5rem)',
-                color: '#e8d4b8', lineHeight: 1.1,
-              }}>
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
                 Joueur {nextPlayerNum}.
               </div>
-              <div style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic', fontSize: 14,
-                color: '#e8d4b8', opacity: 0.55, marginTop: 12,
-              }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.5, marginTop: 12 }}>
                 Passez l'écran. Ne regardez pas.
               </div>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              style={{ ...mono, fontSize: 9, color: '#e8d4b8', opacity: 0.4, letterSpacing: '0.2em' }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
+              style={{ ...mono, fontSize: 9, color: '#e8d4b8', opacity: 0.38, letterSpacing: '0.2em' }}>
               TOUCHER POUR COMMENCER
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   )
 }

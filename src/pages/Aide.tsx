@@ -21,6 +21,19 @@ const MODES = [
   { label: 'HYPNOTIQUE',  detail: '30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place.' },
 ]
 
+const OUTILS_DESSIN = [
+  { label: 'PLUME',    detail: 'Trait fin et précis. Pour les détails, les hachures, l\'écriture.' },
+  { label: 'PINCEAU',  detail: 'Trait doux, légèrement flou. Pour les aplats, les zones d\'ombre.' },
+  { label: 'MARQUEUR', detail: 'Trait épais et couvrant. Pour les formes franches, les silhouettes.' },
+  { label: 'CRAYON',   detail: 'Trait granuleux et tendre. Pour les esquisses, les textures douces.' },
+  { label: 'GOMME',    detail: 'Efface. Pour révéler le blanc du papier.' },
+]
+
+const VISIBILITE_DESSIN = [
+  { label: 'AVEUGLE',  detail: 'Chaque bande commence dans l\'obscurité totale. Le monstre prend forme par hasard.' },
+  { label: 'RACCORD',  detail: 'Un léger liseret du fragment précédent est visible. Assez pour raccorder les corps, pas assez pour tout voir.' },
+]
+
 export default function Aide() {
   const navigate = useNavigate()
   const seance = useReve()
@@ -173,26 +186,112 @@ export default function Aide() {
           ))}
         </motion.div>
 
+        {/* ── CADAVRE DESSINÉ ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.55 }}
+          style={{ marginBottom: 28 }}
+        >
+          <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
+
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+            — CADAVRE DESSINÉ —
+          </div>
+          <p style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontStyle: 'italic', fontSize: 13, color: encre,
+            lineHeight: 1.65, opacity: 0.7, marginBottom: 16,
+          }}>
+            La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est commenté par une intelligence artificielle en vers surréalistes.
+          </p>
+
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+            — OUTILS —
+          </div>
+          {OUTILS_DESSIN.map((o) => (
+            <div
+              key={o.label}
+              style={{ paddingBottom: 8, borderBottom: `0.5px solid ${encre}10`, marginBottom: 8 }}
+            >
+              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 2 }}>{o.label}</div>
+              <div style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6,
+              }}>{o.detail}</div>
+            </div>
+          ))}
+
+          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 10 }}>
+            — RACCORD —
+          </div>
+          {VISIBILITE_DESSIN.map((v) => (
+            <div
+              key={v.label}
+              style={{ paddingBottom: 8, borderBottom: `0.5px solid ${encre}10`, marginBottom: 8 }}
+            >
+              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 2 }}>{v.label}</div>
+              <div style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6,
+              }}>{v.detail}</div>
+            </div>
+          ))}
+
+          <div style={{
+            borderLeft: `1.5px solid ${accent}`,
+            paddingLeft: 12,
+            marginTop: 16,
+            opacity: 0.65,
+          }}>
+            <div style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontStyle: 'italic', fontSize: 13, lineHeight: 1.5,
+              color: encre, marginBottom: 4,
+            }}>
+              « Exquisite Corpse shall drink the new wine »
+            </div>
+            <div style={{ ...mono, fontSize: 7.5, color: accent, letterSpacing: '0.14em' }}>
+              BRETON, ÉLUARD, MORISE, MAN RAY · 1925
+            </div>
+          </div>
+        </motion.div>
+
         {/* ── CTA ── */}
         <motion.div
           className="mb-3"
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          whileTap={{ scale: 0.98 }}
+          transition={{ delay: 0.7 }}
         >
-          <button
-            onClick={() => navigate('/config')}
-            className="w-full flex flex-col items-center justify-center"
-            style={{
-              background: accent, color: '#e8d4b8',
-              ...mono, fontSize: 11, textTransform: 'uppercase',
-              padding: '1em', border: 'none', cursor: 'pointer', gap: 2,
-            }}
-          >
-            <span>Commencer la séance</span>
-            <span aria-hidden style={{ fontSize: 14, opacity: 0.85 }}>→</span>
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => navigate('/config')}
+              className="flex flex-col items-center justify-center"
+              style={{
+                flex: 1,
+                background: accent, color: '#e8d4b8',
+                ...mono, fontSize: 10, textTransform: 'uppercase',
+                padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              }}
+            >
+              <span>Cadavre Écrit</span>
+              <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✒</span>
+            </button>
+            <button
+              onClick={() => navigate('/config-dessin')}
+              className="flex flex-col items-center justify-center"
+              style={{
+                flex: 1,
+                background: encre, color: '#e8d4b8',
+                ...mono, fontSize: 10, textTransform: 'uppercase',
+                padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              }}
+            >
+              <span>Cadavre Dessiné</span>
+              <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✎</span>
+            </button>
+          </div>
         </motion.div>
 
       </div>
