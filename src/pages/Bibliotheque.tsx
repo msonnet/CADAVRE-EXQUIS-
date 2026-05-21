@@ -57,10 +57,10 @@ export default function Bibliotheque() {
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← RETOUR
+            ← ACCUEIL
           </button>
           <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>

@@ -164,11 +164,12 @@ export default function JeuDessin() {
 
     if (bandeIdx > 0 && config.visibilite === 'raccord' && bandes.length > 0) {
       const prev = bandes[bandes.length - 1]
-      const lowestY = Math.floor(prev.lowestDrawnFraction * prev.height)
-      const srcY = Math.max(0, lowestY - RACCORD_H)
+      // Utiliser la même formule que FinDessin pour éviter tout décalage
+      const MARGE = 24
+      const cropH_prev = Math.min(Math.ceil(prev.lowestDrawnFraction * prev.height) + MARGE, prev.height)
+      const srcY = Math.max(0, cropH_prev - RACCORD_H)
       const img = new Image()
       img.onload = () => {
-        // Copier les derniers RACCORD_H px du dessin précédent dans les premiers RACCORD_H px du nouveau canvas
         ctx.drawImage(img, 0, srcY, prev.width, RACCORD_H, 0, 0, w, RACCORD_H)
         setUndoStack([ctx.getImageData(0, 0, w, h)])
         setRedoStack([])

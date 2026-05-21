@@ -103,8 +103,8 @@ export default function Aide() {
           </div>
           <p style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 13, color: encre,
-            lineHeight: 1.65, opacity: 0.65, marginBottom: 20,
+            fontStyle: 'italic', fontSize: 15, color: encre,
+            lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
           }}>
             Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
           </p>
@@ -120,11 +120,11 @@ export default function Aide() {
                 <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 13, color: encre, marginBottom: 2 }}>
                   {s.label}
                 </div>
-                <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.45, marginBottom: s.exemple ? 4 : 0 }}>
+                <div style={{ ...mono, fontSize: 9, color: encre, opacity: 0.65, marginBottom: s.exemple ? 5 : 0 }}>
                   {s.detail}
                 </div>
                 {s.exemple && (
-                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: encre, opacity: 0.5 }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.75 }}>
                     « {s.exemple} »
                   </div>
                 )}
@@ -139,7 +139,7 @@ export default function Aide() {
           {VISIBILITE.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6 }}>{v.detail}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
@@ -150,7 +150,7 @@ export default function Aide() {
           {MODES.map(m => (
             <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6 }}>{m.detail}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{m.detail}</div>
             </div>
           ))}
         </motion.div>
@@ -177,8 +177,8 @@ export default function Aide() {
           </div>
           <p style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 13, color: encre,
-            lineHeight: 1.65, opacity: 0.65, marginBottom: 20,
+            fontStyle: 'italic', fontSize: 15, color: encre,
+            lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
           }}>
             La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
           </p>
@@ -190,16 +190,16 @@ export default function Aide() {
           {RACCORD_DESSIN.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.6 }}>{v.detail}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
           {/* Citation */}
-          <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20, opacity: 0.7 }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, color: encre, marginBottom: 4 }}>
+          <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
               « Le cadavre exquis boira le vin nouveau »
             </div>
-            <div style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.55, letterSpacing: '0.14em' }}>
+            <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.5, letterSpacing: '0.14em' }}>
               BRETON, ÉLUARD, MORISE, MAN RAY · 1925
             </div>
           </div>

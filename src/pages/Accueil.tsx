@@ -125,6 +125,7 @@ export default function Accueil() {
               background: accent, color: '#e8d4b8',
               ...mono, fontSize: 10, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              borderRadius: 12,
             }}
           >
             <span>Cadavre Écrit</span>
@@ -138,6 +139,7 @@ export default function Accueil() {
               background: encre, color: '#e8d4b8',
               ...mono, fontSize: 10, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              borderRadius: 12,
             }}
           >
             <span>Cadavre Dessiné</span>
