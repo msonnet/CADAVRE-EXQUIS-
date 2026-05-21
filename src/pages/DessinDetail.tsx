@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { chargerDessin, supprimerDessin, mettreAJourTitreDessin } from '../db'
+import { partagerImage } from '../utils/partager'
 import type { DessinCadavre } from '../types'
 
 function formatDate(ts: number): string {
@@ -50,6 +51,12 @@ export default function DessinDetail() {
     if (!id) return
     await supprimerDessin(id)
     navigate('/bibliotheque', { replace: true })
+  }
+
+  async function partager() {
+    if (!dessin) return
+    const nom = dessin.titre ?? 'cadavre-dessiné'
+    await partagerImage(dessin.imageDataUrl, nom)
   }
 
   if (chargement) {
@@ -184,6 +191,27 @@ export default function DessinDetail() {
         )}
 
         <div style={{ flex: 1 }} />
+
+        {/* ── PARTAGER ── */}
+        <motion.div
+          className="mb-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+        >
+          <button
+            onClick={partager}
+            style={{
+              width: '100%', padding: '0.85em',
+              background: 'transparent', color: encre,
+              ...mono, fontSize: 9, textTransform: 'uppercase',
+              border: `0.5px solid ${encre}25`, cursor: 'pointer',
+              opacity: 0.7,
+            }}
+          >
+            ↗ Partager ce dessin
+          </button>
+        </motion.div>
 
         {/* ── SUPPRIMER ── */}
         <motion.div

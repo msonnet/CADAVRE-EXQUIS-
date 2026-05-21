@@ -75,13 +75,14 @@ const TOOL_NAMES: Record<Tool, string> = { pen: 'Stylo', brush: 'Pinceau', marke
 
 const TOOLBAR_H = 164
 const RACCORD_H = 80
+const CANVAS_BG = '#fdf8f2'
 
 function findLowestDrawnFraction(ctx: CanvasRenderingContext2D, w: number, h: number): number {
   const data = ctx.getImageData(0, 0, w, h).data
   for (let y = h - 1; y >= 0; y--) {
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4
-      if (data[i] < 248 || data[i + 1] < 248 || data[i + 2] < 248) return y / h
+      if (data[i] < 240 || data[i + 1] < 240 || data[i + 2] < 240) return y / h
     }
   }
   return 0
@@ -152,33 +153,39 @@ export default function JeuDessin() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const w = window.innerWidth
-    const h = window.innerHeight - TOOLBAR_H
-    canvas.width = w
-    canvas.height = h
-    canvas.style.width = `${w}px`
-    canvas.style.height = `${h}px`
+    const dpr = window.devicePixelRatio || 1
+    const cssW = window.innerWidth
+    const cssH = window.innerHeight - TOOLBAR_H
+    canvas.width = cssW * dpr
+    canvas.height = cssH * dpr
+    canvas.style.width = `${cssW}px`
+    canvas.style.height = `${cssH}px`
     const ctx = canvas.getContext('2d')!
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = CANVAS_BG
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     if (bandeIdx > 0 && config.visibilite === 'raccord' && bandes.length > 0) {
       const prev = bandes[bandes.length - 1]
-      // Utiliser la même formule que FinDessin pour éviter tout décalage
       const MARGE = 24
-      const cropH_prev = Math.min(Math.ceil(prev.lowestDrawnFraction * prev.height) + MARGE, prev.height)
-      const srcY = Math.max(0, cropH_prev - RACCORD_H)
+      const prevDpr = prev.dpr ?? 1
+      const RACCORD_H_phys = RACCORD_H * dpr
+      const MARGE_phys = MARGE * prevDpr
+      const cropH_prev = Math.min(
+        Math.ceil(prev.lowestDrawnFraction * prev.height) + MARGE_phys,
+        prev.height,
+      )
+      const srcY = Math.max(0, cropH_prev - RACCORD_H * prevDpr)
       const img = new Image()
       img.onload = () => {
-        ctx.drawImage(img, 0, srcY, prev.width, RACCORD_H, 0, 0, w, RACCORD_H)
-        setUndoStack([ctx.getImageData(0, 0, w, h)])
+        ctx.drawImage(img, 0, srcY, prev.width, RACCORD_H * prevDpr, 0, 0, canvas.width, RACCORD_H_phys)
+        setUndoStack([ctx.getImageData(0, 0, canvas.width, canvas.height)])
         setRedoStack([])
         setZoom(1); setPanX(0); setPanY(0)
         setCanvasReady(true)
       }
       img.src = prev.imageDataUrl
     } else {
-      setUndoStack([ctx.getImageData(0, 0, w, h)])
+      setUndoStack([ctx.getImageData(0, 0, canvas.width, canvas.height)])
       setRedoStack([])
       setZoom(1); setPanX(0); setPanY(0)
       setCanvasReady(true)
@@ -221,12 +228,13 @@ export default function JeuDessin() {
   const draw = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
+    const dpr = window.devicePixelRatio || 1
     const pos = getCanvasCoords(clientX, clientY)
     const prev = lastPos.current ?? pos
-    const size = SIZES[sizeIdx]
+    const size = SIZES[sizeIdx] * dpr
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
     if (tool === 'eraser') {
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = size * 2.5; ctx.globalAlpha = 1
+      ctx.strokeStyle = CANVAS_BG; ctx.lineWidth = size * 2.5; ctx.globalAlpha = 1
       ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
     } else if (tool === 'marker') {
       ctx.strokeStyle = color; ctx.lineWidth = size * 2.2; ctx.globalAlpha = 0.55
@@ -239,7 +247,7 @@ export default function JeuDessin() {
       ctx.globalAlpha = 0.32
       for (let i = 0; i < 6; i++) {
         const ox = (Math.random() - 0.5) * size; const oy = (Math.random() - 0.5) * size
-        ctx.strokeStyle = color; ctx.lineWidth = 0.5 + Math.random() * size * 0.45
+        ctx.strokeStyle = color; ctx.lineWidth = (0.5 + Math.random() * SIZES[sizeIdx] * 0.45) * dpr
         ctx.beginPath(); ctx.moveTo(prev.x + ox, prev.y + oy); ctx.lineTo(pos.x + ox, pos.y + oy); ctx.stroke()
       }
     } else {
@@ -297,11 +305,12 @@ export default function JeuDessin() {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
     const lowestDrawnFraction = findLowestDrawnFraction(ctx, canvas.width, canvas.height)
+    const dpr = window.devicePixelRatio || 1
     const bande: BandeDessin = {
       joueurIdx: bandeIdx, joueurNumero: joueurActuel,
       imageDataUrl: canvas.toDataURL('image/png'),
       width: canvas.width, height: canvas.height,
-      lowestDrawnFraction, ts: Date.now(),
+      lowestDrawnFraction, dpr, ts: Date.now(),
     }
     const nouvellesBandes = [...bandes, bande]
     setBandes(nouvellesBandes)
@@ -329,12 +338,12 @@ export default function JeuDessin() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      style={{ position: 'fixed', inset: 0, background: '#ffffff', display: 'flex', flexDirection: 'column' }}
+      style={{ position: 'fixed', inset: 0, background: CANVAS_BG, display: 'flex', flexDirection: 'column' }}
     >
       {/* ── CANVAS ── */}
       <div
         ref={containerRef}
-        style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#ffffff', touchAction: 'none' }}
+        style={{ position: 'relative', flex: 1, overflow: 'hidden', background: CANVAS_BG, touchAction: 'none' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -354,10 +363,11 @@ export default function JeuDessin() {
         {bandeIdx > 0 && config.visibilite === 'raccord' && canvasReady && (
           <div style={{
             position: 'absolute', top: RACCORD_H, left: 0, right: 0,
-            height: 0, borderTop: `1.5px dashed ${accent}50`,
+            height: 1,
+            background: `linear-gradient(to right, transparent, ${accent}55 15%, ${accent}55 85%, transparent)`,
             pointerEvents: 'none', zIndex: 5,
           }}>
-            <span style={{ position: 'absolute', right: 8, top: -13, ...mono, fontSize: 7, color: accent, background: 'rgba(255,255,255,0.88)', padding: '1px 6px' }}>
+            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 7, color: accent, background: `${CANVAS_BG}ee`, padding: '1px 6px' }}>
               ← RACCORD
             </span>
           </div>

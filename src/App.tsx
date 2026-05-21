@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { ReveProvider } from './reve'
+import SplashScreen from './components/SplashScreen'
 import Accueil from './pages/Accueil'
 import Configuration from './pages/Configuration'
 import ConfigurationDessin from './pages/ConfigurationDessin'
@@ -17,6 +18,7 @@ import Aide from './pages/Aide'
 export default function App() {
   return (
     <ReveProvider>
+      <SplashScreen />
       <BrowserRouter>
         <AnimatePresence mode="wait">
           <Routes>

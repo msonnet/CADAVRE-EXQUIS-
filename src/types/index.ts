@@ -84,6 +84,7 @@ export interface BandeDessin {
   width: number
   height: number
   lowestDrawnFraction: number         // 0–1 : fraction de hauteur du dernier pixel dessiné
+  dpr: number                         // devicePixelRatio au moment du dessin
   ts: number
 }
 

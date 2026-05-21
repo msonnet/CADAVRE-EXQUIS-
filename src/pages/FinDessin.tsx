@@ -4,31 +4,35 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { sauvegarderDessin } from '../db'
+import { partagerImage } from '../utils/partager'
 import type { BandeDessin, DessinCadavre } from '../types'
 
 const RACCORD_H = 80
+const CANVAS_BG = '#fdf8f2'
 
 async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
   if (bandes.length === 0) return ''
   const w = bandes[0].width
+  const dpr = bandes[0].dpr ?? 1
+  const RACCORD_H_phys = RACCORD_H * dpr
 
   // Calculer la hauteur utile de chaque bande (contenu dessiné + marge)
-  const MARGE = 24
+  const MARGE_phys = 24 * dpr
   const lowestYs = bandes.map(b => Math.min(
-    Math.ceil(b.lowestDrawnFraction * b.height) + MARGE,
+    Math.ceil(b.lowestDrawnFraction * b.height) + MARGE_phys,
     b.height,
   ))
   // S'assurer que la bande 0 vaut au moins RACCORD_H pour que les suivantes aient quelque chose à chevaucher
-  lowestYs[0] = Math.max(lowestYs[0], RACCORD_H + MARGE)
+  lowestYs[0] = Math.max(lowestYs[0], RACCORD_H_phys + MARGE_phys)
 
   // Hauteur totale : bande 0 pleine + chaque bande suivante moins le recouvrement RACCORD_H
-  const totalH = lowestYs[0] + lowestYs.slice(1).reduce((s, y) => s + Math.max(y - RACCORD_H, MARGE), 0)
+  const totalH = lowestYs[0] + lowestYs.slice(1).reduce((s, y) => s + Math.max(y - RACCORD_H_phys, MARGE_phys), 0)
 
   const canvas = document.createElement('canvas')
   canvas.width = w
   canvas.height = totalH
   const ctx = canvas.getContext('2d')!
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = CANVAS_BG
   ctx.fillRect(0, 0, w, totalH)
 
   let assembledY = 0
@@ -38,7 +42,7 @@ async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
     await new Promise<void>(res => {
       const img = new Image()
       img.onload = () => {
-        const drawY = i === 0 ? 0 : assembledY - RACCORD_H
+        const drawY = i === 0 ? 0 : assembledY - RACCORD_H_phys
         // Dessiner les cropH premiers pixels de la bande à la position drawY
         ctx.drawImage(img, 0, 0, bande.width, cropH, 0, drawY, w, cropH)
         assembledY = i === 0 ? cropH : drawY + cropH
@@ -79,6 +83,7 @@ export default function FinDessin() {
   const [pleinEcran, setPleinEcran] = useState(false)
   const [sauvegarde, setSauvegarde] = useState(false)
   const [nbBandes, setNbBandes] = useState(0)
+  const [erreurVision, setErreurVision] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
 
   const c = seance?.colorSchema
@@ -103,6 +108,7 @@ export default function FinDessin() {
       setPhase('vision')
       const texte = await interpreterDessin(img)
       if (cancelled) return
+      if (!texte) setErreurVision(true)
       setTexteVision(texte)
       setPhase('revele')
     }
@@ -117,6 +123,19 @@ export default function FinDessin() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  async function reessayerVision() {
+    if (!imageAssemblee) return
+    setErreurVision(false)
+    const texte = await interpreterDessin(imageAssemblee)
+    if (texte) setTexteVision(texte)
+    else setErreurVision(true)
+  }
+
+  async function partager() {
+    if (!imageAssemblee) return
+    await partagerImage(imageAssemblee, 'cadavre-dessiné')
+  }
 
   async function sauvegarder() {
     if (!imageAssemblee) return
@@ -255,6 +274,24 @@ export default function FinDessin() {
                   {texteVision}
                 </div>
               </div>
+            ) : erreurVision ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.5 }}>
+                  La lecture surréaliste n'a pas pu avoir lieu.
+                </div>
+                <button
+                  onClick={reessayerVision}
+                  style={{
+                    alignSelf: 'flex-start',
+                    ...mono, fontSize: 9,
+                    background: 'transparent', color: accent,
+                    border: `0.5px solid ${accent}50`,
+                    padding: '7px 14px', cursor: 'pointer',
+                  }}
+                >
+                  ↺ RÉESSAYER
+                </button>
+              </div>
             ) : (
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.4 }}>
                 (lecture indisponible)
@@ -282,14 +319,26 @@ export default function FinDessin() {
                 {sauvegarde ? '✓ SAUVEGARDÉ' : '↓ SAUVEGARDER'}
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={partager}
                 style={{
-                  flex: 1,
                   ...mono, fontSize: 9,
                   background: 'transparent',
                   color: `${encre}70`,
                   border: `0.5px solid ${encre}25`,
-                  padding: '10px 8px',
+                  padding: '10px 12px',
+                  cursor: 'pointer',
+                }}
+              >
+                ↗ PARTAGER
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                style={{
+                  ...mono, fontSize: 9,
+                  background: 'transparent',
+                  color: `${encre}70`,
+                  border: `0.5px solid ${encre}25`,
+                  padding: '10px 12px',
                   cursor: 'pointer',
                 }}
               >

@@ -7,6 +7,7 @@ import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { Decor, useReve } from '../reve'
+import { partagerTexte } from '../utils/partager'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
@@ -72,6 +73,15 @@ export default function PoemeDetail() {
     if (!id) return
     await supprimerPoeme(id)
     navigate('/bibliotheque', { replace: true })
+  }
+
+  async function partager() {
+    if (!poeme) return
+    const struct = getStructure(poeme.structureId)
+    const textePoeme = reconstruirePoeme(poeme.cases, struct)
+    const titre = poeme.titre ?? 'Cadavre Exquis'
+    const contenu = `${titre}\n\n${textePoeme}\n\n— Cadavre Exquis, jeu surréaliste`
+    await partagerTexte(contenu, titre)
   }
 
   function imprimerPoeme() {
@@ -343,6 +353,13 @@ export default function PoemeDetail() {
             style={{ ...mono, fontSize: 9, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
+          </button>
+          <button
+            onClick={partager}
+            aria-label="Partager le poème"
+            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            — PARTAGER —
           </button>
           <button
             onClick={imprimerPoeme}
