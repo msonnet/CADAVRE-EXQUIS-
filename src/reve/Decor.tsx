@@ -110,7 +110,7 @@ export function useReve(): SeanceReve | null {
 // Les composants Décor respectent ces zones automatiquement
 // ════════════════════════════════════════════════
 
-export type Variant = 'accueil' | 'config' | 'jeu' | 'jeu-ia' | 'fin' | 'fin-image' | 'biblio' | 'detail' | 'config-dessin' | 'jeu-dessin' | 'fin-dessin'
+export type Variant = 'accueil' | 'config' | 'jeu' | 'jeu-ia' | 'fin' | 'fin-image' | 'biblio' | 'aide' | 'detail' | 'config-dessin' | 'jeu-dessin' | 'fin-dessin'
 
 interface InkBlotDef {
   pos: { top?: string; bottom?: string; left?: string; right?: string }
@@ -137,8 +137,8 @@ const ZONES: Record<Variant, VariantZones> = {
     ],
     stripesMax: 0,
     inkBlots: [
-      { pos: { top: '38%', right: '0' }, size: 88, delay: 0.9 },
-      { pos: { top: '52%', right: '0' }, size: 44, delay: 1.4 },
+      { pos: { top: '34%', right: '-3%' }, size: 92, delay: 0.9 },
+      { pos: { top: '63%', right: '5%' }, size: 46, delay: 1.5 },
     ],
     verticalTitle: { side: 'right' },
     citation: true,
@@ -200,11 +200,22 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   biblio: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.5 },
-    etiqs: [{ bottom: '20%', left: '6%', transform: 'rotate(-3deg)' }],
+    etiqs: [],
     stripesMax: 0,
     inkBlots: [
-      { pos: { bottom: '0', right: '0' }, size: 68, delay: 1.0 },
-      { pos: { bottom: '0', left: '0' }, size: 40, delay: 1.75 },
+      { pos: { bottom: '0', right: '-2%' }, size: 68, delay: 1.0 },
+      { pos: { bottom: '0', left: '-1%' }, size: 40, delay: 1.75 },
+    ],
+    verticalTitle: null,
+    citation: false,
+    signature: true,
+  },
+  aide: {
+    symbol: null,
+    etiqs: [],
+    stripesMax: 0,
+    inkBlots: [
+      { pos: { bottom: '0', right: '-2%' }, size: 60, delay: 1.0 },
     ],
     verticalTitle: null,
     citation: false,
@@ -369,6 +380,7 @@ function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: numbe
       position: 'absolute', ...def.pos,
       opacity: targetOpacity,
       pointerEvents: 'none', zIndex: 1,
+      willChange: 'opacity',
     }}>
       {/* Corps principal */}
       <div style={{
@@ -376,8 +388,8 @@ function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: numbe
         width: w, height: h,
         borderRadius: BLOB_SHAPES[shapeIdx],
         background: KLEIN_BLUE,
-        transform: `rotate(${rot}deg)`,
-        filter: 'blur(2.5px)',
+        transform: `rotate(${rot}deg) translateZ(0)`,
+        filter: `blur(${Math.max(5, w / 10)}px)`,
         animation: `fadeInQ 2.4s ease-out ${def.delay}s both`,
       }} />
       {/* Satellite 1 */}
@@ -386,7 +398,8 @@ function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: numbe
         width: s1w, height: s1h,
         borderRadius: BLOB_SHAPES[(shapeIdx + 2) % BLOB_SHAPES.length],
         background: KLEIN_BLUE,
-        filter: 'blur(1.5px)',
+        transform: 'translateZ(0)',
+        filter: `blur(${Math.max(3, s1w / 8)}px)`,
         animation: `fadeInQ 2.4s ease-out ${def.delay + 0.18}s both`,
       }} />
       {/* Satellite 2 */}
@@ -395,7 +408,8 @@ function InkBlot({ def, seed, idx }: { def: InkBlotDef; seed: number; idx: numbe
         width: s2w, height: s2h,
         borderRadius: BLOB_SHAPES[(shapeIdx + 4) % BLOB_SHAPES.length],
         background: KLEIN_BLUE,
-        filter: 'blur(0.8px)',
+        transform: 'translateZ(0)',
+        filter: `blur(${Math.max(2, s2w / 6)}px)`,
         animation: `fadeInQ 2.4s ease-out ${def.delay + 0.32}s both`,
       }} />
     </div>

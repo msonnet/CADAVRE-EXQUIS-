@@ -39,7 +39,7 @@ export default function Aide() {
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
-      <Decor variant="biblio" />
+      <Decor variant="aide" />
 
       <div style={{ position: 'relative', zIndex: 10 }}>
 
