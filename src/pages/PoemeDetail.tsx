@@ -7,7 +7,7 @@ import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { Decor, useReve } from '../reve'
-import { partagerTexte } from '../utils/partager'
+import { partagerTexte, partagerImageDistante } from '../utils/partager'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
@@ -81,7 +81,11 @@ export default function PoemeDetail() {
     const textePoeme = reconstruirePoeme(poeme.cases, struct)
     const titre = poeme.titre ?? 'Cadavre Exquis'
     const contenu = `${titre}\n\n${textePoeme}\n\n— Cadavre Exquis, jeu surréaliste`
-    await partagerTexte(contenu, titre)
+    if (poeme.illustration?.url) {
+      await partagerImageDistante(poeme.illustration.url, titre, contenu, titre)
+    } else {
+      await partagerTexte(contenu, titre)
+    }
   }
 
   function imprimerPoeme() {

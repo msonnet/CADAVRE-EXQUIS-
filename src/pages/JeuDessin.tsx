@@ -128,7 +128,7 @@ export default function JeuDessin() {
 
   const joueurActuel = (bandeIdx % config.joueurs) + 1
   const c = seance?.colorSchema
-  const accent = c?.hex ?? '#b22c20'
+  const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 

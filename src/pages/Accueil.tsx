@@ -24,6 +24,7 @@ export default function Accueil() {
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
+  const second = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
@@ -136,7 +137,7 @@ export default function Accueil() {
             style={{
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: encre, color: '#e8d4b8',
+              background: second, color: '#e8d4b8',
               ...mono, fontSize: 10, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,

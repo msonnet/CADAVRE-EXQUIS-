@@ -26,7 +26,7 @@ export default function DessinDetail() {
   const [confirmSuppr, setConfirmSuppr] = useState(false)
 
   const c = seance?.colorSchema
-  const accent = c?.hex ?? '#b22c20'
+  const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
@@ -56,7 +56,10 @@ export default function DessinDetail() {
   async function partager() {
     if (!dessin) return
     const nom = dessin.titre ?? 'cadavre-dessiné'
-    await partagerImage(dessin.imageDataUrl, nom)
+    const texte = dessin.texteVision
+      ? `${nom}\n\n${dessin.texteVision}\n\n— Cadavre Exquis, jeu surréaliste`
+      : undefined
+    await partagerImage(dessin.imageDataUrl, nom, texte)
   }
 
   if (chargement) {

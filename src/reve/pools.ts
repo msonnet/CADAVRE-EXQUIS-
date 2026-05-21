@@ -9,15 +9,16 @@ export interface ColorSchema {
   name: string
   bg: string
   encre: string
-  hex: string  // accent
+  hex: string    // accent principal (Écrit)
+  second: string // accent secondaire (Dessiné — toujours différent de hex)
 }
 
 export const COLOR_SCHEMAS: Record<ColorKey, ColorSchema> = {
-  rouge:   { name: 'rouge sang',  bg: '#e6d4b8', encre: '#0f0805', hex: '#b22c20' },
-  cinabre: { name: 'cinabre',     bg: '#e8dcc0', encre: '#0f0805', hex: '#c54820' },
-  ocre:    { name: 'ocre brûlée', bg: '#e4d2b0', encre: '#1a0f08', hex: '#a85a20' },
-  bleu:    { name: 'bleu prusse', bg: '#e6d8bc', encre: '#0f0805', hex: '#1d3a8c' },
-  pourpre: { name: 'pourpre',     bg: '#e8d6bc', encre: '#0a0805', hex: '#7a2858' },
+  rouge:   { name: 'rouge sang',  bg: '#e6d4b8', encre: '#0f0805', hex: '#b22c20', second: '#1d3a8c' },
+  cinabre: { name: 'cinabre',     bg: '#e8dcc0', encre: '#0f0805', hex: '#c54820', second: '#7a2858' },
+  ocre:    { name: 'ocre brûlée', bg: '#e4d2b0', encre: '#1a0f08', hex: '#a85a20', second: '#1d3a8c' },
+  bleu:    { name: 'bleu prusse', bg: '#e6d8bc', encre: '#0f0805', hex: '#1d3a8c', second: '#b22c20' },
+  pourpre: { name: 'pourpre',     bg: '#e8d6bc', encre: '#0a0805', hex: '#7a2858', second: '#c54820' },
 }
 
 export const COLOR_POOL: ColorKey[] = ['rouge', 'cinabre', 'ocre', 'bleu', 'pourpre']

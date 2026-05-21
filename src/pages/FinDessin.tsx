@@ -87,7 +87,7 @@ export default function FinDessin() {
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
 
   const c = seance?.colorSchema
-  const accent = c?.hex ?? '#b22c20'
+  const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
@@ -134,7 +134,10 @@ export default function FinDessin() {
 
   async function partager() {
     if (!imageAssemblee) return
-    await partagerImage(imageAssemblee, 'cadavre-dessiné')
+    const texte = texteVision
+      ? `Cadavre Dessiné\n\n${texteVision}\n\n— Cadavre Exquis, jeu surréaliste`
+      : undefined
+    await partagerImage(imageAssemblee, 'cadavre-dessiné', texte)
   }
 
   async function sauvegarder() {

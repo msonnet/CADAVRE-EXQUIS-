@@ -24,7 +24,7 @@ export default function ConfigurationDessin() {
   const [config, setConfig] = useState<ConfigDessin>(CONFIG_PAR_DEFAUT)
 
   const c = seance?.colorSchema
-  const accent = c?.hex ?? '#b22c20'
+  const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
@@ -224,9 +224,10 @@ export default function ConfigurationDessin() {
             onClick={demarrer}
             className="w-full flex flex-col items-center justify-center"
             style={{
-              background: encre, color: '#e8d4b8',
+              background: accent, color: '#e8d4b8',
               ...mono, fontSize: 11, textTransform: 'uppercase',
               padding: '1.15em 1em', border: 'none', cursor: 'pointer', gap: 2,
+              borderRadius: 12,
             }}
           >
             <span>Commencer le dessin</span>

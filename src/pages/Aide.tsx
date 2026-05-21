@@ -32,6 +32,7 @@ export default function Aide() {
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
+  const second = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
@@ -158,7 +159,7 @@ export default function Aide() {
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
 
         {/* ══════════════════════════════════════════
-            CADAVRE DESSINÉ  (couleur encre)
+            CADAVRE DESSINÉ  (couleur second)
         ══════════════════════════════════════════ */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -166,12 +167,12 @@ export default function Aide() {
           transition={{ delay: 0.4 }}
           style={{ marginBottom: 32 }}
         >
-          <div style={{ ...mono, fontSize: 8, color: encre, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 8, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — CADAVRE DESSINÉ —
           </div>
           <div
             className="font-bodoni font-black italic leading-tight"
-            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: encre, marginBottom: 16 }}
+            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: second, marginBottom: 16 }}
           >
             Cadavre <em>Dessiné.</em>
           </div>
@@ -184,22 +185,22 @@ export default function Aide() {
           </p>
 
           {/* Raccord */}
-          <div style={{ ...mono, fontSize: 8, color: encre, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 8, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — RACCORD —
           </div>
           {RACCORD_DESSIN.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 9, color: encre, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+              <div style={{ ...mono, fontSize: 9, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
           {/* Citation */}
-          <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20 }}>
+          <div style={{ borderLeft: `1.5px solid ${second}55`, paddingLeft: 12, marginTop: 20 }}>
             <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
               « Le cadavre exquis boira le vin nouveau »
             </div>
-            <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.5, letterSpacing: '0.14em' }}>
+            <div style={{ ...mono, fontSize: 8, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
               BRETON, ÉLUARD, MORISE, MAN RAY · 1925
             </div>
           </div>
@@ -231,7 +232,7 @@ export default function Aide() {
               className="flex flex-col items-center justify-center"
               style={{
                 flex: 1,
-                background: encre, color: '#e8d4b8',
+                background: second, color: '#e8d4b8',
                 ...mono, fontSize: 10, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}
