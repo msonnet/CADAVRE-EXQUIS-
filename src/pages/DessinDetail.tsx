@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { chargerDessin, supprimerDessin, mettreAJourTitreDessin } from '../db'
-import { partagerImage } from '../utils/partager'
+import { partagerDessinAvecTexte, partagerImage } from '../utils/partager'
 import type { DessinCadavre } from '../types'
 
 function formatDate(ts: number): string {
@@ -56,7 +56,11 @@ export default function DessinDetail() {
   async function partager() {
     if (!dessin) return
     const nom = dessin.titre ?? 'cadavre-dessiné'
-    await partagerImage(dessin.imageDataUrl, nom)
+    if (dessin.texteVision) {
+      await partagerDessinAvecTexte(dessin.imageDataUrl, dessin.texteVision, nom, accent)
+    } else {
+      await partagerImage(dessin.imageDataUrl, nom)
+    }
   }
 
   if (chargement) {

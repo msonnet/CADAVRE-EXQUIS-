@@ -243,6 +243,7 @@ export default function Jeu() {
   const [iaChargement, setIaChargement] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
   const [attendPassage, setAttendPassage] = useState(false)
+  const [confirmAbandon, setConfirmAbandon] = useState(false)
 
   const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
 
@@ -301,9 +302,9 @@ export default function Jeu() {
     if (!muted) ambianceStart()
   }, [muted, ambianceStart])
 
-  // Écran de passage en multijoueur
+  // Écran de passage avant chaque tour humain
   useEffect(() => {
-    if (multiJoueurs && participantActuel?.type === 'humain') {
+    if (participantActuel?.type === 'humain') {
       setAttendPassage(true)
     }
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -436,6 +437,12 @@ export default function Jeu() {
     pousserCase(texte, joueurNum)
   }
 
+  function abandonner() {
+    localStorage.removeItem('brouillon-actuel')
+    ambianceStop()
+    navigate('/')
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); soumettre() }
   }
@@ -460,25 +467,27 @@ export default function Jeu() {
     )
   }
 
-  // Écran de passage (multijoueur)
+  // Écran de passage avant chaque tour humain
   if (attendPassage && participantActuel?.type === 'humain') {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
-        <motion.p
-          className="nav-discrete mb-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          Passe le téléphone à
-        </motion.p>
+        {multiJoueurs && (
+          <motion.p
+            className="nav-discrete mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            Passe le téléphone à
+          </motion.p>
+        )}
         <motion.p
           className="font-garamond italic text-5xl text-encre"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
         >
-          Joueur {participantActuel.num}
+          Joueur {participantActuel.num}.
         </motion.p>
         <motion.div
           className="mt-16"
@@ -491,7 +500,7 @@ export default function Jeu() {
             onClick={() => setAttendPassage(false)}
             className="btn-primaire"
           >
-            C'est à moi →
+            {multiJoueurs ? "C'est à moi →" : "C'est parti →"}
           </button>
         </motion.div>
       </PageTransition>
@@ -519,14 +528,14 @@ export default function Jeu() {
         <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
           {/* Header */}
           <div className="flex justify-between items-baseline">
-            <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5 }}>{acteLabel}</span>
+            <span style={{ ...mono, fontSize: 10, color: encre, opacity: 0.7 }}>{acteLabel}</span>
             <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
           </div>
           <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
           <div className="flex flex-col items-center justify-center flex-1 text-center" style={{ paddingBottom: '20%' }}>
             <motion.div
-              style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 20 }}
+              style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 20 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -551,7 +560,7 @@ export default function Jeu() {
             </motion.div>
 
             <motion.div
-              style={{ ...mono, fontSize: 9, color: encre, opacity: 0.45, lineHeight: 1.8 }}
+              style={{ ...mono, fontSize: 11, color: encre, opacity: 0.65, lineHeight: 1.8 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
@@ -577,7 +586,7 @@ export default function Jeu() {
           </div>
 
           {/* Footer */}
-          <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.35, textAlign: 'center', paddingBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 10, color: encre, opacity: 0.6, textAlign: 'center', paddingBottom: 8 }}>
             — NE PAS LE DÉRANGER —
           </div>
         </div>
@@ -593,7 +602,7 @@ export default function Jeu() {
 
         {/* Header */}
         <div className="flex justify-between items-baseline">
-          <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5 }}>{acteLabel}</span>
+          <span style={{ ...mono, fontSize: 10, color: encre, opacity: 0.7 }}>{acteLabel}</span>
           <button
             onClick={toggleMute}
             aria-label={muted ? 'Activer le son' : 'Couper le son'}
@@ -622,13 +631,13 @@ export default function Jeu() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                <div style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
                   — VOIX PRÉCÉDENTE · SCELLÉE —
                 </div>
                 <p style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontStyle: 'italic', fontSize: 15,
-                  color: encre, opacity: 0.7, lineHeight: 1.5,
+                  fontStyle: 'italic', fontSize: 16,
+                  color: encre, lineHeight: 1.5,
                 }}>
                   « {contexteVisible} »
                 </p>
@@ -642,7 +651,7 @@ export default function Jeu() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+              <div style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
                 — CONSIGNE —
               </div>
               <div
@@ -652,7 +661,7 @@ export default function Jeu() {
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
               </div>
               {subtitle && (
-                <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.4, marginBottom: 14 }}>
+                <div style={{ ...mono, fontSize: 10, color: encre, opacity: 0.65, marginBottom: 14 }}>
                   {subtitle}
                 </div>
               )}
@@ -683,7 +692,7 @@ export default function Jeu() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.35 }}
             >
-              <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+              <div style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
                 — ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —
               </div>
               <textarea
@@ -697,12 +706,12 @@ export default function Jeu() {
                 rows={3}
               />
               {hintQuestion && (
-                <p style={{ ...mono, fontSize: 8, color: encre, opacity: 0.45, marginTop: 4 }}>
+                <p style={{ ...mono, fontSize: 10, color: encre, opacity: 0.65, marginTop: 4 }}>
                   LES QUESTIONS SE TERMINENT PAR UN ?
                 </p>
               )}
               {erreur && (
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: accent, marginTop: 6, opacity: 0.8 }}>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: accent, marginTop: 6 }}>
                   {erreur}
                 </p>
               )}
@@ -740,9 +749,36 @@ export default function Jeu() {
               </button>
             </motion.div>
 
-            {/* Footer */}
-            <div style={{ ...mono, fontSize: 8, color: encre, opacity: 0.3, textAlign: 'center', paddingBottom: 4 }}>
-              — IRRÉVERSIBLE —
+            {/* Footer + abandon */}
+            <div style={{ textAlign: 'center', paddingBottom: 4 }}>
+              {!confirmAbandon ? (
+                <>
+                  <div style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, marginBottom: 8 }}>
+                    — IRRÉVERSIBLE —
+                  </div>
+                  <button
+                    onClick={() => setConfirmAbandon(true)}
+                    style={{ ...mono, fontSize: 9, color: encre, opacity: 0.38, background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    abandonner la partie
+                  </button>
+                </>
+              ) : (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={abandonner}
+                    style={{ flex: 1, padding: '0.75em', background: '#7B0000', color: '#e8d4b8', ...mono, fontSize: 10, border: 'none', cursor: 'pointer', borderRadius: 4 }}
+                  >
+                    Confirmer l'abandon
+                  </button>
+                  <button
+                    onClick={() => setConfirmAbandon(false)}
+                    style={{ padding: '0.75em 1em', background: 'transparent', color: encre, ...mono, fontSize: 10, border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 4 }}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>

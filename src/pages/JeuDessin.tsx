@@ -71,7 +71,7 @@ function IconEraser({ color }: { color: string }) {
 }
 
 const TOOL_ICONS = { pen: IconPen, brush: IconBrush, marker: IconMarker, crayon: IconCrayon, eraser: IconEraser }
-const TOOL_NAMES: Record<Tool, string> = { pen: 'Stylo', brush: 'Pinceau', marker: 'Marqueur', crayon: 'Crayon', eraser: 'Gomme' }
+const TOOL_NAMES: Record<Tool, string> = { pen: 'Stylo', brush: 'Pinceau', marker: 'Feutre', crayon: 'Craie', eraser: 'Gomme' }
 
 const TOOLBAR_H = 164
 const RACCORD_H = 80
@@ -122,6 +122,7 @@ export default function JeuDessin() {
   const containerRef = useRef<HTMLDivElement>(null)
   const isDrawing = useRef(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
+  const velocityRef = useRef(0)
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const lastPinchDist = useRef<number | null>(null)
   const lastPinchMid = useRef<{ x: number; y: number } | null>(null)
@@ -232,28 +233,63 @@ export default function JeuDessin() {
     const pos = getCanvasCoords(clientX, clientY)
     const prev = lastPos.current ?? pos
     const size = SIZES[sizeIdx] * dpr
+
+    const dx = pos.x - prev.x
+    const dy = pos.y - prev.y
+    const dist = Math.sqrt(dx * dx + dy * dy)
+
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+
     if (tool === 'eraser') {
-      ctx.strokeStyle = CANVAS_BG; ctx.lineWidth = size * 2.5; ctx.globalAlpha = 1
+      ctx.strokeStyle = CANVAS_BG; ctx.lineWidth = size * 2.8; ctx.globalAlpha = 1
       ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
-    } else if (tool === 'marker') {
-      ctx.strokeStyle = color; ctx.lineWidth = size * 2.2; ctx.globalAlpha = 0.55
+
+    } else if (tool === 'pen') {
+      // Stylo : largeur dynamique selon la vitesse (lent = épais, rapide = fin)
+      velocityRef.current = velocityRef.current * 0.55 + dist * 0.45
+      const dynamicW = size * Math.max(0.35, 1.0 - velocityRef.current * 0.018)
+      ctx.strokeStyle = color; ctx.lineWidth = dynamicW; ctx.globalAlpha = 1
       ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+
     } else if (tool === 'brush') {
-      ctx.strokeStyle = color; ctx.lineWidth = size * 1.8; ctx.globalAlpha = 0.82
-      ctx.beginPath(); ctx.moveTo(prev.x, prev.y)
-      ctx.quadraticCurveTo((prev.x + pos.x) / 2, (prev.y + pos.y) / 2, pos.x, pos.y); ctx.stroke()
-    } else if (tool === 'crayon') {
-      ctx.globalAlpha = 0.32
-      for (let i = 0; i < 6; i++) {
-        const ox = (Math.random() - 0.5) * size; const oy = (Math.random() - 0.5) * size
-        ctx.strokeStyle = color; ctx.lineWidth = (0.5 + Math.random() * SIZES[sizeIdx] * 0.45) * dpr
-        ctx.beginPath(); ctx.moveTo(prev.x + ox, prev.y + oy); ctx.lineTo(pos.x + ox, pos.y + oy); ctx.stroke()
+      // Pinceau : poils multiples, étalés perpendiculairement au trait
+      const angle = Math.atan2(dy, dx) + Math.PI / 2
+      const numBristles = 12
+      for (let b = 0; b < numBristles; b++) {
+        const t = b / (numBristles - 1) - 0.5
+        const spread = size * 0.9
+        const ox = Math.cos(angle) * t * spread + (Math.random() - 0.5) * size * 0.08
+        const oy = Math.sin(angle) * t * spread + (Math.random() - 0.5) * size * 0.08
+        ctx.strokeStyle = color
+        ctx.lineWidth = (0.35 + Math.random() * 0.9) * dpr
+        ctx.globalAlpha = 0.22 + Math.random() * 0.52
+        ctx.beginPath()
+        ctx.moveTo(prev.x + ox, prev.y + oy)
+        ctx.lineTo(pos.x + ox, pos.y + oy)
+        ctx.stroke()
       }
-    } else {
-      ctx.strokeStyle = color; ctx.lineWidth = size; ctx.globalAlpha = 1
+
+    } else if (tool === 'marker') {
+      // Feutre : pointe plate (lineCap square), opacité faible qui s'accumule
+      ctx.strokeStyle = color; ctx.lineWidth = size * 2.6; ctx.lineCap = 'square'
+      ctx.globalAlpha = 0.35
       ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+
+    } else if (tool === 'crayon') {
+      // Craie : texture granuleuse, particules aléatoires le long du trait
+      const numGrains = Math.ceil(Math.max(dist * 0.9, 5) * 1.8)
+      for (let g = 0; g < numGrains; g++) {
+        const t = Math.random()
+        const gx = prev.x + dx * t + (Math.random() - 0.5) * size * 1.1
+        const gy = prev.y + dy * t + (Math.random() - 0.5) * size * 1.1
+        ctx.fillStyle = color
+        ctx.globalAlpha = 0.04 + Math.random() * 0.20
+        ctx.beginPath()
+        ctx.arc(gx, gy, Math.random() * 1.4 * dpr, 0, Math.PI * 2)
+        ctx.fill()
+      }
     }
+
     ctx.restore()
     lastPos.current = pos
   }, [tool, sizeIdx, color])
@@ -265,6 +301,7 @@ export default function JeuDessin() {
         isDrawing.current = false
       } else {
         isDrawing.current = true
+        velocityRef.current = 0
         lastPos.current = getCanvasCoords(e.clientX, e.clientY)
         saveSnapshot(); draw(e.clientX, e.clientY)
       }

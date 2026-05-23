@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { getAudioContext, onContextRunning } from '../audio/sharedCtx'
 
-const VOLUME = 0.08
+const VOLUME = 0.10
 
 export function useAmbiance() {
   const [muted, setMuted] = useState(() => localStorage.getItem('ambiance-muted') === 'true')
@@ -18,10 +18,24 @@ export function useAmbiance() {
     master.connect(ctx.destination)
     masterRef.current = master
 
+    // Pseudo-reverb : delay avec feedback doux
+    const delay = ctx.createDelay(2.0)
+    delay.delayTime.value = 0.42
+    const feedback = ctx.createGain()
+    feedback.gain.value = 0.28
+    const wetGain = ctx.createGain()
+    wetGain.gain.value = 0.32
+    delay.connect(feedback)
+    feedback.connect(delay)
+    delay.connect(wetGain)
+    wetGain.connect(master)
+
+    // Pentatonique A : A3=220, E4=330, A4=440, B3=247 — aérien, doux
     const specs = [
-      { freq: 55,    gain: 0.45, lfoRate: 0.04 },
-      { freq: 55.4,  gain: 0.40, lfoRate: 0.06 },
-      { freq: 110.2, gain: 0.25, lfoRate: 0.03 },
+      { freq: 220.0, gain: 0.32, lfoRate: 0.07, lfoDepth: 1.2 },
+      { freq: 329.6, gain: 0.20, lfoRate: 0.05, lfoDepth: 0.8 },
+      { freq: 440.0, gain: 0.11, lfoRate: 0.03, lfoDepth: 0.4 },
+      { freq: 246.9, gain: 0.09, lfoRate: 0.06, lfoDepth: 0.6 },
     ]
     for (const s of specs) {
       const osc = ctx.createOscillator()
@@ -33,12 +47,13 @@ export function useAmbiance() {
       lfo.type = 'sine'
       lfo.frequency.value = s.lfoRate
       const lfoGain = ctx.createGain()
-      lfoGain.gain.value = 1.2
+      lfoGain.gain.value = s.lfoDepth
       lfo.connect(lfoGain)
       lfoGain.connect(osc.frequency)
       lfo.start()
       osc.connect(oscGain)
       oscGain.connect(master)
+      oscGain.connect(delay)
       osc.start()
     }
 
@@ -46,7 +61,7 @@ export function useAmbiance() {
       const t = ctx.currentTime
       master.gain.cancelScheduledValues(t)
       master.gain.setValueAtTime(0, t)
-      master.gain.linearRampToValueAtTime(VOLUME, t + 4)
+      master.gain.linearRampToValueAtTime(VOLUME, t + 5)
     }
   }, [muted])
 
@@ -57,9 +72,7 @@ export function useAmbiance() {
     if (ctx.state === 'running') {
       buildOscillators()
     } else {
-      // S'abonner au déverrouillage via useSound (geste utilisateur)
       onContextRunning(buildOscillators)
-      // Fallback: listener direct sur le document
       const unlock = () => {
         ctx.resume().then(buildOscillators)
       }
@@ -68,7 +81,6 @@ export function useAmbiance() {
     }
   }, [muted, buildOscillators])
 
-  // Re-démarrer quand l'utilisateur active le son
   useEffect(() => {
     if (!muted) start()
   }, [muted, start])
