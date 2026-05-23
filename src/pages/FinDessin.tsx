@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { sauvegarderDessin } from '../db'
-import { partagerImage } from '../utils/partager'
+import { partagerDessinAvecTexte, partagerImage } from '../utils/partager'
 import type { BandeDessin, DessinCadavre } from '../types'
 
 const RACCORD_H = 80
@@ -134,10 +134,11 @@ export default function FinDessin() {
 
   async function partager() {
     if (!imageAssemblee) return
-    const texte = texteVision
-      ? `Cadavre Dessiné\n\n${texteVision}\n\n— Cadavre Exquis, jeu surréaliste`
-      : undefined
-    await partagerImage(imageAssemblee, 'cadavre-dessiné', texte)
+    if (texteVision) {
+      await partagerDessinAvecTexte(imageAssemblee, texteVision, 'cadavre-dessiné', accent)
+    } else {
+      await partagerImage(imageAssemblee, 'cadavre-dessiné')
+    }
   }
 
   async function sauvegarder() {
