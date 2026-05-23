@@ -117,6 +117,9 @@ export default function JeuDessin() {
   const [zoom, setZoom] = useState(1)
   const [panX, setPanX] = useState(0)
   const [panY, setPanY] = useState(0)
+  const zoomRef = useRef(1)
+  const panXRef = useRef(0)
+  const panYRef = useRef(0)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -150,13 +153,35 @@ export default function JeuDessin() {
   // Ambiance
   useEffect(() => { startAmbiance(); return () => stopAmbiance() }, [])
 
+  // Wake lock — empêcher la mise en veille pendant le dessin
+  const wakeLockRef = useRef<{ release(): Promise<void> } | null>(null)
+  useEffect(() => {
+    let released = false
+    async function requestLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          const nav = navigator as unknown as { wakeLock: { request(t: string): Promise<{ release(): Promise<void> }> } }
+          wakeLockRef.current = await nav.wakeLock.request('screen')
+        }
+      } catch { /* not supported */ }
+    }
+    requestLock()
+    const onVisible = () => { if (!released && document.visibilityState === 'visible') requestLock() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      released = true
+      document.removeEventListener('visibilitychange', onVisible)
+      wakeLockRef.current?.release().catch(() => {})
+    }
+  }, [])
+
   // Initialiser canvas — pré-dessine le raccord si mode raccord
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const dpr = window.devicePixelRatio || 1
-    const cssW = window.innerWidth
-    const cssH = window.innerHeight - TOOLBAR_H
+    const cssW = containerRef.current?.offsetWidth ?? Math.min(window.innerWidth, 500)
+    const cssH = containerRef.current?.offsetHeight ?? (window.innerHeight - TOOLBAR_H)
     canvas.width = cssW * dpr
     canvas.height = cssH * dpr
     canvas.style.width = `${cssW}px`
@@ -182,6 +207,7 @@ export default function JeuDessin() {
         setUndoStack([ctx.getImageData(0, 0, canvas.width, canvas.height)])
         setRedoStack([])
         setZoom(1); setPanX(0); setPanY(0)
+        zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0
         setCanvasReady(true)
       }
       img.src = prev.imageDataUrl
@@ -189,6 +215,7 @@ export default function JeuDessin() {
       setUndoStack([ctx.getImageData(0, 0, canvas.width, canvas.height)])
       setRedoStack([])
       setZoom(1); setPanX(0); setPanY(0)
+      zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0
       setCanvasReady(true)
     }
   }, [bandeIdx])
@@ -319,12 +346,24 @@ export default function JeuDessin() {
       isDrawing.current = false
       const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
       const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
-      if (lastPinchDist.current !== null) setZoom(z => Math.max(1, Math.min(6, z * (dist / lastPinchDist.current!))))
-      if (lastPinchMid.current !== null) { setPanX(x => x + mid.x - lastPinchMid.current!.x); setPanY(y => y + mid.y - lastPinchMid.current!.y) }
+      if (lastPinchDist.current !== null && lastPinchMid.current !== null) {
+        const scale = dist / lastPinchDist.current
+        const newZoom = Math.max(1, Math.min(6, zoomRef.current * scale))
+        const actualScale = newZoom / zoomRef.current
+        const newPanX = mid.x - (mid.x - panXRef.current) * actualScale + (mid.x - lastPinchMid.current.x)
+        const newPanY = mid.y - (mid.y - panYRef.current) * actualScale + (mid.y - lastPinchMid.current.y)
+        zoomRef.current = newZoom; panXRef.current = newPanX; panYRef.current = newPanY
+        setZoom(newZoom); setPanX(newPanX); setPanY(newPanY)
+      } else if (lastPinchMid.current !== null) {
+        panXRef.current += mid.x - lastPinchMid.current.x
+        panYRef.current += mid.y - lastPinchMid.current.y
+        setPanX(panXRef.current); setPanY(panYRef.current)
+      }
       lastPinchDist.current = dist; lastPinchMid.current = mid
     } else if (panMode && prevPt) {
-      setPanX(x => x + e.clientX - prevPt.x)
-      setPanY(y => y + e.clientY - prevPt.y)
+      panXRef.current += e.clientX - prevPt.x
+      panYRef.current += e.clientY - prevPt.y
+      setPanX(panXRef.current); setPanY(panYRef.current)
     } else if (isDrawing.current) {
       draw(e.clientX, e.clientY)
     }
@@ -375,7 +414,7 @@ export default function JeuDessin() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      style={{ position: 'fixed', inset: 0, background: CANVAS_BG, display: 'flex', flexDirection: 'column' }}
+      style={{ position: 'absolute', inset: 0, background: CANVAS_BG, display: 'flex', flexDirection: 'column' }}
     >
       {/* ── CANVAS ── */}
       <div
@@ -422,7 +461,7 @@ export default function JeuDessin() {
 
         {/* Reset zoom */}
         {zoom > 1.05 && (
-          <button onClick={() => { setZoom(1); setPanX(0); setPanY(0) }} style={{
+          <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }} style={{
             position: 'absolute', top: 10, right: 10,
             ...mono, fontSize: 8, color: encre,
             background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
@@ -575,7 +614,7 @@ export default function JeuDessin() {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowColorPanel(false)}
-              style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.2)' }}
+              style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.2)' }}
             />
             <motion.div
               initial={{ y: '100%' }}
@@ -583,7 +622,7 @@ export default function JeuDessin() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 400 }}
               style={{
-                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+                position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
                 background: '#ffffff', borderRadius: '20px 20px 0 0',
                 padding: '0 16px 24px',
                 boxShadow: '0 -4px 32px rgba(0,0,0,0.16)',
@@ -645,7 +684,7 @@ export default function JeuDessin() {
             transition={{ duration: 0.5 }}
             onClick={() => setShowIntro(false)}
             style={{
-              position: 'fixed', inset: 0, zIndex: 100, background: encre,
+              position: 'absolute', inset: 0, zIndex: 100, background: encre,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20,
             }}
           >
@@ -680,7 +719,7 @@ export default function JeuDessin() {
             transition={{ duration: 0.5 }}
             onClick={demarrerProchainJoueur}
             style={{
-              position: 'fixed', inset: 0, zIndex: 100, background: encre,
+              position: 'absolute', inset: 0, zIndex: 100, background: encre,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20,
             }}
           >
