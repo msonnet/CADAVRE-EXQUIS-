@@ -214,13 +214,6 @@ export default function FinDessin() {
                 {phaseLabel}
               </div>
             </div>
-            {phase === 'vision' && imageAssemblee && (
-              <img
-                src={imageAssemblee}
-                alt="Cadavre exquis assemblé"
-                style={{ maxWidth: '60%', maxHeight: '30vh', objectFit: 'contain', opacity: 0.5, border: `0.5px solid ${encre}20` }}
-              />
-            )}
           </motion.div>
         )}
 
