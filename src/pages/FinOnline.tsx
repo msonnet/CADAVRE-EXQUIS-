@@ -160,12 +160,37 @@ export default function FinOnline() {
             onClick={() => setRevealed(true)}
             style={{ background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 2em', border: 'none', cursor: 'pointer', marginTop: 8 }}
           >
-            RÉVÉLER LE POÈME →
+            {room.mode === 'dessin' ? 'RÉVÉLER LE DESSIN →' : 'RÉVÉLER LE POÈME →'}
           </button>
         </motion.div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          {/* Poème */}
+
+          {/* ── Mode dessin : bandes empilées ── */}
+          {room.mode === 'dessin' && (
+            <div style={{ marginBottom: 28 }}>
+              {contributions
+                .sort((a, b) => a.case_index - b.case_index)
+                .map(c => {
+                  const p = players.find(pl => pl.player_id === c.player_id)
+                  return (
+                    <div key={c.case_index} style={{ marginBottom: 4 }}>
+                      {c.texte.startsWith('data:') ? (
+                        <img src={c.texte} alt={p?.pseudo ?? ''} style={{ width: '100%', display: 'block', borderLeft: `3px solid ${accent}40` }} />
+                      ) : (
+                        <div style={{ padding: '12px 14px', background: `${accent}10`, fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre }}>{c.texte}</div>
+                      )}
+                      <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 11, letterSpacing: '0.15em', color: accent, opacity: 0.7, marginTop: 2, paddingLeft: 4 }}>
+                        {p?.pseudo ?? '?'}
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+
+          {/* ── Mode écrit : poème ── */}
+          {room.mode !== 'dessin' && (
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 15, lineHeight: 1.65 }}>
               {texteAffiche && lettrine && (
@@ -182,9 +207,10 @@ export default function FinOnline() {
               {(!lettrine || !texteAffiche) && texteAffiche}
             </p>
           </div>
+          )}
 
-          {/* Coutures */}
-          <div style={{ marginBottom: 20 }}>
+          {/* Coutures — mode écrit seulement */}
+          {room.mode !== 'dessin' && (<div style={{ marginBottom: 20 }}>
             <button
               onClick={() => setShowCoutures(!showCoutures)}
               style={{ ...mono, fontSize: 13, color: showCoutures ? accent : encre, opacity: showCoutures ? 1 : 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -219,10 +245,10 @@ export default function FinOnline() {
                 })}
               </div>
             )}
-          </div>
+          </div>)}
 
-          {/* Illustration */}
-          <div style={{ marginBottom: 20 }}>
+          {/* Illustration — mode écrit seulement */}
+          {room.mode !== 'dessin' && (<div style={{ marginBottom: 20 }}>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
               — ILLUSTRATION —
             </div>
@@ -265,7 +291,7 @@ export default function FinOnline() {
                 ))}
               </div>
             )}
-          </div>
+          </div>)}
 
           {/* Nouvelle partie */}
           <button

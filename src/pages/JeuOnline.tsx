@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -21,6 +21,132 @@ const TYPE_LABEL: Record<string, string> = {
   'proposition': 'PROPOSITION',
   'libre': 'VERS LIBRE',
   'article-adj': 'ARTICLE + ADJECTIF · 2 MOTS',
+}
+
+const DRAWING_PALETTE = [
+  '#000000', '#444444', '#888888', '#cccccc', '#ffffff',
+  '#b22c20', '#a85a20', '#1d3a8c', '#2e7d32', '#7a2858',
+  '#f0e4cc', '#004D40',
+]
+const DRAW_SIZES = [3, 8, 18]
+
+function DrawingCanvas({ onSubmit, accent, encre }: {
+  onSubmit: (dataUrl: string) => Promise<void>
+  accent: string
+  encre: string
+}) {
+  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const drawing = useRef(false)
+  const last = useRef<{ x: number; y: number } | null>(null)
+  const [color, setColor] = useState('#000000')
+  const [sizeIdx, setSizeIdx] = useState(1)
+  const [eraser, setEraser] = useState(false)
+  const [history, setHistory] = useState<ImageData[]>([])
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext('2d')
+    if (!ctx) return
+    ctx.fillStyle = '#fdf8f2'
+    ctx.fillRect(0, 0, 600, 300)
+  }, [])
+
+  const getXY = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current!
+    const r = canvas.getBoundingClientRect()
+    const sx = 600 / r.width, sy = 300 / r.height
+    if ('touches' in e) {
+      const t = e.touches[0]
+      return { x: (t.clientX - r.left) * sx, y: (t.clientY - r.top) * sy }
+    }
+    const m = e as React.MouseEvent
+    return { x: (m.clientX - r.left) * sx, y: (m.clientY - r.top) * sy }
+  }
+
+  const start = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    const canvas = canvasRef.current!
+    const ctx = canvas.getContext('2d')!
+    setHistory(h => [...h.slice(-9), ctx.getImageData(0, 0, 600, 300)])
+    drawing.current = true
+    last.current = getXY(e)
+  }
+
+  const move = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!drawing.current) return
+    e.preventDefault()
+    const ctx = canvasRef.current!.getContext('2d')!
+    const pos = getXY(e)
+    const prev = last.current ?? pos
+    ctx.beginPath()
+    ctx.moveTo(prev.x, prev.y)
+    ctx.lineTo(pos.x, pos.y)
+    ctx.lineWidth = eraser ? DRAW_SIZES[sizeIdx] * 3 : DRAW_SIZES[sizeIdx]
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.strokeStyle = eraser ? '#fdf8f2' : color
+    ctx.stroke()
+    last.current = pos
+  }
+
+  const end = () => { drawing.current = false; last.current = null }
+
+  const undo = () => {
+    if (!history.length) return
+    const ctx = canvasRef.current!.getContext('2d')!
+    ctx.putImageData(history[history.length - 1], 0, 0)
+    setHistory(h => h.slice(0, -1))
+  }
+
+  const clear = () => {
+    const ctx = canvasRef.current!.getContext('2d')!
+    ctx.fillStyle = '#fdf8f2'
+    ctx.fillRect(0, 0, 600, 300)
+    setHistory([])
+  }
+
+  const submit = async () => {
+    setBusy(true)
+    await onSubmit(canvasRef.current!.toDataURL('image/jpeg', 0.75))
+    setBusy(false)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {DRAWING_PALETTE.map(c => (
+          <button key={c} type="button" onClick={() => { setColor(c); setEraser(false) }} style={{
+            width: 24, height: 24, background: c, padding: 0, cursor: 'pointer', borderRadius: 3,
+            border: `2.5px solid ${!eraser && color === c ? accent : 'transparent'}`,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+          }} />
+        ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
+          {DRAW_SIZES.map((s, i) => (
+            <button key={i} type="button" onClick={() => { setSizeIdx(i); setEraser(false) }} style={{
+              width: s + 10, height: s + 10, borderRadius: '50%', padding: 0, cursor: 'pointer',
+              background: !eraser && sizeIdx === i ? encre : 'transparent',
+              border: `1.5px solid ${!eraser && sizeIdx === i ? encre : `${encre}40`}`,
+            }} />
+          ))}
+          <button type="button" onClick={() => setEraser(v => !v)} style={{ ...mono, fontSize: 11, padding: '3px 8px', cursor: 'pointer', background: eraser ? `${accent}20` : 'transparent', color: eraser ? accent : encre, border: `1px solid ${eraser ? accent : `${encre}30`}` }}>✕</button>
+          <button type="button" onClick={undo} disabled={!history.length} style={{ ...mono, fontSize: 11, padding: '3px 8px', cursor: 'pointer', background: 'transparent', color: encre, border: `1px solid ${encre}30`, opacity: history.length ? 1 : 0.3 }}>↩</button>
+          <button type="button" onClick={clear} style={{ ...mono, fontSize: 11, padding: '3px 8px', cursor: 'pointer', background: 'transparent', color: encre, border: `1px solid ${encre}30` }}>⌫</button>
+        </div>
+      </div>
+
+      <canvas ref={canvasRef} width={600} height={300}
+        style={{ width: '100%', aspectRatio: '2/1', touchAction: 'none', border: `1px solid ${encre}18`, background: '#fdf8f2', cursor: eraser ? 'cell' : 'crosshair', borderRadius: 2 }}
+        onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
+        onTouchStart={start} onTouchMove={move} onTouchEnd={end}
+      />
+
+      <button type="button" onClick={submit} disabled={busy} style={{ background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em', border: 'none', cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+        {busy ? 'ENVOI…' : 'SOUMETTRE MON DESSIN →'}
+      </button>
+    </div>
+  )
 }
 
 async function callClaude(consigne: string, type: string): Promise<string> {
@@ -147,6 +273,20 @@ export default function JeuOnline() {
     setSubmitting(false)
   }
 
+  async function handleDrawingSubmit(dataUrl: string) {
+    if (!user || !code || myIndex === null) return
+    const { error } = await supabase.from('contributions').insert({
+      room_code: code,
+      player_id: user.id,
+      case_index: myIndex,
+      texte: dataUrl,
+    })
+    if (!error) {
+      setMyContrib(dataUrl)
+      setSubmitted(true)
+    }
+  }
+
   if (authLoading || !room || !myPlayer) {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
@@ -156,8 +296,8 @@ export default function JeuOnline() {
   }
 
   const structure = getStructure(room.structure_id)
-  const nbTotal = Math.min(players.length, nombreCasesEffectif(structure))
-  const caseDef = myIndex !== null ? structure.cases[myIndex] : null
+  const nbTotal = room.mode === 'dessin' ? players.length : Math.min(players.length, nombreCasesEffectif(structure))
+  const caseDef = myIndex !== null && room.mode !== 'dessin' ? structure.cases[myIndex] : null
   const submitted_count = contributions.length
 
   return (
@@ -216,20 +356,32 @@ export default function JeuOnline() {
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
               ✓ CONTRIBUTION REÇUE
             </div>
-            <div style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: 20,
-              color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20`,
-            }}>
-              « {myContrib} »
-            </div>
+            {myContrib?.startsWith('data:') ? (
+              <img src={myContrib} alt="votre dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 2, border: `1px solid ${accent}30` }} />
+            ) : (
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>
+                « {myContrib} »
+              </div>
+            )}
             <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
-              En attente des autres joueurs…{'\n'}La révélation aura lieu lorsque tout le monde aura soumis sa contribution.
+              En attente des autres joueurs… La révélation aura lieu lorsque tout le monde aura soumis.
             </p>
-            <motion.span
-              style={{ fontSize: 22, color: accent }}
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >✦</motion.span>
+            <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+          </motion.div>
+        ) : room.mode === 'dessin' ? (
+          <motion.div
+            key="dessin"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+          >
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+              VOTRE BANDE · {(myIndex ?? 0) + 1}/{players.length}
+            </div>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, lineHeight: 1.5, marginBottom: 14 }}>
+              Dessinez une section du corps — tête, buste ou jambes selon votre bande. Les autres joueurs font de même à l'aveugle.
+            </p>
+            <DrawingCanvas onSubmit={handleDrawingSubmit} accent={accent} encre={encre} />
           </motion.div>
         ) : caseDef ? (
           <motion.div

@@ -279,6 +279,32 @@ export default function Salon() {
               </div>
             </div>
           )}
+
+          {room.mode === 'dessin' && (
+            <div>
+              <div style={{ ...mono, fontSize: 12, color: encre, marginBottom: 6 }}>BANDES</div>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
+                Chaque joueur dessine une bande du corps à l'aveugle. Fixez le nombre de joueurs attendus.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[2, 3, 4, 5, 6, 7].map(n => (
+                  <button
+                    key={n}
+                    onClick={() => updateRoom({ nb_joueurs: n })}
+                    style={{
+                      ...mono, fontSize: 13, padding: '6px 14px',
+                      background: room.nb_joueurs === n ? `${accent}18` : 'transparent',
+                      color: room.nb_joueurs === n ? accent : encre,
+                      border: `1px solid ${room.nb_joueurs === n ? accent : `${encre}25`}`,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
