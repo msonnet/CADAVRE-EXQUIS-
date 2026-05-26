@@ -11,30 +11,30 @@ type TypeCase =
   | 'libre'
   | 'article-adj'
 
-// Tokens hard-cap par type — force les réponses courtes
+// Tokens hard-cap par type
 const MAX_TOKENS: Record<TypeCase, number> = {
-  'nom': 2,
-  'verbe': 4,
-  'adjectif': 4,
+  'nom': 5,
+  'verbe': 5,
+  'adjectif': 5,
   'adverbe': 6,
-  'groupe-nominal': 7,
+  'groupe-nominal': 8,
   'groupe-verbal': 8,
   'proposition': 18,
   'libre': 18,
-  'article-adj': 5,
+  'article-adj': 6,
 }
 
 // Contraintes de longueur explicites dans le prompt
 const CONTRAINTES: Record<TypeCase, string> = {
   'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "cœur", "nuage", "cendre", "os")',
-  'verbe': '1 mot (verbe conjugué, forme courte)',
-  'adjectif': '1 mot (adjectif seul)',
+  'verbe': '1 mot (verbe conjugué — ex : "dévore", "hante", "veille", "frôle")',
+  'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
   'adverbe': '1 à 2 mots',
-  'groupe-nominal': '2 mots (article + nom, ex: "le silence", "une ombre")',
+  'groupe-nominal': '2 à 3 mots (article + nom, ex: "le silence", "une ombre froide")',
   'groupe-verbal': '2 mots (verbe + 1 complément court)',
   'proposition': '4 à 6 mots (phrase courte)',
   'libre': '3 à 6 mots (un vers)',
-  'article-adj': "2 mots exactement : article + adjectif (ex: 'un sombre', 'le vieux', 'une pâle') — SANS nom",
+  'article-adj': '2 MOTS EXACTEMENT : article défini ou indéfini + adjectif qualificatif. Exemples valides : "un sombre", "la vieille", "une pâle", "le lourd", "un creux". INTERDIT : noms, pronoms, expressions figées.',
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
@@ -52,7 +52,7 @@ const FALLBACKS: Record<TypeCase, string[]> = {
   'groupe-nominal': [
     "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
     'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
-    'la pluie fine', 'le temps qui passe', 'un mur de brume', 'la main tendue',
+    'la pluie fine', 'un mur de brume', 'la main tendue',
     'un silence épais', 'le bord du gouffre', 'une voix creuse', "l'eau noire",
     'le corps absent', 'une ombre familière', 'la porte close', 'un feu mourant',
   ],
@@ -70,8 +70,7 @@ const FALLBACKS: Record<TypeCase, string[]> = {
   'libre': [
     'quelque chose demeure', 'la nuit garde tout', 'le silence répond',
     'rien ne disparaît vraiment', 'tout recommence ailleurs', "l'oubli protège",
-    "il reste toujours quelque chose", "les mots s'effacent", 'le temps hésite',
-    "l'absence a une forme",
+    "les mots s'effacent", 'le temps hésite', "l'absence a une forme",
   ],
   'article-adj': [
     'un sombre', 'une vieille', 'le froid', 'une pâle', 'un beau', 'la douce',
@@ -80,8 +79,47 @@ const FALLBACKS: Record<TypeCase, string[]> = {
   ],
 }
 
+const ARTICLES_FR = new Set([
+  'un', 'une', 'le', 'la', 'les', 'du', 'des', 'au', 'aux',
+  'ce', 'cet', 'cette', 'ces', 'mon', 'ton', 'son', 'ma', 'ta', 'sa',
+])
+
+// Valide et normalise la sortie du modèle selon le type attendu.
+// Retourne '' si invalide (déclenchera le fallback).
+function normaliserSortie(texte: string, type: TypeCase): string {
+  const t = texte.trim()
+  const mots = t.split(/\s+/)
+
+  switch (type) {
+    case 'article-adj': {
+      if (mots.length !== 2) return ''
+      if (!ARTICLES_FR.has(mots[0].toLowerCase())) return ''
+      return t
+    }
+    case 'nom': {
+      // Strip article si le modèle en a mis un malgré l'instruction
+      if (mots.length >= 2 && ARTICLES_FR.has(mots[0].toLowerCase().replace(/[''].*/, ''))) {
+        return mots.slice(1).join(' ')
+      }
+      if (mots.length > 2) return mots[0]
+      return t
+    }
+    case 'adjectif': {
+      // Prendre uniquement le premier mot si le modèle a écrit une phrase
+      if (mots.length > 2) return mots[0]
+      return t
+    }
+    case 'verbe': {
+      if (mots.length > 3) return mots.slice(0, 2).join(' ')
+      return t
+    }
+    default:
+      return t
+  }
+}
+
 function pickFallback(type: TypeCase): string {
-  const arr = FALLBACKS[type] ?? ['quelque chose']
+  const arr = FALLBACKS[type] ?? FALLBACKS['libre']
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
@@ -131,7 +169,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         messages: [
           {
             role: 'user',
-            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nLongueur absolue : ${contrainte}.\nSois inattendu — choisis l'image concrète et physique qui ne vient pas en premier.${echoLine}\nRéponds avec le fragment seul.`,
+            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nContrainte absolue : ${contrainte}.\nSois inattendu — choisis l'image concrète et physique qui ne vient pas en premier.${echoLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),
@@ -143,7 +181,7 @@ export default async function handler(req: any, res: any): Promise<void> {
 
     const data = await response.json()
     const brut = (data.content?.[0]?.text ?? '').trim()
-    const texte = brut
+    const propre = brut
       .replace(/\*+([^*]*)\*+/g, '$1')
       .replace(/#+\s*/g, '')
       .replace(/\n+/g, ' ')
@@ -151,6 +189,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       .replace(/[.!?;,]+$/, '')
       .trim()
 
+    const texte = normaliserSortie(propre, type as TypeCase)
     res.status(200).json({ texte: texte || pickFallback(type as TypeCase) })
   } catch (err) {
     console.error('Erreur Claude API:', err)

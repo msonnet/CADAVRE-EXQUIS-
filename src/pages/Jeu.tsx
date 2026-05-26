@@ -77,9 +77,10 @@ function toRomain(n: number): string {
 }
 
 const TYPE_SUBTITLE: Partial<Record<string, string>> = {
-  'nom':             "AVEC ARTICLE · OU SANS",
-  'verbe':           "À L'INFINITIF · OU CONJUGUÉ",
-  'adjectif':        "ÉPITHÈTE · OU ATTRIBUT",
+  'article-adj':     "ARTICLE + ADJECTIF · 2 MOTS",
+  'nom':             "NOM SEUL · SANS ARTICLE",
+  'verbe':           "UN SEUL MOT · CONJUGUÉ",
+  'adjectif':        "UN SEUL MOT",
   'adverbe':         "DE MANIÈRE · OU DEGRÉ",
   'groupe-nominal':  "DÉT. · NOM · ÉPITHÈTE",
   'groupe-verbal':   "VERBE · COMPLÉMENT",
@@ -118,9 +119,14 @@ function normaliserCle(t: string): string {
 // ─── Fallbacks client ────────────────────────────────────────────────────────
 
 const FALLBACKS_CLIENT: Record<string, string[]> = {
-  nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
-        'le froid', 'la poussière', 'le vent', 'la pluie', "l'écho", 'la flamme', 'le seuil',
-        "l'abîme", 'le vertige', 'la mousse', 'le givre', "l'encre", 'la boue'],
+  'article-adj': [
+    'un sombre', 'une vieille', 'le froid', 'une pâle', 'un beau', 'la douce',
+    'un noir', 'une lente', 'le vieux', 'une étrange', 'un creux', 'la froide',
+    'un lourd', 'une brisée', 'le muet', 'une profonde', 'un nu', 'la dense',
+  ],
+  nom: ['ombre', 'silence', 'nuit', 'cendre', 'vide', 'pierre', 'brume',
+        'froid', 'poussière', 'vent', 'pluie', 'écho', 'flamme', 'seuil',
+        'abîme', 'vertige', 'mousse', 'givre', 'encre', 'boue'],
   verbe: ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse',
           'erre', 'veille', 'frôle', 'hante', 'effleure', 'résiste', 'chavire', 'murmure',
           'vacille', 'sombre', 'rôde', 'dérive'],

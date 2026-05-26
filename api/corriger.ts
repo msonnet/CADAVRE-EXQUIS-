@@ -11,28 +11,28 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (!apiKey) { res.status(200).json({ texte }); return }
 
   const prompt = structureId === 'phrase-etoffee'
-    ? `Tu es un correcteur de grammaire française spécialisé dans le cadavre exquis.
+    ? `Tu es un correcteur de grammaire française expert du cadavre exquis.
 
-La phrase ci-dessous a été construite par 7 joueurs différents écrivant chacun UN bloc sans voir les autres. Les accords en genre sont donc cassés : la personne qui a écrit l'article+adjectif ne connaissait pas le nom qui allait suivre.
+La phrase ci-dessous a été construite par 7 joueurs écrivant chacun un bloc sans voir les autres. Les accords peuvent être cassés, et certains blocs peuvent contenir un mot du mauvais type (ex : un nom à la place d'un adjectif).
 
-Structure des 7 blocs dans l'ordre :
-  1. article + adjectif épithète  (ex : "un vieux" / "une belle" / "le grand")
-  2. nom sujet                    (ex : "nuage" / "flamme" / "couteau")
-  3. adjectif qualifiant le sujet (ex : "mystérieux" / "violente" / "sombre")
-  4. verbe conjugué               (inchangé)
-  5. article + adjectif épithète  (ex : "un long" / "la vieille" / "un pur")
-  6. nom COD                      (ex : "miroir" / "forêt" / "os")
-  7. adjectif qualifiant le COD   (ex : "brisé" / "profonde" / "éternel")
+Structure exacte dans l'ordre :
+  Bloc 1 : article + adjectif épithète   (ex : "un sombre", "la vieille", "une pâle")
+  Bloc 2 : nom sujet                     (INVARIABLE — son genre grammatical fait loi)
+  Bloc 3 : adjectif qualifiant le sujet  (1 mot)
+  Bloc 4 : verbe conjugué                (INVARIABLE)
+  Bloc 5 : article + adjectif épithète   (ex : "la douce", "un long", "une froide")
+  Bloc 6 : nom COD                       (INVARIABLE — son genre grammatical fait loi)
+  Bloc 7 : adjectif qualifiant le COD    (1 mot)
 
-Règle absolue : les NOMS (blocs 2 et 6) ne bougent JAMAIS. Leur genre grammatical est la loi.
-Tu dois mettre en accord :
-  • bloc 1 avec bloc 2  (article et adjectif épithète → genre du nom sujet)
-  • bloc 3 avec bloc 2  (adjectif attribut → genre du nom sujet)
-  • bloc 5 avec bloc 6  (article et adjectif épithète → genre du nom COD)
-  • bloc 7 avec bloc 6  (adjectif attribut → genre du nom COD)
+Tu dois :
+1. Accorder le bloc 1 (article + adjectif) en genre avec le bloc 2 (nom sujet)
+2. Accorder le bloc 3 (adjectif) en genre avec le bloc 2 (nom sujet)
+3. Accorder le bloc 5 (article + adjectif) en genre avec le bloc 6 (nom COD)
+4. Accorder le bloc 7 (adjectif) en genre avec le bloc 6 (nom COD)
+5. Si le bloc 1 ou le bloc 5 contient un nom commun au lieu d'un adjectif (ex : "la peine", "le chagrin", "la terreur"), remplace-le par un article + adjectif du genre correspondant au nom associé (bloc 2 ou 6), en gardant l'esprit surréaliste
 
-Ne touche à rien d'autre (verbe, noms, adverbes, ponctuation).
-Réponds avec LA PHRASE CORRIGÉE UNIQUEMENT, sans guillemets, sans explication.
+Ne touche pas aux noms (blocs 2 et 6), au verbe (bloc 4), ni aux adverbes.
+Réponds avec LA PHRASE CORRIGÉE UNIQUEMENT, sans guillemets ni explication.
 
 Phrase : ${texte}`
     : `Tu es un correcteur de grammaire française. La phrase ci-dessous est une phrase surréaliste issue d'un cadavre exquis. Corrige uniquement les fautes d'accord en genre et en nombre (articles et adjectifs doivent s'accorder avec leur nom). Ne modifie aucun mot lexical (noms, verbes, adverbes). Réponds avec la phrase corrigée uniquement, sans guillemets ni explication.
