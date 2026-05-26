@@ -5,12 +5,21 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 
-async function genererAvatar(prompt: string): Promise<string | null> {
+const AVATAR_STYLES = [
+  { id: 'surrealiste',     label: 'Surréaliste' },
+  { id: 'aquarelle',       label: 'Aquarelle' },
+  { id: 'fusain',          label: 'Fusain' },
+  { id: 'art_nouveau',     label: 'Art Nouveau' },
+  { id: 'encre',           label: 'Encre' },
+  { id: 'expressionniste', label: 'Expression.' },
+]
+
+async function genererAvatar(prompt: string, style: string): Promise<string | null> {
   try {
     const r = await fetch('/api/avatar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, style }),
     })
     if (!r.ok) return null
     const { url } = await r.json()
@@ -26,13 +35,14 @@ export default function Profil() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, saveProfile } = useAuth()
 
   const [pseudo, setPseudo] = useState('')
   const [avatarPrompt, setAvatarPrompt] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarStyle, setAvatarStyle] = useState('surrealiste')
   const [generatingAvatar, setGeneratingAvatar] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +63,7 @@ export default function Profil() {
     if (!avatarPrompt.trim()) return
     setGeneratingAvatar(true)
     setError(null)
-    const url = await genererAvatar(avatarPrompt.trim())
+    const url = await genererAvatar(avatarPrompt.trim(), avatarStyle)
     setAvatarUrl(url)
     if (!url) setError('Génération d\'avatar indisponible pour l\'instant.')
     setGeneratingAvatar(false)
@@ -74,7 +84,7 @@ export default function Profil() {
 
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
-      <Decor variant="fin" />
+      <Decor variant="aide" />
 
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
         <button
@@ -142,6 +152,22 @@ export default function Profil() {
                   outline: 'none', caretColor: accent, resize: 'none', width: '100%',
                 }}
               />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                {AVATAR_STYLES.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setAvatarStyle(s.id)}
+                    style={{
+                      ...mono, fontSize: 11, padding: '4px 9px',
+                      background: avatarStyle === s.id ? `${accent}20` : 'transparent',
+                      color: avatarStyle === s.id ? accent : encre,
+                      border: `0.5px solid ${avatarStyle === s.id ? accent : `${encre}25`}`,
+                      cursor: 'pointer',
+                    }}
+                  >{s.label}</button>
+                ))}
+              </div>
               <button
                 type="button"
                 onClick={handleGenerateAvatar}
@@ -153,7 +179,7 @@ export default function Profil() {
                   opacity: generatingAvatar || !avatarPrompt.trim() ? 0.5 : 1,
                 }}
               >
-                {generatingAvatar ? 'GÉNÉRATION…' : '✦ GÉNÉRER L\'AVATAR'}
+                {generatingAvatar ? 'GÉNÉRATION…' : '✦ GÉNÉRER'}
               </button>
             </div>
           </div>

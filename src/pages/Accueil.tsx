@@ -33,7 +33,7 @@ export default function Accueil() {
   const angleBiais = seance?.angleBiais ?? 0
   const letters = 'Exquis.'
 
-  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">

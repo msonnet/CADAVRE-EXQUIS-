@@ -18,7 +18,7 @@ export default function Online() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, signInWithEmail, signOut } = useAuth()
 
@@ -91,7 +91,7 @@ export default function Online() {
 
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
-      <Decor variant="fin" />
+      <Decor variant="aide" />
 
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>

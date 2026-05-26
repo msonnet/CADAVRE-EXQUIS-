@@ -516,7 +516,7 @@ export default function Jeu() {
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
 

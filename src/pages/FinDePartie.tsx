@@ -67,7 +67,7 @@ export default function FinDePartie() {
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     jouer('revelation')
@@ -187,14 +187,14 @@ export default function FinDePartie() {
               style={{ maxWidth: '95vw', maxHeight: '88vh', objectFit: 'contain' }}
             />
             {labelStyle && (
-              <p style={{ fontFamily: 'monospace', fontSize: 12, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: 12, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
                 {labelStyle.toUpperCase()}
               </p>
             )}
             <button
               aria-label="Fermer le plein écran"
               onClick={e => { e.stopPropagation(); setPleinEcran(false) }}
-              style={{ position: 'absolute', top: 20, right: 20, fontFamily: 'monospace', fontSize: 13, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: 20, right: 20, fontFamily: "'Outfit', sans-serif", fontSize: 13, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
             >
               ✕ FERMER
             </button>

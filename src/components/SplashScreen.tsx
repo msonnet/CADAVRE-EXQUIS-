@@ -77,7 +77,7 @@ export default function SplashScreen() {
             transition={{ delay: 2.7 }}
             style={{
               position: 'absolute', bottom: 48,
-              fontFamily: 'monospace', fontSize: 8,
+              fontFamily: "'Outfit', sans-serif", fontSize: 8,
               letterSpacing: '0.22em', textTransform: 'uppercase',
               color: '#e8d4b8', opacity: 0.28,
             }}

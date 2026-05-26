@@ -134,7 +134,7 @@ export default function JeuDessin() {
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   // Prévenir swipe-back iOS — uniquement sur la zone canvas
   useEffect(() => {

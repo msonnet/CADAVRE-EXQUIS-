@@ -3,13 +3,22 @@ export const config = { maxDuration: 30 }
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
-  const { prompt } = req.body ?? {}
+  const { prompt, style = 'surrealiste' } = req.body ?? {}
   if (!prompt) { res.status(400).json({ error: 'prompt requis' }); return }
 
   const falKey = process.env.FAL_KEY
   if (!falKey) { res.status(200).json({ url: null, reason: 'not_configured' }); return }
 
-  const fullPrompt = `Portrait of a person described as: ${prompt}. Surrealist fine art portrait, dreamlike atmosphere, painted style, centered face, dark warm background, no text, no watermark.`
+  const stylePrompts: Record<string, string> = {
+    surrealiste:     'surrealist fine art portrait, dreamlike uncanny atmosphere, painted, dark warm tones',
+    aquarelle:       'delicate watercolor portrait, soft washes of color, loose brushstrokes, white paper texture',
+    fusain:          'charcoal drawing portrait, expressive marks, deep blacks, smudged textures, sketch aesthetic',
+    art_nouveau:     'Art Nouveau portrait, ornate flowing lines, botanical motifs, Mucha-inspired, decorative border',
+    encre:           'ink portrait, bold brushwork, high contrast black and white, East Asian ink painting influence',
+    expressionniste: 'expressionist portrait, bold brushstrokes, distorted forms, intense color, Kirchner influence',
+  }
+  const styleDesc = stylePrompts[style] ?? stylePrompts.surrealiste
+  const fullPrompt = `Portrait of a person described as: ${prompt}. ${styleDesc}. Centered face, no text, no watermark, fine art quality.`
 
   try {
     const response = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
