@@ -30,6 +30,7 @@ export default function Online() {
   const [joinError, setJoinError] = useState<string | null>(null)
   const [joining, setJoining] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
 
   async function handleSendLink(e: React.FormEvent) {
     e.preventDefault()
@@ -45,6 +46,7 @@ export default function Online() {
   async function handleCreate() {
     if (!user || !profile) return
     setCreating(true)
+    setCreateError(null)
     try {
       const code = genCode()
       const { error } = await supabase.from('rooms').insert({
@@ -59,6 +61,7 @@ export default function Online() {
       navigate(`/salon/${code}`)
     } catch (err: any) {
       console.error('Erreur création salon:', err)
+      setCreateError(err?.message ?? 'Erreur lors de la création du salon.')
     } finally {
       setCreating(false)
     }
@@ -236,6 +239,9 @@ export default function Online() {
             >
               {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
             </button>
+            {createError && (
+              <p style={{ ...mono, fontSize: 12, color: '#b22c20', marginTop: 8 }}>{createError}</p>
+            )}
           </div>
 
           {/* Rejoindre salon */}
