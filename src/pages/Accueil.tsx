@@ -42,18 +42,18 @@ export default function Accueil() {
 
       {/* ── HEADER ── */}
       <div className="relative flex justify-between items-baseline" style={{ zIndex: 10 }}>
-        <span style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6 }}>
+        <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>
           N° {num} · {annee}
         </span>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <button
             onClick={() => seance?.retirer()}
             title="Re-tirer un rêve"
-            style={{ ...mono, fontSize: 14, color: accent, opacity: 0.65, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
+            style={{ ...mono, fontSize: 14, color: accent, opacity: 0.9, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
           >
             ✦
           </button>
-          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>
             {colorLabel}
           </span>
         </div>
@@ -102,7 +102,7 @@ export default function Accueil() {
           }}>
             {seance.citation.t}
           </em>
-          <div style={{ ...mono, fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: accent, marginTop: 5 }}>
+          <div style={{ ...mono, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: accent, marginTop: 5 }}>
             {seance.citation.a}
           </div>
         </motion.div>
@@ -123,7 +123,7 @@ export default function Accueil() {
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: accent, color: '#e8d4b8',
-              ...mono, fontSize: 10, textTransform: 'uppercase',
+              ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
             }}
@@ -136,8 +136,8 @@ export default function Accueil() {
             style={{
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: encre, color: '#e8d4b8',
-              ...mono, fontSize: 10, textTransform: 'uppercase',
+              background: second, color: '#e8d4b8',
+              ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
             }}
@@ -158,19 +158,19 @@ export default function Accueil() {
       >
         <button
           onClick={() => nav('/bibliotheque')}
-          style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — RECUEIL —
         </button>
         <button
           onClick={() => nav('/aide')}
-          style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — RÈGLES —
         </button>
         <button
           onClick={() => nav('/reglages')}
-          style={{ ...mono, fontSize: 9, color: encre, opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — RÉGLAGES —
         </button>

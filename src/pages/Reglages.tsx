@@ -64,16 +64,16 @@ export default function Reglages() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
           — RÉGLAGES —
         </div>
 
@@ -101,13 +101,13 @@ export default function Reglages() {
           transition={{ delay: 0.2 }}
           style={{ marginBottom: 24 }}
         >
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — SON —
           </div>
           <div className="flex justify-between items-center">
             <div>
-              <div style={{ ...mono, fontSize: 9, color: encre, marginBottom: 3 }}>AUDIO AMBIANT</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
+              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 3 }}>AUDIO AMBIANT</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.8 }}>
                 Drone atmosphérique pendant le jeu
               </div>
             </div>
@@ -137,7 +137,7 @@ export default function Reglages() {
           transition={{ delay: 0.3 }}
           style={{ marginBottom: 24 }}
         >
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — VALIDATION —
           </div>
           <div className="flex gap-2 mb-3">
@@ -152,7 +152,7 @@ export default function Reglages() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 8,
+                    ...mono, fontSize: 12,
                     color: active ? accent : `${encre}60`,
                     transition: 'all 0.15s',
                   }}
@@ -162,7 +162,7 @@ export default function Reglages() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.8 }}>
             {NIVEAUX.find(n => n.id === validation)?.desc}
           </div>
         </motion.div>
@@ -174,20 +174,20 @@ export default function Reglages() {
           transition={{ delay: 0.4 }}
           style={{ marginBottom: 28 }}
         >
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — DONNÉES —
           </div>
           <div className="flex justify-between items-center" style={{ paddingBottom: 12, borderBottom: `0.5px solid ${encre}10` }}>
             <div>
-              <div style={{ ...mono, fontSize: 9, color: encre, marginBottom: 3 }}>EXPORTER MES POÈMES</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
+              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 3 }}>EXPORTER MES POÈMES</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.8 }}>
                 Télécharge tous les poèmes en JSON
               </div>
             </div>
             <button
               onClick={exporterPoemes}
               style={{
-                ...mono, fontSize: 8,
+                ...mono, fontSize: 12,
                 color: exportOk ? accent : encre,
                 background: 'none',
                 border: `0.5px solid ${exportOk ? accent : `${encre}30`}`,
@@ -203,7 +203,7 @@ export default function Reglages() {
         <div style={{ flex: 1 }} />
 
         {/* ── VERSION ── */}
-        <div style={{ ...mono, fontSize: 7.5, color: encre, opacity: 0.3, textAlign: 'center', paddingBottom: 8, lineHeight: 1.6 }}>
+        <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.9, textAlign: 'center', paddingBottom: 8, lineHeight: 1.6 }}>
           CADAVRE EXQUIS · v1.0<br />
           AUCUN TRACKING · AUCUN COMPTE · TOUT RESTE LOCAL
         </div>

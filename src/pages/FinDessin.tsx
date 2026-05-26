@@ -176,16 +176,16 @@ export default function FinDessin() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — RÉVÉLATION —
         </div>
 
@@ -210,7 +210,7 @@ export default function FinDessin() {
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
               }} />
-              <div style={{ ...mono, fontSize: 8, color: accent, letterSpacing: '0.18em' }}>
+              <div style={{ ...mono, fontSize: 12, color: accent, letterSpacing: '0.18em' }}>
                 {phaseLabel}
               </div>
             </div>
@@ -253,7 +253,7 @@ export default function FinDessin() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
                   <button
                     onClick={() => setPleinEcran(true)}
-                    style={{ ...mono, fontSize: 7.5, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ ...mono, fontSize: 12, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     ↗ AGRANDIR
                   </button>
@@ -266,7 +266,7 @@ export default function FinDessin() {
             {/* Texte Vision */}
             {texteVision ? (
               <div>
-                <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+                <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
                   — LECTURE SURRÉALISTE —
                 </div>
                 <div style={{
@@ -280,14 +280,14 @@ export default function FinDessin() {
               </div>
             ) : erreurVision ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.5 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8 }}>
                   La lecture surréaliste n'a pas pu avoir lieu.
                 </div>
                 <button
                   onClick={reessayerVision}
                   style={{
                     alignSelf: 'flex-start',
-                    ...mono, fontSize: 9,
+                    ...mono, fontSize: 13,
                     background: 'transparent', color: accent,
                     border: `0.5px solid ${accent}50`,
                     padding: '7px 14px', cursor: 'pointer',
@@ -297,7 +297,7 @@ export default function FinDessin() {
                 </button>
               </div>
             ) : (
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.4 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.75 }}>
                 (lecture indisponible)
               </div>
             )}
@@ -311,7 +311,7 @@ export default function FinDessin() {
                 disabled={sauvegarde}
                 style={{
                   flex: 1,
-                  ...mono, fontSize: 9,
+                  ...mono, fontSize: 13,
                   background: sauvegarde ? `${accent}20` : accent,
                   color: sauvegarde ? accent : '#e8d4b8',
                   border: `0.5px solid ${accent}`,
@@ -325,7 +325,7 @@ export default function FinDessin() {
               <button
                 onClick={partager}
                 style={{
-                  ...mono, fontSize: 9,
+                  ...mono, fontSize: 13,
                   background: 'transparent',
                   color: `${encre}70`,
                   border: `0.5px solid ${encre}25`,
@@ -338,7 +338,7 @@ export default function FinDessin() {
               <button
                 onClick={() => navigate('/')}
                 style={{
-                  ...mono, fontSize: 9,
+                  ...mono, fontSize: 13,
                   background: 'transparent',
                   color: `${encre}70`,
                   border: `0.5px solid ${encre}25`,
@@ -387,7 +387,7 @@ export default function FinDessin() {
                 position: 'absolute', top: 16, right: 16,
                 background: 'none', border: `0.5px solid rgba(232,212,184,0.4)`,
                 color: '#e8d4b8',
-                ...mono, fontSize: 9, padding: '6px 12px',
+                ...mono, fontSize: 13, padding: '6px 12px',
                 cursor: 'pointer',
               }}
             >
