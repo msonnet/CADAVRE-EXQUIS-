@@ -137,7 +137,7 @@ const ZONES: Record<Variant, VariantZones> = {
       { pos: { top: '34%', right: '-3%' }, size: 92, delay: 0.9 },
       { pos: { top: '63%', right: '5%' }, size: 46, delay: 1.5 },
     ],
-    verticalTitle: { side: 'left', opacity: 0.13 },
+    verticalTitle: { side: 'left', opacity: 0.10 },
     citation: true,
     signature: true,
   },
@@ -303,7 +303,7 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
       {zones.verticalTitle && (
         <VerticalAccent
           side={zones.verticalTitle.side}
-          color={c.hex}
+          color={c.encre}
           rotation={seance.titreRotation}
           opacity={zones.verticalTitle.opacity ?? 1}
         />
