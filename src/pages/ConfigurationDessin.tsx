@@ -24,7 +24,7 @@ export default function ConfigurationDessin() {
   const [config, setConfig] = useState<ConfigDessin>(CONFIG_PAR_DEFAUT)
 
   const c = seance?.colorSchema
-  const accent = c?.second ?? '#1d3a8c'
+  const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
@@ -54,16 +54,16 @@ export default function ConfigurationDessin() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 22, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 22, marginBottom: 8 }}>
           — CADAVRE DESSINÉ —
         </div>
 
@@ -86,10 +86,10 @@ export default function ConfigurationDessin() {
 
         {/* ── BANDES ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — FRAGMENTS —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 11.5, color: encre, opacity: 0.5, marginBottom: 8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8, marginBottom: 8 }}>
             Nombre de bandes horizontales à dessiner
           </div>
           <div className="flex gap-2">
@@ -119,7 +119,7 @@ export default function ConfigurationDessin() {
 
         {/* ── JOUEURS ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.28 }} style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — JOUEURS —
           </div>
           <div className="flex gap-2 mb-2">
@@ -144,14 +144,14 @@ export default function ConfigurationDessin() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 11.5, color: encre, opacity: 0.45 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8 }}>
             {cycleNote}
           </div>
         </motion.div>
 
         {/* ── VISIBILITÉ ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} style={{ marginBottom: 20 }}>
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — VISIBILITÉ —
           </div>
           <div className="flex gap-2 mb-2">
@@ -169,7 +169,7 @@ export default function ConfigurationDessin() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 8,
+                    ...mono, fontSize: 12,
                     color: active ? accent : `${encre}60`,
                     transition: 'all 0.15s',
                   }}
@@ -179,7 +179,7 @@ export default function ConfigurationDessin() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: encre, opacity: 0.45 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8 }}>
             {config.visibilite === 'aveugle'
               ? 'Chaque bande commence dans l\'obscurité totale.'
               : 'Un raccord révèle la lisière du fragment précédent.'}
@@ -205,7 +205,7 @@ export default function ConfigurationDessin() {
           }}>
             « {ref.titre} »
           </div>
-          <div style={{ ...mono, fontSize: 7.5, color: accent, letterSpacing: '0.14em' }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, letterSpacing: '0.14em' }}>
             {ref.auteurs.toUpperCase()} · {ref.annee}
           </div>
         </motion.div>
@@ -225,9 +225,8 @@ export default function ConfigurationDessin() {
             className="w-full flex flex-col items-center justify-center"
             style={{
               background: accent, color: '#e8d4b8',
-              ...mono, fontSize: 11, textTransform: 'uppercase',
+              ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '1.15em 1em', border: 'none', cursor: 'pointer', gap: 2,
-              borderRadius: 12,
             }}
           >
             <span>Commencer le dessin</span>

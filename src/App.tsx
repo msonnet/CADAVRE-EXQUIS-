@@ -14,6 +14,11 @@ import PoemeDetail from './pages/PoemeDetail'
 import DessinDetail from './pages/DessinDetail'
 import Reglages from './pages/Reglages'
 import Aide from './pages/Aide'
+import Online from './pages/Online'
+import Profil from './pages/Profil'
+import Salon from './pages/Salon'
+import JeuOnline from './pages/JeuOnline'
+import FinOnline from './pages/FinOnline'
 
 export default function App() {
   return (
@@ -34,6 +39,11 @@ export default function App() {
             <Route path="/bibliotheque/:id" element={<PoemeDetail />} />
             <Route path="/reglages" element={<Reglages />} />
             <Route path="/aide" element={<Aide />} />
+            <Route path="/online" element={<Online />} />
+            <Route path="/profil" element={<Profil />} />
+            <Route path="/salon/:code" element={<Salon />} />
+            <Route path="/jeu-online/:code" element={<JeuOnline />} />
+            <Route path="/fin-online/:code" element={<FinOnline />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>

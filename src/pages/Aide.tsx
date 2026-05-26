@@ -32,14 +32,14 @@ export default function Aide() {
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
-  const second = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
+  const second = encre
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: 'monospace', letterSpacing: '0.18em' }
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
-      <Decor variant="aide" />
+      <Decor variant="biblio" />
 
       <div style={{ position: 'relative', zIndex: 10 }}>
 
@@ -47,16 +47,16 @@ export default function Aide() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate(-1)}
-            style={{ ...mono, fontSize: 9, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← RETOUR
           </button>
-          <span style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — RÈGLES —
         </div>
 
@@ -93,7 +93,7 @@ export default function Aide() {
           transition={{ delay: 0.2 }}
           style={{ marginBottom: 32 }}
         >
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — CADAVRE ÉCRIT —
           </div>
           <div
@@ -111,17 +111,17 @@ export default function Aide() {
           </p>
 
           {/* Structures */}
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — STRUCTURES —
           </div>
           {STRUCTURES.map(s => (
             <div key={s.romain} style={{ display: 'flex', gap: 14, paddingBottom: 12, borderBottom: `0.5px solid ${encre}10`, marginBottom: 12 }}>
-              <span style={{ ...mono, fontSize: 10, color: accent, fontWeight: 700, minWidth: 22 }}>{s.romain}.</span>
+              <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 22 }}>{s.romain}.</span>
               <div>
                 <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 13, color: encre, marginBottom: 2 }}>
                   {s.label}
                 </div>
-                <div style={{ ...mono, fontSize: 9, color: encre, opacity: 0.65, marginBottom: s.exemple ? 5 : 0 }}>
+                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginBottom: s.exemple ? 5 : 0 }}>
                   {s.detail}
                 </div>
                 {s.exemple && (
@@ -134,23 +134,23 @@ export default function Aide() {
           ))}
 
           {/* Visibilité */}
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
             — VISIBILITÉ —
           </div>
           {VISIBILITE.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
           {/* Modes */}
-          <div style={{ ...mono, fontSize: 8, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
             — MODES —
           </div>
           {MODES.map(m => (
             <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 9, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{m.detail}</div>
             </div>
           ))}
@@ -159,7 +159,7 @@ export default function Aide() {
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
 
         {/* ══════════════════════════════════════════
-            CADAVRE DESSINÉ  (couleur second)
+            CADAVRE DESSINÉ  (couleur encre)
         ══════════════════════════════════════════ */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -167,12 +167,12 @@ export default function Aide() {
           transition={{ delay: 0.4 }}
           style={{ marginBottom: 32 }}
         >
-          <div style={{ ...mono, fontSize: 8, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 12, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — CADAVRE DESSINÉ —
           </div>
           <div
             className="font-bodoni font-black italic leading-tight"
-            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: second, marginBottom: 16 }}
+            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: encre, marginBottom: 16 }}
           >
             Cadavre <em>Dessiné.</em>
           </div>
@@ -185,22 +185,22 @@ export default function Aide() {
           </p>
 
           {/* Raccord */}
-          <div style={{ ...mono, fontSize: 8, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 12, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — RACCORD —
           </div>
           {RACCORD_DESSIN.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 9, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+              <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
           {/* Citation */}
-          <div style={{ borderLeft: `1.5px solid ${second}55`, paddingLeft: 12, marginTop: 20 }}>
+          <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20 }}>
             <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
               « Le cadavre exquis boira le vin nouveau »
             </div>
-            <div style={{ ...mono, fontSize: 8, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
+            <div style={{ ...mono, fontSize: 12, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
               BRETON, ÉLUARD, MORISE, MAN RAY · 1925
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function Aide() {
               style={{
                 flex: 1,
                 background: accent, color: '#e8d4b8',
-                ...mono, fontSize: 10, textTransform: 'uppercase',
+                ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}
             >
@@ -233,7 +233,7 @@ export default function Aide() {
               style={{
                 flex: 1,
                 background: second, color: '#e8d4b8',
-                ...mono, fontSize: 10, textTransform: 'uppercase',
+                ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}
             >

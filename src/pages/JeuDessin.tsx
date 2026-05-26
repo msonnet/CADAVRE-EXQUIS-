@@ -452,7 +452,7 @@ export default function JeuDessin() {
         {/* Badge joueur */}
         <div style={{
           position: 'absolute', top: 10, left: 10,
-          ...mono, fontSize: 8, color: encre,
+          ...mono, fontSize: 12, color: encre,
           background: 'rgba(255,255,255,0.88)', padding: '4px 10px',
           border: `0.5px solid ${encre}15`, pointerEvents: 'none',
         }}>
@@ -463,7 +463,7 @@ export default function JeuDessin() {
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }} style={{
             position: 'absolute', top: 10, right: 10,
-            ...mono, fontSize: 8, color: encre,
+            ...mono, fontSize: 12, color: encre,
             background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
             padding: '4px 10px', cursor: 'pointer', zIndex: 10,
           }}>
@@ -596,7 +596,7 @@ export default function JeuDessin() {
           </button>
           <div style={{ flex: 1 }} />
           <button onClick={validerBande} style={{
-            ...mono, fontSize: 10,
+            ...mono, fontSize: 13,
             background: encre, color: '#e8d4b8',
             border: 'none', cursor: 'pointer',
             padding: '10px 24px', borderRadius: 10,
@@ -634,7 +634,7 @@ export default function JeuDessin() {
               {/* Sélecteur natif + couleur custom */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
-                <span style={{ ...mono, fontSize: 8, color: encre, flex: 1, opacity: 0.6 }}>COULEUR PERSONNALISÉE</span>
+                <span style={{ ...mono, fontSize: 12, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
                 <input
                   type="color"
                   value={color}
@@ -666,7 +666,7 @@ export default function JeuDessin() {
 
               <button onClick={() => setShowColorPanel(false)} style={{
                 width: '100%', padding: '12px',
-                ...mono, fontSize: 9, background: '#f5f0ea', color: encre,
+                ...mono, fontSize: 13, background: '#f5f0ea', color: encre,
                 border: 'none', borderRadius: 10, cursor: 'pointer',
               }}>
                 FERMER
@@ -693,18 +693,18 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 9, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 — BANDE 1/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
                 Joueur 1.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.5, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.8, marginTop: 12 }}>
                 Dessine la première bande.
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
-              style={{ ...mono, fontSize: 9, color: '#e8d4b8', opacity: 0.38, letterSpacing: '0.2em' }}>
+              style={{ ...mono, fontSize: 13, color: '#e8d4b8', opacity: 0.75, letterSpacing: '0.2em' }}>
               TOUCHER POUR COMMENCER
             </motion.div>
           </motion.div>
@@ -728,18 +728,18 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 9, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 — BANDE {bandeIdx + 2}/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
                 Joueur {nextPlayerNum}.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.5, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.8, marginTop: 12 }}>
                 Passez l'écran. Ne regardez pas.
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
-              style={{ ...mono, fontSize: 9, color: '#e8d4b8', opacity: 0.38, letterSpacing: '0.2em' }}>
+              style={{ ...mono, fontSize: 13, color: '#e8d4b8', opacity: 0.75, letterSpacing: '0.2em' }}>
               TOUCHER POUR COMMENCER
             </motion.div>
           </motion.div>

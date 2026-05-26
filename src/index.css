@@ -115,7 +115,7 @@
   .folio {
     @apply font-fell;
     color: var(--gris);
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
   }
@@ -123,7 +123,7 @@
   .petite-cap {
     @apply font-fell;
     color: var(--encre-claire);
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     letter-spacing: 0.3em;
     text-transform: uppercase;
   }
@@ -131,7 +131,7 @@
   .petite-cap-rouge {
     @apply font-fell;
     color: var(--rouge);
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     letter-spacing: 0.3em;
     text-transform: uppercase;
   }
@@ -139,7 +139,7 @@
   .consigne-grammaticale {
     @apply font-fell italic;
     color: var(--encre-claire);
-    font-size: 0.95rem;
+    font-size: 1rem;
     letter-spacing: 0.04em;
   }
 

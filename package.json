@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
     "dexie": "^4.0.11",
     "framer-motion": "^11.18.2",
     "howler": "^2.2.4",
