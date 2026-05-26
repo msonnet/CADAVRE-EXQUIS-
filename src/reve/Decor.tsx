@@ -159,10 +159,7 @@ interface VariantZones {
 const ZONES: Record<Variant, VariantZones> = {
   accueil: {
     symbol: { top: '13%', sizeMul: 0.9 },
-    etiqs: [
-      { top: '62%', left: '30%', transform: 'rotate(-3deg)' },
-      { top: '66%', left: '36%', transform: 'rotate(2deg)' },
-    ],
+    etiqs: [],
     stripesMax: 0,
     verticalTitle: { side: 'right' },
     citation: true,
@@ -363,18 +360,19 @@ function SymboleAvecCartel({
       <Draw w={size} />
       {showCartel && (
         <div style={{
-          marginTop: 8,
-          background: 'rgba(128,128,128,0.12)',
+          marginTop: 6,
+          background: 'var(--reve-bg)',
           border: '0.5px solid var(--reve-ink)',
-          padding: '5px 9px 6px',
+          padding: '4px 8px 5px',
           fontFamily: "'Inter', sans-serif",
           color: 'var(--reve-ink)',
           transform: 'rotate(-2deg)',
-          maxWidth: 150, lineHeight: 1.3,
-          boxShadow: '1px 1px 0 rgba(0,0,0,0.15)',
+          maxWidth: 120, lineHeight: 1.25,
+          boxShadow: '1px 1px 0 rgba(0,0,0,0.12)',
+          opacity: 0.85,
         }}>
-          <div style={{ fontSize: 13, letterSpacing: '0.10em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
-          <div style={{ fontSize: 12, fontStyle: 'italic', opacity: 0.75, marginTop: 2 }}>{symbole.ref}</div>
+          <div style={{ fontSize: 10, letterSpacing: '0.12em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
+          <div style={{ fontSize: 9, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
         </div>
       )}
     </div>
