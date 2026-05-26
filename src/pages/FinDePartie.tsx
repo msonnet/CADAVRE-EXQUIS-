@@ -90,10 +90,12 @@ export default function FinDePartie() {
 
   useEffect(() => {
     if (!poeme) return
+    let cancelled = false
     const structure = getStructure(poeme.structureId)
     const brut = reconstruirePoeme(poeme.cases, structure)
     setTexteCorrige(null)
-    corrigerAccords(brut, poeme.structureId).then(setTexteCorrige)
+    corrigerAccords(brut, poeme.structureId).then(t => { if (!cancelled) setTexteCorrige(t) })
+    return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function choisirStyle(style: string) {
@@ -143,8 +145,9 @@ export default function FinDePartie() {
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
   const lignes = texteAffiche.split('\n')
-  const lettrine = lignes[0]?.trim().charAt(0) ?? ''
-  const resteLigne0 = lignes[0]?.trim().slice(1) ?? ''
+  const ligne0 = (lignes[0]?.trim() ?? '').replace(/^[«»"''"“”‘’]+/, '')
+  const lettrine = ligne0.charAt(0) ?? ''
+  const resteLigne0 = ligne0.slice(1) ?? ''
   const voixCount = poeme.cases.length
   const structLabel = STRUCT_LABELS[poeme.structureId] ?? poeme.structureId
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { ReveProvider } from './reve'
 import SplashScreen from './components/SplashScreen'
@@ -34,6 +34,7 @@ export default function App() {
             <Route path="/bibliotheque/:id" element={<PoemeDetail />} />
             <Route path="/reglages" element={<Reglages />} />
             <Route path="/aide" element={<Aide />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
       </BrowserRouter>

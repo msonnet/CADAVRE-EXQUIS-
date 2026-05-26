@@ -321,6 +321,7 @@ export default function Jeu() {
     if (casesTraitees.current.has(caseIndex)) return
     casesTraitees.current.add(caseIndex)
 
+    let cancelled = false
     setIaChargement(true)
     jouer('ia')
 
@@ -332,8 +333,9 @@ export default function Jeu() {
 
     const contexteIA = getContexteVisible(cases, config.visibilite) ?? undefined
     demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA })
-      .then(texte => avancer(idx, def, choisirSansDuplique(texte.trim(), def.type), slotNum))
-      .catch(()  => avancer(idx, def, choisirSansDuplique('', def.type), slotNum))
+      .then(texte => { if (!cancelled) avancer(idx, def, choisirSansDuplique(texte.trim(), def.type), slotNum) })
+      .catch(()   => { if (!cancelled) avancer(idx, def, choisirSansDuplique('', def.type), slotNum) })
+    return () => { cancelled = true }
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer hypnotique

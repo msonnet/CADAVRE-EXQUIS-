@@ -13,7 +13,7 @@ type TypeCase =
 
 // Tokens hard-cap par type
 const MAX_TOKENS: Record<TypeCase, number> = {
-  'nom': 5,
+  'nom': 6,
   'verbe': 5,
   'adjectif': 5,
   'adverbe': 6,
@@ -97,10 +97,10 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       return t
     }
     case 'nom': {
-      // Strip article si le modèle en a mis un malgré l'instruction
-      if (mots.length >= 2 && ARTICLES_FR.has(mots[0].toLowerCase().replace(/[''].*/, ''))) {
-        return mots.slice(1).join(' ')
-      }
+      // Cas "l'ombre" ou "d'encre" — élision sans espace → strip l' / d'
+      if (mots.length === 1) return t.replace(/^[lLdD][''’]/, '')
+      // Cas "le silence" ou "la nuit" — article séparé → strip l'article
+      if (ARTICLES_FR.has(mots[0].toLowerCase())) return mots.slice(1).join(' ')
       if (mots.length > 2) return mots[0]
       return t
     }
@@ -164,7 +164,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: maxTokens,
-        stop_sequences: ['\n', '.', '!', '?', ';'],
+        stop_sequences: ['\n', '.', '!', '?'],
         system: voix.systemPrompt,
         messages: [
           {
