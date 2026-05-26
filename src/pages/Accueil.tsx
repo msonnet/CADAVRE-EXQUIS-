@@ -25,6 +25,7 @@ export default function Accueil() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const second = encre
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -146,6 +147,20 @@ export default function Accueil() {
             <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✎</span>
           </button>
         </div>
+        <button
+          onClick={() => nav('/online')}
+          style={{
+            width: '100%', marginTop: 8,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: `${encre}0d`, color: encre,
+            ...mono, fontSize: 13, textTransform: 'uppercase',
+            padding: '0.8em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', gap: 2,
+            borderRadius: 12,
+          }}
+        >
+          <span>Mode en ligne</span>
+          <span aria-hidden style={{ fontSize: 13, opacity: 0.75 }}>⊕</span>
+        </button>
       </motion.div>
 
       {/* ── FOOTER ── */}
