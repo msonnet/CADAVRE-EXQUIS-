@@ -36,6 +36,13 @@ export default function Accueil() {
   const bg = c?.bg ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Inter', sans-serif", letterSpacing: '0.18em' }
 
+  // CADAVRE vertical est du côté opposé au symbole
+  // "Exquis." se cale contre lui, du même côté, avec un padding pour ne pas se chevaucher
+  const cadavreSide = seance?.symbolSide === 'right' ? 'left' : 'right'
+  const exquisStyle: React.CSSProperties = cadavreSide === 'right'
+    ? { paddingRight: 'clamp(2.8rem, 14vw, 5rem)', alignSelf: 'flex-end', textAlign: 'right' }
+    : { paddingLeft: 'clamp(2.8rem, 14vw, 5rem)', alignSelf: 'flex-start', textAlign: 'left' }
+
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
 
@@ -65,7 +72,8 @@ export default function Accueil() {
       {/* ── ZONE CENTRALE — CADAVRE (Decor, absolu) + Exquis. (flux) ── */}
       <div className="relative flex flex-col flex-1 justify-end" style={{ minHeight: '50vh', zIndex: 10 }}>
         <motion.div
-          className="self-end mb-8 text-right"
+          className="mb-8"
+          style={exquisStyle}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.0, delay: 0.3 }}
