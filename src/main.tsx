@@ -4,7 +4,14 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './index.css'
 
-// immediate: true → enregistrement avant l'événement 'load', utile sur iOS
+// Attrape toute erreur JS non gérée et l'affiche dans la page
+window.addEventListener('error', (e) => {
+  document.body.innerHTML = `<pre style="padding:24px;font-family:monospace;font-size:13px;color:#b22c20;white-space:pre-wrap;background:#f5ede0">ERREUR JS:\n${e.message}\n\n${e.filename}:${e.lineno}\n\n${e.error?.stack ?? ''}</pre>`
+})
+window.addEventListener('unhandledrejection', (e) => {
+  document.body.innerHTML = `<pre style="padding:24px;font-family:monospace;font-size:13px;color:#b22c20;white-space:pre-wrap;background:#f5ede0">PROMESSE REJETÉE:\n${e.reason}</pre>`
+})
+
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
@@ -13,8 +20,6 @@ const updateSW = registerSW({
   onOfflineReady() {},
 })
 
-// iOS PWA : le SW ne vérifie pas les mises à jour quand l'app revient au premier plan.
-// On force la vérification à chaque retour de l'arrière-plan.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     updateSW()
