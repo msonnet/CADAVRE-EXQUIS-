@@ -217,12 +217,12 @@ export default function JeuOnline() {
               ✓ CONTRIBUTION REÇUE
             </div>
             <div style={{
-              fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 20,
+              fontFamily: "'Cormorant Garamond', serif", fontSize: 20,
               color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20`,
             }}>
               « {myContrib} »
             </div>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
               En attente des autres joueurs…{'\n'}La révélation aura lieu lorsque tout le monde aura soumis sa contribution.
             </p>
             <motion.span
@@ -244,7 +244,7 @@ export default function JeuOnline() {
             <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.75, marginBottom: 4 }}>
               {TYPE_LABEL[caseDef.type] ?? caseDef.type.toUpperCase()}
             </div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 17, color: encre, marginBottom: 20, lineHeight: 1.5 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, marginBottom: 20, lineHeight: 1.5 }}>
               Écrivez <strong>{caseDef.consigne}</strong>
             </div>
 
@@ -256,7 +256,7 @@ export default function JeuOnline() {
                 placeholder={caseDef.consigne}
                 autoFocus
                 style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 22,
+                  fontFamily: "'Cormorant Garamond', serif", fontSize: 22,
                   color: encre, background: 'rgba(255,253,247,0.5)',
                   border: 'none', borderLeft: `2px solid ${encre}`, padding: '12px 16px',
                   outline: 'none', caretColor: accent, width: '100%',
@@ -301,7 +301,7 @@ export default function JeuOnline() {
             animate={{ opacity: 1 }}
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 16, color: encre, opacity: 0.75, textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: encre, opacity: 0.75, textAlign: 'center' }}>
               En attente de la partie…
             </p>
           </motion.div>

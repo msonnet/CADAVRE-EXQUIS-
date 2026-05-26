@@ -69,15 +69,14 @@ export default function Configuration() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <div
-            className="font-bodoni font-black italic leading-tight mb-1"
+            className="font-bodoni font-black leading-tight mb-1"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
             Choisir la{' '}
-            <em style={{ color: accent }}>structure.</em>
+            <span style={{ color: accent }}>structure.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 15,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 15,
             color: encre, opacity: 0.75, marginBottom: 20,
           }}>
             La structure détermine la forme du cadavre exquis.

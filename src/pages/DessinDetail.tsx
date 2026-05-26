@@ -78,7 +78,7 @@ export default function DessinDetail() {
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
         <div style={{ position: 'relative', zIndex: 10 }}>
           <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}>← RETOUR</button>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.75, marginTop: 40, textAlign: 'center' }}>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, marginTop: 40, textAlign: 'center' }}>
             Dessin introuvable.
           </p>
         </div>
@@ -132,7 +132,7 @@ export default function DessinDetail() {
               onClick={() => { setTitreDraft(dessin.titre ?? ''); setEditTitre(true) }}
               style={{ background: 'none', border: 'none', cursor: 'text', textAlign: 'left', padding: 0 }}
             >
-              <div className="font-bodoni font-black italic leading-tight" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.2rem)', color: encre }}>
+              <div className="font-bodoni font-black leading-tight" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.2rem)', color: encre }}>
                 {titre}
               </div>
             </button>
@@ -183,8 +183,7 @@ export default function DessinDetail() {
             }}>
               {dessin.texteVision.split('\n').filter(Boolean).map((ligne, i) => (
                 <p key={i} style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontStyle: 'italic', fontSize: 15, color: encre,
+                  fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre,
                   lineHeight: 1.65, marginBottom: 6,
                 }}>
                   {ligne}

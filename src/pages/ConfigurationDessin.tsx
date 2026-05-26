@@ -75,10 +75,10 @@ export default function ConfigurationDessin() {
           style={{ marginBottom: 20 }}
         >
           <div
-            className="font-bodoni font-black italic leading-tight"
+            className="font-bodoni font-black leading-tight"
             style={{ fontSize: 'clamp(1.8rem, 8vw, 2.5rem)', color: encre, marginBottom: 6 }}
           >
-            Préparer le <em style={{ color: accent }}>rituel.</em>
+            Préparer le <span style={{ color: accent }}>rituel.</span>
           </div>
         </motion.div>
 
@@ -89,7 +89,7 @@ export default function ConfigurationDessin() {
           <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — FRAGMENTS —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8, marginBottom: 8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8, marginBottom: 8 }}>
             Nombre de bandes horizontales à dessiner
           </div>
           <div className="flex gap-2">
@@ -144,7 +144,7 @@ export default function ConfigurationDessin() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8 }}>
             {cycleNote}
           </div>
         </motion.div>
@@ -179,7 +179,7 @@ export default function ConfigurationDessin() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8 }}>
             {config.visibilite === 'aveugle'
               ? 'Chaque bande commence dans l\'obscurité totale.'
               : 'Un raccord révèle la lisière du fragment précédent.'}
@@ -199,8 +199,7 @@ export default function ConfigurationDessin() {
           }}
         >
           <div style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 13, lineHeight: 1.5,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 13, lineHeight: 1.5,
             color: encre, marginBottom: 4,
           }}>
             « {ref.titre} »

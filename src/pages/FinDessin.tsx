@@ -190,8 +190,8 @@ export default function FinDessin() {
         </div>
 
         {/* ── TITRE ── */}
-        <div className="font-bodoni font-black italic leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
-          Le cadavre <em style={{ color: accent }}>dessiné.</em>
+        <div className="font-bodoni font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
+          Le cadavre <span style={{ color: accent }}>dessiné.</span>
         </div>
 
         {/* ── PHASES DE CHARGEMENT ── */}
@@ -263,8 +263,7 @@ export default function FinDessin() {
                   — LECTURE SURRÉALISTE —
                 </div>
                 <div style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontStyle: 'italic', fontSize: 15, lineHeight: 1.7,
+                  fontFamily: "'Cormorant Garamond', serif", fontSize: 15, lineHeight: 1.7,
                   color: encre,
                   whiteSpace: 'pre-line',
                 }}>
@@ -273,7 +272,7 @@ export default function FinDessin() {
               </div>
             ) : erreurVision ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.8 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8 }}>
                   La lecture surréaliste n'a pas pu avoir lieu.
                 </div>
                 <button
@@ -290,7 +289,7 @@ export default function FinDessin() {
                 </button>
               </div>
             ) : (
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.75 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.75 }}>
                 (lecture indisponible)
               </div>
             )}

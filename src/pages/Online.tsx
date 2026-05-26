@@ -120,12 +120,12 @@ export default function Online() {
       {!user && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <div
-            className="font-bodoni font-black italic leading-tight"
+            className="font-bodoni font-black leading-tight"
             style={{ fontSize: 'clamp(1.8rem, 8vw, 2.8rem)', color: encre, marginBottom: 12 }}
           >
             Jouer à plusieurs.
           </div>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85, lineHeight: 1.65, marginBottom: 28 }}>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, lineHeight: 1.65, marginBottom: 28 }}>
             Chaque joueur sur son propre appareil. Composez ensemble un cadavre exquis, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.
           </p>
 
@@ -139,13 +139,13 @@ export default function Online() {
                 key="sent"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 16, color: accent, lineHeight: 1.6 }}
+                style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: accent, lineHeight: 1.6 }}
               >
                 Un lien magique a été envoyé à <strong>{email}</strong>. Ouvrez-le pour vous connecter.
               </motion.p>
             ) : (
               <motion.form key="form" onSubmit={handleSendLink} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85, marginBottom: 4 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 4 }}>
                   Entrez votre adresse e-mail pour recevoir un lien de connexion instantané — sans mot de passe.
                 </div>
                 <input
@@ -155,7 +155,7 @@ export default function Online() {
                   placeholder="votre@email.fr"
                   required
                   style={{
-                    fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 16,
+                    fontFamily: "'Cormorant Garamond', serif", fontSize: 16,
                     color: encre, background: 'rgba(255,253,247,0.5)',
                     border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
                     outline: 'none', caretColor: accent, width: '100%',
@@ -180,7 +180,7 @@ export default function Online() {
       {/* ── LOGGED IN BUT NO PROFILE ── */}
       {user && !profile && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 16, color: encre, opacity: 0.85, marginBottom: 20 }}>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: encre, opacity: 0.85, marginBottom: 20 }}>
             Connecté. Créez votre profil pour continuer.
           </p>
           <button
@@ -226,7 +226,7 @@ export default function Online() {
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
               — NOUVELLE PARTIE —
             </div>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
               Créez un salon et partagez le code à vos joueurs.
             </p>
             <button

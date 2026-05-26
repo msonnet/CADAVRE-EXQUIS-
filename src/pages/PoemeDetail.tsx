@@ -103,7 +103,7 @@ export default function PoemeDetail() {
       <p class="medium">${MEDIUMS[poeme.illustration.style] ?? poeme.illustration.style}</p>
     </div>` : ''
     const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>${titre.replace(/</g,'&lt;')}</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;background:#faf8f3;color:#1a1714;padding:48px 40px;max-width:560px;margin:0 auto}.ornement{text-align:center;letter-spacing:.5em;font-size:1.1em;margin-bottom:24px}h1{font-size:1.8em;font-style:italic;font-weight:400;text-align:center;margin-bottom:5px}.label{text-align:center;font-size:.72em;letter-spacing:.12em;text-transform:uppercase;color:#999;margin-bottom:28px}hr{border:none;border-top:1px solid #ccc;opacity:.35;margin:24px 0}.illus{text-align:center;margin:20px 0}.illus img{max-width:260px;width:100%}.medium{font-size:.65em;letter-spacing:.1em;text-transform:uppercase;color:#bbb;margin-top:6px}.poeme{text-align:center;margin:12px 0}.vers{font-size:1.3em;font-style:italic;line-height:2.1}.footer{text-align:center;font-size:.65em;letter-spacing:.1em;text-transform:uppercase;color:#c0b8a8;margin-top:48px}@media print{body{padding:16mm 14mm}}</style>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;background:#faf8f3;color:#1a1714;padding:48px 40px;max-width:560px;margin:0 auto}.ornement{text-align:center;letter-spacing:.5em;font-size:1.1em;margin-bottom:24px}h1{font-size:1.8em;font-weight:400;text-align:center;margin-bottom:5px}.label{text-align:center;font-size:.72em;letter-spacing:.12em;text-transform:uppercase;color:#999;margin-bottom:28px}hr{border:none;border-top:1px solid #ccc;opacity:.35;margin:24px 0}.illus{text-align:center;margin:20px 0}.illus img{max-width:260px;width:100%}.medium{font-size:.65em;letter-spacing:.1em;text-transform:uppercase;color:#bbb;margin-top:6px}.poeme{text-align:center;margin:12px 0}.vers{font-size:1.3em;line-height:2.1}.footer{text-align:center;font-size:.65em;letter-spacing:.1em;text-transform:uppercase;color:#c0b8a8;margin-top:48px}@media print{body{padding:16mm 14mm}}</style>
 </head><body><div class="ornement">✦ &nbsp; ✦ &nbsp; ✦</div><h1>${titre.replace(/</g,'&lt;')}</h1><p class="label">Cadavre exquis — ${date}</p><hr>${illustrationHtml}${illustrationHtml ? '<hr>' : ''}<div class="poeme">${versHtml}</div><hr><p class="footer">Cadavre Exquis · Jeu surréaliste</p><script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
@@ -127,7 +127,7 @@ export default function PoemeDetail() {
   if (!poeme) {
     return (
       <PageTransition className="page-carnet relative flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.75 }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75 }}>
           Poème introuvable.
         </p>
         <button
@@ -228,7 +228,7 @@ export default function PoemeDetail() {
               <input
                 ref={inputRef}
                 className="champ-carnet flex-1"
-                style={{ borderLeftColor: accent, fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 20 }}
+                style={{ borderLeftColor: accent, fontFamily: "'Cormorant Garamond', serif", fontSize: 20 }}
                 value={titreDraft}
                 onChange={e => setTitreDraft(e.target.value)}
                 onKeyDown={e => {
@@ -256,7 +256,7 @@ export default function PoemeDetail() {
               className="text-left w-full"
             >
               <div
-                className="font-bodoni font-black italic leading-tight"
+                className="font-bodoni font-black leading-tight"
                 style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: poeme.titre ? encre : `${encre}40` }}
               >
                 {poeme.titre ?? 'Sans titre'}
@@ -317,10 +317,10 @@ export default function PoemeDetail() {
           <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — LE CADAVRE —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 16, lineHeight: 1.7 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16, lineHeight: 1.7 }}>
             {lettrine && (
               <span style={{
-                fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',
+                fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
                 fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
                 lineHeight: 0.85, color: accent,
                 float: 'left', marginRight: 6, marginTop: 4,
@@ -405,11 +405,11 @@ export default function PoemeDetail() {
                   <div style={{ ...mono, fontSize: 12, color: accent, opacity: 0.8, marginBottom: 3 }}>
                     {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
                     <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
-                    <em style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', textTransform: 'none', letterSpacing: 0 }}>
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif", textTransform: 'none', letterSpacing: 0 }}>
                       {cas.auteur === 'ia' ? 'voix IA' : cas.joueurNumero ? `joueur ${cas.joueurNumero}` : 'toi'}
-                    </em>
+                    </span>
                   </div>
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 16, lineHeight: 1.4 }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16, lineHeight: 1.4 }}>
                     {cas.texte}
                   </p>
                 </div>

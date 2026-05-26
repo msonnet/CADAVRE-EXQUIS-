@@ -78,14 +78,13 @@ export default function Bibliotheque() {
           transition={{ duration: 0.5 }}
         >
           <div
-            className="font-bodoni font-black italic leading-tight mb-1"
+            className="font-bodoni font-black leading-tight mb-1"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            Mes <em style={{ color: accent }}>poèmes.</em>
+            Mes <span style={{ color: accent }}>poèmes.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Ta bibliothèque personnelle
           </p>
@@ -127,8 +126,7 @@ export default function Bibliotheque() {
             transition={{ delay: 0.2 }}
           >
             <p style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.75, textAlign: 'center',
+              fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
               Aucun poème pour l'instant.
             </p>
@@ -166,8 +164,7 @@ export default function Bibliotheque() {
                 )}
                 {poemesFiltres.length === 0 && (
                   <p style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.75,
+                    fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75,
                     textAlign: 'center', padding: '40px 0',
                   }}>
                     Aucun poème trouvé.
@@ -192,8 +189,7 @@ export default function Bibliotheque() {
                     onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
                   >
                     <p style={{
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontStyle: 'italic', color: encre, fontSize: 16,
+                      fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16,
                       lineHeight: 1.3, marginBottom: 3,
                       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     }}>
@@ -250,14 +246,14 @@ export default function Bibliotheque() {
                 </div>
                 {/* Infos */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 15, lineHeight: 1.3, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 15, lineHeight: 1.3, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')}
                   </p>
                   <p style={{ ...mono, fontSize: 12, color: encre, opacity: 0.75 }}>
                     {dessin.nbBandes} BANDES · {formatDate(dessin.dateCreation).toUpperCase()}
                   </p>
                   {dessin.texteVision && (
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.85, marginTop: 3, lineHeight: 1.4 }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.85, marginTop: 3, lineHeight: 1.4 }}>
                       {dessin.texteVision.split('\n')[0]}
                     </p>
                   )}

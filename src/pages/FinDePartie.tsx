@@ -131,7 +131,7 @@ export default function FinDePartie() {
   if (!poeme) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85, textAlign: 'center' }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, textAlign: 'center' }}>
           Aucun poème en cours.
         </p>
         <button
@@ -224,12 +224,12 @@ export default function FinDePartie() {
           transition={{ delay: 0.3, duration: 0.7 }}
         >
           <div
-            className="font-bodoni font-black italic leading-none"
+            className="font-bodoni font-black leading-none"
             style={{ fontSize: 'clamp(2rem, 9vw, 3rem)', color: encre }}
           >
             <span style={{ display: 'block' }}>LE CADAVRE</span>
             <span style={{ display: 'block' }}>
-              <em style={{ color: accent }}>est exquis.</em>
+              <span style={{ color: accent }}>est exquis.</span>
             </span>
           </div>
         </motion.div>
@@ -255,11 +255,11 @@ export default function FinDePartie() {
           </div>
 
           {/* Poem text with lettrine */}
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 15, lineHeight: 1.65 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 15, lineHeight: 1.65 }}>
             {lettrine && (
               <span style={{
                 fontFamily: "'Bodoni Moda', serif",
-                fontWeight: 900, fontStyle: 'italic',
+                fontWeight: 900,
                 fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
                 lineHeight: 0.85, color: accent,
                 float: 'left', marginRight: 6, marginTop: 4,
@@ -325,8 +325,7 @@ export default function FinDePartie() {
                 </button>
                 {promptVisible && (
                   <p style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontStyle: 'italic', fontSize: 14, color: encre,
+                    fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre,
                     opacity: 0.85, marginTop: 6, lineHeight: 1.55,
                   }}>
                     {promptVisuel}
@@ -430,11 +429,11 @@ export default function FinDePartie() {
                     <p style={{ ...mono, fontSize: 12, color: accent, opacity: 0.7, marginBottom: 3 }}>
                       {c.fonction.toUpperCase()}
                       <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
-                      <em style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic' }}>
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                         {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
-                      </em>
+                      </span>
                     </p>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 17, lineHeight: 1.4 }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                       {c.texte}
                     </p>
                   </div>
@@ -479,7 +478,7 @@ export default function FinDePartie() {
               </div>
 
               {erreurIllustration && (
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: accent, opacity: 0.7, textAlign: 'center', marginBottom: 10 }}>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: accent, opacity: 0.7, textAlign: 'center', marginBottom: 10 }}>
                   {erreurIllustration}
                 </p>
               )}
@@ -526,7 +525,7 @@ export default function FinDePartie() {
                     {promptVisible ? '↑ MASQUER LE PROMPT' : '→ VOIR LE PROMPT IA'}
                   </button>
                   {promptVisible && (
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: encre, opacity: 0.85, marginTop: 6, textAlign: 'center', lineHeight: 1.5, maxWidth: 280 }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.85, marginTop: 6, textAlign: 'center', lineHeight: 1.5, maxWidth: 280 }}>
                       {promptVisuel}
                     </p>
                   )}

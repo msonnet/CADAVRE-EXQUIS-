@@ -70,7 +70,7 @@ export default function Accueil() {
           transition={{ duration: 1.0, delay: 0.3 }}
         >
           <div
-            className="font-bodoni italic font-black leading-tight"
+            className="font-bodoni font-black leading-tight"
             style={{ fontSize: 'clamp(3.4rem, 14vw, 5.8rem)', color: encre }}
           >
             {[...letters].map((l, i) => (
@@ -96,13 +96,12 @@ export default function Accueil() {
           transition={{ delay: 1.3, duration: 0.7 }}
         >
           <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: '0.75rem' }} />
-          <em style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 13, lineHeight: 1.55,
+          <span style={{
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 13, lineHeight: 1.55,
             color: encre, display: 'block',
           }}>
             {seance.citation.t}
-          </em>
+          </span>
           <div style={{ ...mono, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: accent, marginTop: 5 }}>
             {seance.citation.a}
           </div>
@@ -117,7 +116,7 @@ export default function Accueil() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.4 }}
       >
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, paddingLeft: 'clamp(5.5rem, 26vw, 10rem)' }}>
           <button
             onClick={() => nav('/config')}
             style={{

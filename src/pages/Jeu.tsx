@@ -91,14 +91,14 @@ function renderConsigneTitre(consigne: string, accent: string): React.ReactNode 
   const idx = consigne.indexOf(' ')
   if (idx === -1) {
     const cap = consigne.charAt(0).toUpperCase() + consigne.slice(1)
-    return <em style={{ color: accent }}>{cap}.</em>
+    return <span style={{ color: accent }}>{cap}.</span>
   }
   const article = consigne.slice(0, idx + 1)
   const keyword = consigne.slice(idx + 1)
   return (
     <>
       {article.charAt(0).toUpperCase() + article.slice(1)}
-      <em style={{ color: accent }}>{keyword}</em>
+      <span style={{ color: accent }}>{keyword}</span>
       {'.'}
     </>
   )
@@ -460,7 +460,7 @@ export default function Jeu() {
         >
           ✦
         </motion.span>
-        <p className="font-cormorant italic text-encre text-lg mt-4">
+        <p className="font-cormorant text-encre text-lg mt-4">
           Le poème se referme…
         </p>
       </PageTransition>
@@ -482,7 +482,7 @@ export default function Jeu() {
           </motion.p>
         )}
         <motion.p
-          className="font-garamond italic text-5xl text-encre"
+          className="font-garamond text-5xl text-encre"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
@@ -546,7 +546,6 @@ export default function Jeu() {
             <motion.div
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic',
                 fontSize: 'clamp(1.4rem, 6vw, 1.9rem)',
                 color: encre,
                 marginBottom: 12,
@@ -635,8 +634,7 @@ export default function Jeu() {
                   — VOIX PRÉCÉDENTE · SCELLÉE —
                 </div>
                 <p style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontStyle: 'italic', fontSize: 16,
+                  fontFamily: "'Cormorant Garamond', serif", fontSize: 16,
                   color: encre, lineHeight: 1.5,
                 }}>
                   « {contexteVisible} »
@@ -655,7 +653,7 @@ export default function Jeu() {
                 — CONSIGNE —
               </div>
               <div
-                className="font-bodoni font-black italic leading-tight"
+                className="font-bodoni font-black leading-tight"
                 style={{ fontSize: 'clamp(1.25rem, 5.5vw, 1.75rem)', color: encre, marginBottom: subtitle ? 4 : 14 }}
               >
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
@@ -711,7 +709,7 @@ export default function Jeu() {
                 </p>
               )}
               {erreur && (
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: accent, marginTop: 6 }}>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: accent, marginTop: 6 }}>
                   {erreur}
                 </p>
               )}

@@ -134,7 +134,7 @@ export default function FinOnline() {
 
       {!revealed ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.6 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.6 }}>
             Le cadavre a été assemblé.
           </div>
           <div style={{ display: 'flex', gap: -8 }}>
@@ -167,7 +167,7 @@ export default function FinOnline() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           {/* Poème */}
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 15, lineHeight: 1.65 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 15, lineHeight: 1.65 }}>
               {texteAffiche && lettrine && (
                 <>
                   <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>
@@ -212,7 +212,7 @@ export default function FinOnline() {
                       <div>
                         <span style={{ ...mono, fontSize: 12, color: accent }}>{p?.pseudo ?? '?'}</span>
                         <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
-                        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: encre, fontSize: 16 }}>{c.texte}</span>
+                        <span style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16 }}>{c.texte}</span>
                       </div>
                     </div>
                   )

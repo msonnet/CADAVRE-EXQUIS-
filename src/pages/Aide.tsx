@@ -68,14 +68,13 @@ export default function Aide() {
           style={{ marginBottom: 20 }}
         >
           <div
-            className="font-bodoni font-black italic leading-tight mb-3"
+            className="font-bodoni font-black leading-tight mb-3"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            Comment <em style={{ color: accent }}>jouer.</em>
+            Comment <span style={{ color: accent }}>jouer.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 14, color: encre,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre,
             lineHeight: 1.65, marginBottom: 10,
           }}>
             Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.
@@ -97,14 +96,13 @@ export default function Aide() {
             — CADAVRE ÉCRIT —
           </div>
           <div
-            className="font-bodoni font-black italic leading-tight"
+            className="font-bodoni font-black leading-tight"
             style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: accent, marginBottom: 16 }}
           >
-            Cadavre <em>Écrit.</em>
+            Cadavre Écrit.
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 15, color: encre,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre,
             lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
           }}>
             Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
@@ -125,7 +123,7 @@ export default function Aide() {
                   {s.detail}
                 </div>
                 {s.exemple && (
-                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.75 }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.75 }}>
                     « {s.exemple} »
                   </div>
                 )}
@@ -140,7 +138,7 @@ export default function Aide() {
           {VISIBILITE.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
@@ -151,7 +149,7 @@ export default function Aide() {
           {MODES.map(m => (
             <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{m.detail}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85 }}>{m.detail}</div>
             </div>
           ))}
         </motion.div>
@@ -171,14 +169,13 @@ export default function Aide() {
             — CADAVRE DESSINÉ —
           </div>
           <div
-            className="font-bodoni font-black italic leading-tight"
+            className="font-bodoni font-black leading-tight"
             style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: encre, marginBottom: 16 }}
           >
-            Cadavre <em>Dessiné.</em>
+            Cadavre Dessiné.
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic', fontSize: 15, color: encre,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre,
             lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
           }}>
             La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
@@ -191,13 +188,13 @@ export default function Aide() {
           {RACCORD_DESSIN.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
           {/* Citation */}
           <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20 }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
               « Le cadavre exquis boira le vin nouveau »
             </div>
             <div style={{ ...mono, fontSize: 12, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>

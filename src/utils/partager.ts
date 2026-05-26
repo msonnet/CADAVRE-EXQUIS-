@@ -84,7 +84,7 @@ function composerImageAvecTexte(
       canvas.width = img.width
       canvas.height = img.height  // temp, will resize
       const ctx = canvas.getContext('2d')!
-      ctx.font = `italic ${fontSize}px Georgia, 'Cormorant Garamond', serif`
+      ctx.font = `${fontSize}px Georgia, 'Cormorant Garamond', serif`
 
       const wrappedLines: string[] = []
       const maxW = img.width - pad * 2
@@ -131,7 +131,7 @@ function composerImageAvecTexte(
       // Vision text
       ctx.globalAlpha = 0.88
       ctx.fillStyle = '#0f0805'
-      ctx.font = `italic ${fontSize}px Georgia, 'Cormorant Garamond', serif`
+      ctx.font = `${fontSize}px Georgia, 'Cormorant Garamond', serif`
       wrappedLines.forEach((line, i) => {
         ctx.fillText(line, pad, img.height + pad + Math.round(pad * 0.5) + (i + 1) * lineH)
       })

@@ -47,7 +47,6 @@ export default function SplashScreen() {
           >
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontStyle: 'italic',
               fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
               color: '#e8d4b8',
               lineHeight: 1.7,
@@ -61,7 +60,6 @@ export default function SplashScreen() {
               transition={{ delay: 1.3, duration: 0.8 }}
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic',
                 fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
                 color: accent,
                 lineHeight: 1.7,

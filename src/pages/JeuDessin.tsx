@@ -696,10 +696,10 @@ export default function JeuDessin() {
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 — BANDE 1/{config.nbBandes} —
               </div>
-              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
                 Joueur 1.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.8, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: '#e8d4b8', opacity: 0.8, marginTop: 12 }}>
                 Dessine la première bande.
               </div>
             </motion.div>
@@ -731,10 +731,10 @@ export default function JeuDessin() {
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 — BANDE {bandeIdx + 2}/{config.nbBandes} —
               </div>
-              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: '#e8d4b8', lineHeight: 1.1 }}>
                 Joueur {nextPlayerNum}.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: '#e8d4b8', opacity: 0.8, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: '#e8d4b8', opacity: 0.8, marginTop: 12 }}>
                 Passez l'écran. Ne regardez pas.
               </div>
             </motion.div>

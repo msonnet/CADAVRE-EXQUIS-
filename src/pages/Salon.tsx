@@ -222,7 +222,7 @@ export default function Salon() {
             ))}
           </AnimatePresence>
           {players.length < 2 && (
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 15, color: encre, opacity: 0.75, marginTop: 8 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, marginTop: 8 }}>
               En attente d'autres joueurs… Partagez le code <strong>{code}</strong>.
             </p>
           )}

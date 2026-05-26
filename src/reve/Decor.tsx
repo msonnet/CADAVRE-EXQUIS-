@@ -131,10 +131,7 @@ interface VariantZones {
 const ZONES: Record<Variant, VariantZones> = {
   accueil: {
     symbol: { top: '13%', sizeMul: 0.9 },
-    etiqs: [
-      { top: '42%', left: '3%', transform: 'rotate(-3deg)' },
-      { top: '51%', left: '7%', transform: 'rotate(2deg)' },
-    ],
+    etiqs: [],
     stripesMax: 0,
     inkBlots: [
       { pos: { top: '34%', right: '-3%' }, size: 92, delay: 0.9 },
@@ -486,7 +483,7 @@ function SymboleAvecCartel({
           boxShadow: '1px 1px 0 rgba(0,0,0,0.15)',
         }}>
           <div style={{ fontSize: 8.5, letterSpacing: '0.12em', fontWeight: 700 }}>{symbole.label.toUpperCase()}</div>
-          <div style={{ fontSize: 7.5, fontStyle: 'italic', opacity: 0.75, marginTop: 1 }}>{symbole.ref}</div>
+          <div style={{ fontSize: 7.5, opacity: 0.75, marginTop: 1 }}>{symbole.ref}</div>
         </div>
       )}
     </div>
@@ -517,9 +514,9 @@ function CitationManifeste({ citation, color, accent }: { citation: Citation; co
       animation: 'fadeInQ 0.8s 1.3s both',
       zIndex: 4, pointerEvents: 'none',
     }}>
-      <em style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, opacity: 0.95 }}>
+      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, lineHeight: 1.5, opacity: 0.95 }}>
         {citation.t}
-      </em>
+      </span>
       <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, marginTop: 6 }}>
         {citation.a}
       </div>
