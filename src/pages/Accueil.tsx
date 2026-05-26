@@ -116,7 +116,7 @@ export default function Accueil() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.4 }}
       >
-        <div style={{ display: 'flex', gap: 8, paddingLeft: 'clamp(5.5rem, 26vw, 10rem)' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => nav('/config')}
             style={{

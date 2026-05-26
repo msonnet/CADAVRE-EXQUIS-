@@ -123,7 +123,7 @@ interface VariantZones {
   etiqs: React.CSSProperties[]
   stripesMax: number
   inkBlots: InkBlotDef[]
-  verticalTitle: { side: 'left' | 'right' } | null
+  verticalTitle: { side: 'left' | 'right'; opacity?: number } | null
   citation: boolean
   signature: boolean
 }
@@ -137,7 +137,7 @@ const ZONES: Record<Variant, VariantZones> = {
       { pos: { top: '34%', right: '-3%' }, size: 92, delay: 0.9 },
       { pos: { top: '63%', right: '5%' }, size: 46, delay: 1.5 },
     ],
-    verticalTitle: { side: 'right' },
+    verticalTitle: { side: 'left', opacity: 0.13 },
     citation: true,
     signature: true,
   },
@@ -302,9 +302,10 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 
       {zones.verticalTitle && (
         <VerticalAccent
-          side="left"
+          side={zones.verticalTitle.side}
           color={c.hex}
           rotation={seance.titreRotation}
+          opacity={zones.verticalTitle.opacity ?? 1}
         />
       )}
 
@@ -431,7 +432,7 @@ function Stripes({ pos, size, height, color }: { pos: StripeSpec['pos']; size: n
   )
 }
 
-function VerticalAccent({ side, color, rotation }: { side: 'left' | 'right'; color: string; rotation: number }) {
+function VerticalAccent({ side, color, rotation, opacity = 1 }: { side: 'left' | 'right'; color: string; rotation: number; opacity?: number }) {
   return (
     <div style={{
       position: 'absolute', top: '7%',
@@ -441,9 +442,9 @@ function VerticalAccent({ side, color, rotation }: { side: 'left' | 'right'; col
       fontWeight: 900,
       fontSize: 'clamp(5.5rem, 26vw, 10rem)',
       lineHeight: 0.82, letterSpacing: '-0.04em',
-      color, textTransform: 'uppercase',
+      color, textTransform: 'uppercase', opacity,
       transform: rotation ? `rotate(${rotation}deg)` : undefined,
-      zIndex: 3, pointerEvents: 'none',
+      zIndex: 2, pointerEvents: 'none',
       animation: 'inkBloomQ 1.2s 0.2s both',
     } as React.CSSProperties}>CADAVRE</div>
   )
