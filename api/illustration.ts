@@ -78,7 +78,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (!texte) { res.status(400).json({ error: 'texte requis' }); return }
 
   const falKey = process.env.FAL_KEY
-  if (!falKey) { res.status(200).json({ url: null }); return }
+  if (!falKey) { res.status(200).json({ url: null, reason: 'not_configured' }); return }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
   const stylePrompt = style !== 'libre' ? (STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle) : ''
@@ -116,19 +116,24 @@ export default async function handler(req: any, res: any): Promise<void> {
         image_size: 'portrait_4_3',
         num_inference_steps: 28,
         guidance_scale,
-        safety_tolerance: '5',
+        safety_tolerance: 5,
         num_images: 1,
       }),
     })
 
-    if (!response.ok) throw new Error(`fal.ai ${response.status}`)
+    if (!response.ok) {
+      const body = await response.text().catch(() => '')
+      console.error(`fal.ai ${response.status}:`, body)
+      res.status(200).json({ url: null, reason: `fal_error_${response.status}` })
+      return
+    }
 
     const data = await response.json()
     const url = data.images?.[0]?.url ?? null
     res.status(200).json({ url, promptVisuel: textePrompt })
   } catch (err) {
     console.error('Erreur fal.ai:', err)
-    res.status(200).json({ url: null })
+    res.status(200).json({ url: null, reason: 'network_error' })
   }
 }
 

@@ -107,14 +107,17 @@ export default function FinDePartie() {
     const texte = reconstruirePoeme(poeme.cases, structure)
     const pl = promptLibre.trim() || undefined
     genererIllustration(texte, style, pl)
-      .then(({ url, promptVisuel: pv }) => {
+      .then(({ url, promptVisuel: pv, reason }) => {
         if (url) {
           setIllustrationUrl(url)
           if (pv) setPromptVisuel(pv)
           const illustration = { url, style, promptLibre: pl, promptUtilise: texte, dateGeneration: Date.now() }
           sauvegarderIllustration(poeme.id, illustration).catch(console.error)
         } else {
-          setErreurIllustration('Illustration indisponible — vérifiez votre connexion')
+          const msg = reason === 'not_configured'
+            ? 'Génération d\'images non configurée (clé FAL_KEY manquante)'
+            : 'Illustration indisponible — réessayez dans un instant'
+          setErreurIllustration(msg)
           setStyleChoisi(null)
         }
       })
