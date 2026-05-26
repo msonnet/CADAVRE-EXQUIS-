@@ -1,3 +1,4 @@
+// REMPLACE INTÉGRALEMENT src/App.tsx existant.
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { ReveProvider } from './reve'

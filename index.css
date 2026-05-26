@@ -1,276 +1,285 @@
+/* ════════════════════════════════════════════════
+   index.css — Cadavre Exquis
+   REMPLACE INTÉGRALEMENT le src/index.css existant.
+
+   Système :
+   · Tailwind base
+   · Variables CSS du rêve (écrites par <ReveProvider> sur :root)
+   · Typographie unifiée Fraunces / Inter / Cormorant
+   · Animations Q v3
+   ════════════════════════════════════════════════ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ──────────────────────────────────────────────
-   ALMANACH SURRÉALISTE — système de design
-   ────────────────────────────────────────────── */
+/* ── Fonts ───────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@400;500;600;700&family=Caveat:wght@400;600;700&display=swap');
 
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500&family=IM+Fell+English:ital@0;1&family=IM+Fell+DW+Pica:ital@0;1&family=Caveat:wght@400;600&display=swap');
+/* ── Variables (valeurs par défaut · ReveProvider les écrase) ── */
+:root {
+  --reve-bg: #15110d;
+  --reve-ink: #e6d4b8;
+  --reve-ink-soft: #c8b89a;
+  --reve-ink-faint: #887458;
+  --reve-rule: rgba(230, 212, 184, 0.16);
+  --reve-accent: #b22c20;
+  --reve-accent-hover: #c83c30;
+  --reve-button-text: #15110d;
+  --reve-halo: none;
 
+  /* Compat legacy */
+  --reve-papier: var(--reve-bg);
+  --reve-encre: var(--reve-ink);
+}
+
+/* ── Base ─────────────────────────────────────── */
 @layer base {
-  :root {
-    --papier: #ede2c8;
-    --papier-fonce: #d9c9a5;
-    --encre: #1a1410;
-    --encre-claire: #3a302a;
-    --gris: #6b5d4f;
-    --gris-clair: #a08e7a;
-    --rouge: #a8332a;
-    --rouge-fonce: #7a2620;
-    --or: #9a7d3a;
-    --or-clair: #c9a85d;
-  }
-
-  html { height: 100%; }
-
+  html { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   body {
-    background-color: var(--papier);
-    background-image:
-      radial-gradient(ellipse at 30% 20%, rgba(154,125,58,0.06), transparent 50%),
-      radial-gradient(ellipse at 70% 80%, rgba(168,51,42,0.04), transparent 50%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
-    color: var(--encre);
-    font-family: 'IM Fell English', Georgia, serif;
-    min-height: 100%;
+    margin: 0;
+    background-color: var(--reve-bg);
+    background-image: var(--reve-halo);
+    color: var(--reve-ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
     min-height: 100dvh;
     overflow-x: hidden;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
-
   #root {
-    min-height: 100vh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
     position: relative;
   }
-
   ::selection {
-    background-color: rgba(168, 51, 42, 0.2);
+    background: color-mix(in srgb, var(--reve-accent) 30%, transparent);
+    color: var(--reve-ink);
   }
 }
 
+/* ── Typographie ───────────────────────────────── */
 @layer components {
-  /* ───── Typographie ───── */
+
+  /* DISPLAY */
   .titre-principal {
-    @apply font-bodoni italic text-encre;
+    @apply text-[var(--reve-ink)];
+    font-family: 'Fraunces', serif;
     font-weight: 900;
-    font-size: clamp(2.5rem, 9vw, 4rem);
-    letter-spacing: -0.005em;
+    font-style: italic;
+    font-size: clamp(3.4rem, 11vw, 4.8rem);
     line-height: 0.95;
+    letter-spacing: -0.02em;
   }
-
-  .titre-rouge {
-    @apply font-bodoni italic;
-    color: var(--rouge);
+  .titre-accent {
+    font-family: 'Fraunces', serif;
     font-weight: 900;
+    font-style: italic;
+    font-size: clamp(3.6rem, 12vw, 5rem);
     line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--reve-accent);
   }
 
-  .sous-titre {
-    @apply font-cormorant italic text-encre-claire;
-    font-size: clamp(1rem, 3.2vw, 1.15rem);
-    line-height: 1.5;
-  }
-
-  .vers-jeu {
-    @apply font-cormorant italic text-encre;
-    font-size: clamp(1.2rem, 4.5vw, 1.55rem);
-    line-height: 1.55;
-    letter-spacing: 0.005em;
-  }
-
-  .vers-grand {
-    @apply font-cormorant italic text-encre;
-    font-size: clamp(1.4rem, 5.5vw, 1.85rem);
-    line-height: 1.45;
-  }
-
-  .titre-section {
-    @apply font-bodoni italic text-encre;
+  /* Headings */
+  .h-section {
+    font-family: 'Fraunces', serif;
     font-weight: 700;
-    font-size: 1.6rem;
+    font-style: italic;
+    font-size: clamp(2rem, 6vw, 2.4rem);
     line-height: 1.05;
+    letter-spacing: -0.005em;
+    color: var(--reve-ink);
+  }
+  .h-1 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.6rem; line-height: 1.15; color: var(--reve-ink); }
+  .h-2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem; line-height: 1.2; color: var(--reve-ink); }
+
+  /* Vers du poème */
+  .vers-jeu, .vers-grand {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(1.6rem, 5vw, 1.85rem);
+    line-height: 1.6;
+    color: var(--reve-ink);
+  }
+  .vers-jeu strong, .vers-grand strong { font-weight: 600; color: var(--reve-accent); }
+
+  /* Citation / lead */
+  .citation, .lead {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 1.3rem;
+    line-height: 1.55;
+    color: var(--reve-ink-soft);
+  }
+  .sous-titre { @apply lead; }
+
+  /* Body */
+  .body-lg {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: var(--reve-ink);
+  }
+  .body-md {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--reve-ink);
   }
 
+  /* UI */
+  .ui-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    color: var(--reve-ink);
+  }
+  .label, .label-accent {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .label { color: var(--reve-ink-soft); }
+  .label-accent { color: var(--reve-accent); }
+  .folio {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--reve-ink-faint);
+  }
+  .consigne-grammaticale { @apply label; color: var(--reve-ink-soft); }
+  .nav-discrete { @apply label; color: var(--reve-ink-faint); }
+
+  /* Compat anciennes classes (au cas où) */
   .lien-texte {
-    @apply font-fell italic text-encre no-underline transition-colors duration-300;
-    font-size: 1.05rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--reve-ink);
+    text-decoration: none;
     border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease, color 0.2s ease;
     background: transparent;
     cursor: pointer;
   }
-  .lien-texte:hover {
-    border-bottom-color: var(--rouge);
-    color: var(--rouge);
-  }
+  .lien-texte:hover { border-bottom-color: var(--reve-accent); color: var(--reve-accent); }
 
-  .nav-discrete {
-    @apply font-fell italic;
-    color: var(--gris);
-    font-size: 0.85rem;
-    letter-spacing: 0.04em;
-  }
-
-  .folio {
-    @apply font-fell;
-    color: var(--gris);
-    font-size: 0.7rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-
-  .petite-cap {
-    @apply font-fell;
-    color: var(--encre-claire);
-    font-size: 0.65rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-  }
-
-  .petite-cap-rouge {
-    @apply font-fell;
-    color: var(--rouge);
-    font-size: 0.65rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-  }
-
-  .consigne-grammaticale {
-    @apply font-fell italic;
-    color: var(--encre-claire);
+  /* Boutons */
+  .btn-primaire, .btn-rouge {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
     font-size: 0.95rem;
-    letter-spacing: 0.04em;
-  }
-
-  /* ───── Filets typographiques ───── */
-  .filet-double {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.95em 1.7em;
     border: none;
-    border-top: 1px solid var(--encre);
-    border-bottom: 1px solid var(--encre);
-    height: 3px;
+    border-radius: 10px;
+    background: var(--reve-accent);
+    color: var(--reve-button-text);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
   }
-  .filet-simple {
-    border: none;
-    border-top: 1px solid var(--encre);
-    height: 1px;
-    margin: 0;
-  }
-  .filet-rouge {
-    border: none;
-    border-top: 1px solid var(--rouge);
-    height: 1px;
-    margin: 0;
-  }
-  .filet-fin {
-    border: none;
-    border-top: 0.5px solid var(--gris);
-    opacity: 0.6;
-    margin: 0;
-  }
-
-  /* compat ancien nom */
-  .separateur-or {
-    @apply filet-rouge;
-    margin: 1.5rem auto;
-  }
-
-  /* ───── Boutons ───── */
-  .btn-primaire {
-    @apply font-fell italic transition-all duration-200 cursor-pointer;
-    background: var(--rouge);
-    color: var(--papier);
-    font-size: 1.05rem;
-    letter-spacing: 0.05em;
-    padding: 0.7em 1.8em;
-    border: none;
-    font-weight: 500;
-  }
-  .btn-primaire:hover {
-    background: var(--rouge-fonce);
-  }
-  .btn-primaire:active {
-    transform: scale(0.97);
-  }
-  .btn-primaire:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+  .btn-primaire:hover, .btn-rouge:hover { background: var(--reve-accent-hover); }
+  .btn-primaire:active, .btn-rouge:active { transform: scale(0.98); }
+  .btn-primaire:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .btn-secondaire {
-    @apply font-fell italic transition-all duration-200 cursor-pointer;
+    @apply ui-text;
     background: transparent;
-    color: var(--encre);
-    font-size: 1rem;
-    border: 1px solid var(--encre);
-    padding: 0.6em 1.5em;
+    color: var(--reve-ink);
+    padding: 0.85em 1.5em;
+    border: 1px solid var(--reve-ink);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
   }
-  .btn-secondaire:hover {
-    background: var(--encre);
-    color: var(--papier);
-  }
+  .btn-secondaire:hover { background: var(--reve-ink); color: var(--reve-bg); }
 
-  /* ───── Champ d'écriture ───── */
+  /* Champ d'écriture (textarea) */
   .champ-carnet {
-    @apply font-cormorant italic text-encre w-full;
-    font-size: 1.35rem;
-    line-height: 1.55;
-    background: rgba(255, 253, 247, 0.5);
-    border: none;
-    border-left: 2px solid var(--encre);
-    outline: none;
-    padding: 12px 16px;
-    caret-color: var(--rouge);
-    resize: none;
-  }
-  .champ-carnet::placeholder {
-    color: var(--gris);
-    opacity: 0.5;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
     font-style: italic;
+    font-size: 1.3rem;
+    line-height: 1.6;
+    color: var(--reve-ink);
+    width: 100%;
+    background: color-mix(in srgb, var(--reve-bg) 92%, transparent);
+    border: none;
+    border-left: 2px solid var(--reve-ink);
+    outline: none;
+    padding: 14px 16px;
+    caret-color: var(--reve-accent);
+    resize: none;
+    border-radius: 0 6px 6px 0;
+    transition: border-color 0.2s ease;
   }
-  .champ-carnet:focus {
-    border-left-color: var(--rouge);
-  }
+  .champ-carnet:focus { border-left-color: var(--reve-accent); }
+  .champ-carnet::placeholder { color: var(--reve-ink-faint); opacity: 0.55; font-style: italic; }
 
-  /* ───── Cadre page ───── */
+  /* Filets */
+  .filet-double {
+    border: none;
+    border-top: 1px solid var(--reve-ink);
+    border-bottom: 1px solid var(--reve-ink);
+    height: 3px;
+  }
+  .filet-simple { border: none; border-top: 1px solid var(--reve-rule); height: 0; }
+  .filet-accent { border: none; border-top: 1.5px solid var(--reve-accent); height: 0; }
+  .separateur-or { @apply filet-accent; margin: 1.5rem auto; max-width: 6rem; }
+
+  /* Cadre page */
   .page-carnet {
-    @apply mx-auto px-6 py-8;
+    position: relative;
+    margin-inline: auto;
     max-width: 42rem;
     min-height: 100dvh;
-    position: relative;
+    padding: 1.5rem 1.25rem;
+    overflow: hidden;
   }
 
-  /* ───── Lettrine ───── */
+  /* Lettrine sur poème */
   .lettrine {
-    @apply font-bodoni italic;
+    font-family: 'Fraunces', serif;
     font-weight: 900;
+    font-style: italic;
     font-size: 3.6rem;
     line-height: 0.85;
-    color: var(--rouge);
+    color: var(--reve-accent);
     float: left;
-    margin: 6px 8px 0 0;
-  }
-
-  /* ───── Animations ───── */
-  .vers-apparition {
-    animation: fadeInSlow 1.2s ease-in forwards;
-    opacity: 0;
+    margin: 4px 8px 0 0;
   }
 }
 
+/* ── Utilities ─────────────────────────────────── */
 @layer utilities {
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
-  .safe-x {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
+  .safe-x { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 }
 
-/* ───── Scrollbar discrète ───── */
-::-webkit-scrollbar { width: 3px; }
+/* ── Animations ────────────────────────────────── */
+@keyframes fadeInQ { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes inkBloomQ { from { opacity: 0; filter: blur(2.5px); } to { opacity: 1; filter: blur(0); } }
+@keyframes symbolDrop { from { opacity: 0; transform: translateY(-22px) rotate(-15deg) scale(0.88); } to { opacity: 1; transform: translateY(0) rotate(0) scale(1); } }
+@keyframes etiqDrop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; } }
+@keyframes stripesIn { from { opacity: 0; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); } to { opacity: 0.72; } }
+@keyframes blinkCaret { 50% { opacity: 0; } }
+@keyframes pulseQ { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
+
+/* ── Scrollbar discrète ──────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: var(--gris-clair);
-  border-radius: 2px;
-}
+::-webkit-scrollbar-thumb { background: var(--reve-ink-faint); border-radius: 2px; }

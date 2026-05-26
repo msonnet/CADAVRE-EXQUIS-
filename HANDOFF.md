@@ -1,155 +1,180 @@
-# HANDOFF · Système Rêve Q v3 + Safe Zones
+# HANDOFF · Direction artistique finale — Cadavre Exquis
 
-Direction artistique finalisée pour **Cadavre Exquis** — à intégrer dans le repo TypeScript existant.
-
----
-
-## 1 · Ce qui est livré
-
-```
-handoff/
-├── HANDOFF.md                       ← ce fichier
-├── SAFE-ZONES.tsx                   ← documentation des zones protégées par écran
-└── src/
-    ├── reve/
-    │   ├── index.ts                 ← exports publics
-    │   ├── Decor.tsx                ← composant central + ReveProvider + HeaderKeywords
-    │   ├── pools.ts                 ← palettes, citations, étiquettes, heures, rayures
-    │   ├── animations.css           ← keyframes à ajouter à src/index.css
-    │   └── collages.tsx             ← INCHANGÉ (déjà dans ton repo)
-    │   └── prng.ts                  ← INCHANGÉ (déjà dans ton repo)
-    └── pages/
-        └── Accueil.tsx              ← exemple d'utilisation complet
-```
+À transmettre à Claude Code. **Ne pas paraphraser** — coller ce document tel quel.
 
 ---
 
-## 2 · Ce qui a évolué depuis la dernière version
+## 1 · Ce qu'il faut faire (résumé en une phrase)
 
-| Avant | Maintenant |
+> Remplacer les 5 fichiers ci-dessous par leurs versions livrées. **Ne pas modifier les pages** (Accueil, Configuration, Jeu, FinDePartie, etc.) — elles utilisent déjà `<Decor variant="..." />` et les classes CSS, donc tout va se mettre à jour automatiquement.
+
+---
+
+## 2 · Fichiers à REMPLACER (5 fichiers)
+
+| Chemin | Action |
 |---|---|
-| Palette générée parmi 8 schemas | **5 palettes ciblées** : rouge sang, cinabre, ocre brûlée, bleu prusse, pourpre |
-| Décor uniforme sur tous les écrans | **6 variants** : `accueil`, `config`, `jeu`, `jeu-ia`, `fin`, `fin-image`, `biblio`, `detail` |
-| Pas de cartel | **Cartel d'identification** sous chaque symbole (références stylistiques only) |
-| Pas de citation | **Citation rotative** parmi 7 (Breton, Desnos, Apollinaire, Cocteau — DP en France) |
-| Signature « rêve № 17 » | **Signature poétique** : « rêvé à 03h47, vendredi » (heure nocturne tirée) |
-| Animation simple `collageDrop` | **Animation séquencée** : titre 0.2s → symbole 0.5s → étiquettes 0.9-1.1s → citation 1.3s → CTA 1.5s → signature 1.8s |
-| Pas de protection | **Safe zones par variant** : le décor ne s'aventure jamais sur les zones interactives |
+| `src/reve/pools.ts` | **REMPLACER intégralement** par `handoff/src/reve/pools.ts` |
+| `src/reve/Decor.tsx` | **REMPLACER intégralement** par `handoff/src/reve/Decor.tsx` |
+| `src/reve/index.ts` | **REMPLACER intégralement** par `handoff/src/reve/index.ts` |
+| `src/index.css` | **REMPLACER intégralement** par `handoff/src/index.css` |
+| `tailwind.config.js` | **REMPLACER intégralement** par `handoff/tailwind.config.js` |
+| `src/App.tsx` | **REMPLACER intégralement** par `handoff/src/App.tsx` (vérifie que `<ReveProvider>` est bien le wrapper racine) |
+
+**Fichiers à NE PAS toucher** :
+- `src/reve/collages.tsx` — les SVG des collages restent
+- `src/reve/prng.ts` — le mulberry32 + helpers restent
+- `src/pages/*.tsx` — toutes les pages
+- `src/components/*.tsx` — tous les composants existants
+- Tous les hooks, l'API Claude, l'audio, la DB IndexedDB
 
 ---
 
-## 3 · Intégration (étape par étape)
+## 3 · Ce qui change visuellement
 
-### Étape 1 — Remplacer 3 fichiers
-```bash
-cp handoff/src/reve/Decor.tsx   src/reve/Decor.tsx
-cp handoff/src/reve/index.ts    src/reve/index.ts
-cp handoff/src/reve/pools.ts    src/reve/pools.ts
-```
+### Typographie
+- **Fraunces** (display, italique, 900/800/700) → titres, sections, Exquis
+- **Inter** (400/500/600) → UI, body, labels, boutons, méta
+- **Cormorant Garamond italique 500** → vers du poème, citations, lead
+- Polices augmentées de +3px partout · minimum 14px sur les labels, 16px sur le body, 26px sur les vers
 
-### Étape 2 — Ajouter les animations
-Ouvre `handoff/src/reve/animations.css` et **colle son contenu à la fin** de `src/index.css`.
+### Couleurs
+**5 ambiances** (fond + accents compatibles, contrastes WCAG AA garantis) :
 
-### Étape 3 — Adapter chaque page
-Pour chacune des 6 pages, le pattern est identique :
+| Ambiance | Fond | Accents compatibles (le rêve en choisit un) |
+|---|---|---|
+| **Minuit profond** | `#0e1726` | or, cobalt, cinabre, crème |
+| **Encre profonde** | `#15110d` | rouge feu, or, ocre, crème |
+| **Argile cuite** | `#2a2018` | or chaud, rouge brique, crème, vert sauge |
+| **Lin écru** | `#e6dfc9` | vert sapin, pourpre, bleu encre, rouge brique |
+| **Aube froide** | `#dde0e6` | bleu nuit, pourpre, rouge sourd, vert encre |
+
+Chaque accent a été testé contre son fond pour la lisibilité. **Aucune combinaison ne peut produire un texte illisible** — c'est garanti par construction (les accents sont scopés par ambiance, jamais croisés).
+
+### Système de rêve
+- À chaque ouverture (ou clic sur "✦ re-rêver"), le PRNG mulberry32 tire :
+  1. une ambiance parmi les 5
+  2. un accent dans le pool de cette ambiance
+  3. un symbole (collage)
+  4. une citation (auteurs en domaine public uniquement : Breton, Desnos, Apollinaire, Cocteau)
+  5. des étiquettes typewriter
+  6. une heure nocturne
+- Le seed est stocké par jour (`localStorage["cadavre-seed-YYYY-MM-DD"]`) → même rêve toute la journée, change automatiquement le lendemain
+
+---
+
+## 4 · Variants pour les modes de jeu
+
+Le composant `<Decor variant="..." />` accepte ces variants. Toutes les pages doivent utiliser le bon :
+
+| Variant | Pour quel écran |
+|---|---|
+| `accueil` | Accueil principal |
+| `config` | Configuration de la partie |
+| `jeu` | **Mode Cadavre Écrit · tour humain** — SANCTUAIRE (décor minimal, juste un mini-symbole en pied) |
+| `jeu-ia` | **Tour IA** ("le cadavre songe") — symbole central opacité 0.45 |
+| `jeu-dessin` | **Mode Cadavre Dessiné** — SANCTUAIRE pour ne pas distraire du canevas |
+| `multi` | **Mode multijoueur** (passation de téléphone entre joueurs) |
+| `fin` | Fin de partie sans illustration générée |
+| `fin-image` | Fin de partie AVEC illustration — **aucun symbole** (l'image est le centre) |
+| `biblio` | Bibliothèque |
+| `detail` | Détail d'un poème |
+
+**Action requise :** vérifier que chaque page utilise le bon variant. Notamment :
+- `Jeu.tsx` (mode écrit) → `<Decor variant="jeu" />`
+- Si tu as une page `JeuDessin.tsx` → `<Decor variant="jeu-dessin" />`
+- Si tu as une page `JeuMulti.tsx` ou similaire → `<Decor variant="multi" />`
+
+Si une page n'utilise pas encore `<Decor>`, ajoute-le après l'ouverture de `<PageTransition>` :
 
 ```tsx
-import { Decor, HeaderKeywords, useReve } from '../reve'
+import { Decor } from '../reve'
 
-export default function MaPage() {
-  const seance = useReve()
-
-  return (
-    <PageTransition className="page-carnet relative ... overflow-hidden">
-
-      {/* DÉCOR — toujours en premier (z-index 1-4) */}
-      <HeaderKeywords />                  {/* facultatif, surtout pour Accueil/Fin */}
-      <Decor variant="accueil" />          {/* ← change selon la page */}
-
-      {/* CONTENU INTERACTIF — z-index 5+ pour passer devant le décor */}
-      <div className="relative z-10">
-        {/* ton contenu existant inchangé */}
-      </div>
-
-    </PageTransition>
-  )
-}
+return (
+  <PageTransition className="page-carnet relative ... overflow-hidden">
+    <Decor variant="jeu" />
+    {/* contenu existant inchangé */}
+  </PageTransition>
+)
 ```
-
-### Mapping `variant` → page
-
-| Page | Variant à utiliser |
-|---|---|
-| `Accueil.tsx` | `<Decor variant="accueil" />` + `<HeaderKeywords />` |
-| `Configuration.tsx` | `<Decor variant="config" />` |
-| `Jeu.tsx` (tour humain) | `<Decor variant="jeu" />` — SANCTUAIRE, juste un mini-symbole |
-| `Jeu.tsx` (tour IA) | `<Decor variant="jeu-ia" />` — symbole centré opacité 0.5 |
-| `FinDePartie.tsx` SANS illustration | `<Decor variant="fin" />` |
-| `FinDePartie.tsx` AVEC illustration générée | `<Decor variant="fin-image" />` ← décor minimal |
-| `Bibliotheque.tsx` | `<Decor variant="biblio" />` |
-| `PoemeDetail.tsx` | `<Decor variant="detail" />` |
-
-Le détail des safe zones par écran est dans `SAFE-ZONES.tsx`.
 
 ---
 
-## 4 · Couleur du rêve dans le contenu interactif
+## 5 · Comment les pages utilisent les couleurs
 
-Pour que la palette du rêve participe à l'expérience, **utilise `useReve()` dans ta page** pour colorer dynamiquement :
+Les pages doivent utiliser les **variables CSS** (pas de couleur en dur). Tout est déjà branché :
 
 ```tsx
-const seance = useReve()
-const accent = seance?.colorSchema.hex ?? '#b22c20'
+// ✅ Bon — suit le rêve courant
+<button className="btn-primaire">Sceller cette voix</button>
+<div className="vers-jeu">{poeme}</div>
+<span className="label-accent">— CONSIGNE —</span>
 
-// 1. Le caret du textarea
-<textarea style={{ caretColor: accent }} />
+// ✅ Bon en inline
+<div style={{ color: 'var(--reve-accent)' }}>Mot rouge</div>
+<input style={{ caretColor: 'var(--reve-accent)' }} />
 
-// 2. Le bouton CTA principal
-<button style={{ background: accent, boxShadow: `3px 3px 0 var(--reve-encre)` }}>
-  sceller cette voix →
-</button>
-
-// 3. Les mots-clés dans la consigne
-<span style={{ color: accent }}>verbe</span>
-
-// 4. Les labels de section
-<div className="petite-cap" style={{ color: accent }}>— CONSIGNE —</div>
+// ❌ À éviter — couleur en dur (ne suivra pas le rêve)
+<button style={{ background: '#b22c20' }}>Sceller</button>
 ```
 
----
-
-## 5 · Sécurité commerciale
-
-✓ **Aucune citation d'auteur sous droits** — uniquement Breton (DP 2017), Desnos (DP 2016), Apollinaire (DP 1989), Cocteau (DP 2014)
-✓ **Aucun titre d'œuvre reproduit** — les cartels indiquent uniquement des références stylistiques (« d'après l'antique grec », « gravure surréaliste, 1929 »)
-✓ **Aucun nom de marque** (Magritte, Dalí, Buñuel ne sont jamais cités dans l'UI utilisateur)
-✓ **Polices** : EB Garamond, Bodoni Moda, IM Fell English, Cormorant Garamond, Caveat — toutes en licence SIL Open Font (commerce-safe via Google Fonts)
-
----
-
-## 6 · Vérification après intégration
-
-Au chargement de chaque page, contrôle visuellement :
-
-- [ ] Le titre / les vers du poème / le formulaire / les CTAs **ne sont jamais recouverts** par un collage ou une étiquette
-- [ ] La couleur du rêve change au reload (re-rêver via bouton ✦)
-- [ ] L'animation d'entrée s'enchaîne ~1.8s puis tout est stable
-- [ ] La signature « rêvé à 03h47, vendredi » apparaît bien en bas à droite (sauf sur Jeu)
-- [ ] Sur l'écran Jeu, **aucune étiquette ne flotte près du textarea** (sanctuaire)
-- [ ] Sur Fin de partie AVEC illustration, le décor est très réduit (`variant="fin-image"`)
+Si dans le code existant tu trouves des couleurs en dur (`#b22c20`, `#0f0805`, `#e6d4b8`, etc.), **remplace-les par les variables** correspondantes :
+- Couleur de fond → `var(--reve-bg)`
+- Texte principal → `var(--reve-ink)`
+- Texte secondaire → `var(--reve-ink-soft)`
+- Texte tertiaire → `var(--reve-ink-faint)`
+- Accent (CTA, accent visuel) → `var(--reve-accent)`
+- Filets/borders → `var(--reve-rule)`
 
 ---
 
-## 7 · Si quelque chose casse
+## 6 · Compatibilité ascendante
 
-**Le décor recouvre un bouton** → vérifie que le parent a `position: relative; overflow: hidden;` et que ton contenu interactif est en `z-index: 5+`.
+Les anciens noms de classes Tailwind continuent à fonctionner via des alias :
 
-**Les animations ne jouent pas** → vérifie que `animations.css` est bien collé dans `src/index.css` et que Caveat est chargé (l'`@import` est dans `animations.css`).
+| Ancien | Alias vers |
+|---|---|
+| `text-papier`, `bg-papier` | `var(--reve-bg)` |
+| `text-encre`, `bg-encre` | `var(--reve-ink)` |
+| `text-rouge`, `bg-rouge` | `var(--reve-accent)` |
+| `text-or` | `var(--reve-accent)` |
+| `font-garamond`, `font-bodoni` | Fraunces |
+| `font-lora`, `font-fell` | Inter |
 
-**`useReve()` renvoie null** → l'app n'est pas enveloppée dans `<ReveProvider>`. Vérifie `App.tsx`.
-
-**Crash TypeScript sur `variant`** → la variante doit être l'une des suivantes : `'accueil' | 'config' | 'jeu' | 'jeu-ia' | 'fin' | 'fin-image' | 'biblio' | 'detail'`.
+**Aucune page ne devrait casser.** Si une page casse, c'est probablement :
+1. Soit un import qui pointait vers un export supprimé (vérifie les imports de `'../reve'`)
+2. Soit une couleur en dur qui ne s'adapte plus
 
 ---
 
-Tout est prêt. Bonne intégration.
+## 7 · Checklist de validation post-intégration
+
+Après l'intégration, tester :
+
+- [ ] `npm run dev` ne produit aucune erreur TypeScript
+- [ ] L'app charge sur l'Accueil sans crash
+- [ ] Le bouton "✦ re-rêver" change l'ambiance complète (fond + accent + symbole + citation)
+- [ ] Sur 10 clics consécutifs, **aucune combinaison ne produit de texte illisible**
+- [ ] Les 5 ambiances apparaissent toutes au moins une fois sur 20 clics
+- [ ] Le mode **Cadavre Écrit** (Jeu.tsx) reste sobre — un seul mini-symbole en pied
+- [ ] Le mode **Cadavre Dessiné** ne couvre pas le canevas avec du décor
+- [ ] Le mode **Multijoueur** affiche correctement le décor sans masquer les CTAs de passation
+- [ ] La police du body est ≥ 16px partout, ≥ 14px sur les labels, ≥ 26px sur les vers du poème
+- [ ] L'italique du Cormorant est visible (poids 500, pas 400)
+- [ ] Aucune couleur en dur ne ressort sur fond clair quand l'ambiance Lin/Aube est active
+
+---
+
+## 8 · Si quelque chose casse
+
+**Crash au démarrage** : vérifier `App.tsx` — `<ReveProvider>` doit envelopper `<BrowserRouter>`.
+
+**Texte illisible sur fond clair** : la couleur est en dur dans une page. Remplacer par `var(--reve-ink)` ou la classe Tailwind correspondante.
+
+**Symbole couvre un bouton** : la page n'a pas `position: relative` + `overflow: hidden`, ou son contenu interactif n'est pas en `z-index: 5+`.
+
+**`useReve()` renvoie null** : la page n'est pas dans `<ReveProvider>`, ou est rendue hors arbre React.
+
+---
+
+Tout est prêt. Le seul mot de passe pour que ça marche : **remplacer ces 6 fichiers et redémarrer.**
