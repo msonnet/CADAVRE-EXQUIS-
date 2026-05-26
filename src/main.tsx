@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    window.location.reload()
+    updateSW(true)
   },
   onOfflineReady() {},
 })

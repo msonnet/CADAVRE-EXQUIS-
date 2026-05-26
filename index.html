@@ -19,6 +19,19 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Désinstalle les service workers obsolètes avant le chargement de l'app
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var r of registrations) {
+            r.update();
+          }
+        });
+      }
+      window.addEventListener('error', function(e) {
+        document.body.innerHTML = '<pre style="padding:24px;font-family:monospace;font-size:13px;color:#b22c20;white-space:pre-wrap;background:#f5ede0">ERREUR:\n' + e.message + '\n' + (e.filename || '') + ':' + e.lineno + '\n\n' + (e.error && e.error.stack ? e.error.stack : '') + '</pre>';
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
