@@ -1,263 +1,270 @@
+/* ════════════════════════════════════════════════
+   index.css — Cadavre Exquis
+   Système : Tailwind + CSS vars dynamiques du rêve + animations Q v3
+   Ambiances : Minuit / Encre / Argile / Lin / Aube
+   ════════════════════════════════════════════════ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ──────────────────────────────────────────────
-   ALMANACH SURRÉALISTE — système de design
-   ────────────────────────────────────────────── */
+/* ── Fonts ───────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@400;500;600;700&family=Caveat:wght@400;600;700&family=Bodoni+Moda:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=IM+Fell+English:ital@0;1&display=swap');
 
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500&family=IM+Fell+English:ital@0;1&family=IM+Fell+DW+Pica:ital@0;1&family=Caveat:wght@400;600&display=swap');
+/* ── Variables (valeurs par défaut · ReveProvider les écrase) ── */
+:root {
+  --reve-bg: #15110d;
+  --reve-ink: #e6d4b8;
+  --reve-ink-soft: #c8b89a;
+  --reve-ink-faint: #887458;
+  --reve-rule: rgba(230, 212, 184, 0.16);
+  --reve-accent: #b22c20;
+  --reve-accent-hover: #c83c30;
+  --reve-button-text: #15110d;
+  --reve-halo: none;
 
+  /* Compat legacy */
+  --reve-papier: var(--reve-bg);
+  --reve-encre: var(--reve-ink);
+  --papier: #ede2c8;
+  --papier-fonce: #d9c9a5;
+  --encre: #1a1410;
+  --encre-claire: #3a302a;
+  --gris: #6b5d4f;
+  --gris-clair: #a08e7a;
+  --rouge: #a8332a;
+  --rouge-fonce: #7a2620;
+  --or: #9a7d3a;
+  --or-clair: #c9a85d;
+}
+
+/* ── Base ─────────────────────────────────────── */
 @layer base {
-  :root {
-    --papier: #ede2c8;
-    --papier-fonce: #d9c9a5;
-    --encre: #1a1410;
-    --encre-claire: #3a302a;
-    --gris: #6b5d4f;
-    --gris-clair: #a08e7a;
-    --rouge: #a8332a;
-    --rouge-fonce: #7a2620;
-    --or: #9a7d3a;
-    --or-clair: #c9a85d;
-  }
-
-  html { height: 100%; }
-
+  html { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   body {
-    background-color: var(--papier);
-    background-image:
-      radial-gradient(ellipse at 30% 20%, rgba(154,125,58,0.06), transparent 50%),
-      radial-gradient(ellipse at 70% 80%, rgba(168,51,42,0.04), transparent 50%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
-    color: var(--encre);
-    font-family: 'IM Fell English', Georgia, serif;
-    min-height: 100%;
+    margin: 0;
+    background-color: var(--reve-bg);
+    background-image: var(--reve-halo);
+    color: var(--reve-ink);
+    font-family: 'Inter', 'IM Fell English', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.55;
     min-height: 100dvh;
     overflow-x: hidden;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
-
   #root {
-    min-height: 100vh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
     position: relative;
   }
-
   ::selection {
     background-color: rgba(168, 51, 42, 0.2);
+    color: var(--reve-ink);
   }
 }
 
+/* ── Typographie ───────────────────────────────── */
 @layer components {
-  /* ───── Typographie ───── */
+
+  /* DISPLAY */
   .titre-principal {
-    @apply font-bodoni italic text-encre;
+    font-family: 'Fraunces', 'Bodoni Moda', serif;
     font-weight: 900;
+    font-style: italic;
     font-size: clamp(2.5rem, 9vw, 4rem);
+    line-height: 0.95;
     letter-spacing: -0.005em;
-    line-height: 0.95;
+    color: var(--reve-ink);
   }
-
-  .titre-rouge {
-    @apply font-bodoni italic;
-    color: var(--rouge);
+  .titre-rouge, .titre-accent {
+    font-family: 'Fraunces', 'Bodoni Moda', serif;
     font-weight: 900;
+    font-style: italic;
     line-height: 0.95;
+    color: var(--reve-accent);
   }
-
-  .sous-titre {
-    @apply font-cormorant italic text-encre-claire;
-    font-size: clamp(1rem, 3.2vw, 1.15rem);
-    line-height: 1.5;
-  }
-
-  .vers-jeu {
-    @apply font-cormorant italic text-encre;
-    font-size: clamp(1.2rem, 4.5vw, 1.55rem);
-    line-height: 1.55;
-    letter-spacing: 0.005em;
-  }
-
-  .vers-grand {
-    @apply font-cormorant italic text-encre;
-    font-size: clamp(1.4rem, 5.5vw, 1.85rem);
-    line-height: 1.45;
-  }
-
-  .titre-section {
-    @apply font-bodoni italic text-encre;
+  .h-section, .titre-section {
+    font-family: 'Fraunces', 'Bodoni Moda', serif;
     font-weight: 700;
-    font-size: 1.6rem;
+    font-style: italic;
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
     line-height: 1.05;
+    color: var(--reve-ink);
   }
 
+  /* Vers du poème */
+  .vers-jeu, .vers-grand {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(1.4rem, 5vw, 1.85rem);
+    line-height: 1.6;
+    color: var(--reve-ink);
+  }
+
+  /* Citation / sous-titre */
+  .sous-titre, .citation, .lead {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: var(--reve-ink-soft);
+  }
+
+  /* UI */
   .lien-texte {
-    @apply font-fell italic text-encre no-underline transition-colors duration-300;
-    font-size: 1.05rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--reve-ink);
+    text-decoration: none;
     border-bottom: 1px solid transparent;
     background: transparent;
     cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
   }
-  .lien-texte:hover {
-    border-bottom-color: var(--rouge);
-    color: var(--rouge);
-  }
+  .lien-texte:hover { border-bottom-color: var(--reve-accent); color: var(--reve-accent); }
 
   .nav-discrete {
-    @apply font-fell italic;
-    color: var(--gris);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
     font-size: 0.85rem;
     letter-spacing: 0.04em;
+    color: var(--reve-ink-faint);
   }
 
   .folio {
-    @apply font-fell;
-    color: var(--gris);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
     font-size: 0.8rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
+    color: var(--reve-ink-faint);
   }
 
   .petite-cap {
-    @apply font-fell;
-    color: var(--encre-claire);
-    font-size: 0.75rem;
-    letter-spacing: 0.3em;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
+    color: var(--reve-ink-soft);
   }
 
   .petite-cap-rouge {
-    @apply font-fell;
-    color: var(--rouge);
-    font-size: 0.75rem;
-    letter-spacing: 0.3em;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
+    color: var(--reve-accent);
   }
 
   .consigne-grammaticale {
-    @apply font-fell italic;
-    color: var(--encre-claire);
-    font-size: 1rem;
-    letter-spacing: 0.04em;
-  }
-
-  /* ───── Filets typographiques ───── */
-  .filet-double {
-    border: none;
-    border-top: 1px solid var(--encre);
-    border-bottom: 1px solid var(--encre);
-    height: 3px;
-  }
-  .filet-simple {
-    border: none;
-    border-top: 1px solid var(--encre);
-    height: 1px;
-    margin: 0;
-  }
-  .filet-rouge {
-    border: none;
-    border-top: 1px solid var(--rouge);
-    height: 1px;
-    margin: 0;
-  }
-  .filet-fin {
-    border: none;
-    border-top: 0.5px solid var(--gris);
-    opacity: 0.6;
-    margin: 0;
-  }
-
-  /* compat ancien nom */
-  .separateur-or {
-    @apply filet-rouge;
-    margin: 1.5rem auto;
-  }
-
-  /* ───── Boutons ───── */
-  .btn-primaire {
-    @apply font-fell italic transition-all duration-200 cursor-pointer;
-    background: var(--rouge);
-    color: var(--papier);
-    font-size: 1.05rem;
-    letter-spacing: 0.05em;
-    padding: 0.7em 1.8em;
-    border: none;
+    font-family: 'Inter', sans-serif;
     font-weight: 500;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    color: var(--reve-ink-soft);
   }
-  .btn-primaire:hover {
-    background: var(--rouge-fonce);
+
+  /* Boutons */
+  .btn-primaire, .btn-rouge {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 0.95em 1.7em;
+    border: none;
+    border-radius: 10px;
+    background: var(--reve-accent);
+    color: var(--reve-button-text);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
   }
-  .btn-primaire:active {
-    transform: scale(0.97);
-  }
-  .btn-primaire:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+  .btn-primaire:hover, .btn-rouge:hover { background: var(--reve-accent-hover); }
+  .btn-primaire:active, .btn-rouge:active { transform: scale(0.98); }
+  .btn-primaire:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .btn-secondaire {
-    @apply font-fell italic transition-all duration-200 cursor-pointer;
-    background: transparent;
-    color: var(--encre);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
     font-size: 1rem;
-    border: 1px solid var(--encre);
-    padding: 0.6em 1.5em;
+    background: transparent;
+    color: var(--reve-ink);
+    padding: 0.85em 1.5em;
+    border: 1px solid var(--reve-ink);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
   }
-  .btn-secondaire:hover {
-    background: var(--encre);
-    color: var(--papier);
-  }
+  .btn-secondaire:hover { background: var(--reve-ink); color: var(--reve-bg); }
 
-  /* ───── Champ d'écriture ───── */
+  /* Champ d'écriture */
   .champ-carnet {
-    @apply font-cormorant italic text-encre w-full;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-style: italic;
     font-size: 1.35rem;
     line-height: 1.55;
-    background: rgba(255, 253, 247, 0.5);
+    color: var(--reve-ink);
+    width: 100%;
+    background: rgba(128,128,128,0.06);
     border: none;
-    border-left: 2px solid var(--encre);
+    border-left: 2px solid var(--reve-ink);
     outline: none;
     padding: 12px 16px;
-    caret-color: var(--rouge);
+    caret-color: var(--reve-accent);
     resize: none;
+    border-radius: 0 6px 6px 0;
+    transition: border-color 0.2s ease;
   }
-  .champ-carnet::placeholder {
-    color: var(--gris);
-    opacity: 0.5;
-    font-style: italic;
-  }
-  .champ-carnet:focus {
-    border-left-color: var(--rouge);
-  }
+  .champ-carnet::placeholder { color: var(--reve-ink-faint); opacity: 0.55; font-style: italic; }
+  .champ-carnet:focus { border-left-color: var(--reve-accent); }
 
-  /* ───── Cadre page ───── */
+  /* Filets typographiques */
+  .filet-double {
+    border: none;
+    border-top: 1px solid var(--reve-ink);
+    border-bottom: 1px solid var(--reve-ink);
+    height: 3px;
+  }
+  .filet-simple { border: none; border-top: 1px solid var(--reve-rule); height: 0; }
+  .filet-rouge, .filet-accent { border: none; border-top: 1.5px solid var(--reve-accent); height: 0; }
+  .filet-fin { border: none; border-top: 0.5px solid var(--reve-rule); opacity: 0.6; margin: 0; }
+  .separateur-or { @apply filet-accent; margin: 1.5rem auto; max-width: 6rem; }
+
+  /* Cadre page */
   .page-carnet {
-    @apply mx-auto px-6 py-8;
+    position: relative;
+    margin-inline: auto;
     max-width: 42rem;
     min-height: 100dvh;
-    position: relative;
+    padding: 1.5rem 1.25rem;
+    overflow: hidden;
   }
 
-  /* ───── Lettrine ───── */
+  /* Lettrine */
   .lettrine {
-    @apply font-bodoni italic;
+    font-family: 'Fraunces', 'Bodoni Moda', serif;
     font-weight: 900;
+    font-style: italic;
     font-size: 3.6rem;
     line-height: 0.85;
-    color: var(--rouge);
+    color: var(--reve-accent);
     float: left;
     margin: 6px 8px 0 0;
   }
 
-  /* ───── Animations ───── */
-  .vers-apparition {
-    animation: fadeInSlow 1.2s ease-in forwards;
-    opacity: 0;
-  }
+  /* Animation */
+  .vers-apparition { animation: fadeInSlow 1.2s ease-in forwards; opacity: 0; }
 }
 
+/* ── Utilities ─────────────────────────────────── */
 @layer utilities {
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
@@ -267,87 +274,25 @@
   }
 }
 
-/* ───── Keyframes (déclarés ici pour ne pas être purgés par Tailwind JIT) ───── */
-@keyframes fadeInSlow {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+/* ── Keyframes ─────────────────────────────────── */
+@keyframes fadeInSlow { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInQ { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes inkBloomQ { from { opacity: 0; filter: blur(2.5px); } to { opacity: 1; filter: blur(0); } }
+@keyframes inkBloom { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: blur(0); } }
+@keyframes symbolDrop { from { opacity: 0; transform: translateY(-22px) rotate(-15deg) scale(0.88); } to { opacity: 1; transform: translateY(0) rotate(0) scale(1); } }
+@keyframes collageDrop { 0% { opacity: 0; transform: translateY(-30px) rotate(-20deg) scale(0.85); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); } }
+@keyframes etiqDrop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; } }
+@keyframes stripesIn { from { opacity: 0; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); } to { opacity: 0.72; } }
+@keyframes blinkCaret { 50% { opacity: 0; } }
+@keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes pulseQ { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
+@keyframes plume { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(5deg) translateY(-4px); } }
 
-@keyframes collageDrop {
-  0%   { opacity: 0; transform: translateY(-30px) rotate(-20deg) scale(0.85); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
-}
+/* ── Focus clavier (accessibilité) ── */
+:focus-visible { outline: 2px solid var(--reve-accent); outline-offset: 3px; }
+button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 
-@keyframes inkBloom {
-  from { opacity: 0; filter: blur(2px); }
-  to   { opacity: 1; filter: blur(0); }
-}
-
-@keyframes cursorBlink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-@keyframes plume {
-  0%, 100% { transform: rotate(-5deg) translateY(0); }
-  50%       { transform: rotate(5deg) translateY(-4px); }
-}
-
-/* ───── Focus clavier visible (accessibilité) ───── */
-:focus-visible {
-  outline: 2px solid var(--rouge);
-  outline-offset: 3px;
-}
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible) {
-  outline: none;
-}
-
-/* ───── Scrollbar discrète ───── */
-::-webkit-scrollbar { width: 3px; }
+/* ── Scrollbar discrète ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: var(--gris-clair);
-  border-radius: 2px;
-}
-
-/* ──────────────────────────────────────────────────
-   ANIMATIONS du système Rêve · Q v3
-   ────────────────────────────────────────────────── */
-
-@keyframes fadeInQ {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes inkBloomQ {
-  from { opacity: 0; filter: blur(2.5px); }
-  to   { opacity: 1; filter: blur(0); }
-}
-
-@keyframes symbolDrop {
-  from { opacity: 0; transform: translateY(-22px) rotate(-15deg) scale(0.88); }
-  to   { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
-}
-
-@keyframes etiqDrop {
-  from { opacity: 0; transform: translateY(-8px) rotate(0deg); }
-  to   { opacity: 1; }
-}
-
-@keyframes stripesIn {
-  from { opacity: 0; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); }
-  to   { opacity: 0.72; }
-}
-
-@keyframes blinkCaret {
-  50% { opacity: 0; }
-}
-
-/* Palette Q v3 — variables CSS (écrites dynamiquement par ReveProvider) */
-:root {
-  --reve-papier: #e6d4b8;
-  --reve-encre:  #0f0805;
-  --reve-accent: #b22c20;
-}
+::-webkit-scrollbar-thumb { background: var(--reve-ink-faint); border-radius: 2px; }

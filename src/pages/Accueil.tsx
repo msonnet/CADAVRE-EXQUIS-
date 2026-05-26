@@ -33,7 +33,8 @@ export default function Accueil() {
   const angleBiais = seance?.angleBiais ?? 0
   const letters = 'Exquis.'
 
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const bg = c?.bg ?? '#0f0805'
+  const mono: React.CSSProperties = { fontFamily: "'Inter', sans-serif", letterSpacing: '0.18em' }
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -122,7 +123,7 @@ export default function Accueil() {
             style={{
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: encre, color: '#e8d4b8',
+              background: encre, color: bg,
               ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
@@ -136,7 +137,7 @@ export default function Accueil() {
             style={{
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: second, color: '#e8d4b8',
+              background: second, color: bg,
               ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
