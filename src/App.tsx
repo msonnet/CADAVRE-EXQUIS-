@@ -1,6 +1,27 @@
+import { Component, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { ReveProvider } from './reve'
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  render() {
+    if (this.state.error) {
+      const e = this.state.error as Error
+      return (
+        <div style={{ padding: 32, fontFamily: 'monospace', fontSize: 13, color: '#b22c20' }}>
+          <div style={{ marginBottom: 12, fontWeight: 700 }}>ERREUR APPLICATION</div>
+          <pre style={{ whiteSpace: 'pre-wrap', opacity: 0.8 }}>{e.message}</pre>
+          <button onClick={() => window.location.reload()} style={{ marginTop: 16, padding: '8px 16px', cursor: 'pointer' }}>
+            RECHARGER
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 import SplashScreen from './components/SplashScreen'
 import Accueil from './pages/Accueil'
 import Configuration from './pages/Configuration'
@@ -22,6 +43,7 @@ import FinOnline from './pages/FinOnline'
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <ReveProvider>
       <SplashScreen />
       <BrowserRouter>
@@ -49,5 +71,6 @@ export default function App() {
         </AnimatePresence>
       </BrowserRouter>
     </ReveProvider>
+    </ErrorBoundary>
   )
 }
