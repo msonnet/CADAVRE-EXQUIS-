@@ -25,7 +25,7 @@ export default function Accueil() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const second = encre
+  const second = c?.second ?? '#1d3a8c'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -71,7 +71,7 @@ export default function Accueil() {
         >
           <div
             className="font-bodoni font-black leading-tight"
-            style={{ fontSize: 'clamp(3.4rem, 14vw, 5.8rem)', color: encre }}
+            style={{ fontSize: 'clamp(3.8rem, 16vw, 6.5rem)', color: accent }}
           >
             {[...letters].map((l, i) => (
               <span key={i} style={{
@@ -122,7 +122,7 @@ export default function Accueil() {
             style={{
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: accent, color: '#e8d4b8',
+              background: encre, color: '#e8d4b8',
               ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
