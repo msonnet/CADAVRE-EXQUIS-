@@ -18,6 +18,7 @@ export default function Online() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, signInWithEmail, signOut } = useAuth()
@@ -171,7 +172,7 @@ export default function Online() {
                 <button
                   type="submit"
                   disabled={sendingEmail}
-                  style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer', opacity: sendingEmail ? 0.5 : 1 }}
+                  style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer', opacity: sendingEmail ? 0.5 : 1 }}
                 >
                   {sendingEmail ? 'ENVOI…' : 'ENVOYER LE LIEN'}
                 </button>
@@ -189,7 +190,7 @@ export default function Online() {
           </p>
           <button
             onClick={() => navigate('/profil')}
-            style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer' }}
+            style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer' }}
           >
             CRÉER MON PROFIL →
           </button>
@@ -236,7 +237,7 @@ export default function Online() {
             <button
               onClick={handleCreate}
               disabled={creating}
-              style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
+              style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
             >
               {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
             </button>

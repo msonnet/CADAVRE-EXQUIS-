@@ -23,6 +23,7 @@ export default function Salon() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
@@ -246,7 +247,7 @@ export default function Salon() {
                   style={{
                     ...mono, fontSize: 13, padding: '6px 14px',
                     background: room.mode === m ? accent : 'transparent',
-                    color: room.mode === m ? 'var(--reve-button-text)' : encre,
+                    color: room.mode === m ? btnText : encre,
                     border: `1px solid ${room.mode === m ? accent : `${encre}40`}`,
                     cursor: 'pointer',
                   }}
@@ -315,7 +316,7 @@ export default function Salon() {
           onClick={toggleReady}
           style={{
             background: mePlayer?.is_ready ? `${encre}15` : accent,
-            color: mePlayer?.is_ready ? encre : 'var(--reve-button-text)',
+            color: mePlayer?.is_ready ? encre : btnText,
             ...mono, fontSize: 13, textTransform: 'uppercase',
             padding: '0.85em 1.8em', border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
             cursor: 'pointer', width: '100%',

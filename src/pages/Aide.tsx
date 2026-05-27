@@ -33,6 +33,7 @@ export default function Aide() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const second = encre
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
@@ -216,7 +217,7 @@ export default function Aide() {
               className="flex flex-col items-center justify-center"
               style={{
                 flex: 1,
-                background: accent, color: 'var(--reve-button-text)',
+                background: accent, color: btnText,
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}
@@ -229,7 +230,7 @@ export default function Aide() {
               className="flex flex-col items-center justify-center"
               style={{
                 flex: 1,
-                background: second, color: 'var(--reve-button-text)',
+                background: second, color: btnText,
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}

@@ -30,6 +30,7 @@ export default function Configuration() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -282,7 +283,7 @@ export default function Configuration() {
             onClick={demarrer}
             className="w-full flex flex-col items-center justify-center"
             style={{
-              background: accent, color: 'var(--reve-button-text)',
+              background: accent, color: btnText,
               ...mono, fontSize: 13,
               textTransform: 'uppercase',
               padding: '1.15em 1em',

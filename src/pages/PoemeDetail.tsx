@@ -38,6 +38,7 @@ export default function PoemeDetail() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -132,7 +133,7 @@ export default function PoemeDetail() {
         </p>
         <button
           onClick={() => navigate('/bibliotheque')}
-          style={{ marginTop: 28, background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
+          style={{ marginTop: 28, background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
         >
           Mes poèmes
         </button>
@@ -433,7 +434,7 @@ export default function PoemeDetail() {
             className="w-full flex flex-col items-center justify-center"
             aria-label="Démarrer une nouvelle partie"
             style={{
-              background: accent, color: 'var(--reve-button-text)',
+              background: accent, color: btnText,
               ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '1.1em 1em', border: 'none', cursor: 'pointer', gap: 2,
             }}

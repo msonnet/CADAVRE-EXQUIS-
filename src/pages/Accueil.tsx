@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
+import Onboarding from '../components/Onboarding'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 
@@ -48,6 +49,9 @@ export default function Accueil() {
 
       {/* DÉCOR — stripes, symbole, étiquettes, signature (pas la citation) */}
       <Decor variant="accueil" hideCitation />
+
+      {/* ONBOARDING — overlay 3 slides au premier lancement */}
+      <Onboarding />
 
       {/* ── HEADER ── */}
       <div className="relative flex justify-between items-baseline" style={{ zIndex: 10 }}>

@@ -103,9 +103,10 @@ export default function JeuDessin() {
   const [tool, setTool] = useState<Tool>('pen')
   const [sizeIdx, setSizeIdx] = useState(1)
   const [color, setColor] = useState('#000000')
-  const [undoStack, setUndoStack] = useState<ImageData[]>([])
-  const [redoStack, setRedoStack] = useState<ImageData[]>([])
   const [canvasReady, setCanvasReady] = useState(false)
+  // Force re-render when the undo/redo stacks change (kept in refs to avoid re-renders during drawing)
+  const [, setHistoryTick] = useState(0)
+  const bumpHistory = useCallback(() => setHistoryTick(t => t + 1), [])
   const [panMode, setPanMode] = useState(false)
   const [showTransition, setShowTransition] = useState(false)
   const [showIntro, setShowIntro] = useState(true)
@@ -129,6 +130,11 @@ export default function JeuDessin() {
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const lastPinchDist = useRef<number | null>(null)
   const lastPinchMid = useRef<{ x: number; y: number } | null>(null)
+
+  // Historique d'annulation : snapshots ImageData empilés à chaque pointerup (max 20)
+  const undoStackRef = useRef<ImageData[]>([])
+  const redoStackRef = useRef<ImageData[]>([])
+  const UNDO_MAX = 20
 
   const joueurActuel = (bandeIdx % config.joueurs) + 1
   const c = seance?.colorSchema
@@ -205,16 +211,20 @@ export default function JeuDessin() {
       const img = new Image()
       img.onload = () => {
         ctx.drawImage(img, 0, srcY, prev.width, RACCORD_H * prevDpr, 0, 0, canvas.width, RACCORD_H_phys)
-        setUndoStack([ctx.getImageData(0, 0, canvas.width, canvas.height)])
-        setRedoStack([])
+        // Reset historique pour la nouvelle bande : on garde l'état initial (avec le raccord) comme baseline
+        undoStackRef.current = [ctx.getImageData(0, 0, canvas.width, canvas.height)]
+        redoStackRef.current = []
+        bumpHistory()
         setZoom(1); setPanX(0); setPanY(0)
         zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0
         setCanvasReady(true)
       }
       img.src = prev.imageDataUrl
     } else {
-      setUndoStack([ctx.getImageData(0, 0, canvas.width, canvas.height)])
-      setRedoStack([])
+      // Reset historique pour la nouvelle bande : baseline = canvas vide
+      undoStackRef.current = [ctx.getImageData(0, 0, canvas.width, canvas.height)]
+      redoStackRef.current = []
+      bumpHistory()
       setZoom(1); setPanX(0); setPanY(0)
       zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0
       setCanvasReady(true)
@@ -229,30 +239,67 @@ export default function JeuDessin() {
     }
   }
 
+  // Empile un snapshot de l'état actuel du canvas (appelé après chaque trait complet)
   function saveSnapshot() {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
-    setUndoStack(prev => [...prev.slice(-29), ctx.getImageData(0, 0, canvas.width, canvas.height)])
-    setRedoStack([])
+    const snap = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    undoStackRef.current.push(snap)
+    // Limite la taille de la pile à UNDO_MAX entrées
+    if (undoStackRef.current.length > UNDO_MAX) {
+      undoStackRef.current.splice(0, undoStackRef.current.length - UNDO_MAX)
+    }
+    // Tout nouvel acte de dessin invalide la pile redo
+    redoStackRef.current = []
+    bumpHistory()
   }
 
-  function undo() {
-    const canvas = canvasRef.current; if (!canvas || undoStack.length <= 1) return
+  // Annule le dernier trait : retire le snapshot du sommet et restaure le précédent
+  const undo = useCallback(() => {
+    const canvas = canvasRef.current; if (!canvas) return
+    if (undoStackRef.current.length <= 1) return
     const ctx = canvas.getContext('2d')!
-    setRedoStack(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
-    const prev = undoStack[undoStack.length - 2]
-    setUndoStack(s => s.slice(0, -1))
-    ctx.putImageData(prev, 0, 0)
-  }
+    const popped = undoStackRef.current.pop()!
+    redoStackRef.current.push(popped)
+    if (redoStackRef.current.length > UNDO_MAX) {
+      redoStackRef.current.splice(0, redoStackRef.current.length - UNDO_MAX)
+    }
+    const previous = undoStackRef.current[undoStackRef.current.length - 1]
+    ctx.putImageData(previous, 0, 0)
+    bumpHistory()
+  }, [bumpHistory])
 
-  function redo() {
-    const canvas = canvasRef.current; if (!canvas || redoStack.length === 0) return
+  // Rétablit le dernier trait annulé
+  const redo = useCallback(() => {
+    const canvas = canvasRef.current; if (!canvas) return
+    if (redoStackRef.current.length === 0) return
     const ctx = canvas.getContext('2d')!
-    const next = redoStack[redoStack.length - 1]
-    setUndoStack(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
-    setRedoStack(s => s.slice(0, -1))
+    const next = redoStackRef.current.pop()!
+    undoStackRef.current.push(next)
+    if (undoStackRef.current.length > UNDO_MAX) {
+      undoStackRef.current.splice(0, undoStackRef.current.length - UNDO_MAX)
+    }
     ctx.putImageData(next, 0, 0)
-  }
+    bumpHistory()
+  }, [bumpHistory])
+
+  // Raccourcis clavier : Ctrl+Z / Cmd+Z annule, Ctrl+Shift+Z / Cmd+Shift+Z rétablit
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey
+      if (!mod) return
+      if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault()
+        if (e.shiftKey) redo()
+        else undo()
+      } else if (e.key === 'y' || e.key === 'Y') {
+        e.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undo, redo])
 
   const draw = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current; if (!canvas) return
@@ -331,7 +378,7 @@ export default function JeuDessin() {
         isDrawing.current = true
         velocityRef.current = 0
         lastPos.current = getCanvasCoords(e.clientX, e.clientY)
-        saveSnapshot(); draw(e.clientX, e.clientY)
+        draw(e.clientX, e.clientY)
       }
     } else {
       isDrawing.current = false; lastPos.current = null
@@ -371,8 +418,11 @@ export default function JeuDessin() {
   }
 
   function onPointerUp(e: React.PointerEvent) {
+    const wasDrawing = isDrawing.current && pointersRef.current.size === 1
     pointersRef.current.delete(e.pointerId)
     if (pointersRef.current.size === 0) {
+      // Trait terminé : on capture l'état du canvas pour permettre l'annulation
+      if (wasDrawing) saveSnapshot()
       isDrawing.current = false; lastPos.current = null
       lastPinchDist.current = null; lastPinchMid.current = null
     }
@@ -562,16 +612,48 @@ export default function JeuDessin() {
             ))}
           </div>
           {/* Undo / redo */}
-          <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-            <button onClick={undo} disabled={undoStack.length <= 1} aria-label="Annuler"
-              style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: undoStack.length > 1 ? '#f5f0ea' : 'transparent', color: undoStack.length > 1 ? encre : `${encre}28`, fontSize: 18, cursor: undoStack.length > 1 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              ↩
-            </button>
-            <button onClick={redo} disabled={redoStack.length === 0} aria-label="Rétablir"
-              style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: redoStack.length > 0 ? '#f5f0ea' : 'transparent', color: redoStack.length > 0 ? encre : `${encre}28`, fontSize: 18, cursor: redoStack.length > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              ↪
-            </button>
-          </div>
+          {(() => {
+            const canUndo = undoStackRef.current.length > 1
+            const canRedo = redoStackRef.current.length > 0
+            return (
+              <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  aria-label="Annuler"
+                  title="Annuler (Ctrl+Z)"
+                  style={{
+                    width: 34, height: 34, borderRadius: 8, border: 'none',
+                    background: canUndo ? `${accent}18` : 'transparent',
+                    color: canUndo ? accent : encre,
+                    opacity: canUndo ? 1 : 0.35,
+                    fontSize: 18,
+                    cursor: canUndo ? 'pointer' : 'default',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  ↩
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  aria-label="Rétablir"
+                  title="Rétablir (Ctrl+Shift+Z)"
+                  style={{
+                    width: 34, height: 34, borderRadius: 8, border: 'none',
+                    background: canRedo ? `${accent}18` : 'transparent',
+                    color: canRedo ? accent : encre,
+                    opacity: canRedo ? 1 : 0.35,
+                    fontSize: 18,
+                    cursor: canRedo ? 'pointer' : 'default',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  ↪
+                </button>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Rangée action */}

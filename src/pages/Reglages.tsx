@@ -24,6 +24,7 @@ export default function Reglages() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -123,7 +124,7 @@ export default function Reglages() {
               <span style={{
                 position: 'absolute', top: 3, left: sonActif ? 23 : 3,
                 width: 18, height: 18, borderRadius: '50%',
-                background: sonActif ? 'var(--reve-button-text)' : encre,
+                background: sonActif ? btnText : encre,
                 transition: 'left 0.25s',
               }} />
             </button>

@@ -30,10 +30,11 @@ const DRAWING_PALETTE = [
 ]
 const DRAW_SIZES = [3, 8, 18]
 
-function DrawingCanvas({ onSubmit, accent, encre }: {
+function DrawingCanvas({ onSubmit, accent, encre, btnText }: {
   onSubmit: (dataUrl: string) => Promise<void>
   accent: string
   encre: string
+  btnText: string
 }) {
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -142,7 +143,7 @@ function DrawingCanvas({ onSubmit, accent, encre }: {
         onTouchStart={start} onTouchMove={move} onTouchEnd={end}
       />
 
-      <button type="button" onClick={submit} disabled={busy} style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em', border: 'none', cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+      <button type="button" onClick={submit} disabled={busy} style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em', border: 'none', cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}>
         {busy ? 'ENVOI…' : 'SOUMETTRE MON DESSIN →'}
       </button>
     </div>
@@ -169,6 +170,7 @@ export default function JeuOnline() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const bg = c?.bg ?? '#fdf8f2'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -382,7 +384,7 @@ export default function JeuOnline() {
             <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, lineHeight: 1.5, marginBottom: 14 }}>
               Dessinez une section du corps — tête, buste ou jambes selon votre bande. Les autres joueurs font de même à l'aveugle.
             </p>
-            <DrawingCanvas onSubmit={handleDrawingSubmit} accent={accent} encre={encre} />
+            <DrawingCanvas onSubmit={handleDrawingSubmit} accent={accent} encre={encre} btnText={btnText} />
           </motion.div>
         ) : caseDef ? (
           <motion.div

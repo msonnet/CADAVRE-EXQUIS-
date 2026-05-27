@@ -30,6 +30,7 @@ export default function FinOnline() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, loading: authLoading } = useAuth()
@@ -158,7 +159,7 @@ export default function FinOnline() {
           </div>
           <button
             onClick={() => setRevealed(true)}
-            style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 2em', border: 'none', cursor: 'pointer', marginTop: 8 }}
+            style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 2em', border: 'none', cursor: 'pointer', marginTop: 8 }}
           >
             {room.mode === 'dessin' ? 'RÉVÉLER LE DESSIN →' : 'RÉVÉLER LE POÈME →'}
           </button>

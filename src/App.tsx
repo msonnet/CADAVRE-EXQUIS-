@@ -1,4 +1,4 @@
-import { Component, type ReactNode } from 'react'
+import React, { Component, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { ReveProvider } from './reve'
@@ -23,23 +23,41 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
 }
 import SplashScreen from './components/SplashScreen'
-import Accueil from './pages/Accueil'
-import Configuration from './pages/Configuration'
-import ConfigurationDessin from './pages/ConfigurationDessin'
-import Jeu from './pages/Jeu'
-import JeuDessin from './pages/JeuDessin'
-import FinDePartie from './pages/FinDePartie'
-import FinDessin from './pages/FinDessin'
-import Bibliotheque from './pages/Bibliotheque'
-import PoemeDetail from './pages/PoemeDetail'
-import DessinDetail from './pages/DessinDetail'
-import Reglages from './pages/Reglages'
-import Aide from './pages/Aide'
-import Online from './pages/Online'
-import Profil from './pages/Profil'
-import Salon from './pages/Salon'
-import JeuOnline from './pages/JeuOnline'
-import FinOnline from './pages/FinOnline'
+const Accueil = React.lazy(() => import('./pages/Accueil'))
+const Configuration = React.lazy(() => import('./pages/Configuration'))
+const ConfigurationDessin = React.lazy(() => import('./pages/ConfigurationDessin'))
+const Jeu = React.lazy(() => import('./pages/Jeu'))
+const JeuDessin = React.lazy(() => import('./pages/JeuDessin'))
+const FinDePartie = React.lazy(() => import('./pages/FinDePartie'))
+const FinDessin = React.lazy(() => import('./pages/FinDessin'))
+const Bibliotheque = React.lazy(() => import('./pages/Bibliotheque'))
+const PoemeDetail = React.lazy(() => import('./pages/PoemeDetail'))
+const DessinDetail = React.lazy(() => import('./pages/DessinDetail'))
+const Reglages = React.lazy(() => import('./pages/Reglages'))
+const Aide = React.lazy(() => import('./pages/Aide'))
+const Online = React.lazy(() => import('./pages/Online'))
+const Profil = React.lazy(() => import('./pages/Profil'))
+const Salon = React.lazy(() => import('./pages/Salon'))
+const JeuOnline = React.lazy(() => import('./pages/JeuOnline'))
+const FinOnline = React.lazy(() => import('./pages/FinOnline'))
+
+const PageFallback = () => (
+  <div style={{
+    minHeight: '100dvh',
+    background: 'var(--reve-bg, #15110d)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}>
+    <span style={{
+      fontSize: 18,
+      color: 'var(--reve-accent, #b22c20)',
+      fontFamily: "'Outfit', sans-serif",
+      letterSpacing: '0.18em',
+      opacity: 0.7,
+    }}>✦</span>
+  </div>
+)
 
 export default function App() {
   return (
@@ -48,26 +66,28 @@ export default function App() {
       <SplashScreen />
       <BrowserRouter>
         <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Accueil />} />
-            <Route path="/config" element={<Configuration />} />
-            <Route path="/config-dessin" element={<ConfigurationDessin />} />
-            <Route path="/jeu" element={<Jeu />} />
-            <Route path="/jeu-dessin" element={<JeuDessin />} />
-            <Route path="/fin" element={<FinDePartie />} />
-            <Route path="/fin-dessin" element={<FinDessin />} />
-            <Route path="/bibliotheque" element={<Bibliotheque />} />
-            <Route path="/bibliotheque/dessin/:id" element={<DessinDetail />} />
-            <Route path="/bibliotheque/:id" element={<PoemeDetail />} />
-            <Route path="/reglages" element={<Reglages />} />
-            <Route path="/aide" element={<Aide />} />
-            <Route path="/online" element={<Online />} />
-            <Route path="/profil" element={<Profil />} />
-            <Route path="/salon/:code" element={<Salon />} />
-            <Route path="/jeu-online/:code" element={<JeuOnline />} />
-            <Route path="/fin-online/:code" element={<FinOnline />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/" element={<Accueil />} />
+              <Route path="/config" element={<Configuration />} />
+              <Route path="/config-dessin" element={<ConfigurationDessin />} />
+              <Route path="/jeu" element={<Jeu />} />
+              <Route path="/jeu-dessin" element={<JeuDessin />} />
+              <Route path="/fin" element={<FinDePartie />} />
+              <Route path="/fin-dessin" element={<FinDessin />} />
+              <Route path="/bibliotheque" element={<Bibliotheque />} />
+              <Route path="/bibliotheque/dessin/:id" element={<DessinDetail />} />
+              <Route path="/bibliotheque/:id" element={<PoemeDetail />} />
+              <Route path="/reglages" element={<Reglages />} />
+              <Route path="/aide" element={<Aide />} />
+              <Route path="/online" element={<Online />} />
+              <Route path="/profil" element={<Profil />} />
+              <Route path="/salon/:code" element={<Salon />} />
+              <Route path="/jeu-online/:code" element={<JeuOnline />} />
+              <Route path="/fin-online/:code" element={<FinOnline />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </AnimatePresence>
       </BrowserRouter>
     </ReveProvider>

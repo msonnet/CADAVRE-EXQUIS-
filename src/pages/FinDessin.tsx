@@ -89,6 +89,7 @@ export default function FinDessin() {
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -312,7 +313,7 @@ export default function FinDessin() {
                   flex: 1,
                   ...mono, fontSize: 13,
                   background: sauvegarde ? `${accent}20` : accent,
-                  color: sauvegarde ? accent : 'var(--reve-button-text)',
+                  color: sauvegarde ? accent : btnText,
                   border: `0.5px solid ${accent}`,
                   padding: '10px 8px',
                   cursor: sauvegarde ? 'default' : 'pointer',

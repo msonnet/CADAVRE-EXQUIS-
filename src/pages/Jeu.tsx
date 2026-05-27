@@ -523,6 +523,7 @@ export default function Jeu() {
   const sc = seance?.colorSchema
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
@@ -741,7 +742,7 @@ export default function Jeu() {
                 className="w-full flex flex-col items-center justify-center"
                 style={{
                   background: !inputValue.trim() ? `${encre}30` : accent,
-                  color: 'var(--reve-button-text)',
+                  color: btnText,
                   ...mono, fontSize: 13,
                   textTransform: 'uppercase',
                   padding: '1.1em 1em',

@@ -38,6 +38,7 @@ export default function Bibliotheque() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -135,7 +136,7 @@ export default function Bibliotheque() {
               onClick={() => navigate('/config')}
               whileTap={{ scale: 0.98 }}
               style={{
-                marginTop: 28, background: accent, color: 'var(--reve-button-text)',
+                marginTop: 28, background: accent, color: btnText,
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '0.9em 1.6em', border: 'none', cursor: 'pointer',
               }}
@@ -279,7 +280,7 @@ export default function Bibliotheque() {
               onClick={() => navigate('/config')}
               className="w-full flex flex-col items-center justify-center"
               style={{
-                background: accent, color: 'var(--reve-button-text)',
+                background: accent, color: btnText,
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em', border: 'none', cursor: 'pointer', gap: 2,
               }}

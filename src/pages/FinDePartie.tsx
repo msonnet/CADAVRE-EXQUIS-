@@ -66,6 +66,7 @@ export default function FinDePartie() {
   const sc = seance?.colorSchema
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -136,7 +137,7 @@ export default function FinDePartie() {
         </p>
         <button
           onClick={() => navigate('/config')}
-          style={{ marginTop: 32, background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
+          style={{ marginTop: 32, background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
         >
           Nouvelle partie
         </button>
@@ -370,7 +371,7 @@ export default function FinDePartie() {
             onClick={() => navigate('/bibliotheque')}
             className="w-full flex flex-col items-center justify-center"
             style={{
-              background: accent, color: 'var(--reve-button-text)',
+              background: accent, color: btnText,
               ...mono, fontSize: 13,
               textTransform: 'uppercase',
               padding: '1.15em 1em',

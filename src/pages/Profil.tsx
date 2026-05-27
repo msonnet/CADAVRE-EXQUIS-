@@ -35,6 +35,7 @@ export default function Profil() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, saveProfile } = useAuth()
@@ -216,7 +217,7 @@ export default function Profil() {
           type="submit"
           disabled={saving || !pseudo.trim()}
           style={{
-            background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13,
+            background: accent, color: btnText, ...mono, fontSize: 13,
             textTransform: 'uppercase', padding: '0.9em 1.8em',
             border: 'none', cursor: saving ? 'wait' : 'pointer',
             opacity: saving || !pseudo.trim() ? 0.5 : 1,
