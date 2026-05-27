@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
+import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
 
-type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string }
+type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
 type RoomPlayer = { player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
@@ -34,6 +35,8 @@ export default function FinOnline() {
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, loading: authLoading } = useAuth()
+  const { jouer } = useSound()
+  const revelationPlayedRef = useRef(false)
 
   const [room, setRoom] = useState<Room | null>(null)
   const [players, setPlayers] = useState<RoomPlayer[]>([])
@@ -84,6 +87,54 @@ export default function FinOnline() {
     if (!authLoading && !user) { navigate('/online'); return }
     if (!authLoading && user) load()
   }, [authLoading, user, load])
+
+  // Subscribe to "rejouer" broadcast so non-host players are redirected
+  useEffect(() => {
+    if (!code) return
+    const channel = supabase.channel(`fin-online-${code}`)
+      .on('broadcast', { event: 'rejouer' }, (payload) => {
+        const newCode = payload.payload?.newCode as string | undefined
+        if (newCode) navigate(`/salon/${newCode}`)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [code, navigate])
+
+  // Jouer le son de révélation une seule fois au chargement de la page
+  useEffect(() => {
+    if (revelationPlayedRef.current) return
+    revelationPlayedRef.current = true
+    jouer('revelation')
+  }, [jouer])
+
+  async function rejouerEnsemble() {
+    if (!room || !user || !code) return
+    const newCode = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 23)]).join('')
+    const { error } = await supabase.from('rooms').insert({
+      code: newCode,
+      host_id: user.id,
+      mode: room.mode,
+      structure_id: room.structure_id,
+      nb_joueurs: room.nb_joueurs,
+      turn_seconds: room.turn_seconds,
+      status: 'waiting',
+    })
+    if (error) { console.error('Erreur rejouer:', error); return }
+    for (const p of players) {
+      await supabase.from('room_players').insert({
+        room_code: newCode,
+        player_id: p.player_id,
+        pseudo: p.pseudo,
+        avatar_url: p.avatar_url ?? null,
+        is_ready: false,
+      })
+    }
+    const channel = supabase.channel(`fin-online-${code}`)
+    await channel.subscribe()
+    await channel.send({ type: 'broadcast', event: 'rejouer', payload: { newCode } })
+    supabase.removeChannel(channel)
+    navigate(`/salon/${newCode}`)
+  }
 
   async function genererIllus(style: string) {
     if (!texteAssemble) return
@@ -293,6 +344,23 @@ export default function FinOnline() {
               </div>
             )}
           </div>)}
+
+          {/* Rejouer ensemble (hôte seulement) */}
+          {room.host_id === user?.id && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+              <button
+                onClick={rejouerEnsemble}
+                style={{
+                  width: '100%', background: 'transparent', color: encre,
+                  ...mono, fontSize: 13, textTransform: 'uppercase',
+                  padding: '0.85em 1.8em', border: `1px solid ${encre}40`,
+                  cursor: 'pointer', marginTop: 8,
+                }}
+              >
+                ↻ REJOUER ENSEMBLE
+              </button>
+            </motion.div>
+          )}
 
           {/* Nouvelle partie */}
           <button

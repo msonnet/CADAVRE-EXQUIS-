@@ -53,6 +53,7 @@ export default function FinDePartie() {
   const [promptVisible, setPromptVisible] = useState(false)
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const [pleinEcran, setPleinEcran] = useState(false)
+  const [typed, setTyped] = useState('')
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -98,6 +99,22 @@ export default function FinDePartie() {
     corrigerAccords(brut, poeme.structureId).then(t => { if (!cancelled) setTexteCorrige(t) })
     return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Typewriter reveal of the final poem text
+  const texteATaper = poeme
+    ? (texteCorrige ?? reconstruirePoeme(poeme.cases, getStructure(poeme.structureId)))
+    : ''
+  useEffect(() => {
+    if (!texteATaper) return
+    setTyped('')
+    let i = 0
+    const id = setInterval(() => {
+      i++
+      setTyped(texteATaper.slice(0, i))
+      if (i >= texteATaper.length) clearInterval(id)
+    }, 38)
+    return () => clearInterval(id)
+  }, [texteATaper])
 
   function choisirStyle(style: string) {
     if (!poeme || generatingIllustration) return
@@ -148,7 +165,9 @@ export default function FinDePartie() {
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
-  const lignes = texteAffiche.split('\n')
+  const typingDone = typed.length >= texteAffiche.length
+  const texteRendu = typingDone ? texteAffiche : typed
+  const lignes = texteRendu.split('\n')
   const ligne0 = (lignes[0]?.trim() ?? '').replace(/^[«»"''"“”‘’]+/, '')
   const lettrine = ligne0.charAt(0) ?? ''
   const resteLigne0 = ligne0.slice(1) ?? ''
@@ -255,8 +274,15 @@ export default function FinDePartie() {
             CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
           </div>
 
-          {/* Poem text with lettrine */}
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 15, lineHeight: 1.65 }}>
+          {/* Poem text with lettrine — tap to skip typewriter */}
+          <div
+            onClick={() => { if (!typingDone) setTyped(texteAffiche) }}
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              color: encre, fontSize: 15, lineHeight: 1.65,
+              cursor: typingDone ? 'default' : 'pointer',
+            }}
+          >
             {lettrine && (
               <span style={{
                 fontFamily: "'Bodoni Moda', serif",
@@ -269,12 +295,32 @@ export default function FinDePartie() {
               </span>
             )}
             {resteLigne0 && <span>{resteLigne0}</span>}
-            {lignes.slice(1).map((ligne, i) => (
+            {lignes.slice(1).map((ligne, i, arr) => (
               <React.Fragment key={i}>
                 <br />
                 {ligne || ' '}
+                {!typingDone && i === arr.length - 1 && (
+                  <motion.span
+                    aria-hidden
+                    style={{ display: 'inline-block', marginLeft: 1, color: accent }}
+                    animate={{ opacity: [1, 0] }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                  >
+                    ▎
+                  </motion.span>
+                )}
               </React.Fragment>
             ))}
+            {!typingDone && lignes.length <= 1 && (
+              <motion.span
+                aria-hidden
+                style={{ display: 'inline-block', marginLeft: 1, color: accent }}
+                animate={{ opacity: [1, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              >
+                ▎
+              </motion.span>
+            )}
           </div>
 
           {/* Card footer */}

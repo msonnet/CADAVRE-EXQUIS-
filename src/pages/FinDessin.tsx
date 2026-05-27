@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
+import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin } from '../db'
 import { partagerDessinAvecTexte, partagerImage } from '../utils/partager'
 import type { BandeDessin, DessinCadavre } from '../types'
@@ -85,6 +86,8 @@ export default function FinDessin() {
   const [nbBandes, setNbBandes] = useState(0)
   const [erreurVision, setErreurVision] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
+  const { jouer } = useSound()
+  const revelationPlayedRef = useRef(false)
 
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
@@ -131,6 +134,14 @@ export default function FinDessin() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  // Jouer le son de révélation la première fois que le dessin assemblé apparaît
+  useEffect(() => {
+    if (phase === 'revele' && !revelationPlayedRef.current) {
+      revelationPlayedRef.current = true
+      jouer('revelation')
+    }
+  }, [phase, jouer])
 
   async function reessayerVision() {
     if (!imageAssemblee) return

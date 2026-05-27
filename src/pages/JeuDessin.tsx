@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
 import { useAmbiance } from '../hooks/useAmbiance'
+import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
 
 type Tool = 'pen' | 'brush' | 'marker' | 'crayon' | 'eraser'
@@ -106,6 +107,7 @@ export default function JeuDessin() {
   const navigate = useNavigate()
   const seance = useReve()
   const { start: startAmbiance, stop: stopAmbiance, toggleMute, muted } = useAmbiance()
+  const { jouer } = useSound()
 
   const [config] = useState<ConfigDessin>(() => {
     try { return JSON.parse(sessionStorage.getItem('config-dessin') ?? '') }
@@ -226,6 +228,17 @@ export default function JeuDessin() {
       const img = new Image()
       img.onload = () => {
         ctx.drawImage(img, 0, srcY, prev.width, RACCORD_H * prevDpr, 0, 0, canvas.width, RACCORD_H_phys)
+        // Fade-out progressif du raccord : opaque en haut, fondu vers la couleur du fond en bas
+        // (effet d'un pli papier — la trace s'efface là où le joueur prendra le relais)
+        const grad = ctx.createLinearGradient(0, 0, 0, RACCORD_H_phys)
+        grad.addColorStop(0, 'rgba(253, 248, 242, 0)')
+        grad.addColorStop(0.7, 'rgba(253, 248, 242, 0)')
+        grad.addColorStop(1, 'rgba(253, 248, 242, 1)')
+        ctx.save()
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 0, canvas.width, RACCORD_H_phys)
+        ctx.restore()
         // Reset historique pour la nouvelle bande : on garde l'état initial (avec le raccord) comme baseline
         undoStackRef.current = [ctx.getImageData(0, 0, canvas.width, canvas.height)]
         redoStackRef.current = []
@@ -456,6 +469,7 @@ export default function JeuDessin() {
     }
     const nouvellesBandes = [...bandes, bande]
     setBandes(nouvellesBandes)
+    jouer('soumettre')
     if (bandeIdx + 1 >= config.nbBandes) {
       sessionStorage.setItem('dessin-bandes', JSON.stringify(nouvellesBandes))
       navigate('/fin-dessin')

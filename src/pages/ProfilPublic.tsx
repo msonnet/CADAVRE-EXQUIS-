@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { supabase, getReactorKey } from '../lib/supabase'
-import { useSound } from '../hooks/useSound'
 
-const PAGE_SIZE = 20
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
 type ReactionEmoji = typeof REACTION_EMOJIS[number]
 
@@ -69,10 +67,11 @@ function extraitPoeme(payload: PoemePayload): string {
   return texte.slice(0, 120)
 }
 
-export default function Galerie() {
+export default function ProfilPublic() {
   const navigate = useNavigate()
+  const params = useParams<{ pseudo: string }>()
+  const pseudoParam = params.pseudo ?? ''
   const seance = useReve()
-  const { jouer } = useSound()
 
   const accent = seance?.accent.hex ?? '#b22c20'
   const encre = seance?.ambiance.ink ?? '#e6d4b8'
@@ -81,14 +80,10 @@ export default function Galerie() {
 
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
-  const [onglet, setOnglet] = useState<GalleryType>('poeme')
   const [items, setItems] = useState<GalleryItem[]>([])
   const [chargement, setChargement] = useState(true)
-  const [chargementPlus, setChargementPlus] = useState(false)
-  const [pageOffset, setPageOffset] = useState(0)
-  const [encore, setEncore] = useState(true)
-  const [expanded, setExpanded] = useState<string | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
   const [reactions, setReactions] = useState<ReactionsMap>({})
   const [mine, setMine] = useState<MineMap>({})
   const reactorKey = useRef<string>(getReactorKey())
@@ -102,7 +97,7 @@ export default function Galerie() {
         .select('gallery_id, emoji, reactor_key')
         .in('gallery_id', ids)
       if (error) {
-        console.error('[Galerie] Erreur réactions', error)
+        console.error('[ProfilPublic] Erreur réactions', error)
         return
       }
       const counts: ReactionsMap = {}
@@ -125,14 +120,13 @@ export default function Galerie() {
         return next
       })
     } catch (e) {
-      console.error('[Galerie] Exception réactions', e)
+      console.error('[ProfilPublic] Exception réactions', e)
     }
   }, [])
 
   const toggleReaction = useCallback(async (galleryId: string, emoji: ReactionEmoji) => {
     const hadIt = mine[galleryId]?.has(emoji) ?? false
 
-    // Mise à jour optimiste
     setReactions(prev => {
       const cur = { ...(prev[galleryId] ?? {}) }
       cur[emoji] = Math.max(0, (cur[emoji] ?? 0) + (hadIt ? -1 : 1))
@@ -161,8 +155,7 @@ export default function Galerie() {
         if (error) throw error
       }
     } catch (e) {
-      console.error('[Galerie] Erreur toggle réaction', e)
-      // Rollback
+      console.error('[ProfilPublic] Erreur toggle réaction', e)
       setReactions(prev => {
         const cur = { ...(prev[galleryId] ?? {}) }
         cur[emoji] = Math.max(0, (cur[emoji] ?? 0) + (hadIt ? 1 : -1))
@@ -183,14 +176,14 @@ export default function Galerie() {
     try {
       const { error } = await supabase.rpc('increment_gallery_view', { g_id: galleryId })
       if (error) {
-        console.error('[Galerie] Erreur incrément vue', error)
+        console.error('[ProfilPublic] Erreur incrément vue', error)
         return
       }
       setItems(prev => prev.map(it => it.id === galleryId
         ? { ...it, views_count: (it.views_count ?? 0) + 1 }
         : it))
     } catch (e) {
-      console.error('[Galerie] Exception incrément vue', e)
+      console.error('[ProfilPublic] Exception incrément vue', e)
     }
   }, [])
 
@@ -202,59 +195,46 @@ export default function Galerie() {
     })
   }, [incrementView])
 
-  const chargerItems = useCallback(async (type: GalleryType, offset: number, reset: boolean) => {
-    if (reset) {
-      setChargement(true)
-      setItems([])
-      setEncore(true)
-    } else {
-      setChargementPlus(true)
-    }
-    setErreur(null)
-
-    try {
-      const { data, error } = await supabase
-        .from('gallery')
-        .select('id, type, titre, payload, image_url, author_pseudo, author_avatar, created_at, views_count')
-        .eq('type', type)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1)
-
-      if (error) {
-        console.error('[Galerie] Erreur de chargement', error)
-        setErreur('Impossible de charger la galerie.')
-        setChargement(false)
-        setChargementPlus(false)
-        return
-      }
-
-      const nouveaux = (data ?? []) as GalleryItem[]
-      setItems(prev => reset ? nouveaux : [...prev, ...nouveaux])
-      setEncore(nouveaux.length === PAGE_SIZE)
-      setPageOffset(offset + nouveaux.length)
-      setChargement(false)
-      setChargementPlus(false)
-
-      if (nouveaux.length > 0) {
-        chargerReactions(nouveaux.map(n => n.id))
-      }
-    } catch (e) {
-      console.error('[Galerie] Exception chargement', e)
-      setErreur('Impossible de charger la galerie.')
-      setChargement(false)
-      setChargementPlus(false)
-    }
-  }, [chargerReactions])
-
   useEffect(() => {
-    setExpanded(null)
-    chargerItems(onglet, 0, true)
-  }, [onglet, chargerItems])
+    let annule = false
+    async function charger() {
+      setChargement(true)
+      setErreur(null)
+      try {
+        const { data, error } = await supabase
+          .from('gallery')
+          .select('id, type, titre, payload, image_url, author_pseudo, author_avatar, created_at, views_count')
+          .ilike('author_pseudo', pseudoParam)
+          .order('created_at', { ascending: false })
 
-  const chargerPlus = () => {
-    if (chargementPlus || !encore) return
-    chargerItems(onglet, pageOffset, false)
-  }
+        if (annule) return
+
+        if (error) {
+          console.error('[ProfilPublic] Erreur de chargement', error)
+          setErreur('Impossible de charger ce profil.')
+          setChargement(false)
+          return
+        }
+
+        const rows = (data ?? []) as GalleryItem[]
+        setItems(rows)
+        setChargement(false)
+
+        if (rows.length > 0) {
+          chargerReactions(rows.map(r => r.id))
+        }
+      } catch (e) {
+        if (annule) return
+        console.error('[ProfilPublic] Exception chargement', e)
+        setErreur('Impossible de charger ce profil.')
+        setChargement(false)
+      }
+    }
+    charger()
+    return () => { annule = true }
+  }, [pseudoParam, chargerReactions])
+
+  const titreAffichePseudo = items[0]?.author_pseudo ?? pseudoParam
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -265,20 +245,20 @@ export default function Galerie() {
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/galerie')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← ACCUEIL
+            ← GALERIE
           </button>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — GALERIE —
+          — PROFIL —
         </div>
 
-        {/* ── TITRE ── */}
+        {/* ── TITRE (pseudo) ── */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -288,43 +268,14 @@ export default function Galerie() {
             className="font-bodoni font-black leading-tight mb-1"
             style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            Créations <span style={{ color: accent }}>partagées.</span>
+            <span style={{ color: accent }}>{titreAffichePseudo}</span>
           </div>
           <p style={{
             fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
-            Les œuvres de la communauté
+            Œuvres publiées
           </p>
         </motion.div>
-
-        {/* ── ONGLETS ── */}
-        <div style={{ display: 'flex', gap: 0, marginBottom: 14, borderBottom: `0.5px solid ${encre}20` }}>
-          {(['poeme', 'dessin'] as const).map(t => {
-            const actif = onglet === t
-            return (
-              <button
-                key={t}
-                onClick={() => { jouer('clic'); setOnglet(t) }}
-                style={{
-                  ...mono,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: actif ? accent : encre,
-                  opacity: actif ? 1 : 0.55,
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: actif ? `2px solid ${accent}` : '2px solid transparent',
-                  padding: '10px 18px 10px 0',
-                  marginRight: 18,
-                  cursor: 'pointer',
-                  letterSpacing: '0.22em',
-                }}
-              >
-                {t === 'poeme' ? 'POÈMES' : 'DESSINS'}
-              </button>
-            )
-          })}
-        </div>
 
         {/* ── CHARGEMENT ── */}
         {chargement && (
@@ -358,8 +309,21 @@ export default function Galerie() {
             <p style={{
               fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
-              Aucune création partagée pour l'instant.
+              Aucune œuvre publiée sous ce nom.
             </p>
+            <button
+              onClick={() => navigate('/galerie')}
+              style={{
+                marginTop: 22,
+                background: accent, color: btnText,
+                ...mono, fontSize: 12, textTransform: 'uppercase',
+                padding: '0.8em 1.4em',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Retour à la galerie
+            </button>
           </motion.div>
         )}
 
@@ -406,7 +370,6 @@ export default function Galerie() {
                           color: 'inherit',
                         }}
                       >
-                        {/* En-tête de la carte */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
                           <p style={{
                             fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16,
@@ -419,39 +382,13 @@ export default function Galerie() {
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
-                      </button>
 
-                      {/* Méta auteur (Link) + date */}
-                      <p style={{ ...mono, fontSize: 11, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
-                        <Link
-                          to={`/u/${encodeURIComponent(item.author_pseudo)}`}
-                          onClick={e => e.stopPropagation()}
-                          style={{
-                            color: encre,
-                            textDecoration: 'none',
-                            transition: 'color 0.15s',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.color = accent }}
-                          onMouseLeave={e => { e.currentTarget.style.color = encre }}
-                        >
-                          {item.author_pseudo.toUpperCase()}
-                        </Link>
-                        {' · '}
-                        {formatDate(item.created_at).toUpperCase()}
-                      </p>
+                        <p style={{ ...mono, fontSize: 11, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
+                          {(item.type === 'poeme' ? 'POÈME' : 'DESSIN')}
+                          {' · '}
+                          {formatDate(item.created_at).toUpperCase()}
+                        </p>
 
-                      <button
-                        onClick={() => handleExpand(item.id)}
-                        style={{
-                          display: 'block', width: '100%', textAlign: 'left',
-                          padding: 0,
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: 'inherit',
-                        }}
-                      >
-                        {/* Aperçu / contenu */}
                         {item.type === 'poeme' && poemePayload && (
                           <div style={{
                             fontFamily: "'Cormorant Garamond', serif",
@@ -549,49 +486,9 @@ export default function Galerie() {
           </AnimatePresence>
         )}
 
-        {/* ── CHARGER PLUS ── */}
-        {!chargement && !erreur && items.length > 0 && encore && (
-          <motion.div
-            style={{ marginTop: 18, marginBottom: 4 }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <button
-              onClick={chargerPlus}
-              disabled={chargementPlus}
-              style={{
-                width: '100%',
-                background: chargementPlus ? `${accent}aa` : accent,
-                color: btnText,
-                ...mono, fontSize: 13, textTransform: 'uppercase',
-                padding: '0.9em 1em',
-                border: 'none',
-                cursor: chargementPlus ? 'wait' : 'pointer',
-              }}
-            >
-              {chargementPlus ? (
-                <motion.span
-                  style={{ display: 'inline-block' }}
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                >✦</motion.span>
-              ) : 'Charger plus →'}
-            </button>
-          </motion.div>
-        )}
-
-        {!chargement && !erreur && items.length > 0 && !encore && (
-          <p style={{
-            ...mono, fontSize: 11, color: encre, opacity: 0.55,
-            textAlign: 'center', marginTop: 18, marginBottom: 4,
-          }}>
-            — FIN —
-          </p>
-        )}
-
         <div style={{ flex: 1, minHeight: 12 }} />
 
-        {/* Référence à bg pour cohérence — la couleur de fond est déjà appliquée par le Decor */}
+        {/* Référence à bg pour cohérence */}
         <div aria-hidden style={{ display: 'none', background: bg }} />
 
       </div>

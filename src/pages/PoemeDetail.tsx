@@ -6,6 +6,7 @@ import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
+import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import { partagerTexte, partagerImageDistante, genererImageStory, telechargerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
@@ -41,6 +42,7 @@ export default function PoemeDetail() {
   const [pdfBusy, setPdfBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { parler, arreter, parlant } = useTTS()
+  const { jouer } = useSound()
   const { profile } = useAuth()
 
   const c = seance?.colorSchema
@@ -103,6 +105,7 @@ export default function PoemeDetail() {
         author_avatar: profile?.avatar_url ?? null,
       })
       if (error) throw error
+      jouer('soumettre')
       setPublished(true)
       setTimeout(() => setPublished(false), 2000)
     } catch (e) {

@@ -1,5 +1,3 @@
-import { jsPDF } from 'jspdf'
-
 export async function partagerImage(
   dataUrl: string,
   nomFichier: string,
@@ -327,6 +325,7 @@ export async function exporterPDF(opts: {
   date: number
 }): Promise<void> {
   try {
+    const { jsPDF } = await import('jspdf')
     const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
     const pageW = doc.internal.pageSize.getWidth()
     const pageH = doc.internal.pageSize.getHeight()

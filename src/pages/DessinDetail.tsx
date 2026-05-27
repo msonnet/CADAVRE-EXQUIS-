@@ -6,7 +6,8 @@ import { Decor, useReve } from '../reve'
 import { chargerDessin, supprimerDessin, mettreAJourTitreDessin } from '../db'
 import { partagerDessinAvecTexte, partagerImage, genererImageStory, telechargerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
-import { supabase } from '../lib/supabase'
+import { useSound } from '../hooks/useSound'
+import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import type { DessinCadavre } from '../types'
 
 function formatDate(ts: number): string {
@@ -32,6 +33,7 @@ export default function DessinDetail() {
   const [storyBusy, setStoryBusy] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const { profile } = useAuth()
+  const { jouer } = useSound()
 
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
@@ -76,8 +78,13 @@ export default function DessinDetail() {
     setPublishing(true)
     setPublishError(false)
     try {
+      const url = await uploaderImageGalerie(dessin.imageDataUrl, 'dessin')
+      if (!url) {
+        setPublishError(true)
+        setTimeout(() => setPublishError(false), 2000)
+        return
+      }
       const payload = JSON.stringify({
-        imageDataUrl: dessin.imageDataUrl,
         texteVision: dessin.texteVision,
         nbBandes: dessin.nbBandes,
       })
@@ -85,10 +92,12 @@ export default function DessinDetail() {
         type: 'dessin',
         titre: dessin.titre,
         payload,
+        image_url: url,
         author_pseudo: profile?.pseudo ?? 'Anonyme',
         author_avatar: profile?.avatar_url ?? null,
       })
       if (error) throw error
+      jouer('soumettre')
       setPublished(true)
       setTimeout(() => setPublished(false), 2000)
     } catch (e) {

@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
+import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 
-type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string }
+type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
@@ -175,6 +176,9 @@ export default function JeuOnline() {
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
+  const { jouer } = useSound()
+  const prevContribCountRef = useRef(0)
+  const contribInitializedRef = useRef(false)
 
   const [room, setRoom] = useState<Room | null>(null)
   const [players, setPlayers] = useState<RoomPlayer[]>([])
@@ -191,7 +195,13 @@ export default function JeuOnline() {
   const [reconnectTick, setReconnectTick] = useState(0)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Timer per turn
+  const [tick, setTick] = useState(0)
+  const autoSubmittedRef = useRef(false)
+
   const myIndex = myPlayer?.order_index ?? null
+  // Spectator detection : utilisateur connecté mais pas dans la liste des joueurs
+  const isSpectator = !!room && !!user && !!players.length && !myPlayer
 
   const loadGame = useCallback(async () => {
     if (!code || !user) return
@@ -287,6 +297,7 @@ export default function JeuOnline() {
     const texte = await callClaude(caseDef.consigne, caseDef.type)
     if (texte) setInput(texte)
     setIaLoading(false)
+    jouer('ia')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -302,6 +313,7 @@ export default function JeuOnline() {
     if (!error) {
       setMyContrib(input.trim())
       setSubmitted(true)
+      jouer('soumettre')
     }
     setSubmitting(false)
   }
@@ -317,10 +329,71 @@ export default function JeuOnline() {
     if (!error) {
       setMyContrib(dataUrl)
       setSubmitted(true)
+      jouer('soumettre')
     }
   }
 
-  if (authLoading || !room || !myPlayer) {
+  // Notification Realtime : nouvelle contribution reçue et l'utilisateur n'a pas encore soumis
+  useEffect(() => {
+    const prev = prevContribCountRef.current
+    const now = contributions.length
+    prevContribCountRef.current = now
+    if (!contribInitializedRef.current) {
+      contribInitializedRef.current = true
+      return
+    }
+    if (now > prev && !submitted) {
+      jouer('clic')
+      if ('vibrate' in navigator) navigator.vibrate(180)
+    }
+  }, [contributions.length, submitted, jouer])
+
+  // ── Timer : tick every second to re-render countdown ──
+  useEffect(() => {
+    if (!room?.turn_seconds || !room?.started_at) return
+    const id = setInterval(() => setTick(t => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [room?.turn_seconds, room?.started_at])
+
+  // ── Calcul du temps restant ──
+  const secondsLeft = (() => {
+    if (!room?.turn_seconds || !room?.started_at) return null
+    const elapsed = Math.floor((Date.now() - new Date(room.started_at).getTime()) / 1000)
+    return Math.max(0, room.turn_seconds - elapsed)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  })()
+  void tick // re-render trigger
+
+  // ── Auto-submit on timer expiry ──
+  useEffect(() => {
+    if (isSpectator) return
+    if (secondsLeft === null) return
+    if (secondsLeft > 0) return
+    if (submitted) return
+    if (autoSubmittedRef.current) return
+    if (!user || !code || myIndex === null) return
+    if (!input.trim()) return // pas de soumission vide — l'hôte auto-finit
+    autoSubmittedRef.current = true
+    ;(async () => {
+      try {
+        const { error } = await supabase.from('contributions').insert({
+          room_code: code,
+          player_id: user.id,
+          case_index: myIndex,
+          texte: input.trim(),
+        })
+        if (!error) {
+          setMyContrib(input.trim())
+          setSubmitted(true)
+          try { jouer('soumettre') } catch {}
+        }
+      } catch (e) {
+        console.error('Auto-submit erreur:', e)
+      }
+    })()
+  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, input, jouer])
+
+  if (authLoading || !room || (!myPlayer && !isSpectator)) {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
@@ -344,6 +417,80 @@ export default function JeuOnline() {
   const nbTotal = room.mode === 'dessin' ? players.length : Math.min(players.length, nombreCasesEffectif(structure))
   const caseDef = myIndex !== null && room.mode !== 'dessin' ? structure.cases[myIndex] : null
   const submitted_count = contributions.length
+
+  // ── Spectator view ────────────────────────────────────
+  if (isSpectator) {
+    return (
+      <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
+        <Decor variant="aide" />
+
+        {connectionStatus !== 'connected' && (
+          <div style={{
+            position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
+            left: '50%', transform: 'translateX(-50%)',
+            padding: '8px 14px', borderRadius: 4,
+            background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
+            color: '#fff', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+            fontSize: 11, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          }}>
+            {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+          </div>
+        )}
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>{code}</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>
+            {submitted_count}/{nbTotal} SOUMIS
+          </span>
+        </div>
+        <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
+
+        {/* Spectator banner */}
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 16 }}>
+          👁 SPECTATEUR
+        </div>
+
+        {/* Live counter */}
+        <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, marginBottom: 20 }}>
+          {submitted_count}/{nbTotal} contributions reçues
+        </div>
+
+        {/* Player avatars */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+          {players.map((p) => {
+            const hasDone = contributions.some(c => c.player_id === p.player_id)
+            return (
+              <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 3, overflow: 'hidden',
+                  border: `2px solid ${hasDone ? accent : `${encre}20`}`,
+                  opacity: hasDone ? 1 : 0.5,
+                }}>
+                  {p.avatar_url ? (
+                    <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 16, color: accent }}>
+                        {p.pseudo[0]?.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <span style={{ ...mono, fontSize: 11, color: hasDone ? accent : `${encre}50` }}>
+                  {hasDone ? '✓' : '…'}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+        </div>
+      </PageTransition>
+    )
+  }
 
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">

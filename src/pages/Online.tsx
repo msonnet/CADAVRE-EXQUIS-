@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
+import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 
 function genCode(): string {
@@ -22,6 +23,7 @@ export default function Online() {
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, signInWithEmail, signOut } = useAuth()
+  const { jouer } = useSound()
 
   const [email, setEmail] = useState('')
   const [emailSent, setEmailSent] = useState(false)
@@ -46,6 +48,7 @@ export default function Online() {
 
   async function handleCreate() {
     if (!user || !profile) return
+    jouer('clic')
     setCreating(true)
     setCreateError(null)
     try {
@@ -72,6 +75,7 @@ export default function Online() {
     e.preventDefault()
     const code = joinCode.trim().toUpperCase()
     if (!code || !user || !profile) return
+    jouer('clic')
     setJoining(true)
     setJoinError(null)
     try {

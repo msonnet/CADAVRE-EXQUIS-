@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { chargerPoemes } from '../db'
 import { Decor, useReve } from '../reve'
+import { useSound } from '../hooks/useSound'
 import type { NiveauValidation } from '../utils/validation'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [

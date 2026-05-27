@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { chargerPoemes, chargerDessins } from '../db'
 import { Decor, useReve } from '../reve'
 import type { Poeme, DessinCadavre } from '../types'
+import { useSound } from '../hooks/useSound'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -30,6 +31,7 @@ function normaliser(s: string): string {
 export default function Bibliotheque() {
   const navigate = useNavigate()
   const seance = useReve()
+  const { jouer } = useSound()
   const [poemes, setPoemes] = useState<Poeme[]>([])
   const [dessins, setDessins] = useState<DessinCadavre[]>([])
   const [chargement, setChargement] = useState(true)
@@ -175,7 +177,7 @@ export default function Bibliotheque() {
                 {poemesFiltres.map((poeme, i) => (
                   <motion.button
                     key={poeme.id}
-                    onClick={() => navigate(`/bibliotheque/${poeme.id}`)}
+                    onClick={() => { jouer('clic'); navigate(`/bibliotheque/${poeme.id}`) }}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
@@ -223,7 +225,7 @@ export default function Bibliotheque() {
             {dessins.map((dessin, i) => (
               <motion.button
                 key={dessin.id}
-                onClick={() => navigate(`/bibliotheque/dessin/${dessin.id}`)}
+                onClick={() => { jouer('clic'); navigate(`/bibliotheque/dessin/${dessin.id}`) }}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}

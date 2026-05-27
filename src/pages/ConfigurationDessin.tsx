@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
+import { useSound } from '../hooks/useSound'
 import type { ConfigDessin } from '../types'
 
 const CONFIG_PAR_DEFAUT: ConfigDessin = {
@@ -21,6 +22,7 @@ const REFS = [
 export default function ConfigurationDessin() {
   const navigate = useNavigate()
   const seance = useReve()
+  const { jouer } = useSound()
   const [config, setConfig] = useState<ConfigDessin>(CONFIG_PAR_DEFAUT)
 
   const c = seance?.colorSchema
@@ -40,6 +42,7 @@ export default function ConfigurationDessin() {
       : `${joueurs} joueurs se partagent ${totalBandes} bandes`
 
   function demarrer() {
+    jouer('demarrage')
     sessionStorage.setItem('config-dessin', JSON.stringify(config))
     sessionStorage.removeItem('dessin-bandes')
     navigate('/jeu-dessin')
