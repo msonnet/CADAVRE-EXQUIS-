@@ -2,7 +2,8 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const { texte, structureId } = req.body ?? {}
-  if (!texte) { res.status(400).json({ error: 'texte requis' }); return }
+  if (typeof texte !== 'string' || !texte) { res.status(400).json({ error: 'texte requis' }); return }
+  if (texte.length > 1000) { res.status(400).json({ error: 'texte trop long' }); return }
 
   // Vers libre : chaque vers est écrit en entier par un joueur, pas de désaccord inter-blocs
   if (structureId === 'vers-libre') { res.status(200).json({ texte }); return }

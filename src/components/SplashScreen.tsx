@@ -6,10 +6,15 @@ const SPLASH_KEY = 'cadavre-splash-v1'
 
 export default function SplashScreen() {
   const seance = useReve()
-  const [visible, setVisible] = useState(() => localStorage.getItem(SPLASH_KEY) !== '1')
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try { return localStorage.getItem(SPLASH_KEY) !== '1' } catch { return true }
+  })
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
+  const bg = c?.bg ?? '#0f0805'
+  const encre = c?.encre ?? '#e8d4b8'
 
   useEffect(() => {
     if (!visible) return
@@ -18,7 +23,7 @@ export default function SplashScreen() {
   }, [visible])
 
   function dismiss() {
-    localStorage.setItem(SPLASH_KEY, '1')
+    try { localStorage.setItem(SPLASH_KEY, '1') } catch {}
     setVisible(false)
   }
 
@@ -33,7 +38,7 @@ export default function SplashScreen() {
           onClick={dismiss}
           style={{
             position: 'fixed', inset: 0, zIndex: 999,
-            background: '#0f0805',
+            background: bg,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer',
@@ -48,7 +53,7 @@ export default function SplashScreen() {
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
-              color: '#e8d4b8',
+              color: encre,
               lineHeight: 1.7,
               marginBottom: 8,
             }}>
@@ -75,9 +80,9 @@ export default function SplashScreen() {
             transition={{ delay: 2.7 }}
             style={{
               position: 'absolute', bottom: 48,
-              fontFamily: "'Outfit', sans-serif", fontSize: 8,
+              fontFamily: "'Inter', sans-serif", fontSize: 8,
               letterSpacing: '0.22em', textTransform: 'uppercase',
-              color: '#e8d4b8', opacity: 0.28,
+              color: encre, opacity: 0.28,
             }}
           >
             Toucher pour entrer

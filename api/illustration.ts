@@ -75,7 +75,14 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const { texte, style, promptLibre } = req.body ?? {}
-  if (!texte) { res.status(400).json({ error: 'texte requis' }); return }
+  if (typeof texte !== 'string' || !texte) { res.status(400).json({ error: 'texte requis' }); return }
+  if (texte.length > 1500) { res.status(400).json({ error: 'texte trop long' }); return }
+  if (promptLibre !== undefined && (typeof promptLibre !== 'string' || promptLibre.length > 500)) {
+    res.status(400).json({ error: 'promptLibre invalide' }); return
+  }
+  if (style !== undefined && typeof style !== 'string') {
+    res.status(400).json({ error: 'style invalide' }); return
+  }
 
   const falKey = process.env.FAL_KEY
   if (!falKey) { res.status(200).json({ url: null, reason: 'not_configured' }); return }
@@ -122,8 +129,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     })
 
     if (!response.ok) {
-      const body = await response.text().catch(() => '')
-      console.error(`fal.ai ${response.status}:`, body)
+      console.error(`fal.ai ${response.status}`)
       res.status(200).json({ url: null, reason: `fal_error_${response.status}` })
       return
     }

@@ -216,7 +216,7 @@ export default function Aide() {
               className="flex flex-col items-center justify-center"
               style={{
                 flex: 1,
-                background: accent, color: '#e8d4b8',
+                background: accent, color: 'var(--reve-button-text)',
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}
@@ -229,7 +229,7 @@ export default function Aide() {
               className="flex flex-col items-center justify-center"
               style={{
                 flex: 1,
-                background: second, color: '#e8d4b8',
+                background: second, color: 'var(--reve-button-text)',
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}

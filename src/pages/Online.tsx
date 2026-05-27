@@ -156,6 +156,7 @@ export default function Online() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="votre@email.fr"
+                  aria-label="Adresse e-mail"
                   required
                   style={{
                     fontFamily: "'Cormorant Garamond', serif", fontSize: 16,
@@ -170,7 +171,7 @@ export default function Online() {
                 <button
                   type="submit"
                   disabled={sendingEmail}
-                  style={{ background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer', opacity: sendingEmail ? 0.5 : 1 }}
+                  style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer', opacity: sendingEmail ? 0.5 : 1 }}
                 >
                   {sendingEmail ? 'ENVOI…' : 'ENVOYER LE LIEN'}
                 </button>
@@ -188,7 +189,7 @@ export default function Online() {
           </p>
           <button
             onClick={() => navigate('/profil')}
-            style={{ background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer' }}
+            style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer' }}
           >
             CRÉER MON PROFIL →
           </button>
@@ -235,7 +236,7 @@ export default function Online() {
             <button
               onClick={handleCreate}
               disabled={creating}
-              style={{ background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
+              style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
             >
               {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
             </button>
@@ -255,6 +256,7 @@ export default function Online() {
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value)}
                 placeholder="LOUP-42"
+                aria-label="Code du salon"
                 maxLength={12}
                 style={{
                   ...mono, fontSize: 16, textTransform: 'uppercase',

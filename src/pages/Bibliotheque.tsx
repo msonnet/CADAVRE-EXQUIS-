@@ -98,6 +98,7 @@ export default function Bibliotheque() {
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
               placeholder="Rechercher…"
+              aria-label="Rechercher dans le recueil"
               className="champ-carnet w-full"
               style={{ borderLeftColor: accent, fontSize: 13 }}
             />
@@ -134,7 +135,7 @@ export default function Bibliotheque() {
               onClick={() => navigate('/config')}
               whileTap={{ scale: 0.98 }}
               style={{
-                marginTop: 28, background: accent, color: '#e8d4b8',
+                marginTop: 28, background: accent, color: 'var(--reve-button-text)',
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '0.9em 1.6em', border: 'none', cursor: 'pointer',
               }}
@@ -278,7 +279,7 @@ export default function Bibliotheque() {
               onClick={() => navigate('/config')}
               className="w-full flex flex-col items-center justify-center"
               style={{
-                background: accent, color: '#e8d4b8',
+                background: accent, color: 'var(--reve-button-text)',
                 ...mono, fontSize: 13, textTransform: 'uppercase',
                 padding: '1em', border: 'none', cursor: 'pointer', gap: 2,
               }}

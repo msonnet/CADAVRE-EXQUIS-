@@ -123,7 +123,7 @@ export default function Reglages() {
               <span style={{
                 position: 'absolute', top: 3, left: sonActif ? 23 : 3,
                 width: 18, height: 18, borderRadius: '50%',
-                background: sonActif ? '#e8d4b8' : encre,
+                background: sonActif ? 'var(--reve-button-text)' : encre,
                 transition: 'left 0.25s',
               }} />
             </button>

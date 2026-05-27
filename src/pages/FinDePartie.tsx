@@ -136,7 +136,7 @@ export default function FinDePartie() {
         </p>
         <button
           onClick={() => navigate('/config')}
-          style={{ marginTop: 32, background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
+          style={{ marginTop: 32, background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
         >
           Nouvelle partie
         </button>
@@ -370,7 +370,7 @@ export default function FinDePartie() {
             onClick={() => navigate('/bibliotheque')}
             className="w-full flex flex-col items-center justify-center"
             style={{
-              background: accent, color: '#e8d4b8',
+              background: accent, color: 'var(--reve-button-text)',
               ...mono, fontSize: 13,
               textTransform: 'uppercase',
               padding: '1.15em 1em',

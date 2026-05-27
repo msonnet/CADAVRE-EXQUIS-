@@ -142,7 +142,7 @@ function DrawingCanvas({ onSubmit, accent, encre }: {
         onTouchStart={start} onTouchMove={move} onTouchEnd={end}
       />
 
-      <button type="button" onClick={submit} disabled={busy} style={{ background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em', border: 'none', cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+      <button type="button" onClick={submit} disabled={busy} style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em', border: 'none', cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}>
         {busy ? 'ENVOI…' : 'SOUMETTRE MON DESSIN →'}
       </button>
     </div>
@@ -169,6 +169,7 @@ export default function JeuOnline() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const bg = c?.bg ?? '#fdf8f2'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
@@ -406,6 +407,7 @@ export default function JeuOnline() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={caseDef.consigne}
+                aria-label={caseDef.consigne}
                 autoFocus
                 style={{
                   fontFamily: "'Cormorant Garamond', serif", fontSize: 22,
@@ -434,7 +436,7 @@ export default function JeuOnline() {
                   disabled={!input.trim() || submitting}
                   style={{
                     flex: 3, background: input.trim() ? accent : 'transparent',
-                    color: input.trim() ? '#e8d4b8' : `${encre}40`,
+                    color: input.trim() ? bg : `${encre}40`,
                     ...mono, fontSize: 13, textTransform: 'uppercase',
                     padding: '0.7em 1.5em',
                     border: input.trim() ? 'none' : `1px solid ${encre}30`,

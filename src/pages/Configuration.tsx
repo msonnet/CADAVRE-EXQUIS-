@@ -282,7 +282,7 @@ export default function Configuration() {
             onClick={demarrer}
             className="w-full flex flex-col items-center justify-center"
             style={{
-              background: accent, color: '#e8d4b8',
+              background: accent, color: 'var(--reve-button-text)',
               ...mono, fontSize: 13,
               textTransform: 'uppercase',
               padding: '1.15em 1em',

@@ -78,11 +78,18 @@ export function ReveProvider({ children }: { children: React.ReactNode }) {
   const [seed, setSeed] = useState<number>(() => {
     if (typeof window === 'undefined') return 42
     const k = storageKey()
-    const saved = localStorage.getItem(k)
-    if (saved) return parseInt(saved)
-    const fresh = Math.floor(Math.random() * 100000)
-    localStorage.setItem(k, String(fresh))
-    return fresh
+    try {
+      const saved = localStorage.getItem(k)
+      if (saved) {
+        const n = parseInt(saved, 10)
+        if (Number.isFinite(n)) return n
+      }
+      const fresh = Math.floor(Math.random() * 100000)
+      localStorage.setItem(k, String(fresh))
+      return fresh
+    } catch {
+      return Math.floor(Math.random() * 100000)
+    }
   })
 
   const retirer = useCallback(() => {

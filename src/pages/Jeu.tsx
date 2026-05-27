@@ -111,6 +111,14 @@ function lireBrouillon(): BrouillonActuel | null {
   } catch { return null }
 }
 
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback
+  try {
+    const v = JSON.parse(raw)
+    return v ?? fallback
+  } catch { return fallback }
+}
+
 function normaliserCle(t: string): string {
   return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
@@ -213,7 +221,7 @@ export default function Jeu() {
   // Pré-assigne une voix stable à chaque slot IA de la séquence, une fois pour toute la partie
   const [voixParSlot] = useState<Record<number, string>>(() => {
     if (b?.voixParSlot) return b.voixParSlot
-    const used = new Set<string>(JSON.parse(localStorage.getItem('voix-utilisees') ?? '[]') as string[])
+    const used = new Set<string>(safeParse<string[]>(localStorage.getItem('voix-utilisees'), []))
     const map: Record<number, string> = {}
     seq.forEach((p, idx) => {
       if (p.type === 'ia') {
@@ -253,7 +261,7 @@ export default function Jeu() {
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const caseIndexSoumis = useRef(-1)
   const textesUtilises  = useRef(new Set<string>())
-  const textesSession   = useRef(new Set<string>(JSON.parse(sessionStorage.getItem('textes-session') ?? '[]') as string[]))
+  const textesSession   = useRef(new Set<string>(safeParse<string[]>(sessionStorage.getItem('textes-session'), [])))
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
@@ -700,6 +708,7 @@ export default function Jeu() {
                 onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
                 onKeyDown={handleKeyDown}
                 placeholder="…"
+                aria-label="Votre contribution"
                 autoFocus
                 rows={3}
               />
@@ -732,7 +741,7 @@ export default function Jeu() {
                 className="w-full flex flex-col items-center justify-center"
                 style={{
                   background: !inputValue.trim() ? `${encre}30` : accent,
-                  color: '#e8d4b8',
+                  color: 'var(--reve-button-text)',
                   ...mono, fontSize: 13,
                   textTransform: 'uppercase',
                   padding: '1.1em 1em',

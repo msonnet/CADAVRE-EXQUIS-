@@ -4,7 +4,9 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const { prompt, style = 'surrealiste' } = req.body ?? {}
-  if (!prompt) { res.status(400).json({ error: 'prompt requis' }); return }
+  if (typeof prompt !== 'string' || !prompt) { res.status(400).json({ error: 'prompt requis' }); return }
+  if (prompt.length > 500) { res.status(400).json({ error: 'prompt trop long' }); return }
+  if (typeof style !== 'string' || style.length > 50) { res.status(400).json({ error: 'style invalide' }); return }
 
   const falKey = process.env.FAL_KEY
   if (!falKey) { res.status(200).json({ url: null, reason: 'not_configured' }); return }
@@ -38,8 +40,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     })
 
     if (!response.ok) {
-      const body = await response.text().catch(() => '')
-      console.error(`avatar fal.ai ${response.status}:`, body)
+      console.error(`avatar fal.ai ${response.status}`)
       res.status(200).json({ url: null, reason: `fal_error_${response.status}` })
       return
     }

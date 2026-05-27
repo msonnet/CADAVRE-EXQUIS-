@@ -123,6 +123,12 @@ function pickFallback(type: TypeCase): string {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+const TYPES_VALIDES: Set<string> = new Set([
+  'nom', 'verbe', 'adjectif', 'adverbe',
+  'groupe-nominal', 'groupe-verbal',
+  'proposition', 'libre', 'article-adj',
+])
+
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') {
     res.status(405).end()
@@ -131,8 +137,16 @@ export default async function handler(req: any, res: any): Promise<void> {
 
   const { consigne, type, voiceId, contexte } = req.body ?? {}
 
-  if (!consigne || !type) {
+  if (typeof consigne !== 'string' || typeof type !== 'string' || !consigne || !type) {
     res.status(400).json({ error: 'Champs manquants : consigne et type requis.' })
+    return
+  }
+  if (!TYPES_VALIDES.has(type)) {
+    res.status(400).json({ error: 'type invalide' })
+    return
+  }
+  if (consigne.length > 200 || (typeof contexte === 'string' && contexte.length > 500)) {
+    res.status(400).json({ error: 'champs trop longs' })
     return
   }
 

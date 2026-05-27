@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 // Ordre de préférence : voix haute qualité fr-CA (Amélie) > fr-FR (Thomas) > toute fr
 const VOICE_PRIORITY = [
@@ -58,15 +58,28 @@ function parlerAvecVoix(texte: string, voices: SpeechSynthesisVoice[], onStart: 
 export function useTTS() {
   const [parlant, setParlant] = useState(false)
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+        window.speechSynthesis.onvoiceschanged = null
+      }
+    }
+  }, [])
 
   const parler = useCallback((texte: string) => {
-    if (!window.speechSynthesis) return
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
     window.speechSynthesis.cancel()
 
-    const onStart = () => setParlant(true)
-    const onEnd = () => setParlant(false)
+    const onStart = () => { if (mountedRef.current) setParlant(true) }
+    const onEnd = () => { if (mountedRef.current) setParlant(false) }
 
     const speak = (voices: SpeechSynthesisVoice[]) => {
+      if (!mountedRef.current) return
       const u = parlerAvecVoix(texte, voices, onStart, onEnd)
       utterRef.current = u
       window.speechSynthesis.speak(u)
@@ -77,14 +90,14 @@ export function useTTS() {
       speak(voices)
     } else {
       window.speechSynthesis.onvoiceschanged = () => {
-        speak(window.speechSynthesis.getVoices())
         window.speechSynthesis.onvoiceschanged = null
+        speak(window.speechSynthesis.getVoices())
       }
     }
   }, [])
 
   const arreter = useCallback(() => {
-    window.speechSynthesis?.cancel()
+    if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
     setParlant(false)
   }, [])
 

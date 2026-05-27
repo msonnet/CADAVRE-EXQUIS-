@@ -158,7 +158,7 @@ export default function FinOnline() {
           </div>
           <button
             onClick={() => setRevealed(true)}
-            style={{ background: accent, color: '#e8d4b8', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 2em', border: 'none', cursor: 'pointer', marginTop: 8 }}
+            style={{ background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 2em', border: 'none', cursor: 'pointer', marginTop: 8 }}
           >
             {room.mode === 'dessin' ? 'RÉVÉLER LE DESSIN →' : 'RÉVÉLER LE POÈME →'}
           </button>

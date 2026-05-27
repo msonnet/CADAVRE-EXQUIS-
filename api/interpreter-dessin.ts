@@ -1,10 +1,15 @@
 export const config = { maxDuration: 45 }
 
+// ~5 Mo de base64 (≈ 3.7 Mo binaire) — assez pour un dessin assemblé en PNG
+const MAX_BASE64_BYTES = 5 * 1024 * 1024
+
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const { imageBase64 } = req.body ?? {}
-  if (!imageBase64) { res.status(400).json({ error: 'imageBase64 requis' }); return }
+  if (typeof imageBase64 !== 'string' || !imageBase64) { res.status(400).json({ error: 'imageBase64 requis' }); return }
+  if (imageBase64.length > MAX_BASE64_BYTES) { res.status(413).json({ error: 'image trop volumineuse' }); return }
+  if (!/^[A-Za-z0-9+/=]+$/.test(imageBase64)) { res.status(400).json({ error: 'base64 invalide' }); return }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) { res.status(200).json({ texte: '' }); return }
@@ -46,7 +51,7 @@ Les formes et les jonctions déclenchent un flux de langage automatique. Tu peux
     })
 
     if (!response.ok) {
-      console.error('Anthropic Vision error:', response.status, await response.text())
+      console.error('Anthropic Vision error:', response.status)
       res.status(200).json({ texte: '' }); return
     }
 

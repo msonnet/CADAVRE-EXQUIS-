@@ -144,6 +144,7 @@ export default function Profil() {
                 value={avatarPrompt}
                 onChange={e => setAvatarPrompt(e.target.value)}
                 placeholder="ex: un alchimiste aux yeux verts avec une barbe de brume…"
+                aria-label="Description de votre avatar"
                 rows={2}
                 style={{
                   fontFamily: "'Cormorant Garamond', serif", fontSize: 15,
@@ -195,6 +196,7 @@ export default function Profil() {
             value={pseudo}
             onChange={e => setPseudo(e.target.value)}
             placeholder="Votre nom de plume…"
+            aria-label="Pseudonyme"
             maxLength={30}
             required
             style={{
@@ -214,7 +216,7 @@ export default function Profil() {
           type="submit"
           disabled={saving || !pseudo.trim()}
           style={{
-            background: accent, color: '#e8d4b8', ...mono, fontSize: 13,
+            background: accent, color: 'var(--reve-button-text)', ...mono, fontSize: 13,
             textTransform: 'uppercase', padding: '0.9em 1.8em',
             border: 'none', cursor: saving ? 'wait' : 'pointer',
             opacity: saving || !pseudo.trim() ? 0.5 : 1,

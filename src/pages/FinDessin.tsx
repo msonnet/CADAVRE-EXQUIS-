@@ -97,7 +97,14 @@ export default function FinDessin() {
     async function run() {
       const raw = sessionStorage.getItem('dessin-bandes')
       if (!raw) { navigate('/config-dessin'); return }
-      const bandes: BandeDessin[] = JSON.parse(raw)
+      let bandes: BandeDessin[]
+      try {
+        bandes = JSON.parse(raw)
+        if (!Array.isArray(bandes) || bandes.length === 0) throw new Error('bandes vides')
+      } catch {
+        navigate('/config-dessin')
+        return
+      }
       setNbBandes(bandes.length)
 
       setPhase('assemblage')
@@ -305,7 +312,7 @@ export default function FinDessin() {
                   flex: 1,
                   ...mono, fontSize: 13,
                   background: sauvegarde ? `${accent}20` : accent,
-                  color: sauvegarde ? accent : '#e8d4b8',
+                  color: sauvegarde ? accent : 'var(--reve-button-text)',
                   border: `0.5px solid ${accent}`,
                   padding: '10px 8px',
                   cursor: sauvegarde ? 'default' : 'pointer',

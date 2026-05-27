@@ -120,6 +120,7 @@ export default function DessinDetail() {
                 value={titreDraft}
                 onChange={e => setTitreDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') sauvegarderTitre(); if (e.key === 'Escape') setEditTitre(false) }}
+                aria-label="Titre du dessin"
                 className="champ-carnet flex-1"
                 style={{ borderLeftColor: accent, fontSize: 15 }}
                 placeholder="Titre du dessin…"

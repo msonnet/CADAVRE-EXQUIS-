@@ -246,7 +246,7 @@ export default function Salon() {
                   style={{
                     ...mono, fontSize: 13, padding: '6px 14px',
                     background: room.mode === m ? accent : 'transparent',
-                    color: room.mode === m ? '#e8d4b8' : encre,
+                    color: room.mode === m ? 'var(--reve-button-text)' : encre,
                     border: `1px solid ${room.mode === m ? accent : `${encre}40`}`,
                     cursor: 'pointer',
                   }}
@@ -315,7 +315,7 @@ export default function Salon() {
           onClick={toggleReady}
           style={{
             background: mePlayer?.is_ready ? `${encre}15` : accent,
-            color: mePlayer?.is_ready ? encre : '#e8d4b8',
+            color: mePlayer?.is_ready ? encre : 'var(--reve-button-text)',
             ...mono, fontSize: 13, textTransform: 'uppercase',
             padding: '0.85em 1.8em', border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
             cursor: 'pointer', width: '100%',
@@ -331,7 +331,7 @@ export default function Salon() {
             disabled={!allReady || starting}
             style={{
               background: allReady ? encre : 'transparent',
-              color: allReady ? '#e8d4b8' : `${encre}50`,
+              color: allReady ? 'var(--reve-bg)' : `${encre}50`,
               ...mono, fontSize: 13, textTransform: 'uppercase',
               padding: '0.85em 1.8em',
               border: allReady ? 'none' : `1px solid ${encre}30`,
