@@ -167,7 +167,7 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   config: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
-    etiqs: [{ bottom: '32%', left: '8%', transform: 'rotate(-3deg)' }],
+    etiqs: [],
     stripesMax: 0,
     verticalTitle: null,
     citation: false,
@@ -215,7 +215,7 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   fin: {
     symbol: { top: '12%', right: '5%', sizeMul: 0.55 },
-    etiqs: [{ bottom: '24%', left: '6%', transform: 'rotate(-2deg)' }],
+    etiqs: [],
     stripesMax: 0,
     verticalTitle: null,
     citation: false,
@@ -239,7 +239,7 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   biblio: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.5 },
-    etiqs: [{ bottom: '20%', left: '6%', transform: 'rotate(-3deg)' }],
+    etiqs: [],
     stripesMax: 0,
     verticalTitle: null,
     citation: false,
@@ -337,6 +337,8 @@ function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: 
   )
 }
 
+const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
+
 function SymboleAvecCartel({
   symbole, pos, variant,
 }: {
@@ -344,10 +346,12 @@ function SymboleAvecCartel({
   pos: NonNullable<VariantZones['symbol']>
   variant: Variant
 }) {
+  const s = useReve()
   const Draw = symbole.draw
   const size = symbole.w * pos.sizeMul
   const isCentered = variant === 'jeu-ia' || variant === 'multi'
   const showCartel = variant === 'accueil' || variant === 'fin'
+  const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
   return (
     <div style={{
       position: 'absolute',
@@ -357,7 +361,9 @@ function SymboleAvecCartel({
       zIndex: 3, opacity: 0, pointerEvents: 'none',
       animation: 'symbolDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.5s both',
     }}>
-      <Draw w={size} />
+      <div style={{ filter: isDark ? 'invert(1) brightness(0.88)' : undefined }}>
+        <Draw w={size} />
+      </div>
       {showCartel && (
         <div style={{
           marginTop: 6,
