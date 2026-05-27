@@ -1,29 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
 
-const SPLASH_KEY = 'cadavre-splash-v1'
-
 export default function SplashScreen() {
   const seance = useReve()
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === 'undefined') return false
-    try { return localStorage.getItem(SPLASH_KEY) !== '1' } catch { return true }
-  })
+  const [visible, setVisible] = useState(true)
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const bg = c?.bg ?? '#0f0805'
   const encre = c?.encre ?? '#e8d4b8'
 
-  useEffect(() => {
-    if (!visible) return
-    const timer = setTimeout(dismiss, 3800)
-    return () => clearTimeout(timer)
-  }, [visible])
-
   function dismiss() {
-    try { localStorage.setItem(SPLASH_KEY, '1') } catch {}
     setVisible(false)
   }
 
@@ -37,7 +25,7 @@ export default function SplashScreen() {
           transition={{ duration: 0.75, ease: 'easeInOut' }}
           onClick={dismiss}
           style={{
-            position: 'fixed', inset: 0, zIndex: 999,
+            position: 'fixed', inset: 0, zIndex: 10000,
             background: bg,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
