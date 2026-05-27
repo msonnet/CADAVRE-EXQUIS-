@@ -7,7 +7,9 @@ import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { Decor, useReve } from '../reve'
-import { partagerTexte, partagerImageDistante } from '../utils/partager'
+import { partagerTexte, partagerImageDistante, genererImageStory, telechargerStory, exporterPDF } from '../utils/partager'
+import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
@@ -32,12 +34,19 @@ export default function PoemeDetail() {
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppression, setConfirmSuppression] = useState(false)
   const [pleinEcran, setPleinEcran] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [published, setPublished] = useState(false)
+  const [publishError, setPublishError] = useState(false)
+  const [storyBusy, setStoryBusy] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { parler, arreter, parlant } = useTTS()
+  const { profile } = useAuth()
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const fond = c?.bg ?? '#faf8f3'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
@@ -76,6 +85,35 @@ export default function PoemeDetail() {
     navigate('/bibliotheque', { replace: true })
   }
 
+  async function publierDansGalerie() {
+    if (!poeme || publishing) return
+    setPublishing(true)
+    setPublishError(false)
+    try {
+      const payload = JSON.stringify({
+        cases: poeme.cases,
+        structureId: poeme.structureId,
+        titre: poeme.titre,
+      })
+      const { error } = await supabase.from('gallery').insert({
+        type: 'poeme',
+        titre: poeme.titre,
+        payload,
+        author_pseudo: profile?.pseudo ?? 'Anonyme',
+        author_avatar: profile?.avatar_url ?? null,
+      })
+      if (error) throw error
+      setPublished(true)
+      setTimeout(() => setPublished(false), 2000)
+    } catch (e) {
+      console.error('publish error', e)
+      setPublishError(true)
+      setTimeout(() => setPublishError(false), 2000)
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   async function partager() {
     if (!poeme) return
     const struct = getStructure(poeme.structureId)
@@ -86,6 +124,61 @@ export default function PoemeDetail() {
       await partagerImageDistante(poeme.illustration.url, titre, contenu, titre)
     } else {
       await partagerTexte(contenu, titre)
+    }
+  }
+
+  async function partagerStory() {
+    if (!poeme || storyBusy) return
+    setStoryBusy(true)
+    try {
+      const struct = getStructure(poeme.structureId)
+      const textePoeme = reconstruirePoeme(poeme.cases, struct)
+      const titre = poeme.titre ?? 'Cadavre Exquis'
+      const dataUrl = await genererImageStory({
+        type: 'poeme',
+        titre,
+        texte: textePoeme,
+        accent, bg: fond, ink: encre,
+      })
+      const nom = (titre || 'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sans-titre'
+      // Try Web Share API with file support
+      try {
+        const blob = await (await fetch(dataUrl)).blob()
+        const file = new File([blob], `cadavre-${nom}-story.png`, { type: 'image/png' })
+        const shareData: ShareData = { files: [file], title: titre }
+        if (navigator.canShare?.(shareData)) {
+          await navigator.share(shareData)
+          return
+        }
+      } catch (e) {
+        console.error('share story failed, fallback to download', e)
+      }
+      await telechargerStory(dataUrl, nom)
+    } catch (e) {
+      console.error('story generation failed', e)
+    } finally {
+      setStoryBusy(false)
+    }
+  }
+
+  async function exporterPoemePDF() {
+    if (!poeme || pdfBusy) return
+    setPdfBusy(true)
+    try {
+      const struct = getStructure(poeme.structureId)
+      const textePoeme = reconstruirePoeme(poeme.cases, struct)
+      const titre = poeme.titre ?? 'Cadavre Exquis'
+      await exporterPDF({
+        type: 'poeme',
+        titre,
+        texte: textePoeme,
+        bg: fond, ink: encre, accent,
+        date: poeme.dateCreation,
+      })
+    } catch (e) {
+      console.error('pdf export failed', e)
+    } finally {
+      setPdfBusy(false)
     }
   }
 
@@ -162,7 +255,8 @@ export default function PoemeDetail() {
           <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label="Illustration en plein écran"
+            aria-label="Fermer en touchant"
+            tabIndex={0}
             style={{
               position: 'fixed', inset: 0, zIndex: 200,
               background: 'rgba(10,6,3,0.97)',
@@ -380,6 +474,77 @@ export default function PoemeDetail() {
             style={{ ...mono, fontSize: 13, color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             — COUTURES —
+          </button>
+        </motion.div>
+
+        {/* ── STORY + PDF ── */}
+        <motion.div
+          className="mb-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.52 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+        >
+          <button
+            onClick={partagerStory}
+            disabled={storyBusy}
+            aria-label="Générer une image pour les stories"
+            style={{
+              width: '100%', padding: '0.85em',
+              background: 'transparent', color: encre,
+              ...mono, fontSize: 13, textTransform: 'uppercase',
+              border: `0.5px solid ${encre}25`,
+              cursor: storyBusy ? 'wait' : 'pointer',
+              opacity: storyBusy ? 0.55 : 0.75,
+            }}
+          >
+            {storyBusy ? '✦ Génération…' : '✦ Image pour story'}
+          </button>
+          <button
+            onClick={exporterPoemePDF}
+            disabled={pdfBusy}
+            aria-label="Exporter ce poème en PDF"
+            style={{
+              width: '100%', padding: '0.85em',
+              background: 'transparent', color: encre,
+              ...mono, fontSize: 13, textTransform: 'uppercase',
+              border: `0.5px solid ${encre}25`,
+              cursor: pdfBusy ? 'wait' : 'pointer',
+              opacity: pdfBusy ? 0.55 : 0.75,
+            }}
+          >
+            {pdfBusy ? '↓ Export…' : '↓ Exporter PDF'}
+          </button>
+        </motion.div>
+
+        {/* ── PUBLIER DANS LA GALERIE ── */}
+        <motion.div
+          className="mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.55 }}
+        >
+          <button
+            onClick={publierDansGalerie}
+            disabled={publishing || published}
+            aria-label="Publier ce poème dans la galerie"
+            style={{
+              width: '100%', padding: '0.85em',
+              background: 'transparent',
+              color: publishError ? accent : (published ? accent : encre),
+              ...mono, fontSize: 13, textTransform: 'uppercase',
+              border: `0.5px solid ${encre}25`,
+              cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
+              opacity: publishing ? 0.55 : (published ? 1 : 0.75),
+            }}
+          >
+            {publishError
+              ? 'ERREUR'
+              : published
+                ? '✓ PUBLIÉ'
+                : publishing
+                  ? '✦ Publication…'
+                  : '✦ Publier dans la galerie'}
           </button>
         </motion.div>
 

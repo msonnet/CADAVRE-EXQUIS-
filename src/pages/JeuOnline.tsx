@@ -187,6 +187,10 @@ export default function JeuOnline() {
   const [iaLoading, setIaLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting')
+  const [reconnectTick, setReconnectTick] = useState(0)
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const myIndex = myPlayer?.order_index ?? null
 
   const loadGame = useCallback(async () => {
@@ -217,6 +221,7 @@ export default function JeuOnline() {
   // Realtime: watch contributions for full reveal
   useEffect(() => {
     if (!code) return
+    setConnectionStatus('connecting')
     const channel = supabase.channel(`jeu-online-${code}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'contributions', filter: `room_code=eq.${code}` },
         (payload) => {
@@ -234,9 +239,34 @@ export default function JeuOnline() {
           if (r.status === 'finished') navigate(`/fin-online/${code}`)
         }
       )
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [code, navigate])
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('connected')
+          loadGame()
+        } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+          setConnectionStatus('disconnected')
+        }
+      })
+    return () => {
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+      supabase.removeChannel(channel)
+    }
+  }, [code, navigate, loadGame, reconnectTick])
+
+  // Auto-reconnect when disconnected
+  useEffect(() => {
+    if (connectionStatus !== 'disconnected') return
+    reconnectTimeoutRef.current = setTimeout(() => {
+      setConnectionStatus('connecting')
+      setReconnectTick(t => t + 1)
+    }, 1500)
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
+    }
+  }, [connectionStatus])
 
   // Auto-finish when all contributions received
   useEffect(() => {
@@ -293,6 +323,18 @@ export default function JeuOnline() {
   if (authLoading || !room || !myPlayer) {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
+        {connectionStatus !== 'connected' && (
+          <div style={{
+            position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
+            left: '50%', transform: 'translateX(-50%)',
+            padding: '8px 14px', borderRadius: 4,
+            background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
+            color: '#fff', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+            fontSize: 11, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          }}>
+            {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+          </div>
+        )}
         <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>CHARGEMENT…</span>
       </PageTransition>
     )
@@ -306,6 +348,19 @@ export default function JeuOnline() {
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="aide" />
+
+      {connectionStatus !== 'connected' && (
+        <div style={{
+          position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
+          left: '50%', transform: 'translateX(-50%)',
+          padding: '8px 14px', borderRadius: 4,
+          background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
+          color: '#fff', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+          fontSize: 11, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+        }}>
+          {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>

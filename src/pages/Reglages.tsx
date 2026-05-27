@@ -201,6 +201,37 @@ export default function Reglages() {
           </div>
         </motion.div>
 
+        {/* ── AMBIANCE ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          style={{ marginBottom: 28 }}
+        >
+          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — AMBIANCE —
+          </div>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.8, marginBottom: 12 }}>
+            Chaque jour, une ambiance est tirée au sort. Vous pouvez en tirer une nouvelle maintenant.
+          </div>
+          <button
+            onClick={() => seance?.retirer()}
+            style={{
+              ...mono, fontSize: 12,
+              color: encre,
+              background: 'transparent',
+              border: `0.5px solid ${encre}30`,
+              padding: '7px 12px', cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            ✦ NOUVELLE AMBIANCE
+          </button>
+          <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.6, marginTop: 8, textTransform: 'uppercase' }}>
+            {seance?.ambiance.name}
+          </div>
+        </motion.div>
+
         <div style={{ flex: 1 }} />
 
         {/* ── VERSION ── */}

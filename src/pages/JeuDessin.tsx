@@ -15,6 +15,20 @@ const PALETTE = [
   '#4E342E', '#795548', '#546E7A', '#37474F', '#f0e4cc', '#FFF9C4', '#FCE4EC', '#F3E5F5',
 ]
 
+// Palette rapide pour le crayon : 10 teintes lisibles sur le fond crème
+const COULEURS_CRAYON = [
+  '#1a1410', // encre (défaut)
+  '#e84a3a', // rouge feu
+  '#2e5a2e', // vert sapin
+  '#1d3a8c', // bleu nuit
+  '#7a2858', // pourpre
+  '#d4a838', // or
+  '#e8a050', // ocre
+  '#6a8ad8', // cobalt clair
+  '#9ab488', // vert sauge
+  '#ffffff', // blanc
+]
+
 // ── SVG tool icons ──────────────────────────────
 function IconPen({ color }: { color: string }) {
   return (
@@ -73,7 +87,7 @@ function IconEraser({ color }: { color: string }) {
 const TOOL_ICONS = { pen: IconPen, brush: IconBrush, marker: IconMarker, crayon: IconCrayon, eraser: IconEraser }
 const TOOL_NAMES: Record<Tool, string> = { pen: 'Stylo', brush: 'Pinceau', marker: 'Feutre', crayon: 'Craie', eraser: 'Gomme' }
 
-const TOOLBAR_H = 164
+const TOOLBAR_H = 204
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
 
@@ -103,6 +117,7 @@ export default function JeuDessin() {
   const [tool, setTool] = useState<Tool>('pen')
   const [sizeIdx, setSizeIdx] = useState(1)
   const [color, setColor] = useState('#000000')
+  const [couleur, setCouleur] = useState('#1a1410')
   const [canvasReady, setCanvasReady] = useState(false)
   // Force re-render when the undo/redo stacks change (kept in refs to avoid re-renders during drawing)
   const [, setHistoryTick] = useState(0)
@@ -323,7 +338,7 @@ export default function JeuDessin() {
       // Stylo : largeur dynamique selon la vitesse (lent = épais, rapide = fin)
       velocityRef.current = velocityRef.current * 0.55 + dist * 0.45
       const dynamicW = size * Math.max(0.35, 1.0 - velocityRef.current * 0.018)
-      ctx.strokeStyle = color; ctx.lineWidth = dynamicW; ctx.globalAlpha = 1
+      ctx.strokeStyle = couleur; ctx.lineWidth = dynamicW; ctx.globalAlpha = 1
       ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
 
     } else if (tool === 'brush') {
@@ -367,7 +382,7 @@ export default function JeuDessin() {
 
     ctx.restore()
     lastPos.current = pos
-  }, [tool, sizeIdx, color])
+  }, [tool, sizeIdx, color, couleur])
 
   function onPointerDown(e: React.PointerEvent) {
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
@@ -581,6 +596,39 @@ export default function JeuDessin() {
               transition: 'background 0.15s, transform 0.1s',
             }}
           />
+        </div>
+
+        {/* Rangée palette rapide pour le crayon */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ ...mono, fontSize: 7, color: `${encre}45`, flexShrink: 0, width: 32 }}>CRAYON</span>
+          <div style={{ display: 'flex', flex: 1, gap: 6, alignItems: 'center', justifyContent: 'space-between' }}>
+            {COULEURS_CRAYON.map(col => {
+              const selected = couleur === col
+              const isLight = col === '#ffffff'
+              return (
+                <button
+                  key={col}
+                  onClick={() => { setCouleur(col); if (tool === 'eraser') setTool('pen') }}
+                  aria-label={`Couleur ${col}`}
+                  aria-pressed={selected}
+                  style={{
+                    width: 22, height: 22,
+                    borderRadius: '50%',
+                    background: col,
+                    border: selected
+                      ? '2px solid #ffffff'
+                      : isLight ? `1px solid ${encre}25` : '2px solid transparent',
+                    boxShadow: selected
+                      ? `0 0 0 1.5px ${encre}55, 0 1px 4px rgba(0,0,0,0.18)`
+                      : '0 1px 3px rgba(0,0,0,0.12)',
+                    transform: selected ? 'scale(1.12)' : 'scale(1)',
+                    transition: 'transform 0.12s, box-shadow 0.12s, border 0.12s',
+                    cursor: 'pointer', flexShrink: 0, padding: 0,
+                  }}
+                />
+              )
+            })}
+          </div>
         </div>
 
         {/* Rangée tailles */}

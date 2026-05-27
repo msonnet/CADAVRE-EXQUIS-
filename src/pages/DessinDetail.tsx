@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { chargerDessin, supprimerDessin, mettreAJourTitreDessin } from '../db'
-import { partagerDessinAvecTexte, partagerImage } from '../utils/partager'
+import { partagerDessinAvecTexte, partagerImage, genererImageStory, telechargerStory, exporterPDF } from '../utils/partager'
+import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 import type { DessinCadavre } from '../types'
 
 function formatDate(ts: number): string {
@@ -24,10 +26,17 @@ export default function DessinDetail() {
   const [editTitre, setEditTitre] = useState(false)
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppr, setConfirmSuppr] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [published, setPublished] = useState(false)
+  const [publishError, setPublishError] = useState(false)
+  const [storyBusy, setStoryBusy] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const { profile } = useAuth()
 
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
+  const fond = c?.bg ?? '#faf8f3'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -38,6 +47,15 @@ export default function DessinDetail() {
       .catch(console.error)
       .finally(() => setChargement(false))
   }, [id])
+
+  useEffect(() => {
+    if (!pleinEcran) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPleinEcran(false)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [pleinEcran])
 
   async function sauvegarderTitre() {
     if (!dessin || !id) return
@@ -53,6 +71,35 @@ export default function DessinDetail() {
     navigate('/bibliotheque', { replace: true })
   }
 
+  async function publierDansGalerie() {
+    if (!dessin || publishing) return
+    setPublishing(true)
+    setPublishError(false)
+    try {
+      const payload = JSON.stringify({
+        imageDataUrl: dessin.imageDataUrl,
+        texteVision: dessin.texteVision,
+        nbBandes: dessin.nbBandes,
+      })
+      const { error } = await supabase.from('gallery').insert({
+        type: 'dessin',
+        titre: dessin.titre,
+        payload,
+        author_pseudo: profile?.pseudo ?? 'Anonyme',
+        author_avatar: profile?.avatar_url ?? null,
+      })
+      if (error) throw error
+      setPublished(true)
+      setTimeout(() => setPublished(false), 2000)
+    } catch (e) {
+      console.error('publish error', e)
+      setPublishError(true)
+      setTimeout(() => setPublishError(false), 2000)
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   async function partager() {
     if (!dessin) return
     const nom = dessin.titre ?? 'cadavre-dessiné'
@@ -60,6 +107,57 @@ export default function DessinDetail() {
       await partagerDessinAvecTexte(dessin.imageDataUrl, dessin.texteVision, nom, accent)
     } else {
       await partagerImage(dessin.imageDataUrl, nom)
+    }
+  }
+
+  async function partagerStory() {
+    if (!dessin || storyBusy) return
+    setStoryBusy(true)
+    try {
+      const titreDessin = dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')
+      const dataUrl = await genererImageStory({
+        type: 'dessin',
+        titre: titreDessin,
+        imageDataUrl: dessin.imageDataUrl,
+        accent, bg: fond, ink: encre,
+      })
+      const nom = (titreDessin || 'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sans-titre'
+      try {
+        const blob = await (await fetch(dataUrl)).blob()
+        const file = new File([blob], `cadavre-${nom}-story.png`, { type: 'image/png' })
+        const shareData: ShareData = { files: [file], title: titreDessin }
+        if (navigator.canShare?.(shareData)) {
+          await navigator.share(shareData)
+          return
+        }
+      } catch (e) {
+        console.error('share story failed, fallback to download', e)
+      }
+      await telechargerStory(dataUrl, nom)
+    } catch (e) {
+      console.error('story generation failed', e)
+    } finally {
+      setStoryBusy(false)
+    }
+  }
+
+  async function exporterDessinPDF() {
+    if (!dessin || pdfBusy) return
+    setPdfBusy(true)
+    try {
+      const titreDessin = dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')
+      await exporterPDF({
+        type: 'dessin',
+        titre: titreDessin,
+        texte: dessin.texteVision,
+        imageDataUrl: dessin.imageDataUrl,
+        bg: fond, ink: encre, accent,
+        date: dessin.dateCreation,
+      })
+    } catch (e) {
+      console.error('pdf export failed', e)
+    } finally {
+      setPdfBusy(false)
     }
   }
 
@@ -217,6 +315,77 @@ export default function DessinDetail() {
           </button>
         </motion.div>
 
+        {/* ── STORY + PDF ── */}
+        <motion.div
+          className="mb-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.46 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+        >
+          <button
+            onClick={partagerStory}
+            disabled={storyBusy}
+            aria-label="Générer une image pour les stories"
+            style={{
+              width: '100%', padding: '0.85em',
+              background: 'transparent', color: encre,
+              ...mono, fontSize: 13, textTransform: 'uppercase',
+              border: `0.5px solid ${encre}25`,
+              cursor: storyBusy ? 'wait' : 'pointer',
+              opacity: storyBusy ? 0.55 : 0.7,
+            }}
+          >
+            {storyBusy ? '✦ Génération…' : '✦ Image pour story'}
+          </button>
+          <button
+            onClick={exporterDessinPDF}
+            disabled={pdfBusy}
+            aria-label="Exporter ce dessin en PDF"
+            style={{
+              width: '100%', padding: '0.85em',
+              background: 'transparent', color: encre,
+              ...mono, fontSize: 13, textTransform: 'uppercase',
+              border: `0.5px solid ${encre}25`,
+              cursor: pdfBusy ? 'wait' : 'pointer',
+              opacity: pdfBusy ? 0.55 : 0.7,
+            }}
+          >
+            {pdfBusy ? '↓ Export…' : '↓ Exporter PDF'}
+          </button>
+        </motion.div>
+
+        {/* ── PUBLIER DANS LA GALERIE ── */}
+        <motion.div
+          className="mb-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.47 }}
+        >
+          <button
+            onClick={publierDansGalerie}
+            disabled={publishing || published}
+            aria-label="Publier ce dessin dans la galerie"
+            style={{
+              width: '100%', padding: '0.85em',
+              background: 'transparent',
+              color: publishError ? accent : (published ? accent : encre),
+              ...mono, fontSize: 13, textTransform: 'uppercase',
+              border: `0.5px solid ${encre}25`,
+              cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
+              opacity: publishing ? 0.55 : (published ? 1 : 0.75),
+            }}
+          >
+            {publishError
+              ? 'ERREUR'
+              : published
+                ? '✓ PUBLIÉ'
+                : publishing
+                  ? '✦ Publication…'
+                  : '✦ Publier dans la galerie'}
+          </button>
+        </motion.div>
+
         {/* ── SUPPRIMER ── */}
         <motion.div
           className="mb-3"
@@ -270,6 +439,10 @@ export default function DessinDetail() {
       <AnimatePresence>
         {pleinEcran && (
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Fermer en touchant"
+            tabIndex={0}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

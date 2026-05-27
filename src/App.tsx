@@ -31,6 +31,7 @@ const JeuDessin = React.lazy(() => import('./pages/JeuDessin'))
 const FinDePartie = React.lazy(() => import('./pages/FinDePartie'))
 const FinDessin = React.lazy(() => import('./pages/FinDessin'))
 const Bibliotheque = React.lazy(() => import('./pages/Bibliotheque'))
+const Galerie = React.lazy(() => import('./pages/Galerie'))
 const PoemeDetail = React.lazy(() => import('./pages/PoemeDetail'))
 const DessinDetail = React.lazy(() => import('./pages/DessinDetail'))
 const Reglages = React.lazy(() => import('./pages/Reglages'))
@@ -76,6 +77,7 @@ export default function App() {
               <Route path="/fin" element={<FinDePartie />} />
               <Route path="/fin-dessin" element={<FinDessin />} />
               <Route path="/bibliotheque" element={<Bibliotheque />} />
+              <Route path="/galerie" element={<Galerie />} />
               <Route path="/bibliotheque/dessin/:id" element={<DessinDetail />} />
               <Route path="/bibliotheque/:id" element={<PoemeDetail />} />
               <Route path="/reglages" element={<Reglages />} />

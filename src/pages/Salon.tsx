@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -33,6 +33,10 @@ export default function Salon() {
   const [roomError, setRoomError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting')
+  const [reconnectTick, setReconnectTick] = useState(0)
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isHost = room?.host_id === user?.id
   const mePlayer = players.find(p => p.player_id === user?.id)
@@ -75,6 +79,7 @@ export default function Salon() {
   // ── Realtime subscriptions ────────────────────────────
   useEffect(() => {
     if (!code) return
+    setConnectionStatus('connecting')
 
     const channel = supabase.channel(`salon-${code}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'room_players', filter: `room_code=eq.${code}` },
@@ -88,10 +93,35 @@ export default function Salon() {
           if (r.status === 'finished') navigate(`/fin-online/${code}`)
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('connected')
+          loadRoom()
+        } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+          setConnectionStatus('disconnected')
+        }
+      })
 
-    return () => { supabase.removeChannel(channel) }
-  }, [code, loadRoom, navigate])
+    return () => {
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+      supabase.removeChannel(channel)
+    }
+  }, [code, loadRoom, navigate, reconnectTick])
+
+  // Auto-reconnect when disconnected
+  useEffect(() => {
+    if (connectionStatus !== 'disconnected') return
+    reconnectTimeoutRef.current = setTimeout(() => {
+      setConnectionStatus('connecting')
+      setReconnectTick(t => t + 1)
+    }, 1500)
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
+    }
+  }, [connectionStatus])
 
   // ── Host: update room config ──────────────────────────
   async function updateRoom(changes: Partial<Room>) {
@@ -138,6 +168,18 @@ export default function Salon() {
   if (authLoading || !room) {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
+        {connectionStatus !== 'connected' && (
+          <div style={{
+            position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
+            left: '50%', transform: 'translateX(-50%)',
+            padding: '8px 14px', borderRadius: 4,
+            background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
+            color: '#fff', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+            fontSize: 11, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          }}>
+            {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+          </div>
+        )}
         {roomError ? (
           <div style={{ textAlign: 'center' }}>
             <p style={{ ...mono, fontSize: 14, color: encre, opacity: 0.85 }}>{roomError}</p>
@@ -155,6 +197,19 @@ export default function Salon() {
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="aide" />
+
+      {connectionStatus !== 'connected' && (
+        <div style={{
+          position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
+          left: '50%', transform: 'translateX(-50%)',
+          padding: '8px 14px', borderRadius: 4,
+          background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
+          color: '#fff', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+          fontSize: 11, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+        }}>
+          {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <button

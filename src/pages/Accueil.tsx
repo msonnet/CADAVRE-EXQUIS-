@@ -190,6 +190,12 @@ export default function Accueil() {
           — RECUEIL —
         </button>
         <button
+          onClick={() => nav('/galerie')}
+          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          — GALERIE —
+        </button>
+        <button
           onClick={() => nav('/aide')}
           style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
