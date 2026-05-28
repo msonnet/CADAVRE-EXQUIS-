@@ -8,7 +8,7 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 
-type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null }
+type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; nb_cases: number | null }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
@@ -209,14 +209,13 @@ export default function JeuOnline() {
 
   // ── Turn state (round-robin) ─────────────────────────────
   const structure = room ? getStructure(room.structure_id) : null
-  // Total cases: dessin = one per player; écrit = full structure length (NOT capped by player count)
-  // useMemo so nombreCasesEffectif (which uses Math.random for variable structures) is only called once
-  const nbTotal = React.useMemo(() => {
-    if (!room) return 0
-    if (room.mode === 'dessin') return players.length
-    return structure ? nombreCasesEffectif(structure) : 0
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.mode, room?.structure_id, players.length])
+  // Total cases. Persisted on the room at game start (room.nb_cases) so every
+  // client agrees — critical for variable-length structures (vers libre).
+  // Fallbacks cover rooms created before nb_cases existed.
+  const nbTotal = !room ? 0
+    : room.mode === 'dessin'
+      ? (room.nb_cases ?? players.length)
+      : (room.nb_cases ?? (structure ? nombreCasesEffectif(structure) : 0))
   // Next case to fill = number of contributions so far
   const currentCase = contributions.length
   // Whose turn (by order_index) — round-robin for écrit
@@ -349,28 +348,32 @@ export default function JeuOnline() {
 
   // Host auto-finishes when all cases are filled
   useEffect(() => {
-    if (!room || !players.length) return
-    const struc = getStructure(room.structure_id)
-    const total = room.mode === 'dessin' ? players.length : nombreCasesEffectif(struc)
-    if (contributions.length >= total && room.status === 'playing' && room.host_id === user?.id) {
+    if (!room || !players.length || !nbTotal) return
+    if (contributions.length >= nbTotal && room.status === 'playing' && room.host_id === user?.id) {
       supabase.from('rooms').update({ status: 'finished' }).eq('code', code ?? '')
     }
-  }, [contributions, players, room, code, user])
+  }, [contributions, players, room, code, user, nbTotal])
 
   // Écrit: reset "submitted" when the round-robin returns to me
   useEffect(() => {
     if (!submitted || !room || room.mode !== 'ecrit') return
-    if (!players.length || myIndex === null) return
-    const struc = getStructure(room.structure_id)
-    const total = nombreCasesEffectif(struc)
+    if (!players.length || myIndex === null || !nbTotal) return
     const currCase = contributions.length
-    if (currCase >= total) return
+    if (currCase >= nbTotal) return
     if (myIndex === currCase % players.length) {
       setSubmitted(false)
       setInput('')
       autoSubmittedRef.current = false
     }
-  }, [contributions.length, submitted, players.length, myIndex, room])
+  }, [contributions.length, submitted, players.length, myIndex, room, nbTotal])
+
+  const mergeContribution = useCallback((c: Contribution) => {
+    setContributions(prev =>
+      prev.find(x => x.case_index === c.case_index)
+        ? prev
+        : [...prev, c].sort((a, b) => a.case_index - b.case_index)
+    )
+  }, [])
 
   async function handleIa() {
     if (!caseDef) return
@@ -393,6 +396,9 @@ export default function JeuOnline() {
       texte: input.trim(),
     })
     if (!error) {
+      // Optimistic merge so the turn advances instantly without waiting for the
+      // realtime echo (deduped by case_index, so the echo won't double-add).
+      mergeContribution({ case_index: currentCase, texte: input.trim(), player_id: user.id })
       setMyContrib(input.trim())
       setSubmitted(true)
       jouer('soumettre')
@@ -415,6 +421,7 @@ export default function JeuOnline() {
       texte: dataUrl,
     })
     if (!error) {
+      mergeContribution({ case_index: myIndex, texte: dataUrl, player_id: user.id })
       setMyContrib(dataUrl)
       setSubmitted(true)
       jouer('soumettre')
@@ -486,6 +493,7 @@ export default function JeuOnline() {
           texte: textToSubmit,
         })
         if (!error) {
+          mergeContribution({ case_index: caseIdx, texte: textToSubmit, player_id: user.id })
           setMyContrib(textToSubmit)
           setSubmitted(true)
           try { jouer('soumettre') } catch {}
