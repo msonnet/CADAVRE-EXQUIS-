@@ -255,7 +255,7 @@ export default function FinOnline() {
                 key={i}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 1.1, duration: 0.6, ease: 'easeOut' }}
+                transition={{ delay: i * 2.0, duration: 0.7, ease: 'easeOut' }}
                 style={{
                   fontFamily: "'Cormorant Garamond', serif",
                   color: encre, fontSize: 15, lineHeight: 1.65,
