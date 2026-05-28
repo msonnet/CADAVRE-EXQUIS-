@@ -6,7 +6,8 @@ import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
 
-type Tool = 'pen' | 'brush' | 'marker' | 'crayon' | 'eraser'
+type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'eraser'
+const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'eraser']
 const SIZES = [1.5, 4, 9, 17, 28]
 
 const PALETTE = [
@@ -16,79 +17,82 @@ const PALETTE = [
   '#4E342E', '#795548', '#546E7A', '#37474F', '#f0e4cc', '#FFF9C4', '#FCE4EC', '#F3E5F5',
 ]
 
-// Palette rapide pour le crayon : 10 teintes lisibles sur le fond crème
-const COULEURS_CRAYON = [
-  '#1a1410', // encre (défaut)
-  '#e84a3a', // rouge feu
-  '#2e5a2e', // vert sapin
-  '#1d3a8c', // bleu nuit
-  '#7a2858', // pourpre
-  '#d4a838', // or
-  '#e8a050', // ocre
-  '#6a8ad8', // cobalt clair
-  '#9ab488', // vert sauge
-  '#ffffff', // blanc
-]
-
-// ── SVG tool icons ──────────────────────────────
-function IconPen({ color }: { color: string }) {
+// ── Icônes d'outils (illustrations originales) ───
+// `tint` = teinte d'encre du corps de l'outil ; `nib` = couleur active appliquée à la pointe.
+function IconPencil({ tint, nib }: { tint: string; nib: string }) {
   return (
-    <svg width="16" height="40" viewBox="0 0 16 40" fill="none">
-      <rect x="5" y="1" width="6" height="26" rx="3" fill={color}/>
-      <path d="M5 26 L11 26 L8 37" fill={color}/>
-      <circle cx="8" cy="38.5" r="1.2" fill={color} opacity="0.45"/>
-      <rect x="10" y="3.5" width="2.5" height="18" rx="1.2" fill={color} opacity="0.3"/>
+    <svg width="22" height="40" viewBox="0 0 22 40" fill="none">
+      <rect x="7" y="3" width="8" height="24" rx="1.5" fill={tint} />
+      <rect x="9.4" y="3" width="3.2" height="24" fill={tint} opacity="0.55" />
+      <path d="M7 27 L15 27 L11.6 36 Z" fill="#e8c79a" />
+      <path d="M9.6 33 L11 36 L13.4 33 Z" fill={nib} />
+      <rect x="7" y="3" width="8" height="3" rx="1.5" fill={tint} opacity="0.6" />
     </svg>
   )
 }
 
-function IconBrush({ color }: { color: string }) {
+function IconPen({ tint, nib }: { tint: string; nib: string }) {
   return (
-    <svg width="16" height="40" viewBox="0 0 16 40" fill="none">
-      <rect x="6.5" y="0" width="3" height="20" rx="1.5" fill={color}/>
-      <rect x="4.5" y="18" width="7" height="4" rx="1" fill={color} opacity="0.65"/>
-      <ellipse cx="8" cy="31.5" rx="5" ry="7.5" fill={color} opacity="0.85"/>
-      <path d="M6 37.5 Q8 40 10 37.5 L10.5 35.5 Q8 37 5.5 35.5 Z" fill={color}/>
+    <svg width="22" height="40" viewBox="0 0 22 40" fill="none">
+      <rect x="7.5" y="2" width="7" height="22" rx="3.5" fill={tint} />
+      <rect x="11" y="4" width="2.4" height="16" rx="1.2" fill="#ffffff" opacity="0.22" />
+      <path d="M7.5 23 L14.5 23 L11 35 Z" fill={tint} />
+      <path d="M10.2 31.5 L11 35 L11.8 31.5 Z" fill={nib} />
+      <circle cx="11" cy="36.4" r="1.1" fill={nib} />
     </svg>
   )
 }
 
-function IconMarker({ color }: { color: string }) {
+function IconMarker({ tint, nib }: { tint: string; nib: string }) {
   return (
-    <svg width="20" height="40" viewBox="0 0 20 40" fill="none">
-      <rect x="4" y="1" width="12" height="22" rx="5" fill={color}/>
-      <rect x="5.5" y="21" width="9" height="8" rx="2" fill={color} opacity="0.8"/>
-      <rect x="7" y="29" width="6" height="8" rx="2" fill={color}/>
-      <rect x="3.5" y="7" width="13" height="2.5" rx="1.2" fill="white" opacity="0.18"/>
+    <svg width="24" height="40" viewBox="0 0 24 40" fill="none">
+      <rect x="5" y="2" width="14" height="20" rx="4" fill={tint} />
+      <rect x="6.5" y="6" width="11" height="2.4" rx="1.2" fill="#ffffff" opacity="0.2" />
+      <rect x="7" y="21" width="10" height="6" rx="1.5" fill={tint} opacity="0.8" />
+      <path d="M7 27 L17 27 L14.5 36 L9.5 36 Z" fill={nib} />
     </svg>
   )
 }
 
-function IconCrayon({ color }: { color: string }) {
+function IconBrush({ tint, nib }: { tint: string; nib: string }) {
   return (
-    <svg width="16" height="40" viewBox="0 0 16 40" fill="none">
-      <rect x="4" y="0" width="8" height="4" rx="2" fill={color} opacity="0.4"/>
-      <rect x="4" y="4" width="8" height="24" rx="1" fill={color}/>
-      <path d="M4 27.5 L8 38 L12 27.5 Z" fill={color} opacity="0.8"/>
-      <line x1="4" y1="27.5" x2="12" y2="27.5" stroke={color} opacity="0.3" strokeWidth="0.5"/>
+    <svg width="22" height="40" viewBox="0 0 22 40" fill="none">
+      <rect x="9" y="2" width="4" height="16" rx="2" fill={tint} />
+      <rect x="7.5" y="17" width="7" height="5" rx="1" fill="#b8b0a4" />
+      <rect x="7.5" y="17.5" width="7" height="1.6" fill="#ffffff" opacity="0.3" />
+      <path d="M8 22 Q11 21 14 22 L12.4 34 Q11 37 9.6 34 Z" fill={nib} />
     </svg>
   )
 }
 
-function IconEraser({ color }: { color: string }) {
+function IconCrayon({ tint, nib }: { tint: string; nib: string }) {
+  // Craie / pastel — bâtonnet court et épais
   return (
-    <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
-      <rect x="1" y="3" width="26" height="16" rx="4" fill={color} opacity="0.85"/>
-      <rect x="1" y="3" width="26" height="8" rx="4" fill="white" opacity="0.14"/>
-      <rect x="1" y="12" width="26" height="3" fill={color} opacity="0.45"/>
+    <svg width="22" height="40" viewBox="0 0 22 40" fill="none">
+      <rect x="6" y="8" width="10" height="26" rx="2.5" fill={nib} />
+      <rect x="6" y="8" width="3.2" height="26" rx="2.5" fill="#ffffff" opacity="0.22" />
+      <rect x="6" y="8" width="10" height="4" rx="2.5" fill={tint} opacity="0.35" />
+      <rect x="6" y="31" width="10" height="3" rx="1.5" fill="#000000" opacity="0.12" />
     </svg>
   )
 }
 
-const TOOL_ICONS = { pen: IconPen, brush: IconBrush, marker: IconMarker, crayon: IconCrayon, eraser: IconEraser }
-const TOOL_NAMES: Record<Tool, string> = { pen: 'Stylo', brush: 'Pinceau', marker: 'Feutre', crayon: 'Craie', eraser: 'Gomme' }
+function IconEraser({ tint }: { tint: string; nib: string }) {
+  return (
+    <svg width="28" height="40" viewBox="0 0 28 40" fill="none">
+      <g transform="rotate(-18 14 22)">
+        <rect x="7" y="12" width="14" height="20" rx="3" fill="#f3a9b8" />
+        <rect x="7" y="12" width="14" height="8" rx="3" fill={tint} opacity="0.85" />
+        <rect x="7" y="19.5" width="14" height="1.8" fill={tint} opacity="0.3" />
+      </g>
+    </svg>
+  )
+}
 
-const TOOLBAR_H = 204
+const TOOL_ICONS = { pencil: IconPencil, pen: IconPen, marker: IconMarker, brush: IconBrush, crayon: IconCrayon, eraser: IconEraser }
+const TOOL_NAMES: Record<Tool, string> = { pencil: 'Crayon', pen: 'Stylo', marker: 'Feutre', brush: 'Pinceau', crayon: 'Craie', eraser: 'Gomme' }
+
+const TOOLBAR_H = 218
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
 
@@ -116,10 +120,10 @@ export default function JeuDessin() {
 
   const [bandes, setBandes] = useState<BandeDessin[]>([])
   const [bandeIdx, setBandeIdx] = useState(0)
-  const [tool, setTool] = useState<Tool>('pen')
+  const [tool, setTool] = useState<Tool>('pencil')
   const [sizeIdx, setSizeIdx] = useState(1)
-  const [color, setColor] = useState('#000000')
-  const [couleur, setCouleur] = useState('#1a1410')
+  const [color, setColor] = useState('#1a1410')
+  const [opacity, setOpacity] = useState(1) // 0.1 → 1, réglable
   const [canvasReady, setCanvasReady] = useState(false)
   // Force re-render when the undo/redo stacks change (kept in refs to avoid re-renders during drawing)
   const [, setHistoryTick] = useState(0)
@@ -342,6 +346,7 @@ export default function JeuDessin() {
     const dist = Math.sqrt(dx * dx + dy * dy)
 
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    const op = opacity // multiplicateur d'opacité réglable (0.1 → 1)
 
     if (tool === 'eraser') {
       ctx.strokeStyle = CANVAS_BG; ctx.lineWidth = size * 2.8; ctx.globalAlpha = 1
@@ -351,8 +356,26 @@ export default function JeuDessin() {
       // Stylo : largeur dynamique selon la vitesse (lent = épais, rapide = fin)
       velocityRef.current = velocityRef.current * 0.55 + dist * 0.45
       const dynamicW = size * Math.max(0.35, 1.0 - velocityRef.current * 0.018)
-      ctx.strokeStyle = couleur; ctx.lineWidth = dynamicW; ctx.globalAlpha = 1
+      ctx.strokeStyle = color; ctx.lineWidth = dynamicW; ctx.globalAlpha = op
       ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+
+    } else if (tool === 'pencil') {
+      // Crayon graphite : trait fin, légèrement granuleux, qui se densifie en repassant
+      const baseW = Math.max(size * 0.55, 0.8 * dpr)
+      ctx.strokeStyle = color; ctx.lineWidth = baseW; ctx.globalAlpha = 0.5 * op
+      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+      // Grain : petites touches décalées le long du trait
+      const grains = Math.ceil(Math.max(dist, 3))
+      for (let g = 0; g < grains; g++) {
+        const t = g / grains
+        const gx = prev.x + dx * t + (Math.random() - 0.5) * baseW * 1.4
+        const gy = prev.y + dy * t + (Math.random() - 0.5) * baseW * 1.4
+        ctx.fillStyle = color
+        ctx.globalAlpha = (0.05 + Math.random() * 0.12) * op
+        ctx.beginPath()
+        ctx.arc(gx, gy, Math.random() * 0.7 * dpr, 0, Math.PI * 2)
+        ctx.fill()
+      }
 
     } else if (tool === 'brush') {
       // Pinceau : poils multiples, étalés perpendiculairement au trait
@@ -365,7 +388,7 @@ export default function JeuDessin() {
         const oy = Math.sin(angle) * t * spread + (Math.random() - 0.5) * size * 0.08
         ctx.strokeStyle = color
         ctx.lineWidth = (0.35 + Math.random() * 0.9) * dpr
-        ctx.globalAlpha = 0.22 + Math.random() * 0.52
+        ctx.globalAlpha = (0.22 + Math.random() * 0.52) * op
         ctx.beginPath()
         ctx.moveTo(prev.x + ox, prev.y + oy)
         ctx.lineTo(pos.x + ox, pos.y + oy)
@@ -375,7 +398,7 @@ export default function JeuDessin() {
     } else if (tool === 'marker') {
       // Feutre : pointe plate (lineCap square), opacité faible qui s'accumule
       ctx.strokeStyle = color; ctx.lineWidth = size * 2.6; ctx.lineCap = 'square'
-      ctx.globalAlpha = 0.35
+      ctx.globalAlpha = 0.35 * op
       ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
 
     } else if (tool === 'crayon') {
@@ -386,7 +409,7 @@ export default function JeuDessin() {
         const gx = prev.x + dx * t + (Math.random() - 0.5) * size * 1.1
         const gy = prev.y + dy * t + (Math.random() - 0.5) * size * 1.1
         ctx.fillStyle = color
-        ctx.globalAlpha = 0.04 + Math.random() * 0.20
+        ctx.globalAlpha = (0.04 + Math.random() * 0.20) * op
         ctx.beginPath()
         ctx.arc(gx, gy, Math.random() * 1.4 * dpr, 0, Math.PI * 2)
         ctx.fill()
@@ -395,7 +418,7 @@ export default function JeuDessin() {
 
     ctx.restore()
     lastPos.current = pos
-  }, [tool, sizeIdx, color, couleur])
+  }, [tool, sizeIdx, color, opacity])
 
   function onPointerDown(e: React.PointerEvent) {
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
@@ -485,9 +508,6 @@ export default function JeuDessin() {
     setBandeIdx(idx => idx + 1); setCanvasReady(false)
   }
 
-  const prevBande = bandes[bandes.length - 1] ?? null
-  const ToolIcon = TOOL_ICONS[tool]
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -562,49 +582,57 @@ export default function JeuDessin() {
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
 
-        {/* Rangée outils */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {(['pen', 'brush', 'marker', 'crayon', 'eraser'] as Tool[]).map(t => {
-            const active = tool === t
-            const Icon = TOOL_ICONS[t]
-            return (
-              <button
-                key={t}
-                onClick={() => setTool(t)}
-                aria-pressed={active}
-                title={TOOL_NAMES[t]}
-                style={{
-                  flex: 1, height: 58, paddingTop: 6, paddingBottom: 4,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
-                  background: active ? '#f5f0ea' : 'transparent',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer', transition: 'all 0.15s',
-                }}
-              >
-                <Icon color={active ? (tool === 'eraser' ? encre : color) : `${encre}55`} />
-                {/* Bande de couleur comme Freeform */}
-                <div style={{
-                  width: '60%', height: 3, borderRadius: 2,
-                  background: active && tool !== 'eraser' ? color : `${encre}18`,
-                  transition: 'background 0.15s',
-                }} />
-              </button>
-            )
-          })}
+        {/* Rangée outils — défilement horizontal fluide */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              flex: 1, minWidth: 0,
+              overflowX: 'auto', overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+            }}
+          >
+            {TOOL_ORDER.map(t => {
+              const active = tool === t
+              const Icon = TOOL_ICONS[t]
+              const nib = t === 'eraser' ? '#f3a9b8' : active ? color : `${encre}40`
+              const tint = active ? encre : `${encre}45`
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTool(t)}
+                  aria-pressed={active}
+                  title={TOOL_NAMES[t]}
+                  style={{
+                    flex: '0 0 auto', width: 52, height: 62,
+                    paddingTop: 6, paddingBottom: 4,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
+                    background: active ? '#f5f0ea' : 'transparent',
+                    border: 'none', borderRadius: 12,
+                    cursor: 'pointer', transition: 'background 0.15s',
+                  }}
+                >
+                  <Icon tint={tint} nib={nib} />
+                  <span style={{ ...mono, fontSize: 7, color: active ? accent : `${encre}45`, letterSpacing: '0.08em' }}>
+                    {TOOL_NAMES[t].toUpperCase()}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
 
           {/* Séparateur */}
-          <div style={{ width: 1, height: 36, background: `${encre}12`, margin: '0 2px', flexShrink: 0 }} />
+          <div style={{ width: 1, height: 38, background: `${encre}12`, flexShrink: 0 }} />
 
           {/* Bouton couleur */}
           <button
             onClick={() => setShowColorPanel(true)}
             aria-label="Choisir une couleur"
             style={{
-              width: 44, height: 44,
-              borderRadius: '50%',
+              width: 44, height: 44, borderRadius: '50%',
               background: tool === 'eraser' ? '#f0ede8' : color,
-              border: `2px solid ${tool === 'eraser' ? `${encre}20` : color === '#ffffff' || color === '#eeeeee' ? `${encre}30` : 'transparent'}`,
+              border: `2px solid ${tool === 'eraser' ? `${encre}20` : (color === '#ffffff' ? `${encre}30` : 'transparent')}`,
               boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
               cursor: 'pointer', flexShrink: 0,
               transition: 'background 0.15s, transform 0.1s',
@@ -612,37 +640,20 @@ export default function JeuDessin() {
           />
         </div>
 
-        {/* Rangée palette rapide pour le crayon */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 7, color: `${encre}45`, flexShrink: 0, width: 32 }}>CRAYON</span>
-          <div style={{ display: 'flex', flex: 1, gap: 6, alignItems: 'center', justifyContent: 'space-between' }}>
-            {COULEURS_CRAYON.map(col => {
-              const selected = couleur === col
-              const isLight = col === '#ffffff'
-              return (
-                <button
-                  key={col}
-                  onClick={() => { setCouleur(col); if (tool === 'eraser') setTool('pen') }}
-                  aria-label={`Couleur ${col}`}
-                  aria-pressed={selected}
-                  style={{
-                    width: 22, height: 22,
-                    borderRadius: '50%',
-                    background: col,
-                    border: selected
-                      ? '2px solid #ffffff'
-                      : isLight ? `1px solid ${encre}25` : '2px solid transparent',
-                    boxShadow: selected
-                      ? `0 0 0 1.5px ${encre}55, 0 1px 4px rgba(0,0,0,0.18)`
-                      : '0 1px 3px rgba(0,0,0,0.12)',
-                    transform: selected ? 'scale(1.12)' : 'scale(1)',
-                    transition: 'transform 0.12s, box-shadow 0.12s, border 0.12s',
-                    cursor: 'pointer', flexShrink: 0, padding: 0,
-                  }}
-                />
-              )
-            })}
-          </div>
+        {/* Rangée opacité */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ ...mono, fontSize: 7, color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
+          <input
+            type="range" min={10} max={100} step={5}
+            value={Math.round(opacity * 100)}
+            onChange={e => setOpacity(Number(e.target.value) / 100)}
+            aria-label="Opacité du trait"
+            disabled={tool === 'eraser'}
+            style={{ flex: 1, accentColor: accent, cursor: tool === 'eraser' ? 'default' : 'pointer', opacity: tool === 'eraser' ? 0.35 : 1 }}
+          />
+          <span style={{ ...mono, fontSize: 10, color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>
+            {Math.round(opacity * 100)}%
+          </span>
         </div>
 
         {/* Rangée tailles */}
