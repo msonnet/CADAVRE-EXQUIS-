@@ -101,6 +101,7 @@ export default function PoemeDetail() {
         type: 'poeme',
         titre: poeme.titre,
         payload,
+        image_url: poeme.illustration?.url ?? null,
         author_pseudo: profile?.pseudo ?? 'Anonyme',
         author_avatar: profile?.avatar_url ?? null,
       })

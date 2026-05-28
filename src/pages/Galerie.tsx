@@ -9,6 +9,12 @@ import { useSound } from '../hooks/useSound'
 const PAGE_SIZE = 20
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
 type ReactionEmoji = typeof REACTION_EMOJIS[number]
+const REACTION_LABELS: Record<ReactionEmoji, string> = {
+  '🌙': 'Onirique',
+  '✦': 'Sublime',
+  '❀': 'Délicat',
+  '🜔': 'Troublant',
+}
 
 type GalleryType = 'poeme' | 'dessin'
 
@@ -326,6 +332,19 @@ export default function Galerie() {
           })}
         </div>
 
+        {/* ── LÉGENDE DES RÉACTIONS ── */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: '4px 14px',
+          marginBottom: 14, opacity: 0.7,
+        }}>
+          {REACTION_EMOJIS.map(em => (
+            <span key={em} style={{ ...mono, fontSize: 10, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 12 }}>{em}</span>
+              {REACTION_LABELS[em].toUpperCase()}
+            </span>
+          ))}
+        </div>
+
         {/* ── CHARGEMENT ── */}
         {chargement && (
           <div className="flex justify-center py-16">
@@ -465,6 +484,29 @@ export default function Galerie() {
                           </div>
                         )}
 
+                        {item.type === 'poeme' && item.image_url && (
+                          <div style={{
+                            marginTop: 10,
+                            border: `0.5px solid ${encre}20`,
+                            overflow: 'hidden',
+                            display: 'flex',
+                            justifyContent: 'center',
+                          }}>
+                            <img
+                              src={item.image_url}
+                              alt={titreAffiche}
+                              loading="lazy"
+                              style={{
+                                maxHeight: ouvert ? 'none' : 140,
+                                width: ouvert ? '100%' : 'auto',
+                                height: 'auto',
+                                objectFit: 'contain',
+                                display: 'block',
+                              }}
+                            />
+                          </div>
+                        )}
+
                         {item.type === 'dessin' && (item.image_url || dessinPayload?.imageDataUrl) && (
                           <div style={{
                             border: `0.5px solid ${encre}20`,
@@ -526,7 +568,8 @@ export default function Galerie() {
                               }}
                               onMouseEnter={e => { if (!reacted) e.currentTarget.style.opacity = '0.95' }}
                               onMouseLeave={e => { if (!reacted) e.currentTarget.style.opacity = '0.6' }}
-                              aria-label={`Réagir ${em}`}
+                              aria-label={`Réagir : ${REACTION_LABELS[em]}`}
+                              title={REACTION_LABELS[em]}
                             >
                               <span style={{ fontSize: 13 }}>{em}</span>
                               {count > 0 && <span>{count}</span>}

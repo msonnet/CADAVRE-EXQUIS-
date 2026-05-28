@@ -402,6 +402,29 @@ export default function ProfilPublic() {
                           </div>
                         )}
 
+                        {item.type === 'poeme' && item.image_url && (
+                          <div style={{
+                            marginTop: 10,
+                            border: `0.5px solid ${encre}20`,
+                            overflow: 'hidden',
+                            display: 'flex',
+                            justifyContent: 'center',
+                          }}>
+                            <img
+                              src={item.image_url}
+                              alt={titreAffiche}
+                              loading="lazy"
+                              style={{
+                                maxHeight: ouvert ? 'none' : 140,
+                                width: ouvert ? '100%' : 'auto',
+                                height: 'auto',
+                                objectFit: 'contain',
+                                display: 'block',
+                              }}
+                            />
+                          </div>
+                        )}
+
                         {item.type === 'dessin' && (item.image_url || dessinPayload?.imageDataUrl) && (
                           <div style={{
                             border: `0.5px solid ${encre}20`,
