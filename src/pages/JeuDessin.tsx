@@ -575,8 +575,8 @@ export default function JeuDessin() {
       {/* ── TOOLBAR ── */}
       <div style={{
         height: TOOLBAR_H, flexShrink: 0, zIndex: 20,
-        background: '#e8e2d9',
-        boxShadow: '0 -2px 20px rgba(15,8,5,0.12)',
+        background: '#f0e9df',
+        boxShadow: '0 -2px 20px rgba(15,8,5,0.10)',
         borderRadius: '18px 18px 0 0',
         padding: '12px 16px 10px',
         display: 'flex', flexDirection: 'column', gap: 8,
@@ -596,8 +596,8 @@ export default function JeuDessin() {
             {TOOL_ORDER.map(t => {
               const active = tool === t
               const Icon = TOOL_ICONS[t]
-              const nib = t === 'eraser' ? '#f3a9b8' : active ? color : `${encre}40`
-              const tint = active ? encre : `${encre}45`
+              const nib = t === 'eraser' ? '#f3a9b8' : active ? color : `${encre}60`
+              const tint = active ? encre : `${encre}72`
               return (
                 <button
                   key={t}
@@ -608,13 +608,13 @@ export default function JeuDessin() {
                     flex: '0 0 auto', width: 52, height: 62,
                     paddingTop: 6, paddingBottom: 4,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
-                    background: active ? '#f5f0ea' : 'transparent',
+                    background: active ? '#ffffff' : 'transparent',
                     border: 'none', borderRadius: 12,
                     cursor: 'pointer', transition: 'background 0.15s',
                   }}
                 >
                   <Icon tint={tint} nib={nib} />
-                  <span style={{ ...mono, fontSize: 7, color: active ? accent : `${encre}45`, letterSpacing: '0.08em' }}>
+                  <span style={{ ...mono, fontSize: 7, color: active ? accent : `${encre}72`, letterSpacing: '0.08em' }}>
                     {TOOL_NAMES[t].toUpperCase()}
                   </span>
                 </button>
