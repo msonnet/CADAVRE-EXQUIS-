@@ -565,7 +565,7 @@ export default function Jeu() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              {iaChargement ? '— LE CADAVRE SONGE —' : '— LA VOIX PARLE —'}
+              — LE CADAVRE SONGE —
             </motion.div>
 
             {iaChargement ? (
