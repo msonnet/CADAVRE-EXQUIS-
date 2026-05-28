@@ -223,10 +223,16 @@ export default function FinOnline() {
             <div style={{ marginBottom: 28 }}>
               {contributions
                 .sort((a, b) => a.case_index - b.case_index)
-                .map(c => {
+                .map((c, idx) => {
                   const p = players.find(pl => pl.player_id === c.player_id)
                   return (
-                    <div key={c.case_index} style={{ marginBottom: 4 }}>
+                    <motion.div
+                      key={c.case_index}
+                      style={{ marginBottom: 4 }}
+                      initial={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
+                      animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)' }}
+                      transition={{ delay: idx * 0.55, duration: 0.7, ease: 'easeInOut' }}
+                    >
                       {c.texte.startsWith('data:') ? (
                         <img src={c.texte} alt={p?.pseudo ?? ''} style={{ width: '100%', display: 'block', borderLeft: `3px solid ${accent}40` }} />
                       ) : (
@@ -235,7 +241,7 @@ export default function FinOnline() {
                       <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 11, letterSpacing: '0.15em', color: accent, opacity: 0.7, marginTop: 2, paddingLeft: 4 }}>
                         {p?.pseudo ?? '?'}
                       </div>
-                    </div>
+                    </motion.div>
                   )
                 })}
             </div>

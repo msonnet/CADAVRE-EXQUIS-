@@ -256,9 +256,12 @@ export default function FinDessin() {
                     background: 'none', cursor: 'zoom-in',
                   }}
                 >
-                  <img
+                  <motion.img
                     src={imageAssemblee}
                     alt="Cadavre exquis dessiné"
+                    initial={{ clipPath: 'inset(0 0 100% 0)' }}
+                    animate={{ clipPath: 'inset(0 0 0% 0)' }}
+                    transition={{ duration: 2.4, ease: 'easeInOut' }}
                     style={{ display: 'block', width: '100%', maxHeight: '45vh', objectFit: 'contain' }}
                   />
                 </button>
