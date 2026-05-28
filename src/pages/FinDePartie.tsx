@@ -67,6 +67,7 @@ export default function FinDePartie() {
   const sc = seance?.colorSchema
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
@@ -76,7 +77,7 @@ export default function FinDePartie() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const t = setTimeout(() => setRevealReady(true), 2600)
+    const t = setTimeout(() => setRevealReady(true), 3000)
     return () => clearTimeout(t)
   }, [])
 
@@ -166,9 +167,7 @@ export default function FinDePartie() {
   const labelStyle = STYLES.find(s => s.id === styleChoisi)?.label
 
   return (
-    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
-      <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
-
+    <>
       {/* ── ÉCRAN D'ASSEMBLAGE ── */}
       <AnimatePresence>
         {!revealReady && poeme && (
@@ -178,16 +177,32 @@ export default function FinDePartie() {
             exit={{ opacity: 0, transition: { duration: 0.9, ease: 'easeInOut' } }}
             style={{
               position: 'fixed', inset: 0, zIndex: 250,
-              background: encre,
+              background: bg, overflow: 'hidden',
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               gap: 20, textAlign: 'center', padding: '0 28px',
             }}
           >
+            {Array.from({ length: voixCount }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ x: i % 2 === 0 ? '-110%' : '110%' }}
+                animate={{ x: 0 }}
+                transition={{ delay: i * 0.28, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{
+                  position: 'absolute', left: 0, right: 0,
+                  height: `${100 / voixCount}%`,
+                  top: `${(i * 100) / voixCount}%`,
+                  background: accent, opacity: 0.12,
+                  pointerEvents: 'none',
+                }}
+              />
+            ))}
             <motion.div
+              style={{ position: 'relative', zIndex: 1 }}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.7 }}
+              transition={{ delay: 0.4 + voixCount * 0.14, duration: 0.7 }}
             >
               <div style={{ ...mono, fontSize: 12, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
                 — {voixCount} VOIX —
@@ -195,14 +210,14 @@ export default function FinDePartie() {
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
-                color: sc?.bg ?? '#f0e4cc', lineHeight: 1.3,
+                color: encre, lineHeight: 1.3,
               }}>
                 Le cadavre
               </div>
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
-                color: sc?.bg ?? '#f0e4cc', lineHeight: 1.3,
+                color: encre, lineHeight: 1.3,
               }}>
                 se reconstitue
                 <motion.span
@@ -212,15 +227,17 @@ export default function FinDePartie() {
               </div>
             </motion.div>
             <motion.div
+              style={{ position: 'relative', zIndex: 1, fontSize: 18, color: accent }}
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ fontSize: 18, color: accent }}
             >
               ✦
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+      <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
+        <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
 
       {/* ── PLEIN ÉCRAN ILLUSTRATION ── */}
       <AnimatePresence>
@@ -622,5 +639,6 @@ export default function FinDePartie() {
 
       </div>
     </PageTransition>
+    </>
   )
 }

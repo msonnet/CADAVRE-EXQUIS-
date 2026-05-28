@@ -31,6 +31,7 @@ export default function FinOnline() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
@@ -108,7 +109,7 @@ export default function FinOnline() {
   }, [jouer])
 
   useEffect(() => {
-    const t = setTimeout(() => setRevealReady(true), 2600)
+    const t = setTimeout(() => setRevealReady(true), 3000)
     return () => clearTimeout(t)
   }, [])
 
@@ -171,24 +172,8 @@ export default function FinOnline() {
   const resteLigne0 = ligne0.slice(1) ?? ''
 
   return (
-    <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom relative">
-      <Decor variant="fin" />
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <button
-          onClick={() => navigate('/online')}
-          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          ← ACCUEIL
-        </button>
-        <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{code}</span>
-      </div>
-      <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
-
-      <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 12 }}>
-        — RÉVÉLATION —
-      </div>
-
+    <>
+      {/* ── ÉCRAN D'ASSEMBLAGE ── */}
       <AnimatePresence>
         {!revealReady && (
           <motion.div
@@ -197,13 +182,29 @@ export default function FinOnline() {
             exit={{ opacity: 0, transition: { duration: 0.9, ease: 'easeInOut' } }}
             style={{
               position: 'fixed', inset: 0, zIndex: 100,
-              background: encre,
+              background: bg, overflow: 'hidden',
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               gap: 20, textAlign: 'center', padding: '0 28px',
             }}
           >
+            {Array.from({ length: Math.max(players.length, 2) }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ x: i % 2 === 0 ? '-110%' : '110%' }}
+                animate={{ x: 0 }}
+                transition={{ delay: i * 0.28, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{
+                  position: 'absolute', left: 0, right: 0,
+                  height: `${100 / Math.max(players.length, 2)}%`,
+                  top: `${(i * 100) / Math.max(players.length, 2)}%`,
+                  background: accent, opacity: 0.12,
+                  pointerEvents: 'none',
+                }}
+              />
+            ))}
             <motion.div
+              style={{ position: 'relative', zIndex: 1 }}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.7 }}
@@ -214,14 +215,14 @@ export default function FinOnline() {
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
-                color: '#f0e4cc', lineHeight: 1.3,
+                color: encre, lineHeight: 1.3,
               }}>
                 Le cadavre
               </div>
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
-                color: '#f0e4cc', lineHeight: 1.3,
+                color: encre, lineHeight: 1.3,
               }}>
                 se reconstitue
                 <motion.span
@@ -231,15 +232,32 @@ export default function FinOnline() {
               </div>
             </motion.div>
             <motion.div
+              style={{ position: 'relative', zIndex: 1, fontSize: 18, color: accent }}
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ fontSize: 18, color: accent }}
             >
               ✦
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+      <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom relative">
+        <Decor variant="fin" />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <button
+            onClick={() => navigate('/online')}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            ← ACCUEIL
+          </button>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{code}</span>
+        </div>
+        <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
+
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 12 }}>
+          — RÉVÉLATION —
+        </div>
 
       {revealReady && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -417,5 +435,6 @@ export default function FinOnline() {
         </motion.div>
       )}
     </PageTransition>
+    </>
   )
 }
