@@ -199,6 +199,9 @@ export default function JeuOnline() {
   // Timer per turn
   const [tick, setTick] = useState(0)
   const autoSubmittedRef = useRef(false)
+  const turnStartedAtRef = useRef<number>(Date.now())
+  const inputRef = useRef('')
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const myIndex = myPlayer?.order_index ?? null
   // Spectator detection : utilisateur connecté mais pas dans la liste des joueurs
@@ -207,9 +210,13 @@ export default function JeuOnline() {
   // ── Turn state (round-robin) ─────────────────────────────
   const structure = room ? getStructure(room.structure_id) : null
   // Total cases: dessin = one per player; écrit = full structure length (NOT capped by player count)
-  const nbTotal = !room ? 0
-    : room.mode === 'dessin' ? players.length
-    : structure ? nombreCasesEffectif(structure) : 0
+  // useMemo so nombreCasesEffectif (which uses Math.random for variable structures) is only called once
+  const nbTotal = React.useMemo(() => {
+    if (!room) return 0
+    if (room.mode === 'dessin') return players.length
+    return structure ? nombreCasesEffectif(structure) : 0
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.mode, room?.structure_id, players.length])
   // Next case to fill = number of contributions so far
   const currentCase = contributions.length
   // Whose turn (by order_index) — round-robin for écrit
@@ -247,13 +254,27 @@ export default function JeuOnline() {
     setContributions(cList)
 
     // For drawing mode (one case per player), if I've already submitted, lock my screen.
-    // For écrit (round-robin), the submitted state is driven by whose turn it is.
+    // Restore submitted state from DB contributions
     if (r.mode === 'dessin') {
       const mine = cList.find(c => c.player_id === user.id)
       if (mine) { setMyContrib(mine.texte); setSubmitted(true) }
     } else {
-      const mine = cList.filter(c => c.player_id === user.id)
-      if (mine.length > 0) setMyContrib(mine[mine.length - 1].texte)
+      // Écrit: check if I already submitted for the current round
+      const me2 = pList.find(p => p.player_id === user.id)
+      const myIdx2 = me2?.order_index ?? null
+      if (myIdx2 !== null && pList.length > 0) {
+        const roundStart = Math.floor(cList.length / pList.length) * pList.length
+        const myExpectedCase = roundStart + myIdx2
+        const alreadySubmitted = cList.some(c => c.case_index === myExpectedCase && c.player_id === user.id)
+        if (alreadySubmitted) {
+          setSubmitted(true)
+          const myContribForCase = cList.find(c => c.case_index === myExpectedCase && c.player_id === user.id)
+          if (myContribForCase) setMyContrib(myContribForCase.texte)
+        } else {
+          const mine = cList.filter(c => c.player_id === user.id)
+          if (mine.length > 0) setMyContrib(mine[mine.length - 1].texte)
+        }
+      }
     }
   }, [code, user, navigate])
 
@@ -311,6 +332,21 @@ export default function JeuOnline() {
     }
   }, [connectionStatus])
 
+  // Polling fallback: re-sync contributions every 7s in case a realtime event was missed
+  useEffect(() => {
+    if (!code || !user) return
+    const id = setInterval(async () => {
+      const { data: cs } = await supabase.from('contributions')
+        .select('case_index,texte,player_id')
+        .eq('room_code', code)
+        .order('case_index')
+      if (cs) setContributions(cs as Contribution[])
+      const { data: r } = await supabase.from('rooms').select('status').eq('code', code).single()
+      if (r?.status === 'finished') navigate(`/fin-online/${code}`)
+    }, 7000)
+    return () => clearInterval(id)
+  }, [code, user, navigate])
+
   // Host auto-finishes when all cases are filled
   useEffect(() => {
     if (!room || !players.length) return
@@ -349,6 +385,7 @@ export default function JeuOnline() {
     e.preventDefault()
     if (!input.trim() || !user || !code || !isMyTurnEcrit) return
     setSubmitting(true)
+    setSubmitError(null)
     const { error } = await supabase.from('contributions').insert({
       room_code: code,
       player_id: user.id,
@@ -359,12 +396,18 @@ export default function JeuOnline() {
       setMyContrib(input.trim())
       setSubmitted(true)
       jouer('soumettre')
+    } else {
+      console.error('Erreur soumission:', error)
+      setSubmitError('Erreur lors de la soumission — réessaie.')
     }
     setSubmitting(false)
   }
 
   async function handleDrawingSubmit(dataUrl: string) {
     if (!user || !code || myIndex === null) return
+    // Guard against duplicate submissions (reconnect race)
+    if (contributions.some(c => c.case_index === myIndex && c.player_id === user.id)) return
+    setSubmitError(null)
     const { error } = await supabase.from('contributions').insert({
       room_code: code,
       player_id: user.id,
@@ -375,6 +418,9 @@ export default function JeuOnline() {
       setMyContrib(dataUrl)
       setSubmitted(true)
       jouer('soumettre')
+    } else {
+      console.error('Erreur dessin soumission:', error)
+      setSubmitError('Erreur lors de la soumission — réessaie.')
     }
   }
 
@@ -395,15 +441,25 @@ export default function JeuOnline() {
 
   // ── Timer : tick every second to re-render countdown ──
   useEffect(() => {
-    if (!room?.turn_seconds || !room?.started_at) return
+    if (!room?.turn_seconds) return
     const id = setInterval(() => setTick(t => t + 1), 1000)
     return () => clearInterval(id)
-  }, [room?.turn_seconds, room?.started_at])
+  }, [room?.turn_seconds])
 
-  // ── Calcul du temps restant ──
+  // Reset the per-turn clock each time a new contribution arrives
+  useEffect(() => {
+    turnStartedAtRef.current = Date.now()
+  }, [contributions.length])
+
+  // Keep inputRef in sync so auto-submit can read latest value without being in the deps array
+  useEffect(() => {
+    inputRef.current = input
+  }, [input])
+
+  // ── Calcul du temps restant (per-turn local clock) ──
   const secondsLeft = (() => {
-    if (!room?.turn_seconds || !room?.started_at) return null
-    const elapsed = Math.floor((Date.now() - new Date(room.started_at).getTime()) / 1000)
+    if (!room?.turn_seconds) return null
+    const elapsed = Math.floor((Date.now() - turnStartedAtRef.current) / 1000)
     return Math.max(0, room.turn_seconds - elapsed)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   })()
@@ -417,7 +473,9 @@ export default function JeuOnline() {
     if (!(isMyTurnEcrit || isMyTurnDessin)) return
     if (!user || !code || myIndex === null) return
     autoSubmittedRef.current = true
-    const textToSubmit = input.trim() || '…'
+    // Read input via ref to avoid stale closure and prevent the effect from
+    // firing on every keystroke when the timer is already at 0
+    const textToSubmit = inputRef.current.trim() || '…'
     ;(async () => {
       try {
         const caseIdx = room?.mode === 'dessin' ? myIndex : contributions.length
@@ -431,12 +489,18 @@ export default function JeuOnline() {
           setMyContrib(textToSubmit)
           setSubmitted(true)
           try { jouer('soumettre') } catch {}
+        } else {
+          autoSubmittedRef.current = false
+          console.error('Auto-submit erreur DB:', error)
         }
       } catch (e) {
+        autoSubmittedRef.current = false
         console.error('Auto-submit erreur:', e)
       }
     })()
-  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, input, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length])
+  // input intentionally omitted — read via inputRef to prevent re-firing on every keystroke
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length])
 
   if (authLoading || !room || (!myPlayer && !isSpectator)) {
     return (
@@ -497,7 +561,10 @@ export default function JeuOnline() {
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
           {players.map((p) => {
             const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
-            const hasDone = contributions.some(c => c.player_id === p.player_id)
+            // écrit: "done" = submitted for the previous (completed) case, not just "ever contributed"
+            const hasDone = room?.mode === 'dessin'
+              ? contributions.some(c => c.player_id === p.player_id)
+              : contributions.some(c => c.player_id === p.player_id && c.case_index < currentCase)
             return (
               <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
                 <div style={{
@@ -567,7 +634,9 @@ export default function JeuOnline() {
         {players.map((p) => {
           const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
           const isMe = p.player_id === user?.id
-          const hasDone = contributions.some(c => c.player_id === p.player_id)
+          const hasDone = room?.mode === 'dessin'
+            ? contributions.some(c => c.player_id === p.player_id)
+            : contributions.some(c => c.player_id === p.player_id && c.case_index < currentCase)
           return (
             <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
               <div style={{
@@ -720,6 +789,9 @@ export default function JeuOnline() {
                   {submitting ? 'ENVOI…' : 'SOUMETTRE →'}
                 </button>
               </div>
+              {submitError && (
+                <div style={{ ...mono, fontSize: 12, color: '#b22c20', marginTop: 6 }}>{submitError}</div>
+              )}
             </form>
           </motion.div>
         ) : (
