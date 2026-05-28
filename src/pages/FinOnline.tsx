@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
@@ -48,7 +48,7 @@ export default function FinOnline() {
   const [generatingIllus, setGeneratingIllus] = useState(false)
   const [erreurIllus, setErreurIllus] = useState<string | null>(null)
   const [showCoutures, setShowCoutures] = useState(false)
-  const [revealed, setRevealed] = useState(false)
+  const [revealReady, setRevealReady] = useState(false)
 
   const load = useCallback(async () => {
     if (!code || !user) return
@@ -106,6 +106,11 @@ export default function FinOnline() {
     revelationPlayedRef.current = true
     jouer('revelation')
   }, [jouer])
+
+  useEffect(() => {
+    const t = setTimeout(() => setRevealReady(true), 2600)
+    return () => clearTimeout(t)
+  }, [])
 
   async function rejouerEnsemble() {
     if (!room || !user || !code) return
@@ -184,38 +189,59 @@ export default function FinOnline() {
         — RÉVÉLATION —
       </div>
 
-      {!revealed ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.6 }}>
-            Le cadavre a été assemblé.
-          </div>
-          <div style={{ display: 'flex', gap: -8 }}>
-            {players.map(p => (
-              <div key={p.player_id} style={{
-                width: 44, height: 44, borderRadius: 3, overflow: 'hidden',
-                border: `2px solid ${accent}`, marginLeft: -6,
-                background: `${accent}20`,
-              }}>
-                {p.avatar_url ? (
-                  <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 18, color: accent }}>
-                      {p.pseudo[0]?.toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => setRevealed(true)}
-            style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 2em', border: 'none', cursor: 'pointer', marginTop: 8 }}
+      <AnimatePresence>
+        {!revealReady && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.9, ease: 'easeInOut' } }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 100,
+              background: encre,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 20, textAlign: 'center', padding: '0 28px',
+            }}
           >
-            {room.mode === 'dessin' ? 'RÉVÉLER LE DESSIN →' : 'RÉVÉLER LE POÈME →'}
-          </button>
-        </motion.div>
-      ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.7 }}
+            >
+              <div style={{ ...mono, fontSize: 12, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
+                — {players.length} VOIX —
+              </div>
+              <div style={{
+                fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+                fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
+                color: '#f0e4cc', lineHeight: 1.3,
+              }}>
+                Le cadavre
+              </div>
+              <div style={{
+                fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+                fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
+                color: '#f0e4cc', lineHeight: 1.3,
+              }}>
+                se reconstitue
+                <motion.span
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                >…</motion.span>
+              </div>
+            </motion.div>
+            <motion.div
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ fontSize: 18, color: accent }}
+            >
+              ✦
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {revealReady && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
 
           {/* ── Mode dessin : bandes empilées ── */}

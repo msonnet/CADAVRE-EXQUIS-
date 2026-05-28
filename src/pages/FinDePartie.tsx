@@ -44,7 +44,7 @@ export default function FinDePartie() {
     (location.state as { poeme?: Poeme } | null)?.poeme ?? null
   )
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
-  const [curtainDismissed, setCurtainDismissed] = useState(false)
+  const [revealReady, setRevealReady] = useState(false)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [promptLibre, setPromptLibre] = useState('')
@@ -54,7 +54,6 @@ export default function FinDePartie() {
   const [promptVisible, setPromptVisible] = useState(false)
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const [pleinEcran, setPleinEcran] = useState(false)
-  const [typed, setTyped] = useState('')
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -75,6 +74,11 @@ export default function FinDePartie() {
   useEffect(() => {
     jouer('revelation')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const t = setTimeout(() => setRevealReady(true), 2600)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (!poeme) {
@@ -101,21 +105,6 @@ export default function FinDePartie() {
     return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Typewriter reveal — démarre seulement après le rideau
-  const texteATaper = poeme
-    ? (texteCorrige ?? reconstruirePoeme(poeme.cases, getStructure(poeme.structureId)))
-    : ''
-  useEffect(() => {
-    if (!texteATaper || !curtainDismissed) return
-    setTyped('')
-    let i = 0
-    const id = setInterval(() => {
-      i++
-      setTyped(texteATaper.slice(0, i))
-      if (i >= texteATaper.length) clearInterval(id)
-    }, 28)
-    return () => clearInterval(id)
-  }, [texteATaper, curtainDismissed])
 
   function choisirStyle(style: string) {
     if (!poeme || generatingIllustration) return
@@ -166,9 +155,7 @@ export default function FinDePartie() {
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
-  const typingDone = typed.length >= texteAffiche.length
-  const texteRendu = typingDone ? texteAffiche : typed
-  const lignes = texteRendu.split('\n')
+  const lignes = texteAffiche.split('\n')
   const ligne0 = (lignes[0]?.trim() ?? '').replace(/^[«»"''"“”‘’]+/, '')
   const lettrine = ligne0.charAt(0) ?? ''
   const resteLigne0 = ligne0.slice(1) ?? ''
@@ -182,60 +169,55 @@ export default function FinDePartie() {
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
 
-      {/* ── RIDEAU DE RÉVÉLATION ── */}
+      {/* ── ÉCRAN D'ASSEMBLAGE ── */}
       <AnimatePresence>
-        {!curtainDismissed && poeme && (
+        {!revealReady && poeme && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.6 } }}
+            exit={{ opacity: 0, transition: { duration: 0.9, ease: 'easeInOut' } }}
             style={{
               position: 'fixed', inset: 0, zIndex: 250,
               background: encre,
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
-              gap: 24, textAlign: 'center', padding: '0 28px',
+              gap: 20, textAlign: 'center', padding: '0 28px',
             }}
           >
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.7 }}
+              transition={{ delay: 0.3, duration: 0.7 }}
             >
               <div style={{ ...mono, fontSize: 12, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
-                — LA RÉVÉLATION —
+                — {voixCount} VOIX —
               </div>
               <div style={{
-                fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
-                fontSize: 'clamp(2.6rem, 12vw, 4.2rem)',
-                color: sc?.bg ?? '#f0e4cc', lineHeight: 1.05,
-                marginBottom: 8,
+                fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+                fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
+                color: sc?.bg ?? '#f0e4cc', lineHeight: 1.3,
               }}>
-                Le cadavre<br />est exquis.
+                Le cadavre
               </div>
               <div style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: 15, color: sc?.bg ?? '#f0e4cc',
-                opacity: 0.6, marginTop: 12,
+                fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+                fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
+                color: sc?.bg ?? '#f0e4cc', lineHeight: 1.3,
               }}>
-                {voixCount} voix · {structLabel}
+                se reconstitue
+                <motion.span
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                >…</motion.span>
               </div>
             </motion.div>
-            <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2, duration: 0.5 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => setCurtainDismissed(true)}
-              style={{
-                background: accent, color: btnText,
-                ...mono, fontSize: 13, textTransform: 'uppercase',
-                padding: '0.9em 2.2em', border: 'none', cursor: 'pointer',
-                marginTop: 8,
-              }}
+            <motion.div
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ fontSize: 18, color: accent }}
             >
-              RÉVÉLER LE POÈME →
-            </motion.button>
+              ✦
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -335,14 +317,12 @@ export default function FinDePartie() {
 
           {/* Poem text — lignes dévoilées une à une après le rideau */}
           <div
-            onClick={() => { if (!typingDone) setTyped(texteAffiche) }}
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               color: encre, fontSize: 15, lineHeight: 1.65,
-              cursor: typingDone ? 'default' : 'pointer',
             }}
           >
-            {curtainDismissed && lignes.map((ligne, i) => (
+            {revealReady && lignes.map((ligne, i) => (
               <motion.span
                 key={i}
                 style={{ display: 'block', minHeight: '1.65em' }}
@@ -362,14 +342,6 @@ export default function FinDePartie() {
                   </span>
                 )}
                 {i === 0 ? resteLigne0 : (ligne || ' ')}
-                {!typingDone && i === lignes.length - 1 && (
-                  <motion.span
-                    aria-hidden
-                    style={{ display: 'inline-block', marginLeft: 1, color: accent }}
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                  >▎</motion.span>
-                )}
               </motion.span>
             ))}
           </div>
