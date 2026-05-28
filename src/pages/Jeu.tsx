@@ -249,6 +249,7 @@ export default function Jeu() {
   const [inputValue, setInputValue] = useState('')
   const [erreur, setErreur]       = useState<string | null>(null)
   const [iaChargement, setIaChargement] = useState(false)
+  const [iaTexteRevele, setIaTexteRevele] = useState<string | null>(null)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
   const [attendPassage, setAttendPassage] = useState(false)
   const [confirmAbandon, setConfirmAbandon] = useState(false)
@@ -259,6 +260,7 @@ export default function Jeu() {
   const sauvegardeFaite = useRef(false)
   const fallback        = useRef(makeFallbackPicker())
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
+  const revealTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const caseIndexSoumis = useRef(-1)
   const textesUtilises  = useRef(new Set<string>())
   const textesSession   = useRef(new Set<string>(safeParse<string[]>(sessionStorage.getItem('textes-session'), [])))
@@ -324,6 +326,7 @@ export default function Jeu() {
     casesTraitees.current.add(caseIndex)
 
     setIaChargement(true)
+    setIaTexteRevele(null)
     jouer('ia')
 
     const def = defActuelle
@@ -332,11 +335,24 @@ export default function Jeu() {
     const voiceId = voixParSlot[seqPos]
     const slotNum = iaSlotNums[seqPos]
 
+    const finaliser = (brut: string) => {
+      const texte = choisirSansDuplique(brut, def.type)
+      setIaChargement(false)
+      setIaTexteRevele(texte)
+      revealTimerRef.current = setTimeout(() => {
+        avancer(idx, def, texte, slotNum)
+        setIaTexteRevele(null)
+      }, 2600)
+    }
+
     const contexteIA = getContexteVisible(cases, config.visibilite) ?? undefined
     demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA })
-      .then(texte => avancer(idx, def, choisirSansDuplique(texte.trim(), def.type), slotNum))
-      .catch(()  => avancer(idx, def, choisirSansDuplique('', def.type), slotNum))
+      .then(texte => finaliser(texte.trim()))
+      .catch(()  => finaliser(''))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Nettoyage du timer de révélation IA au démontage
+  useEffect(() => () => { if (revealTimerRef.current) clearTimeout(revealTimerRef.current) }, [])
 
   // Timer hypnotique
   useEffect(() => {
@@ -529,8 +545,8 @@ export default function Jeu() {
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
 
-  // ── IA loading screen ──────────────────────────────────────────────────────
-  if (participantActuel?.type === 'ia' && iaChargement) {
+  // ── IA screen : songe puis révélation du fragment ───────────────────────────
+  if (participantActuel?.type === 'ia' && (iaChargement || iaTexteRevele !== null)) {
     return (
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
         <Decor variant="jeu-ia" />
@@ -549,53 +565,92 @@ export default function Jeu() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              — LE CADAVRE SONGE —
+              {iaChargement ? '— LE CADAVRE SONGE —' : '— LA VOIX A PARLÉ —'}
             </motion.div>
 
-            <motion.div
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: 'clamp(1.4rem, 6vw, 1.9rem)',
-                color: encre,
-                marginBottom: 12,
-                lineHeight: 1.3,
-              }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              {defActuelle?.consigne}
-            </motion.div>
+            {iaChargement ? (
+              <>
+                <motion.div
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: 'clamp(1.4rem, 6vw, 1.9rem)',
+                    color: encre,
+                    marginBottom: 12,
+                    lineHeight: 1.3,
+                  }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  {defActuelle?.consigne}
+                </motion.div>
 
-            <motion.div
-              style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, lineHeight: 1.8 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              il puise dans les voix<br />qui l'ont précédé…
-            </motion.div>
+                <motion.div
+                  style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, lineHeight: 1.8 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  il puise dans les voix<br />qui l'ont précédé…
+                </motion.div>
 
-            <motion.div
-              className="flex gap-2 mt-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.0 }}
-            >
-              {[0, 1, 2].map(i => (
-                <motion.span
-                  key={i}
-                  style={{ width: 5, height: 5, borderRadius: '50%', background: accent, display: 'inline-block' }}
-                  animate={{ opacity: [0.2, 1, 0.2] }}
-                  transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.4 }}
-                />
-              ))}
-            </motion.div>
+                <motion.div
+                  className="flex gap-2 mt-8"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.0 }}
+                >
+                  {[0, 1, 2].map(i => (
+                    <motion.span
+                      key={i}
+                      style={{ width: 5, height: 5, borderRadius: '50%', background: accent, display: 'inline-block' }}
+                      animate={{ opacity: [0.2, 1, 0.2] }}
+                      transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.4 }}
+                    />
+                  ))}
+                </motion.div>
+              </>
+            ) : (
+              <>
+                <motion.div
+                  style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6, marginBottom: 16 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.6 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  {defActuelle?.consigne}
+                </motion.div>
+
+                <motion.div
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontStyle: 'italic',
+                    fontSize: 'clamp(1.6rem, 7vw, 2.2rem)',
+                    color: encre,
+                    lineHeight: 1.35,
+                  }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, ease: 'easeOut' }}
+                >
+                  « {iaTexteRevele} »
+                </motion.div>
+
+                <motion.div
+                  style={{ fontSize: 16, color: accent, marginTop: 22 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  ✦
+                </motion.div>
+              </>
+            )}
           </div>
 
           {/* Footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
-            — NE PAS LE DÉRANGER —
+            {iaChargement ? '— NE PAS LE DÉRANGER —' : '— LA VOIX S’EFFACE… —'}
           </div>
         </div>
       </PageTransition>

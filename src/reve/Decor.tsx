@@ -357,7 +357,7 @@ function SymboleAvecCartel({
   const Draw = symbole.draw
   const size = symbole.w * pos.sizeMul
   const isCentered = variant === 'jeu-ia' || variant === 'multi'
-  const showCartel = variant === 'accueil' || variant === 'fin'
+  const showCartel = variant === 'accueil'
   const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
   return (
     <div style={{

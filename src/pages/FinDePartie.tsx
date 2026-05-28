@@ -345,7 +345,7 @@ export default function FinDePartie() {
                 style={{ display: 'block', minHeight: '1.65em' }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 2.0, duration: 0.7, ease: 'easeOut' }}
+                transition={{ delay: 0.3 + i * 0.7, duration: 0.7, ease: 'easeOut' }}
               >
                 {i === 0 && lettrine && (
                   <span style={{
