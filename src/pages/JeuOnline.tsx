@@ -415,8 +415,9 @@ export default function JeuOnline() {
     if (secondsLeft === null || secondsLeft > 0) return
     if (submitted || autoSubmittedRef.current) return
     if (!(isMyTurnEcrit || isMyTurnDessin)) return
-    if (!user || !code || myIndex === null || !input.trim()) return
+    if (!user || !code || myIndex === null) return
     autoSubmittedRef.current = true
+    const textToSubmit = input.trim() || '…'
     ;(async () => {
       try {
         const caseIdx = room?.mode === 'dessin' ? myIndex : contributions.length
@@ -424,10 +425,10 @@ export default function JeuOnline() {
           room_code: code,
           player_id: user.id,
           case_index: caseIdx,
-          texte: input.trim(),
+          texte: textToSubmit,
         })
         if (!error) {
-          setMyContrib(input.trim())
+          setMyContrib(textToSubmit)
           setSubmitted(true)
           try { jouer('soumettre') } catch {}
         }
