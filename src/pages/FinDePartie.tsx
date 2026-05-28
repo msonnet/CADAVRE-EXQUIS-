@@ -44,6 +44,7 @@ export default function FinDePartie() {
     (location.state as { poeme?: Poeme } | null)?.poeme ?? null
   )
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
+  const [curtainDismissed, setCurtainDismissed] = useState(false)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [promptLibre, setPromptLibre] = useState('')
@@ -100,21 +101,21 @@ export default function FinDePartie() {
     return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Typewriter reveal of the final poem text
+  // Typewriter reveal — démarre seulement après le rideau
   const texteATaper = poeme
     ? (texteCorrige ?? reconstruirePoeme(poeme.cases, getStructure(poeme.structureId)))
     : ''
   useEffect(() => {
-    if (!texteATaper) return
+    if (!texteATaper || !curtainDismissed) return
     setTyped('')
     let i = 0
     const id = setInterval(() => {
       i++
       setTyped(texteATaper.slice(0, i))
       if (i >= texteATaper.length) clearInterval(id)
-    }, 38)
+    }, 28)
     return () => clearInterval(id)
-  }, [texteATaper])
+  }, [texteATaper, curtainDismissed])
 
   function choisirStyle(style: string) {
     if (!poeme || generatingIllustration) return
@@ -180,6 +181,64 @@ export default function FinDePartie() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
+
+      {/* ── RIDEAU DE RÉVÉLATION ── */}
+      <AnimatePresence>
+        {!curtainDismissed && poeme && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.6 } }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 250,
+              background: encre,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 24, textAlign: 'center', padding: '0 28px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.7 }}
+            >
+              <div style={{ ...mono, fontSize: 12, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
+                — LA RÉVÉLATION —
+              </div>
+              <div style={{
+                fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
+                fontSize: 'clamp(2.6rem, 12vw, 4.2rem)',
+                color: sc?.bg ?? '#f0e4cc', lineHeight: 1.05,
+                marginBottom: 8,
+              }}>
+                Le cadavre<br />est exquis.
+              </div>
+              <div style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: 15, color: sc?.bg ?? '#f0e4cc',
+                opacity: 0.6, marginTop: 12,
+              }}>
+                {voixCount} voix · {structLabel}
+              </div>
+            </motion.div>
+            <motion.button
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.5 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setCurtainDismissed(true)}
+              style={{
+                background: accent, color: btnText,
+                ...mono, fontSize: 13, textTransform: 'uppercase',
+                padding: '0.9em 2.2em', border: 'none', cursor: 'pointer',
+                marginTop: 8,
+              }}
+            >
+              RÉVÉLER LE POÈME →
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── PLEIN ÉCRAN ILLUSTRATION ── */}
       <AnimatePresence>
@@ -274,7 +333,7 @@ export default function FinDePartie() {
             CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
           </div>
 
-          {/* Poem text with lettrine — tap to skip typewriter */}
+          {/* Poem text — lignes dévoilées une à une après le rideau */}
           <div
             onClick={() => { if (!typingDone) setTyped(texteAffiche) }}
             style={{
@@ -283,44 +342,36 @@ export default function FinDePartie() {
               cursor: typingDone ? 'default' : 'pointer',
             }}
           >
-            {lettrine && (
-              <span style={{
-                fontFamily: "'Bodoni Moda', serif",
-                fontWeight: 900,
-                fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
-                lineHeight: 0.85, color: accent,
-                float: 'left', marginRight: 6, marginTop: 4,
-              }}>
-                {lettrine}
-              </span>
-            )}
-            {resteLigne0 && <span>{resteLigne0}</span>}
-            {lignes.slice(1).map((ligne, i, arr) => (
-              <React.Fragment key={i}>
-                <br />
-                {ligne || ' '}
-                {!typingDone && i === arr.length - 1 && (
+            {curtainDismissed && lignes.map((ligne, i) => (
+              <motion.span
+                key={i}
+                style={{ display: 'block', minHeight: '1.65em' }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + i * 0.8, duration: 0.55, ease: 'easeOut' }}
+              >
+                {i === 0 && lettrine && (
+                  <span style={{
+                    fontFamily: "'Bodoni Moda', serif",
+                    fontWeight: 900,
+                    fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
+                    lineHeight: 0.85, color: accent,
+                    float: 'left', marginRight: 6, marginTop: 4,
+                  }}>
+                    {lettrine}
+                  </span>
+                )}
+                {i === 0 ? resteLigne0 : (ligne || ' ')}
+                {!typingDone && i === lignes.length - 1 && (
                   <motion.span
                     aria-hidden
                     style={{ display: 'inline-block', marginLeft: 1, color: accent }}
                     animate={{ opacity: [1, 0] }}
                     transition={{ duration: 0.5, repeat: Infinity }}
-                  >
-                    ▎
-                  </motion.span>
+                  >▎</motion.span>
                 )}
-              </React.Fragment>
-            ))}
-            {!typingDone && lignes.length <= 1 && (
-              <motion.span
-                aria-hidden
-                style={{ display: 'inline-block', marginLeft: 1, color: accent }}
-                animate={{ opacity: [1, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-              >
-                ▎
               </motion.span>
-            )}
+            ))}
           </div>
 
           {/* Card footer */}

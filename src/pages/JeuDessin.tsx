@@ -575,8 +575,8 @@ export default function JeuDessin() {
       {/* ── TOOLBAR ── */}
       <div style={{
         height: TOOLBAR_H, flexShrink: 0, zIndex: 20,
-        background: '#ffffff',
-        boxShadow: '0 -2px 20px rgba(15,8,5,0.09)',
+        background: '#e8e2d9',
+        boxShadow: '0 -2px 20px rgba(15,8,5,0.12)',
         borderRadius: '18px 18px 0 0',
         padding: '12px 16px 10px',
         display: 'flex', flexDirection: 'column', gap: 8,

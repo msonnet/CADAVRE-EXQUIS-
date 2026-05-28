@@ -213,8 +213,6 @@ export default function ConfigurationDessin() {
           </div>
         </motion.div>
 
-        <div style={{ flex: 1 }} />
-
         {/* ── CTA ── */}
         <motion.div
           className="mb-3"

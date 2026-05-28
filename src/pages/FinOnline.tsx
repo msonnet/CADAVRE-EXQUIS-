@@ -247,23 +247,31 @@ export default function FinOnline() {
             </div>
           )}
 
-          {/* ── Mode écrit : poème ── */}
+          {/* ── Mode écrit : poème fragment par fragment ── */}
           {room.mode !== 'dessin' && (
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 15, lineHeight: 1.65 }}>
-              {texteAffiche && lettrine && (
-                <>
-                  <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>
-                    {lettrine}
-                  </span>
-                  {resteLigne0}
-                  {lignes.slice(1).map((l, i) => (
-                    <React.Fragment key={i}><br />{l}</React.Fragment>
-                  ))}
-                </>
-              )}
-              {(!lettrine || !texteAffiche) && texteAffiche}
-            </p>
+            {lignes.map((ligne, i) => (
+              <motion.p
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 1.1, duration: 0.6, ease: 'easeOut' }}
+                style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  color: encre, fontSize: 15, lineHeight: 1.65,
+                  margin: '0 0 2px',
+                }}
+              >
+                {i === 0 && lettrine ? (
+                  <>
+                    <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>
+                      {lettrine}
+                    </span>
+                    {resteLigne0}
+                  </>
+                ) : (ligne || ' ')}
+              </motion.p>
+            ))}
           </div>
           )}
 

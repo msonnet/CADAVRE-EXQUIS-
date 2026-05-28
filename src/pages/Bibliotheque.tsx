@@ -267,8 +267,6 @@ export default function Bibliotheque() {
           </motion.div>
         )}
 
-        <div style={{ flex: 1 }} />
-
         {/* ── CTA ── */}
         {!chargement && (
           <motion.div

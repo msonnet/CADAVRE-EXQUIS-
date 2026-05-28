@@ -99,6 +99,7 @@ export default function Galerie() {
   const [mine, setMine] = useState<MineMap>({})
   const reactorKey = useRef<string>(getReactorKey())
   const seenViews = useRef<Set<string>>(new Set())
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
 
   const chargerReactions = useCallback(async (ids: string[]) => {
     if (ids.length === 0) return
@@ -265,6 +266,46 @@ export default function Galerie() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="biblio" />
+
+      {/* ── LIGHTBOX ── */}
+      <AnimatePresence>
+        {lightboxSrc && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            onClick={() => setLightboxSrc(null)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 300,
+              background: 'rgba(0,0,0,0.96)',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              cursor: 'zoom-out',
+            }}
+          >
+            <motion.img
+              src={lightboxSrc}
+              alt=""
+              initial={{ scale: 0.93 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.25 }}
+              style={{ maxWidth: '95vw', maxHeight: '88vh', objectFit: 'contain', display: 'block' }}
+            />
+            <button
+              onClick={e => { e.stopPropagation(); setLightboxSrc(null) }}
+              style={{
+                position: 'absolute', top: 18, right: 18,
+                fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+                fontSize: 12, color: '#e8d4b8', opacity: 0.85,
+                background: 'none', border: 'none', cursor: 'pointer',
+              }}
+            >
+              ✕ FERMER
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
@@ -491,7 +532,11 @@ export default function Galerie() {
                             overflow: 'hidden',
                             display: 'flex',
                             justifyContent: 'center',
-                          }}>
+                            position: 'relative',
+                            cursor: ouvert ? 'zoom-in' : 'default',
+                          }}
+                            onClick={e => { if (ouvert && item.image_url) { e.stopPropagation(); setLightboxSrc(item.image_url) } }}
+                          >
                             <img
                               src={item.image_url}
                               alt={titreAffiche}
@@ -504,30 +549,55 @@ export default function Galerie() {
                                 display: 'block',
                               }}
                             />
+                            {ouvert && (
+                              <span style={{
+                                position: 'absolute', bottom: 6, right: 8,
+                                fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
+                                fontSize: 10, color: '#fff',
+                                background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
+                                pointerEvents: 'none',
+                              }}>⤢ AGRANDIR</span>
+                            )}
                           </div>
                         )}
 
-                        {item.type === 'dessin' && (item.image_url || dessinPayload?.imageDataUrl) && (
-                          <div style={{
-                            border: `0.5px solid ${encre}20`,
-                            overflow: 'hidden',
-                            background: '#fff',
-                            display: 'flex',
-                            justifyContent: 'center',
-                          }}>
-                            <img
-                              src={item.image_url ?? dessinPayload?.imageDataUrl}
-                              alt={titreAffiche}
-                              style={{
-                                maxHeight: ouvert ? 'none' : 120,
-                                width: ouvert ? '100%' : 'auto',
-                                height: 'auto',
-                                objectFit: 'contain',
-                                display: 'block',
-                              }}
-                            />
-                          </div>
-                        )}
+                        {item.type === 'dessin' && (item.image_url || dessinPayload?.imageDataUrl) && (() => {
+                          const src = item.image_url ?? dessinPayload?.imageDataUrl
+                          return (
+                            <div style={{
+                              border: `0.5px solid ${encre}20`,
+                              overflow: 'hidden',
+                              background: '#fff',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              position: 'relative',
+                              cursor: ouvert ? 'zoom-in' : 'default',
+                            }}
+                              onClick={e => { if (ouvert && src) { e.stopPropagation(); setLightboxSrc(src) } }}
+                            >
+                              <img
+                                src={src}
+                                alt={titreAffiche}
+                                style={{
+                                  maxHeight: ouvert ? 'none' : 120,
+                                  width: ouvert ? '100%' : 'auto',
+                                  height: 'auto',
+                                  objectFit: 'contain',
+                                  display: 'block',
+                                }}
+                              />
+                              {ouvert && (
+                                <span style={{
+                                  position: 'absolute', bottom: 6, right: 8,
+                                  fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
+                                  fontSize: 10, color: '#fff',
+                                  background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
+                                  pointerEvents: 'none',
+                                }}>⤢ AGRANDIR</span>
+                              )}
+                            </div>
+                          )
+                        })()}
 
                         {ouvert && item.type === 'dessin' && dessinPayload?.texteVision && (
                           <p style={{
