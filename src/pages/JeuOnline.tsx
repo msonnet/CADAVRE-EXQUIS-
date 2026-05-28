@@ -189,6 +189,7 @@ export default function JeuOnline() {
   const [input, setInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [iaLoading, setIaLoading] = useState(false)
+  // submitted = true right after I submit; for écrit it resets when it's my turn again (round-robin)
   const [submitted, setSubmitted] = useState(false)
 
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting')
@@ -203,6 +204,27 @@ export default function JeuOnline() {
   // Spectator detection : utilisateur connecté mais pas dans la liste des joueurs
   const isSpectator = !!room && !!user && !!players.length && !myPlayer
 
+  // ── Turn state (round-robin) ─────────────────────────────
+  const structure = room ? getStructure(room.structure_id) : null
+  // Total cases: dessin = one per player; écrit = full structure length (NOT capped by player count)
+  const nbTotal = !room ? 0
+    : room.mode === 'dessin' ? players.length
+    : structure ? nombreCasesEffectif(structure) : 0
+  // Next case to fill = number of contributions so far
+  const currentCase = contributions.length
+  // Whose turn (by order_index) — round-robin for écrit
+  const whoseTurnIdx = players.length > 0 ? currentCase % players.length : 0
+  const currentTurnPlayer = players.find(p => p.order_index === whoseTurnIdx) ?? null
+  // Écrit: my turn when round-robin reaches my order_index and I haven't submitted this round
+  const isMyTurnEcrit = room?.mode === 'ecrit' && !submitted
+    && myIndex !== null && players.length > 0
+    && myIndex === whoseTurnIdx && currentCase < nbTotal
+  // Dessin: each player submits exactly once (their band)
+  const isMyTurnDessin = room?.mode === 'dessin' && !submitted && myIndex !== null
+  const caseDef = isMyTurnEcrit && structure && currentCase < structure.cases.length
+    ? structure.cases[currentCase]
+    : null
+
   const loadGame = useCallback(async () => {
     if (!code || !user) return
     const { data: r } = await supabase.from('rooms').select('*').eq('code', code).single()
@@ -216,11 +238,23 @@ export default function JeuOnline() {
     const me = pList.find(p => p.player_id === user.id)
     setMyPlayer(me ?? null)
 
-    const { data: cs } = await supabase.from('contributions').select('case_index,texte,player_id').eq('room_code', code)
+    // Sorted by case_index so contributions.length === currentCase is correct
+    const { data: cs } = await supabase.from('contributions')
+      .select('case_index,texte,player_id')
+      .eq('room_code', code)
+      .order('case_index')
     const cList = (cs ?? []) as Contribution[]
     setContributions(cList)
-    const myC = cList.find(c => c.player_id === user.id)
-    if (myC) { setMyContrib(myC.texte); setSubmitted(true) }
+
+    // For drawing mode (one case per player), if I've already submitted, lock my screen.
+    // For écrit (round-robin), the submitted state is driven by whose turn it is.
+    if (r.mode === 'dessin') {
+      const mine = cList.find(c => c.player_id === user.id)
+      if (mine) { setMyContrib(mine.texte); setSubmitted(true) }
+    } else {
+      const mine = cList.filter(c => c.player_id === user.id)
+      if (mine.length > 0) setMyContrib(mine[mine.length - 1].texte)
+    }
   }, [code, user, navigate])
 
   useEffect(() => {
@@ -228,7 +262,7 @@ export default function JeuOnline() {
     if (!authLoading && user) loadGame()
   }, [authLoading, user, loadGame])
 
-  // Realtime: watch contributions for full reveal
+  // Realtime: watch contributions + room status
   useEffect(() => {
     if (!code) return
     setConnectionStatus('connecting')
@@ -237,9 +271,8 @@ export default function JeuOnline() {
         (payload) => {
           const newC = payload.new as Contribution
           setContributions(prev => {
-            const existing = prev.find(c => c.case_index === newC.case_index)
-            if (existing) return prev
-            return [...prev, newC]
+            if (prev.find(c => c.case_index === newC.case_index)) return prev
+            return [...prev, newC].sort((a, b) => a.case_index - b.case_index)
           })
         }
       )
@@ -278,20 +311,32 @@ export default function JeuOnline() {
     }
   }, [connectionStatus])
 
-  // Auto-finish when all contributions received
+  // Host auto-finishes when all cases are filled
   useEffect(() => {
     if (!room || !players.length) return
-    const structure = getStructure(room.structure_id)
-    const total = room.mode === 'dessin' ? players.length : Math.min(players.length, nombreCasesEffectif(structure))
+    const struc = getStructure(room.structure_id)
+    const total = room.mode === 'dessin' ? players.length : nombreCasesEffectif(struc)
     if (contributions.length >= total && room.status === 'playing' && room.host_id === user?.id) {
       supabase.from('rooms').update({ status: 'finished' }).eq('code', code ?? '')
     }
   }, [contributions, players, room, code, user])
 
+  // Écrit: reset "submitted" when the round-robin returns to me
+  useEffect(() => {
+    if (!submitted || !room || room.mode !== 'ecrit') return
+    if (!players.length || myIndex === null) return
+    const struc = getStructure(room.structure_id)
+    const total = nombreCasesEffectif(struc)
+    const currCase = contributions.length
+    if (currCase >= total) return
+    if (myIndex === currCase % players.length) {
+      setSubmitted(false)
+      setInput('')
+      autoSubmittedRef.current = false
+    }
+  }, [contributions.length, submitted, players.length, myIndex, room])
+
   async function handleIa() {
-    if (!room || myIndex === null) return
-    const structure = getStructure(room.structure_id)
-    const caseDef = structure.cases[myIndex]
     if (!caseDef) return
     setIaLoading(true)
     const texte = await callClaude(caseDef.consigne, caseDef.type)
@@ -302,12 +347,12 @@ export default function JeuOnline() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!input.trim() || !user || !code || myIndex === null) return
+    if (!input.trim() || !user || !code || !isMyTurnEcrit) return
     setSubmitting(true)
     const { error } = await supabase.from('contributions').insert({
       room_code: code,
       player_id: user.id,
-      case_index: myIndex,
+      case_index: currentCase,
       texte: input.trim(),
     })
     if (!error) {
@@ -333,7 +378,7 @@ export default function JeuOnline() {
     }
   }
 
-  // Notification Realtime : nouvelle contribution reçue et l'utilisateur n'a pas encore soumis
+  // Notification Realtime : nouvelle contribution reçue
   useEffect(() => {
     const prev = prevContribCountRef.current
     const now = contributions.length
@@ -367,19 +412,18 @@ export default function JeuOnline() {
   // ── Auto-submit on timer expiry ──
   useEffect(() => {
     if (isSpectator) return
-    if (secondsLeft === null) return
-    if (secondsLeft > 0) return
-    if (submitted) return
-    if (autoSubmittedRef.current) return
-    if (!user || !code || myIndex === null) return
-    if (!input.trim()) return // pas de soumission vide — l'hôte auto-finit
+    if (secondsLeft === null || secondsLeft > 0) return
+    if (submitted || autoSubmittedRef.current) return
+    if (!(isMyTurnEcrit || isMyTurnDessin)) return
+    if (!user || !code || myIndex === null || !input.trim()) return
     autoSubmittedRef.current = true
     ;(async () => {
       try {
+        const caseIdx = room?.mode === 'dessin' ? myIndex : contributions.length
         const { error } = await supabase.from('contributions').insert({
           room_code: code,
           player_id: user.id,
-          case_index: myIndex,
+          case_index: caseIdx,
           texte: input.trim(),
         })
         if (!error) {
@@ -391,7 +435,7 @@ export default function JeuOnline() {
         console.error('Auto-submit erreur:', e)
       }
     })()
-  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, input, jouer])
+  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, input, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length])
 
   if (authLoading || !room || (!myPlayer && !isSpectator)) {
     return (
@@ -413,9 +457,6 @@ export default function JeuOnline() {
     )
   }
 
-  const structure = getStructure(room.structure_id)
-  const nbTotal = room.mode === 'dessin' ? players.length : Math.min(players.length, nombreCasesEffectif(structure))
-  const caseDef = myIndex !== null && room.mode !== 'dessin' ? structure.cases[myIndex] : null
   const submitted_count = contributions.length
 
   // ── Spectator view ────────────────────────────────────
@@ -451,21 +492,18 @@ export default function JeuOnline() {
           👁 SPECTATEUR
         </div>
 
-        {/* Live counter */}
-        <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, marginBottom: 20 }}>
-          {submitted_count}/{nbTotal} contributions reçues
-        </div>
-
-        {/* Player avatars */}
+        {/* Player avatars with turn indicator */}
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
           {players.map((p) => {
+            const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
             const hasDone = contributions.some(c => c.player_id === p.player_id)
             return (
               <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 3, overflow: 'hidden',
-                  border: `2px solid ${hasDone ? accent : `${encre}20`}`,
-                  opacity: hasDone ? 1 : 0.5,
+                  border: `2px solid ${isTheirTurn ? accent : hasDone ? `${accent}50` : `${encre}20`}`,
+                  opacity: hasDone || isTheirTurn ? 1 : 0.5,
+                  boxShadow: isTheirTurn ? `0 0 8px ${accent}60` : 'none',
                 }}>
                   {p.avatar_url ? (
                     <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -477,15 +515,20 @@ export default function JeuOnline() {
                     </div>
                   )}
                 </div>
-                <span style={{ ...mono, fontSize: 11, color: hasDone ? accent : `${encre}50` }}>
-                  {hasDone ? '✓' : '…'}
+                <span style={{ ...mono, fontSize: 11, color: isTheirTurn ? accent : hasDone ? `${accent}80` : `${encre}50` }}>
+                  {isTheirTurn ? '✎' : hasDone ? '✓' : '…'}
                 </span>
               </div>
             )
           })}
         </div>
 
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          {currentTurnPlayer && currentCase < nbTotal && (
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: encre, opacity: 0.8, textAlign: 'center' }}>
+              En attente de <strong>{currentTurnPlayer.pseudo}</strong>…
+            </p>
+          )}
           <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
         </div>
       </PageTransition>
@@ -511,25 +554,26 @@ export default function JeuOnline() {
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>
-          {code}
-        </span>
+        <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>{code}</span>
         <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>
           {submitted_count}/{nbTotal} SOUMIS
         </span>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      {/* Joueurs */}
+      {/* Joueurs with turn indicator */}
       <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
         {players.map((p) => {
+          const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
+          const isMe = p.player_id === user?.id
           const hasDone = contributions.some(c => c.player_id === p.player_id)
           return (
             <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
               <div style={{
                 width: 40, height: 40, borderRadius: 3, overflow: 'hidden',
-                border: `2px solid ${hasDone ? accent : `${encre}20`}`,
-                opacity: hasDone ? 1 : 0.5,
+                border: `2px solid ${isTheirTurn ? accent : hasDone ? `${accent}50` : `${encre}20`}`,
+                opacity: hasDone || isTheirTurn ? 1 : 0.5,
+                boxShadow: isTheirTurn ? `0 0 8px ${accent}60` : 'none',
               }}>
                 {p.avatar_url ? (
                   <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -541,13 +585,32 @@ export default function JeuOnline() {
                   </div>
                 )}
               </div>
-              <span style={{ ...mono, fontSize: 11, color: hasDone ? accent : `${encre}50` }}>
-                {hasDone ? '✓' : '…'}
+              <span style={{ ...mono, fontSize: 11, color: isTheirTurn ? accent : `${encre}50` }}>
+                {isMe ? (isTheirTurn ? '✎ VOUS' : submitted ? '✓' : '…') : isTheirTurn ? '✎' : hasDone ? '✓' : '…'}
               </span>
             </div>
           )
         })}
       </div>
+
+      {/* Timer bar */}
+      {secondsLeft !== null && room.turn_seconds && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ height: 2, background: `${encre}15`, borderRadius: 1, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${Math.round((secondsLeft / room.turn_seconds) * 100)}%`,
+              background: secondsLeft < 30 ? '#b22c20' : accent,
+              transition: 'width 1s linear',
+            }} />
+          </div>
+          {secondsLeft < 60 && (
+            <div style={{ ...mono, fontSize: 12, color: secondsLeft < 30 ? '#b22c20' : accent, marginTop: 4, textAlign: 'right' }}>
+              {secondsLeft}s
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Contenu principal */}
       <AnimatePresence mode="wait">
@@ -568,12 +631,18 @@ export default function JeuOnline() {
                 « {myContrib} »
               </div>
             )}
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
-              En attente des autres joueurs… La révélation aura lieu lorsque tout le monde aura soumis.
-            </p>
+            {room.mode === 'ecrit' && currentCase < nbTotal ? (
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
+                C'est au tour de <strong>{currentTurnPlayer?.pseudo ?? '…'}</strong>. Votre tour reviendra ensuite.
+              </p>
+            ) : (
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
+                En attente des autres joueurs… La révélation aura lieu lorsque tout le monde aura soumis.
+              </p>
+            )}
             <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
           </motion.div>
-        ) : room.mode === 'dessin' ? (
+        ) : isMyTurnDessin ? (
           <motion.div
             key="dessin"
             initial={{ opacity: 0, y: 8 }}
@@ -588,15 +657,15 @@ export default function JeuOnline() {
             </p>
             <DrawingCanvas onSubmit={handleDrawingSubmit} accent={accent} encre={encre} btnText={btnText} />
           </motion.div>
-        ) : caseDef ? (
+        ) : isMyTurnEcrit && caseDef ? (
           <motion.div
-            key="form"
+            key={`form-${currentCase}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
           >
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-              VOTRE CASE · {(myIndex ?? 0) + 1}/{nbTotal}
+              VOTRE CASE · {currentCase + 1}/{nbTotal}
             </div>
             <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.75, marginBottom: 4 }}>
               {TYPE_LABEL[caseDef.type] ?? caseDef.type.toUpperCase()}
@@ -654,14 +723,29 @@ export default function JeuOnline() {
           </motion.div>
         ) : (
           <motion.div
-            key="nocase"
+            key="notmyturn"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center' }}
           >
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: encre, opacity: 0.75, textAlign: 'center' }}>
-              En attente de la partie…
-            </p>
+            {currentTurnPlayer && currentCase < nbTotal ? (
+              <>
+                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, letterSpacing: '0.22em' }}>
+                  — EN ATTENTE —
+                </div>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, lineHeight: 1.6 }}>
+                  C'est le tour de <strong>{currentTurnPlayer.pseudo}</strong>…
+                </p>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.55 }}>
+                  Case {currentCase + 1} sur {nbTotal}
+                </p>
+              </>
+            ) : (
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: encre, opacity: 0.75 }}>
+                En attente de la partie…
+              </p>
+            )}
+            <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
           </motion.div>
         )}
       </AnimatePresence>

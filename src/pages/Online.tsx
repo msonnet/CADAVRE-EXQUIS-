@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -11,6 +11,21 @@ function genCode(): string {
   const adj = ['LOUP', 'CYGNE', 'CRABE', 'OURS', 'VACHE', 'TIGRE', 'AIGLE', 'SINGE', 'VIPÈRE', 'LAPIN', 'RENARD', 'HIBOU']
   const n = Math.floor(Math.random() * 90) + 10
   return `${adj[Math.floor(Math.random() * adj.length)]}-${n}`
+}
+
+type PublicRoom = {
+  code: string
+  mode: string
+  structure_id: string
+  nb_joueurs: number
+  player_count: number
+}
+
+const MODE_LABEL: Record<string, string> = { ecrit: 'ÉCRIT', dessin: 'DESSINÉ' }
+const STRUCT_SHORT: Record<string, string> = {
+  'phrase-simple': '3 cases',
+  'phrase-etoffee': '7 cases',
+  'vers-libre': 'libre',
 }
 
 export default function Online() {
@@ -34,6 +49,36 @@ export default function Online() {
   const [joining, setJoining] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [publicRooms, setPublicRooms] = useState<PublicRoom[]>([])
+  const [loadingRooms, setLoadingRooms] = useState(false)
+
+  const fetchPublicRooms = useCallback(async () => {
+    setLoadingRooms(true)
+    try {
+      const { data: rooms } = await supabase
+        .from('rooms')
+        .select('code, mode, structure_id, nb_joueurs')
+        .eq('status', 'waiting')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(10)
+      if (!rooms) { setPublicRooms([]); return }
+      const withCounts = await Promise.all(rooms.map(async (r) => {
+        const { count } = await supabase
+          .from('room_players')
+          .select('*', { count: 'exact', head: true })
+          .eq('room_code', r.code)
+        return { ...r, player_count: count ?? 0 }
+      }))
+      setPublicRooms(withCounts)
+    } finally {
+      setLoadingRooms(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (user && profile) fetchPublicRooms()
+  }, [user, profile, fetchPublicRooms])
 
   async function handleSendLink(e: React.FormEvent) {
     e.preventDefault()
@@ -60,6 +105,7 @@ export default function Online() {
         structure_id: 'phrase-simple',
         nb_joueurs: 3,
         status: 'waiting',
+        is_public: true,
       })
       if (error) throw error
       navigate(`/salon/${code}`)
@@ -230,13 +276,68 @@ export default function Online() {
             </div>
           </div>
 
+          {/* Parties ouvertes */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+                — PARTIES OUVERTES —
+              </div>
+              <button
+                onClick={fetchPublicRooms}
+                disabled={loadingRooms}
+                style={{ ...mono, fontSize: 12, color: encre, opacity: 0.65, background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                {loadingRooms ? '⟳' : '↺ ACTUALISER'}
+              </button>
+            </div>
+            {loadingRooms ? (
+              <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>Recherche…</p>
+            ) : publicRooms.length === 0 ? (
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.65, lineHeight: 1.5 }}>
+                Aucune partie ouverte pour l'instant. Créez la vôtre ou rejoignez par code.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {publicRooms.map((r) => (
+                  <motion.button
+                    key={r.code}
+                    onClick={() => { jouer('clic'); navigate(`/salon/${r.code}`) }}
+                    whileTap={{ scale: 0.98 }}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      background: `${encre}06`, border: `1px solid ${encre}20`,
+                      borderLeft: `3px solid ${accent}`,
+                      cursor: 'pointer', textAlign: 'left', width: '100%',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 16, color: encre, marginBottom: 2 }}>
+                        {r.code}
+                      </div>
+                      <div style={{ ...mono, fontSize: 11, color: accent, letterSpacing: '0.18em' }}>
+                        {MODE_LABEL[r.mode] ?? r.mode} · {STRUCT_SHORT[r.structure_id] ?? r.structure_id}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700 }}>
+                        {r.player_count}/{r.nb_joueurs}
+                      </div>
+                      <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5 }}>JOUEURS</div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Créer salon */}
           <div>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
               — NOUVELLE PARTIE —
             </div>
             <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
-              Créez un salon et partagez le code à vos joueurs.
+              Créez un salon et partagez le code, ou laissez-le public pour que d'autres rejoignent.
             </p>
             <button
               onClick={handleCreate}
@@ -253,7 +354,7 @@ export default function Online() {
           {/* Rejoindre salon */}
           <div>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-              — REJOINDRE —
+              — REJOINDRE PAR CODE —
             </div>
             <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input

@@ -8,7 +8,7 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { STRUCTURES } from '../structures'
 
-type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null }
+type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; is_ready: boolean }
 type SpectatorPresence = { player_id: string; pseudo: string; avatar_url: string | null; is_spectator: true }
 
@@ -509,6 +509,39 @@ export default function Salon() {
                   </button>
                 )
               })}
+            </div>
+          </div>
+
+          {/* ── Visibilité du salon ── */}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ ...mono, fontSize: 12, color: encre, marginBottom: 6 }}>VISIBILITÉ</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {([
+                { value: true, label: 'PUBLIC' },
+                { value: false, label: 'PRIVÉ' },
+              ] as const).map(opt => {
+                const selected = (room.is_public ?? true) === opt.value
+                return (
+                  <button
+                    key={opt.label}
+                    onClick={() => updateRoom({ is_public: opt.value })}
+                    style={{
+                      flex: 1, ...mono, fontSize: 13, padding: '7px 10px',
+                      background: selected ? `${accent}18` : 'transparent',
+                      color: selected ? accent : encre,
+                      border: `1px solid ${selected ? accent : `${encre}25`}`,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.65, marginTop: 6 }}>
+              {(room.is_public ?? true)
+                ? 'Visible dans la liste des parties ouvertes.'
+                : 'Accessible uniquement par code — salon privé.'}
             </div>
           </div>
         </div>
