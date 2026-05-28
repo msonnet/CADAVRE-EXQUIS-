@@ -565,7 +565,7 @@ export default function Jeu() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              {iaChargement ? '— LE CADAVRE SONGE —' : '— LA VOIX A PARLÉ —'}
+              {iaChargement ? '— LE CADAVRE SONGE —' : '— LA VOIX PARLE —'}
             </motion.div>
 
             {iaChargement ? (
@@ -613,15 +613,6 @@ export default function Jeu() {
             ) : (
               <>
                 <motion.div
-                  style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6, marginBottom: 16 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {defActuelle?.consigne}
-                </motion.div>
-
-                <motion.div
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontStyle: 'italic',
@@ -633,7 +624,19 @@ export default function Jeu() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.7, ease: 'easeOut' }}
                 >
-                  « {iaTexteRevele} »
+                  La voix parle<motion.span
+                    animate={{ opacity: [1, 0, 1] }}
+                    transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                  >…</motion.span>
+                </motion.div>
+
+                <motion.div
+                  style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 16, lineHeight: 1.7 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.7 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  elle dépose son fragment<br />à l'abri des regards
                 </motion.div>
 
                 <motion.div
@@ -650,7 +653,7 @@ export default function Jeu() {
 
           {/* Footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
-            {iaChargement ? '— NE PAS LE DÉRANGER —' : '— LA VOIX S’EFFACE… —'}
+            {iaChargement ? '— NE PAS LE DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
           </div>
         </div>
       </PageTransition>
