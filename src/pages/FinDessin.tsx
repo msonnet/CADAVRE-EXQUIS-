@@ -180,7 +180,7 @@ export default function FinDessin() {
 
   const phaseLabel = {
     assemblage: 'Assemblage du dessin…',
-    vision: 'Lecture surréaliste en cours…',
+    vision: 'Le cadavre se constitue…',
     revele: '',
     sauvegarde: 'Sauvegardé.',
   }[phase]
@@ -259,9 +259,9 @@ export default function FinDessin() {
                   <motion.img
                     src={imageAssemblee}
                     alt="Cadavre exquis dessiné"
-                    initial={{ clipPath: 'inset(0 0 100% 0)' }}
-                    animate={{ clipPath: 'inset(0 0 0% 0)' }}
-                    transition={{ duration: 2.4, ease: 'easeInOut' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 2.8, ease: 'easeInOut' }}
                     style={{ display: 'block', width: '100%', maxHeight: '45vh', objectFit: 'contain' }}
                   />
                 </button>

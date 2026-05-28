@@ -596,8 +596,10 @@ export default function JeuDessin() {
             {TOOL_ORDER.map(t => {
               const active = tool === t
               const Icon = TOOL_ICONS[t]
-              const nib = t === 'eraser' ? '#f3a9b8' : active ? color : `${encre}60`
-              const tint = active ? encre : `${encre}72`
+              // Fixed dark ink for toolbar (always readable on the fixed beige #f0e9df background)
+              const TOOLBAR_INK = '#1a1208'
+              const nib = t === 'eraser' ? '#f3a9b8' : color
+              const tint = TOOLBAR_INK
               return (
                 <button
                   key={t}
@@ -610,11 +612,13 @@ export default function JeuDessin() {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
                     background: active ? '#ffffff' : 'transparent',
                     border: 'none', borderRadius: 12,
-                    cursor: 'pointer', transition: 'background 0.15s',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s, opacity 0.15s',
+                    opacity: active ? 1 : 0.42,
                   }}
                 >
                   <Icon tint={tint} nib={nib} />
-                  <span style={{ ...mono, fontSize: 7, color: active ? accent : `${encre}72`, letterSpacing: '0.08em' }}>
+                  <span style={{ ...mono, fontSize: 7, color: active ? accent : TOOLBAR_INK, letterSpacing: '0.08em' }}>
                     {TOOL_NAMES[t].toUpperCase()}
                   </span>
                 </button>
