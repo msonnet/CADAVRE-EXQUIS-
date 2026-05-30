@@ -346,7 +346,13 @@ export default function Jeu() {
     }
 
     const contexteIA = getContexteVisible(cases, config.visibilite) ?? undefined
-    demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA })
+    // Anti-répétition : mots déjà employés dans la partie (>2 lettres), pour que
+    // l'IA choisisse un autre mot plutôt que de tomber sur un doublon. Vocabulaire libre.
+    const eviterIA = cases
+      .filter(c => c.texte)
+      .flatMap(c => c.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? [])
+      .filter(m => m.length > 2)
+    demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA })
       .then(texte => finaliser(texte.trim()))
       .catch(()  => finaliser(''))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps

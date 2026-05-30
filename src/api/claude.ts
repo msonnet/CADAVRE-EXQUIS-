@@ -5,6 +5,7 @@ export interface RequeteIA {
   type: string
   voiceId?: string
   contexte?: string
+  eviter?: string[]
 }
 
 export async function demanderFragmentIA(requete: RequeteIA): Promise<string> {
