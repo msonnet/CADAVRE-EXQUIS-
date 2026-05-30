@@ -20,8 +20,8 @@ const TURN_OPTIONS: { value: number | null; label: string }[] = [
 ]
 
 const STRUCT_LABELS: Record<string, string> = {
-  'phrase-simple': 'Phrase simple (3 joueurs)',
-  'phrase-etoffee': 'Phrase étoffée (7 joueurs)',
+  'phrase-simple': 'Phrase simple (3 fragments)',
+  'phrase-etoffee': 'Phrase étoffée (7 fragments)',
   'vers-libre': 'Vers libre (variable)',
 }
 
