@@ -8,7 +8,7 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 
-type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null }
+type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; nb_cases: number | null }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
@@ -199,6 +199,9 @@ export default function JeuOnline() {
   // Timer per turn
   const [tick, setTick] = useState(0)
   const autoSubmittedRef = useRef(false)
+  const turnStartedAtRef = useRef<number>(Date.now())
+  const inputRef = useRef<string>('')
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const myIndex = myPlayer?.order_index ?? null
   // Spectator detection : utilisateur connecté mais pas dans la liste des joueurs
@@ -206,10 +209,12 @@ export default function JeuOnline() {
 
   // ── Turn state (round-robin) ─────────────────────────────
   const structure = room ? getStructure(room.structure_id) : null
-  // Total cases: dessin = one per player; écrit = full structure length (NOT capped by player count)
+  // Total cases: persisted in room.nb_cases at game start so every client agrees.
+  // Fallback to structure length for rooms created before nb_cases existed.
   const nbTotal = !room ? 0
-    : room.mode === 'dessin' ? players.length
-    : structure ? nombreCasesEffectif(structure) : 0
+    : room.mode === 'dessin'
+      ? (room.nb_cases ?? players.length)
+      : (room.nb_cases ?? (structure ? nombreCasesEffectif(structure) : 0))
   // Next case to fill = number of contributions so far
   const currentCase = contributions.length
   // Whose turn (by order_index) — round-robin for écrit
@@ -246,14 +251,27 @@ export default function JeuOnline() {
     const cList = (cs ?? []) as Contribution[]
     setContributions(cList)
 
-    // For drawing mode (one case per player), if I've already submitted, lock my screen.
-    // For écrit (round-robin), the submitted state is driven by whose turn it is.
+    // Restore submitted state from DB contributions
     if (r.mode === 'dessin') {
       const mine = cList.find(c => c.player_id === user.id)
       if (mine) { setMyContrib(mine.texte); setSubmitted(true) }
     } else {
-      const mine = cList.filter(c => c.player_id === user.id)
-      if (mine.length > 0) setMyContrib(mine[mine.length - 1].texte)
+      // Écrit: check if I already submitted for the current round
+      const me2 = pList.find(p => p.player_id === user.id)
+      const myIdx2 = me2?.order_index ?? null
+      if (myIdx2 !== null && pList.length > 0) {
+        const roundStart = Math.floor(cList.length / pList.length) * pList.length
+        const myExpectedCase = roundStart + myIdx2
+        const alreadySubmitted = cList.some(c => c.case_index === myExpectedCase && c.player_id === user.id)
+        if (alreadySubmitted) {
+          setSubmitted(true)
+          const myContribForCase = cList.find(c => c.case_index === myExpectedCase && c.player_id === user.id)
+          if (myContribForCase) setMyContrib(myContribForCase.texte)
+        } else {
+          const mine = cList.filter(c => c.player_id === user.id)
+          if (mine.length > 0) setMyContrib(mine[mine.length - 1].texte)
+        }
+      }
     }
   }, [code, user, navigate])
 
@@ -311,12 +329,26 @@ export default function JeuOnline() {
     }
   }, [connectionStatus])
 
+  // Polling fallback: re-sync every 3s in case a Realtime event was missed.
+  // Critical for non-host players whose postgres_changes events may not arrive
+  // when the contributions RLS policy involves cross-table JOINs.
+  useEffect(() => {
+    if (!code || !user) return
+    const id = setInterval(async () => {
+      const { data: cs } = await supabase.from('contributions')
+        .select('case_index,texte,player_id').eq('room_code', code).order('case_index')
+      if (cs) setContributions(cs as Contribution[])
+      const { data: r } = await supabase.from('rooms').select('status,nb_cases').eq('code', code).single()
+      if (r?.status === 'finished') navigate(`/fin-online/${code}`)
+      if (r?.nb_cases != null) setRoom(prev => prev ? { ...prev, nb_cases: r.nb_cases } : prev)
+    }, 3000)
+    return () => clearInterval(id)
+  }, [code, user, navigate])
+
   // Host auto-finishes when all cases are filled
   useEffect(() => {
-    if (!room || !players.length) return
-    const struc = getStructure(room.structure_id)
-    const total = room.mode === 'dessin' ? players.length : nombreCasesEffectif(struc)
-    if (contributions.length >= total && room.status === 'playing' && room.host_id === user?.id) {
+    if (!room || !players.length || !nbTotal) return
+    if (contributions.length >= nbTotal && room.status === 'playing' && room.host_id === user?.id) {
       supabase.from('rooms').update({ status: 'finished' }).eq('code', code ?? '')
     }
   }, [contributions, players, room, code, user])
@@ -324,17 +356,23 @@ export default function JeuOnline() {
   // Écrit: reset "submitted" when the round-robin returns to me
   useEffect(() => {
     if (!submitted || !room || room.mode !== 'ecrit') return
-    if (!players.length || myIndex === null) return
-    const struc = getStructure(room.structure_id)
-    const total = nombreCasesEffectif(struc)
+    if (!players.length || myIndex === null || !nbTotal) return
     const currCase = contributions.length
-    if (currCase >= total) return
+    if (currCase >= nbTotal) return
     if (myIndex === currCase % players.length) {
       setSubmitted(false)
       setInput('')
       autoSubmittedRef.current = false
     }
-  }, [contributions.length, submitted, players.length, myIndex, room])
+  }, [contributions.length, submitted, players.length, myIndex, room, nbTotal])
+
+  const mergeContribution = useCallback((c: Contribution) => {
+    setContributions(prev =>
+      prev.find(x => x.case_index === c.case_index)
+        ? prev
+        : [...prev, c].sort((a, b) => a.case_index - b.case_index)
+    )
+  }, [])
 
   async function handleIa() {
     if (!caseDef) return
@@ -349,6 +387,7 @@ export default function JeuOnline() {
     e.preventDefault()
     if (!input.trim() || !user || !code || !isMyTurnEcrit) return
     setSubmitting(true)
+    setSubmitError(null)
     const { error } = await supabase.from('contributions').insert({
       room_code: code,
       player_id: user.id,
@@ -356,15 +395,19 @@ export default function JeuOnline() {
       texte: input.trim(),
     })
     if (!error) {
+      mergeContribution({ case_index: currentCase, texte: input.trim(), player_id: user.id })
       setMyContrib(input.trim())
       setSubmitted(true)
       jouer('soumettre')
+    } else {
+      setSubmitError('Erreur lors de l\'envoi. Réessayez.')
     }
     setSubmitting(false)
   }
 
   async function handleDrawingSubmit(dataUrl: string) {
     if (!user || !code || myIndex === null) return
+    if (contributions.some(c => c.case_index === myIndex && c.player_id === user.id)) return
     const { error } = await supabase.from('contributions').insert({
       room_code: code,
       player_id: user.id,
@@ -372,6 +415,7 @@ export default function JeuOnline() {
       texte: dataUrl,
     })
     if (!error) {
+      mergeContribution({ case_index: myIndex, texte: dataUrl, player_id: user.id })
       setMyContrib(dataUrl)
       setSubmitted(true)
       jouer('soumettre')
@@ -395,15 +439,25 @@ export default function JeuOnline() {
 
   // ── Timer : tick every second to re-render countdown ──
   useEffect(() => {
-    if (!room?.turn_seconds || !room?.started_at) return
+    if (!room?.turn_seconds) return
     const id = setInterval(() => setTick(t => t + 1), 1000)
     return () => clearInterval(id)
-  }, [room?.turn_seconds, room?.started_at])
+  }, [room?.turn_seconds])
 
-  // ── Calcul du temps restant ──
+  // Reset the per-turn clock each time a new contribution lands
+  useEffect(() => {
+    turnStartedAtRef.current = Date.now()
+  }, [contributions.length])
+
+  // Keep inputRef in sync so auto-submit reads latest value without being in the deps array
+  useEffect(() => {
+    inputRef.current = input
+  }, [input])
+
+  // ── Calcul du temps restant (per-turn local clock) ──
   const secondsLeft = (() => {
-    if (!room?.turn_seconds || !room?.started_at) return null
-    const elapsed = Math.floor((Date.now() - new Date(room.started_at).getTime()) / 1000)
+    if (!room?.turn_seconds) return null
+    const elapsed = Math.floor((Date.now() - turnStartedAtRef.current) / 1000)
     return Math.max(0, room.turn_seconds - elapsed)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   })()
@@ -415,8 +469,9 @@ export default function JeuOnline() {
     if (secondsLeft === null || secondsLeft > 0) return
     if (submitted || autoSubmittedRef.current) return
     if (!(isMyTurnEcrit || isMyTurnDessin)) return
-    if (!user || !code || myIndex === null || !input.trim()) return
+    if (!user || !code || myIndex === null) return
     autoSubmittedRef.current = true
+    const textToSubmit = inputRef.current.trim() || '…'
     ;(async () => {
       try {
         const caseIdx = room?.mode === 'dessin' ? myIndex : contributions.length
@@ -424,18 +479,24 @@ export default function JeuOnline() {
           room_code: code,
           player_id: user.id,
           case_index: caseIdx,
-          texte: input.trim(),
+          texte: textToSubmit,
         })
         if (!error) {
-          setMyContrib(input.trim())
+          mergeContribution({ case_index: caseIdx, texte: textToSubmit, player_id: user.id })
+          setMyContrib(textToSubmit)
           setSubmitted(true)
           try { jouer('soumettre') } catch {}
+        } else {
+          autoSubmittedRef.current = false
         }
       } catch (e) {
+        autoSubmittedRef.current = false
         console.error('Auto-submit erreur:', e)
       }
     })()
-  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, input, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length])
+  // input intentionally omitted — read via inputRef to avoid re-firing on every keystroke
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length, mergeContribution])
 
   if (authLoading || !room || (!myPlayer && !isSpectator)) {
     return (
@@ -719,6 +780,9 @@ export default function JeuOnline() {
                   {submitting ? 'ENVOI…' : 'SOUMETTRE →'}
                 </button>
               </div>
+              {submitError && (
+                <div style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em', fontSize: 12, color: '#b22c20', marginTop: 6 }}>{submitError}</div>
+              )}
             </form>
           </motion.div>
         ) : (

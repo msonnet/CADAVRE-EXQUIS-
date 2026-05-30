@@ -6,9 +6,9 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
-import { STRUCTURES } from '../structures'
+import { STRUCTURES, getStructure, nombreCasesEffectif } from '../structures'
 
-type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean }
+type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; is_ready: boolean }
 type SpectatorPresence = { player_id: string; pseudo: string; avatar_url: string | null; is_spectator: true }
 
@@ -202,9 +202,15 @@ export default function Salon() {
         await supabase.from('room_players').update({ order_index: i }).eq('id', shuffled[i].id)
       }
 
+      // Fix the total number of cases ONCE at game start so every client agrees.
+      const nbCases = room.mode === 'dessin'
+        ? players.length
+        : nombreCasesEffectif(getStructure(room.structure_id))
+
       await supabase.from('rooms').update({
         status: 'playing',
         nb_joueurs: players.length,
+        nb_cases: nbCases,
         started_at: new Date().toISOString(),
       }).eq('code', code)
     } catch (e) {
