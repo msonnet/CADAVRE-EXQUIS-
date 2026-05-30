@@ -102,7 +102,11 @@ export default function FinDePartie() {
     const structure = getStructure(poeme.structureId)
     const brut = reconstruirePoeme(poeme.cases, structure)
     setTexteCorrige(null)
-    corrigerAccords(brut, poeme.structureId).then(t => { if (!cancelled) setTexteCorrige(t) })
+    const blocs = poeme.cases.map((c, i) => ({
+      texte: c.texte,
+      type: structure.cases[i]?.type ?? 'libre',
+    }))
+    corrigerAccords(brut, poeme.structureId, blocs).then(t => { if (!cancelled) setTexteCorrige(t) })
     return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 

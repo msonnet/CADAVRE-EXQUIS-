@@ -148,7 +148,11 @@ export default function FinOnline() {
       const brut = reconstruirePoeme(fakeCases, structure)
       setTexteAssemble(brut)
       let cancelled = false
-      corrigerAccords(brut, r.structure_id).then(t => { if (!cancelled) setTexteCorrige(t) })
+      const blocs = structure.cases.map((def, i) => ({
+        texte: caseMap.get(i) ?? '',
+        type: def.type,
+      }))
+      corrigerAccords(brut, r.structure_id, blocs).then(t => { if (!cancelled) setTexteCorrige(t) })
       return () => { cancelled = true }
     }
 
