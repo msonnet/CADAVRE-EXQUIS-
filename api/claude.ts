@@ -118,9 +118,13 @@ function normaliserSortie(texte: string, type: TypeCase): string {
   }
 }
 
-function pickFallback(type: TypeCase): string {
+function pickFallback(type: TypeCase, eviter: string[] = []): string {
   const arr = FALLBACKS[type] ?? FALLBACKS['libre']
-  return arr[Math.floor(Math.random() * arr.length)]
+  // Prefer fallback words that haven't already been used in the game
+  const used = new Set(eviter.map(m => m.toLowerCase()))
+  const dispo = arr.filter(m => !used.has(m.toLowerCase()))
+  const pool = dispo.length ? dispo : arr
+  return pool[Math.floor(Math.random() * pool.length)]
 }
 
 const TYPES_VALIDES: Set<string> = new Set([
@@ -135,7 +139,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type, voiceId, contexte } = req.body ?? {}
+  const { consigne, type, voiceId, contexte, eviter } = req.body ?? {}
 
   if (typeof consigne !== 'string' || typeof type !== 'string' || !consigne || !type) {
     res.status(400).json({ error: 'Champs manquants : consigne et type requis.' })
@@ -167,6 +171,16 @@ export default async function handler(req: any, res: any): Promise<void> {
     ? `\nTu entends en écho : "${contexte}".`
     : ''
 
+  // Anti-répétition : liste des mots déjà employés dans la partie, à ne jamais réutiliser.
+  // Le vocabulaire reste libre — on interdit seulement les doublons exacts déjà sortis.
+  const motsEviter = Array.isArray(eviter)
+    ? [...new Set(eviter.filter((m: unknown): m is string => typeof m === 'string' && m.trim().length > 0)
+        .map((m: string) => m.trim().toLowerCase()))].slice(0, 60)
+    : []
+  const eviterLine = motsEviter.length
+    ? `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés (trouve autre chose) : ${motsEviter.join(', ')}.`
+    : ''
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -183,7 +197,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         messages: [
           {
             role: 'user',
-            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nContrainte absolue : ${contrainte}.\nSois inattendu — choisis l'image concrète et physique qui ne vient pas en premier.${echoLine}\nRéponds avec le fragment seul.`,
+            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nContrainte absolue : ${contrainte}.\nSois inattendu — choisis l'image concrète et physique qui ne vient pas en premier.${echoLine}${eviterLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),
@@ -204,9 +218,9 @@ export default async function handler(req: any, res: any): Promise<void> {
       .trim()
 
     const texte = normaliserSortie(propre, type as TypeCase)
-    res.status(200).json({ texte: texte || pickFallback(type as TypeCase) })
+    res.status(200).json({ texte: texte || pickFallback(type as TypeCase, motsEviter) })
   } catch (err) {
     console.error('Erreur Claude API:', err)
-    res.status(200).json({ texte: pickFallback(type as TypeCase) })
+    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter) })
   }
 }

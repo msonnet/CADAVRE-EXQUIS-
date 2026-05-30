@@ -533,12 +533,12 @@ function OnlineDrawingCanvas({ onSubmit, accent, encre, raccordPrev }: {
   )
 }
 
-async function callClaude(consigne: string, type: string): Promise<string> {
+async function callClaude(consigne: string, type: string, eviter?: string[]): Promise<string> {
   try {
     const r = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ consigne, type }),
+      body: JSON.stringify({ consigne, type, eviter }),
     })
     if (!r.ok) return ''
     const { texte } = await r.json()
@@ -783,7 +783,12 @@ export default function JeuOnline() {
   async function handleIa() {
     if (!caseDef) return
     setIaLoading(true)
-    const texte = await callClaude(caseDef.consigne, caseDef.type)
+    // Anti-répétition : mots déjà soumis dans la partie (on ignore les bandes dessin)
+    const eviter = contributions
+      .filter(c => !c.texte.startsWith('data:') && !c.texte.startsWith('{'))
+      .flatMap(c => c.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? [])
+      .filter(m => m.length > 2)
+    const texte = await callClaude(caseDef.consigne, caseDef.type, eviter)
     if (texte) setInput(texte)
     setIaLoading(false)
     jouer('ia')
