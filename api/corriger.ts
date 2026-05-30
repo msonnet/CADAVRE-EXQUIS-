@@ -17,34 +17,36 @@ export default async function handler(req: any, res: any): Promise<void> {
 
   if (Array.isArray(blocs) && blocs.length > 0) {
     if (structureId === 'phrase-etoffee' && blocs.length === 7) {
-      // 7 exact blocs — canonique de Breton
-      // Invariable: nom (bloc 2, 6), verbe (bloc 4). Variable: article-adj (1,5), adjectif (3,7).
-      const roles = [
+      // 7 blocs — canonique de Breton.
+      // Approche sémantique : Claude identifie le nom noyau de chaque groupe
+      // plutôt que de supposer que bloc 2 = nom sujet (les joueurs font des erreurs).
+      const labels = [
         'article + adjectif épithète',
-        'nom sujet — INVARIABLE, fait loi pour le genre',
-        'adjectif qualifiant le sujet',
-        'verbe conjugué — INVARIABLE',
+        'nom sujet (prévu)',
+        'adjectif du sujet',
+        'verbe conjugué',
         'article + adjectif épithète',
-        'nom COD — INVARIABLE, fait loi pour le genre',
-        'adjectif qualifiant le COD',
+        'nom COD (prévu)',
+        'adjectif du COD',
       ]
       const blocLines = blocs.map((b, i) =>
-        `  Bloc ${i + 1} (${roles[i]}) : «${b.texte.trim()}»`
+        `  Bloc ${i + 1} (${labels[i]}) : «${b.texte.trim()}»`
       ).join('\n')
 
-      prompt = `Tu es un correcteur de grammaire française pour le cadavre exquis.
+      prompt = `Tu es un correcteur de grammaire française pour le jeu du cadavre exquis.
 
-Chaque joueur a écrit UN bloc sans voir les autres :
+Sept joueurs ont chacun écrit un bloc en aveugle, dans cet ordre :
 ${blocLines}
 
-RÈGLES STRICTES — respecte-les à la lettre :
-1. Ne touche JAMAIS aux blocs NOM (2 et 6) ni au VERBE (4) — ils sont invariables et font loi.
-2. Bloc 1 : accorde l'article ET l'adjectif en genre et nombre avec le NOM du bloc 2.
-3. Bloc 3 : accorde l'adjectif en genre et nombre avec le NOM du bloc 2.
-4. Bloc 5 : accorde l'article ET l'adjectif en genre et nombre avec le NOM du bloc 6.
-5. Bloc 7 : accorde l'adjectif en genre et nombre avec le NOM du bloc 6.
-6. Si un bloc "article + adjectif" contient un nom commun à la place d'un adjectif (ex : "la terreur", "le chagrin"), remplace-le par UN ARTICLE + UN ADJECTIF du même genre que le nom associé (bloc 2 ou 6), en gardant un esprit surréaliste.
-7. Conserve tous les mots lexicaux (noms, verbes, adverbes) tels quels.
+Phrase assemblée : «${texte}»
+
+TÂCHE — effectue exactement ces étapes dans l'ordre :
+1. Identifie le NOM PRINCIPAL du groupe sujet (cherche dans les blocs 1, 2 et 3 — les joueurs font parfois des erreurs de catégorie).
+2. Accorde le déterminant et les adjectifs des blocs 1 et 3 avec ce nom (genre et nombre).
+3. Identifie le NOM PRINCIPAL du groupe COD (cherche dans les blocs 5, 6 et 7).
+4. Accorde le déterminant et les adjectifs des blocs 5 et 7 avec ce nom (genre et nombre).
+5. Garde rigoureusement identiques : tous les noms, le verbe (bloc 4), les adverbes.
+6. Si un bloc "article + adjectif" ne contient pas d'adjectif mais un nom (ex : «la terreur», «le chagrin»), remplace-le par article + adjectif du bon genre, en gardant l'esprit surréaliste.
 
 Réponds avec LA PHRASE CORRIGÉE UNIQUEMENT, sur une seule ligne, sans guillemets ni explication.`
 
@@ -98,7 +100,7 @@ Phrase : ${texte}`
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }],
       }),
