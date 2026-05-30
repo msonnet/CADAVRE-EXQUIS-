@@ -23,8 +23,8 @@ type PublicRoom = {
 
 const MODE_LABEL: Record<string, string> = { ecrit: 'ÉCRIT', dessin: 'DESSINÉ' }
 const STRUCT_SHORT: Record<string, string> = {
-  'phrase-simple': '3 cases',
-  'phrase-etoffee': '7 cases',
+  'phrase-simple': '3 fragments',
+  'phrase-etoffee': '7 fragments',
   'vers-libre': 'libre',
 }
 

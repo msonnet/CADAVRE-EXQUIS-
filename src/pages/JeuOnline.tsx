@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; nb_cases: number | null }
-type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
+type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; joined_at: string | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -203,9 +203,26 @@ export default function JeuOnline() {
   const inputRef = useRef<string>('')
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const myIndex = myPlayer?.order_index ?? null
   // Spectator detection : utilisateur connecté mais pas dans la liste des joueurs
   const isSpectator = !!room && !!user && !!players.length && !myPlayer
+
+  // ── Stable player ordering ───────────────────────────────
+  // We derive the turn order from the players list instead of trusting each
+  // row's order_index. The host assigns order_index in Salon, but RLS only lets
+  // a player update THEIR OWN room_players row, so the host's writes to other
+  // players' rows are silently dropped → their order_index stays null → those
+  // players never get their turn. Deriving the order here (identical on every
+  // client because joined_at is a fixed server timestamp) makes the game work
+  // regardless of whether order_index was successfully persisted.
+  const orderedPlayers = [...players].sort((a, b) => {
+    const ao = a.order_index, bo = b.order_index
+    if (ao != null && bo != null && ao !== bo) return ao - bo
+    const aj = a.joined_at ?? '', bj = b.joined_at ?? ''
+    if (aj !== bj) return aj < bj ? -1 : 1
+    return a.player_id < b.player_id ? -1 : 1 // stable tiebreak
+  })
+  const myIndex = user ? orderedPlayers.findIndex(p => p.player_id === user.id) : -1
+  const myEffectiveIndex = myIndex >= 0 ? myIndex : null
 
   // ── Turn state (round-robin) ─────────────────────────────
   const structure = room ? getStructure(room.structure_id) : null
@@ -217,15 +234,15 @@ export default function JeuOnline() {
       : (room.nb_cases ?? (structure ? nombreCasesEffectif(structure) : 0))
   // Next case to fill = number of contributions so far
   const currentCase = contributions.length
-  // Whose turn (by order_index) — round-robin for écrit
-  const whoseTurnIdx = players.length > 0 ? currentCase % players.length : 0
-  const currentTurnPlayer = players.find(p => p.order_index === whoseTurnIdx) ?? null
-  // Écrit: my turn when round-robin reaches my order_index and I haven't submitted this round
+  // Whose turn — round-robin over the derived ordering
+  const whoseTurnIdx = orderedPlayers.length > 0 ? currentCase % orderedPlayers.length : 0
+  const currentTurnPlayer = orderedPlayers[whoseTurnIdx] ?? null
+  // Écrit: my turn when round-robin reaches my position and I haven't submitted this round
   const isMyTurnEcrit = room?.mode === 'ecrit' && !submitted
-    && myIndex !== null && players.length > 0
-    && myIndex === whoseTurnIdx && currentCase < nbTotal
+    && myEffectiveIndex !== null && orderedPlayers.length > 0
+    && myEffectiveIndex === whoseTurnIdx && currentCase < nbTotal
   // Dessin: each player submits exactly once (their band)
-  const isMyTurnDessin = room?.mode === 'dessin' && !submitted && myIndex !== null
+  const isMyTurnDessin = room?.mode === 'dessin' && !submitted && myEffectiveIndex !== null
   const caseDef = isMyTurnEcrit && structure && currentCase < structure.cases.length
     ? structure.cases[currentCase]
     : null
@@ -237,7 +254,7 @@ export default function JeuOnline() {
     if (r.status === 'finished') { navigate(`/fin-online/${code}`); return }
     setRoom(r)
 
-    const { data: ps } = await supabase.from('room_players').select('*').eq('room_code', code).order('order_index')
+    const { data: ps } = await supabase.from('room_players').select('*').eq('room_code', code).order('joined_at')
     const pList = (ps ?? []) as RoomPlayer[]
     setPlayers(pList)
     const me = pList.find(p => p.player_id === user.id)
@@ -251,15 +268,25 @@ export default function JeuOnline() {
     const cList = (cs ?? []) as Contribution[]
     setContributions(cList)
 
+    // Derive my position the same way the render does (order_index if present,
+    // else joined_at), so reconnect restores the right turn even if order_index
+    // was never persisted (RLS blocks the host from writing other players' rows).
+    const ordered = [...pList].sort((a, b) => {
+      const ao = a.order_index, bo = b.order_index
+      if (ao != null && bo != null && ao !== bo) return ao - bo
+      const aj = a.joined_at ?? '', bj = b.joined_at ?? ''
+      if (aj !== bj) return aj < bj ? -1 : 1
+      return a.player_id < b.player_id ? -1 : 1
+    })
+    const myIdx2 = ordered.findIndex(p => p.player_id === user.id)
+
     // Restore submitted state from DB contributions
     if (r.mode === 'dessin') {
       const mine = cList.find(c => c.player_id === user.id)
       if (mine) { setMyContrib(mine.texte); setSubmitted(true) }
     } else {
       // Écrit: check if I already submitted for the current round
-      const me2 = pList.find(p => p.player_id === user.id)
-      const myIdx2 = me2?.order_index ?? null
-      if (myIdx2 !== null && pList.length > 0) {
+      if (myIdx2 >= 0 && pList.length > 0) {
         const roundStart = Math.floor(cList.length / pList.length) * pList.length
         const myExpectedCase = roundStart + myIdx2
         const alreadySubmitted = cList.some(c => c.case_index === myExpectedCase && c.player_id === user.id)
@@ -356,15 +383,15 @@ export default function JeuOnline() {
   // Écrit: reset "submitted" when the round-robin returns to me
   useEffect(() => {
     if (!submitted || !room || room.mode !== 'ecrit') return
-    if (!players.length || myIndex === null || !nbTotal) return
+    if (!orderedPlayers.length || myEffectiveIndex === null || !nbTotal) return
     const currCase = contributions.length
     if (currCase >= nbTotal) return
-    if (myIndex === currCase % players.length) {
+    if (myEffectiveIndex === currCase % orderedPlayers.length) {
       setSubmitted(false)
       setInput('')
       autoSubmittedRef.current = false
     }
-  }, [contributions.length, submitted, players.length, myIndex, room, nbTotal])
+  }, [contributions.length, submitted, orderedPlayers.length, myEffectiveIndex, room, nbTotal])
 
   const mergeContribution = useCallback((c: Contribution) => {
     setContributions(prev =>
@@ -406,16 +433,16 @@ export default function JeuOnline() {
   }
 
   async function handleDrawingSubmit(dataUrl: string) {
-    if (!user || !code || myIndex === null) return
-    if (contributions.some(c => c.case_index === myIndex && c.player_id === user.id)) return
+    if (!user || !code || myEffectiveIndex === null) return
+    if (contributions.some(c => c.case_index === myEffectiveIndex && c.player_id === user.id)) return
     const { error } = await supabase.from('contributions').insert({
       room_code: code,
       player_id: user.id,
-      case_index: myIndex,
+      case_index: myEffectiveIndex,
       texte: dataUrl,
     })
     if (!error) {
-      mergeContribution({ case_index: myIndex, texte: dataUrl, player_id: user.id })
+      mergeContribution({ case_index: myEffectiveIndex, texte: dataUrl, player_id: user.id })
       setMyContrib(dataUrl)
       setSubmitted(true)
       jouer('soumettre')
@@ -469,12 +496,12 @@ export default function JeuOnline() {
     if (secondsLeft === null || secondsLeft > 0) return
     if (submitted || autoSubmittedRef.current) return
     if (!(isMyTurnEcrit || isMyTurnDessin)) return
-    if (!user || !code || myIndex === null) return
+    if (!user || !code || myEffectiveIndex === null) return
     autoSubmittedRef.current = true
     const textToSubmit = inputRef.current.trim() || '…'
     ;(async () => {
       try {
-        const caseIdx = room?.mode === 'dessin' ? myIndex : contributions.length
+        const caseIdx = room?.mode === 'dessin' ? myEffectiveIndex : contributions.length
         const { error } = await supabase.from('contributions').insert({
           room_code: code,
           player_id: user.id,
@@ -496,7 +523,7 @@ export default function JeuOnline() {
     })()
   // input intentionally omitted — read via inputRef to avoid re-firing on every keystroke
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length, mergeContribution])
+  }, [secondsLeft, submitted, isSpectator, user, code, myEffectiveIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length, mergeContribution])
 
   if (authLoading || !room || (!myPlayer && !isSpectator)) {
     return (
@@ -555,8 +582,8 @@ export default function JeuOnline() {
 
         {/* Player avatars with turn indicator */}
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-          {players.map((p) => {
-            const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
+          {orderedPlayers.map((p, idx) => {
+            const isTheirTurn = idx === whoseTurnIdx && currentCase < nbTotal
             const hasDone = contributions.some(c => c.player_id === p.player_id)
             return (
               <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
@@ -624,8 +651,8 @@ export default function JeuOnline() {
 
       {/* Joueurs with turn indicator */}
       <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
-        {players.map((p) => {
-          const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
+        {orderedPlayers.map((p, idx) => {
+          const isTheirTurn = idx === whoseTurnIdx && currentCase < nbTotal
           const isMe = p.player_id === user?.id
           const hasDone = contributions.some(c => c.player_id === p.player_id)
           return (
@@ -711,7 +738,7 @@ export default function JeuOnline() {
             style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
           >
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-              VOTRE BANDE · {(myIndex ?? 0) + 1}/{players.length}
+              VOTRE BANDE · {(myEffectiveIndex ?? 0) + 1}/{players.length}
             </div>
             <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, lineHeight: 1.5, marginBottom: 14 }}>
               Dessinez une section du corps — tête, buste ou jambes selon votre bande. Les autres joueurs font de même à l'aveugle.
