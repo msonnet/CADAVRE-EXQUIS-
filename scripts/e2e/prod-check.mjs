@@ -4,12 +4,13 @@
 // (ephemeral) accounts, and verifies the exact thing that was broken:
 //   a NON-HOST player sees the turn counter advance and the round-robin works.
 //
-// It uses only your PUBLIC anon key (the same one shipped in the frontend) —
-// no service role, no secret. Safe to run from your machine.
+// It uses your PUBLIC anon key (same as the frontend) plus the service_role key
+// only for creating test accounts (bypasses email confirmation).
 //
 // Usage:
 //   VITE_SUPABASE_URL="https://xxxx.supabase.co" \
 //   VITE_SUPABASE_ANON_KEY="eyJ..." \
+//   SUPABASE_SERVICE_ROLE_KEY="eyJ..." \
 //   node scripts/e2e/prod-check.mjs
 //
 // It creates a throwaway room + two test users (emails ce-e2e-*@example.com),
@@ -21,6 +22,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const ANON = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!URL || !ANON) {
   console.error('Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY env vars.')
   process.exit(2)
@@ -35,19 +37,39 @@ async function makeUser(tag) {
   const c = mkClient()
   const email = `ce-e2e-${rnd}-${tag}@example.com`
   const password = `Pw_${rnd}_${tag}_123!`
+
+  // If we have a service_role key, use admin.createUser to bypass email confirmation
+  if (SERVICE) {
+    const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } })
+    // Delete any leftover user with this email first (best-effort)
+    try {
+      const { data: list } = await admin.auth.admin.listUsers()
+      const existing = list?.users?.find(u => u.email === email)
+      if (existing) await admin.auth.admin.deleteUser(existing.id)
+    } catch {}
+    const { data: created, error: cErr } = await admin.auth.admin.createUser({
+      email, password, email_confirm: true,
+    })
+    if (cErr) throw new Error(`admin createUser failed for ${tag}: ${cErr.message}`)
+    // Sign in as the newly-created user with the anon client
+    const { data, error } = await c.auth.signInWithPassword({ email, password })
+    if (error || !data.session) throw new Error(`signIn after admin create failed for ${tag}: ${error?.message}`)
+    return { client: c, id: data.user.id, email }
+  }
+
+  // Fallback: try signUp then signInWithPassword (works when email confirmation is OFF)
   let { data, error } = await c.auth.signUp({ email, password })
   if (error || !data.session) {
-    // maybe the user exists from a previous run, or confirmations are on
     const r = await c.auth.signInWithPassword({ email, password })
     data = r.data; error = r.error
   }
-  if (error || !data.session) throw new Error(`auth failed for ${tag}: ${error?.message || 'no session (email confirmations enabled?)'}`)
+  if (error || !data.session) throw new Error(`auth failed for ${tag}: ${error?.message || 'no session (email confirmations enabled — set SUPABASE_SERVICE_ROLE_KEY)'}`)
   return { client: c, id: data.user.id, email }
 }
 
 const CODE = `E2E${rnd.toUpperCase().slice(0, 4)}`
 const NB = 4 // short structure
-let host
+let host, hostUserId
 try {
   console.log(`\n=== Production check against ${URL} (room ${CODE}) ===\n`)
   host = await makeUser('host')
@@ -93,6 +115,15 @@ try {
 } finally {
   // cleanup: delete the room (contributions + players cascade)
   try { if (host) await host.client.from('rooms').delete().eq('code', CODE) } catch {}
+  // cleanup test users via admin if possible
+  if (SERVICE) {
+    try {
+      const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } })
+      const { data: list } = await admin.auth.admin.listUsers()
+      const toDelete = list?.users?.filter(u => u.email?.startsWith(`ce-e2e-${rnd}-`)) ?? []
+      for (const u of toDelete) await admin.auth.admin.deleteUser(u.id)
+    } catch {}
+  }
 }
 
 console.log(`\n${fail === 0 ? '✅ PRODUCTION CHECK PASSED — online turns advance for non-host players' : '❌ ' + fail + ' check(s) FAILED — see above'}`)

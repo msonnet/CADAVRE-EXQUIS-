@@ -202,8 +202,7 @@ export default function Salon() {
         await supabase.from('room_players').update({ order_index: i }).eq('id', shuffled[i].id)
       }
 
-      // Fix the total number of cases ONCE, so all clients agree (matters for
-      // variable-length structures like "vers libre").
+      // Fix the total number of cases ONCE at game start so every client agrees.
       const nbCases = room.mode === 'dessin'
         ? players.length
         : nombreCasesEffectif(getStructure(room.structure_id))

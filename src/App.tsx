@@ -42,6 +42,7 @@ const Profil = React.lazy(() => import('./pages/Profil'))
 const Salon = React.lazy(() => import('./pages/Salon'))
 const JeuOnline = React.lazy(() => import('./pages/JeuOnline'))
 const FinOnline = React.lazy(() => import('./pages/FinOnline'))
+const AuthCallback = React.lazy(() => import('./pages/AuthCallback'))
 
 const PageFallback = () => (
   <div style={{
@@ -89,6 +90,7 @@ export default function App() {
               <Route path="/salon/:code" element={<Salon />} />
               <Route path="/jeu-online/:code" element={<JeuOnline />} />
               <Route path="/fin-online/:code" element={<FinOnline />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

@@ -200,7 +200,7 @@ export default function JeuOnline() {
   const [tick, setTick] = useState(0)
   const autoSubmittedRef = useRef(false)
   const turnStartedAtRef = useRef<number>(Date.now())
-  const inputRef = useRef('')
+  const inputRef = useRef<string>('')
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const myIndex = myPlayer?.order_index ?? null
@@ -209,9 +209,8 @@ export default function JeuOnline() {
 
   // ── Turn state (round-robin) ─────────────────────────────
   const structure = room ? getStructure(room.structure_id) : null
-  // Total cases. Persisted on the room at game start (room.nb_cases) so every
-  // client agrees — critical for variable-length structures (vers libre).
-  // Fallbacks cover rooms created before nb_cases existed.
+  // Total cases: persisted in room.nb_cases at game start so every client agrees.
+  // Fallback to structure length for rooms created before nb_cases existed.
   const nbTotal = !room ? 0
     : room.mode === 'dessin'
       ? (room.nb_cases ?? players.length)
@@ -252,7 +251,6 @@ export default function JeuOnline() {
     const cList = (cs ?? []) as Contribution[]
     setContributions(cList)
 
-    // For drawing mode (one case per player), if I've already submitted, lock my screen.
     // Restore submitted state from DB contributions
     if (r.mode === 'dessin') {
       const mine = cList.find(c => c.player_id === user.id)
@@ -331,18 +329,19 @@ export default function JeuOnline() {
     }
   }, [connectionStatus])
 
-  // Polling fallback: re-sync contributions every 7s in case a realtime event was missed
+  // Polling fallback: re-sync every 3s in case a Realtime event was missed.
+  // Critical for non-host players whose postgres_changes events may not arrive
+  // when the contributions RLS policy involves cross-table JOINs.
   useEffect(() => {
     if (!code || !user) return
     const id = setInterval(async () => {
       const { data: cs } = await supabase.from('contributions')
-        .select('case_index,texte,player_id')
-        .eq('room_code', code)
-        .order('case_index')
+        .select('case_index,texte,player_id').eq('room_code', code).order('case_index')
       if (cs) setContributions(cs as Contribution[])
-      const { data: r } = await supabase.from('rooms').select('status').eq('code', code).single()
+      const { data: r } = await supabase.from('rooms').select('status,nb_cases').eq('code', code).single()
       if (r?.status === 'finished') navigate(`/fin-online/${code}`)
-    }, 7000)
+      if (r?.nb_cases != null) setRoom(prev => prev ? { ...prev, nb_cases: r.nb_cases } : prev)
+    }, 3000)
     return () => clearInterval(id)
   }, [code, user, navigate])
 
@@ -352,7 +351,7 @@ export default function JeuOnline() {
     if (contributions.length >= nbTotal && room.status === 'playing' && room.host_id === user?.id) {
       supabase.from('rooms').update({ status: 'finished' }).eq('code', code ?? '')
     }
-  }, [contributions, players, room, code, user, nbTotal])
+  }, [contributions, players, room, code, user])
 
   // Écrit: reset "submitted" when the round-robin returns to me
   useEffect(() => {
@@ -396,24 +395,19 @@ export default function JeuOnline() {
       texte: input.trim(),
     })
     if (!error) {
-      // Optimistic merge so the turn advances instantly without waiting for the
-      // realtime echo (deduped by case_index, so the echo won't double-add).
       mergeContribution({ case_index: currentCase, texte: input.trim(), player_id: user.id })
       setMyContrib(input.trim())
       setSubmitted(true)
       jouer('soumettre')
     } else {
-      console.error('Erreur soumission:', error)
-      setSubmitError('Erreur lors de la soumission — réessaie.')
+      setSubmitError('Erreur lors de l\'envoi. Réessayez.')
     }
     setSubmitting(false)
   }
 
   async function handleDrawingSubmit(dataUrl: string) {
     if (!user || !code || myIndex === null) return
-    // Guard against duplicate submissions (reconnect race)
     if (contributions.some(c => c.case_index === myIndex && c.player_id === user.id)) return
-    setSubmitError(null)
     const { error } = await supabase.from('contributions').insert({
       room_code: code,
       player_id: user.id,
@@ -425,9 +419,6 @@ export default function JeuOnline() {
       setMyContrib(dataUrl)
       setSubmitted(true)
       jouer('soumettre')
-    } else {
-      console.error('Erreur dessin soumission:', error)
-      setSubmitError('Erreur lors de la soumission — réessaie.')
     }
   }
 
@@ -453,12 +444,12 @@ export default function JeuOnline() {
     return () => clearInterval(id)
   }, [room?.turn_seconds])
 
-  // Reset the per-turn clock each time a new contribution arrives
+  // Reset the per-turn clock each time a new contribution lands
   useEffect(() => {
     turnStartedAtRef.current = Date.now()
   }, [contributions.length])
 
-  // Keep inputRef in sync so auto-submit can read latest value without being in the deps array
+  // Keep inputRef in sync so auto-submit reads latest value without being in the deps array
   useEffect(() => {
     inputRef.current = input
   }, [input])
@@ -480,8 +471,6 @@ export default function JeuOnline() {
     if (!(isMyTurnEcrit || isMyTurnDessin)) return
     if (!user || !code || myIndex === null) return
     autoSubmittedRef.current = true
-    // Read input via ref to avoid stale closure and prevent the effect from
-    // firing on every keystroke when the timer is already at 0
     const textToSubmit = inputRef.current.trim() || '…'
     ;(async () => {
       try {
@@ -499,16 +488,15 @@ export default function JeuOnline() {
           try { jouer('soumettre') } catch {}
         } else {
           autoSubmittedRef.current = false
-          console.error('Auto-submit erreur DB:', error)
         }
       } catch (e) {
         autoSubmittedRef.current = false
         console.error('Auto-submit erreur:', e)
       }
     })()
-  // input intentionally omitted — read via inputRef to prevent re-firing on every keystroke
+  // input intentionally omitted — read via inputRef to avoid re-firing on every keystroke
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length])
+  }, [secondsLeft, submitted, isSpectator, user, code, myIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length, mergeContribution])
 
   if (authLoading || !room || (!myPlayer && !isSpectator)) {
     return (
@@ -569,10 +557,7 @@ export default function JeuOnline() {
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
           {players.map((p) => {
             const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
-            // écrit: "done" = submitted for the previous (completed) case, not just "ever contributed"
-            const hasDone = room?.mode === 'dessin'
-              ? contributions.some(c => c.player_id === p.player_id)
-              : contributions.some(c => c.player_id === p.player_id && c.case_index < currentCase)
+            const hasDone = contributions.some(c => c.player_id === p.player_id)
             return (
               <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
                 <div style={{
@@ -642,9 +627,7 @@ export default function JeuOnline() {
         {players.map((p) => {
           const isTheirTurn = p.order_index === whoseTurnIdx && currentCase < nbTotal
           const isMe = p.player_id === user?.id
-          const hasDone = room?.mode === 'dessin'
-            ? contributions.some(c => c.player_id === p.player_id)
-            : contributions.some(c => c.player_id === p.player_id && c.case_index < currentCase)
+          const hasDone = contributions.some(c => c.player_id === p.player_id)
           return (
             <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
               <div style={{
@@ -798,7 +781,7 @@ export default function JeuOnline() {
                 </button>
               </div>
               {submitError && (
-                <div style={{ ...mono, fontSize: 12, color: '#b22c20', marginTop: 6 }}>{submitError}</div>
+                <div style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em', fontSize: 12, color: '#b22c20', marginTop: 6 }}>{submitError}</div>
               )}
             </form>
           </motion.div>
