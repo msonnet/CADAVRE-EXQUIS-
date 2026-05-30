@@ -202,6 +202,8 @@ export default function JeuOnline() {
   const turnStartedAtRef = useRef<number>(Date.now())
   const inputRef = useRef<string>('')
   const [submitError, setSubmitError] = useState<string | null>(null)
+  // Cadavre exquis: optionally reveal the last word of the previous fragment.
+  const [showLastWord, setShowLastWord] = useState(false)
 
   // Spectator detection : utilisateur connecté mais pas dans la liste des joueurs
   const isSpectator = !!room && !!user && !!players.length && !myPlayer
@@ -246,6 +248,11 @@ export default function JeuOnline() {
   const caseDef = isMyTurnEcrit && structure && currentCase < structure.cases.length
     ? structure.cases[currentCase]
     : null
+  // The last word of the immediately preceding fragment (the cadavre-exquis hint).
+  const prevFragment = contributions.find(c => c.case_index === currentCase - 1)
+  const prevLastWord = prevFragment && !prevFragment.texte.startsWith('data:')
+    ? prevFragment.texte.trim().split(/\s+/).pop() ?? ''
+    : ''
 
   const loadGame = useCallback(async () => {
     if (!code || !user) return
@@ -372,13 +379,22 @@ export default function JeuOnline() {
     return () => clearInterval(id)
   }, [code, user, navigate])
 
-  // Host auto-finishes when all cases are filled
+  // Game complete → reveal. EVERY client navigates as soon as it locally sees
+  // all fragments in (don't depend solely on the host's DB write or on realtime
+  // delivery). The host also flips the room to 'finished' so the state persists
+  // and late/spectator clients can read the contributions for the révélation.
   useEffect(() => {
     if (!room || !players.length || !nbTotal) return
-    if (contributions.length >= nbTotal && room.status === 'playing' && room.host_id === user?.id) {
-      supabase.from('rooms').update({ status: 'finished' }).eq('code', code ?? '')
+    if (contributions.length >= nbTotal) {
+      if (room.host_id === user?.id && room.status === 'playing') {
+        supabase.from('rooms').update({ status: 'finished' }).eq('code', code ?? '')
+      }
+      navigate(`/fin-online/${code}`)
     }
-  }, [contributions, players, room, code, user])
+  }, [contributions.length, players.length, room, code, user, nbTotal, navigate])
+
+  // Hide the "last word" hint again whenever the turn (case) changes.
+  useEffect(() => { setShowLastWord(false) }, [currentCase])
 
   // Écrit: reset "submitted" when the round-robin returns to me
   useEffect(() => {
@@ -758,9 +774,32 @@ export default function JeuOnline() {
             <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.75, marginBottom: 4 }}>
               {TYPE_LABEL[caseDef.type] ?? caseDef.type.toUpperCase()}
             </div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, marginBottom: 20, lineHeight: 1.5 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, marginBottom: 16, lineHeight: 1.5 }}>
               Écrivez <strong>{caseDef.consigne}</strong>
             </div>
+
+            {/* Cadavre exquis: optionally peek at the last word of the previous fragment */}
+            {currentCase > 0 && prevLastWord && (
+              <div style={{ marginBottom: 18 }}>
+                {showLastWord ? (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ ...mono, fontSize: 11, color: encre, opacity: 0.55 }}>DERNIER MOT&nbsp;:</span>
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: accent, fontStyle: 'italic' }}>
+                      …{prevLastWord}
+                    </span>
+                    <button type="button" onClick={() => setShowLastWord(false)}
+                      style={{ ...mono, fontSize: 11, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                      masquer
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setShowLastWord(true)}
+                    style={{ ...mono, fontSize: 12, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer', letterSpacing: '0.16em' }}>
+                    👁 VOIR LE DERNIER MOT
+                  </button>
+                )}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input
