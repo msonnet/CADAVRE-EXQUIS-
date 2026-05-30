@@ -105,6 +105,29 @@ try {
   })
   ok(!e7, `guest submits case 1 — game advances${e7 ? ' ERR:' + e7.message : ''}`)
 
+  // 8. host submits the LAST case (case 2) — 3/3 for a phrase-simple structure
+  const { error: e8 } = await host.client.from('contributions').insert({
+    room_code: CODE, player_id: host.id, case_index: 2, texte: 'un lit trop petit',
+  })
+  ok(!e8, `host submits case 2 (last)${e8 ? ' ERR:' + e8.message : ''}`)
+
+  // 9. COMPLETION: every client sees 3/3 and the game is detected as complete
+  const hAll = (await host.client.from('contributions').select('case_index').eq('room_code', CODE)).data
+  const gAll = (await guest.client.from('contributions').select('case_index').eq('room_code', CODE)).data
+  ok(hAll?.length === 3 && gAll?.length === 3,
+    `>>> both clients see 3/3 → both navigate to révélation (host=${hAll?.length} guest=${gAll?.length}) <<<`)
+
+  // 10. host flips room to finished (persisted state for the reveal)
+  const { error: e10 } = await host.client.from('rooms').update({ status: 'finished' }).eq('code', CODE)
+  ok(!e10, `host marks room finished${e10 ? ' ERR:' + e10.message : ''}`)
+
+  // 11. RÉVÉLATION: guest can read ALL contribution TEXTS for the final poem
+  const { data: reveal } = await guest.client.from('contributions')
+    .select('case_index,texte').eq('room_code', CODE).order('case_index')
+  const poem = (reveal ?? []).map(c => c.texte).join(' ')
+  ok(reveal?.length === 3 && poem.includes('un lit trop petit'),
+    `guest reads full poem for révélation: "${poem}"`)
+
 } catch (e) {
   fail++; console.log('✗ FAIL (exception):', e.message)
 } finally {
