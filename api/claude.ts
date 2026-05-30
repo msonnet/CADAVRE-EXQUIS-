@@ -157,7 +157,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY
 
   if (!apiKey) {
-    res.status(200).json({ texte: pickFallback(type as TypeCase) })
+    res.status(200).json({ texte: pickFallback(type as TypeCase), source: 'fallback' })
     return
   }
 
@@ -218,9 +218,12 @@ export default async function handler(req: any, res: any): Promise<void> {
       .trim()
 
     const texte = normaliserSortie(propre, type as TypeCase)
-    res.status(200).json({ texte: texte || pickFallback(type as TypeCase, motsEviter) })
+    res.status(200).json({
+      texte: texte || pickFallback(type as TypeCase, motsEviter),
+      source: texte ? 'ia' : 'fallback',
+    })
   } catch (err) {
     console.error('Erreur Claude API:', err)
-    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter) })
+    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter), source: 'fallback' })
   }
 }

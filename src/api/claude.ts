@@ -8,7 +8,12 @@ export interface RequeteIA {
   eviter?: string[]
 }
 
-export async function demanderFragmentIA(requete: RequeteIA): Promise<string> {
+export interface ReponseIA {
+  texte: string
+  source: 'ia' | 'fallback'
+}
+
+export async function demanderFragmentIA(requete: RequeteIA): Promise<ReponseIA> {
   const response = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -19,6 +24,9 @@ export async function demanderFragmentIA(requete: RequeteIA): Promise<string> {
     throw new Error(`Erreur API: ${response.status}`)
   }
 
-  const { texte } = await response.json()
-  return texte ?? ''
+  const data = await response.json()
+  return {
+    texte: data.texte ?? '',
+    source: data.source === 'fallback' ? 'fallback' : 'ia',
+  }
 }

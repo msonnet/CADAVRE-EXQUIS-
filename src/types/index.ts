@@ -29,6 +29,7 @@ export interface Case {
   voixSlot?: number       // slot IA stable dans la séquence (1-based) — pour affichage cohérent
   texte: string
   ts: number
+  fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)
 }
 
 export interface Illustration {

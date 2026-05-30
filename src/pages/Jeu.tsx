@@ -281,20 +281,25 @@ export default function Jeu() {
 
   // ─── Fonctions utilitaires ─────────────────────────────────────────────────
 
-  function choisirSansDuplique(texte: string, type: string): string {
+  function choisirSansDuplique(texte: string, type: string): { texte: string; remplace: boolean } {
     const key = normaliserCle(texte)
     const totalUsed = new Set([...textesUtilises.current, ...textesSession.current])
     let final: string
+    // remplace = true quand on a dû puiser dans la réserve (FALLBACKS) car le texte
+    // était vide (échec API) ou déjà employé dans la partie.
+    let remplace: boolean
     if (texte && !totalUsed.has(key)) {
       final = texte
+      remplace = false
     } else {
       final = pickUnused(type, totalUsed)
+      remplace = true
     }
     const finalKey = normaliserCle(final)
     textesUtilises.current.add(finalKey)
     textesSession.current.add(finalKey)
     sessionStorage.setItem('textes-session', JSON.stringify([...textesSession.current]))
-    return final
+    return { texte: final, remplace }
   }
 
   function sauvegarderBrouillon(newCases: Case[], newIndex: number) {
@@ -335,13 +340,17 @@ export default function Jeu() {
     const voiceId = voixParSlot[seqPos]
     const slotNum = iaSlotNums[seqPos]
 
-    const finaliser = (brut: string) => {
-      const texte = choisirSansDuplique(brut, def.type)
+    const finaliser = (brut: string, sourceServeur: 'ia' | 'fallback') => {
+      const { texte, remplace } = choisirSansDuplique(brut, def.type)
+      // Fallback si le serveur a renvoyé un mot de réserve OU si on a remplacé un doublon localement
+      const estFallback = sourceServeur === 'fallback' || remplace
       setIaChargement(false)
       setIaTexteRevele(texte)
+      setIaFallbackRevele(estFallback)
       revealTimerRef.current = setTimeout(() => {
-        avancer(idx, def, texte, slotNum)
+        avancer(idx, def, texte, slotNum, estFallback)
         setIaTexteRevele(null)
+        setIaFallbackRevele(false)
       }, 2600)
     }
 
@@ -353,8 +362,8 @@ export default function Jeu() {
       .flatMap(c => c.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? [])
       .filter(m => m.length > 2)
     demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA })
-      .then(texte => finaliser(texte.trim()))
-      .catch(()  => finaliser(''))
+      .then(({ texte, source }) => finaliser(texte.trim(), source))
+      .catch(()  => finaliser('', 'fallback'))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Nettoyage du timer de révélation IA au démontage
