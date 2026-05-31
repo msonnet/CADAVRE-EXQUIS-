@@ -197,7 +197,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: maxTokens,
-        stop_sequences: ['\n', '.', '!', '?'],
+        stop_sequences: ['.', '!', '?'],
         system: voix.systemPrompt,
         messages: [
           {
