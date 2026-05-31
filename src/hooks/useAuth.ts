@@ -9,10 +9,6 @@ export type Profile = {
   avatar_prompt: string | null
 }
 
-// Empêche toute promesse Supabase de bloquer l'UI indéfiniment.
-// Sur certains navigateurs intégrés (Yahoo Mail, Messenger, Instagram…)
-// `navigator.locks` stalle et getSession() ne se résout jamais : sans ce
-// garde-fou, l'écran reste figé sur « CHARGEMENT… ».
 function withTimeout<T>(promise: PromiseLike<T>, ms: number, fallback: T): Promise<T> {
   return new Promise<T>((resolve) => {
     let done = false
@@ -32,8 +28,6 @@ export function useAuth() {
 
   useEffect(() => {
     let cancelled = false
-
-    // Garde-fou ultime : quoi qu'il arrive, l'app s'affiche au bout de 5 s.
     const failsafe = setTimeout(() => { if (!cancelled) setLoading(false) }, 5000)
 
     withTimeout(supabase.auth.getSession(), 4500, { data: { session: null } } as any)
@@ -76,12 +70,21 @@ export function useAuth() {
     }
   }
 
-  async function signInWithEmail(email: string): Promise<string | null> {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/online` },
+  // Connexion anonyme : crée un compte + profil en une étape, sans email.
+  // Compatible avec tous les navigateurs intégrés (in-app webviews).
+  async function signInAnonymously(pseudo: string): Promise<string | null> {
+    const { data, error } = await supabase.auth.signInAnonymously()
+    if (error) return error.message
+    if (!data.user) return 'Connexion impossible'
+    const { error: profError } = await supabase.from('profiles').upsert({
+      id: data.user.id,
+      pseudo: pseudo.trim(),
+      avatar_url: null,
+      avatar_prompt: null,
     })
-    return error?.message ?? null
+    if (profError) return profError.message
+    setProfile({ id: data.user.id, pseudo: pseudo.trim(), avatar_url: null, avatar_prompt: null })
+    return null
   }
 
   async function signOut() {
@@ -97,5 +100,5 @@ export function useAuth() {
     return null
   }
 
-  return { user, session, profile, loading, signInWithEmail, signOut, saveProfile, reloadProfile: () => user && loadProfile(user.id) }
+  return { user, session, profile, loading, signInAnonymously, signOut, saveProfile, reloadProfile: () => user && loadProfile(user.id) }
 }
