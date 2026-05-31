@@ -155,9 +155,14 @@ export default async function handler(req: any, res: any): Promise<void> {
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
+  const debug = req.body?.debug === true
 
   if (!apiKey) {
-    res.status(200).json({ texte: pickFallback(type as TypeCase), source: 'fallback' })
+    res.status(200).json({
+      texte: pickFallback(type as TypeCase),
+      source: 'fallback',
+      ...(debug ? { diag: 'no-key' } : {}),
+    })
     return
   }
 
@@ -204,7 +209,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     })
 
     if (!response.ok) {
-      throw new Error(`Anthropic ${response.status}`)
+      const corps = await response.text().catch(() => '')
+      throw new Error(`Anthropic ${response.status}: ${corps.slice(0, 200)}`)
     }
 
     const data = await response.json()
@@ -224,6 +230,10 @@ export default async function handler(req: any, res: any): Promise<void> {
     })
   } catch (err) {
     console.error('Erreur Claude API:', err)
-    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter), source: 'fallback' })
+    res.status(200).json({
+      texte: pickFallback(type as TypeCase, motsEviter),
+      source: 'fallback',
+      ...(debug ? { diag: `api-error: ${err instanceof Error ? err.message : String(err)}` } : {}),
+    })
   }
 }
