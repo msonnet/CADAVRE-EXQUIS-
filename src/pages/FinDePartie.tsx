@@ -523,6 +523,22 @@ export default function FinDePartie() {
                       <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                         {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
                       </span>
+                      {c.fallback && (
+                        <span style={{
+                          fontSize: 9,
+                          letterSpacing: '0.18em',
+                          border: `1px solid ${accent}55`,
+                          color: accent,
+                          opacity: 0.55,
+                          padding: '1px 5px',
+                          borderRadius: 2,
+                          marginLeft: 7,
+                          fontFamily: "'Outfit', sans-serif",
+                          verticalAlign: 'middle',
+                        }}>
+                          RÉSERVE
+                        </span>
+                      )}
                     </p>
                     <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                       {c.texte}

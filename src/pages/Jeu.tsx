@@ -250,6 +250,7 @@ export default function Jeu() {
   const [erreur, setErreur]       = useState<string | null>(null)
   const [iaChargement, setIaChargement] = useState(false)
   const [iaTexteRevele, setIaTexteRevele] = useState<string | null>(null)
+  const [iaFallbackRevele, setIaFallbackRevele] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
   const [attendPassage, setAttendPassage] = useState(false)
   const [confirmAbandon, setConfirmAbandon] = useState(false)
@@ -416,7 +417,7 @@ export default function Jeu() {
 
   // ─── Fonctions de jeu ─────────────────────────────────────────────────────
 
-  function avancer(idx: number, def: DefinitionCase, texte: string, slotNum?: number) {
+  function avancer(idx: number, def: DefinitionCase, texte: string, slotNum?: number, isFallback?: boolean) {
     const c: Case = {
       numero: idx + 1,
       fonction: def.fonction,
@@ -425,6 +426,7 @@ export default function Jeu() {
       voixSlot: slotNum,
       texte,
       ts: Date.now(),
+      fallback: isFallback || undefined,
     }
     setCases(prev => {
       const next = [...prev, c]
@@ -662,6 +664,27 @@ export default function Jeu() {
                 >
                   ✦
                 </motion.div>
+
+                {iaFallbackRevele && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.4 }}
+                    style={{
+                      ...mono,
+                      fontSize: 10,
+                      color: accent,
+                      opacity: 0.55,
+                      marginTop: 18,
+                      letterSpacing: '0.2em',
+                      border: `1px solid ${accent}55`,
+                      padding: '2px 8px',
+                      borderRadius: 2,
+                    }}
+                  >
+                    RÉSERVE
+                  </motion.div>
+                )}
               </>
             )}
           </div>
