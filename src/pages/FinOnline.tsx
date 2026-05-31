@@ -5,7 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
-import { supabase } from '../lib/supabase'
+import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
@@ -97,7 +97,7 @@ export default function FinOnline() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
-  const { user, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
   const revelationPlayedRef = useRef(false)
 
@@ -124,6 +124,8 @@ export default function FinOnline() {
   const [sauvegardeDessin_, setSauvegardeDessin] = useState(false)
 
   const [revealReady, setRevealReady] = useState(false)
+  const [publishingGallery, setPublishingGallery] = useState(false)
+  const [publishedGallery, setPublishedGallery] = useState(false)
 
   const load = useCallback(async () => {
     if (!code || !user) return
@@ -209,6 +211,41 @@ export default function FinOnline() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  async function publierDansGalerieEcrit() {
+    if (!room || !user || publishingGallery || !texteAssemble) return
+    setPublishingGallery(true)
+    try {
+      const sortedContribs = [...contributions].sort((a, b) => a.case_index - b.case_index)
+      const cases = sortedContribs.map(c => ({ texte: c.texte }))
+      const payload = JSON.stringify({ cases, structureId: room.structure_id, titre: null })
+      const pseudo = profile?.pseudo ?? players.find(p => p.player_id === user.id)?.pseudo ?? 'Anonyme'
+      const { error } = await supabase.from('gallery').insert({
+        type: 'poeme', titre: null, payload,
+        image_url: illustrationUrl ?? null,
+        author_pseudo: pseudo, author_avatar: null,
+      })
+      if (!error) { setPublishedGallery(true); jouer('soumettre') }
+    } catch { /* ignore */ }
+    setPublishingGallery(false)
+  }
+
+  async function publierDansGalerieDessin() {
+    if (!room || !user || publishingGallery || !imageAssemblee) return
+    setPublishingGallery(true)
+    try {
+      const url = await uploaderImageGalerie(imageAssemblee, 'dessin-online')
+      if (!url) { setPublishingGallery(false); return }
+      const payload = JSON.stringify({ texteVision: texteVision || null, nbBandes: contributions.length })
+      const pseudo = profile?.pseudo ?? players.find(p => p.player_id === user.id)?.pseudo ?? 'Anonyme'
+      const { error } = await supabase.from('gallery').insert({
+        type: 'dessin', titre: null, payload, image_url: url,
+        author_pseudo: pseudo, author_avatar: null,
+      })
+      if (!error) { setPublishedGallery(true); jouer('soumettre') }
+    } catch { /* ignore */ }
+    setPublishingGallery(false)
+  }
 
   async function rejouerEnsemble() {
     if (!room || !user || !code) return
@@ -381,8 +418,14 @@ export default function FinOnline() {
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button onClick={sauvegarderDessinLocal} disabled={sauvegardeDessin_}
                         style={{ flex: 1, ...mono, fontSize: 13, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText, border: `0.5px solid ${accent}`, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer' }}>
-                        {sauvegardeDessin_ ? '✓ SAUVEGARDÉ' : '↓ GALERIE'}
+                        {sauvegardeDessin_ ? '✓ SAUVEGARDÉ' : '↓ MA GALERIE'}
                       </button>
+                      <button onClick={publierDansGalerieDessin} disabled={publishingGallery || publishedGallery}
+                        style={{ flex: 1, ...mono, fontSize: 13, background: publishedGallery ? `${accent}20` : 'transparent', color: publishedGallery ? accent : `${encre}70`, border: `0.5px solid ${publishedGallery ? accent : encre}25`, padding: '10px 8px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                        {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE COMMUNE'}
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                       <button onClick={partagerDessin}
                         style={{ ...mono, fontSize: 13, background: 'transparent', color: `${encre}70`, border: `0.5px solid ${encre}25`, padding: '10px 12px', cursor: 'pointer' }}>
                         ↗ PARTAGER
@@ -495,15 +538,25 @@ export default function FinOnline() {
                         style={{ ...mono, fontSize: 12, color: `${encre}60`, background: 'none', border: `0.5px solid ${encre}20`, padding: '6px 10px', cursor: 'pointer' }}>
                         ↗ PARTAGER
                       </button>
+                      <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
+                        style={{ ...mono, fontSize: 12, color: publishedGallery ? accent : `${encre}60`, background: publishedGallery ? `${accent}15` : 'none', border: `0.5px solid ${publishedGallery ? accent : encre}20`, padding: '6px 10px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                        {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE'}
+                      </button>
                     </div>
                   </div>
                 )}
 
                 {!illustrationUrl && !generatingIllus && (
-                  <button onClick={partagerEcrit}
-                    style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer', marginBottom: 10 }}>
-                    ↗ PARTAGER LE POÈME
-                  </button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <button onClick={partagerEcrit}
+                      style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer' }}>
+                      ↗ PARTAGER LE POÈME
+                    </button>
+                    <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
+                      style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : encre, background: publishedGallery ? `${accent}15` : 'transparent', border: `0.5px solid ${publishedGallery ? accent : encre}30`, padding: '7px 14px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                      {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE COMMUNE'}
+                    </button>
+                  </div>
                 )}
 
                 {generatingIllus && (

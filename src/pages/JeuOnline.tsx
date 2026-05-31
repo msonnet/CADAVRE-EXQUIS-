@@ -339,7 +339,14 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
   async function handleSubmit() {
     const canvas = canvasRef.current; if (!canvas || busy) return
     setBusy(true)
-    await onSubmit(canvas.toDataURL('image/jpeg', 0.75))
+    const json = JSON.stringify({
+      imageDataUrl: canvas.toDataURL('image/jpeg', 0.75),
+      lowestDrawnFraction: 0.9,
+      width: canvas.width,
+      height: canvas.height,
+      dpr: window.devicePixelRatio || 1,
+    })
+    await onSubmit(json)
     setBusy(false)
   }
 
@@ -508,6 +515,8 @@ export default function JeuOnline() {
   const [submitting, setSubmitting] = useState(false)
   const [iaLoading, setIaLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [showIntro, setShowIntro] = useState(false)
+  const introTriggeredRef = useRef(false)
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting')
   const [reconnectTick, setReconnectTick] = useState(0)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -534,7 +543,7 @@ export default function JeuOnline() {
   // Turn state
   const structure = room ? getStructure(room.structure_id) : null
   const nbTotal = !room ? 0
-    : room.mode === 'dessin' ? (room.nb_cases ?? players.length)
+    : room.mode === 'dessin' ? (room.nb_cases ?? room.nb_joueurs ?? players.length)
     : (room.nb_cases ?? (structure ? nombreCasesEffectif(structure) : 0))
   const currentCase = contributions.length
   const whoseTurnIdx = orderedPlayers.length > 0 ? currentCase % orderedPlayers.length : 0
@@ -559,8 +568,13 @@ export default function JeuOnline() {
     ? prevFragment.texte.trim().split(/\s+/).pop() ?? '' : ''
 
   // Raccord for drawing: data URL of the previous player's band
-  const raccordDataUrl = room?.mode === 'dessin' && myEffectiveIndex !== null && myEffectiveIndex > 0
+  const raccordRaw = room?.mode === 'dessin' && myEffectiveIndex !== null && myEffectiveIndex > 0
     ? (contributions.find(c2 => c2.case_index === myEffectiveIndex - 1)?.texte ?? null)
+    : null
+  const raccordDataUrl = raccordRaw
+    ? raccordRaw.startsWith('data:')
+      ? raccordRaw
+      : (() => { try { return (JSON.parse(raccordRaw) as { imageDataUrl: string }).imageDataUrl } catch { return raccordRaw } })()
     : null
 
   const loadGame = useCallback(async () => {
@@ -649,14 +663,27 @@ export default function JeuOnline() {
   }, [code, user, navigate])
 
   useEffect(() => {
-    if (!room || !players.length || !nbTotal) return
+    if (!room || !nbTotal) return
+    // Guard: nbTotal must be at least nb_joueurs to prevent premature navigation
+    // when players haven't all loaded yet or nb_cases is wrong
+    if (room.nb_joueurs && nbTotal < room.nb_joueurs) return
     if (contributions.length >= nbTotal) {
       if (room.host_id === user?.id && room.status === 'playing') supabase.from('rooms').update({ status: 'finished' }).eq('code', code ?? '')
       navigate(`/fin-online/${code}`)
     }
-  }, [contributions.length, players.length, room, code, user, nbTotal, navigate])
+  }, [contributions.length, room, code, user, nbTotal, navigate])
 
   useEffect(() => { setShowLastWord(false) }, [currentCase])
+
+  // Show intro overlay when it becomes my turn
+  useEffect(() => {
+    const isMyTurn = isMyTurnDessin || isMyTurnEcrit
+    if (isMyTurn && !introTriggeredRef.current && !submitted) {
+      setShowIntro(true)
+      introTriggeredRef.current = true
+    }
+    if (!isMyTurn) introTriggeredRef.current = false
+  }, [isMyTurnDessin, isMyTurnEcrit, submitted])
 
   useEffect(() => {
     if (!submitted || !room || room.mode !== 'ecrit') return
@@ -751,6 +778,32 @@ export default function JeuOnline() {
   // ── Full-screen canvas when it's my turn to draw ──────────────────────────
 
   if (isMyTurnDessin) {
+    if (showIntro) {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={() => setShowIntro(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, background: encre, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, cursor: 'pointer', textAlign: 'center', padding: '0 28px' }}
+        >
+          <div style={{ ...mono, fontSize: 11, color: accent, letterSpacing: '0.28em' }}>
+            — BANDE {(myEffectiveIndex ?? 0) + 1} SUR {nbTotal} —
+          </div>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
+            À vous<br />de dessiner
+          </div>
+          {raccordDataUrl && (
+            <div style={{ ...mono, fontSize: 11, color: `${bg}60`, letterSpacing: '0.16em' }}>
+              ← RACCORD DU JOUEUR PRÉCÉDENT VISIBLE
+            </div>
+          )}
+          <motion.div style={{ ...mono, fontSize: 11, color: `${bg}50`, letterSpacing: '0.2em', marginTop: 12 }}
+            animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.8 }}>
+            TOUCHER POUR COMMENCER
+          </motion.div>
+          <motion.span style={{ fontSize: 20, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+        </motion.div>
+      )
+    }
     return (
       <OnlineDrawingCanvas
         onSubmit={handleDrawingSubmit}
@@ -855,13 +908,13 @@ export default function JeuOnline() {
           <motion.div key="waiting" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 16 }}>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>✓ CONTRIBUTION REÇUE</div>
-            {myContrib?.startsWith('data:') ? (
-              <img src={myContrib} alt="votre dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 2, border: `1px solid ${accent}30` }} />
-            ) : (
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>
-                « {myContrib} »
-              </div>
-            )}
+            {(() => {
+              if (!myContrib) return null
+              const displayUrl = myContrib.startsWith('data:') ? myContrib : (() => { try { return (JSON.parse(myContrib) as { imageDataUrl: string }).imageDataUrl } catch { return null } })()
+              return displayUrl
+                ? <img src={displayUrl} alt="votre dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 2, border: `1px solid ${accent}30` }} />
+                : <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>« {myContrib} »</div>
+            })()}
             {room.mode === 'ecrit' && currentCase < nbTotal ? (
               <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
                 C'est au tour de <strong>{currentTurnPlayer?.pseudo ?? '…'}</strong>. Votre tour reviendra ensuite.
@@ -872,6 +925,24 @@ export default function JeuOnline() {
               </p>
             )}
             <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+          </motion.div>
+
+        ) : showIntro && isMyTurnEcrit ? (
+          // ── Écrit : intro before my turn ──
+          <motion.div key={`intro-${currentCase}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowIntro(false)}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, cursor: 'pointer', textAlign: 'center' }}>
+            <div style={{ ...mono, fontSize: 11, color: accent, letterSpacing: '0.28em' }}>
+              — CASE {currentCase + 1} SUR {nbTotal} —
+            </div>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.8rem,8vw,2.6rem)', color: encre, lineHeight: 1.3 }}>
+              À vous<br />d'écrire
+            </div>
+            <motion.div style={{ ...mono, fontSize: 11, color: `${encre}45`, letterSpacing: '0.2em', marginTop: 8 }}
+              animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.8 }}>
+              TOUCHER POUR COMMENCER
+            </motion.div>
+            <motion.span style={{ fontSize: 20, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
           </motion.div>
 
         ) : isMyTurnEcrit && caseDef ? (
