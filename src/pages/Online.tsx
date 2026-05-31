@@ -87,7 +87,6 @@ export default function Online() {
     const err = await signInAnonymously(pseudo.trim())
     setSigningIn(false)
     if (err) setJoinError2(err)
-    // onAuthStateChange fires → user+profile set → component re-renders logged-in
   }
 
   async function handleCreate() {
@@ -182,10 +181,11 @@ export default function Online() {
             Chaque joueur sur son propre appareil. Composez ensemble un cadavre exquis, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.
           </p>
 
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — VOTRE NOM DE PLUME —
+          </div>
+
           <form onSubmit={handleAnonymousJoin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 4 }}>
-              — VOTRE NOM DE PLUME —
-            </div>
             <input
               type="text"
               value={pseudo}

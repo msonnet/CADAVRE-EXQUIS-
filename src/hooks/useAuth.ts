@@ -9,17 +9,6 @@ export type Profile = {
   avatar_prompt: string | null
 }
 
-function withTimeout<T>(promise: PromiseLike<T>, ms: number, fallback: T): Promise<T> {
-  return new Promise<T>((resolve) => {
-    let done = false
-    const timer = setTimeout(() => { if (!done) { done = true; resolve(fallback) } }, ms)
-    Promise.resolve(promise).then(
-      (v) => { if (!done) { done = true; clearTimeout(timer); resolve(v) } },
-      () => { if (!done) { done = true; clearTimeout(timer); resolve(fallback) } },
-    )
-  })
-}
-
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -27,41 +16,30 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let cancelled = false
-    const failsafe = setTimeout(() => { if (!cancelled) setLoading(false) }, 5000)
-
-    withTimeout(supabase.auth.getSession(), 4500, { data: { session: null } } as any)
-      .then(({ data: { session } }) => {
-        if (cancelled) return
-        setSession(session)
-        setUser(session?.user ?? null)
-        if (session?.user) loadProfile(session.user.id)
-        else setLoading(false)
-      })
-      .catch(() => {
-        if (cancelled) return
-        setSession(null); setUser(null); setLoading(false)
-      })
-      .finally(() => clearTimeout(failsafe))
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      if (session?.user) loadProfile(session.user.id)
+      else setLoading(false)
+    })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (cancelled) return
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) loadProfile(session.user.id)
       else { setProfile(null); setLoading(false) }
     })
 
-    return () => { cancelled = true; clearTimeout(failsafe); subscription.unsubscribe() }
+    return () => subscription.unsubscribe()
   }, [])
 
   async function loadProfile(userId: string) {
     try {
-      const { data } = await withTimeout(
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        6000,
-        { data: null } as any,
-      )
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
       setProfile(data ?? null)
     } catch {
       setProfile(null)
@@ -70,8 +48,7 @@ export function useAuth() {
     }
   }
 
-  // Connexion anonyme : crée un compte + profil en une étape, sans email.
-  // Compatible avec tous les navigateurs intégrés (in-app webviews).
+  // Connexion anonyme : crée un compte + profil sans email.
   async function signInAnonymously(pseudo: string): Promise<string | null> {
     const { data, error } = await supabase.auth.signInAnonymously()
     if (error) return error.message
