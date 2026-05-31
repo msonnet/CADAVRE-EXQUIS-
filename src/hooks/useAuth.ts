@@ -9,6 +9,21 @@ export type Profile = {
   avatar_prompt: string | null
 }
 
+// Empêche toute promesse Supabase de bloquer l'UI indéfiniment.
+// Sur certains navigateurs intégrés (Yahoo Mail, Messenger, Instagram…)
+// `navigator.locks` stalle et getSession() ne se résout jamais : sans ce
+// garde-fou, l'écran reste figé sur « CHARGEMENT… ».
+function withTimeout<T>(promise: PromiseLike<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    let done = false
+    const timer = setTimeout(() => { if (!done) { done = true; resolve(fallback) } }, ms)
+    Promise.resolve(promise).then(
+      (v) => { if (!done) { done = true; clearTimeout(timer); resolve(v) } },
+      () => { if (!done) { done = true; clearTimeout(timer); resolve(fallback) } },
+    )
+  })
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -16,30 +31,43 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) loadProfile(session.user.id)
-      else setLoading(false)
-    })
+    let cancelled = false
+
+    // Garde-fou ultime : quoi qu'il arrive, l'app s'affiche au bout de 5 s.
+    const failsafe = setTimeout(() => { if (!cancelled) setLoading(false) }, 5000)
+
+    withTimeout(supabase.auth.getSession(), 4500, { data: { session: null } } as any)
+      .then(({ data: { session } }) => {
+        if (cancelled) return
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) loadProfile(session.user.id)
+        else setLoading(false)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setSession(null); setUser(null); setLoading(false)
+      })
+      .finally(() => clearTimeout(failsafe))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) loadProfile(session.user.id)
       else { setProfile(null); setLoading(false) }
     })
 
-    return () => subscription.unsubscribe()
+    return () => { cancelled = true; clearTimeout(failsafe); subscription.unsubscribe() }
   }, [])
 
   async function loadProfile(userId: string) {
     try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      const { data } = await withTimeout(
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        6000,
+        { data: null } as any,
+      )
       setProfile(data ?? null)
     } catch {
       setProfile(null)
