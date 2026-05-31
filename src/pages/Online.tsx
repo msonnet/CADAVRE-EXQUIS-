@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
@@ -37,13 +37,12 @@ export default function Online() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
 
-  const { user, profile, loading, signInWithEmail, signOut } = useAuth()
+  const { user, profile, loading, signInAnonymously, signOut } = useAuth()
   const { jouer } = useSound()
 
-  const [email, setEmail] = useState('')
-  const [emailSent, setEmailSent] = useState(false)
-  const [emailError, setEmailError] = useState<string | null>(null)
-  const [sendingEmail, setSendingEmail] = useState(false)
+  const [pseudo, setPseudo] = useState('')
+  const [joinError2, setJoinError2] = useState<string | null>(null)
+  const [signingIn, setSigningIn] = useState(false)
   const [joinCode, setJoinCode] = useState('')
   const [joinError, setJoinError] = useState<string | null>(null)
   const [joining, setJoining] = useState(false)
@@ -80,15 +79,14 @@ export default function Online() {
     if (user && profile) fetchPublicRooms()
   }, [user, profile, fetchPublicRooms])
 
-  async function handleSendLink(e: React.FormEvent) {
+  async function handleAnonymousJoin(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim()) return
-    setSendingEmail(true)
-    setEmailError(null)
-    const err = await signInWithEmail(email.trim())
-    setSendingEmail(false)
-    if (err) setEmailError(err)
-    else setEmailSent(true)
+    if (!pseudo.trim()) return
+    setSigningIn(true)
+    setJoinError2(null)
+    const err = await signInAnonymously(pseudo.trim())
+    setSigningIn(false)
+    if (err) setJoinError2(err)
   }
 
   async function handleCreate() {
@@ -184,51 +182,37 @@ export default function Online() {
           </p>
 
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — CONNEXION —
+            — VOTRE NOM DE PLUME —
           </div>
 
-          <AnimatePresence mode="wait">
-            {emailSent ? (
-              <motion.p
-                key="sent"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: accent, lineHeight: 1.6 }}
-              >
-                Un lien magique a été envoyé à <strong>{email}</strong>. Ouvrez-le pour vous connecter.
-              </motion.p>
-            ) : (
-              <motion.form key="form" onSubmit={handleSendLink} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 4 }}>
-                  Entrez votre adresse e-mail pour recevoir un lien de connexion instantané — sans mot de passe.
-                </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="votre@email.fr"
-                  aria-label="Adresse e-mail"
-                  required
-                  style={{
-                    fontFamily: "'Cormorant Garamond', serif", fontSize: 16,
-                    color: encre, background: 'rgba(255,253,247,0.5)',
-                    border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
-                    outline: 'none', caretColor: accent, width: '100%',
-                  }}
-                />
-                {emailError && (
-                  <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: -4 }}>{emailError}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={sendingEmail}
-                  style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer', opacity: sendingEmail ? 0.5 : 1 }}
-                >
-                  {sendingEmail ? 'ENVOI…' : 'ENVOYER LE LIEN'}
-                </button>
-              </motion.form>
+          <form onSubmit={handleAnonymousJoin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <input
+              type="text"
+              value={pseudo}
+              onChange={e => setPseudo(e.target.value)}
+              placeholder="ex : L'Étranger, Séraphine, le Muet…"
+              aria-label="Pseudonyme"
+              maxLength={30}
+              required
+              autoFocus
+              style={{
+                fontFamily: "'Cormorant Garamond', serif", fontSize: 18,
+                color: encre, background: 'rgba(255,253,247,0.5)',
+                border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
+                outline: 'none', caretColor: accent, width: '100%',
+              }}
+            />
+            {joinError2 && (
+              <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: -4 }}>{joinError2}</p>
             )}
-          </AnimatePresence>
+            <button
+              type="submit"
+              disabled={signingIn || !pseudo.trim()}
+              style={{ background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
+            >
+              {signingIn ? 'CONNEXION…' : 'ENTRER DANS LE JEU →'}
+            </button>
+          </form>
         </motion.div>
       )}
 

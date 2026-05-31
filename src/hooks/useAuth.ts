@@ -48,12 +48,20 @@ export function useAuth() {
     }
   }
 
-  async function signInWithEmail(email: string): Promise<string | null> {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/online` },
+  // Connexion anonyme : crée un compte + profil sans email.
+  async function signInAnonymously(pseudo: string): Promise<string | null> {
+    const { data, error } = await supabase.auth.signInAnonymously()
+    if (error) return error.message
+    if (!data.user) return 'Connexion impossible'
+    const { error: profError } = await supabase.from('profiles').upsert({
+      id: data.user.id,
+      pseudo: pseudo.trim(),
+      avatar_url: null,
+      avatar_prompt: null,
     })
-    return error?.message ?? null
+    if (profError) return profError.message
+    setProfile({ id: data.user.id, pseudo: pseudo.trim(), avatar_url: null, avatar_prompt: null })
+    return null
   }
 
   async function signOut() {
@@ -69,5 +77,5 @@ export function useAuth() {
     return null
   }
 
-  return { user, session, profile, loading, signInWithEmail, signOut, saveProfile, reloadProfile: () => user && loadProfile(user.id) }
+  return { user, session, profile, loading, signInAnonymously, signOut, saveProfile, reloadProfile: () => user && loadProfile(user.id) }
 }
