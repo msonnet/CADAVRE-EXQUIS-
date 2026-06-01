@@ -87,7 +87,7 @@ export default function Bibliotheque() {
             Mes <span style={{ color: accent }}>poèmes.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Ta bibliothèque personnelle
           </p>

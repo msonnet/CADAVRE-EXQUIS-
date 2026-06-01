@@ -110,7 +110,7 @@ export default function Accueil() {
         >
           <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: '0.75rem' }} />
           <span style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, lineHeight: 1.55,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, lineHeight: 1.55,
             color: encre, display: 'block',
           }}>
             {seance.citation.t}

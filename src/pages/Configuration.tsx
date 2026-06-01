@@ -77,7 +77,7 @@ export default function Configuration() {
             <span style={{ color: accent }}>structure.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 18,
             color: encre, opacity: 0.75, marginBottom: 20,
           }}>
             La structure détermine la forme du cadavre exquis.

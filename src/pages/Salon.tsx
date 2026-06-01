@@ -347,7 +347,7 @@ export default function Salon() {
             ))}
           </AnimatePresence>
           {players.length < 2 && (
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, marginTop: 8 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.75, marginTop: 8 }}>
               En attente d'autres joueurs… Partagez le code <strong>{code}</strong>.
             </p>
           )}
@@ -470,7 +470,7 @@ export default function Salon() {
           {room.mode === 'dessin' && (
             <div>
               <div style={{ ...mono, fontSize: 14, color: encre, marginBottom: 6 }}>BANDES</div>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
                 Chaque joueur dessine une bande du corps à l'aveugle. Fixez le nombre de joueurs attendus.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -544,7 +544,7 @@ export default function Salon() {
                 )
               })}
             </div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.65, marginTop: 6 }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.65, marginTop: 6 }}>
               {(room.is_public ?? true)
                 ? 'Visible dans la liste des parties ouvertes.'
                 : 'Accessible uniquement par code — salon privé.'}

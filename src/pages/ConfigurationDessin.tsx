@@ -93,7 +93,7 @@ export default function ConfigurationDessin() {
           <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — FRAGMENTS —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8, marginBottom: 8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 8 }}>
             Nombre de bandes horizontales à dessiner
           </div>
           <div className="flex gap-2">
@@ -148,7 +148,7 @@ export default function ConfigurationDessin() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
             {cycleNote}
           </div>
         </motion.div>
@@ -183,7 +183,7 @@ export default function ConfigurationDessin() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
             {config.visibilite === 'aveugle'
               ? 'Chaque bande commence dans l\'obscurité totale.'
               : 'Un raccord révèle la lisière du fragment précédent.'}
@@ -203,7 +203,7 @@ export default function ConfigurationDessin() {
           }}
         >
           <div style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, lineHeight: 1.5,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, lineHeight: 1.5,
             color: encre, marginBottom: 4,
           }}>
             « {ref.titre} »

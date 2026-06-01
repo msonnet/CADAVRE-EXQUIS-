@@ -112,7 +112,7 @@ export default function Profil() {
           <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — IMAGE DE PROFIL —
           </div>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
             Décrivez en quelques mots le personnage qui vous représente. L'IA générera votre portrait surréaliste.
           </p>
 
