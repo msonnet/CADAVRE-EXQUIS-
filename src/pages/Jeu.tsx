@@ -679,7 +679,7 @@ export default function Jeu() {
 
           {/* Footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
-            {iaChargement ? '— NE PAS LE DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
+            {iaChargement ? '— NE PAS LA DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
           </div>
         </div>
       </PageTransition>
