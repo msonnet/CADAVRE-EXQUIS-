@@ -381,7 +381,7 @@ export default function PoemeDetail() {
           <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — LE CADAVRE —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16, lineHeight: 1.7 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 'clamp(1rem, 4.5vw, 1.15rem)', lineHeight: 1.7 }}>
             {lettrine && (
               <span style={{
                 fontFamily: "'Bodoni Moda', serif", fontWeight: 900,

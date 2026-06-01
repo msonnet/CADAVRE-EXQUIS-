@@ -13,6 +13,7 @@
 
 /* ── Variables (valeurs par défaut · ReveProvider les écrase) ── */
 :root {
+  --font-scale: 1;
   --reve-bg: #15110d;
   --reve-ink: #e6d4b8;
   --reve-ink-soft: #c8b89a;
@@ -40,14 +41,14 @@
 
 /* ── Base ─────────────────────────────────────── */
 @layer base {
-  html { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html { height: 100%; font-size: calc(16px * var(--font-scale, 1)); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   body {
     margin: 0;
     background-color: var(--reve-bg);
     background-image: var(--reve-halo);
     color: var(--reve-ink);
     font-family: 'Inter', 'IM Fell English', Georgia, serif;
-    font-size: 17px;
+    font-size: 1.0625rem;
     line-height: 1.55;
     min-height: 100dvh;
     overflow-x: hidden;

@@ -20,6 +20,9 @@ export default function Reglages() {
   const [validation, setValidation] = useState<NiveauValidation>(
     () => (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
   )
+  const [fontScale, setFontScale] = useState<number>(
+    () => parseFloat(localStorage.getItem('font-scale') ?? '1')
+  )
   const [exportOk, setExportOk] = useState(false)
 
   const c = seance?.colorSchema
@@ -38,6 +41,12 @@ export default function Reglages() {
   function changerValidation(niveau: NiveauValidation) {
     setValidation(niveau)
     localStorage.setItem('validation-niveau', niveau)
+  }
+
+  function changerTaille(scale: number) {
+    setFontScale(scale)
+    localStorage.setItem('font-scale', String(scale))
+    document.documentElement.style.setProperty('--font-scale', String(scale))
   }
 
   async function exporterPoemes() {
@@ -95,6 +104,52 @@ export default function Reglages() {
         </motion.div>
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
+
+        {/* ── TAILLE DU TEXTE ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          style={{ marginBottom: 24 }}
+        >
+          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — TAILLE DU TEXTE —
+          </div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
+            {([
+              { scale: 0.85, label: 'A', size: 13 },
+              { scale: 0.92, label: 'A', size: 16 },
+              { scale: 1.0,  label: 'A', size: 19 },
+              { scale: 1.1,  label: 'A', size: 22 },
+              { scale: 1.2,  label: 'A', size: 26 },
+            ] as const).map(({ scale, label, size }) => {
+              const active = Math.abs(fontScale - scale) < 0.01
+              return (
+                <button
+                  key={scale}
+                  onClick={() => changerTaille(scale)}
+                  aria-label={`Taille ${scale}`}
+                  aria-pressed={active}
+                  style={{
+                    flex: 1,
+                    padding: '10px 4px',
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    background: 'transparent', cursor: 'pointer',
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: size,
+                    fontStyle: 'italic',
+                    color: active ? accent : `${encre}55`,
+                    transition: 'all 0.15s',
+                    lineHeight: 1,
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </motion.div>
 
         {/* ── SON ── */}
         <motion.div
