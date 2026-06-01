@@ -8,7 +8,7 @@ import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { partagerTexte, partagerImageDistante, genererImageStory, telechargerStory, exporterPDF } from '../utils/partager'
+import { partagerTexte, partagerImageDistante, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
@@ -38,7 +38,6 @@ export default function PoemeDetail() {
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState(false)
-  const [storyBusy, setStoryBusy] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { parler, arreter, parlant } = useTTS()
@@ -128,40 +127,6 @@ export default function PoemeDetail() {
       await partagerImageDistante(poeme.illustration.url, titre, contenu, titre)
     } else {
       await partagerTexte(contenu, titre)
-    }
-  }
-
-  async function partagerStory() {
-    if (!poeme || storyBusy) return
-    setStoryBusy(true)
-    try {
-      const struct = getStructure(poeme.structureId)
-      const textePoeme = reconstruirePoeme(poeme.cases, struct)
-      const titre = poeme.titre ?? 'Cadavre Exquis'
-      const dataUrl = await genererImageStory({
-        type: 'poeme',
-        titre,
-        texte: textePoeme,
-        accent, bg: fond, ink: encre,
-      })
-      const nom = (titre || 'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sans-titre'
-      // Try Web Share API with file support
-      try {
-        const blob = await (await fetch(dataUrl)).blob()
-        const file = new File([blob], `cadavre-${nom}-story.png`, { type: 'image/png' })
-        const shareData: ShareData = { files: [file], title: titre }
-        if (navigator.canShare?.(shareData)) {
-          await navigator.share(shareData)
-          return
-        }
-      } catch (e) {
-        console.error('share story failed, fallback to download', e)
-      }
-      await telechargerStory(dataUrl, nom)
-    } catch (e) {
-      console.error('story generation failed', e)
-    } finally {
-      setStoryBusy(false)
     }
   }
 
@@ -481,29 +446,13 @@ export default function PoemeDetail() {
           </button>
         </motion.div>
 
-        {/* ── STORY + PDF ── */}
+        {/* ── PDF ── */}
         <motion.div
           className="mb-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.52 }}
-          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
         >
-          <button
-            onClick={partagerStory}
-            disabled={storyBusy}
-            aria-label="Générer une image pour les stories"
-            style={{
-              width: '100%', padding: '0.85em',
-              background: 'transparent', color: encre,
-              ...mono, fontSize: 15, textTransform: 'uppercase',
-              border: `0.5px solid ${encre}25`,
-              cursor: storyBusy ? 'wait' : 'pointer',
-              opacity: storyBusy ? 0.55 : 0.75,
-            }}
-          >
-            {storyBusy ? '✦ Génération…' : '✦ Image pour story'}
-          </button>
           <button
             onClick={exporterPoemePDF}
             disabled={pdfBusy}

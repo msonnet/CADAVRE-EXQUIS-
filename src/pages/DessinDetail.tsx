@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { chargerDessin, supprimerDessin, mettreAJourTitreDessin } from '../db'
-import { partagerDessinAvecTexte, partagerImage, genererImageStory, telechargerStory, exporterPDF } from '../utils/partager'
+import { partagerDessinAvecTexte, partagerImage, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
@@ -30,7 +30,6 @@ export default function DessinDetail() {
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState(false)
-  const [storyBusy, setStoryBusy] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const { profile } = useAuth()
   const { jouer } = useSound()
@@ -116,37 +115,6 @@ export default function DessinDetail() {
       await partagerDessinAvecTexte(dessin.imageDataUrl, dessin.texteVision, nom, accent)
     } else {
       await partagerImage(dessin.imageDataUrl, nom)
-    }
-  }
-
-  async function partagerStory() {
-    if (!dessin || storyBusy) return
-    setStoryBusy(true)
-    try {
-      const titreDessin = dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')
-      const dataUrl = await genererImageStory({
-        type: 'dessin',
-        titre: titreDessin,
-        imageDataUrl: dessin.imageDataUrl,
-        accent, bg: fond, ink: encre,
-      })
-      const nom = (titreDessin || 'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sans-titre'
-      try {
-        const blob = await (await fetch(dataUrl)).blob()
-        const file = new File([blob], `cadavre-${nom}-story.png`, { type: 'image/png' })
-        const shareData: ShareData = { files: [file], title: titreDessin }
-        if (navigator.canShare?.(shareData)) {
-          await navigator.share(shareData)
-          return
-        }
-      } catch (e) {
-        console.error('share story failed, fallback to download', e)
-      }
-      await telechargerStory(dataUrl, nom)
-    } catch (e) {
-      console.error('story generation failed', e)
-    } finally {
-      setStoryBusy(false)
     }
   }
 
@@ -324,29 +292,13 @@ export default function DessinDetail() {
           </button>
         </motion.div>
 
-        {/* ── STORY + PDF ── */}
+        {/* ── PDF ── */}
         <motion.div
           className="mb-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.46 }}
-          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
         >
-          <button
-            onClick={partagerStory}
-            disabled={storyBusy}
-            aria-label="Générer une image pour les stories"
-            style={{
-              width: '100%', padding: '0.85em',
-              background: `${accent}12`, color: accent,
-              ...mono, fontSize: 15, textTransform: 'uppercase',
-              border: `1px solid ${accent}40`,
-              cursor: storyBusy ? 'wait' : 'pointer',
-              opacity: storyBusy ? 0.55 : 1,
-            }}
-          >
-            {storyBusy ? '✦ Génération…' : '✦ Image pour story'}
-          </button>
           <button
             onClick={exporterDessinPDF}
             disabled={pdfBusy}
