@@ -349,7 +349,7 @@ export default function FinDePartie() {
           {/* Poem text — lignes dévoilées une à une après le rideau */}
           <div
             style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
               color: encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
             }}
           >

@@ -180,7 +180,7 @@ export default function FinDessin() {
 
   const phaseLabel = {
     assemblage: 'Assemblage du dessin…',
-    vision: 'Le cadavre se constitue…',
+    vision: 'Le cadavre se reconstitue…',
     revele: '',
     sauvegarde: 'Sauvegardé.',
   }[phase]
@@ -218,20 +218,26 @@ export default function FinDessin() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center' }}
+            exit={{ opacity: 0 }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center', textAlign: 'center' }}
           >
-            {/* Spinner */}
-            <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 32, height: 32,
-                border: `2px solid ${accent}30`,
-                borderTop: `2px solid ${accent}`,
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-              }} />
-              <div style={{ ...mono, fontSize: 14, color: accent, letterSpacing: '0.18em' }}>
-                {phaseLabel}
+            <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+              <div style={{ ...mono, fontSize: 14, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
+                — {nbBandes} BANDE{nbBandes > 1 ? 'S' : ''} —
               </div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
+                Le cadavre
+              </div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3, marginBottom: 20 }}>
+                se reconstitue<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>
+              </div>
+              <motion.div
+                style={{ fontSize: 18, color: accent }}
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                ✦
+              </motion.div>
             </div>
           </motion.div>
         )}

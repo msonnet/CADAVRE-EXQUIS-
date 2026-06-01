@@ -338,11 +338,11 @@ export default function DessinDetail() {
             aria-label="Générer une image pour les stories"
             style={{
               width: '100%', padding: '0.85em',
-              background: 'transparent', color: encre,
+              background: `${accent}12`, color: accent,
               ...mono, fontSize: 15, textTransform: 'uppercase',
-              border: `0.5px solid ${encre}25`,
+              border: `1px solid ${accent}40`,
               cursor: storyBusy ? 'wait' : 'pointer',
-              opacity: storyBusy ? 0.55 : 0.7,
+              opacity: storyBusy ? 0.55 : 1,
             }}
           >
             {storyBusy ? '✦ Génération…' : '✦ Image pour story'}
