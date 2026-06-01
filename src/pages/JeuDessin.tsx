@@ -457,20 +457,19 @@ export default function JeuDessin() {
       traceLisse()
 
     } else if (tool === 'pencil') {
-      // Crayon graphite : trait fin, légèrement granuleux, qui se densifie en repassant
       const baseW = Math.max(size * 0.55 * pf, 0.8 * dpr)
       ctx.strokeStyle = color; ctx.lineWidth = baseW; ctx.globalAlpha = 0.5 * op
       traceLisse()
-      // Grain : petites touches décalées le long du trait
+      // Grain graphite : particules infimes, imperceptibles individuellement
       const grains = Math.ceil(Math.max(dist, 3))
       for (let g = 0; g < grains; g++) {
         const t = g / grains
         const gx = prev.x + dx * t + (Math.random() - 0.5) * baseW * 1.4
         const gy = prev.y + dy * t + (Math.random() - 0.5) * baseW * 1.4
         ctx.fillStyle = color
-        ctx.globalAlpha = (0.05 + Math.random() * 0.12) * op
+        ctx.globalAlpha = (0.02 + Math.random() * 0.05) * op
         ctx.beginPath()
-        ctx.arc(gx, gy, Math.random() * 0.7 * dpr, 0, Math.PI * 2)
+        ctx.arc(gx, gy, Math.random() * 0.22 * dpr, 0, Math.PI * 2)
         ctx.fill()
       }
 
@@ -931,10 +930,9 @@ export default function JeuDessin() {
           <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Activer le son' : 'Couper le son'}
             style={{
               width: 36, height: 36, borderRadius: 9, border: 'none',
-              background: 'rgba(26,18,8,0.10)',
+              background: '#c8bfb0',
               fontSize: 15, cursor: 'pointer',
-              color: '#1a1208',
-              opacity: muted ? 0.4 : 1,
+              color: muted ? '#888070' : '#1a1208',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
             {muted ? '♪' : '♫'}
@@ -947,10 +945,9 @@ export default function JeuDessin() {
             title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
             style={{
               width: 36, height: 36, borderRadius: 9, border: 'none',
-              background: panMode ? `${accent}30` : 'rgba(26,18,8,0.10)',
-              color: panMode ? accent : '#1a1208',
+              background: panMode ? accent : '#c8bfb0',
+              color: panMode ? '#fff' : '#1a1208',
               fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              outline: panMode ? `1.5px solid ${accent}66` : 'none',
             }}>
             ✥
           </button>
@@ -966,15 +963,14 @@ export default function JeuDessin() {
             title="Prélever une couleur sur le canvas"
             style={{
               width: 36, height: 36, borderRadius: 9, border: 'none',
-              background: pipetteActive ? `${accent}30` : 'rgba(26,18,8,0.10)',
-              color: pipetteActive ? accent : '#1a1208',
+              background: pipetteActive ? accent : '#c8bfb0',
+              color: pipetteActive ? '#fff' : '#1a1208',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              outline: pipetteActive ? `1.5px solid ${accent}66` : 'none',
             }}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
               <path d="M13.5 1.5 C14.5 2.5 14.5 4 13.5 5L8 10.5L5.5 11.5L6.5 9L12 3.5 C13 2.5 12.5 0.5 13.5 1.5Z"
-                fill="currentColor" fillOpacity="0.85" />
-              <circle cx="4" cy="13" r="2" fill="currentColor" fillOpacity="0.65"/>
+                fill="currentColor" fillOpacity="0.9" />
+              <circle cx="4" cy="13" r="2" fill="currentColor" fillOpacity="0.75"/>
             </svg>
           </button>
           <div style={{ flex: 1 }} />
