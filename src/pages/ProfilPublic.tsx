@@ -246,7 +246,7 @@ export default function ProfilPublic() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/galerie')}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← GALERIE
           </button>
@@ -254,7 +254,7 @@ export default function ProfilPublic() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — PROFIL —
         </div>
 
@@ -271,7 +271,7 @@ export default function ProfilPublic() {
             <span style={{ color: accent }}>{titreAffichePseudo}</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Œuvres publiées
           </p>
@@ -316,7 +316,7 @@ export default function ProfilPublic() {
               style={{
                 marginTop: 22,
                 background: accent, color: btnText,
-                ...mono, fontSize: 12, textTransform: 'uppercase',
+                ...mono, fontSize: 14, textTransform: 'uppercase',
                 padding: '0.8em 1.4em',
                 border: 'none',
                 cursor: 'pointer',
@@ -378,12 +378,12 @@ export default function ProfilPublic() {
                           }}>
                             {titreAffiche}
                           </p>
-                          <span style={{ ...mono, fontSize: 11, color: accent, opacity: 0.85, flexShrink: 0 }}>
+                          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.85, flexShrink: 0 }}>
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
 
-                        <p style={{ ...mono, fontSize: 11, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
+                        <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
                           {(item.type === 'poeme' ? 'POÈME' : 'DESSIN')}
                           {' · '}
                           {formatDate(item.created_at).toUpperCase()}
@@ -471,7 +471,7 @@ export default function ProfilPublic() {
                               onClick={e => { e.stopPropagation(); toggleReaction(item.id, em) }}
                               style={{
                                 ...mono,
-                                fontSize: 12,
+                                fontSize: 14,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
@@ -488,16 +488,16 @@ export default function ProfilPublic() {
                               onMouseLeave={e => { if (!reacted) e.currentTarget.style.opacity = '0.6' }}
                               aria-label={`Réagir ${em}`}
                             >
-                              <span style={{ fontSize: 13 }}>{em}</span>
+                              <span style={{ fontSize: 15 }}>{em}</span>
                               {count > 0 && <span>{count}</span>}
                             </button>
                           )
                         })}
                         <span style={{
-                          ...mono, fontSize: 11, color: encre, opacity: 0.55,
+                          ...mono, fontSize: 13, color: encre, opacity: 0.55,
                           marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}>
-                          <span style={{ fontSize: 12 }}>👁</span>
+                          <span style={{ fontSize: 14 }}>👁</span>
                           {item.views_count ?? 0}
                         </span>
                       </div>

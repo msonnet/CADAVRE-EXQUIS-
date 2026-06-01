@@ -50,16 +50,16 @@ export default function Configuration() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← SORTIR
           </button>
-          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── SECTION LABEL ── */}
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
           — PRÉPARATIFS —
         </div>
 
@@ -108,14 +108,14 @@ export default function Configuration() {
                   transition: 'all 0.2s',
                 }}
               >
-                <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 26, paddingTop: 2 }}>
+                <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, minWidth: 26, paddingTop: 2 }}>
                   {s.romain}.
                 </span>
                 <div>
                   <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 14, color: encre, marginBottom: 2 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.70 }}>{s.description}</div>
+                  <div style={{ ...mono, fontSize: 15, color: encre, opacity: 0.70 }}>{s.description}</div>
                 </div>
               </motion.button>
             )
@@ -124,7 +124,7 @@ export default function Configuration() {
 
         {/* ── VISIBILITÉ ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — VISIBILITÉ —
           </div>
           <div className="flex gap-2">
@@ -139,7 +139,7 @@ export default function Configuration() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
+                    ...mono, fontSize: 15,
                     color: active ? accent : `${encre}80`,
                     transition: 'all 0.15s',
                   }}
@@ -153,7 +153,7 @@ export default function Configuration() {
 
         {/* ── JOUEURS ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — JOUEURS —
           </div>
           <div className="flex gap-2">
@@ -168,7 +168,7 @@ export default function Configuration() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
+                    ...mono, fontSize: 15,
                     color: active ? accent : `${encre}80`,
                     transition: 'all 0.15s',
                   }}
@@ -182,7 +182,7 @@ export default function Configuration() {
 
         {/* ── VOIX IA ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — VOIX IA —
           </div>
           <div className="flex gap-2">
@@ -197,7 +197,7 @@ export default function Configuration() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
+                    ...mono, fontSize: 15,
                     color: active ? accent : `${encre}80`,
                     transition: 'all 0.15s',
                   }}
@@ -212,7 +212,7 @@ export default function Configuration() {
         {/* ── PREMIER JOUEUR ── */}
         {config.voixIA > 0 && config.joueursHumains === 1 && (
           <div style={{ marginBottom: 18 }}>
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+            <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
               — OUVRE LA SÉANCE —
             </div>
             <div className="flex gap-2">
@@ -227,7 +227,7 @@ export default function Configuration() {
                       border: `0.5px solid ${active ? accent : `${encre}20`}`,
                       borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                       background: 'transparent', cursor: 'pointer',
-                      ...mono, fontSize: 13,
+                      ...mono, fontSize: 15,
                       color: active ? accent : `${encre}80`,
                       transition: 'all 0.15s',
                     }}
@@ -242,7 +242,7 @@ export default function Configuration() {
 
         {/* ── MODE ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — MODE —
           </div>
           <div className="flex gap-2">
@@ -257,7 +257,7 @@ export default function Configuration() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
+                    ...mono, fontSize: 15,
                     color: active ? accent : `${encre}80`,
                     transition: 'all 0.15s',
                   }}
@@ -284,7 +284,7 @@ export default function Configuration() {
             className="w-full flex flex-col items-center justify-center"
             style={{
               background: accent, color: btnText,
-              ...mono, fontSize: 13,
+              ...mono, fontSize: 15,
               textTransform: 'uppercase',
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',

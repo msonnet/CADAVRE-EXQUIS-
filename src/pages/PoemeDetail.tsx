@@ -230,7 +230,7 @@ export default function PoemeDetail() {
         </p>
         <button
           onClick={() => navigate('/bibliotheque')}
-          style={{ marginTop: 28, background: accent, color: btnText, ...mono, fontSize: 13, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
+          style={{ marginTop: 28, background: accent, color: btnText, ...mono, fontSize: 15, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
         >
           Mes poèmes
         </button>
@@ -280,14 +280,14 @@ export default function PoemeDetail() {
               style={{ maxWidth: '95vw', maxHeight: '88vh', objectFit: 'contain' }}
             />
             {illustrationLabel && (
-              <p style={{ ...mono, fontSize: 12, color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
+              <p style={{ ...mono, fontSize: 14, color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
                 {illustrationLabel.toUpperCase()}
               </p>
             )}
             <button
               aria-label="Fermer le plein écran"
               onClick={() => setPleinEcran(false)}
-              style={{ position: 'absolute', top: 20, right: 20, ...mono, fontSize: 13, color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: 20, right: 20, ...mono, fontSize: 15, color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
             >
               ✕ FERMER
             </button>
@@ -302,16 +302,16 @@ export default function PoemeDetail() {
           <button
             onClick={() => navigate('/bibliotheque')}
             aria-label="Retour à mes poèmes"
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← MES POÈMES
           </button>
-          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — FEUILLET —
         </div>
 
@@ -340,12 +340,12 @@ export default function PoemeDetail() {
               <button
                 onClick={sauvegarderTitre}
                 aria-label="Valider le titre"
-                style={{ ...mono, fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
+                style={{ ...mono, fontSize: 14, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
               >✓</button>
               <button
                 onClick={() => setEditionTitre(false)}
                 aria-label="Annuler l'édition du titre"
-                style={{ ...mono, fontSize: 12, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
+                style={{ ...mono, fontSize: 14, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
               >✕</button>
             </div>
           ) : (
@@ -361,7 +361,7 @@ export default function PoemeDetail() {
                 {poeme.titre ?? 'Sans titre'}
               </div>
               {!poeme.titre && (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.7, marginTop: 2 }}>
+                <div style={{ ...mono, fontSize: 14, color: encre, opacity: 0.7, marginTop: 2 }}>
                   TAP POUR NOMMER
                 </div>
               )}
@@ -393,12 +393,12 @@ export default function PoemeDetail() {
             </button>
             <div className="flex justify-between items-center mt-2">
               {illustrationLabel && (
-                <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.75 }}>{illustrationLabel.toUpperCase()}</span>
+                <span style={{ ...mono, fontSize: 14, color: encre, opacity: 0.75 }}>{illustrationLabel.toUpperCase()}</span>
               )}
               <button
                 onClick={() => setPleinEcran(true)}
                 aria-label="Agrandir l'illustration"
-                style={{ ...mono, fontSize: 12, color: accent, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                style={{ ...mono, fontSize: 14, color: accent, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
               >
                 ↗ AGRANDIR
               </button>
@@ -413,7 +413,7 @@ export default function PoemeDetail() {
           transition={{ delay: 0.35, duration: 0.7 }}
           style={{ marginBottom: 16 }}
         >
-          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — LE CADAVRE —
           </div>
           <div style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16, lineHeight: 1.7 }}>
@@ -435,7 +435,7 @@ export default function PoemeDetail() {
               </React.Fragment>
             ))}
           </div>
-          <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.7, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}15` }}>
+          <div style={{ ...mono, fontSize: 14, color: encre, opacity: 0.7, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}15` }}>
             {dateStr} · {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </motion.div>
@@ -453,21 +453,21 @@ export default function PoemeDetail() {
             onClick={() => parlant ? arreter() : parler(texte)}
             aria-label={parlant ? 'Arrêter la lecture' : 'Écouter le poème'}
             aria-pressed={parlant}
-            style={{ ...mono, fontSize: 13, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
           </button>
           <button
             onClick={partager}
             aria-label="Partager le poème"
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             — PARTAGER —
           </button>
           <button
             onClick={imprimerPoeme}
             aria-label="Télécharger le poème en PDF"
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             — PDF —
           </button>
@@ -475,7 +475,7 @@ export default function PoemeDetail() {
             onClick={() => setCasesVisibles(v => !v)}
             aria-label={casesVisibles ? 'Masquer les coutures' : 'Voir case par case'}
             aria-expanded={casesVisibles}
-            style={{ ...mono, fontSize: 13, color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             — COUTURES —
           </button>
@@ -496,7 +496,7 @@ export default function PoemeDetail() {
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent', color: encre,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               cursor: storyBusy ? 'wait' : 'pointer',
               opacity: storyBusy ? 0.55 : 0.75,
@@ -511,7 +511,7 @@ export default function PoemeDetail() {
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent', color: encre,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               cursor: pdfBusy ? 'wait' : 'pointer',
               opacity: pdfBusy ? 0.55 : 0.75,
@@ -536,7 +536,7 @@ export default function PoemeDetail() {
               width: '100%', padding: '0.85em',
               background: 'transparent',
               color: publishError ? accent : (published ? accent : encre),
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
               opacity: publishing ? 0.55 : (published ? 1 : 0.75),
@@ -572,7 +572,7 @@ export default function PoemeDetail() {
                     paddingTop: 6, paddingBottom: 6, marginBottom: 10,
                   }}
                 >
-                  <div style={{ ...mono, fontSize: 12, color: accent, opacity: 0.8, marginBottom: 3 }}>
+                  <div style={{ ...mono, fontSize: 14, color: accent, opacity: 0.8, marginBottom: 3 }}>
                     {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
                     <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
                     <span style={{ fontFamily: "'Cormorant Garamond', serif", textTransform: 'none', letterSpacing: 0 }}>
@@ -604,7 +604,7 @@ export default function PoemeDetail() {
             aria-label="Démarrer une nouvelle partie"
             style={{
               background: accent, color: btnText,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               padding: '1.1em 1em', border: 'none', cursor: 'pointer', gap: 2,
             }}
           >
@@ -621,7 +621,7 @@ export default function PoemeDetail() {
                 key="suppr"
                 onClick={() => setConfirmSuppression(true)}
                 aria-label="Supprimer ce poème"
-                style={{ ...mono, fontSize: 12, color: encre, opacity: 0.9, background: 'none', border: 'none', cursor: 'pointer' }}
+                style={{ ...mono, fontSize: 14, color: encre, opacity: 0.9, background: 'none', border: 'none', cursor: 'pointer' }}
                 initial={{ opacity: 0.3 }}
                 exit={{ opacity: 0 }}
               >
@@ -634,16 +634,16 @@ export default function PoemeDetail() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.8 }}>SUPPRIMER DÉFINITIVEMENT ?</span>
+                <span style={{ ...mono, fontSize: 14, color: encre, opacity: 0.8 }}>SUPPRIMER DÉFINITIVEMENT ?</span>
                 <button
                   onClick={supprimer}
                   aria-label="Confirmer la suppression"
-                  style={{ ...mono, fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{ ...mono, fontSize: 14, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}
                 >OUI</button>
                 <button
                   onClick={() => setConfirmSuppression(false)}
                   aria-label="Annuler la suppression"
-                  style={{ ...mono, fontSize: 12, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{ ...mono, fontSize: 14, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
                 >NON</button>
               </motion.div>
             )}

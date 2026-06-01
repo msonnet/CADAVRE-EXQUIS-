@@ -48,16 +48,16 @@ export default function Aide() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate(-1)}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← RETOUR
           </button>
-          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — RÈGLES —
         </div>
 
@@ -93,7 +93,7 @@ export default function Aide() {
           transition={{ delay: 0.2 }}
           style={{ marginBottom: 32 }}
         >
-          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — CADAVRE ÉCRIT —
           </div>
           <div
@@ -110,21 +110,21 @@ export default function Aide() {
           </p>
 
           {/* Structures */}
-          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — STRUCTURES —
           </div>
           {STRUCTURES.map(s => (
             <div key={s.romain} style={{ display: 'flex', gap: 14, paddingBottom: 12, borderBottom: `0.5px solid ${encre}10`, marginBottom: 12 }}>
-              <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 22 }}>{s.romain}.</span>
+              <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, minWidth: 22 }}>{s.romain}.</span>
               <div>
-                <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 13, color: encre, marginBottom: 2 }}>
+                <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 15, color: encre, marginBottom: 2 }}>
                   {s.label}
                 </div>
-                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginBottom: s.exemple ? 5 : 0 }}>
+                <div style={{ ...mono, fontSize: 15, color: encre, opacity: 0.9, marginBottom: s.exemple ? 5 : 0 }}>
                   {s.detail}
                 </div>
                 {s.exemple && (
-                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.75 }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75 }}>
                     « {s.exemple} »
                   </div>
                 )}
@@ -133,23 +133,23 @@ export default function Aide() {
           ))}
 
           {/* Visibilité */}
-          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
+          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
             — VISIBILITÉ —
           </div>
           {VISIBILITE.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+              <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
           {/* Modes */}
-          <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
+          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
             — MODES —
           </div>
           {MODES.map(m => (
             <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
+              <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85 }}>{m.detail}</div>
             </div>
           ))}
@@ -166,7 +166,7 @@ export default function Aide() {
           transition={{ delay: 0.4 }}
           style={{ marginBottom: 32 }}
         >
-          <div style={{ ...mono, fontSize: 12, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 14, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — CADAVRE DESSINÉ —
           </div>
           <div
@@ -183,12 +183,12 @@ export default function Aide() {
           </p>
 
           {/* Raccord */}
-          <div style={{ ...mono, fontSize: 12, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 14, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — RACCORD —
           </div>
           {RACCORD_DESSIN.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+              <div style={{ ...mono, fontSize: 15, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
@@ -198,7 +198,7 @@ export default function Aide() {
             <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
               « Le cadavre exquis boira le vin nouveau »
             </div>
-            <div style={{ ...mono, fontSize: 12, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
+            <div style={{ ...mono, fontSize: 14, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
               BRETON, ÉLUARD, MORISE, MAN RAY · 1925
             </div>
           </div>
@@ -218,12 +218,12 @@ export default function Aide() {
               style={{
                 flex: 1,
                 background: accent, color: btnText,
-                ...mono, fontSize: 13, textTransform: 'uppercase',
+                ...mono, fontSize: 15, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}
             >
               <span>Cadavre Écrit</span>
-              <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✒</span>
+              <span aria-hidden style={{ fontSize: 15, opacity: 0.85 }}>✒</span>
             </button>
             <button
               onClick={() => navigate('/config-dessin')}
@@ -231,12 +231,12 @@ export default function Aide() {
               style={{
                 flex: 1,
                 background: second, color: btnText,
-                ...mono, fontSize: 13, textTransform: 'uppercase',
+                ...mono, fontSize: 15, textTransform: 'uppercase',
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               }}
             >
               <span>Cadavre Dessiné</span>
-              <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✎</span>
+              <span aria-hidden style={{ fontSize: 15, opacity: 0.85 }}>✎</span>
             </button>
           </div>
         </motion.div>

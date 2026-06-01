@@ -175,7 +175,7 @@ export function validerCase(
   niveau: NiveauValidation
 ): ResultatValidation {
   if (niveau === 'desactivee') return { valide: true }
-  if (!texte.trim()) return { valide: false, message: 'Ecris quelque chose.' }
+  if (!texte.trim()) return { valide: false, message: 'Écris quelque chose.' }
 
   // En mode souple, on valide juste que le champ n'est pas vide
   if (niveau === 'souple') return { valide: true }
@@ -188,7 +188,7 @@ export function validerCase(
       if (mots(texte).length === 1 && !contientArticle(texte)) return { valide: true }
       return {
         valide: false,
-        message: 'Es-tu sur ? La consigne demande un verbe conjugue.',
+        message: 'Es-tu sûr ? La consigne demande un verbe conjugué.',
       }
     }
 
@@ -198,7 +198,7 @@ export function validerCase(
         return { valide: false, message: "Écris le nom seul, sans article (ex : 'mousse', 'vent', 'cendre')." }
       }
       if (contientVerbe(texte) && ms.length > 1) {
-        return { valide: false, message: 'Es-tu sur ? La consigne demande un nom, pas une phrase.' }
+        return { valide: false, message: 'Es-tu sûr ? La consigne demande un nom, pas une phrase.' }
       }
       return { valide: true }
     }
@@ -206,7 +206,7 @@ export function validerCase(
     case 'adjectif': {
       if (ressembleAdjectif(texte) || contientArticle(texte)) return { valide: true }
       if (contientVerbe(texte)) {
-        return { valide: false, message: 'Es-tu sur ? La consigne demande un adjectif.' }
+        return { valide: false, message: 'Es-tu sûr ? La consigne demande un adjectif.' }
       }
       return { valide: true }
     }
@@ -215,7 +215,7 @@ export function validerCase(
       if (contientVerbe(texte) && mots(texte).length > 3) {
         return {
           valide: false,
-          message: 'Es-tu sur ? La consigne demande un groupe nominal, pas une phrase complete.',
+          message: 'Es-tu sûr ? La consigne demande un groupe nominal, pas une phrase complète.',
         }
       }
       return { valide: true }

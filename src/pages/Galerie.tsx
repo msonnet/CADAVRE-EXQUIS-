@@ -297,7 +297,7 @@ export default function Galerie() {
               style={{
                 position: 'absolute', top: 18, right: 18,
                 fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
-                fontSize: 12, color: '#e8d4b8', opacity: 0.85,
+                fontSize: 14, color: '#e8d4b8', opacity: 0.85,
                 background: 'none', border: 'none', cursor: 'pointer',
               }}
             >
@@ -313,7 +313,7 @@ export default function Galerie() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
@@ -321,7 +321,7 @@ export default function Galerie() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — GALERIE —
         </div>
 
@@ -338,7 +338,7 @@ export default function Galerie() {
             Créations <span style={{ color: accent }}>partagées.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Les œuvres de la communauté
           </p>
@@ -354,7 +354,7 @@ export default function Galerie() {
                 onClick={() => { jouer('clic'); setOnglet(t) }}
                 style={{
                   ...mono,
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: 700,
                   color: actif ? accent : encre,
                   opacity: actif ? 1 : 0.55,
@@ -379,8 +379,8 @@ export default function Galerie() {
           marginBottom: 14, opacity: 0.7,
         }}>
           {REACTION_EMOJIS.map(em => (
-            <span key={em} style={{ ...mono, fontSize: 10, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 12 }}>{em}</span>
+            <span key={em} style={{ ...mono, fontSize: 13, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 14 }}>{em}</span>
               {REACTION_LABELS[em].toUpperCase()}
             </span>
           ))}
@@ -475,14 +475,14 @@ export default function Galerie() {
                           }}>
                             {titreAffiche}
                           </p>
-                          <span style={{ ...mono, fontSize: 11, color: accent, opacity: 0.85, flexShrink: 0 }}>
+                          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.85, flexShrink: 0 }}>
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
                       </button>
 
                       {/* Méta auteur (Link) + date */}
-                      <p style={{ ...mono, fontSize: 11, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
+                      <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
                         <Link
                           to={`/u/${encodeURIComponent(item.author_pseudo)}`}
                           onClick={e => e.stopPropagation()}
@@ -553,7 +553,7 @@ export default function Galerie() {
                               <span style={{
                                 position: 'absolute', bottom: 6, right: 8,
                                 fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
-                                fontSize: 10, color: '#fff',
+                                fontSize: 13, color: '#fff',
                                 background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                 pointerEvents: 'none',
                               }}>⤢ AGRANDIR</span>
@@ -590,7 +590,7 @@ export default function Galerie() {
                                 <span style={{
                                   position: 'absolute', bottom: 6, right: 8,
                                   fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
-                                  fontSize: 10, color: '#fff',
+                                  fontSize: 13, color: '#fff',
                                   background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                   pointerEvents: 'none',
                                 }}>⤢ AGRANDIR</span>
@@ -623,7 +623,7 @@ export default function Galerie() {
                               onClick={e => { e.stopPropagation(); toggleReaction(item.id, em) }}
                               style={{
                                 ...mono,
-                                fontSize: 12,
+                                fontSize: 14,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
@@ -641,16 +641,16 @@ export default function Galerie() {
                               aria-label={`Réagir : ${REACTION_LABELS[em]}`}
                               title={REACTION_LABELS[em]}
                             >
-                              <span style={{ fontSize: 13 }}>{em}</span>
+                              <span style={{ fontSize: 15 }}>{em}</span>
                               {count > 0 && <span>{count}</span>}
                             </button>
                           )
                         })}
                         <span style={{
-                          ...mono, fontSize: 11, color: encre, opacity: 0.55,
+                          ...mono, fontSize: 13, color: encre, opacity: 0.55,
                           marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}>
-                          <span style={{ fontSize: 12 }}>👁</span>
+                          <span style={{ fontSize: 14 }}>👁</span>
                           {item.views_count ?? 0}
                         </span>
                       </div>
@@ -676,7 +676,7 @@ export default function Galerie() {
                 width: '100%',
                 background: chargementPlus ? `${accent}aa` : accent,
                 color: btnText,
-                ...mono, fontSize: 13, textTransform: 'uppercase',
+                ...mono, fontSize: 15, textTransform: 'uppercase',
                 padding: '0.9em 1em',
                 border: 'none',
                 cursor: chargementPlus ? 'wait' : 'pointer',
@@ -695,7 +695,7 @@ export default function Galerie() {
 
         {!chargement && !erreur && items.length > 0 && !encore && (
           <p style={{
-            ...mono, fontSize: 11, color: encre, opacity: 0.55,
+            ...mono, fontSize: 13, color: encre, opacity: 0.55,
             textAlign: 'center', marginTop: 18, marginBottom: 4,
           }}>
             — FIN —

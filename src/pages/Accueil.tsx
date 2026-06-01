@@ -55,7 +55,7 @@ export default function Accueil() {
 
       {/* ── HEADER ── */}
       <div className="relative flex justify-between items-baseline" style={{ zIndex: 10 }}>
-        <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>
+        <span style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85 }}>
           N° {num} · {annee}
         </span>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
@@ -66,7 +66,7 @@ export default function Accueil() {
           >
             ✦
           </button>
-          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>
+          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>
             {colorLabel}
           </span>
         </div>
@@ -110,12 +110,12 @@ export default function Accueil() {
         >
           <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: '0.75rem' }} />
           <span style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 13, lineHeight: 1.55,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, lineHeight: 1.55,
             color: encre, display: 'block',
           }}>
             {seance.citation.t}
           </span>
-          <div style={{ ...mono, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: accent, marginTop: 5 }}>
+          <div style={{ ...mono, fontSize: 14, fontWeight: 700, textTransform: 'uppercase', color: accent, marginTop: 5 }}>
             {seance.citation.a}
           </div>
         </motion.div>
@@ -136,13 +136,13 @@ export default function Accueil() {
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: encre, color: bg,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
             }}
           >
             <span>Cadavre Écrit</span>
-            <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✒</span>
+            <span aria-hidden style={{ fontSize: 15, opacity: 0.85 }}>✒</span>
           </button>
           <button
             onClick={() => nav('/config-dessin')}
@@ -150,13 +150,13 @@ export default function Accueil() {
               flex: 1,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: second, color: bg,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
             }}
           >
             <span>Cadavre Dessiné</span>
-            <span aria-hidden style={{ fontSize: 13, opacity: 0.85 }}>✎</span>
+            <span aria-hidden style={{ fontSize: 15, opacity: 0.85 }}>✎</span>
           </button>
         </div>
         <button
@@ -165,13 +165,13 @@ export default function Accueil() {
             width: '100%', marginTop: 8,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             background: `${encre}0d`, color: encre,
-            ...mono, fontSize: 13, textTransform: 'uppercase',
+            ...mono, fontSize: 15, textTransform: 'uppercase',
             padding: '0.8em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', gap: 2,
             borderRadius: 12,
           }}
         >
           <span>Mode en ligne</span>
-          <span aria-hidden style={{ fontSize: 13, opacity: 0.75 }}>⊕</span>
+          <span aria-hidden style={{ fontSize: 15, opacity: 0.75 }}>⊕</span>
         </button>
       </motion.div>
 
@@ -185,25 +185,25 @@ export default function Accueil() {
       >
         <button
           onClick={() => nav('/bibliotheque')}
-          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 15, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — RECUEIL —
         </button>
         <button
           onClick={() => nav('/galerie')}
-          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 15, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — GALERIE —
         </button>
         <button
           onClick={() => nav('/aide')}
-          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 15, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — RÈGLES —
         </button>
         <button
           onClick={() => nav('/reglages')}
-          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 15, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           — RÉGLAGES —
         </button>

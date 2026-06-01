@@ -184,7 +184,7 @@ export default function DessinDetail() {
     return (
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
         <div style={{ position: 'relative', zIndex: 10 }}>
-          <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}>← RETOUR</button>
+          <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}>← RETOUR</button>
           <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, marginTop: 40, textAlign: 'center' }}>
             Dessin introuvable.
           </p>
@@ -205,16 +205,16 @@ export default function DessinDetail() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/bibliotheque')}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← RECUEIL
           </button>
-          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — CADAVRE DESSINÉ —
         </div>
 
@@ -232,8 +232,8 @@ export default function DessinDetail() {
                 style={{ borderLeftColor: accent, fontSize: 15 }}
                 placeholder="Titre du dessin…"
               />
-              <button onClick={sauvegarderTitre} style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}>OK</button>
-              <button onClick={() => setEditTitre(false)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+              <button onClick={sauvegarderTitre} style={{ ...mono, fontSize: 15, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}>OK</button>
+              <button onClick={() => setEditTitre(false)} style={{ ...mono, fontSize: 15, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
             </div>
           ) : (
             <button
@@ -245,7 +245,7 @@ export default function DessinDetail() {
               </div>
             </button>
           )}
-          <p style={{ ...mono, fontSize: 12, color: encre, opacity: 0.7, marginTop: 6 }}>
+          <p style={{ ...mono, fontSize: 14, color: encre, opacity: 0.7, marginTop: 6 }}>
             {dessin.nbBandes} BANDES · {formatDate(dessin.dateCreation).toUpperCase()}
           </p>
         </motion.div>
@@ -269,7 +269,7 @@ export default function DessinDetail() {
               style={{ width: '100%', display: 'block', border: `0.5px solid ${encre}15` }}
             />
           </button>
-          <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.9, marginTop: 6, textAlign: 'right' }}>
+          <div style={{ ...mono, fontSize: 14, color: encre, opacity: 0.9, marginTop: 6, textAlign: 'right' }}>
             TOUCHER POUR AGRANDIR
           </div>
         </motion.div>
@@ -282,7 +282,7 @@ export default function DessinDetail() {
             transition={{ delay: 0.35 }}
             style={{ marginBottom: 24 }}
           >
-            <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
               — VISION —
             </div>
             <div style={{
@@ -315,7 +315,7 @@ export default function DessinDetail() {
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent', color: encre,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`, cursor: 'pointer',
               opacity: 0.7,
             }}
@@ -339,7 +339,7 @@ export default function DessinDetail() {
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent', color: encre,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               cursor: storyBusy ? 'wait' : 'pointer',
               opacity: storyBusy ? 0.55 : 0.7,
@@ -354,7 +354,7 @@ export default function DessinDetail() {
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent', color: encre,
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               cursor: pdfBusy ? 'wait' : 'pointer',
               opacity: pdfBusy ? 0.55 : 0.7,
@@ -379,7 +379,7 @@ export default function DessinDetail() {
               width: '100%', padding: '0.85em',
               background: 'transparent',
               color: publishError ? accent : (published ? accent : encre),
-              ...mono, fontSize: 13, textTransform: 'uppercase',
+              ...mono, fontSize: 15, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
               opacity: publishing ? 0.55 : (published ? 1 : 0.75),
@@ -409,7 +409,7 @@ export default function DessinDetail() {
                 style={{
                   flex: 1, padding: '0.9em',
                   background: '#7B0000', color: '#e8d4b8',
-                  ...mono, fontSize: 13, textTransform: 'uppercase',
+                  ...mono, fontSize: 15, textTransform: 'uppercase',
                   border: 'none', cursor: 'pointer',
                 }}
               >
@@ -420,7 +420,7 @@ export default function DessinDetail() {
                 style={{
                   padding: '0.9em 1.2em',
                   background: 'transparent', color: encre,
-                  ...mono, fontSize: 13,
+                  ...mono, fontSize: 15,
                   border: `0.5px solid ${encre}30`, cursor: 'pointer',
                 }}
               >
@@ -433,7 +433,7 @@ export default function DessinDetail() {
               style={{
                 width: '100%', padding: '0.75em',
                 background: 'transparent', color: encre,
-                ...mono, fontSize: 13, textTransform: 'uppercase', opacity: 0.7,
+                ...mono, fontSize: 15, textTransform: 'uppercase', opacity: 0.7,
                 border: `0.5px solid ${encre}20`, cursor: 'pointer',
               }}
             >

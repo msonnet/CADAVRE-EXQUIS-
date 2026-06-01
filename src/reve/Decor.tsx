@@ -384,8 +384,8 @@ function SymboleAvecCartel({
           boxShadow: '1px 1px 0 rgba(0,0,0,0.12)',
           opacity: 0.85,
         }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.12em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
-          <div style={{ fontSize: 9, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
+          <div style={{ fontSize: 13, letterSpacing: '0.12em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
+          <div style={{ fontSize: 12, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
         </div>
       )}
     </div>
@@ -442,7 +442,7 @@ function SignatureReve() {
       fontFamily: "'Inter', sans-serif",
       fontWeight: 500,
       color: 'var(--reve-accent)',
-      fontSize: 13, opacity: 0.7,
+      fontSize: 15, opacity: 0.7,
       pointerEvents: 'none', zIndex: 6,
       animation: 'fadeInQ 0.8s 1.8s both',
     }}>rêvé à {s.heure}</div>
@@ -467,7 +467,7 @@ export function HeaderKeywords({ count = 8 }: { count?: number }) {
   return (
     <div style={{ position: 'absolute', top: '3%', left: '5%', right: '5%', zIndex: 3, pointerEvents: 'none' }}>
       <div style={{
-        fontSize: 13,
+        fontSize: 15,
         fontFamily: "'Inter', sans-serif",
         fontWeight: 500,
         color: 'var(--reve-accent)',
