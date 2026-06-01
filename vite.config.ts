@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'audio/**/*'],
       manifest: {
         name: 'Cadavre Exquis',
@@ -41,7 +41,8 @@ export default defineConfig({
         categories: ['games', 'entertainment'],
       },
       workbox: {
-        skipWaiting: true,
+        // skipWaiting laissé à false : le nouveau SW attend qu'on l'active
+        // explicitement (updateSW(true) au moment opportun), jamais en pleine partie.
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,mp3,ogg,wav}'],
