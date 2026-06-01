@@ -585,7 +585,7 @@ export default function Jeu() {
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
 
-  // ── IA screen : songe puis révélation du fragment ───────────────────────────
+  // ── IA screen ──────────────────────────────────────────────────────────────
   if (participantActuel?.type === 'ia' && (iaChargement || iaTexteRevele !== null)) {
     return (
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
@@ -600,76 +600,41 @@ export default function Jeu() {
 
           <div className="flex flex-col items-center justify-center flex-1 text-center" style={{ paddingBottom: '20%' }}>
             <motion.div
-              style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 20 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontStyle: 'italic',
+                fontSize: 'clamp(1.6rem, 7vw, 2.2rem)',
+                color: encre,
+                lineHeight: 1.35,
+              }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
             >
-              — LE CADAVRE SONGE —
+              La voix parle<motion.span
+                animate={{ opacity: [1, 0, 1] }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+              >…</motion.span>
             </motion.div>
 
             {iaChargement ? (
-              <>
-                <motion.div
-                  style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: 'clamp(1.4rem, 6vw, 1.9rem)',
-                    color: encre,
-                    marginBottom: 12,
-                    lineHeight: 1.3,
-                  }}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  {defActuelle?.consigne}
-                </motion.div>
-
-                <motion.div
-                  style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, lineHeight: 1.8 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                >
-                  il puise dans les voix<br />qui l'ont précédé…
-                </motion.div>
-
-                <motion.div
-                  className="flex gap-2 mt-8"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.0 }}
-                >
-                  {[0, 1, 2].map(i => (
-                    <motion.span
-                      key={i}
-                      style={{ width: 5, height: 5, borderRadius: '50%', background: accent, display: 'inline-block' }}
-                      animate={{ opacity: [0.2, 1, 0.2] }}
-                      transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.4 }}
-                    />
-                  ))}
-                </motion.div>
-              </>
+              <motion.div
+                className="flex gap-2 mt-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                {[0, 1, 2].map(i => (
+                  <motion.span
+                    key={i}
+                    style={{ width: 5, height: 5, borderRadius: '50%', background: accent, display: 'inline-block' }}
+                    animate={{ opacity: [0.2, 1, 0.2] }}
+                    transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.4 }}
+                  />
+                ))}
+              </motion.div>
             ) : (
               <>
-                <motion.div
-                  style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontStyle: 'italic',
-                    fontSize: 'clamp(1.6rem, 7vw, 2.2rem)',
-                    color: encre,
-                    lineHeight: 1.35,
-                  }}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, ease: 'easeOut' }}
-                >
-                  La voix parle<motion.span
-                    animate={{ opacity: [1, 0, 1] }}
-                    transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-                  >…</motion.span>
-                </motion.div>
-
                 <motion.div
                   style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 16, lineHeight: 1.7 }}
                   initial={{ opacity: 0 }}
