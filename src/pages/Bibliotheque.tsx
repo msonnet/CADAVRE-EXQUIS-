@@ -87,10 +87,17 @@ export default function Bibliotheque() {
             Mes <span style={{ color: accent }}>poèmes.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 10,
           }}>
             Ta bibliothèque personnelle
           </p>
+          {!chargement && (poemes.length > 0 || dessins.length > 0) && (
+            <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em', opacity: 0.75, marginBottom: 14 }}>
+              {poemes.length > 0 && `${poemes.length} POÈME${poemes.length > 1 ? 'S' : ''} · ${poemes.reduce((s, p) => s + p.cases.length, 0)} VOIX`}
+              {poemes.length > 0 && dessins.length > 0 && '  ·  '}
+              {dessins.length > 0 && `${dessins.length} DESSIN${dessins.length > 1 ? 'S' : ''}`}
+            </div>
+          )}
         </motion.div>
 
         {/* ── RECHERCHE ── */}

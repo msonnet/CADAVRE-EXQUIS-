@@ -1,3 +1,5 @@
+export const config = { maxDuration: 30 }
+
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
@@ -91,9 +93,12 @@ Réponds avec la phrase complète corrigée sur une seule ligne, sans guillemets
 Phrase : ${texte}`
   }
 
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 25_000)
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: ctrl.signal,
       headers: {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
@@ -118,5 +123,7 @@ Phrase : ${texte}`
     res.status(200).json({ texte: corrige || texte })
   } catch {
     res.status(200).json({ texte })
+  } finally {
+    clearTimeout(timer)
   }
 }

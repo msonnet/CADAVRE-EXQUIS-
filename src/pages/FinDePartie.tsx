@@ -10,6 +10,7 @@ import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 import { corrigerAccords } from '../api/corriger'
 import { Decor, useReve } from '../reve'
+import { partagerTexte } from '../utils/partager'
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -54,6 +55,7 @@ export default function FinDePartie() {
   const [promptVisible, setPromptVisible] = useState(false)
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const [pleinEcran, setPleinEcran] = useState(false)
+  const [partageOk, setPartageOk] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -165,6 +167,14 @@ export default function FinDePartie() {
   const lettrine = ligne0.charAt(0) ?? ''
   const resteLigne0 = ligne0.slice(1) ?? ''
   const voixCount = poeme.cases.length
+
+  async function partager() {
+    if (!poeme) return
+    const dateStr = new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    await partagerTexte(`${texteAffiche}\n\n— Cadavre Exquis · ${dateStr}`, 'Cadavre Exquis')
+    setPartageOk(true)
+    setTimeout(() => setPartageOk(false), 2000)
+  }
   const structLabel = STRUCT_LABELS[poeme.structureId] ?? poeme.structureId
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
   const feuilletLabel = `FEUILLET ${toRomain(voixCount)} · FIN`
@@ -486,6 +496,12 @@ export default function FinDePartie() {
             style={{ ...mono, fontSize: 15, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
+          </button>
+          <button
+            onClick={partager}
+            style={{ ...mono, fontSize: 15, color: partageOk ? accent : encre, opacity: partageOk ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            {partageOk ? '✓ COPIÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}

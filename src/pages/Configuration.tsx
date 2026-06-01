@@ -6,11 +6,17 @@ import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 
-const STRUCTURES: { id: StructureId; romain: string; label: string; description: string }[] = [
-  { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément' },
-  { id: 'phrase-etoffee', romain: 'II',  label: 'Phrase étoffée', description: '7 cases · la canonique de Breton' },
-  { id: 'vers-libre',     romain: 'III', label: 'Vers libre',     description: '4 à 12 vers · sans contrainte' },
+const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
+  { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },
+  { id: 'phrase-etoffee', romain: 'II',  label: 'Phrase étoffée', description: '7 cases · la canonique de Breton',  detail: 'La structure originale inventée en 1925 : article + adjectif + nom + verbe + article + adjectif + nom.' },
+  { id: 'vers-libre',     romain: 'III', label: 'Vers libre',     description: '4 à 12 vers · sans contrainte',     detail: 'Chaque joueur écrit un vers entier. Le poème s\'assemble sans règle grammaticale.' },
 ]
+
+const VISIBILITE_DESC: Record<string, string> = {
+  aveugle:        'Chaque joueur écrit sans voir ce que les autres ont produit.',
+  'dernier-mot':  'Le dernier mot de la case précédente est visible — un seul indice.',
+  'derniere-case':'La case entière précédente est révélée avant d\'écrire.',
+}
 
 const CONFIG_PAR_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -112,10 +118,15 @@ export default function Configuration() {
                   {s.romain}.
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 14, color: encre, marginBottom: 2 }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 3 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 15, color: encre, opacity: 0.70 }}>{s.description}</div>
+                  <div style={{ ...mono, fontSize: 14, color: encre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
+                  {active && (
+                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
+                      {s.detail}
+                    </div>
+                  )}
                 </div>
               </motion.button>
             )
@@ -127,7 +138,7 @@ export default function Configuration() {
           <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
             — VISIBILITÉ —
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-2">
             {(['aveugle', 'dernier-mot', 'derniere-case'] as Visibilite[]).map(v => {
               const active = config.visibilite === v
               return (
@@ -148,6 +159,9 @@ export default function Configuration() {
                 </button>
               )
             })}
+          </div>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
+            {VISIBILITE_DESC[config.visibilite]}
           </div>
         </div>
 

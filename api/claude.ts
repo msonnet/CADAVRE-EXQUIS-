@@ -1,3 +1,5 @@
+export const config = { maxDuration: 30 }
+
 import { choisirVoixAleatoire, VOIX } from './_voices.js'
 
 type TypeCase =
@@ -181,9 +183,12 @@ export default async function handler(req: any, res: any): Promise<void> {
     ? `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés (trouve autre chose) : ${motsEviter.join(', ')}.`
     : ''
 
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 25_000)
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: ctrl.signal,
       headers: {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
@@ -225,5 +230,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   } catch (err) {
     console.error('Erreur Claude API:', err)
     res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter), source: 'fallback' })
+  } finally {
+    clearTimeout(timer)
   }
 }
