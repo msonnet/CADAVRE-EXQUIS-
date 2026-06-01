@@ -218,21 +218,28 @@ export default function Jeu() {
   )
   const [poemeId] = useState(() => b?.poemeId ?? crypto.randomUUID())
 
-  // Pré-assigne une voix stable à chaque slot IA de la séquence, une fois pour toute la partie
+  // Pré-assigne une voix stable à chaque slot IA de la séquence, une fois pour toute la partie.
+  // Fenêtre glissante : on garde l'ordre des voix récemment employées et on interdit la
+  // réutilisation des FENETRE_VOIX dernières — impossible de retomber sur la même voix avant
+  // une vingtaine de parties, tout en finissant par toutes les parcourir.
   const [voixParSlot] = useState<Record<number, string>>(() => {
     if (b?.voixParSlot) return b.voixParSlot
-    const used = new Set<string>(safeParse<string[]>(localStorage.getItem('voix-utilisees'), []))
+    const FENETRE_VOIX = 20
+    let recentes = safeParse<string[]>(localStorage.getItem('voix-recentes'), [])
+      .filter(id => (VOICE_IDS as readonly string[]).includes(id))
     const map: Record<number, string> = {}
     seq.forEach((p, idx) => {
       if (p.type === 'ia') {
-        let avail = (VOICE_IDS as readonly string[]).filter(id => !used.has(id))
-        if (avail.length === 0) { used.clear(); avail = [...VOICE_IDS] }
+        // On exclut les FENETRE_VOIX plus récentes (sans jamais tout exclure)
+        const fenetre = Math.min(FENETRE_VOIX, VOICE_IDS.length - 1)
+        const interdites = new Set(recentes.slice(-fenetre))
+        const avail = (VOICE_IDS as readonly string[]).filter(id => !interdites.has(id))
         const choix = avail[Math.floor(Math.random() * avail.length)]
-        used.add(choix)
+        recentes = [...recentes, choix].slice(-VOICE_IDS.length)
         map[idx] = choix
       }
     })
-    localStorage.setItem('voix-utilisees', JSON.stringify([...used]))
+    localStorage.setItem('voix-recentes', JSON.stringify(recentes))
     return map
   })
 
@@ -265,6 +272,17 @@ export default function Jeu() {
   const caseIndexSoumis = useRef(-1)
   const textesUtilises  = useRef(new Set<string>())
   const textesSession   = useRef(new Set<string>(safeParse<string[]>(sessionStorage.getItem('textes-session'), [])))
+  // Mots produits par l'IA lors des parties récentes (persistés), pour éviter que
+  // la même imagerie (« boue », « pierre », « chaux »…) ne revienne d'une partie à l'autre.
+  const motsIaRecents   = useRef<string[]>(safeParse<string[]>(localStorage.getItem('mots-ia-recents'), []))
+  const MOTS_IA_MAX = 140
+  function memoriserMotsIa(texte: string) {
+    const mots = (texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2)
+    if (!mots.length) return
+    const fusion = [...motsIaRecents.current, ...mots]
+    motsIaRecents.current = fusion.slice(-MOTS_IA_MAX)
+    localStorage.setItem('mots-ia-recents', JSON.stringify(motsIaRecents.current))
+  }
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
@@ -345,6 +363,7 @@ export default function Jeu() {
       const { texte, remplace } = choisirSansDuplique(brut, def.type)
       // Fallback si le serveur a renvoyé un mot de réserve OU si on a remplacé un doublon localement
       const estFallback = sourceServeur === 'fallback' || remplace
+      memoriserMotsIa(texte)
       setIaChargement(false)
       setIaTexteRevele(texte)
       setIaFallbackRevele(estFallback)
@@ -356,12 +375,16 @@ export default function Jeu() {
     }
 
     const contexteIA = getContexteVisible(cases, config.visibilite) ?? undefined
-    // Anti-répétition : mots déjà employés dans la partie (>2 lettres), pour que
-    // l'IA choisisse un autre mot plutôt que de tomber sur un doublon. Vocabulaire libre.
-    const eviterIA = cases
+    // Anti-répétition : mots déjà employés dans la partie (>2 lettres) + mots produits
+    // par l'IA lors des parties récentes, pour que chaque partie diverge vraiment et que
+    // la même imagerie ne revienne pas trois fois de suite. Vocabulaire libre par ailleurs.
+    const motsPartie = cases
       .filter(c => c.texte)
       .flatMap(c => c.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? [])
       .filter(m => m.length > 2)
+    // Les mots les plus récents d'abord (le serveur tronque la liste) : on garantit
+    // ainsi que l'imagerie de la partie précédente est bien interdite.
+    const eviterIA = [...motsPartie, ...[...motsIaRecents.current].reverse()]
     demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA })
       .then(({ texte, source }) => finaliser(texte.trim(), source))
       .catch(()  => finaliser('', 'fallback'))
