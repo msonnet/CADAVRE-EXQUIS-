@@ -493,8 +493,9 @@ export default function JeuDessin() {
       }
 
     } else if (tool === 'marker') {
-      // Feutre : pointe plate (lineCap square), opacité faible qui s'accumule
-      ctx.strokeStyle = color; ctx.lineWidth = size * 2.6; ctx.lineCap = 'square'
+      // Feutre : large, opacité faible qui s'accumule. lineCap round (pas square) car la
+      // courbe bezier se referme proprement — square créait des artefacts aux jointures.
+      ctx.strokeStyle = color; ctx.lineWidth = size * 2.6; ctx.lineCap = 'round'
       ctx.globalAlpha = 0.35 * op
       traceLisse()
 
@@ -513,26 +514,28 @@ export default function JeuDessin() {
       }
 
     } else if (tool === 'airbrush') {
-      // Aérographe : nuage de gouttelettes pulvérisées, dense au centre, diffus aux bords.
-      // Posé le long du segment pour une couverture continue même en geste rapide.
-      const radius = size * 2.2
-      const steps = Math.max(1, Math.ceil(dist / (size * 0.4)))
-      const dropsPerStep = Math.ceil(radius * 0.6)
+      // Aérographe professionnel — technique des tampons à gradient radial (Procreate / PS).
+      // Chaque dab est un disque rempli d'un gradient opacity : max au centre → 0 en bordure.
+      // Plusieurs dabs espacés ≤ 20 % du rayon garantissent une couverture continue quelle
+      // que soit la vitesse du geste, et le build-up s'accumule naturellement en repassant.
+      const rgb = hexToRgb(color)
+      const radius = size * 3.5 * pf
+      const spacing = Math.max(radius * 0.18, 1)
+      const steps = Math.max(1, Math.ceil(dist / spacing))
+      const peak = 0.09 * op
       for (let s = 0; s <= steps; s++) {
         const cx = prev.x + dx * (s / steps)
         const cy = prev.y + dy * (s / steps)
-        for (let d = 0; d < dropsPerStep; d++) {
-          // Distribution gaussienne approchée (somme de deux uniformes) → centre plus dense
-          const rr = (Math.random() + Math.random()) / 2
-          const ang = Math.random() * Math.PI * 2
-          const gx = cx + Math.cos(ang) * rr * radius
-          const gy = cy + Math.sin(ang) * rr * radius
-          ctx.fillStyle = color
-          ctx.globalAlpha = 0.025 * op
-          ctx.beginPath()
-          ctx.arc(gx, gy, (0.4 + Math.random() * 0.8) * dpr, 0, Math.PI * 2)
-          ctx.fill()
-        }
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius)
+        grad.addColorStop(0,    `rgba(${rgb.r},${rgb.g},${rgb.b},${peak})`)
+        grad.addColorStop(0.25, `rgba(${rgb.r},${rgb.g},${rgb.b},${peak * 0.75})`)
+        grad.addColorStop(0.6,  `rgba(${rgb.r},${rgb.g},${rgb.b},${peak * 0.25})`)
+        grad.addColorStop(1,    `rgba(${rgb.r},${rgb.g},${rgb.b},0)`)
+        ctx.globalAlpha = 1  // Le gradient porte lui-même l'opacité
+        ctx.fillStyle = grad
+        ctx.beginPath()
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+        ctx.fill()
       }
     }
 
@@ -923,27 +926,35 @@ export default function JeuDessin() {
         </div>
 
         {/* Rangée action */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Son' : 'Muet'}
-            style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: 'transparent', fontSize: 16, cursor: 'pointer', color: `${encre}50` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Son */}
+          <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Activer le son' : 'Couper le son'}
+            style={{
+              width: 34, height: 34, borderRadius: 8, border: 'none',
+              background: muted ? `${encre}10` : 'transparent',
+              fontSize: 15, cursor: 'pointer',
+              color: '#1a1208', opacity: muted ? 0.45 : 0.75,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
             {muted ? '♪' : '♫'}
           </button>
-          {/* Mode navigation */}
+          {/* Mode navigation / zoom */}
           <button
             onClick={() => setPanMode(p => !p)}
             aria-pressed={panMode}
-            aria-label={panMode ? 'Retour au dessin' : 'Naviguer'}
+            aria-label={panMode ? 'Retour au dessin' : 'Naviguer / zoomer'}
             title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
             style={{
               width: 34, height: 34, borderRadius: 8, border: 'none',
-              background: panMode ? `${accent}18` : 'transparent',
-              color: panMode ? accent : `${encre}45`,
+              background: panMode ? `${accent}22` : `${encre}10`,
+              color: panMode ? accent : '#1a1208',
+              opacity: panMode ? 1 : 0.72,
               fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              outline: panMode ? `1.5px solid ${accent}40` : 'none',
+              outline: panMode ? `1.5px solid ${accent}55` : 'none',
             }}>
             ✥
           </button>
-          {/* Compte-gouttes / pipette */}
+          {/* Compte-gouttes */}
           <button
             onClick={() => {
               if (pipetteActive) { setPipetteActive(false); return }
@@ -952,15 +963,20 @@ export default function JeuDessin() {
             }}
             aria-pressed={pipetteActive}
             aria-label="Compte-gouttes"
-            title="Compte-gouttes (prélever une couleur)"
+            title="Prélever une couleur sur le canvas"
             style={{
               width: 34, height: 34, borderRadius: 8, border: 'none',
-              background: pipetteActive ? `${accent}18` : 'transparent',
-              color: pipetteActive ? accent : `${encre}45`,
-              fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              outline: pipetteActive ? `1.5px solid ${accent}40` : 'none',
+              background: pipetteActive ? `${accent}22` : `${encre}10`,
+              color: pipetteActive ? accent : '#1a1208',
+              opacity: pipetteActive ? 1 : 0.72,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              outline: pipetteActive ? `1.5px solid ${accent}55` : 'none',
             }}>
-            ⊙
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+              <path d="M13.5 1.5 C14.5 2.5 14.5 4 13.5 5L8 10.5L5.5 11.5L6.5 9L12 3.5 C13 2.5 12.5 0.5 13.5 1.5Z"
+                fill="currentColor" fillOpacity="0.85" />
+              <circle cx="4" cy="13" r="2" fill="currentColor" fillOpacity="0.65"/>
+            </svg>
           </button>
           <div style={{ flex: 1 }} />
           <button onClick={validerBande} style={{
