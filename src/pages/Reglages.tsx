@@ -112,42 +112,56 @@ export default function Reglages() {
           transition={{ delay: 0.15 }}
           style={{ marginBottom: 24 }}
         >
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — TAILLE DU TEXTE —
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+              — TAILLE DU TEXTE —
+            </div>
+            <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55 }}>
+              {Math.round(fontScale * 100)} %
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
-            {([
-              { scale: 0.85, label: 'A', size: 13 },
-              { scale: 0.92, label: 'A', size: 16 },
-              { scale: 1.0,  label: 'A', size: 19 },
-              { scale: 1.1,  label: 'A', size: 22 },
-              { scale: 1.2,  label: 'A', size: 26 },
-            ] as const).map(({ scale, label, size }) => {
-              const active = Math.abs(fontScale - scale) < 0.01
-              return (
-                <button
-                  key={scale}
-                  onClick={() => changerTaille(scale)}
-                  aria-label={`Taille ${scale}`}
-                  aria-pressed={active}
-                  style={{
-                    flex: 1,
-                    padding: '10px 4px',
-                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
-                    background: 'transparent', cursor: 'pointer',
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: size,
-                    fontStyle: 'italic',
-                    color: active ? accent : `${encre}55`,
-                    transition: 'all 0.15s',
-                    lineHeight: 1,
-                  }}
-                >
-                  {label}
-                </button>
-              )
-            })}
+
+          {/* Aperçu */}
+          <div style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontStyle: 'italic',
+            fontSize: `calc(1.15rem * ${fontScale})`,
+            color: encre,
+            lineHeight: 1.4,
+            opacity: 0.75,
+            marginBottom: 14,
+            minHeight: '2.2em',
+            transition: 'font-size 0.15s ease',
+          }}>
+            Le cadavre exquis boira le vin nouveau.
+          </div>
+
+          {/* Jauge */}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="range"
+              min={75}
+              max={150}
+              step={5}
+              value={Math.round(fontScale * 100)}
+              onChange={e => changerTaille(parseInt(e.target.value) / 100)}
+              aria-label="Taille du texte"
+              style={{
+                width: '100%',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                height: 2,
+                background: `linear-gradient(to right, ${accent} ${((fontScale - 0.75) / 0.75) * 100}%, ${encre}22 0%)`,
+                border: 'none',
+                outline: 'none',
+                cursor: 'pointer',
+                borderRadius: 2,
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+            <span style={{ ...mono, fontSize: 11, color: encre, opacity: 0.4 }}>A</span>
+            <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.4 }}>A</span>
           </div>
         </motion.div>
 

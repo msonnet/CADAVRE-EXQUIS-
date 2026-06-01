@@ -289,6 +289,27 @@
 @keyframes pulseQ { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
 @keyframes plume { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(5deg) translateY(-4px); } }
 
+/* ── Range input (jauge taille texte) ── */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--reve-accent);
+  border: 2px solid var(--reve-bg);
+  box-shadow: 0 0 0 1.5px var(--reve-accent);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--reve-accent);
+  border: 2px solid var(--reve-bg);
+  box-shadow: 0 0 0 1.5px var(--reve-accent);
+  cursor: pointer;
+}
+
 /* ── Focus clavier (accessibilité) ── */
 :focus-visible { outline: 2px solid var(--reve-accent); outline-offset: 3px; }
 button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
