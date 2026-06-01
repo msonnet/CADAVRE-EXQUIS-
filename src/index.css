@@ -41,22 +41,20 @@
 
 /* ── Base ─────────────────────────────────────── */
 @layer base {
-  html { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html { height: 100%; font-size: calc(16px * var(--font-scale, 1)); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   body {
     margin: 0;
     background-color: var(--reve-bg);
     background-image: var(--reve-halo);
     color: var(--reve-ink);
     font-family: 'Inter', 'IM Fell English', Georgia, serif;
-    font-size: 17px;
+    font-size: 1.0625rem;
     line-height: 1.55;
     min-height: 100dvh;
     overflow-x: hidden;
     transition: background-color 0.5s ease, color 0.5s ease;
   }
   #root {
-    zoom: var(--font-scale, 1);
-    width: calc(100% / var(--font-scale, 1));
     min-height: 100dvh;
     display: flex;
     flex-direction: column;

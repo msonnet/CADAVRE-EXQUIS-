@@ -75,16 +75,16 @@ export default function Reglages() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: '0.9375rem', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: '0.9375rem', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
           — RÉGLAGES —
         </div>
 
@@ -113,10 +113,10 @@ export default function Reglages() {
           style={{ marginBottom: 24 }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+            <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
               — TAILLE DU TEXTE —
             </div>
-            <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55 }}>
+            <div style={{ ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.55 }}>
               {Math.round(fontScale * 100)} %
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function Reglages() {
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontStyle: 'italic',
-            fontSize: `calc(1.15rem * ${fontScale})`,
+            fontSize: '1.15rem',
             color: encre,
             lineHeight: 1.4,
             opacity: 0.75,
@@ -160,8 +160,8 @@ export default function Reglages() {
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-            <span style={{ ...mono, fontSize: 11, color: encre, opacity: 0.4 }}>A</span>
-            <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.4 }}>A</span>
+            <span style={{ ...mono, fontSize: '0.6875rem', color: encre, opacity: 0.4 }}>A</span>
+            <span style={{ ...mono, fontSize: '1.0625rem', color: encre, opacity: 0.4 }}>A</span>
           </div>
         </motion.div>
 
@@ -172,13 +172,13 @@ export default function Reglages() {
           transition={{ delay: 0.2 }}
           style={{ marginBottom: 24 }}
         >
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — SON —
           </div>
           <div className="flex justify-between items-center">
             <div>
-              <div style={{ ...mono, fontSize: 15, color: encre, marginBottom: 3 }}>AUDIO AMBIANT</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: '0.9375rem', color: encre, marginBottom: 3 }}>AUDIO AMBIANT</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', color: encre, opacity: 0.8 }}>
                 Drone atmosphérique pendant le jeu
               </div>
             </div>
@@ -208,7 +208,7 @@ export default function Reglages() {
           transition={{ delay: 0.3 }}
           style={{ marginBottom: 24 }}
         >
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — VALIDATION —
           </div>
           <div className="flex gap-2 mb-3">
@@ -223,7 +223,7 @@ export default function Reglages() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 14,
+                    ...mono, fontSize: '0.875rem',
                     color: active ? accent : `${encre}60`,
                     transition: 'all 0.15s',
                   }}
@@ -233,7 +233,7 @@ export default function Reglages() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', color: encre, opacity: 0.8 }}>
             {NIVEAUX.find(n => n.id === validation)?.desc}
           </div>
         </motion.div>
@@ -245,20 +245,20 @@ export default function Reglages() {
           transition={{ delay: 0.4 }}
           style={{ marginBottom: 28 }}
         >
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — DONNÉES —
           </div>
           <div className="flex justify-between items-center" style={{ paddingBottom: 12, borderBottom: `0.5px solid ${encre}10` }}>
             <div>
-              <div style={{ ...mono, fontSize: 15, color: encre, marginBottom: 3 }}>EXPORTER MES POÈMES</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: '0.9375rem', color: encre, marginBottom: 3 }}>EXPORTER MES POÈMES</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', color: encre, opacity: 0.8 }}>
                 Télécharge tous les poèmes en JSON
               </div>
             </div>
             <button
               onClick={exporterPoemes}
               style={{
-                ...mono, fontSize: 14,
+                ...mono, fontSize: '0.875rem',
                 color: exportOk ? accent : encre,
                 background: 'none',
                 border: `0.5px solid ${exportOk ? accent : `${encre}30`}`,
@@ -278,16 +278,16 @@ export default function Reglages() {
           transition={{ delay: 0.5 }}
           style={{ marginBottom: 28 }}
         >
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — AMBIANCE —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', color: encre, opacity: 0.8, marginBottom: 12 }}>
             Chaque jour, une ambiance est tirée au sort. Vous pouvez en tirer une nouvelle maintenant.
           </div>
           <button
             onClick={() => seance?.retirer()}
             style={{
-              ...mono, fontSize: 14,
+              ...mono, fontSize: '0.875rem',
               color: encre,
               background: 'transparent',
               border: `0.5px solid ${encre}30`,
@@ -297,7 +297,7 @@ export default function Reglages() {
           >
             ✦ NOUVELLE AMBIANCE
           </button>
-          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, marginTop: 8, textTransform: 'uppercase' }}>
+          <div style={{ ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.6, marginTop: 8, textTransform: 'uppercase' }}>
             {seance?.ambiance.name}
           </div>
         </motion.div>
@@ -305,7 +305,7 @@ export default function Reglages() {
         <div style={{ flex: 1 }} />
 
         {/* ── VERSION ── */}
-        <div style={{ ...mono, fontSize: 14, color: encre, opacity: 0.9, textAlign: 'center', paddingBottom: 8, lineHeight: 1.6 }}>
+        <div style={{ ...mono, fontSize: '0.875rem', color: encre, opacity: 0.9, textAlign: 'center', paddingBottom: 8, lineHeight: 1.6 }}>
           CADAVRE EXQUIS · v1.0<br />
           AUCUN TRACKING · AUCUN COMPTE · TOUT RESTE LOCAL
         </div>

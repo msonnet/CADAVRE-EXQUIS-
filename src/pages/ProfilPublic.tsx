@@ -246,7 +246,7 @@ export default function ProfilPublic() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/galerie')}
-            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: '0.9375rem', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← GALERIE
           </button>
@@ -254,7 +254,7 @@ export default function ProfilPublic() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — PROFIL —
         </div>
 
@@ -271,7 +271,7 @@ export default function ProfilPublic() {
             <span style={{ color: accent }}>{titreAffichePseudo}</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Œuvres publiées
           </p>
@@ -281,7 +281,7 @@ export default function ProfilPublic() {
         {chargement && (
           <div className="flex justify-center py-16">
             <motion.span
-              style={{ fontSize: 20, color: accent }}
+              style={{ fontSize: '1.25rem', color: accent }}
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >✦</motion.span>
@@ -291,7 +291,7 @@ export default function ProfilPublic() {
         {/* ── ERREUR ── */}
         {!chargement && erreur && (
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: accent, opacity: 0.85,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', color: accent, opacity: 0.85,
             textAlign: 'center', padding: '40px 0',
           }}>
             {erreur}
@@ -307,7 +307,7 @@ export default function ProfilPublic() {
             transition={{ delay: 0.2 }}
           >
             <p style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, textAlign: 'center',
+              fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', color: encre, opacity: 0.75, textAlign: 'center',
             }}>
               Aucune œuvre publiée sous ce nom.
             </p>
@@ -316,7 +316,7 @@ export default function ProfilPublic() {
               style={{
                 marginTop: 22,
                 background: accent, color: btnText,
-                ...mono, fontSize: 14, textTransform: 'uppercase',
+                ...mono, fontSize: '0.875rem', textTransform: 'uppercase',
                 padding: '0.8em 1.4em',
                 border: 'none',
                 cursor: 'pointer',
@@ -372,18 +372,18 @@ export default function ProfilPublic() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16,
+                            fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: '1rem',
                             lineHeight: 1.3, margin: 0, flex: 1, minWidth: 0,
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>
                             {titreAffiche}
                           </p>
-                          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.85, flexShrink: 0 }}>
+                          <span style={{ ...mono, fontSize: '0.8125rem', color: accent, opacity: 0.85, flexShrink: 0 }}>
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
 
-                        <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
+                        <p style={{ ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
                           {(item.type === 'poeme' ? 'POÈME' : 'DESSIN')}
                           {' · '}
                           {formatDate(item.created_at).toUpperCase()}
@@ -392,7 +392,7 @@ export default function ProfilPublic() {
                         {item.type === 'poeme' && poemePayload && (
                           <div style={{
                             fontFamily: "'Cormorant Garamond', serif",
-                            fontSize: 15, color: encre, opacity: 0.92,
+                            fontSize: '0.9375rem', color: encre, opacity: 0.92,
                             lineHeight: 1.5,
                             whiteSpace: 'pre-wrap',
                           }}>
@@ -449,7 +449,7 @@ export default function ProfilPublic() {
 
                         {ouvert && item.type === 'dessin' && dessinPayload?.texteVision && (
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre,
+                            fontFamily: "'Cormorant Garamond', serif", fontSize: '0.875rem', color: encre,
                             opacity: 0.85, marginTop: 8, lineHeight: 1.4, whiteSpace: 'pre-wrap',
                           }}>
                             {dessinPayload.texteVision}
@@ -471,7 +471,7 @@ export default function ProfilPublic() {
                               onClick={e => { e.stopPropagation(); toggleReaction(item.id, em) }}
                               style={{
                                 ...mono,
-                                fontSize: 14,
+                                fontSize: '0.875rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
@@ -494,7 +494,7 @@ export default function ProfilPublic() {
                           )
                         })}
                         <span style={{
-                          ...mono, fontSize: 13, color: encre, opacity: 0.55,
+                          ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.55,
                           marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}>
                           <span style={{ fontSize: 14 }}>👁</span>

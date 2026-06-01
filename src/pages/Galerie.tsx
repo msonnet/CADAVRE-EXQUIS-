@@ -297,7 +297,7 @@ export default function Galerie() {
               style={{
                 position: 'absolute', top: 18, right: 18,
                 fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
-                fontSize: 14, color: '#e8d4b8', opacity: 0.85,
+                fontSize: '0.875rem', color: '#e8d4b8', opacity: 0.85,
                 background: 'none', border: 'none', cursor: 'pointer',
               }}
             >
@@ -313,7 +313,7 @@ export default function Galerie() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: '0.9375rem', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
@@ -321,7 +321,7 @@ export default function Galerie() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: '0.875rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — GALERIE —
         </div>
 
@@ -338,7 +338,7 @@ export default function Galerie() {
             Créations <span style={{ color: accent }}>partagées.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Les œuvres de la communauté
           </p>
@@ -354,7 +354,7 @@ export default function Galerie() {
                 onClick={() => { jouer('clic'); setOnglet(t) }}
                 style={{
                   ...mono,
-                  fontSize: 14,
+                  fontSize: '0.875rem',
                   fontWeight: 700,
                   color: actif ? accent : encre,
                   opacity: actif ? 1 : 0.55,
@@ -379,7 +379,7 @@ export default function Galerie() {
           marginBottom: 14, opacity: 0.7,
         }}>
           {REACTION_EMOJIS.map(em => (
-            <span key={em} style={{ ...mono, fontSize: 13, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span key={em} style={{ ...mono, fontSize: '0.8125rem', color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <span style={{ fontSize: 14 }}>{em}</span>
               {REACTION_LABELS[em].toUpperCase()}
             </span>
@@ -390,7 +390,7 @@ export default function Galerie() {
         {chargement && (
           <div className="flex justify-center py-16">
             <motion.span
-              style={{ fontSize: 20, color: accent }}
+              style={{ fontSize: '1.25rem', color: accent }}
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >✦</motion.span>
@@ -400,7 +400,7 @@ export default function Galerie() {
         {/* ── ERREUR ── */}
         {!chargement && erreur && (
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: accent, opacity: 0.85,
+            fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', color: accent, opacity: 0.85,
             textAlign: 'center', padding: '40px 0',
           }}>
             {erreur}
@@ -416,7 +416,7 @@ export default function Galerie() {
             transition={{ delay: 0.2 }}
           >
             <p style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75, textAlign: 'center',
+              fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', color: encre, opacity: 0.75, textAlign: 'center',
             }}>
               Aucune création partagée pour l'instant.
             </p>
@@ -469,20 +469,20 @@ export default function Galerie() {
                         {/* En-tête de la carte */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 16,
+                            fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: '1rem',
                             lineHeight: 1.3, margin: 0, flex: 1, minWidth: 0,
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>
                             {titreAffiche}
                           </p>
-                          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.85, flexShrink: 0 }}>
+                          <span style={{ ...mono, fontSize: '0.8125rem', color: accent, opacity: 0.85, flexShrink: 0 }}>
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
                       </button>
 
                       {/* Méta auteur (Link) + date */}
-                      <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
+                      <p style={{ ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
                         <Link
                           to={`/u/${encodeURIComponent(item.author_pseudo)}`}
                           onClick={e => e.stopPropagation()}
@@ -515,7 +515,7 @@ export default function Galerie() {
                         {item.type === 'poeme' && poemePayload && (
                           <div style={{
                             fontFamily: "'Cormorant Garamond', serif",
-                            fontSize: 15, color: encre, opacity: 0.92,
+                            fontSize: '0.9375rem', color: encre, opacity: 0.92,
                             lineHeight: 1.5,
                             whiteSpace: 'pre-wrap',
                           }}>
@@ -553,7 +553,7 @@ export default function Galerie() {
                               <span style={{
                                 position: 'absolute', bottom: 6, right: 8,
                                 fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
-                                fontSize: 13, color: '#fff',
+                                fontSize: '0.8125rem', color: '#fff',
                                 background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                 pointerEvents: 'none',
                               }}>⤢ AGRANDIR</span>
@@ -590,7 +590,7 @@ export default function Galerie() {
                                 <span style={{
                                   position: 'absolute', bottom: 6, right: 8,
                                   fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
-                                  fontSize: 13, color: '#fff',
+                                  fontSize: '0.8125rem', color: '#fff',
                                   background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                   pointerEvents: 'none',
                                 }}>⤢ AGRANDIR</span>
@@ -601,7 +601,7 @@ export default function Galerie() {
 
                         {ouvert && item.type === 'dessin' && dessinPayload?.texteVision && (
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre,
+                            fontFamily: "'Cormorant Garamond', serif", fontSize: '0.875rem', color: encre,
                             opacity: 0.85, marginTop: 8, lineHeight: 1.4, whiteSpace: 'pre-wrap',
                           }}>
                             {dessinPayload.texteVision}
@@ -623,7 +623,7 @@ export default function Galerie() {
                               onClick={e => { e.stopPropagation(); toggleReaction(item.id, em) }}
                               style={{
                                 ...mono,
-                                fontSize: 14,
+                                fontSize: '0.875rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
@@ -647,7 +647,7 @@ export default function Galerie() {
                           )
                         })}
                         <span style={{
-                          ...mono, fontSize: 13, color: encre, opacity: 0.55,
+                          ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.55,
                           marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}>
                           <span style={{ fontSize: 14 }}>👁</span>
@@ -676,7 +676,7 @@ export default function Galerie() {
                 width: '100%',
                 background: chargementPlus ? `${accent}aa` : accent,
                 color: btnText,
-                ...mono, fontSize: 15, textTransform: 'uppercase',
+                ...mono, fontSize: '0.9375rem', textTransform: 'uppercase',
                 padding: '0.9em 1em',
                 border: 'none',
                 cursor: chargementPlus ? 'wait' : 'pointer',
@@ -695,7 +695,7 @@ export default function Galerie() {
 
         {!chargement && !erreur && items.length > 0 && !encore && (
           <p style={{
-            ...mono, fontSize: 13, color: encre, opacity: 0.55,
+            ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.55,
             textAlign: 'center', marginTop: 18, marginBottom: 4,
           }}>
             — FIN —
