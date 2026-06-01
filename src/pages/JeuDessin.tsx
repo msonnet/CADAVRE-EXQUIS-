@@ -930,10 +930,11 @@ export default function JeuDessin() {
           {/* Son */}
           <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Activer le son' : 'Couper le son'}
             style={{
-              width: 34, height: 34, borderRadius: 8, border: 'none',
-              background: muted ? `${encre}10` : 'transparent',
+              width: 36, height: 36, borderRadius: 9, border: 'none',
+              background: 'rgba(26,18,8,0.10)',
               fontSize: 15, cursor: 'pointer',
-              color: '#1a1208', opacity: muted ? 0.45 : 0.75,
+              color: '#1a1208',
+              opacity: muted ? 0.4 : 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
             {muted ? '♪' : '♫'}
@@ -945,12 +946,11 @@ export default function JeuDessin() {
             aria-label={panMode ? 'Retour au dessin' : 'Naviguer / zoomer'}
             title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
             style={{
-              width: 34, height: 34, borderRadius: 8, border: 'none',
-              background: panMode ? `${accent}22` : `${encre}10`,
+              width: 36, height: 36, borderRadius: 9, border: 'none',
+              background: panMode ? `${accent}30` : 'rgba(26,18,8,0.10)',
               color: panMode ? accent : '#1a1208',
-              opacity: panMode ? 1 : 0.72,
               fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              outline: panMode ? `1.5px solid ${accent}55` : 'none',
+              outline: panMode ? `1.5px solid ${accent}66` : 'none',
             }}>
             ✥
           </button>
@@ -965,12 +965,11 @@ export default function JeuDessin() {
             aria-label="Compte-gouttes"
             title="Prélever une couleur sur le canvas"
             style={{
-              width: 34, height: 34, borderRadius: 8, border: 'none',
-              background: pipetteActive ? `${accent}22` : `${encre}10`,
+              width: 36, height: 36, borderRadius: 9, border: 'none',
+              background: pipetteActive ? `${accent}30` : 'rgba(26,18,8,0.10)',
               color: pipetteActive ? accent : '#1a1208',
-              opacity: pipetteActive ? 1 : 0.72,
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              outline: pipetteActive ? `1.5px solid ${accent}55` : 'none',
+              outline: pipetteActive ? `1.5px solid ${accent}66` : 'none',
             }}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
               <path d="M13.5 1.5 C14.5 2.5 14.5 4 13.5 5L8 10.5L5.5 11.5L6.5 9L12 3.5 C13 2.5 12.5 0.5 13.5 1.5Z"
