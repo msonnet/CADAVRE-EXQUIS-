@@ -6,9 +6,18 @@ import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
 
-type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'eraser'
-const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'eraser']
+type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
+const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
 const SIZES = [1.5, 4, 9, 17, 28]
+
+// Fonds de papier — texture procédurale dessinée au démarrage de chaque bande
+type Paper = 'lisse' | 'kraft' | 'parchemin' | 'ardoise'
+const PAPERS: { id: Paper; nom: string; bg: string; grain: string; ink: string }[] = [
+  { id: 'lisse',      nom: 'Lisse',      bg: '#fdf8f2', grain: '#00000000', ink: '#1a1410' },
+  { id: 'kraft',      nom: 'Kraft',      bg: '#cdb48c', grain: '#5a4326',   ink: '#2c1d0e' },
+  { id: 'parchemin',  nom: 'Parchemin',  bg: '#f3e7cb', grain: '#b89a63',   ink: '#3a2a14' },
+  { id: 'ardoise',    nom: 'Ardoise',    bg: '#2f3438', grain: '#0d0f11',   ink: '#e8e4dc' },
+]
 
 const PALETTE = [
   '#000000', '#1a1a1a', '#444444', '#777777', '#aaaaaa', '#cccccc', '#e8e8e8', '#ffffff',
@@ -77,6 +86,23 @@ function IconCrayon({ tint, nib }: { tint: string; nib: string }) {
   )
 }
 
+function IconAirbrush({ tint, nib }: { tint: string; nib: string }) {
+  // Aérographe — corps fuselé + nuage de gouttelettes projetées
+  return (
+    <svg width="24" height="40" viewBox="0 0 24 40" fill="none">
+      <rect x="6" y="3" width="7" height="16" rx="3" fill={tint} />
+      <rect x="8" y="5" width="2" height="10" rx="1" fill="#ffffff" opacity="0.22" />
+      <path d="M6 19 L13 19 L11.5 25 L7.5 25 Z" fill={tint} opacity="0.8" />
+      <circle cx="9.5" cy="29" r="1.3" fill={nib} opacity="0.9" />
+      <circle cx="13" cy="32" r="0.9" fill={nib} opacity="0.7" />
+      <circle cx="7" cy="33" r="0.8" fill={nib} opacity="0.6" />
+      <circle cx="11" cy="35.5" r="1" fill={nib} opacity="0.55" />
+      <circle cx="15" cy="29" r="0.7" fill={nib} opacity="0.5" />
+      <circle cx="5.5" cy="29.5" r="0.6" fill={nib} opacity="0.45" />
+    </svg>
+  )
+}
+
 function IconEraser({ tint }: { tint: string; nib: string }) {
   return (
     <svg width="28" height="40" viewBox="0 0 28 40" fill="none">
@@ -89,19 +115,64 @@ function IconEraser({ tint }: { tint: string; nib: string }) {
   )
 }
 
-const TOOL_ICONS = { pencil: IconPencil, pen: IconPen, marker: IconMarker, brush: IconBrush, crayon: IconCrayon, eraser: IconEraser }
-const TOOL_NAMES: Record<Tool, string> = { pencil: 'Crayon', pen: 'Stylo', marker: 'Feutre', brush: 'Pinceau', crayon: 'Craie', eraser: 'Gomme' }
+function IconPipette({ tint, nib }: { tint: string; nib: string }) {
+  // Compte-gouttes / pipette
+  return (
+    <svg width="22" height="40" viewBox="0 0 22 40" fill="none">
+      <rect x="11" y="3" width="5" height="7" rx="2.5" transform="rotate(45 13.5 6.5)" fill={tint} />
+      <path d="M12 11 L17 16 L9 24 L6 24 L6 21 Z" fill={tint} />
+      <path d="M6 24 L6 21 L9 24 Z" fill={nib} />
+      <path d="M4.5 27 Q6 24 7.5 27 Q7.5 29.5 6 29.5 Q4.5 29.5 4.5 27 Z" fill={nib} />
+    </svg>
+  )
+}
+
+const TOOL_ICONS = { pencil: IconPencil, pen: IconPen, marker: IconMarker, brush: IconBrush, crayon: IconCrayon, airbrush: IconAirbrush, eraser: IconEraser }
+const TOOL_NAMES: Record<Tool, string> = { pencil: 'Crayon', pen: 'Stylo', marker: 'Feutre', brush: 'Pinceau', crayon: 'Craie', airbrush: 'Aéro', eraser: 'Gomme' }
 
 const TOOLBAR_H = 218
 const RACCORD_H = 80
-const CANVAS_BG = '#fdf8f2'
 
-function findLowestDrawnFraction(ctx: CanvasRenderingContext2D, w: number, h: number): number {
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const h = hex.replace('#', '')
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16)
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
+}
+
+// Peint le fond de la bande : couleur unie + grain procédural propre au papier choisi.
+// Déterministe par bande (la graine vient de bandeIdx) pour que le raccord reste cohérent.
+function peindreFond(ctx: CanvasRenderingContext2D, w: number, h: number, p: { bg: string; grain: string }) {
+  ctx.save()
+  ctx.fillStyle = p.bg
+  ctx.fillRect(0, 0, w, h)
+  if (p.grain && !p.grain.endsWith('00')) {
+    const g = hexToRgb(p.grain)
+    // Mouchetures fines réparties sur toute la surface — densité proportionnelle à l'aire
+    const n = Math.floor((w * h) / 1400)
+    for (let i = 0; i < n; i++) {
+      const x = Math.random() * w
+      const y = Math.random() * h
+      const a = 0.015 + Math.random() * 0.05
+      ctx.fillStyle = `rgba(${g.r},${g.g},${g.b},${a})`
+      ctx.beginPath()
+      ctx.arc(x, y, Math.random() * 1.1 + 0.2, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  ctx.restore()
+}
+
+function findLowestDrawnFraction(ctx: CanvasRenderingContext2D, w: number, h: number, bgRef?: { r: number; g: number; b: number }): number {
   const data = ctx.getImageData(0, 0, w, h).data
+  // Référence de fond : par défaut le beige clair historique (#fdf8f2 ≈ 253/248/242).
+  const ref = bgRef ?? { r: 253, g: 248, b: 242 }
+  // Seuil de distance : ignore le grain du papier (faible écart) mais capte les vrais traits.
+  const SEUIL = 38
   for (let y = h - 1; y >= 0; y--) {
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4
-      if (data[i] < 240 || data[i + 1] < 240 || data[i + 2] < 240) return y / h
+      const d = Math.abs(data[i] - ref.r) + Math.abs(data[i + 1] - ref.g) + Math.abs(data[i + 2] - ref.b)
+      if (d > SEUIL) return y / h
     }
   }
   return 0
@@ -124,6 +195,17 @@ export default function JeuDessin() {
   const [sizeIdx, setSizeIdx] = useState(1)
   const [color, setColor] = useState('#1a1410')
   const [opacity, setOpacity] = useState(1) // 0.1 → 1, réglable
+  // Papier choisi pour toute la partie (fixé à la première bande pour garder l'unité visuelle)
+  const [paper, setPaper] = useState<Paper>('lisse')
+  const paperDef = PAPERS.find(p => p.id === paper) ?? PAPERS[0]
+  const CANVAS_BG_ACTUEL = paperDef.bg
+  // Pipette : capture une fois la couleur puis revient à l'outil précédent
+  const [pipetteActive, setPipetteActive] = useState(false)
+  const toolAvantPipette = useRef<Tool>('pencil')
+  // Couleurs récemment employées (les plus récentes d'abord, max 8)
+  const [recentColors, setRecentColors] = useState<string[]>([])
+  // Curseur fantôme (aperçu de taille/position sous le doigt avant de poser)
+  const [ghost, setGhost] = useState<{ x: number; y: number } | null>(null)
   const [canvasReady, setCanvasReady] = useState(false)
   // Force re-render when the undo/redo stacks change (kept in refs to avoid re-renders during drawing)
   const [, setHistoryTick] = useState(0)
@@ -147,6 +229,8 @@ export default function JeuDessin() {
   const containerRef = useRef<HTMLDivElement>(null)
   const isDrawing = useRef(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
+  // Point médian du segment précédent — sommet de contrôle pour le lissage Bézier quadratique
+  const lastMid = useRef<{ x: number; y: number } | null>(null)
   const velocityRef = useRef(0)
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const lastPinchDist = useRef<number | null>(null)
@@ -215,8 +299,7 @@ export default function JeuDessin() {
     canvas.style.width = `${cssW}px`
     canvas.style.height = `${cssH}px`
     const ctx = canvas.getContext('2d')!
-    ctx.fillStyle = CANVAS_BG
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    peindreFond(ctx, canvas.width, canvas.height, paperDef)
 
     if (bandeIdx > 0 && config.visibilite === 'raccord' && bandes.length > 0) {
       const prev = bandes[bandes.length - 1]
@@ -234,10 +317,11 @@ export default function JeuDessin() {
         ctx.drawImage(img, 0, srcY, prev.width, RACCORD_H * prevDpr, 0, 0, canvas.width, RACCORD_H_phys)
         // Fade-out progressif du raccord : opaque en haut, fondu vers la couleur du fond en bas
         // (effet d'un pli papier — la trace s'efface là où le joueur prendra le relais)
+        const fb = hexToRgb(paperDef.bg)
         const grad = ctx.createLinearGradient(0, 0, 0, RACCORD_H_phys)
-        grad.addColorStop(0, 'rgba(253, 248, 242, 0)')
-        grad.addColorStop(0.7, 'rgba(253, 248, 242, 0)')
-        grad.addColorStop(1, 'rgba(253, 248, 242, 1)')
+        grad.addColorStop(0, `rgba(${fb.r}, ${fb.g}, ${fb.b}, 0)`)
+        grad.addColorStop(0.7, `rgba(${fb.r}, ${fb.g}, ${fb.b}, 0)`)
+        grad.addColorStop(1, `rgba(${fb.r}, ${fb.g}, ${fb.b}, 1)`)
         ctx.save()
         ctx.globalCompositeOperation = 'source-over'
         ctx.fillStyle = grad
@@ -333,37 +417,50 @@ export default function JeuDessin() {
     return () => window.removeEventListener('keydown', onKey)
   }, [undo, redo])
 
-  const draw = useCallback((clientX: number, clientY: number) => {
+  const draw = useCallback((clientX: number, clientY: number, pressure = 0) => {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
     const dpr = window.devicePixelRatio || 1
     const pos = getCanvasCoords(clientX, clientY)
     const prev = lastPos.current ?? pos
     const size = SIZES[sizeIdx] * dpr
+    // Facteur de pression du stylet (Apple Pencil / stylus). Les souris/doigts renvoient
+    // souvent 0 ou 0.5 sans capteur → on neutralise (pf = 1) dans ce cas.
+    const pf = pressure > 0 && pressure !== 0.5 ? 0.35 + pressure * 1.0 : 1
 
     const dx = pos.x - prev.x
     const dy = pos.y - prev.y
     const dist = Math.sqrt(dx * dx + dy * dy)
+    // Point médian courant : avec le médian précédent, il définit une courbe quadratique
+    // dont le point de contrôle est `prev` → tracé lissé même sur gestes rapides.
+    const mid = { x: (prev.x + pos.x) / 2, y: (prev.y + pos.y) / 2 }
+    const from = lastMid.current ?? prev
+    const traceLisse = () => {
+      ctx.beginPath()
+      ctx.moveTo(from.x, from.y)
+      ctx.quadraticCurveTo(prev.x, prev.y, mid.x, mid.y)
+      ctx.stroke()
+    }
 
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
     const op = opacity // multiplicateur d'opacité réglable (0.1 → 1)
 
     if (tool === 'eraser') {
-      ctx.strokeStyle = CANVAS_BG; ctx.lineWidth = size * 2.8; ctx.globalAlpha = 1
-      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+      ctx.strokeStyle = CANVAS_BG_ACTUEL; ctx.lineWidth = size * 2.8; ctx.globalAlpha = 1
+      traceLisse()
 
     } else if (tool === 'pen') {
-      // Stylo : largeur dynamique selon la vitesse (lent = épais, rapide = fin)
+      // Stylo : largeur dynamique selon la vitesse (lent = épais, rapide = fin) et la pression
       velocityRef.current = velocityRef.current * 0.55 + dist * 0.45
-      const dynamicW = size * Math.max(0.35, 1.0 - velocityRef.current * 0.018)
+      const dynamicW = size * pf * Math.max(0.35, 1.0 - velocityRef.current * 0.018)
       ctx.strokeStyle = color; ctx.lineWidth = dynamicW; ctx.globalAlpha = op
-      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+      traceLisse()
 
     } else if (tool === 'pencil') {
       // Crayon graphite : trait fin, légèrement granuleux, qui se densifie en repassant
-      const baseW = Math.max(size * 0.55, 0.8 * dpr)
+      const baseW = Math.max(size * 0.55 * pf, 0.8 * dpr)
       ctx.strokeStyle = color; ctx.lineWidth = baseW; ctx.globalAlpha = 0.5 * op
-      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+      traceLisse()
       // Grain : petites touches décalées le long du trait
       const grains = Math.ceil(Math.max(dist, 3))
       for (let g = 0; g < grains; g++) {
@@ -381,9 +478,9 @@ export default function JeuDessin() {
       // Pinceau : poils multiples, étalés perpendiculairement au trait
       const angle = Math.atan2(dy, dx) + Math.PI / 2
       const numBristles = 12
+      const spread = size * 0.9 * pf
       for (let b = 0; b < numBristles; b++) {
         const t = b / (numBristles - 1) - 0.5
-        const spread = size * 0.9
         const ox = Math.cos(angle) * t * spread + (Math.random() - 0.5) * size * 0.08
         const oy = Math.sin(angle) * t * spread + (Math.random() - 0.5) * size * 0.08
         ctx.strokeStyle = color
@@ -399,7 +496,7 @@ export default function JeuDessin() {
       // Feutre : pointe plate (lineCap square), opacité faible qui s'accumule
       ctx.strokeStyle = color; ctx.lineWidth = size * 2.6; ctx.lineCap = 'square'
       ctx.globalAlpha = 0.35 * op
-      ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y); ctx.stroke()
+      traceLisse()
 
     } else if (tool === 'crayon') {
       // Craie : texture granuleuse, particules aléatoires le long du trait
@@ -414,13 +511,60 @@ export default function JeuDessin() {
         ctx.arc(gx, gy, Math.random() * 1.4 * dpr, 0, Math.PI * 2)
         ctx.fill()
       }
+
+    } else if (tool === 'airbrush') {
+      // Aérographe : nuage de gouttelettes pulvérisées, dense au centre, diffus aux bords.
+      // Posé le long du segment pour une couverture continue même en geste rapide.
+      const radius = size * 2.2
+      const steps = Math.max(1, Math.ceil(dist / (size * 0.4)))
+      const dropsPerStep = Math.ceil(radius * 0.6)
+      for (let s = 0; s <= steps; s++) {
+        const cx = prev.x + dx * (s / steps)
+        const cy = prev.y + dy * (s / steps)
+        for (let d = 0; d < dropsPerStep; d++) {
+          // Distribution gaussienne approchée (somme de deux uniformes) → centre plus dense
+          const rr = (Math.random() + Math.random()) / 2
+          const ang = Math.random() * Math.PI * 2
+          const gx = cx + Math.cos(ang) * rr * radius
+          const gy = cy + Math.sin(ang) * rr * radius
+          ctx.fillStyle = color
+          ctx.globalAlpha = 0.025 * op
+          ctx.beginPath()
+          ctx.arc(gx, gy, (0.4 + Math.random() * 0.8) * dpr, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
     }
 
     ctx.restore()
     lastPos.current = pos
-  }, [tool, sizeIdx, color, opacity])
+    lastMid.current = mid
+  }, [tool, sizeIdx, color, opacity, CANVAS_BG_ACTUEL])
+
+  // Compte-gouttes : lit la couleur du pixel sous le doigt et l'adopte
+  function echantillonnerCouleur(clientX: number, clientY: number): string | null {
+    const canvas = canvasRef.current; if (!canvas) return null
+    const ctx = canvas.getContext('2d')!
+    const { x, y } = getCanvasCoords(clientX, clientY)
+    const px = ctx.getImageData(Math.max(0, Math.min(canvas.width - 1, Math.round(x))),
+                                Math.max(0, Math.min(canvas.height - 1, Math.round(y))), 1, 1).data
+    return '#' + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2, '0')).join('')
+  }
+
+  // Mémorise une couleur posée (les plus récentes en tête, max 8, sans doublon)
+  function ajouterCouleurRecente(col: string) {
+    setRecentColors(prev => [col, ...prev.filter(c => c.toLowerCase() !== col.toLowerCase())].slice(0, 8))
+  }
 
   function onPointerDown(e: React.PointerEvent) {
+    // Pipette : on échantillonne et on ressort immédiatement sans tracer
+    if (pipetteActive) {
+      const col = echantillonnerCouleur(e.clientX, e.clientY)
+      if (col) { setColor(col); ajouterCouleurRecente(col) }
+      setPipetteActive(false)
+      setTool(toolAvantPipette.current === 'eraser' ? 'pen' : toolAvantPipette.current)
+      return
+    }
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointersRef.current.size === 1) {
       if (panMode) {
@@ -429,15 +573,20 @@ export default function JeuDessin() {
         isDrawing.current = true
         velocityRef.current = 0
         lastPos.current = getCanvasCoords(e.clientX, e.clientY)
-        draw(e.clientX, e.clientY)
+        lastMid.current = null
+        draw(e.clientX, e.clientY, e.pressure)
+        if (tool !== 'eraser') ajouterCouleurRecente(color)
       }
     } else {
-      isDrawing.current = false; lastPos.current = null
+      isDrawing.current = false; lastPos.current = null; lastMid.current = null
       lastPinchDist.current = null; lastPinchMid.current = null
     }
   }
 
   function onPointerMove(e: React.PointerEvent) {
+    // Curseur fantôme uniquement au survol (souris/stylet sans appui) : éviter un
+    // re-render à chaque point pendant le tracé, qui nuirait à la fluidité.
+    if (!isDrawing.current && !panMode) setGhost({ x: e.clientX, y: e.clientY })
     const prevPt = pointersRef.current.get(e.pointerId)
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     const pts = [...pointersRef.current.values()]
@@ -464,7 +613,17 @@ export default function JeuDessin() {
       panYRef.current += e.clientY - prevPt.y
       setPanX(panXRef.current); setPanY(panYRef.current)
     } else if (isDrawing.current) {
-      draw(e.clientX, e.clientY)
+      // Coalesced events : rejoue tous les points sub-frame que le navigateur a regroupés,
+      // comblant les « trous » des gestes rapides pour un tracé continu et précis.
+      const native = e.nativeEvent as PointerEvent
+      const events = typeof native.getCoalescedEvents === 'function'
+        ? native.getCoalescedEvents()
+        : []
+      if (events.length > 0) {
+        for (const ev of events) draw(ev.clientX, ev.clientY, ev.pressure)
+      } else {
+        draw(e.clientX, e.clientY, e.pressure)
+      }
     }
   }
 
@@ -474,7 +633,7 @@ export default function JeuDessin() {
     if (pointersRef.current.size === 0) {
       // Trait terminé : on capture l'état du canvas pour permettre l'annulation
       if (wasDrawing) saveSnapshot()
-      isDrawing.current = false; lastPos.current = null
+      isDrawing.current = false; lastPos.current = null; lastMid.current = null
       lastPinchDist.current = null; lastPinchMid.current = null
     }
   }
@@ -482,7 +641,7 @@ export default function JeuDessin() {
   function validerBande() {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
-    const lowestDrawnFraction = findLowestDrawnFraction(ctx, canvas.width, canvas.height)
+    const lowestDrawnFraction = findLowestDrawnFraction(ctx, canvas.width, canvas.height, hexToRgb(paperDef.bg))
     const dpr = window.devicePixelRatio || 1
     const bande: BandeDessin = {
       joueurIdx: bandeIdx, joueurNumero: joueurActuel,
@@ -508,22 +667,36 @@ export default function JeuDessin() {
     setBandeIdx(idx => idx + 1); setCanvasReady(false)
   }
 
+  // Choix du papier (uniquement à la 1re bande, avant de dessiner) : repeint le fond,
+  // réinitialise l'historique sur cette base et adopte l'encre par défaut du papier.
+  function changerPapier(p: Paper) {
+    setPaper(p)
+    const def = PAPERS.find(x => x.id === p) ?? PAPERS[0]
+    setColor(def.ink)
+    const canvas = canvasRef.current; if (!canvas) return
+    const ctx = canvas.getContext('2d')!
+    peindreFond(ctx, canvas.width, canvas.height, def)
+    undoStackRef.current = [ctx.getImageData(0, 0, canvas.width, canvas.height)]
+    redoStackRef.current = []
+    bumpHistory()
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      style={{ position: 'fixed', inset: 0, background: CANVAS_BG, display: 'flex', flexDirection: 'column' }}
+      style={{ position: 'fixed', inset: 0, background: CANVAS_BG_ACTUEL, display: 'flex', flexDirection: 'column' }}
     >
       {/* ── CANVAS ── */}
       <div
         ref={containerRef}
-        style={{ position: 'relative', flex: 1, overflow: 'hidden', background: CANVAS_BG, touchAction: 'none' }}
+        style={{ position: 'relative', flex: 1, overflow: 'hidden', background: CANVAS_BG_ACTUEL, touchAction: 'none' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
+        onPointerLeave={(e) => { setGhost(null); onPointerUp(e) }}
         onPointerCancel={onPointerUp}
       >
         <div style={{
@@ -532,8 +705,24 @@ export default function JeuDessin() {
           transformOrigin: 'center center',
           width: '100%', height: '100%',
         }}>
-          <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: panMode ? (isDrawing.current ? 'grabbing' : 'grab') : (tool === 'eraser' ? 'cell' : 'crosshair') }} />
+          <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: pipetteActive ? 'copy' : panMode ? (isDrawing.current ? 'grabbing' : 'grab') : (tool === 'eraser' ? 'cell' : 'crosshair') }} />
         </div>
+
+        {/* Curseur fantôme — aperçu de la taille/forme de l'outil sous le pointeur */}
+        {ghost && !panMode && !pipetteActive && !showIntro && !showTransition && !showColorPanel && (() => {
+          const factor = tool === 'eraser' ? 2.8 : tool === 'marker' ? 2.6 : tool === 'airbrush' ? 4.4 : tool === 'crayon' ? 2.2 : tool === 'brush' ? 1.8 : 1
+          const diam = Math.max(6, SIZES[sizeIdx] * factor * zoom)
+          return (
+            <div style={{
+              position: 'fixed', left: ghost.x, top: ghost.y,
+              width: diam, height: diam, marginLeft: -diam / 2, marginTop: -diam / 2,
+              borderRadius: '50%',
+              border: `1px solid ${tool === 'eraser' ? `${encre}66` : `${color}aa`}`,
+              background: tool === 'eraser' ? 'transparent' : `${color}14`,
+              pointerEvents: 'none', zIndex: 15,
+            }} />
+          )
+        })()}
 
         {/* Ligne guide raccord */}
         {bandeIdx > 0 && config.visibilite === 'raccord' && canvasReady && (
@@ -543,7 +732,7 @@ export default function JeuDessin() {
             background: `linear-gradient(to right, transparent, ${accent}55 15%, ${accent}55 85%, transparent)`,
             pointerEvents: 'none', zIndex: 5,
           }}>
-            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 7, color: accent, background: `${CANVAS_BG}ee`, padding: '1px 6px' }}>
+            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 7, color: accent, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>
               ← RACCORD
             </span>
           </div>
@@ -754,6 +943,25 @@ export default function JeuDessin() {
             }}>
             ✥
           </button>
+          {/* Compte-gouttes / pipette */}
+          <button
+            onClick={() => {
+              if (pipetteActive) { setPipetteActive(false); return }
+              toolAvantPipette.current = tool
+              setPipetteActive(true)
+            }}
+            aria-pressed={pipetteActive}
+            aria-label="Compte-gouttes"
+            title="Compte-gouttes (prélever une couleur)"
+            style={{
+              width: 34, height: 34, borderRadius: 8, border: 'none',
+              background: pipetteActive ? `${accent}18` : 'transparent',
+              color: pipetteActive ? accent : `${encre}45`,
+              fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              outline: pipetteActive ? `1.5px solid ${accent}40` : 'none',
+            }}>
+            ⊙
+          </button>
           <div style={{ flex: 1 }} />
           <button onClick={validerBande} style={{
             ...mono, fontSize: 13,
@@ -802,6 +1010,27 @@ export default function JeuDessin() {
                   style={{ width: 36, height: 36, padding: 3, border: `1px solid ${encre}20`, borderRadius: 8, cursor: 'pointer' }}
                 />
               </div>
+
+              {/* Couleurs récentes */}
+              {recentColors.length > 0 && (
+                <>
+                  <span style={{ ...mono, fontSize: 10, color: `${encre}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
+                  <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
+                    {recentColors.map(col => (
+                      <button
+                        key={col}
+                        onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen'); setShowColorPanel(false) }}
+                        style={{
+                          width: 32, height: 32, borderRadius: 6, flex: '0 0 auto',
+                          background: col,
+                          border: color.toLowerCase() === col.toLowerCase() ? `2.5px solid ${accent}` : `1px solid ${encre}22`,
+                          cursor: 'pointer',
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
 
               {/* Grille 4×8 */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 5, marginBottom: 14 }}>
@@ -863,6 +1092,40 @@ export default function JeuDessin() {
                 Dessine la première bande.
               </div>
             </motion.div>
+
+            {/* Choix du papier — n'apparaît qu'au tout début de la partie */}
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.5 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
+            >
+              <span style={{ ...mono, fontSize: 11, color: accent, letterSpacing: '0.24em', opacity: 0.8 }}>— PAPIER —</span>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {PAPERS.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => changerPapier(p.id)}
+                    aria-pressed={paper === p.id}
+                    title={p.nom}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                    }}
+                  >
+                    <span style={{
+                      width: 40, height: 40, borderRadius: 8, background: p.bg,
+                      border: paper === p.id ? `2.5px solid ${accent}` : `1px solid rgba(255,255,255,0.25)`,
+                      boxShadow: paper === p.id ? `0 0 0 3px ${accent}33` : 'none',
+                      transition: 'border 0.15s, box-shadow 0.15s',
+                    }} />
+                    <span style={{ ...mono, fontSize: 8, color: bg, opacity: paper === p.id ? 0.95 : 0.55, letterSpacing: '0.1em' }}>
+                      {p.nom.toUpperCase()}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
               style={{ ...mono, fontSize: 13, color: bg, opacity: 0.75, letterSpacing: '0.2em' }}>
               TOUCHER POUR COMMENCER
