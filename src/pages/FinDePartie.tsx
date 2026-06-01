@@ -340,7 +340,7 @@ export default function FinDePartie() {
           <div
             style={{
               fontFamily: "'Cormorant Garamond', serif",
-              color: encre, fontSize: 15, lineHeight: 1.65,
+              color: encre, fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', lineHeight: 1.65,
             }}
           >
             {revealReady && lignes.map((ligne, i) => (

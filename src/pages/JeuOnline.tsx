@@ -723,10 +723,14 @@ export default function JeuOnline() {
     (async () => {
       try {
         const caseIdx = room?.mode === 'dessin' ? myEffectiveIndex : contributions.length
+        // Idempotence : déjà soumis localement → marquer sans ré-insérer
+        if (contributions.some(c => c.case_index === caseIdx && c.player_id === user.id)) {
+          setSubmitted(true); return
+        }
         const { error } = await supabase.from('contributions').insert({ room_code: code, player_id: user.id, case_index: caseIdx, texte: textToSubmit })
         if (!error) { mergeContribution({ case_index: caseIdx, texte: textToSubmit, player_id: user.id }); setMyContrib(textToSubmit); setSubmitted(true); try { jouer('soumettre') } catch {} }
-        else { autoSubmittedRef.current = false }
-      } catch { autoSubmittedRef.current = false }
+        // En cas d'erreur on ne réinitialise pas autoSubmittedRef pour éviter la boucle de tentatives
+      } catch { /* réseau instable — on ne réessaie pas */ }
     })()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, submitted, isSpectator, user, code, myEffectiveIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length, mergeContribution])
@@ -741,7 +745,7 @@ export default function JeuOnline() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!input.trim() || !user || !code || !isMyTurnEcrit) return
+    if (!input.trim() || !user || !code || !isMyTurnEcrit || submitted || submitting) return
     setSubmitting(true); setSubmitError(null)
     const { error } = await supabase.from('contributions').insert({ room_code: code, player_id: user.id, case_index: currentCase, texte: input.trim() })
     if (!error) { mergeContribution({ case_index: currentCase, texte: input.trim(), player_id: user.id }); setMyContrib(input.trim()); setSubmitted(true); jouer('soumettre') }
@@ -896,7 +900,11 @@ export default function JeuOnline() {
           <div style={{ height: 2, background: `${encre}15`, borderRadius: 1, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${Math.round((secondsLeft / room.turn_seconds) * 100)}%`, background: secondsLeft < 30 ? '#b22c20' : accent, transition: 'width 1s linear' }} />
           </div>
-          {secondsLeft < 60 && <div style={{ ...mono, fontSize: 14, color: secondsLeft < 30 ? '#b22c20' : accent, marginTop: 4, textAlign: 'right' }}>{secondsLeft}s</div>}
+          <div style={{ ...mono, fontSize: 14, color: secondsLeft < 30 ? '#b22c20' : accent, marginTop: 4, textAlign: 'right' }}>
+            {secondsLeft >= 60
+              ? `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`
+              : `${secondsLeft}s`}
+          </div>
         </div>
       )}
 
