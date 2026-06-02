@@ -547,7 +547,11 @@ export default function Jeu() {
         )}
         <motion.p
           className="text-encre"
-          style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', lineHeight: 1.1 }}
+          style={{
+            fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
+            fontSize: 'clamp(4rem, 18vw, 7rem)',
+            lineHeight: 0.95, letterSpacing: '-0.02em',
+          }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
@@ -608,9 +612,10 @@ export default function Jeu() {
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontStyle: 'italic',
-                fontSize: 'clamp(1.6rem, 7vw, 2.2rem)',
+                fontSize: 'clamp(2.2rem, 9vw, 3rem)',
                 color: encre,
-                lineHeight: 1.35,
+                lineHeight: 1.2,
+                letterSpacing: '-0.01em',
               }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -665,11 +670,11 @@ export default function Jeu() {
                     transition={{ delay: 0.4, duration: 0.4 }}
                     style={{
                       ...mono,
-                      fontSize: 17,
+                      fontSize: 11,
                       color: accent,
                       opacity: 0.55,
                       marginTop: 18,
-                      letterSpacing: '0.2em',
+                      letterSpacing: '0.22em',
                       border: `1px solid ${accent}55`,
                       padding: '2px 8px',
                       borderRadius: 2,
@@ -753,8 +758,14 @@ export default function Jeu() {
                 — CONSIGNE —
               </div>
               <div
-                className="font-bodoni font-black leading-tight"
-                style={{ fontSize: 'clamp(1.25rem, 5.5vw, 1.75rem)', color: encre, marginBottom: subtitle ? 4 : 14 }}
+                className="font-bodoni font-black"
+                style={{
+                  fontSize: 'clamp(1.6rem, 7vw, 2.4rem)',
+                  lineHeight: 1.05,
+                  letterSpacing: '-0.01em',
+                  color: encre,
+                  marginBottom: subtitle ? 4 : 14,
+                }}
               >
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
               </div>

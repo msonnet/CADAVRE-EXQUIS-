@@ -222,16 +222,18 @@ export default function FinDePartie() {
                 — {voixCount} VOIX —
               </div>
               <div style={{
-                fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
-                color: encre, lineHeight: 1.3,
+                fontFamily: "'Fraunces', serif", fontWeight: 900, fontStyle: 'italic',
+                fontSize: 'clamp(2.2rem, 10vw, 3.8rem)',
+                color: encre, lineHeight: 1.0,
+                letterSpacing: '-0.01em',
               }}>
                 Le cadavre
               </div>
               <div style={{
-                fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
-                color: encre, lineHeight: 1.3,
+                fontFamily: "'Fraunces', serif", fontWeight: 900, fontStyle: 'italic',
+                fontSize: 'clamp(2.2rem, 10vw, 3.8rem)',
+                color: accent, lineHeight: 1.0,
+                letterSpacing: '-0.01em',
               }}>
                 se reconstitue
                 <motion.span
@@ -310,19 +312,22 @@ export default function FinDePartie() {
 
         {/* ── TITLE ── */}
         <motion.div
-          className="mt-6 mb-4"
+          className="mt-5 mb-4"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.7 }}
         >
           <div
-            className="font-bodoni font-black leading-none"
-            style={{ fontSize: 'clamp(2rem, 9vw, 3rem)', color: encre }}
+            className="font-bodoni font-black"
+            style={{
+              fontSize: 'clamp(3.5rem, 15vw, 6rem)',
+              lineHeight: 0.92,
+              letterSpacing: '-0.02em',
+              color: encre,
+            }}
           >
-            <span style={{ display: 'block' }}>LE CADAVRE</span>
-            <span style={{ display: 'block' }}>
-              <span style={{ color: accent }}>est exquis.</span>
-            </span>
+            <span style={{ display: 'block' }}>Le cadavre</span>
+            <span style={{ display: 'block', color: accent }}>est exquis.</span>
           </div>
         </motion.div>
 
@@ -541,8 +546,8 @@ export default function FinDePartie() {
                       </span>
                       {c.fallback && (
                         <span style={{
-                          fontSize: 17,
-                          letterSpacing: '0.18em',
+                          fontSize: 11,
+                          letterSpacing: '0.2em',
                           border: `1px solid ${accent}55`,
                           color: accent,
                           opacity: 0.55,
