@@ -351,7 +351,7 @@ export async function exporterPDF(opts: {
     doc.setTextColor(accR, accG, accB)
     doc.setFont('times', 'normal')
     doc.setFontSize(14)
-    doc.text('✦   ✦   ✦', pageW / 2, 24, { align: 'center' })
+    doc.text('*   *   *', pageW / 2, 24, { align: 'center' })
 
     // Title
     doc.setTextColor(inkR, inkG, inkB)
