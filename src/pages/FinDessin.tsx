@@ -195,16 +195,16 @@ export default function FinDessin() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — RÉVÉLATION —
         </div>
 
@@ -222,7 +222,7 @@ export default function FinDessin() {
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center', textAlign: 'center' }}
           >
             <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-              <div style={{ ...mono, fontSize: 14, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
                 — {nbBandes} BANDE{nbBandes > 1 ? 'S' : ''} —
               </div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
@@ -274,7 +274,7 @@ export default function FinDessin() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
                   <button
                     onClick={() => setPleinEcran(true)}
-                    style={{ ...mono, fontSize: 14, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ ...mono, fontSize: 17, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     ↗ AGRANDIR
                   </button>
@@ -287,11 +287,11 @@ export default function FinDessin() {
             {/* Texte Vision */}
             {texteVision ? (
               <div>
-                <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+                <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
                   — LECTURE SURRÉALISTE —
                 </div>
                 <div style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: 15, lineHeight: 1.7,
+                  fontFamily: "'Cormorant Garamond', serif", fontSize: 17, lineHeight: 1.7,
                   color: encre,
                   whiteSpace: 'pre-line',
                 }}>
@@ -300,14 +300,14 @@ export default function FinDessin() {
               </div>
             ) : erreurVision ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: encre, opacity: 0.8 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
                   La lecture surréaliste n'a pas pu avoir lieu.
                 </div>
                 <button
                   onClick={reessayerVision}
                   style={{
                     alignSelf: 'flex-start',
-                    ...mono, fontSize: 15,
+                    ...mono, fontSize: 17,
                     background: 'transparent', color: accent,
                     border: `0.5px solid ${accent}50`,
                     padding: '7px 14px', cursor: 'pointer',
@@ -317,7 +317,7 @@ export default function FinDessin() {
                 </button>
               </div>
             ) : (
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: encre, opacity: 0.75 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
                 (lecture indisponible)
               </div>
             )}
@@ -331,7 +331,7 @@ export default function FinDessin() {
                 disabled={sauvegarde}
                 style={{
                   flex: 1,
-                  ...mono, fontSize: 15,
+                  ...mono, fontSize: 17,
                   background: sauvegarde ? `${accent}20` : accent,
                   color: sauvegarde ? accent : btnText,
                   border: `0.5px solid ${accent}`,
@@ -345,7 +345,7 @@ export default function FinDessin() {
               <button
                 onClick={partager}
                 style={{
-                  ...mono, fontSize: 15,
+                  ...mono, fontSize: 17,
                   background: 'transparent',
                   color: `${encre}70`,
                   border: `0.5px solid ${encre}25`,
@@ -358,7 +358,7 @@ export default function FinDessin() {
               <button
                 onClick={() => navigate('/')}
                 style={{
-                  ...mono, fontSize: 15,
+                  ...mono, fontSize: 17,
                   background: 'transparent',
                   color: `${encre}70`,
                   border: `0.5px solid ${encre}25`,
@@ -407,7 +407,7 @@ export default function FinDessin() {
                 position: 'absolute', top: 16, right: 16,
                 background: 'none', border: `0.5px solid rgba(232,212,184,0.4)`,
                 color: '#e8d4b8',
-                ...mono, fontSize: 15, padding: '6px 12px',
+                ...mono, fontSize: 17, padding: '6px 12px',
                 cursor: 'pointer',
               }}
             >

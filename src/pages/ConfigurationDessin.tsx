@@ -58,16 +58,16 @@ export default function ConfigurationDessin() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 22, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 22, marginBottom: 8 }}>
           — CADAVRE DESSINÉ —
         </div>
 
@@ -90,7 +90,7 @@ export default function ConfigurationDessin() {
 
         {/* ── BANDES ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+          <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — FRAGMENTS —
           </div>
           <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 8 }}>
@@ -109,7 +109,7 @@ export default function ConfigurationDessin() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 15,
+                    ...mono, fontSize: 17,
                     color: active ? accent : `${encre}60`,
                     transition: 'all 0.15s',
                   }}
@@ -123,7 +123,7 @@ export default function ConfigurationDessin() {
 
         {/* ── JOUEURS ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.28 }} style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+          <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — JOUEURS —
           </div>
           <div className="flex gap-2 mb-2">
@@ -138,7 +138,7 @@ export default function ConfigurationDessin() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 15,
+                    ...mono, fontSize: 17,
                     color: active ? accent : `${encre}60`,
                     transition: 'all 0.15s',
                   }}
@@ -155,7 +155,7 @@ export default function ConfigurationDessin() {
 
         {/* ── VISIBILITÉ ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} style={{ marginBottom: 20 }}>
-          <div style={{ ...mono, fontSize: 14, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+          <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
             — VISIBILITÉ —
           </div>
           <div className="flex gap-2 mb-2">
@@ -173,7 +173,7 @@ export default function ConfigurationDessin() {
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 14,
+                    ...mono, fontSize: 17,
                     color: active ? accent : `${encre}60`,
                     transition: 'all 0.15s',
                   }}
@@ -208,7 +208,7 @@ export default function ConfigurationDessin() {
           }}>
             « {ref.titre} »
           </div>
-          <div style={{ ...mono, fontSize: 14, color: accent, letterSpacing: '0.14em' }}>
+          <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.14em' }}>
             {ref.auteurs.toUpperCase()} · {ref.annee}
           </div>
         </motion.div>
@@ -226,12 +226,12 @@ export default function ConfigurationDessin() {
             className="w-full flex flex-col items-center justify-center"
             style={{
               background: accent, color: btnText,
-              ...mono, fontSize: 15, fontWeight: 700, textTransform: 'uppercase',
+              ...mono, fontSize: 17, fontWeight: 700, textTransform: 'uppercase',
               padding: '1.15em 1em', border: 'none', cursor: 'pointer', gap: 2,
             }}
           >
             <span>Commencer le dessin</span>
-            <span aria-hidden style={{ fontSize: 14, opacity: 0.85 }}>✎</span>
+            <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>✎</span>
           </button>
         </motion.div>
 

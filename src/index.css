@@ -118,7 +118,7 @@
   .lien-texte {
     font-family: 'Inter', sans-serif;
     font-weight: 500;
-    font-size: 1rem;
+    font-size: 17px;
     color: var(--reve-ink);
     text-decoration: none;
     border-bottom: 1px solid transparent;
@@ -131,7 +131,7 @@
   .nav-discrete {
     font-family: 'Inter', sans-serif;
     font-weight: 500;
-    font-size: 0.85rem;
+    font-size: 17px;
     letter-spacing: 0.04em;
     color: var(--reve-ink-faint);
   }
@@ -139,7 +139,7 @@
   .folio {
     font-family: 'Inter', sans-serif;
     font-weight: 500;
-    font-size: 0.8rem;
+    font-size: 17px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--reve-ink-faint);
@@ -148,7 +148,7 @@
   .petite-cap {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 0.72rem;
+    font-size: 17px;
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--reve-ink-soft);
@@ -157,7 +157,7 @@
   .petite-cap-rouge {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 0.72rem;
+    font-size: 17px;
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--reve-accent);
@@ -166,7 +166,7 @@
   .consigne-grammaticale {
     font-family: 'Inter', sans-serif;
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 17px;
     letter-spacing: 0.04em;
     color: var(--reve-ink-soft);
   }
@@ -175,7 +175,7 @@
   .btn-primaire, .btn-rouge {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 17px;
     letter-spacing: 0.10em;
     text-transform: uppercase;
     padding: 0.95em 1.7em;

@@ -115,7 +115,7 @@ export default function Onboarding() {
     opacity: 0.5,
     cursor: 'pointer',
     fontFamily: "'Inter', sans-serif",
-    fontSize: 14,
+    fontSize: 17,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     padding: 4,
@@ -133,7 +133,7 @@ export default function Onboarding() {
 
   const bodyStyle: React.CSSProperties = {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 16,
+    fontSize: 17,
     lineHeight: 1.65,
     color: ink,
     opacity: 0.85,
@@ -166,7 +166,7 @@ export default function Onboarding() {
     border: 'none',
     borderRadius: 10,
     fontFamily: "'Inter', sans-serif",
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: 600,
     letterSpacing: '0.16em',
     textTransform: 'uppercase',
