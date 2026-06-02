@@ -1,6 +1,7 @@
 export const config = { maxDuration: 30 }
 
 import { choisirVoixAleatoire, VOIX } from './_voices.js'
+import { checkRateLimit, getClientIp } from './_rateLimit.js'
 
 type TypeCase =
   | 'nom'
@@ -138,6 +139,12 @@ const TYPES_VALIDES: Set<string> = new Set([
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') {
     res.status(405).end()
+    return
+  }
+
+  const ip = getClientIp(req)
+  if (!checkRateLimit(ip, 20)) {
+    res.status(429).json({ error: 'Trop de requêtes. Attendez une minute.' })
     return
   }
 

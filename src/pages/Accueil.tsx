@@ -250,9 +250,9 @@ export default function Accueil() {
       >
         {[
           { label: 'Recueil', path: '/bibliotheque' },
-          { label: 'Galerie',  path: '/galerie',    align: 'right' },
+          { label: 'Galerie',  path: '/galerie',       align: 'right' },
           { label: 'Règles',   path: '/aide' },
-          { label: 'Réglages', path: '/reglages',   align: 'right' },
+          { label: 'Du jour',  path: '/poeme-du-jour', align: 'right' },
         ].map(({ label, path, align }) => (
           <button
             key={path}

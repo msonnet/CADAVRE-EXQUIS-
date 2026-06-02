@@ -1,5 +1,7 @@
 export const config = { maxDuration: 55 }
 
+import { checkRateLimit, getClientIp } from './_rateLimit.js'
+
 const STYLE_PROMPTS: Record<string, string> = {
   aquarelle:     'traditional watercolor painting on cold press paper, wet-on-wet color blooms and granulation, cauliflower bleeds at edges, translucent glazed layers, crisp dry-brush detail in shadows, visible paper grain and texture, colors merging naturally, professional fine art watercolor technique',
   fusain:        'raw charcoal drawing on rough textured paper, heavy smudging and blending with fingers, velvety deep blacks, powdery chalky texture, erased white highlights carved from darkness, gestural expressionist marks, Käthe Kollwitz dark emotional energy, visible paper fibres and grain',
@@ -73,6 +75,12 @@ async function traduireDirection(direction: string, anthropicKey: string): Promi
 
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
+
+  const ip = getClientIp(req)
+  if (!checkRateLimit(ip, 5)) {
+    res.status(429).json({ error: 'Trop de requêtes. Attendez une minute.' })
+    return
+  }
 
   const { texte, style, promptLibre } = req.body ?? {}
   if (typeof texte !== 'string' || !texte) { res.status(400).json({ error: 'texte requis' }); return }

@@ -43,6 +43,7 @@ const Salon = React.lazy(() => import('./pages/Salon'))
 const JeuOnline = React.lazy(() => import('./pages/JeuOnline'))
 const FinOnline = React.lazy(() => import('./pages/FinOnline'))
 const AuthCallback = React.lazy(() => import('./pages/AuthCallback'))
+const PoemeDuJour = React.lazy(() => import('./pages/PoemeDuJour'))
 
 const PageFallback = () => (
   <div style={{
@@ -91,6 +92,7 @@ export default function App() {
               <Route path="/jeu-online/:code" element={<JeuOnline />} />
               <Route path="/fin-online/:code" element={<FinOnline />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/poeme-du-jour" element={<PoemeDuJour />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
