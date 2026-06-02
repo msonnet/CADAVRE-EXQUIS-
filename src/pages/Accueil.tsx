@@ -20,12 +20,13 @@ export default function Accueil() {
   const { jouer } = useSound()
 
   useEffect(() => {
-    const prev = document.documentElement.style.overflow
+    const prevHtml = document.documentElement.style.overflow
+    const prevBody = document.body.style.overflow
     document.documentElement.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
     return () => {
-      document.documentElement.style.overflow = prev
-      document.body.style.overflow = ''
+      document.documentElement.style.overflow = prevHtml
+      document.body.style.overflow = prevBody
     }
   }, [])
 
@@ -46,10 +47,8 @@ export default function Accueil() {
   const letters = 'Exquis.'
 
   const bg = c?.bg ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Inter', sans-serif", letterSpacing: '0.18em' }
+  const ui: React.CSSProperties = { fontFamily: "'Raleway', sans-serif" }
 
-  // CADAVRE vertical est du côté opposé au symbole
-  // "Exquis." se cale contre lui, du même côté, avec un padding pour ne pas se chevaucher
   const cadavreSide = seance?.symbolSide === 'right' ? 'left' : 'right'
   const exquisStyle: React.CSSProperties = cadavreSide === 'right'
     ? { paddingRight: 'clamp(2.8rem, 14vw, 5rem)', alignSelf: 'flex-end', textAlign: 'right' }
@@ -58,33 +57,44 @@ export default function Accueil() {
   return (
     <PageTransition className="page-carnet relative flex flex-col h-dvh overflow-hidden safe-top safe-bottom">
 
-      {/* DÉCOR — stripes, symbole, étiquettes, signature (pas la citation) */}
       <Decor variant="accueil" hideCitation />
-
-      {/* ONBOARDING — overlay 3 slides au premier lancement */}
       <Onboarding />
 
       {/* ── HEADER ── */}
-      <div className="relative flex justify-between items-baseline" style={{ zIndex: 10 }}>
-        <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85 }}>
+      <div style={{
+        position: 'relative', zIndex: 10,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <span style={{
+          ...ui, fontSize: 13, letterSpacing: '0.1em',
+          color: encre, opacity: 0.7, whiteSpace: 'nowrap',
+        }}>
           N° {num} · {annee}
         </span>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
           <button
             onClick={() => seance?.retirer()}
             title="Re-tirer un rêve"
-            style={{ ...mono, fontSize: 17, color: accent, opacity: 0.9, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
-          >
-            ✦
-          </button>
-          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>
+            style={{
+              ...ui, fontSize: 13, color: accent, opacity: 0.9,
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            }}
+          >✦</button>
+          <span style={{
+            ...ui, fontSize: 13, letterSpacing: '0.1em',
+            color: accent, fontWeight: 700, whiteSpace: 'nowrap',
+          }}>
             {colorLabel}
           </span>
         </div>
       </div>
-      <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10 }} />
 
-      {/* ── ZONE CENTRALE — CADAVRE (Decor, absolu) + Exquis. (flux) ── */}
+      <hr style={{
+        border: 'none', borderTop: `1.2px solid ${accent}`,
+        marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10,
+      }} />
+
+      {/* ── ZONE CENTRALE ── */}
       <div className="relative flex flex-col flex-1 justify-end" style={{ zIndex: 10 }}>
         <motion.div
           className="mb-3"
@@ -110,23 +120,25 @@ export default function Accueil() {
         </motion.div>
       </div>
 
-      {/* ── CITATION inline ── */}
+      {/* ── CITATION ── */}
       {seance?.citation && (
         <motion.div
-          className="relative mb-3"
-          style={{ zIndex: 10 }}
+          style={{ position: 'relative', zIndex: 10, marginBottom: 14 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.3, duration: 0.7 }}
         >
-          <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: '0.75rem' }} />
+          <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: 10 }} />
           <span style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.55,
-            color: encre, display: 'block',
+            fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
+            color: encre, display: 'block', fontStyle: 'italic',
           }}>
             {seance.citation.t}
           </span>
-          <div style={{ ...mono, fontSize: 17, fontWeight: 700, textTransform: 'uppercase', color: accent, marginTop: 5 }}>
+          <div style={{
+            ...ui, fontSize: 13, letterSpacing: '0.1em', fontWeight: 700,
+            textTransform: 'uppercase', color: accent, marginTop: 5,
+          }}>
             {seance.citation.a}
           </div>
         </motion.div>
@@ -134,8 +146,7 @@ export default function Accueil() {
 
       {/* ── CTA ── */}
       <motion.div
-        className="relative mb-2"
-        style={{ zIndex: 10 }}
+        style={{ position: 'relative', zIndex: 10, marginBottom: 10 }}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.4 }}
@@ -144,11 +155,11 @@ export default function Accueil() {
           <button
             onClick={() => nav('/config')}
             style={{
-              flex: 1,
+              flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: encre, color: bg,
-              ...mono, fontSize: 17, textTransform: 'uppercase',
-              padding: '0.65em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              ...ui, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+              padding: '0.7em 0.5em', border: 'none', cursor: 'pointer', gap: 3,
               borderRadius: 12,
             }}
           >
@@ -158,11 +169,11 @@ export default function Accueil() {
           <button
             onClick={() => nav('/config-dessin')}
             style={{
-              flex: 1,
+              flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: second, color: bg,
-              ...mono, fontSize: 17, textTransform: 'uppercase',
-              padding: '0.65em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              ...ui, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+              padding: '0.7em 0.5em', border: 'none', cursor: 'pointer', gap: 3,
               borderRadius: 12,
             }}
           >
@@ -174,10 +185,10 @@ export default function Accueil() {
           onClick={() => nav('/online')}
           style={{
             width: '100%', marginTop: 8,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             background: `${encre}0d`, color: encre,
-            ...mono, fontSize: 17, textTransform: 'uppercase',
-            padding: '0.5em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', gap: 2,
+            ...ui, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+            padding: '0.55em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer',
             borderRadius: 12,
           }}
         >
@@ -188,36 +199,35 @@ export default function Accueil() {
 
       {/* ── FOOTER ── */}
       <motion.div
-        className="relative flex justify-between items-center pb-1"
-        style={{ zIndex: 10 }}
+        style={{
+          position: 'relative', zIndex: 10,
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          gap: '4px 0', paddingBottom: 4,
+        }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.9, duration: 0.4 }}
       >
-        <button
-          onClick={() => nav('/bibliotheque')}
-          style={{ ...mono, fontSize: 17, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          — RECUEIL —
-        </button>
-        <button
-          onClick={() => nav('/galerie')}
-          style={{ ...mono, fontSize: 17, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          — GALERIE —
-        </button>
-        <button
-          onClick={() => nav('/aide')}
-          style={{ ...mono, fontSize: 17, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          — RÈGLES —
-        </button>
-        <button
-          onClick={() => nav('/reglages')}
-          style={{ ...mono, fontSize: 17, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          — RÉGLAGES —
-        </button>
+        {[
+          { label: 'Recueil', path: '/bibliotheque' },
+          { label: 'Galerie',  path: '/galerie',    align: 'right' },
+          { label: 'Règles',   path: '/aide' },
+          { label: 'Réglages', path: '/reglages',   align: 'right' },
+        ].map(({ label, path, align }) => (
+          <button
+            key={path}
+            onClick={() => nav(path)}
+            style={{
+              ...ui, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: encre, opacity: 0.65,
+              background: 'none', border: 'none', cursor: 'pointer',
+              textAlign: (align as 'right') ?? 'left',
+              padding: '2px 0',
+            }}
+          >
+            {label}
+          </button>
+        ))}
       </motion.div>
 
     </PageTransition>
