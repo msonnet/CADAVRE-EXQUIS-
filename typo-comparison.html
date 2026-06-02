@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparaison typographique — Cadavre Exquis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,700;0,900;1,400&family=Spectral:ital,wght@0,400;0,600;1,400&family=EB+Garamond:ital,wght@0,400;1,400&family=Lora:ital,wght@0,400;1,400&family=Playfair+Display:ital,wght@0,400;1,400&family=Josefin+Sans:wght@300;400;600&family=Raleway:wght@300;400;600&family=DM+Sans:wght@400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0805; color: #e8d4b8; padding: 0; }
+
+  .section { padding: 40px 24px 48px; border-bottom: 0.5px solid rgba(232,212,184,0.12); }
+  .section:last-child { border-bottom: none; }
+
+  .label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #b22c20;
+    margin-bottom: 28px;
+    opacity: 0.9;
+  }
+
+  .card {
+    background: rgba(232,212,184,0.04);
+    border: 0.5px solid rgba(232,212,184,0.1);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+  }
+  .card-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #b22c20;
+    margin-bottom: 18px;
+    opacity: 0.7;
+  }
+
+  .title-specimen {
+    font-family: 'Bodoni Moda', serif;
+    font-weight: 900;
+    font-size: 32px;
+    color: #e8d4b8;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+
+  /* CORPS — 4 options */
+  .body-spectral      { font-family: 'Spectral', serif; }
+  .body-ebgaramond    { font-family: 'EB Garamond', serif; }
+  .body-lora          { font-family: 'Lora', serif; }
+  .body-playfair      { font-family: 'Playfair Display', serif; }
+
+  /* UI — 4 options */
+  .ui-josefin  { font-family: 'Josefin Sans', sans-serif; }
+  .ui-raleway  { font-family: 'Raleway', sans-serif; }
+  .ui-dmsans   { font-family: 'DM Sans', sans-serif; }
+  .ui-syne     { font-family: 'Syne', sans-serif; }
+
+  .body-text {
+    font-size: 18px;
+    line-height: 1.7;
+    color: #e8d4b8;
+    margin-bottom: 10px;
+  }
+  .body-text-italic {
+    font-size: 18px;
+    line-height: 1.7;
+    color: #b22c20;
+    font-style: italic;
+    margin-bottom: 0;
+  }
+
+  .ui-sample {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #b22c20;
+    color: #0f0805;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .btn-ghost {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 0.5px solid rgba(232,212,184,0.3);
+    color: #e8d4b8;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .nav-label {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(232,212,184,0.6);
+  }
+
+  h1 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(232,212,184,0.4);
+    padding: 24px 24px 0;
+    margin-bottom: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Comparaison typographique · Cadavre Exquis</h1>
+
+<!-- ===== CORPS DE TEXTE ===== -->
+<div class="section">
+  <div class="label">Corps de texte — remplace Cormorant Garamond</div>
+
+  <!-- Spectral -->
+  <div class="card">
+    <div class="card-label">① Spectral</div>
+    <div class="title-specimen">Le cadavre exquis</div>
+    <p class="body-text body-spectral">Chaque joueur contribue à une œuvre commune — sans voir ce qu'ont écrit ou dessiné les autres. Le jeu surréaliste inventé en 1925.</p>
+    <p class="body-text-italic body-spectral">Ensemble, ils rêvent.</p>
+  </div>
+
+  <!-- EB Garamond -->
+  <div class="card">
+    <div class="card-label">② EB Garamond</div>
+    <div class="title-specimen">Le cadavre exquis</div>
+    <p class="body-text body-ebgaramond">Chaque joueur contribue à une œuvre commune — sans voir ce qu'ont écrit ou dessiné les autres. Le jeu surréaliste inventé en 1925.</p>
+    <p class="body-text-italic body-ebgaramond">Ensemble, ils rêvent.</p>
+  </div>
+
+  <!-- Lora -->
+  <div class="card">
+    <div class="card-label">③ Lora</div>
+    <div class="title-specimen">Le cadavre exquis</div>
+    <p class="body-text body-lora">Chaque joueur contribue à une œuvre commune — sans voir ce qu'ont écrit ou dessiné les autres. Le jeu surréaliste inventé en 1925.</p>
+    <p class="body-text-italic body-lora">Ensemble, ils rêvent.</p>
+  </div>
+
+  <!-- Playfair Display -->
+  <div class="card">
+    <div class="card-label">④ Playfair Display</div>
+    <div class="title-specimen">Le cadavre exquis</div>
+    <p class="body-text body-playfair">Chaque joueur contribue à une œuvre commune — sans voir ce qu'ont écrit ou dessiné les autres. Le jeu surréaliste inventé en 1925.</p>
+    <p class="body-text-italic body-playfair">Ensemble, ils rêvent.</p>
+  </div>
+</div>
+
+<!-- ===== UI ===== -->
+<div class="section">
+  <div class="label">Interface UI — remplace Outfit</div>
+
+  <!-- Josefin Sans -->
+  <div class="card">
+    <div class="card-label">① Josefin Sans</div>
+    <div class="ui-sample ui-josefin">
+      <span class="btn">Cadavre écrit</span>
+      <span class="btn-ghost">Galerie</span>
+      <span class="nav-label">Accueil</span>
+      <span class="nav-label">Réglages</span>
+    </div>
+  </div>
+
+  <!-- Raleway -->
+  <div class="card">
+    <div class="card-label">② Raleway</div>
+    <div class="ui-sample ui-raleway">
+      <span class="btn">Cadavre écrit</span>
+      <span class="btn-ghost">Galerie</span>
+      <span class="nav-label">Accueil</span>
+      <span class="nav-label">Réglages</span>
+    </div>
+  </div>
+
+  <!-- DM Sans -->
+  <div class="card">
+    <div class="card-label">③ DM Sans</div>
+    <div class="ui-sample ui-dmsans">
+      <span class="btn">Cadavre écrit</span>
+      <span class="btn-ghost">Galerie</span>
+      <span class="nav-label">Accueil</span>
+      <span class="nav-label">Réglages</span>
+    </div>
+  </div>
+
+  <!-- Syne -->
+  <div class="card">
+    <div class="card-label">④ Syne</div>
+    <div class="ui-sample ui-syne">
+      <span class="btn">Cadavre écrit</span>
+      <span class="btn-ghost">Galerie</span>
+      <span class="nav-label">Accueil</span>
+      <span class="nav-label">Réglages</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
