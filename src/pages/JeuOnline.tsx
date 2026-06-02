@@ -960,7 +960,7 @@ export default function JeuOnline() {
             {/* Consigne */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>— CONSIGNE —</div>
-              <div className="font-bodoni font-black leading-tight" style={{ fontSize: 'clamp(1.25rem,5.5vw,1.75rem)', color: encre, marginBottom: 4 }}>
+              <div className="font-bodoni font-black" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.01em', color: encre, marginBottom: 4 }}>
                 {caseDef.consigne.charAt(0).toUpperCase() + caseDef.consigne.slice(1)}.
               </div>
               {TYPE_LABEL[caseDef.type] && (
@@ -998,14 +998,14 @@ export default function JeuOnline() {
                 rows={3}
                 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, background: 'rgba(255,253,247,0.5)', border: 'none', borderLeft: `2px solid ${encre}`, padding: '12px 16px', outline: 'none', caretColor: accent, width: '100%', resize: 'none' }}
               />
-              {submitError && <div style={{ ...mono, fontSize: 17, color: '#b22c20' }}>{submitError}</div>}
+              {submitError && <div style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={handleIa} disabled={iaLoading}
                   style={{ flex: 1, ...mono, fontSize: 13, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>
                   {iaLoading ? '…' : '✦ IA'}
                 </button>
                 <button type="submit" disabled={!input.trim() || submitting}
-                  style={{ flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.85em 1.5em', border: input.trim() ? 'none' : `1px solid ${encre}30`, cursor: input.trim() && !submitting ? 'pointer' : 'not-allowed' }}>
+                  style={{ flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.5em', borderRadius: 4, border: input.trim() ? 'none' : `1px solid ${encre}30`, cursor: input.trim() && !submitting ? 'pointer' : 'not-allowed' }}>
                   {submitting ? 'ENVOI…' : 'SCELLER CETTE VOIX →'}
                 </button>
               </div>

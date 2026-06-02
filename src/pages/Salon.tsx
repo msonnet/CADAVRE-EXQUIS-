@@ -244,7 +244,7 @@ export default function Salon() {
             padding: '8px 14px', borderRadius: 4,
             background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
             color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
-            fontSize: 17, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            fontSize: 13, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           }}>
             {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
           </div>
@@ -274,7 +274,7 @@ export default function Salon() {
           padding: '8px 14px', borderRadius: 4,
           background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
           color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
-          fontSize: 17, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          fontSize: 13, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
         }}>
           {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
         </div>
@@ -299,7 +299,7 @@ export default function Salon() {
       <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 4 }}>
         — SALON D'ATTENTE —
       </div>
-      <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 20, color: encre, marginBottom: 16 }}>
+      <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 16 }}>
         {code}
       </div>
 
@@ -333,7 +333,7 @@ export default function Salon() {
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 20, letterSpacing: '-0.01em', color: encre }}>
                     {p.pseudo}
                     {room.host_id === p.player_id && (
                       <span style={{ ...mono, fontSize: 13, color: accent, marginLeft: 8 }}>HÔTE</span>
@@ -431,7 +431,7 @@ export default function Salon() {
                   key={m}
                   onClick={() => updateRoom({ mode: m })}
                   style={{
-                    ...mono, fontSize: 13, padding: '6px 14px',
+                    ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 0,
                     background: room.mode === m ? accent : 'transparent',
                     color: room.mode === m ? btnText : encre,
                     border: `1px solid ${room.mode === m ? accent : `${encre}40`}`,
@@ -453,7 +453,7 @@ export default function Salon() {
                     key={id}
                     onClick={() => updateRoom({ structure_id: id })}
                     style={{
-                      ...mono, fontSize: 13, padding: '7px 14px', textAlign: 'left',
+                      ...mono, fontSize: 13, padding: '7px 14px', textAlign: 'left', borderRadius: 0,
                       background: room.structure_id === id ? `${accent}18` : 'transparent',
                       color: room.structure_id === id ? accent : encre,
                       border: `1px solid ${room.structure_id === id ? accent : `${encre}25`}`,
@@ -479,7 +479,7 @@ export default function Salon() {
                     key={n}
                     onClick={() => updateRoom({ nb_joueurs: n })}
                     style={{
-                      ...mono, fontSize: 13, padding: '6px 14px',
+                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 0,
                       background: room.nb_joueurs === n ? `${accent}18` : 'transparent',
                       color: room.nb_joueurs === n ? accent : encre,
                       border: `1px solid ${room.nb_joueurs === n ? accent : `${encre}25`}`,
@@ -504,7 +504,7 @@ export default function Salon() {
                     key={opt.label}
                     onClick={() => updateRoom({ turn_seconds: opt.value })}
                     style={{
-                      ...mono, fontSize: 13, padding: '6px 14px',
+                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 0,
                       background: selected ? `${accent}18` : 'transparent',
                       color: selected ? accent : encre,
                       border: `1px solid ${selected ? accent : `${encre}25`}`,
@@ -532,7 +532,7 @@ export default function Salon() {
                     key={opt.label}
                     onClick={() => updateRoom({ is_public: opt.value })}
                     style={{
-                      flex: 1, ...mono, fontSize: 13, padding: '7px 10px',
+                      flex: 1, ...mono, fontSize: 13, padding: '7px 10px', borderRadius: 0,
                       background: selected ? `${accent}18` : 'transparent',
                       color: selected ? accent : encre,
                       border: `1px solid ${selected ? accent : `${encre}25`}`,
@@ -573,8 +573,8 @@ export default function Salon() {
             style={{
               background: mePlayer?.is_ready ? `${encre}15` : accent,
               color: mePlayer?.is_ready ? encre : btnText,
-              ...mono, fontSize: 17, textTransform: 'uppercase',
-              padding: '0.85em 1.8em', border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
+              ...mono, fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.08em',
+              padding: '0.85em 1.8em', borderRadius: 4, border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
               cursor: 'pointer', width: '100%',
             }}
           >
@@ -590,8 +590,8 @@ export default function Salon() {
             style={{
               background: allReady ? encre : 'transparent',
               color: allReady ? 'var(--reve-bg)' : `${encre}50`,
-              ...mono, fontSize: 17, textTransform: 'uppercase',
-              padding: '0.85em 1.8em',
+              ...mono, fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.08em',
+              padding: '0.85em 1.8em', borderRadius: 4,
               border: allReady ? 'none' : `1px solid ${encre}30`,
               cursor: allReady && !starting ? 'pointer' : 'not-allowed',
               width: '100%',

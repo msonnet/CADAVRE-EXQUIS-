@@ -603,10 +603,10 @@ export default function Jeu() {
           </div>
           <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-          <div className="flex flex-col items-center flex-1 text-center">
-            {/* Espaceur fixe — ancre "La voix parle…" à 38 % du conteneur quel que soit
-                le contenu variable (dots vs texte révélé) qui suit */}
-            <div style={{ flex: '0 0 38%' }} />
+          <div className="flex flex-col items-center flex-1 text-center justify-center">
+            {/* Espaceur souple — centre "La voix parle…" verticalement,
+                équilibré par le <div flex:1 /> en bas */}
+            <div style={{ flex: 1 }} />
 
             <motion.div
               style={{

@@ -203,12 +203,12 @@ export default function Online() {
               }}
             />
             {joinError2 && (
-              <p style={{ ...mono, fontSize: 17, color: '#b22c20', marginTop: -4 }}>{joinError2}</p>
+              <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: -4 }}>{joinError2}</p>
             )}
             <button
               type="submit"
               disabled={signingIn || !pseudo.trim()}
-              style={{ background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
+              style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', borderRadius: 4, border: 'none', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
             >
               {signingIn ? 'CONNEXION…' : 'ENTRER DANS LE JEU →'}
             </button>
@@ -224,7 +224,7 @@ export default function Online() {
           </p>
           <button
             onClick={() => navigate('/profil')}
-            style={{ background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.85em 1.8em', border: 'none', cursor: 'pointer' }}
+            style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 4, border: 'none', cursor: 'pointer' }}
           >
             CRÉER MON PROFIL →
           </button>
@@ -250,7 +250,7 @@ export default function Online() {
               </div>
             )}
             <div>
-              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre }}>{profile.pseudo}</div>
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 21, letterSpacing: '-0.01em', color: encre }}>{profile.pseudo}</div>
               <button
                 onClick={() => navigate('/profil')}
                 style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -296,7 +296,7 @@ export default function Online() {
                     }}
                   >
                     <div>
-                      <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 2 }}>
+                      <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 24, lineHeight: 1, letterSpacing: '-0.01em', color: encre, marginBottom: 3 }}>
                         {r.code}
                       </div>
                       <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em' }}>
@@ -326,12 +326,12 @@ export default function Online() {
             <button
               onClick={handleCreate}
               disabled={creating}
-              style={{ background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
+              style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', borderRadius: 4, border: 'none', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
             >
               {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
             </button>
             {createError && (
-              <p style={{ ...mono, fontSize: 17, color: '#b22c20', marginTop: 8 }}>{createError}</p>
+              <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{createError}</p>
             )}
           </div>
 
@@ -356,12 +356,12 @@ export default function Online() {
                 }}
               />
               {joinError && (
-                <p style={{ ...mono, fontSize: 17, color: '#b22c20' }}>{joinError}</p>
+                <p style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{joinError}</p>
               )}
               <button
                 type="submit"
                 disabled={joining || !joinCode.trim()}
-                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.8em 1.8em', border: `1px solid ${encre}`, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
+                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', borderRadius: 4, border: `1px solid ${encre}`, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
               >
                 {joining ? 'RECHERCHE…' : 'REJOINDRE'}
               </button>
