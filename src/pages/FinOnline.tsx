@@ -15,7 +15,7 @@ import type { DessinCadavre } from '../types'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
 type RoomPlayer = { player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
-type Contribution = { case_index: number; texte: string; player_id: string }
+type Contribution = { case_index: number; texte: string; player_id: string; voice_name?: string | null }
 type BandeData = { imageDataUrl: string; lowestDrawnFraction: number; width: number; height: number; dpr: number }
 
 const RACCORD_H = 80
@@ -501,14 +501,20 @@ export default function FinOnline() {
                     {contributions.sort((a, b) => a.case_index - b.case_index).map(c => {
                       const p = players.find(pl => pl.player_id === c.player_id)
                       return (
-                        <div key={c.case_index} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 2, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30` }}>
+                        <div key={c.case_index} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 2, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30`, marginTop: 2 }}>
                             {p?.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 17, color: accent, fontWeight: 900 }}>{p?.pseudo[0]?.toUpperCase() ?? '?'}</span></div>}
                           </div>
                           <div>
-                            <span style={{ ...mono, fontSize: 13, color: accent }}>{p?.pseudo ?? '?'}</span>
-                            <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ ...mono, fontSize: 13, color: accent }}>{p?.pseudo ?? '?'}</span>
+                              {c.voice_name && (
+                                <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
+                                  via {c.voice_name}
+                                </span>
+                              )}
+                            </div>
                             <span style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17 }}>{c.texte}</span>
                           </div>
                         </div>

@@ -226,6 +226,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     res.status(200).json({
       texte: texte || pickFallback(type as TypeCase, motsEviter),
       source: texte ? 'ia' : 'fallback',
+      voixNom: voix.id,
     })
   } catch (err) {
     console.error('Erreur Claude API:', err)

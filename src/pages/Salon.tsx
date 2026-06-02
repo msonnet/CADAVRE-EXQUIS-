@@ -83,7 +83,17 @@ export default function Salon() {
     if (r.status === 'finished') navigate(`/fin-online/${code}`)
 
     const { data: ps } = await supabase.from('room_players').select('*').eq('room_code', code).order('joined_at')
-    setPlayers(ps ?? [])
+    const playerList = (ps ?? []) as RoomPlayer[]
+    setPlayers(playerList)
+
+    // Host failover: if the host is no longer among the players, try to claim the role
+    if (r.host_id && !playerList.some(p => p.player_id === r.host_id) && playerList.length > 0) {
+      const { data: claimed } = await supabase.rpc('claim_host', { p_room_code: code })
+      if (claimed) {
+        const { data: updatedRoom } = await supabase.from('rooms').select('*').eq('code', code).single()
+        if (updatedRoom) setRoom(updatedRoom)
+      }
+    }
   }, [code, navigate])
 
   useEffect(() => {
