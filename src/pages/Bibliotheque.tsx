@@ -61,11 +61,11 @@ export default function Bibliotheque() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
@@ -131,39 +131,16 @@ export default function Bibliotheque() {
         {/* ── VIDE ── */}
         {!chargement && poemes.length === 0 && dessins.length === 0 && (
           <motion.div
-            className="flex flex-col items-center justify-center flex-1"
+            className="flex flex-1 items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            style={{ gap: 24, paddingBottom: 32 }}
           >
             <p style={{
               fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
               Aucun poème pour l'instant.
             </p>
-            <motion.button
-              onClick={() => navigate('/config')}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                width: '100%', background: accent, color: btnText,
-                ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
-                padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 12,
-              }}
-            >
-              Commencer →
-            </motion.button>
-            <motion.button
-              onClick={() => navigate('/config-dessin')}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                width: '100%', background: 'transparent', color: encre,
-                ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
-                padding: '0.7em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 12,
-              }}
-            >
-              Ou dessiner →
-            </motion.button>
           </motion.div>
         )}
 

@@ -300,11 +300,11 @@ export default function FinDePartie() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← {feuilletLabel}
           </button>
-          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
@@ -486,32 +486,32 @@ export default function FinDePartie() {
 
         {/* ── FOOTER LINKS ── */}
         <motion.div
-          className="flex justify-between items-center pb-1 mb-2"
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 0', paddingBottom: 4, marginBottom: 8 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5, duration: 0.4 }}
         >
           <button
             onClick={() => parlant ? arreter() : parler(texteAffiche)}
-            style={{ ...mono, fontSize: 17, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0' }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
           </button>
           <button
             onClick={partager}
-            style={{ ...mono, fontSize: 17, color: partageOk ? accent : encre, opacity: partageOk ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: partageOk ? accent : encre, opacity: partageOk ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '2px 0' }}
           >
             {partageOk ? '✓ COPIÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
-            style={{ ...mono, fontSize: 17, color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0' }}
           >
             — COUTURES —
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
-            style={{ ...mono, fontSize: 17, color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '2px 0' }}
           >
             — IMAGE —
           </button>

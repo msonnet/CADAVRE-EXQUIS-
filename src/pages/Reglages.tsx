@@ -70,7 +70,7 @@ export default function Reglages() {
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 

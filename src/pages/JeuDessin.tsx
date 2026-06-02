@@ -809,7 +809,7 @@ export default function JeuDessin() {
                   }}
                 >
                   <Icon tint={tint} nib={nib} />
-                  <span style={{ ...mono, fontSize: 17, color: active ? accent : TOOLBAR_INK, letterSpacing: '0.08em' }}>
+                  <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 9, letterSpacing: '0.04em', color: active ? accent : TOOLBAR_INK }}>
                     {TOOL_NAMES[t].toUpperCase()}
                   </span>
                 </button>

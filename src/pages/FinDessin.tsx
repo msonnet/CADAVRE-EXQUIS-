@@ -195,11 +195,11 @@ export default function FinDessin() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
-          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+          <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
@@ -325,12 +325,12 @@ export default function FinDessin() {
             <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.10 }} />
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button
                 onClick={sauvegarder}
                 disabled={sauvegarde}
                 style={{
-                  flex: 1,
+                  width: '100%',
                   ...mono, fontSize: 17,
                   background: sauvegarde ? `${accent}20` : accent,
                   color: sauvegarde ? accent : btnText,
@@ -342,32 +342,36 @@ export default function FinDessin() {
               >
                 {sauvegarde ? '✓ SAUVEGARDÉ' : '↓ SAUVEGARDER'}
               </button>
-              <button
-                onClick={partager}
-                style={{
-                  ...mono, fontSize: 17,
-                  background: 'transparent',
-                  color: `${encre}70`,
-                  border: `0.5px solid ${encre}25`,
-                  padding: '10px 12px',
-                  cursor: 'pointer',
-                }}
-              >
-                ↗ PARTAGER
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                style={{
-                  ...mono, fontSize: 17,
-                  background: 'transparent',
-                  color: `${encre}70`,
-                  border: `0.5px solid ${encre}25`,
-                  padding: '10px 12px',
-                  cursor: 'pointer',
-                }}
-              >
-                ← ACCUEIL
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={partager}
+                  style={{
+                    flex: 1,
+                    ...mono, fontSize: 17,
+                    background: 'transparent',
+                    color: `${encre}70`,
+                    border: `0.5px solid ${encre}25`,
+                    padding: '10px 8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ↗ PARTAGER
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  style={{
+                    flex: 1,
+                    ...mono, fontSize: 17,
+                    background: 'transparent',
+                    color: `${encre}70`,
+                    border: `0.5px solid ${encre}25`,
+                    padding: '10px 8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← ACCUEIL
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
