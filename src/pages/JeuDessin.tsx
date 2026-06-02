@@ -734,7 +734,7 @@ export default function JeuDessin() {
             background: `linear-gradient(to right, transparent, ${accent}55 15%, ${accent}55 85%, transparent)`,
             pointerEvents: 'none', zIndex: 5,
           }}>
-            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: '0.6875rem', color: accent, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>
+            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 11, color: accent, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>
               ← RACCORD
             </span>
           </div>
@@ -743,7 +743,7 @@ export default function JeuDessin() {
         {/* Badge joueur */}
         <div style={{
           position: 'absolute', top: 10, left: 10,
-          ...mono, fontSize: '0.875rem', color: encre,
+          ...mono, fontSize: 14, color: encre,
           background: 'rgba(255,255,255,0.88)', padding: '4px 10px',
           border: `0.5px solid ${encre}15`, pointerEvents: 'none',
         }}>
@@ -754,7 +754,7 @@ export default function JeuDessin() {
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }} style={{
             position: 'absolute', top: 10, right: 10,
-            ...mono, fontSize: '0.875rem', color: encre,
+            ...mono, fontSize: 14, color: encre,
             background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
             padding: '4px 10px', cursor: 'pointer', zIndex: 10,
           }}>
@@ -809,7 +809,7 @@ export default function JeuDessin() {
                   }}
                 >
                   <Icon tint={tint} nib={nib} />
-                  <span style={{ ...mono, fontSize: '0.6875rem', color: active ? accent : TOOLBAR_INK, letterSpacing: '0.08em' }}>
+                  <span style={{ ...mono, fontSize: 11, color: active ? accent : TOOLBAR_INK, letterSpacing: '0.08em' }}>
                     {TOOL_NAMES[t].toUpperCase()}
                   </span>
                 </button>
@@ -837,7 +837,7 @@ export default function JeuDessin() {
 
         {/* Rangée opacité */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: '0.6875rem', color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 11, color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
           <input
             type="range" min={10} max={100} step={5}
             value={Math.round(opacity * 100)}
@@ -846,14 +846,14 @@ export default function JeuDessin() {
             disabled={tool === 'eraser'}
             style={{ flex: 1, accentColor: accent, cursor: tool === 'eraser' ? 'default' : 'pointer', opacity: tool === 'eraser' ? 0.35 : 1 }}
           />
-          <span style={{ ...mono, fontSize: '0.8125rem', color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>
+          <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>
             {Math.round(opacity * 100)}%
           </span>
         </div>
 
         {/* Rangée tailles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: '0.6875rem', color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 11, color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button
@@ -895,7 +895,7 @@ export default function JeuDessin() {
                     background: canUndo ? `${accent}18` : 'transparent',
                     color: canUndo ? accent : encre,
                     opacity: canUndo ? 1 : 0.35,
-                    fontSize: '1.125rem',
+                    fontSize: 18,
                     cursor: canUndo ? 'pointer' : 'default',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
@@ -912,7 +912,7 @@ export default function JeuDessin() {
                     background: canRedo ? `${accent}18` : 'transparent',
                     color: canRedo ? accent : encre,
                     opacity: canRedo ? 1 : 0.35,
-                    fontSize: '1.125rem',
+                    fontSize: 18,
                     cursor: canRedo ? 'pointer' : 'default',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
@@ -931,7 +931,7 @@ export default function JeuDessin() {
             style={{
               width: 36, height: 36, borderRadius: 9, border: 'none',
               background: '#c8bfb0',
-              fontSize: '0.9375rem', cursor: 'pointer',
+              fontSize: 15, cursor: 'pointer',
               color: muted ? '#888070' : '#1a1208',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
@@ -947,7 +947,7 @@ export default function JeuDessin() {
               width: 36, height: 36, borderRadius: 9, border: 'none',
               background: panMode ? accent : '#c8bfb0',
               color: panMode ? '#fff' : '#1a1208',
-              fontSize: '1.0625rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
             ✥
           </button>
@@ -975,7 +975,7 @@ export default function JeuDessin() {
           </button>
           <div style={{ flex: 1 }} />
           <button onClick={validerBande} style={{
-            ...mono, fontSize: '0.9375rem',
+            ...mono, fontSize: 15,
             background: encre, color: bg,
             border: 'none', cursor: 'pointer',
             padding: '10px 24px', borderRadius: 10,
@@ -1013,7 +1013,7 @@ export default function JeuDessin() {
               {/* Sélecteur natif + couleur custom */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
-                <span style={{ ...mono, fontSize: '0.875rem', color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
+                <span style={{ ...mono, fontSize: 14, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
                 <input
                   type="color"
                   value={color}
@@ -1025,7 +1025,7 @@ export default function JeuDessin() {
               {/* Couleurs récentes */}
               {recentColors.length > 0 && (
                 <>
-                  <span style={{ ...mono, fontSize: '0.8125rem', color: `${encre}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
+                  <span style={{ ...mono, fontSize: 13, color: `${encre}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
                   <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
                     {recentColors.map(col => (
                       <button
@@ -1066,7 +1066,7 @@ export default function JeuDessin() {
 
               <button onClick={() => setShowColorPanel(false)} style={{
                 width: '100%', padding: '12px',
-                ...mono, fontSize: '0.9375rem', background: '#f5f0ea', color: encre,
+                ...mono, fontSize: 15, background: '#f5f0ea', color: encre,
                 border: 'none', borderRadius: 10, cursor: 'pointer',
               }}>
                 FERMER
@@ -1093,13 +1093,13 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: '0.9375rem', color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: 15, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 — BANDE 1/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur 1.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', color: bg, opacity: 0.8, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
                 Dessine la première bande.
               </div>
             </motion.div>
@@ -1110,7 +1110,7 @@ export default function JeuDessin() {
               onClick={(e) => e.stopPropagation()}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
             >
-              <span style={{ ...mono, fontSize: '0.8125rem', color: accent, letterSpacing: '0.24em', opacity: 0.8 }}>— PAPIER —</span>
+              <span style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.24em', opacity: 0.8 }}>— PAPIER —</span>
               <div style={{ display: 'flex', gap: 10 }}>
                 {PAPERS.map(p => (
                   <button
@@ -1129,7 +1129,7 @@ export default function JeuDessin() {
                       boxShadow: paper === p.id ? `0 0 0 3px ${accent}33` : 'none',
                       transition: 'border 0.15s, box-shadow 0.15s',
                     }} />
-                    <span style={{ ...mono, fontSize: '0.6875rem', color: bg, opacity: paper === p.id ? 0.95 : 0.55, letterSpacing: '0.1em' }}>
+                    <span style={{ ...mono, fontSize: 11, color: bg, opacity: paper === p.id ? 0.95 : 0.55, letterSpacing: '0.1em' }}>
                       {p.nom.toUpperCase()}
                     </span>
                   </button>
@@ -1138,7 +1138,7 @@ export default function JeuDessin() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
-              style={{ ...mono, fontSize: '0.9375rem', color: bg, opacity: 0.75, letterSpacing: '0.2em' }}>
+              style={{ ...mono, fontSize: 15, color: bg, opacity: 0.75, letterSpacing: '0.2em' }}>
               TOUCHER POUR COMMENCER
             </motion.div>
           </motion.div>
@@ -1162,18 +1162,18 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: '0.9375rem', color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: 15, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 — BANDE {bandeIdx + 2}/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur {nextPlayerNum}.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', color: bg, opacity: 0.8, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
                 Passez l'écran. Ne regardez pas.
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
-              style={{ ...mono, fontSize: '0.9375rem', color: bg, opacity: 0.75, letterSpacing: '0.2em' }}>
+              style={{ ...mono, fontSize: 15, color: bg, opacity: 0.75, letterSpacing: '0.2em' }}>
               TOUCHER POUR COMMENCER
             </motion.div>
           </motion.div>

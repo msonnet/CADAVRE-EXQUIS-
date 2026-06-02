@@ -90,14 +90,14 @@ export default function Profil() {
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
         <button
           onClick={() => navigate('/online')}
-          style={{ ...mono, fontSize: '0.9375rem', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 15, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           ← RETOUR
         </button>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      <div style={{ ...mono, fontSize: '0.9375rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
+      <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
         — MON PROFIL —
       </div>
 
@@ -109,10 +109,10 @@ export default function Profil() {
       >
         {/* Avatar */}
         <div>
-          <div style={{ ...mono, fontSize: '0.9375rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — IMAGE DE PROFIL —
           </div>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
             Décrivez en quelques mots le personnage qui vous représente. L'IA générera votre portrait surréaliste.
           </p>
 
@@ -129,12 +129,12 @@ export default function Profil() {
                 <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : generatingAvatar ? (
                 <motion.span
-                  style={{ fontSize: '1.375rem', color: accent }}
+                  style={{ fontSize: 22, color: accent }}
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ repeat: Infinity, duration: 1.2 }}
                 >✦</motion.span>
               ) : (
-                <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '1.75rem', color: `${accent}50` }}>
+                <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 28, color: `${accent}50` }}>
                   {pseudo[0]?.toUpperCase() || '?'}
                 </span>
               )}
@@ -148,7 +148,7 @@ export default function Profil() {
                 aria-label="Description de votre avatar"
                 rows={2}
                 style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem',
+                  fontFamily: "'Cormorant Garamond', serif", fontSize: 15,
                   color: encre, background: 'rgba(255,253,247,0.5)',
                   border: 'none', borderLeft: `2px solid ${encre}`, padding: '8px 12px',
                   outline: 'none', caretColor: accent, resize: 'none', width: '100%',
@@ -161,7 +161,7 @@ export default function Profil() {
                     type="button"
                     onClick={() => setAvatarStyle(s.id)}
                     style={{
-                      ...mono, fontSize: '0.8125rem', padding: '4px 9px',
+                      ...mono, fontSize: 13, padding: '4px 9px',
                       background: avatarStyle === s.id ? `${accent}20` : 'transparent',
                       color: avatarStyle === s.id ? accent : encre,
                       border: `0.5px solid ${avatarStyle === s.id ? accent : `${encre}25`}`,
@@ -175,7 +175,7 @@ export default function Profil() {
                 onClick={handleGenerateAvatar}
                 disabled={generatingAvatar || !avatarPrompt.trim()}
                 style={{
-                  ...mono, fontSize: '0.9375rem', background: 'none', color: accent,
+                  ...mono, fontSize: 15, background: 'none', color: accent,
                   border: `0.5px solid ${accent}60`, padding: '6px 12px',
                   cursor: generatingAvatar || !avatarPrompt.trim() ? 'not-allowed' : 'pointer',
                   opacity: generatingAvatar || !avatarPrompt.trim() ? 0.5 : 1,
@@ -189,7 +189,7 @@ export default function Profil() {
 
         {/* Pseudo */}
         <div>
-          <div style={{ ...mono, fontSize: '0.9375rem', color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 15, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — PSEUDONYME —
           </div>
           <input
@@ -201,7 +201,7 @@ export default function Profil() {
             maxLength={30}
             required
             style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem',
+              fontFamily: "'Cormorant Garamond', serif", fontSize: 18,
               color: encre, background: 'rgba(255,253,247,0.5)',
               border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
               outline: 'none', caretColor: accent, width: '100%',
@@ -210,14 +210,14 @@ export default function Profil() {
         </div>
 
         {error && (
-          <p style={{ ...mono, fontSize: '0.9375rem', color: '#b22c20' }}>{error}</p>
+          <p style={{ ...mono, fontSize: 15, color: '#b22c20' }}>{error}</p>
         )}
 
         <button
           type="submit"
           disabled={saving || !pseudo.trim()}
           style={{
-            background: accent, color: btnText, ...mono, fontSize: '0.9375rem',
+            background: accent, color: btnText, ...mono, fontSize: 15,
             textTransform: 'uppercase', padding: '0.9em 1.8em',
             border: 'none', cursor: saving ? 'wait' : 'pointer',
             opacity: saving || !pseudo.trim() ? 0.5 : 1,

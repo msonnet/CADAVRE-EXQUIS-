@@ -115,7 +115,7 @@ export default function Onboarding() {
     opacity: 0.5,
     cursor: 'pointer',
     fontFamily: "'Inter', sans-serif",
-    fontSize: '0.875rem',
+    fontSize: 14,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     padding: 4,
@@ -124,7 +124,7 @@ export default function Onboarding() {
   const titleStyle: React.CSSProperties = {
     fontFamily: "'Bodoni Moda', serif",
     fontWeight: 700,
-    fontSize: '1.75rem',
+    fontSize: 28,
     lineHeight: 1.15,
     color: ink,
     margin: 0,
@@ -133,7 +133,7 @@ export default function Onboarding() {
 
   const bodyStyle: React.CSSProperties = {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: '1rem',
+    fontSize: 16,
     lineHeight: 1.65,
     color: ink,
     opacity: 0.85,
@@ -142,7 +142,7 @@ export default function Onboarding() {
 
   const hintStyle: React.CSSProperties = {
     fontFamily: "'Bodoni Moda', serif",
-    fontSize: '1.375rem',
+    fontSize: 22,
     color: accent,
     letterSpacing: '0.4em',
     textAlign: 'center',
@@ -166,7 +166,7 @@ export default function Onboarding() {
     border: 'none',
     borderRadius: 10,
     fontFamily: "'Inter', sans-serif",
-    fontSize: '0.9375rem',
+    fontSize: 15,
     fontWeight: 600,
     letterSpacing: '0.16em',
     textTransform: 'uppercase',

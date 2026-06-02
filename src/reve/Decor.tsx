@@ -384,8 +384,8 @@ function SymboleAvecCartel({
           boxShadow: '1px 1px 0 rgba(0,0,0,0.12)',
           opacity: 0.85,
         }}>
-          <div style={{ fontSize: '0.8125rem', letterSpacing: '0.12em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
-          <div style={{ fontSize: '0.75rem', fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
+          <div style={{ fontSize: 13, letterSpacing: '0.12em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
+          <div style={{ fontSize: 12, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
         </div>
       )}
     </div>
@@ -399,7 +399,7 @@ function Etiquette({ children, style, delay }: { children: React.ReactNode; styl
       background: 'rgba(128,128,128,0.12)',
       padding: '6px 12px 7px',
       fontFamily: "'Inter', sans-serif",
-      fontSize: '0.875rem', lineHeight: 1.3,
+      fontSize: 14, lineHeight: 1.3,
       color: 'var(--reve-ink)',
       boxShadow: '1px 2px 0 rgba(0,0,0,0.18)',
       zIndex: 6, opacity: 0,
@@ -420,12 +420,12 @@ function CitationManifeste() {
       <span style={{
         fontFamily: "'Cormorant Garamond', serif",
         fontStyle: 'italic', fontWeight: 500,
-        fontSize: '1.125rem', lineHeight: 1.55,
+        fontSize: 18, lineHeight: 1.55,
         color: 'var(--reve-ink)',
         display: 'block',
       }}>{s.citation.t}</span>
       <div style={{
-        fontSize: '0.875rem', fontWeight: 600,
+        fontSize: 14, fontWeight: 600,
         letterSpacing: '0.16em', textTransform: 'uppercase',
         fontFamily: "'Inter', sans-serif",
         color: 'var(--reve-accent)', marginTop: 8,
@@ -442,7 +442,7 @@ function SignatureReve() {
       fontFamily: "'Inter', sans-serif",
       fontWeight: 500,
       color: 'var(--reve-accent)',
-      fontSize: '0.9375rem', opacity: 0.7,
+      fontSize: 15, opacity: 0.7,
       pointerEvents: 'none', zIndex: 6,
       animation: 'fadeInQ 0.8s 1.8s both',
     }}>rêvé à {s.heure}</div>
@@ -467,7 +467,7 @@ export function HeaderKeywords({ count = 8 }: { count?: number }) {
   return (
     <div style={{ position: 'absolute', top: '3%', left: '5%', right: '5%', zIndex: 3, pointerEvents: 'none' }}>
       <div style={{
-        fontSize: '0.9375rem',
+        fontSize: 15,
         fontFamily: "'Inter', sans-serif",
         fontWeight: 500,
         color: 'var(--reve-accent)',

@@ -68,7 +68,7 @@ export default function SplashScreen() {
             transition={{ delay: 2.7 }}
             style={{
               position: 'absolute', bottom: 48,
-              fontFamily: "'Inter', sans-serif", fontSize: '0.6875rem',
+              fontFamily: "'Inter', sans-serif", fontSize: 11,
               letterSpacing: '0.22em', textTransform: 'uppercase',
               color: encre, opacity: 0.28,
             }}

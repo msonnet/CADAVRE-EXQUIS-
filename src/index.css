@@ -13,7 +13,6 @@
 
 /* ── Variables (valeurs par défaut · ReveProvider les écrase) ── */
 :root {
-  --font-scale: 1;
   --reve-bg: #15110d;
   --reve-ink: #e6d4b8;
   --reve-ink-soft: #c8b89a;
@@ -41,14 +40,14 @@
 
 /* ── Base ─────────────────────────────────────── */
 @layer base {
-  html { height: 100%; font-size: calc(16px * var(--font-scale, 1)); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   body {
     margin: 0;
     background-color: var(--reve-bg);
     background-image: var(--reve-halo);
     color: var(--reve-ink);
     font-family: 'Inter', 'IM Fell English', Georgia, serif;
-    font-size: 1.0625rem;
+    font-size: 17px;
     line-height: 1.55;
     min-height: 100dvh;
     overflow-x: hidden;
@@ -288,27 +287,6 @@
 @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes pulseQ { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
 @keyframes plume { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(5deg) translateY(-4px); } }
-
-/* ── Range input (jauge taille texte) ── */
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--reve-accent);
-  border: 2px solid var(--reve-bg);
-  box-shadow: 0 0 0 1.5px var(--reve-accent);
-  cursor: pointer;
-}
-input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--reve-accent);
-  border: 2px solid var(--reve-bg);
-  box-shadow: 0 0 0 1.5px var(--reve-accent);
-  cursor: pointer;
-}
 
 /* ── Focus clavier (accessibilité) ── */
 :focus-visible { outline: 2px solid var(--reve-accent); outline-offset: 3px; }
