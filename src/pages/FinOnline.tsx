@@ -405,7 +405,7 @@ export default function FinOnline() {
                     {texteVision ? (
                       <>
                         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>— LECTURE SURRÉALISTE —</div>
-                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
+                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
                       </>
                     ) : erreurVision ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -476,7 +476,7 @@ export default function FinOnline() {
                   <motion.p key={i}
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.7, duration: 0.7, ease: 'easeOut' }}
-                    style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.65, margin: '0 0 2px' }}>
+                    style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
                     {i === 0 && lettrine ? (
                       <>
                         <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>

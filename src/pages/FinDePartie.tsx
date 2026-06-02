@@ -279,14 +279,14 @@ export default function FinDePartie() {
               style={{ maxWidth: '95vw', maxHeight: '88vh', objectFit: 'contain' }}
             />
             {labelStyle && (
-              <p style={{ fontFamily: "'Raleway', sans-serif", fontSize: 17, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
+              <p style={{ fontFamily: "'Raleway', sans-serif", fontSize: 13, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
                 {labelStyle.toUpperCase()}
               </p>
             )}
             <button
               aria-label="Fermer le plein écran"
               onClick={e => { e.stopPropagation(); setPleinEcran(false) }}
-              style={{ position: 'absolute', top: 20, right: 20, fontFamily: "'Raleway', sans-serif", fontSize: 17, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: 20, right: 20, fontFamily: "'Raleway', sans-serif", fontSize: 13, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
             >
               ✕ FERMER
             </button>

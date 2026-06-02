@@ -108,8 +108,8 @@
     font-family: 'Playfair Display', serif;
     font-weight: 500;
     font-style: italic;
-    font-size: 1.2rem;
-    line-height: 1.55;
+    font-size: 1.25rem;
+    line-height: 1.62;
     color: var(--reve-ink-soft);
   }
 
@@ -247,9 +247,9 @@
     overflow: hidden;
   }
 
-  /* Lettrine */
+  /* Lettrine — Bodoni Moda (cohérent avec les lettrines inline du poème) */
   .lettrine {
-    font-family: 'Fraunces', 'Bodoni Moda', serif;
+    font-family: 'Bodoni Moda', 'Fraunces', serif;
     font-weight: 900;
     font-style: italic;
     font-size: 3.6rem;

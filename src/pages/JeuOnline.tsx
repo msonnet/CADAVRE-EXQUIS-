@@ -368,18 +368,18 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
         {/* Raccord guide */}
         {raccordDataUrl && canvasReady && (
           <div style={{ position: 'absolute', top: RACCORD_H, left: 0, right: 0, height: 1, background: `linear-gradient(to right,transparent,${accent}55 15%,${accent}55 85%,transparent)`, pointerEvents: 'none', zIndex: 5 }}>
-            <span style={{ position: 'absolute', right: 8, top: -12, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: accent, background: `${CANVAS_BG}ee`, padding: '1px 6px' }}>← RACCORD</span>
+            <span style={{ position: 'absolute', right: 8, top: -12, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 13, color: accent, background: `${CANVAS_BG}ee`, padding: '1px 6px' }}>← RACCORD</span>
           </div>
         )}
 
         {/* Badge */}
-        <div style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: encre, background: 'rgba(255,255,255,0.88)', padding: '4px 10px', border: `0.5px solid ${encre}15`, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 13, color: encre, background: 'rgba(255,255,255,0.88)', padding: '4px 10px', border: `0.5px solid ${encre}15`, pointerEvents: 'none' }}>
           BANDE {bandeNum}/{totalBandes}
         </div>
 
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }}
-            style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: encre, background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
+            style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 13, color: encre, background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
             ↺ {Math.round(zoom * 100)}%
           </button>
         )}
@@ -770,7 +770,7 @@ export default function JeuOnline() {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
-          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 17, zIndex: 100 }}>
+          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
             {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
           </div>
         )}
@@ -825,7 +825,7 @@ export default function JeuOnline() {
 
   // ── Connection banner (reused in multiple views) ──────────────────────────
   const connBanner = connectionStatus !== 'connected' ? (
-    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 17, zIndex: 100 }}>
+    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
       {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
     </div>
   ) : null
