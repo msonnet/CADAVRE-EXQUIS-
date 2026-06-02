@@ -129,12 +129,13 @@ export default function Bibliotheque() {
         )}
 
         {/* ── VIDE ── */}
-        {!chargement && poemes.length === 0 && (
+        {!chargement && poemes.length === 0 && dessins.length === 0 && (
           <motion.div
-            className="flex flex-col items-center py-14"
+            className="flex flex-col items-center justify-center flex-1"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
+            style={{ gap: 24, paddingBottom: 32 }}
           >
             <p style={{
               fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
@@ -145,12 +146,23 @@ export default function Bibliotheque() {
               onClick={() => navigate('/config')}
               whileTap={{ scale: 0.98 }}
               style={{
-                marginTop: 28, background: accent, color: btnText,
-                ...mono, fontSize: 17, textTransform: 'uppercase',
-                padding: '0.9em 1.6em', border: 'none', cursor: 'pointer',
+                width: '100%', background: accent, color: btnText,
+                ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 12,
               }}
             >
-              Première partie →
+              Commencer →
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/config-dessin')}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                width: '100%', background: 'transparent', color: encre,
+                ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '0.7em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 12,
+              }}
+            >
+              Ou dessiner →
             </motion.button>
           </motion.div>
         )}
@@ -275,25 +287,22 @@ export default function Bibliotheque() {
         )}
 
         {/* ── CTA ── */}
-        {!chargement && (
+        {!chargement && (poemes.length > 0 || dessins.length > 0) && (
           <motion.div
-            className="mt-6 mb-3"
+            style={{ marginTop: 24, marginBottom: 12 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            whileTap={{ scale: 0.98 }}
           >
             <button
               onClick={() => navigate('/config')}
-              className="w-full flex flex-col items-center justify-center"
               style={{
-                background: accent, color: btnText,
-                ...mono, fontSize: 17, textTransform: 'uppercase',
-                padding: '1em', border: 'none', cursor: 'pointer', gap: 2,
+                width: '100%', background: accent, color: btnText,
+                ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 12,
               }}
             >
-              <span>Nouvelle partie</span>
-              <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
+              Nouvelle partie →
             </button>
           </motion.div>
         )}
