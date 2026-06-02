@@ -375,20 +375,39 @@ export async function exporterPDF(opts: {
     doc.line(marginX + 30, y, pageW - marginX - 30, y)
     y += 10
 
-    if (opts.type === 'dessin' && opts.imageDataUrl) {
-      // Insert image centered, scaled to fit
+    if (opts.imageDataUrl) {
       try {
-        const img = await chargerImage(opts.imageDataUrl)
+        // Convert URL → base64 data URL so jsPDF can embed it
+        let dataUrl = opts.imageDataUrl
+        let fmt: 'PNG' | 'JPEG' = 'PNG'
+        if (!dataUrl.startsWith('data:')) {
+          const resp = await fetch(dataUrl, { mode: 'cors' })
+          const blob = await resp.blob()
+          fmt = blob.type.includes('jpeg') || blob.type.includes('jpg') ? 'JPEG' : 'PNG'
+          dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+          })
+        } else {
+          fmt = dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg') ? 'JPEG' : 'PNG'
+        }
+        const img = await chargerImage(dataUrl)
         const maxW = contentW
-        const maxH = pageH - y - 30
+        // For poems limit height to leave room for verse text; drawings can fill the page
+        const maxH = opts.type === 'poeme' ? 90 : pageH - y - 30
         const ratio = Math.min(maxW / img.width, maxH / img.height)
         const drawW = img.width * ratio
         const drawH = img.height * ratio
         const drawX = (pageW - drawW) / 2
-        // Detect format from data URL
-        const fmt = opts.imageDataUrl.startsWith('data:image/jpeg') || opts.imageDataUrl.startsWith('data:image/jpg') ? 'JPEG' : 'PNG'
-        doc.addImage(opts.imageDataUrl, fmt, drawX, y, drawW, drawH)
-        y += drawH + 6
+        doc.addImage(dataUrl, fmt, drawX, y, drawW, drawH)
+        y += drawH + 8
+        // Thin separator after illustration
+        doc.setDrawColor(accR, accG, accB)
+        doc.setLineWidth(0.2)
+        doc.line(marginX + 40, y, pageW - marginX - 40, y)
+        y += 8
       } catch (e) {
         console.error('Failed to insert image in PDF', e)
       }

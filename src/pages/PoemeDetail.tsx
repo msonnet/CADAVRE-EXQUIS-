@@ -141,6 +141,7 @@ export default function PoemeDetail() {
         type: 'poeme',
         titre,
         texte: textePoeme,
+        imageDataUrl: poeme.illustration?.url ?? undefined,
         bg: fond, ink: encre, accent,
         date: poeme.dateCreation,
       })
