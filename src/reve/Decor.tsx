@@ -380,12 +380,12 @@ function SymboleAvecCartel({
           fontFamily: "'Inter', sans-serif",
           color: 'var(--reve-ink)',
           transform: 'rotate(-2deg)',
-          maxWidth: 120, lineHeight: 1.25,
+          maxWidth: 150, lineHeight: 1.25,
           boxShadow: '1px 1px 0 rgba(0,0,0,0.12)',
-          opacity: 0.85,
+          opacity: 0.85, overflow: 'hidden',
         }}>
-          <div style={{ fontSize: 17, letterSpacing: '0.12em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
-          <div style={{ fontSize: 17, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
+          <div style={{ fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
+          <div style={{ fontSize: 12, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
         </div>
       )}
     </div>

@@ -57,7 +57,7 @@ export default function Accueil() {
   return (
     <PageTransition className="page-carnet relative flex flex-col h-dvh overflow-hidden safe-top safe-bottom">
 
-      <Decor variant="accueil" hideCitation />
+      <Decor variant="accueil" hideCitation hideSignature />
       <Onboarding />
 
       {/* ── HEADER ── */}
@@ -93,6 +93,16 @@ export default function Accueil() {
         border: 'none', borderTop: `1.2px solid ${accent}`,
         marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10,
       }} />
+      {seance?.heure && (
+        <div style={{
+          position: 'relative', zIndex: 10,
+          textAlign: 'right', marginTop: 3,
+          ...ui, fontSize: 11, letterSpacing: '0.06em',
+          color: accent, opacity: 0.5,
+        }}>
+          rêvé à {seance.heure}
+        </div>
+      )}
 
       {/* ── ZONE CENTRALE ── */}
       <div className="relative flex flex-col flex-1 justify-end" style={{ zIndex: 10 }}>
@@ -131,8 +141,9 @@ export default function Accueil() {
           <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: 10 }} />
           <span style={{
             fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
-            color: encre, display: 'block', fontStyle: 'italic',
-          }}>
+            color: encre, display: '-webkit-box', fontStyle: 'italic',
+            overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          } as React.CSSProperties}>
             {seance.citation.t}
           </span>
           <div style={{
@@ -219,7 +230,7 @@ export default function Accueil() {
             onClick={() => nav(path)}
             style={{
               ...ui, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: encre, opacity: 0.65,
+              color: encre, opacity: 0.65, fontWeight: 700,
               background: 'none', border: 'none', cursor: 'pointer',
               textAlign: (align as 'right') ?? 'left',
               padding: '2px 0',
