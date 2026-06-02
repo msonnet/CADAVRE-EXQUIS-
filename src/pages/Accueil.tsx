@@ -45,7 +45,7 @@ export default function Accueil() {
     : { paddingLeft: 'clamp(2.8rem, 14vw, 5rem)', alignSelf: 'flex-start', textAlign: 'left' }
 
   return (
-    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
+    <PageTransition className="page-carnet relative flex flex-col h-dvh overflow-hidden safe-top safe-bottom">
 
       {/* DÉCOR — stripes, symbole, étiquettes, signature (pas la citation) */}
       <Decor variant="accueil" hideCitation />
@@ -74,9 +74,9 @@ export default function Accueil() {
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10 }} />
 
       {/* ── ZONE CENTRALE — CADAVRE (Decor, absolu) + Exquis. (flux) ── */}
-      <div className="relative flex flex-col flex-1 justify-end" style={{ minHeight: '50vh', zIndex: 10 }}>
+      <div className="relative flex flex-col flex-1 justify-end" style={{ zIndex: 10 }}>
         <motion.div
-          className="mb-8"
+          className="mb-3"
           style={exquisStyle}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -102,7 +102,7 @@ export default function Accueil() {
       {/* ── CITATION inline ── */}
       {seance?.citation && (
         <motion.div
-          className="relative mb-5"
+          className="relative mb-3"
           style={{ zIndex: 10 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -123,7 +123,7 @@ export default function Accueil() {
 
       {/* ── CTA ── */}
       <motion.div
-        className="relative mb-3"
+        className="relative mb-2"
         style={{ zIndex: 10 }}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -137,7 +137,7 @@ export default function Accueil() {
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: encre, color: bg,
               ...mono, fontSize: 17, textTransform: 'uppercase',
-              padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              padding: '0.65em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
             }}
           >
@@ -151,7 +151,7 @@ export default function Accueil() {
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: second, color: bg,
               ...mono, fontSize: 17, textTransform: 'uppercase',
-              padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+              padding: '0.65em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
               borderRadius: 12,
             }}
           >
@@ -166,7 +166,7 @@ export default function Accueil() {
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             background: `${encre}0d`, color: encre,
             ...mono, fontSize: 17, textTransform: 'uppercase',
-            padding: '0.8em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', gap: 2,
+            padding: '0.5em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', gap: 2,
             borderRadius: 12,
           }}
         >
