@@ -593,12 +593,16 @@ export default function Jeu() {
         <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
           {/* Header */}
           <div className="flex justify-between items-baseline">
-            <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7 }}>{acteLabel}</span>
-            <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{colorLabel}</span>
+            <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.7 }}>{acteLabel}</span>
+            <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
           </div>
           <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-          <div className="flex flex-col items-center justify-center flex-1 text-center" style={{ paddingBottom: '20%' }}>
+          <div className="flex flex-col items-center flex-1 text-center">
+            {/* Espaceur fixe — ancre "La voix parle…" à 38 % du conteneur quel que soit
+                le contenu variable (dots vs texte révélé) qui suit */}
+            <div style={{ flex: '0 0 38%' }} />
+
             <motion.div
               style={{
                 fontFamily: "'Playfair Display', serif",
@@ -675,6 +679,8 @@ export default function Jeu() {
                 )}
               </>
             )}
+
+            <div style={{ flex: 1 }} />
           </div>
 
           {/* Footer */}
@@ -694,12 +700,12 @@ export default function Jeu() {
 
         {/* Header */}
         <div className="flex justify-between items-baseline">
-          <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7 }}>{acteLabel}</span>
+          <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.7 }}>{acteLabel}</span>
           <button
             onClick={toggleMute}
             aria-label={muted ? 'Activer le son' : 'Couper le son'}
             aria-pressed={!muted}
-            style={{ ...mono, fontSize: 17, color: accent, opacity: muted ? 0.35 : 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, opacity: muted ? 0.35 : 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             {colorLabel}
           </button>
