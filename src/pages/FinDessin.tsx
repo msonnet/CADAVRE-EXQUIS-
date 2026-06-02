@@ -204,7 +204,7 @@ export default function FinDessin() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — RÉVÉLATION —
         </div>
 
@@ -222,7 +222,7 @@ export default function FinDessin() {
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center', textAlign: 'center' }}
           >
             <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-              <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
                 — {nbBandes} BANDE{nbBandes > 1 ? 'S' : ''} —
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
@@ -274,7 +274,7 @@ export default function FinDessin() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
                   <button
                     onClick={() => setPleinEcran(true)}
-                    style={{ ...mono, fontSize: 17, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ ...mono, fontSize: 13, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     ↗ AGRANDIR
                   </button>
@@ -287,7 +287,7 @@ export default function FinDessin() {
             {/* Texte Vision */}
             {texteVision ? (
               <div>
-                <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
                   — LECTURE SURRÉALISTE —
                 </div>
                 <div style={{
@@ -307,7 +307,7 @@ export default function FinDessin() {
                   onClick={reessayerVision}
                   style={{
                     alignSelf: 'flex-start',
-                    ...mono, fontSize: 17,
+                    ...mono, fontSize: 13,
                     background: 'transparent', color: accent,
                     border: `0.5px solid ${accent}50`,
                     padding: '7px 14px', cursor: 'pointer',
@@ -347,7 +347,7 @@ export default function FinDessin() {
                   onClick={partager}
                   style={{
                     flex: 1,
-                    ...mono, fontSize: 17,
+                    ...mono, fontSize: 13,
                     background: 'transparent',
                     color: `${encre}70`,
                     border: `0.5px solid ${encre}25`,
@@ -361,7 +361,7 @@ export default function FinDessin() {
                   onClick={() => navigate('/')}
                   style={{
                     flex: 1,
-                    ...mono, fontSize: 17,
+                    ...mono, fontSize: 13,
                     background: 'transparent',
                     color: `${encre}70`,
                     border: `0.5px solid ${encre}25`,
@@ -411,7 +411,7 @@ export default function FinDessin() {
                 position: 'absolute', top: 16, right: 16,
                 background: 'none', border: `0.5px solid rgba(232,212,184,0.4)`,
                 color: '#e8d4b8',
-                ...mono, fontSize: 17, padding: '6px 12px',
+                ...mono, fontSize: 13, padding: '6px 12px',
                 cursor: 'pointer',
               }}
             >

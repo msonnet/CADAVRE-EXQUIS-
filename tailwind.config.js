@@ -27,13 +27,17 @@ export default {
       },
       fontFamily: {
         // Typographie unifiée
-        fraunces: ['Fraunces', 'serif'],
-        inter: ['Inter', 'system-ui', 'sans-serif'],
-        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        // ── Système typographique (5 rôles) ──
+        fraunces: ['Fraunces', 'serif'],            // manchettes display
+        bodoni:   ['Fraunces', 'serif'],            // alias historique des manchettes → Fraunces
+        bodonimoda: ['"Bodoni Moda"', 'serif'],     // lettrines · « Joueur N. » · initiales
+        playfair: ['"Playfair Display"', 'serif'],  // littéraire : vers · citations
+        inter:    ['Inter', 'system-ui', 'sans-serif'], // corps de lecture
+        raleway:  ['Raleway', 'sans-serif'],        // labels capitales trackés
 
-        // Compat legacy → pointent désormais vers Fraunces / Inter
-        garamond: ['Fraunces', 'serif'],
-        bodoni: ['Fraunces', 'serif'],
+        // Compat legacy → repointent vers le système (plus de Cormorant)
+        cormorant: ['"Playfair Display"', 'Georgia', 'serif'],
+        garamond:  ['"Playfair Display"', 'serif'],
         lora: ['Inter', 'sans-serif'],
         fell: ['Inter', 'sans-serif'],
       },

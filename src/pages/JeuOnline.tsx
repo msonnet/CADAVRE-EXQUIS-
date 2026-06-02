@@ -396,7 +396,7 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
                 <button key={t} onClick={() => setTool(t)} aria-pressed={active} title={TOOL_NAMES[t]}
                   style={{ flex: '0 0 auto', width: 52, height: 62, paddingTop: 6, paddingBottom: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', background: active ? '#ffffff' : 'transparent', border: 'none', borderRadius: 12, cursor: 'pointer', opacity: active ? 1 : 0.42 }}>
                   <Icon tint={INK} nib={t === 'eraser' ? '#f3a9b8' : color} />
-                  <span style={{ ...mono, fontSize: 17, color: active ? accent : INK, letterSpacing: '0.08em' }}>{TOOL_NAMES[t].toUpperCase()}</span>
+                  <span style={{ ...mono, fontSize: 13, color: active ? accent : INK, letterSpacing: '0.08em' }}>{TOOL_NAMES[t].toUpperCase()}</span>
                 </button>
               )
             })}
@@ -408,15 +408,15 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
 
         {/* Opacity */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 17, color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
           <input type="range" min={10} max={100} step={5} value={Math.round(opacity * 100)} onChange={e => setOpacity(Number(e.target.value) / 100)} disabled={tool === 'eraser'}
             style={{ flex: 1, accentColor: accent, opacity: tool === 'eraser' ? 0.35 : 1 }} />
-          <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
+          <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
         </div>
 
         {/* Sizes + undo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 17, color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button key={i} onClick={() => setSizeIdx(i)} aria-pressed={sizeIdx === i}
@@ -458,7 +458,7 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
               <div style={{ width: 36, height: 4, borderRadius: 2, background: '#ddd', margin: '12px auto 16px' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
-                <span style={{ ...mono, fontSize: 17, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
+                <span style={{ ...mono, fontSize: 13, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
                 <input type="color" value={color} onChange={e => { setColor(e.target.value); if (tool === 'eraser') setTool('pen') }}
                   style={{ width: 36, height: 36, padding: 3, border: `1px solid ${encre}20`, borderRadius: 8, cursor: 'pointer' }} />
               </div>
@@ -468,7 +468,7 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
                     style={{ height: 32, borderRadius: 6, background: col, border: color === col ? `2.5px solid ${accent}` : ['#ffffff','#e8e8e8','#f0e4cc','#FFF9C4','#FCE4EC','#F3E5F5'].includes(col) ? `1px solid ${encre}22` : '2.5px solid transparent', cursor: 'pointer' }} />
                 ))}
               </div>
-              <button onClick={() => setShowColorPanel(false)} style={{ width: '100%', padding: '12px', ...mono, fontSize: 17, background: '#f5f0ea', color: encre, border: 'none', borderRadius: 10, cursor: 'pointer' }}>FERMER</button>
+              <button onClick={() => setShowColorPanel(false)} style={{ width: '100%', padding: '12px', ...mono, fontSize: 13, background: '#f5f0ea', color: encre, border: 'none', borderRadius: 10, cursor: 'pointer' }}>FERMER</button>
             </motion.div>
           </>
         )}
@@ -774,7 +774,7 @@ export default function JeuOnline() {
             {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
           </div>
         )}
-        <span style={{ ...mono, fontSize: 17, color: accent, opacity: 0.8 }}>CHARGEMENT…</span>
+        <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>CHARGEMENT…</span>
       </PageTransition>
     )
   }
@@ -789,18 +789,18 @@ export default function JeuOnline() {
           onClick={() => setShowIntro(false)}
           style={{ position: 'fixed', inset: 0, zIndex: 50, background: encre, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, cursor: 'pointer', textAlign: 'center', padding: '0 28px' }}
         >
-          <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em' }}>
+          <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
             — BANDE {(myEffectiveIndex ?? 0) + 1} SUR {nbTotal} —
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
             À vous<br />de dessiner
           </div>
           {raccordDataUrl && (
-            <div style={{ ...mono, fontSize: 17, color: `${bg}60`, letterSpacing: '0.16em' }}>
+            <div style={{ ...mono, fontSize: 13, color: `${bg}60`, letterSpacing: '0.16em' }}>
               ← RACCORD DU JOUEUR PRÉCÉDENT VISIBLE
             </div>
           )}
-          <motion.div style={{ ...mono, fontSize: 17, color: `${bg}50`, letterSpacing: '0.2em', marginTop: 12 }}
+          <motion.div style={{ ...mono, fontSize: 13, color: `${bg}50`, letterSpacing: '0.2em', marginTop: 12 }}
             animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.8 }}>
             TOUCHER POUR COMMENCER
           </motion.div>
@@ -845,7 +845,7 @@ export default function JeuOnline() {
               {p.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda',serif", fontWeight: 900, fontSize: 17, color: accent }}>{p.pseudo[0]?.toUpperCase()}</span></div>}
             </div>
-            <span style={{ ...mono, fontSize: 17, color: isTheirTurn ? accent : `${encre}50` }}>
+            <span style={{ ...mono, fontSize: 13, color: isTheirTurn ? accent : `${encre}50` }}>
               {isMe ? (isTheirTurn ? '✎ VOUS' : submitted ? '✓' : '…') : isTheirTurn ? '✎' : hasDone ? '✓' : '…'}
             </span>
           </div>
@@ -861,11 +861,11 @@ export default function JeuOnline() {
         <Decor variant="aide" />
         {connBanner}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85 }}>{code}</span>
-          <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{submitted_count}/{nbTotal} SOUMIS</span>
+          <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>{code}</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{submitted_count}/{nbTotal} SOUMIS</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
-        <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 4 }}>👁 SPECTATEUR</div>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 4 }}>👁 SPECTATEUR</div>
         {avatarsRow}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           {currentTurnPlayer && currentCase < nbTotal && (
@@ -887,8 +887,8 @@ export default function JeuOnline() {
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85 }}>{code}</span>
-        <span style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700 }}>{submitted_count}/{nbTotal}</span>
+        <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>{code}</span>
+        <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{submitted_count}/{nbTotal}</span>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
@@ -900,7 +900,7 @@ export default function JeuOnline() {
           <div style={{ height: 2, background: `${encre}15`, borderRadius: 1, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${Math.round((secondsLeft / room.turn_seconds) * 100)}%`, background: secondsLeft < 30 ? '#b22c20' : accent, transition: 'width 1s linear' }} />
           </div>
-          <div style={{ ...mono, fontSize: 17, color: secondsLeft < 30 ? '#b22c20' : accent, marginTop: 4, textAlign: 'right' }}>
+          <div style={{ ...mono, fontSize: 13, color: secondsLeft < 30 ? '#b22c20' : accent, marginTop: 4, textAlign: 'right' }}>
             {secondsLeft >= 60
               ? `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`
               : `${secondsLeft}s`}
@@ -915,7 +915,7 @@ export default function JeuOnline() {
         {submitted ? (
           <motion.div key="waiting" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 16 }}>
-            <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>✓ CONTRIBUTION REÇUE</div>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>✓ CONTRIBUTION REÇUE</div>
             {(() => {
               if (!myContrib) return null
               const displayUrl = myContrib.startsWith('data:') ? myContrib : (() => { try { return (JSON.parse(myContrib) as { imageDataUrl: string }).imageDataUrl } catch { return null } })()
@@ -940,13 +940,13 @@ export default function JeuOnline() {
           <motion.div key={`intro-${currentCase}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setShowIntro(false)}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em' }}>
+            <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
               — CASE {currentCase + 1} SUR {nbTotal} —
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.8rem,8vw,2.6rem)', color: encre, lineHeight: 1.3 }}>
               À vous<br />d'écrire
             </div>
-            <motion.div style={{ ...mono, fontSize: 17, color: `${encre}45`, letterSpacing: '0.2em', marginTop: 8 }}
+            <motion.div style={{ ...mono, fontSize: 13, color: `${encre}45`, letterSpacing: '0.2em', marginTop: 8 }}
               animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.8 }}>
               TOUCHER POUR COMMENCER
             </motion.div>
@@ -959,12 +959,12 @@ export default function JeuOnline() {
 
             {/* Consigne */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>— CONSIGNE —</div>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>— CONSIGNE —</div>
               <div className="font-bodoni font-black leading-tight" style={{ fontSize: 'clamp(1.25rem,5.5vw,1.75rem)', color: encre, marginBottom: 4 }}>
                 {caseDef.consigne.charAt(0).toUpperCase() + caseDef.consigne.slice(1)}.
               </div>
               {TYPE_LABEL[caseDef.type] && (
-                <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7, marginBottom: 12 }}>{TYPE_LABEL[caseDef.type]}</div>
+                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginBottom: 12 }}>{TYPE_LABEL[caseDef.type]}</div>
               )}
             </div>
 
@@ -973,12 +973,12 @@ export default function JeuOnline() {
               <div style={{ marginBottom: 18 }}>
                 {showLastWord ? (
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.55 }}>DERNIER MOT&nbsp;:</span>
+                    <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55 }}>DERNIER MOT&nbsp;:</span>
                     <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: accent, fontStyle: 'italic' }}>…{prevLastWord}</span>
-                    <button type="button" onClick={() => setShowLastWord(false)} style={{ ...mono, fontSize: 17, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>masquer</button>
+                    <button type="button" onClick={() => setShowLastWord(false)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>masquer</button>
                   </div>
                 ) : (
-                  <button type="button" onClick={() => setShowLastWord(true)} style={{ ...mono, fontSize: 17, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer', letterSpacing: '0.16em' }}>
+                  <button type="button" onClick={() => setShowLastWord(true)} style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer', letterSpacing: '0.16em' }}>
                     👁 VOIR LE DERNIER MOT
                   </button>
                 )}
@@ -986,7 +986,7 @@ export default function JeuOnline() {
             )}
 
             {/* Input */}
-            <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>— ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —</div>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>— ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —</div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
               <textarea
                 value={input}
@@ -1001,7 +1001,7 @@ export default function JeuOnline() {
               {submitError && <div style={{ ...mono, fontSize: 17, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={handleIa} disabled={iaLoading}
-                  style={{ flex: 1, ...mono, fontSize: 17, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>
+                  style={{ flex: 1, ...mono, fontSize: 13, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>
                   {iaLoading ? '…' : '✦ IA'}
                 </button>
                 <button type="submit" disabled={!input.trim() || submitting}
@@ -1018,7 +1018,7 @@ export default function JeuOnline() {
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center' }}>
             {currentTurnPlayer && currentCase < nbTotal ? (
               <>
-                <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.55, letterSpacing: '0.22em' }}>— EN ATTENTE —</div>
+                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55, letterSpacing: '0.22em' }}>— EN ATTENTE —</div>
                 <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: encre, lineHeight: 1.6 }}>
                   C'est le tour de <strong>{currentTurnPlayer.pseudo}</strong>…
                 </p>

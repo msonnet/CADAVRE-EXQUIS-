@@ -524,7 +524,7 @@ export default function Jeu() {
         >
           ✦
         </motion.span>
-        <p className="font-cormorant text-encre text-lg mt-4">
+        <p className="text-encre mt-4" style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 19 }}>
           Le poème se referme…
         </p>
       </PageTransition>
@@ -546,7 +546,8 @@ export default function Jeu() {
           </motion.p>
         )}
         <motion.p
-          className="font-garamond text-5xl text-encre"
+          className="text-encre"
+          style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', lineHeight: 1.1 }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
@@ -640,7 +641,7 @@ export default function Jeu() {
             ) : (
               <>
                 <motion.div
-                  style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7, marginTop: 16, lineHeight: 1.7 }}
+                  style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 16, lineHeight: 1.7 }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.7 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
@@ -684,7 +685,7 @@ export default function Jeu() {
           </div>
 
           {/* Footer */}
-          <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
             {iaChargement ? '— NE PAS LA DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
           </div>
         </div>
@@ -729,7 +730,7 @@ export default function Jeu() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
                   — VOIX PRÉCÉDENTE · SCELLÉE —
                 </div>
                 <p style={{
@@ -748,7 +749,7 @@ export default function Jeu() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
                 — CONSIGNE —
               </div>
               <div
@@ -758,7 +759,7 @@ export default function Jeu() {
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
               </div>
               {subtitle && (
-                <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.9, marginBottom: 14 }}>
+                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginBottom: 14 }}>
                   {subtitle}
                 </div>
               )}
@@ -779,7 +780,7 @@ export default function Jeu() {
                 >
                   {tempsRestant}
                 </motion.span>
-                <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75 }}>s</span>
+                <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>s</span>
               </motion.div>
             )}
 
@@ -789,7 +790,7 @@ export default function Jeu() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.35 }}
             >
-              <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
                 — ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —
               </div>
               <textarea
@@ -804,7 +805,7 @@ export default function Jeu() {
                 rows={3}
               />
               {hintQuestion && (
-                <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.9, marginTop: 4 }}>
+                <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginTop: 4 }}>
                   LES QUESTIONS SE TERMINENT PAR UN ?
                 </p>
               )}
@@ -851,12 +852,12 @@ export default function Jeu() {
             <div style={{ textAlign: 'center', paddingBottom: 4 }}>
               {!confirmAbandon ? (
                 <>
-                  <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.8, marginBottom: 8 }}>
+                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, marginBottom: 8 }}>
                     — IRRÉVERSIBLE —
                   </div>
                   <button
                     onClick={() => setConfirmAbandon(true)}
-                    style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     abandonner la partie
                   </button>

@@ -246,7 +246,7 @@ export default function ProfilPublic() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/galerie')}
-            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← GALERIE
           </button>
@@ -254,7 +254,7 @@ export default function ProfilPublic() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — PROFIL —
         </div>
 
@@ -378,12 +378,12 @@ export default function ProfilPublic() {
                           }}>
                             {titreAffiche}
                           </p>
-                          <span style={{ ...mono, fontSize: 17, color: accent, opacity: 0.85, flexShrink: 0 }}>
+                          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.85, flexShrink: 0 }}>
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
 
-                        <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
+                        <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
                           {(item.type === 'poeme' ? 'POÈME' : 'DESSIN')}
                           {' · '}
                           {formatDate(item.created_at).toUpperCase()}
@@ -494,7 +494,7 @@ export default function ProfilPublic() {
                           )
                         })}
                         <span style={{
-                          ...mono, fontSize: 17, color: encre, opacity: 0.55,
+                          ...mono, fontSize: 13, color: encre, opacity: 0.55,
                           marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}>
                           <span style={{ fontSize: 17 }}>👁</span>

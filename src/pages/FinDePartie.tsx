@@ -218,7 +218,7 @@ export default function FinDePartie() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + voixCount * 0.14, duration: 0.7 }}
             >
-              <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
                 — {voixCount} VOIX —
               </div>
               <div style={{
@@ -342,7 +342,7 @@ export default function FinDePartie() {
           }}
         >
           {/* Poem title in mono */}
-          <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
           </div>
 
@@ -378,7 +378,7 @@ export default function FinDePartie() {
           </div>
 
           {/* Card footer */}
-          <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
+          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
             {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </motion.div>
@@ -405,13 +405,13 @@ export default function FinDePartie() {
             </button>
             <div className="flex justify-between items-center">
               {labelStyle && !generatingIllustration && (
-                <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75 }}>{labelStyle.toUpperCase()}</span>
+                <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>{labelStyle.toUpperCase()}</span>
               )}
               {!generatingIllustration && (
                 <button
                   onClick={() => setPleinEcran(true)}
                   aria-label="Agrandir l'illustration"
-                  style={{ ...mono, fontSize: 17, color: accent, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                  style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
                 >↗ AGRANDIR</button>
               )}
             </div>
@@ -420,7 +420,7 @@ export default function FinDePartie() {
               <div className="w-full">
                 <button
                   onClick={() => setPromptVisible(v => !v)}
-                  style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                 >
                   {promptVisible ? '↑ masquer le prompt' : '→ voir le prompt IA'}
                 </button>
@@ -454,7 +454,7 @@ export default function FinDePartie() {
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1.8, repeat: Infinity }}
               >✦</motion.span>
-              <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.8 }}>{labelStyle?.toUpperCase()} EN COURS…</p>
+              <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8 }}>{labelStyle?.toUpperCase()} EN COURS…</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -533,7 +533,7 @@ export default function FinDePartie() {
                 const iaNum = c.voixSlot ?? poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
                 return (
                   <div key={i} style={{ borderLeft: `2px solid ${accent}30`, paddingLeft: 12, paddingTop: 2, paddingBottom: 2 }}>
-                    <p style={{ ...mono, fontSize: 17, color: accent, opacity: 0.7, marginBottom: 3 }}>
+                    <p style={{ ...mono, fontSize: 13, color: accent, opacity: 0.7, marginBottom: 3 }}>
                       {c.fonction.toUpperCase()}
                       <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
                       <span style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -593,7 +593,7 @@ export default function FinDePartie() {
                 {promptLibre.trim() && (
                   <button
                     onClick={() => choisirStyle(styleChoisi || 'libre')}
-                    style={{ ...mono, fontSize: 17, color: accent, background: 'none', border: `0.5px solid ${accent}50`, padding: '8px 12px', cursor: 'pointer', marginTop: 8, width: '100%' }}
+                    style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: `0.5px solid ${accent}50`, padding: '8px 12px', cursor: 'pointer', marginTop: 8, width: '100%' }}
                   >
                     ✦ GÉNÉRER AVEC CETTE DIRECTION
                   </button>
@@ -613,7 +613,7 @@ export default function FinDePartie() {
                   {illustrationUrl && (
                     <button
                       onClick={() => styleChoisi && choisirStyle(styleChoisi)}
-                      style={{ ...mono, fontSize: 17, color: encre, opacity: 0.8, background: 'none', border: `0.5px solid ${encre}20`, padding: '8px', cursor: 'pointer' }}
+                      style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: `0.5px solid ${encre}20`, padding: '8px', cursor: 'pointer' }}
                     >
                       ↺ RELANCER
                     </button>
@@ -623,7 +623,7 @@ export default function FinDePartie() {
                       key={s.id}
                       onClick={() => choisirStyle(s.id)}
                       style={{
-                        ...mono, fontSize: 17,
+                        ...mono, fontSize: 13,
                         color: styleChoisi === s.id && illustrationUrl ? accent : encre,
                         opacity: styleChoisi === s.id && illustrationUrl ? 0.9 : 0.55,
                         background: 'transparent',
@@ -643,7 +643,7 @@ export default function FinDePartie() {
                 <div className="flex flex-col items-center mt-3">
                   <button
                     onClick={() => setPromptVisible(v => !v)}
-                    style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     {promptVisible ? '↑ MASQUER LE PROMPT' : '→ VOIR LE PROMPT IA'}
                   </button>
@@ -667,7 +667,7 @@ export default function FinDePartie() {
         >
           <button
             onClick={() => navigate('/config')}
-            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             — NOUVELLE PARTIE —
           </button>

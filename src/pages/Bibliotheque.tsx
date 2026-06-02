@@ -70,7 +70,7 @@ export default function Bibliotheque() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — LE RECUEIL —
         </div>
 
@@ -92,7 +92,7 @@ export default function Bibliotheque() {
             Ta bibliothèque personnelle
           </p>
           {!chargement && (poemes.length > 0 || dessins.length > 0) && (
-            <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.18em', opacity: 0.75, marginBottom: 14 }}>
+            <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em', opacity: 0.75, marginBottom: 14 }}>
               {poemes.length > 0 && `${poemes.length} POÈME${poemes.length > 1 ? 'S' : ''} · ${poemes.reduce((s, p) => s + p.cases.length, 0)} VOIX`}
               {poemes.length > 0 && dessins.length > 0 && '  ·  '}
               {dessins.length > 0 && `${dessins.length} DESSIN${dessins.length > 1 ? 'S' : ''}`}
@@ -158,7 +158,7 @@ export default function Bibliotheque() {
             <AnimatePresence>
               <div>
                 {termes.length > 0 && (
-                  <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75, marginBottom: 8 }}>
+                  <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginBottom: 8 }}>
                     {poemesFiltres.length} RÉSULTAT{poemesFiltres.length !== 1 ? 'S' : ''}
                   </p>
                 )}
@@ -195,7 +195,7 @@ export default function Bibliotheque() {
                     }}>
                       {poeme.titre ?? extraitPoeme(poeme) ?? 'Sans titre'}
                     </p>
-                    <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75 }}>
+                    <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
                       {(NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
                       {' · '}{poeme.cases.length} voix
                       {' · '}{formatDate(poeme.dateCreation).toUpperCase()}
@@ -215,7 +215,7 @@ export default function Bibliotheque() {
             transition={{ delay: 0.3 }}
             style={{ marginTop: 16 }}
           >
-            <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12, marginTop: 8 }}>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12, marginTop: 8 }}>
               — CADAVRES DESSINÉS —
             </div>
             {dessins.map((dessin, i) => (
@@ -249,7 +249,7 @@ export default function Bibliotheque() {
                   <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.3, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')}
                   </p>
-                  <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75 }}>
+                  <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
                     {dessin.nbBandes} BANDES · {formatDate(dessin.dateCreation).toUpperCase()}
                   </p>
                   {dessin.texteVision && (

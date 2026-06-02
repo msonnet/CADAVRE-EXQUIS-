@@ -313,7 +313,7 @@ export default function Galerie() {
         <div className="flex justify-between items-baseline">
           <button
             onClick={() => navigate('/')}
-            style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
           </button>
@@ -321,7 +321,7 @@ export default function Galerie() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
           — GALERIE —
         </div>
 
@@ -379,7 +379,7 @@ export default function Galerie() {
           marginBottom: 14, opacity: 0.7,
         }}>
           {REACTION_EMOJIS.map(em => (
-            <span key={em} style={{ ...mono, fontSize: 17, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span key={em} style={{ ...mono, fontSize: 13, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <span style={{ fontSize: 17 }}>{em}</span>
               {REACTION_LABELS[em].toUpperCase()}
             </span>
@@ -475,14 +475,14 @@ export default function Galerie() {
                           }}>
                             {titreAffiche}
                           </p>
-                          <span style={{ ...mono, fontSize: 17, color: accent, opacity: 0.85, flexShrink: 0 }}>
+                          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.85, flexShrink: 0 }}>
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
                       </button>
 
                       {/* Méta auteur (Link) + date */}
-                      <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
+                      <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
                         <Link
                           to={`/u/${encodeURIComponent(item.author_pseudo)}`}
                           onClick={e => e.stopPropagation()}
@@ -647,7 +647,7 @@ export default function Galerie() {
                           )
                         })}
                         <span style={{
-                          ...mono, fontSize: 17, color: encre, opacity: 0.55,
+                          ...mono, fontSize: 13, color: encre, opacity: 0.55,
                           marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}>
                           <span style={{ fontSize: 17 }}>👁</span>
@@ -695,7 +695,7 @@ export default function Galerie() {
 
         {!chargement && !erreur && items.length > 0 && !encore && (
           <p style={{
-            ...mono, fontSize: 17, color: encre, opacity: 0.55,
+            ...mono, fontSize: 13, color: encre, opacity: 0.55,
             textAlign: 'center', marginTop: 18, marginBottom: 4,
           }}>
             — FIN —

@@ -90,14 +90,14 @@ export default function Profil() {
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
         <button
           onClick={() => navigate('/online')}
-          style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           ← RETOUR
         </button>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
+      <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
         — MON PROFIL —
       </div>
 
@@ -109,7 +109,7 @@ export default function Profil() {
       >
         {/* Avatar */}
         <div>
-          <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — IMAGE DE PROFIL —
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
@@ -161,7 +161,7 @@ export default function Profil() {
                     type="button"
                     onClick={() => setAvatarStyle(s.id)}
                     style={{
-                      ...mono, fontSize: 17, padding: '4px 9px',
+                      ...mono, fontSize: 13, padding: '4px 9px',
                       background: avatarStyle === s.id ? `${accent}20` : 'transparent',
                       color: avatarStyle === s.id ? accent : encre,
                       border: `0.5px solid ${avatarStyle === s.id ? accent : `${encre}25`}`,
@@ -175,7 +175,7 @@ export default function Profil() {
                 onClick={handleGenerateAvatar}
                 disabled={generatingAvatar || !avatarPrompt.trim()}
                 style={{
-                  ...mono, fontSize: 17, background: 'none', color: accent,
+                  ...mono, fontSize: 13, background: 'none', color: accent,
                   border: `0.5px solid ${accent}60`, padding: '6px 12px',
                   cursor: generatingAvatar || !avatarPrompt.trim() ? 'not-allowed' : 'pointer',
                   opacity: generatingAvatar || !avatarPrompt.trim() ? 0.5 : 1,
@@ -189,7 +189,7 @@ export default function Profil() {
 
         {/* Pseudo */}
         <div>
-          <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — PSEUDONYME —
           </div>
           <input
