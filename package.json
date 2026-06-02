@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/tmp/pw-browsers playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
@@ -20,6 +21,7 @@
     "react-router-dom": "^6.30.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
