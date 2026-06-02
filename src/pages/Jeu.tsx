@@ -627,64 +627,70 @@ export default function Jeu() {
               >…</motion.span>
             </motion.div>
 
-            {iaChargement ? (
-              <motion.div
-                className="flex gap-2 mt-8"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                {[0, 1, 2].map(i => (
-                  <motion.span
-                    key={i}
-                    style={{ width: 5, height: 5, borderRadius: '50%', background: accent, display: 'inline-block' }}
-                    animate={{ opacity: [0.2, 1, 0.2] }}
-                    transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.4 }}
-                  />
-                ))}
-              </motion.div>
-            ) : (
-              <>
-                <motion.div
-                  style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 16, lineHeight: 1.7 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.7 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                >
-                  elle dépose son fragment<br />à l'abri des regards
-                </motion.div>
-
-                <motion.div
-                  style={{ fontSize: 17, color: accent, marginTop: 22 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  ✦
-                </motion.div>
-
-                {iaFallbackRevele && (
+            {/* Contenu variable rendu en flux nul (hauteur 0) : il flotte sous le
+                titre sans jamais le décaler entre l'état « chargement » et « révélé ». */}
+            <div style={{ position: 'relative', height: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', top: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {iaChargement ? (
                   <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.4 }}
-                    style={{
-                      ...mono,
-                      fontSize: 11,
-                      color: accent,
-                      opacity: 0.55,
-                      marginTop: 18,
-                      letterSpacing: '0.22em',
-                      border: `1px solid ${accent}55`,
-                      padding: '2px 8px',
-                      borderRadius: 2,
-                    }}
+                    className="flex gap-2 mt-8"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
                   >
-                    RÉSERVE
+                    {[0, 1, 2].map(i => (
+                      <motion.span
+                        key={i}
+                        style={{ width: 5, height: 5, borderRadius: '50%', background: accent, display: 'inline-block' }}
+                        animate={{ opacity: [0.2, 1, 0.2] }}
+                        transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.4 }}
+                      />
+                    ))}
                   </motion.div>
+                ) : (
+                  <>
+                    <motion.div
+                      style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 16, lineHeight: 1.7, textAlign: 'center' }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.7 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                    >
+                      elle dépose son fragment<br />à l'abri des regards
+                    </motion.div>
+
+                    <motion.div
+                      style={{ fontSize: 17, color: accent, marginTop: 22 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      ✦
+                    </motion.div>
+
+                    {iaFallbackRevele && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4, duration: 0.4 }}
+                        style={{
+                          ...mono,
+                          fontSize: 11,
+                          color: accent,
+                          opacity: 0.55,
+                          marginTop: 18,
+                          letterSpacing: '0.22em',
+                          border: `1px solid ${accent}55`,
+                          padding: '2px 8px',
+                          borderRadius: 2,
+                        }}
+                      >
+                        RÉSERVE
+                      </motion.div>
+                    )}
+                  </>
                 )}
-              </>
-            )}
+              </div>
+            </div>
 
             <div style={{ flex: 1 }} />
           </div>
