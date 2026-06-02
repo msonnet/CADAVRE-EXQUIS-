@@ -106,6 +106,30 @@ export default function Accueil() {
 
       {/* ── ZONE CENTRALE ── */}
       <div className="relative flex flex-col flex-1 justify-end" style={{ zIndex: 10 }}>
+
+        {/* Accent vertical éditorial — chiffre de séance */}
+        <motion.div
+          style={{
+            position: 'absolute',
+            top: '8%',
+            ...(cadavreSide === 'right' ? { left: 0 } : { right: 0 }),
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+            fontFamily: "'Raleway', sans-serif",
+            fontSize: 9,
+            letterSpacing: '0.28em',
+            textTransform: 'uppercase',
+            color: accent,
+            opacity: 0.30,
+            userSelect: 'none',
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.30 }}
+          transition={{ duration: 1.4, delay: 0.8 }}
+        >
+          {num} · {annee}
+        </motion.div>
+
         <motion.div
           className="mb-3"
           style={exquisStyle}
@@ -114,8 +138,13 @@ export default function Accueil() {
           transition={{ duration: 1.0, delay: 0.3 }}
         >
           <div
-            className="font-bodoni font-black leading-tight"
-            style={{ fontSize: 'clamp(3.8rem, 16vw, 6.5rem)', color: accent }}
+            className="font-bodoni font-black"
+            style={{
+              fontSize: 'clamp(5rem, 22vw, 9rem)',
+              lineHeight: 0.9,
+              letterSpacing: '-0.02em',
+              color: accent,
+            }}
           >
             {[...letters].map((l, i) => (
               <span key={i} style={{
@@ -162,20 +191,20 @@ export default function Accueil() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.4 }}
       >
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 6 }}>
           <button
             onClick={() => nav('/config')}
             style={{
               flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: encre, color: bg,
-              ...ui, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
-              padding: '0.7em 0.5em', border: 'none', cursor: 'pointer', gap: 3,
-              borderRadius: 12,
+              ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
+              borderRadius: 4,
             }}
           >
             <span>Cadavre Écrit</span>
-            <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>✒</span>
+            <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✒</span>
           </button>
           <button
             onClick={() => nav('/config-dessin')}
@@ -183,28 +212,28 @@ export default function Accueil() {
               flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: second, color: bg,
-              ...ui, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
-              padding: '0.7em 0.5em', border: 'none', cursor: 'pointer', gap: 3,
-              borderRadius: 12,
+              ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
+              borderRadius: 4,
             }}
           >
             <span>Cadavre Dessiné</span>
-            <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>✎</span>
+            <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✎</span>
           </button>
         </div>
         <button
           onClick={() => nav('/online')}
           style={{
-            width: '100%', marginTop: 8,
+            width: '100%', marginTop: 6,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            background: `${encre}0d`, color: encre,
-            ...ui, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
-            padding: '0.55em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer',
-            borderRadius: 12,
+            background: 'transparent', color: encre,
+            ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
+            padding: '0.55em 1em', border: `1px solid ${encre}40`, cursor: 'pointer',
+            borderRadius: 4,
           }}
         >
           <span>Mode en ligne</span>
-          <span aria-hidden style={{ fontSize: 17, opacity: 0.75 }}>⊕</span>
+          <span aria-hidden style={{ fontSize: 14, opacity: 0.65 }}>⊕</span>
         </button>
       </motion.div>
 

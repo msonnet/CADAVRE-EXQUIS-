@@ -72,24 +72,35 @@
     font-family: 'Fraunces', 'Bodoni Moda', serif;
     font-weight: 900;
     font-style: italic;
-    font-size: clamp(2.5rem, 9vw, 4rem);
-    line-height: 0.95;
-    letter-spacing: -0.005em;
+    font-size: clamp(3.5rem, 13vw, 5.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
     color: var(--reve-ink);
   }
   .titre-rouge, .titre-accent {
     font-family: 'Fraunces', 'Bodoni Moda', serif;
     font-weight: 900;
     font-style: italic;
-    line-height: 0.95;
+    line-height: 0.92;
+    color: var(--reve-accent);
+  }
+  /* Extrême display — posters, révélation, manchettes choc */
+  .titre-poster {
+    font-family: 'Fraunces', 'Bodoni Moda', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(5rem, 24vw, 10rem);
+    line-height: 0.88;
+    letter-spacing: -0.03em;
     color: var(--reve-accent);
   }
   .h-section, .titre-section {
     font-family: 'Fraunces', 'Bodoni Moda', serif;
     font-weight: 700;
     font-style: italic;
-    font-size: clamp(1.6rem, 5vw, 2.2rem);
-    line-height: 1.05;
+    font-size: clamp(2rem, 7vw, 3rem);
+    line-height: 1.0;
+    letter-spacing: -0.01em;
     color: var(--reve-ink);
   }
 
@@ -130,34 +141,35 @@
   .nav-discrete {
     font-family: 'Inter', sans-serif;
     font-weight: 500;
-    font-size: 17px;
+    font-size: 14px;
     letter-spacing: 0.04em;
     color: var(--reve-ink-faint);
   }
 
+  /* Chrome · labels · folios — petits et précis, tracking large */
   .folio {
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    font-size: 17px;
-    letter-spacing: 0.18em;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--reve-ink-faint);
   }
 
   .petite-cap {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 17px;
-    letter-spacing: 0.28em;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--reve-ink-soft);
   }
 
   .petite-cap-rouge {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 17px;
-    letter-spacing: 0.28em;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--reve-accent);
   }
