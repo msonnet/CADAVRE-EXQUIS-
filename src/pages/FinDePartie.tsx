@@ -72,7 +72,7 @@ export default function FinDePartie() {
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     jouer('revelation')
@@ -146,7 +146,7 @@ export default function FinDePartie() {
   if (!poeme) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, textAlign: 'center' }}>
+        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, textAlign: 'center' }}>
           Aucun poème en cours.
         </p>
         <button
@@ -222,14 +222,14 @@ export default function FinDePartie() {
                 — {voixCount} VOIX —
               </div>
               <div style={{
-                fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+                fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
                 color: encre, lineHeight: 1.3,
               }}>
                 Le cadavre
               </div>
               <div style={{
-                fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+                fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.5rem, 7vw, 2.2rem)',
                 color: encre, lineHeight: 1.3,
               }}>
@@ -279,14 +279,14 @@ export default function FinDePartie() {
               style={{ maxWidth: '95vw', maxHeight: '88vh', objectFit: 'contain' }}
             />
             {labelStyle && (
-              <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
+              <p style={{ fontFamily: "'Raleway', sans-serif", fontSize: 17, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.75, marginTop: 12 }}>
                 {labelStyle.toUpperCase()}
               </p>
             )}
             <button
               aria-label="Fermer le plein écran"
               onClick={e => { e.stopPropagation(); setPleinEcran(false) }}
-              style={{ position: 'absolute', top: 20, right: 20, fontFamily: "'Outfit', sans-serif", fontSize: 17, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: 20, right: 20, fontFamily: "'Raleway', sans-serif", fontSize: 17, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
             >
               ✕ FERMER
             </button>
@@ -349,7 +349,7 @@ export default function FinDePartie() {
           {/* Poem text — lignes dévoilées une à une après le rideau */}
           <div
             style={{
-              fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+              fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
               color: encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
             }}
           >
@@ -426,7 +426,7 @@ export default function FinDePartie() {
                 </button>
                 {promptVisible && (
                   <p style={{
-                    fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre,
+                    fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre,
                     opacity: 0.85, marginTop: 6, lineHeight: 1.55,
                   }}>
                     {promptVisuel}
@@ -536,7 +536,7 @@ export default function FinDePartie() {
                     <p style={{ ...mono, fontSize: 17, color: accent, opacity: 0.7, marginBottom: 3 }}>
                       {c.fonction.toUpperCase()}
                       <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                      <span style={{ fontFamily: "'Playfair Display', serif" }}>
                         {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
                       </span>
                       {c.fallback && (
@@ -549,14 +549,14 @@ export default function FinDePartie() {
                           padding: '1px 5px',
                           borderRadius: 2,
                           marginLeft: 7,
-                          fontFamily: "'Outfit', sans-serif",
+                          fontFamily: "'Raleway', sans-serif",
                           verticalAlign: 'middle',
                         }}>
                           RÉSERVE
                         </span>
                       )}
                     </p>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
+                    <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                       {c.texte}
                     </p>
                   </div>
@@ -601,7 +601,7 @@ export default function FinDePartie() {
               </div>
 
               {erreurIllustration && (
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: accent, opacity: 0.7, textAlign: 'center', marginBottom: 10 }}>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, opacity: 0.7, textAlign: 'center', marginBottom: 10 }}>
                   {erreurIllustration}
                 </p>
               )}
@@ -648,7 +648,7 @@ export default function FinDePartie() {
                     {promptVisible ? '↑ MASQUER LE PROMPT' : '→ VOIR LE PROMPT IA'}
                   </button>
                   {promptVisible && (
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, marginTop: 6, textAlign: 'center', lineHeight: 1.5, maxWidth: 280 }}>
+                    <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginTop: 6, textAlign: 'center', lineHeight: 1.5, maxWidth: 280 }}>
                       {promptVisuel}
                     </p>
                   )}

@@ -10,7 +10,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
     if (this.state.error) {
       const e = this.state.error as Error
       return (
-        <div style={{ padding: 32, fontFamily: "'Outfit', sans-serif", fontSize: 17, color: '#b22c20' }}>
+        <div style={{ padding: 32, fontFamily: "'Raleway', sans-serif", fontSize: 17, color: '#b22c20' }}>
           <div style={{ marginBottom: 12, fontWeight: 700 }}>ERREUR APPLICATION</div>
           <pre style={{ whiteSpace: 'pre-wrap', opacity: 0.8 }}>{e.message}</pre>
           <button onClick={() => window.location.reload()} style={{ marginTop: 16, padding: '8px 16px', cursor: 'pointer' }}>
@@ -55,7 +55,7 @@ const PageFallback = () => (
     <span style={{
       fontSize: 18,
       color: 'var(--reve-accent, #b22c20)',
-      fontFamily: "'Outfit', sans-serif",
+      fontFamily: "'Raleway', sans-serif",
       letterSpacing: '0.18em',
       opacity: 0.7,
     }}>✦</span>

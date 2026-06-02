@@ -36,7 +36,7 @@ export default function Aide() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const second = encre
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -75,7 +75,7 @@ export default function Aide() {
             Comment <span style={{ color: accent }}>jouer.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre,
+            fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre,
             lineHeight: 1.65, marginBottom: 10,
           }}>
             Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.
@@ -103,7 +103,7 @@ export default function Aide() {
             Cadavre Écrit.
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre,
+            fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre,
             lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
           }}>
             Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
@@ -124,7 +124,7 @@ export default function Aide() {
                   {s.detail}
                 </div>
                 {s.exemple && (
-                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
                     « {s.exemple} »
                   </div>
                 )}
@@ -139,7 +139,7 @@ export default function Aide() {
           {VISIBILITE.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
@@ -150,7 +150,7 @@ export default function Aide() {
           {MODES.map(m => (
             <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{m.detail}</div>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{m.detail}</div>
             </div>
           ))}
         </motion.div>
@@ -176,7 +176,7 @@ export default function Aide() {
             Cadavre Dessiné.
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre,
+            fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre,
             lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
           }}>
             La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
@@ -189,13 +189,13 @@ export default function Aide() {
           {RACCORD_DESSIN.map(v => (
             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 17, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
             </div>
           ))}
 
           {/* Citation */}
           <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20 }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
               « Le cadavre exquis boira le vin nouveau »
             </div>
             <div style={{ ...mono, fontSize: 17, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>

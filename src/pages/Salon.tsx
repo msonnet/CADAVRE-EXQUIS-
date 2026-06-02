@@ -33,7 +33,7 @@ export default function Salon() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
@@ -243,7 +243,7 @@ export default function Salon() {
             left: '50%', transform: 'translateX(-50%)',
             padding: '8px 14px', borderRadius: 4,
             background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
-            color: '#fff', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+            color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
             fontSize: 17, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           }}>
             {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
@@ -273,7 +273,7 @@ export default function Salon() {
           left: '50%', transform: 'translateX(-50%)',
           padding: '8px 14px', borderRadius: 4,
           background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
-          color: '#fff', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+          color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
           fontSize: 17, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
         }}>
           {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
@@ -347,7 +347,7 @@ export default function Salon() {
             ))}
           </AnimatePresence>
           {players.length < 2 && (
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.75, marginTop: 8 }}>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.75, marginTop: 8 }}>
               En attente d'autres joueurs… Partagez le code <strong>{code}</strong>.
             </p>
           )}
@@ -470,7 +470,7 @@ export default function Salon() {
           {room.mode === 'dessin' && (
             <div>
               <div style={{ ...mono, fontSize: 17, color: encre, marginBottom: 6 }}>BANDES</div>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
+              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
                 Chaque joueur dessine une bande du corps à l'aveugle. Fixez le nombre de joueurs attendus.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -544,7 +544,7 @@ export default function Salon() {
                 )
               })}
             </div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.65, marginTop: 6 }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.65, marginTop: 6 }}>
               {(room.is_public ?? true)
                 ? 'Visible dans la liste des parties ouvertes.'
                 : 'Accessible uniquement par code — salon privé.'}

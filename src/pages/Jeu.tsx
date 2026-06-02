@@ -581,7 +581,7 @@ export default function Jeu() {
   const encre = sc?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
 
@@ -601,7 +601,7 @@ export default function Jeu() {
           <div className="flex flex-col items-center justify-center flex-1 text-center" style={{ paddingBottom: '20%' }}>
             <motion.div
               style={{
-                fontFamily: "'Cormorant Garamond', serif",
+                fontFamily: "'Playfair Display', serif",
                 fontStyle: 'italic',
                 fontSize: 'clamp(1.6rem, 7vw, 2.2rem)',
                 color: encre,
@@ -727,7 +727,7 @@ export default function Jeu() {
                   — VOIX PRÉCÉDENTE · SCELLÉE —
                 </div>
                 <p style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: 17,
+                  fontFamily: "'Playfair Display', serif", fontSize: 17,
                   color: encre, lineHeight: 1.5,
                 }}>
                   « {contexteVisible} »
@@ -767,7 +767,7 @@ export default function Jeu() {
                 transition={{ delay: 0.5 }}
               >
                 <motion.span
-                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: accent }}
+                  style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, color: accent }}
                   animate={tempsRestant <= 5 ? { scale: [1, 1.15, 1] } : {}}
                   transition={{ duration: 0.5, repeat: tempsRestant <= 5 ? Infinity : 0 }}
                 >
@@ -803,7 +803,7 @@ export default function Jeu() {
                 </p>
               )}
               {erreur && (
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: accent, marginTop: 6 }}>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, marginTop: 6 }}>
                   {erreur}
                 </p>
               )}

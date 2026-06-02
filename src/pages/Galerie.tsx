@@ -85,7 +85,7 @@ export default function Galerie() {
   const bg = seance?.ambiance.bg ?? '#15110d'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
 
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [onglet, setOnglet] = useState<GalleryType>('poeme')
   const [items, setItems] = useState<GalleryItem[]>([])
@@ -296,7 +296,7 @@ export default function Galerie() {
               onClick={e => { e.stopPropagation(); setLightboxSrc(null) }}
               style={{
                 position: 'absolute', top: 18, right: 18,
-                fontFamily: "'Outfit', sans-serif", letterSpacing: '0.16em',
+                fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
                 fontSize: 17, color: '#e8d4b8', opacity: 0.85,
                 background: 'none', border: 'none', cursor: 'pointer',
               }}
@@ -338,7 +338,7 @@ export default function Galerie() {
             Créations <span style={{ color: accent }}>partagées.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Les œuvres de la communauté
           </p>
@@ -400,7 +400,7 @@ export default function Galerie() {
         {/* ── ERREUR ── */}
         {!chargement && erreur && (
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: accent, opacity: 0.85,
+            fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, opacity: 0.85,
             textAlign: 'center', padding: '40px 0',
           }}>
             {erreur}
@@ -416,7 +416,7 @@ export default function Galerie() {
             transition={{ delay: 0.2 }}
           >
             <p style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
+              fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
               Aucune création partagée pour l'instant.
             </p>
@@ -469,7 +469,7 @@ export default function Galerie() {
                         {/* En-tête de la carte */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17,
+                            fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17,
                             lineHeight: 1.3, margin: 0, flex: 1, minWidth: 0,
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>
@@ -514,7 +514,7 @@ export default function Galerie() {
                         {/* Aperçu / contenu */}
                         {item.type === 'poeme' && poemePayload && (
                           <div style={{
-                            fontFamily: "'Cormorant Garamond', serif",
+                            fontFamily: "'Playfair Display', serif",
                             fontSize: 17, color: encre, opacity: 0.92,
                             lineHeight: 1.5,
                             whiteSpace: 'pre-wrap',
@@ -552,7 +552,7 @@ export default function Galerie() {
                             {ouvert && (
                               <span style={{
                                 position: 'absolute', bottom: 6, right: 8,
-                                fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
+                                fontFamily: "'Raleway', sans-serif", letterSpacing: '0.14em',
                                 fontSize: 17, color: '#fff',
                                 background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                 pointerEvents: 'none',
@@ -589,7 +589,7 @@ export default function Galerie() {
                               {ouvert && (
                                 <span style={{
                                   position: 'absolute', bottom: 6, right: 8,
-                                  fontFamily: "'Outfit', sans-serif", letterSpacing: '0.14em',
+                                  fontFamily: "'Raleway', sans-serif", letterSpacing: '0.14em',
                                   fontSize: 17, color: '#fff',
                                   background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                   pointerEvents: 'none',
@@ -601,7 +601,7 @@ export default function Galerie() {
 
                         {ouvert && item.type === 'dessin' && dessinPayload?.texteVision && (
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre,
+                            fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre,
                             opacity: 0.85, marginTop: 8, lineHeight: 1.4, whiteSpace: 'pre-wrap',
                           }}>
                             {dessinPayload.texteVision}

@@ -95,7 +95,7 @@ export default function FinOnline() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
@@ -345,7 +345,7 @@ export default function FinOnline() {
             ))}
             <motion.div style={{ position: 'relative', zIndex: 1 }} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.7 }}>
               <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>— {players.length} VOIX —</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
                 Le cadavre<br />se reconstitue
                 <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>
               </div>
@@ -405,11 +405,11 @@ export default function FinOnline() {
                     {texteVision ? (
                       <>
                         <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>— LECTURE SURRÉALISTE —</div>
-                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
+                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
                       </>
                     ) : erreurVision ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.8 }}>La lecture surréaliste n'a pas pu avoir lieu.</p>
+                        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>La lecture surréaliste n'a pas pu avoir lieu.</p>
                         <button onClick={reessayerVision} style={{ alignSelf: 'flex-start', ...mono, fontSize: 17, background: 'transparent', color: accent, border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer' }}>↺ RÉESSAYER</button>
                       </div>
                     ) : null}
@@ -476,7 +476,7 @@ export default function FinOnline() {
                   <motion.p key={i}
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.7, duration: 0.7, ease: 'easeOut' }}
-                    style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17, lineHeight: 1.65, margin: '0 0 2px' }}>
+                    style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.65, margin: '0 0 2px' }}>
                     {i === 0 && lettrine ? (
                       <>
                         <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>
@@ -509,7 +509,7 @@ export default function FinOnline() {
                           <div>
                             <span style={{ ...mono, fontSize: 17, color: accent }}>{p?.pseudo ?? '?'}</span>
                             <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
-                            <span style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17 }}>{c.texte}</span>
+                            <span style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17 }}>{c.texte}</span>
                           </div>
                         </div>
                       )

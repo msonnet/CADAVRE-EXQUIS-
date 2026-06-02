@@ -36,7 +36,7 @@ export default function Profil() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, saveProfile } = useAuth()
 
@@ -112,7 +112,7 @@ export default function Profil() {
           <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — IMAGE DE PROFIL —
           </div>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
             Décrivez en quelques mots le personnage qui vous représente. L'IA générera votre portrait surréaliste.
           </p>
 
@@ -148,7 +148,7 @@ export default function Profil() {
                 aria-label="Description de votre avatar"
                 rows={2}
                 style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: 17,
+                  fontFamily: "'Playfair Display', serif", fontSize: 17,
                   color: encre, background: 'rgba(255,253,247,0.5)',
                   border: 'none', borderLeft: `2px solid ${encre}`, padding: '8px 12px',
                   outline: 'none', caretColor: accent, resize: 'none', width: '100%',
@@ -201,7 +201,7 @@ export default function Profil() {
             maxLength={30}
             required
             style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: 18,
+              fontFamily: "'Playfair Display', serif", fontSize: 18,
               color: encre, background: 'rgba(255,253,247,0.5)',
               border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
               outline: 'none', caretColor: accent, width: '100%',

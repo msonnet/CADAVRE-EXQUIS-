@@ -39,7 +39,7 @@ export default function DessinDetail() {
   const encre = c?.encre ?? '#0f0805'
   const fond = c?.bg ?? '#faf8f3'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     if (!id) return
@@ -153,7 +153,7 @@ export default function DessinDetail() {
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
         <div style={{ position: 'relative', zIndex: 10 }}>
           <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 17, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}>← RETOUR</button>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75, marginTop: 40, textAlign: 'center' }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, marginTop: 40, textAlign: 'center' }}>
             Dessin introuvable.
           </p>
         </div>
@@ -259,7 +259,7 @@ export default function DessinDetail() {
             }}>
               {dessin.texteVision.split('\n').filter(Boolean).map((ligne, i) => (
                 <p key={i} style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre,
+                  fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre,
                   lineHeight: 1.65, marginBottom: 6,
                 }}>
                   {ligne}

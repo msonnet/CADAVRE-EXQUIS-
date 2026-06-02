@@ -84,7 +84,7 @@ function composerImageAvecTexte(
       canvas.width = img.width
       canvas.height = img.height  // temp, will resize
       const ctx = canvas.getContext('2d')!
-      ctx.font = `${fontSize}px Georgia, 'Cormorant Garamond', serif`
+      ctx.font = `${fontSize}px Georgia, 'Playfair Display', serif`
 
       const wrappedLines: string[] = []
       const maxW = img.width - pad * 2
@@ -131,7 +131,7 @@ function composerImageAvecTexte(
       // Vision text
       ctx.globalAlpha = 0.88
       ctx.fillStyle = '#0f0805'
-      ctx.font = `${fontSize}px Georgia, 'Cormorant Garamond', serif`
+      ctx.font = `${fontSize}px Georgia, 'Playfair Display', serif`
       wrappedLines.forEach((line, i) => {
         ctx.fillText(line, pad, img.height + pad + Math.round(pad * 0.5) + (i + 1) * lineH)
       })
@@ -215,7 +215,7 @@ export async function genererImageStory(opts: {
     // Title
     ctx.fillStyle = opts.ink
     ctx.textAlign = 'center'
-    ctx.font = "bold 80px 'Bodoni Moda', 'Cormorant Garamond', Georgia, serif"
+    ctx.font = "bold 80px 'Bodoni Moda', 'Playfair Display', Georgia, serif"
     const titleLines = wrapText(ctx, opts.titre, W - marginX * 2)
     const titleLineH = 92
     const titleTop = 200
@@ -226,12 +226,12 @@ export async function genererImageStory(opts: {
 
     // Ornament
     ctx.fillStyle = opts.accent
-    ctx.font = "32px 'Outfit', monospace"
+    ctx.font = "32px 'Raleway', monospace"
     ctx.fillText('✦   ✦   ✦', W / 2, titleBottom + 60)
 
     // Body text — handle \n as forced break
     ctx.fillStyle = opts.ink
-    ctx.font = "48px 'Bodoni Moda', 'Cormorant Garamond', Georgia, serif"
+    ctx.font = "48px 'Bodoni Moda', 'Playfair Display', Georgia, serif"
     const bodyLineH = 48 * 1.5
     const sourceLines = (opts.texte ?? '').split('\n')
     const wrapped: string[] = []
@@ -256,7 +256,7 @@ export async function genererImageStory(opts: {
     // Drawing variant
     ctx.fillStyle = opts.ink
     ctx.textAlign = 'center'
-    ctx.font = "bold 60px 'Bodoni Moda', 'Cormorant Garamond', Georgia, serif"
+    ctx.font = "bold 60px 'Bodoni Moda', 'Playfair Display', Georgia, serif"
     const titleLines = wrapText(ctx, opts.titre, W - marginX * 2)
     const titleLineH = 72
     const titleTop = 170
@@ -288,13 +288,13 @@ export async function genererImageStory(opts: {
   // Bottom mark
   ctx.fillStyle = opts.accent
   ctx.textAlign = 'center'
-  ctx.font = "28px 'Outfit', monospace"
+  ctx.font = "28px 'Raleway', monospace"
   const mark = 'C A D A V R E   E X Q U I S'
   ctx.fillText(mark, W / 2, H - 110)
   // small sub-mark
   ctx.fillStyle = opts.ink
   ctx.globalAlpha = 0.55
-  ctx.font = "20px 'Outfit', monospace"
+  ctx.font = "20px 'Raleway', monospace"
   ctx.fillText('— JEU SURRÉALISTE —', W / 2, H - 75)
   ctx.globalAlpha = 1
 

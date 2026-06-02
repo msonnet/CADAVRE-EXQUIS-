@@ -418,7 +418,7 @@ function CitationManifeste() {
       zIndex: 4, pointerEvents: 'none',
     }}>
       <span style={{
-        fontFamily: "'Cormorant Garamond', serif",
+        fontFamily: "'Playfair Display', serif",
         fontStyle: 'italic', fontWeight: 500,
         fontSize: 18, lineHeight: 1.55,
         color: 'var(--reve-ink)',

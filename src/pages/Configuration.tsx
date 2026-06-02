@@ -38,7 +38,7 @@ export default function Configuration() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   function demarrer() {
     jouer('demarrage')
@@ -83,7 +83,7 @@ export default function Configuration() {
             <span style={{ color: accent }}>structure.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 18,
+            fontFamily: "'Playfair Display', serif", fontSize: 18,
             color: encre, opacity: 0.75, marginBottom: 20,
           }}>
             La structure détermine la forme du cadavre exquis.
@@ -123,7 +123,7 @@ export default function Configuration() {
                   </div>
                   <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
                   {active && (
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
                       {s.detail}
                     </div>
                   )}
@@ -160,7 +160,7 @@ export default function Configuration() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
             {VISIBILITE_DESC[config.visibilite]}
           </div>
         </div>

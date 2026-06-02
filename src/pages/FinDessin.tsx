@@ -94,7 +94,7 @@ export default function FinDessin() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     let cancelled = false
@@ -225,10 +225,10 @@ export default function FinDessin() {
               <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
                 — {nbBandes} BANDE{nbBandes > 1 ? 'S' : ''} —
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
                 Le cadavre
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3, marginBottom: 20 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3, marginBottom: 20 }}>
                 se reconstitue<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>
               </div>
               <motion.div
@@ -291,7 +291,7 @@ export default function FinDessin() {
                   — LECTURE SURRÉALISTE —
                 </div>
                 <div style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: 17, lineHeight: 1.7,
+                  fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.7,
                   color: encre,
                   whiteSpace: 'pre-line',
                 }}>
@@ -300,7 +300,7 @@ export default function FinDessin() {
               </div>
             ) : erreurVision ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
                   La lecture surréaliste n'a pas pu avoir lieu.
                 </div>
                 <button
@@ -317,7 +317,7 @@ export default function FinDessin() {
                 </button>
               </div>
             ) : (
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
                 (lecture indisponible)
               </div>
             )}

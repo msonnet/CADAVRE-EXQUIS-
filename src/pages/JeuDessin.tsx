@@ -246,7 +246,7 @@ export default function JeuDessin() {
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const bg = c?.bg ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   // Prévenir swipe-back iOS — uniquement sur la zone canvas
   useEffect(() => {
@@ -1099,7 +1099,7 @@ export default function JeuDessin() {
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur 1.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
                 Dessine la première bande.
               </div>
             </motion.div>
@@ -1168,7 +1168,7 @@ export default function JeuDessin() {
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur {nextPlayerNum}.
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
                 Passez l'écran. Ne regardez pas.
               </div>
             </motion.div>

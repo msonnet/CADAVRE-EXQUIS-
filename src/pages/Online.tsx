@@ -35,7 +35,7 @@ export default function Online() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, signInAnonymously, signOut } = useAuth()
   const { jouer } = useSound()
@@ -177,7 +177,7 @@ export default function Online() {
           >
             Jouer à plusieurs.
           </div>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, lineHeight: 1.65, marginBottom: 28 }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, lineHeight: 1.65, marginBottom: 28 }}>
             Chaque joueur sur son propre appareil. Composez ensemble un cadavre exquis, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.
           </p>
 
@@ -196,7 +196,7 @@ export default function Online() {
               required
               autoFocus
               style={{
-                fontFamily: "'Cormorant Garamond', serif", fontSize: 18,
+                fontFamily: "'Playfair Display', serif", fontSize: 18,
                 color: encre, background: 'rgba(255,253,247,0.5)',
                 border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
                 outline: 'none', caretColor: accent, width: '100%',
@@ -219,7 +219,7 @@ export default function Online() {
       {/* ── LOGGED IN BUT NO PROFILE ── */}
       {user && !profile && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 20 }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 20 }}>
             Connecté. Créez votre profil pour continuer.
           </p>
           <button
@@ -277,7 +277,7 @@ export default function Online() {
             {loadingRooms ? (
               <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.5 }}>Recherche…</p>
             ) : publicRooms.length === 0 ? (
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.65, lineHeight: 1.5 }}>
+              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.65, lineHeight: 1.5 }}>
                 Aucune partie ouverte pour l'instant. Créez la vôtre ou rejoignez par code.
               </p>
             ) : (
@@ -320,7 +320,7 @@ export default function Online() {
             <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
               — NOUVELLE PARTIE —
             </div>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
               Créez un salon et partagez le code, ou laissez-le public pour que d'autres rejoignent.
             </p>
             <button

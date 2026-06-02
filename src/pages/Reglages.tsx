@@ -27,7 +27,7 @@ export default function Reglages() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   function toggleSon() {
     const next = !sonActif
@@ -109,7 +109,7 @@ export default function Reglages() {
           <div className="flex justify-between items-center">
             <div>
               <div style={{ ...mono, fontSize: 17, color: encre, marginBottom: 3 }}>AUDIO AMBIANT</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
                 Drone atmosphérique pendant le jeu
               </div>
             </div>
@@ -164,7 +164,7 @@ export default function Reglages() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
             {NIVEAUX.find(n => n.id === validation)?.desc}
           </div>
         </motion.div>
@@ -182,7 +182,7 @@ export default function Reglages() {
           <div className="flex justify-between items-center" style={{ paddingBottom: 12, borderBottom: `0.5px solid ${encre}10` }}>
             <div>
               <div style={{ ...mono, fontSize: 17, color: encre, marginBottom: 3 }}>EXPORTER MES POÈMES</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
                 Télécharge tous les poèmes en JSON
               </div>
             </div>
@@ -212,7 +212,7 @@ export default function Reglages() {
           <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — AMBIANCE —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
             Chaque jour, une ambiance est tirée au sort. Vous pouvez en tirer une nouvelle maintenant.
           </div>
           <button

@@ -78,7 +78,7 @@ export default function ProfilPublic() {
   const bg = seance?.ambiance.bg ?? '#15110d'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
 
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [items, setItems] = useState<GalleryItem[]>([])
   const [chargement, setChargement] = useState(true)
@@ -271,7 +271,7 @@ export default function ProfilPublic() {
             <span style={{ color: accent }}>{titreAffichePseudo}</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 18,
+            fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
             Œuvres publiées
           </p>
@@ -291,7 +291,7 @@ export default function ProfilPublic() {
         {/* ── ERREUR ── */}
         {!chargement && erreur && (
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: accent, opacity: 0.85,
+            fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, opacity: 0.85,
             textAlign: 'center', padding: '40px 0',
           }}>
             {erreur}
@@ -307,7 +307,7 @@ export default function ProfilPublic() {
             transition={{ delay: 0.2 }}
           >
             <p style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
+              fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
               Aucune œuvre publiée sous ce nom.
             </p>
@@ -372,7 +372,7 @@ export default function ProfilPublic() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17,
+                            fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17,
                             lineHeight: 1.3, margin: 0, flex: 1, minWidth: 0,
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>
@@ -391,7 +391,7 @@ export default function ProfilPublic() {
 
                         {item.type === 'poeme' && poemePayload && (
                           <div style={{
-                            fontFamily: "'Cormorant Garamond', serif",
+                            fontFamily: "'Playfair Display', serif",
                             fontSize: 17, color: encre, opacity: 0.92,
                             lineHeight: 1.5,
                             whiteSpace: 'pre-wrap',
@@ -449,7 +449,7 @@ export default function ProfilPublic() {
 
                         {ouvert && item.type === 'dessin' && dessinPayload?.texteVision && (
                           <p style={{
-                            fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre,
+                            fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre,
                             opacity: 0.85, marginTop: 8, lineHeight: 1.4, whiteSpace: 'pre-wrap',
                           }}>
                             {dessinPayload.texteVision}

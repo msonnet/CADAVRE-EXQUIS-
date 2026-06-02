@@ -132,7 +132,7 @@ export default function Onboarding() {
   }
 
   const bodyStyle: React.CSSProperties = {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'Playfair Display', serif",
     fontSize: 17,
     lineHeight: 1.65,
     color: ink,

@@ -50,7 +50,7 @@ export default function PoemeDetail() {
   const fond = c?.bg ?? '#faf8f3'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     if (!id) return
@@ -190,7 +190,7 @@ export default function PoemeDetail() {
   if (!poeme) {
     return (
       <PageTransition className="page-carnet relative flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
+        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
           Poème introuvable.
         </p>
         <button
@@ -292,7 +292,7 @@ export default function PoemeDetail() {
               <input
                 ref={inputRef}
                 className="champ-carnet flex-1"
-                style={{ borderLeftColor: accent, fontFamily: "'Cormorant Garamond', serif", fontSize: 20 }}
+                style={{ borderLeftColor: accent, fontFamily: "'Playfair Display', serif", fontSize: 20 }}
                 value={titreDraft}
                 onChange={e => setTitreDraft(e.target.value)}
                 onKeyDown={e => {
@@ -381,7 +381,7 @@ export default function PoemeDetail() {
           <div style={{ ...mono, fontSize: 17, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             — LE CADAVRE —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17, lineHeight: 1.7 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.7 }}>
             {lettrine && (
               <span style={{
                 fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
@@ -524,11 +524,11 @@ export default function PoemeDetail() {
                   <div style={{ ...mono, fontSize: 17, color: accent, opacity: 0.8, marginBottom: 3 }}>
                     {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
                     <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
-                    <span style={{ fontFamily: "'Cormorant Garamond', serif", textTransform: 'none', letterSpacing: 0 }}>
+                    <span style={{ fontFamily: "'Playfair Display', serif", textTransform: 'none', letterSpacing: 0 }}>
                       {cas.auteur === 'ia' ? 'voix IA' : cas.joueurNumero ? `joueur ${cas.joueurNumero}` : 'toi'}
                     </span>
                   </div>
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
+                  <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                     {cas.texte}
                   </p>
                 </div>

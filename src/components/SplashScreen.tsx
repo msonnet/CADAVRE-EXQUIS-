@@ -39,7 +39,7 @@ export default function SplashScreen() {
             style={{ textAlign: 'center', padding: '0 32px' }}
           >
             <div style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Playfair Display', serif",
               fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
               color: encre,
               lineHeight: 1.7,
@@ -52,7 +52,7 @@ export default function SplashScreen() {
               animate={{ opacity: 1 }}
               transition={{ delay: 1.3, duration: 0.8 }}
               style={{
-                fontFamily: "'Cormorant Garamond', serif",
+                fontFamily: "'Playfair Display', serif",
                 fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
                 color: accent,
                 lineHeight: 1.7,

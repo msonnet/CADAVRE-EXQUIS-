@@ -121,7 +121,7 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
   encre: string
   bg: string
 }) {
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [tool, setTool] = useState<Tool>('pencil')
   const [sizeIdx, setSizeIdx] = useState(1)
@@ -368,18 +368,18 @@ function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, 
         {/* Raccord guide */}
         {raccordDataUrl && canvasReady && (
           <div style={{ position: 'absolute', top: RACCORD_H, left: 0, right: 0, height: 1, background: `linear-gradient(to right,transparent,${accent}55 15%,${accent}55 85%,transparent)`, pointerEvents: 'none', zIndex: 5 }}>
-            <span style={{ position: 'absolute', right: 8, top: -12, fontFamily: "'Outfit',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: accent, background: `${CANVAS_BG}ee`, padding: '1px 6px' }}>← RACCORD</span>
+            <span style={{ position: 'absolute', right: 8, top: -12, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: accent, background: `${CANVAS_BG}ee`, padding: '1px 6px' }}>← RACCORD</span>
           </div>
         )}
 
         {/* Badge */}
-        <div style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Outfit',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: encre, background: 'rgba(255,255,255,0.88)', padding: '4px 10px', border: `0.5px solid ${encre}15`, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 10, left: 10, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: encre, background: 'rgba(255,255,255,0.88)', padding: '4px 10px', border: `0.5px solid ${encre}15`, pointerEvents: 'none' }}>
           BANDE {bandeNum}/{totalBandes}
         </div>
 
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }}
-            style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Outfit',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: encre, background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
+            style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Raleway',sans-serif", letterSpacing: '0.18em', fontSize: 17, color: encre, background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
             ↺ {Math.round(zoom * 100)}%
           </button>
         )}
@@ -499,7 +499,7 @@ export default function JeuOnline() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const bg = c?.bg ?? '#fdf8f2'
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
@@ -770,7 +770,7 @@ export default function JeuOnline() {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
-          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Outfit',sans-serif", letterSpacing: '0.16em', fontSize: 17, zIndex: 100 }}>
+          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 17, zIndex: 100 }}>
             {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
           </div>
         )}
@@ -792,7 +792,7 @@ export default function JeuOnline() {
           <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em' }}>
             — BANDE {(myEffectiveIndex ?? 0) + 1} SUR {nbTotal} —
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
             À vous<br />de dessiner
           </div>
           {raccordDataUrl && (
@@ -825,7 +825,7 @@ export default function JeuOnline() {
 
   // ── Connection banner (reused in multiple views) ──────────────────────────
   const connBanner = connectionStatus !== 'connected' ? (
-    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Outfit',sans-serif", letterSpacing: '0.16em', fontSize: 17, zIndex: 100 }}>
+    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 17, zIndex: 100 }}>
       {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
     </div>
   ) : null
@@ -869,7 +869,7 @@ export default function JeuOnline() {
         {avatarsRow}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           {currentTurnPlayer && currentCase < nbTotal && (
-            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 17, color: encre, opacity: 0.8, textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.8, textAlign: 'center' }}>
               En attente de <strong>{currentTurnPlayer.pseudo}</strong>…
             </p>
           )}
@@ -921,14 +921,14 @@ export default function JeuOnline() {
               const displayUrl = myContrib.startsWith('data:') ? myContrib : (() => { try { return (JSON.parse(myContrib) as { imageDataUrl: string }).imageDataUrl } catch { return null } })()
               return displayUrl
                 ? <img src={displayUrl} alt="votre dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 2, border: `1px solid ${accent}30` }} />
-                : <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>« {myContrib} »</div>
+                : <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>« {myContrib} »</div>
             })()}
             {room.mode === 'ecrit' && currentCase < nbTotal ? (
-              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
                 C'est au tour de <strong>{currentTurnPlayer?.pseudo ?? '…'}</strong>. Votre tour reviendra ensuite.
               </p>
             ) : (
-              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
                 En attente des autres joueurs… La révélation aura lieu lorsque tout le monde aura soumis.
               </p>
             )}
@@ -943,7 +943,7 @@ export default function JeuOnline() {
             <div style={{ ...mono, fontSize: 17, color: accent, letterSpacing: '0.28em' }}>
               — CASE {currentCase + 1} SUR {nbTotal} —
             </div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.8rem,8vw,2.6rem)', color: encre, lineHeight: 1.3 }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.8rem,8vw,2.6rem)', color: encre, lineHeight: 1.3 }}>
               À vous<br />d'écrire
             </div>
             <motion.div style={{ ...mono, fontSize: 17, color: `${encre}45`, letterSpacing: '0.2em', marginTop: 8 }}
@@ -974,7 +974,7 @@ export default function JeuOnline() {
                 {showLastWord ? (
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                     <span style={{ ...mono, fontSize: 17, color: encre, opacity: 0.55 }}>DERNIER MOT&nbsp;:</span>
-                    <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, color: accent, fontStyle: 'italic' }}>…{prevLastWord}</span>
+                    <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: accent, fontStyle: 'italic' }}>…{prevLastWord}</span>
                     <button type="button" onClick={() => setShowLastWord(false)} style={{ ...mono, fontSize: 17, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>masquer</button>
                   </div>
                 ) : (
@@ -996,7 +996,7 @@ export default function JeuOnline() {
                 aria-label={caseDef.consigne}
                 autoFocus
                 rows={3}
-                style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, color: encre, background: 'rgba(255,253,247,0.5)', border: 'none', borderLeft: `2px solid ${encre}`, padding: '12px 16px', outline: 'none', caretColor: accent, width: '100%', resize: 'none' }}
+                style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, background: 'rgba(255,253,247,0.5)', border: 'none', borderLeft: `2px solid ${encre}`, padding: '12px 16px', outline: 'none', caretColor: accent, width: '100%', resize: 'none' }}
               />
               {submitError && <div style={{ ...mono, fontSize: 17, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>
@@ -1019,15 +1019,15 @@ export default function JeuOnline() {
             {currentTurnPlayer && currentCase < nbTotal ? (
               <>
                 <div style={{ ...mono, fontSize: 17, color: encre, opacity: 0.55, letterSpacing: '0.22em' }}>— EN ATTENTE —</div>
-                <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, color: encre, lineHeight: 1.6 }}>
+                <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: encre, lineHeight: 1.6 }}>
                   C'est le tour de <strong>{currentTurnPlayer.pseudo}</strong>…
                 </p>
-                <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 17, color: encre, opacity: 0.55 }}>
+                <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.55 }}>
                   {room.mode === 'dessin' ? `Bande ${currentCase + 1} sur ${nbTotal}` : `Case ${currentCase + 1} sur ${nbTotal}`}
                 </p>
               </>
             ) : (
-              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 17, color: encre, opacity: 0.75 }}>En attente de la partie…</p>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75 }}>En attente de la partie…</p>
             )}
             <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
           </motion.div>

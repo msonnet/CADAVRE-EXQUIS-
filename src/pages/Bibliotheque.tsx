@@ -42,7 +42,7 @@ export default function Bibliotheque() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Outfit', sans-serif", letterSpacing: '0.18em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     Promise.all([chargerPoemes(), chargerDessins()])
@@ -87,7 +87,7 @@ export default function Bibliotheque() {
             Mes <span style={{ color: accent }}>poèmes.</span>
           </div>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 10,
+            fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 10,
           }}>
             Ta bibliothèque personnelle
           </p>
@@ -137,7 +137,7 @@ export default function Bibliotheque() {
             transition={{ delay: 0.2 }}
           >
             <p style={{
-              fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
+              fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
               Aucun poème pour l'instant.
             </p>
@@ -175,7 +175,7 @@ export default function Bibliotheque() {
                 )}
                 {poemesFiltres.length === 0 && (
                   <p style={{
-                    fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.75,
+                    fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75,
                     textAlign: 'center', padding: '40px 0',
                   }}>
                     Aucun poème trouvé.
@@ -200,7 +200,7 @@ export default function Bibliotheque() {
                     onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
                   >
                     <p style={{
-                      fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17,
+                      fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17,
                       lineHeight: 1.3, marginBottom: 3,
                       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     }}>
@@ -257,14 +257,14 @@ export default function Bibliotheque() {
                 </div>
                 {/* Infos */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", color: encre, fontSize: 17, lineHeight: 1.3, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.3, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')}
                   </p>
                   <p style={{ ...mono, fontSize: 17, color: encre, opacity: 0.75 }}>
                     {dessin.nbBandes} BANDES · {formatDate(dessin.dateCreation).toUpperCase()}
                   </p>
                   {dessin.texteVision && (
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: encre, opacity: 0.85, marginTop: 3, lineHeight: 1.4 }}>
+                    <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginTop: 3, lineHeight: 1.4 }}>
                       {dessin.texteVision.split('\n')[0]}
                     </p>
                   )}
