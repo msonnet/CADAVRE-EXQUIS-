@@ -52,7 +52,7 @@ export default function Bibliotheque() {
   }, [])
 
   return (
-    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="biblio" />
 
       <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">

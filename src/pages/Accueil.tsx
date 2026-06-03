@@ -252,7 +252,7 @@ export default function Accueil() {
           { label: 'Recueil', path: '/bibliotheque' },
           { label: 'Galerie',  path: '/galerie',       align: 'right' },
           { label: 'Règles',   path: '/aide' },
-          { label: 'Du jour',  path: '/poeme-du-jour', align: 'right' },
+          { label: 'Réglages', path: '/reglages',      align: 'right' },
         ].map(({ label, path, align }) => (
           <button
             key={path}

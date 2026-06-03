@@ -264,7 +264,7 @@ export default function Galerie() {
   }
 
   return (
-    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="biblio" />
 
       {/* ── LIGHTBOX ── */}
@@ -316,6 +316,12 @@ export default function Galerie() {
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             ← ACCUEIL
+          </button>
+          <button
+            onClick={() => { jouer('clic'); navigate('/poeme-du-jour') }}
+            style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            POÈME DU JOUR →
           </button>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />

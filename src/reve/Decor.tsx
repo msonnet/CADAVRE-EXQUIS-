@@ -245,7 +245,7 @@ const ZONES: Record<Variant, VariantZones> = {
     signature: true,
   },
   biblio: {
-    symbol: { top: '12%', right: '4%', sizeMul: 0.5 },
+    symbol: { bottom: '18%', right: '4%', sizeMul: 0.38 },
     etiqs: [],
     stripesMax: 0,
     verticalTitle: null,
