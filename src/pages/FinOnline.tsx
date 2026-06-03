@@ -613,7 +613,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={imageAssemblee} alt="Cadavre exquis — plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranDessin(false)} aria-label="Fermer"
-              style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', color: '#e8d4b8', ...mono, fontSize: 13, padding: '6px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ FERMER
             </button>
           </motion.div>
@@ -628,7 +628,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={illustrationUrl} alt="Illustration — plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranIllus(false)} aria-label="Fermer"
-              style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', color: '#e8d4b8', ...mono, fontSize: 13, padding: '6px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ FERMER
             </button>
           </motion.div>

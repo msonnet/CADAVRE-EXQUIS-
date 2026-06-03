@@ -253,7 +253,7 @@ export default function PoemeDetail() {
             <button
               aria-label="Fermer le plein écran"
               onClick={() => setPleinEcran(false)}
-              style={{ position: 'absolute', top: 20, right: 20, ...mono, fontSize: 13, color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: 'max(20px, env(safe-area-inset-top))', right: 'max(20px, env(safe-area-inset-right))', ...mono, fontSize: 13, color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
             >
               ✕ FERMER
             </button>

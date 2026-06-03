@@ -105,7 +105,7 @@ export default function ConfigurationDessin() {
                   key={n}
                   onClick={() => setConfig(c => ({ ...c, nbBandes: n }))}
                   style={{
-                    flex: 1, padding: '10px 4px',
+                    flex: 1, padding: '10px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
@@ -134,7 +134,7 @@ export default function ConfigurationDessin() {
                   key={n}
                   onClick={() => setConfig(c => ({ ...c, joueurs: n }))}
                   style={{
-                    flex: 1, padding: '10px 4px',
+                    flex: 1, padding: '10px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',

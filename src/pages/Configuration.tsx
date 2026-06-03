@@ -146,7 +146,7 @@ export default function Configuration() {
                   key={v}
                   onClick={() => setConfig(c => ({ ...c, visibilite: v }))}
                   style={{
-                    flex: 1, padding: '8px 4px',
+                    flex: 1, padding: '8px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
@@ -178,7 +178,7 @@ export default function Configuration() {
                   key={n}
                   onClick={() => setConfig(c => ({ ...c, joueursHumains: n }))}
                   style={{
-                    flex: 1, padding: '8px 4px',
+                    flex: 1, padding: '8px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
@@ -207,7 +207,7 @@ export default function Configuration() {
                   key={n}
                   onClick={() => setConfig(c => ({ ...c, voixIA: n }))}
                   style={{
-                    flex: 1, padding: '8px 4px',
+                    flex: 1, padding: '8px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',
@@ -237,7 +237,7 @@ export default function Configuration() {
                     key={p}
                     onClick={() => setConfig(c => ({ ...c, premierJoueur: p }))}
                     style={{
-                      flex: 1, padding: '8px 4px',
+                      flex: 1, padding: '8px 4px', minHeight: 44,
                       border: `0.5px solid ${active ? accent : `${encre}20`}`,
                       borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                       background: 'transparent', cursor: 'pointer',
@@ -267,7 +267,7 @@ export default function Configuration() {
                   key={m}
                   onClick={() => setConfig(c => ({ ...c, mode: m }))}
                   style={{
-                    flex: 1, padding: '8px 4px',
+                    flex: 1, padding: '8px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
                     background: 'transparent', cursor: 'pointer',

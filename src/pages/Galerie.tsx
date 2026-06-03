@@ -295,10 +295,10 @@ export default function Galerie() {
             <button
               onClick={e => { e.stopPropagation(); setLightboxSrc(null) }}
               style={{
-                position: 'absolute', top: 18, right: 18,
+                position: 'absolute', top: 'max(18px, env(safe-area-inset-top))', right: 'max(18px, env(safe-area-inset-right))',
                 fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
                 fontSize: 17, color: '#e8d4b8', opacity: 0.85,
-                background: 'none', border: 'none', cursor: 'pointer',
+                background: 'none', border: 'none', cursor: 'pointer', padding: '8px',
               }}
             >
               ✕ FERMER
