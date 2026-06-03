@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
+import { corrigerAccords } from '../api/corriger'
 import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
@@ -31,6 +32,7 @@ export default function PoemeDetail() {
   const [poeme, setPoeme] = useState<Poeme | null>(null)
   const [chargement, setChargement] = useState(true)
   const [casesVisibles, setCasesVisibles] = useState(false)
+  const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const [editionTitre, setEditionTitre] = useState(false)
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppression, setConfirmSuppression] = useState(false)
@@ -59,6 +61,20 @@ export default function PoemeDetail() {
       .catch(console.error)
       .finally(() => setChargement(false))
   }, [id])
+
+  useEffect(() => {
+    if (!poeme) return
+    let cancelled = false
+    setTexteCorrige(null)
+    const structure = getStructure(poeme.structureId)
+    const brut = reconstruirePoeme(poeme.cases, structure)
+    const blocs = poeme.cases.map((c, i) => ({
+      texte: c.texte,
+      type: structure.cases[i]?.type ?? 'libre',
+    }))
+    corrigerAccords(brut, poeme.structureId, blocs).then(t => { if (!cancelled) setTexteCorrige(t) })
+    return () => { cancelled = true }
+  }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (editionTitre) inputRef.current?.focus()
@@ -120,7 +136,7 @@ export default function PoemeDetail() {
   async function partager() {
     if (!poeme) return
     const struct = getStructure(poeme.structureId)
-    const textePoeme = reconstruirePoeme(poeme.cases, struct)
+    const textePoeme = texteCorrige ?? reconstruirePoeme(poeme.cases, struct)
     const titre = poeme.titre ?? 'Cadavre Exquis'
     const contenu = `${titre}\n\n${textePoeme}\n\n— Cadavre Exquis, jeu surréaliste`
     if (poeme.illustration?.url) {
@@ -135,7 +151,7 @@ export default function PoemeDetail() {
     setPdfBusy(true)
     try {
       const struct = getStructure(poeme.structureId)
-      const textePoeme = reconstruirePoeme(poeme.cases, struct)
+      const textePoeme = texteCorrige ?? reconstruirePoeme(poeme.cases, struct)
       const titre = poeme.titre ?? 'Cadavre Exquis'
       await exporterPDF({
         type: 'poeme',
@@ -156,7 +172,7 @@ export default function PoemeDetail() {
     if (!poeme) return
     const titre = poeme.titre ?? 'Cadavre Exquis'
     const struct = getStructure(poeme.structureId)
-    const texte = reconstruirePoeme(poeme.cases, struct)
+    const texte = texteCorrige ?? reconstruirePoeme(poeme.cases, struct)
     const date = new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
     const versHtml = texte.split('\n')
       .map(l => `<p class="vers">${l.trim() ? l.replace(/&/g, '&amp;').replace(/</g, '&lt;') : '&nbsp;'}</p>`)
@@ -206,7 +222,8 @@ export default function PoemeDetail() {
 
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
-  const lignes = texte.split('\n')
+  const texteAffiche = texteCorrige ?? texte
+  const lignes = texteAffiche.split('\n')
   const lettrine = lignes[0]?.trim().charAt(0) ?? ''
   const resteLigne0 = lignes[0]?.trim().slice(1) ?? ''
   const voixCount = poeme.cases.length
@@ -416,7 +433,7 @@ export default function PoemeDetail() {
           transition={{ delay: 0.5 }}
         >
           <button
-            onClick={() => parlant ? arreter() : parler(texte)}
+            onClick={() => parlant ? arreter() : parler(texteAffiche)}
             aria-label={parlant ? 'Arrêter la lecture' : 'Écouter le poème'}
             aria-pressed={parlant}
             style={{ ...mono, fontSize: 13, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
