@@ -335,7 +335,6 @@ function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: 
       fontSize: 'clamp(3.5rem, 17vw, 6.5rem)',
       lineHeight: 0.88, letterSpacing: '-0.03em',
       color: 'var(--reve-ink)',
-      opacity: 0.10,
       textTransform: 'uppercase',
       transform: rotation ? `rotate(${rotation}deg)` : undefined,
       zIndex: 2, pointerEvents: 'none',
