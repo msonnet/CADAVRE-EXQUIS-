@@ -165,7 +165,7 @@ interface VariantZones {
 
 const ZONES: Record<Variant, VariantZones> = {
   accueil: {
-    symbol: { top: '13%', sizeMul: 0.9 },
+    symbol: { top: '12%', sizeMul: 0.6 },
     etiqs: [],
     stripesMax: 0,
     verticalTitle: { side: 'right' },
@@ -339,7 +339,7 @@ function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: 
       textTransform: 'uppercase',
       transform: rotation ? `rotate(${rotation}deg)` : undefined,
       zIndex: 2, pointerEvents: 'none',
-      animation: 'inkBloomQ 1.2s 0.2s both',
+      animation: 'inkBloomFaint 1.2s 0.2s both',
     } as React.CSSProperties}>CADAVRE</div>
   )
 }
@@ -357,7 +357,7 @@ function SymboleAvecCartel({
   const Draw = symbole.draw
   const size = symbole.w * pos.sizeMul
   const isCentered = variant === 'jeu-ia' || variant === 'multi'
-  const showCartel = variant === 'accueil'
+  const showCartel = false
   const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
   return (
     <div style={{

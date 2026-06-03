@@ -289,6 +289,7 @@
 @keyframes fadeInSlow { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeInQ { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes inkBloomQ { from { opacity: 0; filter: blur(2.5px); } to { opacity: 1; filter: blur(0); } }
+@keyframes inkBloomFaint { from { opacity: 0; filter: blur(2.5px); } to { opacity: 0.10; filter: blur(0); } }
 @keyframes inkBloom { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: blur(0); } }
 @keyframes symbolDrop { from { opacity: 0; transform: translateY(-22px) rotate(-15deg) scale(0.88); } to { opacity: 1; transform: translateY(0) rotate(0) scale(1); } }
 @keyframes collageDrop { 0% { opacity: 0; transform: translateY(-30px) rotate(-20deg) scale(0.85); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); } }
