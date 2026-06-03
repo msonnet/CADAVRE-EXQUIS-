@@ -165,7 +165,7 @@ interface VariantZones {
 
 const ZONES: Record<Variant, VariantZones> = {
   accueil: {
-    symbol: { top: '12%', sizeMul: 0.6 },
+    symbol: { top: '13%', sizeMul: 0.9 },
     etiqs: [],
     stripesMax: 0,
     verticalTitle: { side: 'right' },
@@ -357,37 +357,46 @@ function SymboleAvecCartel({
   const Draw = symbole.draw
   const size = symbole.w * pos.sizeMul
   const isCentered = variant === 'jeu-ia' || variant === 'multi'
-  const showCartel = false
+  const showCartel = variant === 'accueil'
   const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
   return (
-    <div style={{
-      position: 'absolute',
-      top: pos.top, bottom: pos.bottom,
-      left: pos.left, right: pos.right,
-      transform: isCentered ? 'translateX(-50%)' : undefined,
-      zIndex: 3, opacity: 0, pointerEvents: 'none',
-      animation: 'symbolDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.5s both',
-    }}>
-      <div style={{ filter: isDark ? 'invert(1) brightness(0.88)' : undefined }}>
-        <Draw w={size} />
-      </div>
-      {showCartel && (
-        <div style={{
-          marginTop: 6,
-          background: 'var(--reve-bg)',
-          border: '0.5px solid var(--reve-ink)',
-          padding: '4px 8px 5px',
-          fontFamily: "'Inter', sans-serif",
-          color: 'var(--reve-ink)',
-          transform: 'rotate(-2deg)',
-          maxWidth: 150, lineHeight: 1.25,
-          boxShadow: '1px 1px 0 rgba(0,0,0,0.12)',
-          opacity: 0.85, overflow: 'hidden',
-        }}>
-          <div style={{ fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
-          <div style={{ fontSize: 12, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
+    // Outer: position + centering + responsive CSS scale (not touched by inner animation)
+    <div
+      className={variant === 'accueil' ? 'decor-symbol-accueil' : undefined}
+      style={{
+        position: 'absolute',
+        top: pos.top, bottom: pos.bottom,
+        left: pos.left, right: pos.right,
+        transform: isCentered ? 'translateX(-50%)' : undefined,
+        zIndex: 3, pointerEvents: 'none',
+      }}
+    >
+      {/* Inner: drop animation runs here, separate so CSS scale above isn't overridden */}
+      <div style={{
+        opacity: 0,
+        animation: 'symbolDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.5s both',
+      }}>
+        <div style={{ filter: isDark ? 'invert(1) brightness(0.88)' : undefined }}>
+          <Draw w={size} />
         </div>
-      )}
+        {showCartel && (
+          <div style={{
+            marginTop: 6,
+            background: 'var(--reve-bg)',
+            border: '0.5px solid var(--reve-ink)',
+            padding: '4px 8px 5px',
+            fontFamily: "'Inter', sans-serif",
+            color: 'var(--reve-ink)',
+            transform: 'rotate(-2deg)',
+            maxWidth: 150, lineHeight: 1.25,
+            boxShadow: '1px 1px 0 rgba(0,0,0,0.12)',
+            opacity: 0.85, overflow: 'hidden',
+          }}>
+            <div style={{ fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase' }}>{symbole.label}</div>
+            <div style={{ fontSize: 12, fontStyle: 'italic', opacity: 0.7, marginTop: 1 }}>{symbole.ref}</div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

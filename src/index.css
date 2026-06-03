@@ -309,6 +309,26 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--reve-ink-faint); border-radius: 2px; }
 
+/* ── Symbole décoratif accueil — scale adaptatif sur écrans courts ──
+   Le symbole+cartel part de top:13% et peut atteindre ~200px de hauteur.
+   Sur les petits viewports (barre navigateur visible), on réduit visuellement
+   via transform:scale pour éviter le chevauchement avec le titre "Exquis."
+   La séparation outer/inner dans Decor.tsx garantit que l'animation drop
+   ne réécrase pas ce scale (animation-fill-mode ne touche que le div interne).
+   ── */
+.decor-symbol-accueil {
+  transform-origin: top center;
+}
+@media (max-height: 659px) {
+  .decor-symbol-accueil { transform: scale(0.80); }
+}
+@media (max-height: 619px) {
+  .decor-symbol-accueil { transform: scale(0.65); }
+}
+@media (max-height: 569px) {
+  .decor-symbol-accueil { transform: scale(0.50); }
+}
+
 /* ── Accessibilité : réduction de mouvement ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
