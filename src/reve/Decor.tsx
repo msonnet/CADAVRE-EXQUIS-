@@ -339,7 +339,7 @@ function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: 
       textTransform: 'uppercase',
       transform: rotation ? `rotate(${rotation}deg)` : undefined,
       zIndex: 2, pointerEvents: 'none',
-      animation: 'inkBloomFaint 1.2s 0.2s both',
+      animation: 'inkBloomQ 1.2s 0.2s both',
     } as React.CSSProperties}>CADAVRE</div>
   )
 }
