@@ -118,9 +118,9 @@ export default function JeuOnline() {
   const prevLastWord = prevFragment && !prevFragment.texte.startsWith('data:')
     ? prevFragment.texte.trim().split(/\s+/).pop() ?? '' : ''
 
-  // Raccord for drawing: data URL of the previous player's band
-  const raccordRaw = room?.mode === 'dessin' && myEffectiveIndex !== null && myEffectiveIndex > 0
-    ? (contributions.find(c2 => c2.case_index === myEffectiveIndex - 1)?.texte ?? null)
+  // Raccord for drawing: data URL of the previous band (not player index — correct across multiple rounds)
+  const raccordRaw = room?.mode === 'dessin' && currentCase > 0
+    ? (contributions.find(c2 => c2.case_index === currentCase - 1)?.texte ?? null)
     : null
   const raccordDataUrl = raccordRaw
     ? raccordRaw.startsWith('data:')

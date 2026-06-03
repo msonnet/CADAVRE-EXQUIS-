@@ -241,6 +241,18 @@ export default function Salon() {
   async function quitterSalon() {
     if (!user || !code) return
     await supabase.from('room_players').delete().eq('room_code', code).eq('player_id', user.id)
+    // Count remaining players after leaving
+    const { count } = await supabase.from('room_players').select('*', { count: 'exact', head: true }).eq('room_code', code)
+    if ((count ?? 0) === 0) {
+      // Last player out: close the room so it disappears from the public listing
+      await supabase.from('rooms').update({ status: 'finished' }).eq('code', code)
+    } else if (room?.host_id === user.id) {
+      // Host left but others remain: transfer host to next player
+      const { data: remaining } = await supabase.from('room_players').select('player_id').eq('room_code', code).order('joined_at').limit(1)
+      if (remaining?.[0]) {
+        await supabase.from('rooms').update({ host_id: remaining[0].player_id }).eq('code', code)
+      }
+    }
     navigate('/online')
   }
 
