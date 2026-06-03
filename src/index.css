@@ -253,9 +253,9 @@
   .page-carnet {
     position: relative;
     margin-inline: auto;
-    max-width: 42rem;
+    width: 100%;
     min-height: 100dvh;
-    padding: 1.5rem 0.75rem;
+    padding: 1.5rem clamp(0.75rem, 4vw, 3rem);
     overflow: hidden;
   }
 
