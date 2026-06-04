@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { chargerPoemes } from '../db'
@@ -236,9 +236,17 @@ export default function Reglages() {
         <div style={{ flex: 1 }} />
 
         {/* ── VERSION ── */}
-        <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, textAlign: 'center', paddingBottom: 8, lineHeight: 1.6 }}>
+        <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, textAlign: 'center', paddingBottom: 4, lineHeight: 1.6 }}>
           CADAVRE EXQUIS · v1.0<br />
           AUCUN TRACKING · AUCUN COMPTE · TOUT RESTE LOCAL
+        </div>
+        <div style={{ textAlign: 'center', paddingBottom: 8 }}>
+          <Link
+            to="/privacy"
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5, textDecoration: 'none' }}
+          >
+            Politique de confidentialité
+          </Link>
         </div>
 
       </div>

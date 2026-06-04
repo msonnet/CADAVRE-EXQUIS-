@@ -119,6 +119,7 @@ export default function PoemeDetail() {
         image_url: poeme.illustration?.url ?? null,
         author_pseudo: profile?.pseudo ?? 'Anonyme',
         author_avatar: profile?.avatar_url ?? null,
+        author_id: profile?.id ?? null,
       })
       if (error) throw error
       jouer('soumettre')

@@ -9,9 +9,18 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/tmp/pw-browsers playwright test"
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/tmp/pw-browsers playwright test",
+    "cap:sync": "npm run build && cap sync",
+    "cap:ios": "npm run build && cap sync ios && cap open ios",
+    "cap:android": "npm run build && cap sync android && cap open android",
+    "cap:add:ios": "cap add ios",
+    "cap:add:android": "cap add android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/ios": "^8.4.0",
     "@supabase/supabase-js": "^2.106.2",
     "dexie": "^4.0.11",
     "framer-motion": "^11.18.2",

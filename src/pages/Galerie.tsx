@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { supabase, getReactorKey } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
+import { useAuth } from '../hooks/useAuth'
 
 const PAGE_SIZE = 20
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
@@ -26,6 +27,7 @@ interface GalleryItem {
   image_url: string | null
   author_pseudo: string
   author_avatar: string | null
+  author_id?: string | null
   created_at: string
   views_count?: number | null
 }
@@ -75,10 +77,18 @@ function extraitPoeme(payload: PoemePayload): string {
   return texte.slice(0, 120)
 }
 
+const REPORT_REASONS = [
+  { id: 'inappropriate', label: 'Contenu inapproprié' },
+  { id: 'spam', label: 'Spam' },
+  { id: 'offensive', label: 'Contenu offensant' },
+  { id: 'other', label: 'Autre' },
+] as const
+
 export default function Galerie() {
   const navigate = useNavigate()
   const seance = useReve()
   const { jouer } = useSound()
+  const { user } = useAuth()
 
   const accent = seance?.accent.hex ?? '#b22c20'
   const encre = seance?.ambiance.ink ?? '#e6d4b8'
@@ -100,6 +110,12 @@ export default function Galerie() {
   const reactorKey = useRef<string>(getReactorKey())
   const seenViews = useRef<Set<string>>(new Set())
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
+  const [reportingId, setReportingId] = useState<string | null>(null)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetails, setReportDetails] = useState('')
+  const [reportSending, setReportSending] = useState(false)
+  const [reportDone, setReportDone] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const chargerReactions = useCallback(async (ids: string[]) => {
     if (ids.length === 0) return
@@ -209,6 +225,44 @@ export default function Galerie() {
     })
   }, [incrementView])
 
+  const envoyerSignalement = useCallback(async () => {
+    if (!reportingId || !reportReason) return
+    setReportSending(true)
+    try {
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gallery_id: reportingId,
+          reason: reportReason,
+          details: reportDetails || undefined,
+          reporter_id: user?.id ?? null,
+        }),
+      })
+      if (res.ok) {
+        setReportDone(true)
+        setTimeout(() => {
+          setReportingId(null)
+          setReportDone(false)
+          setReportReason('')
+          setReportDetails('')
+        }, 2000)
+      }
+    } catch { /* ignore */ } finally {
+      setReportSending(false)
+    }
+  }, [reportingId, reportReason, reportDetails, user])
+
+  const supprimerItem = useCallback(async (id: string) => {
+    setDeletingId(id)
+    try {
+      const { error } = await supabase.from('gallery').delete().eq('id', id)
+      if (!error) setItems(prev => prev.filter(it => it.id !== id))
+    } catch { /* ignore */ } finally {
+      setDeletingId(null)
+    }
+  }, [])
+
   const chargerItems = useCallback(async (type: GalleryType, offset: number, reset: boolean) => {
     if (reset) {
       setChargement(true)
@@ -222,7 +276,7 @@ export default function Galerie() {
     try {
       const { data, error } = await supabase
         .from('gallery')
-        .select('id, type, titre, payload, image_url, author_pseudo, author_avatar, created_at, views_count')
+        .select('id, type, titre, payload, image_url, author_pseudo, author_avatar, author_id, created_at, views_count')
         .eq('type', type)
         .order('created_at', { ascending: false })
         .range(offset, offset + PAGE_SIZE - 1)
@@ -266,6 +320,113 @@ export default function Galerie() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="biblio" />
+
+      {/* ── MODAL SIGNALEMENT ── */}
+      <AnimatePresence>
+        {reportingId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 400,
+              background: 'rgba(0,0,0,0.72)',
+              display: 'flex', alignItems: 'flex-end',
+            }}
+            onClick={() => { if (!reportSending) { setReportingId(null); setReportReason(''); setReportDetails('') } }}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: '100%',
+                background: bg,
+                borderTop: `1.5px solid ${accent}55`,
+                padding: '24px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
+                display: 'flex', flexDirection: 'column', gap: 16,
+              }}
+            >
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+                — SIGNALER CE CONTENU —
+              </div>
+
+              {reportDone ? (
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85 }}>
+                  Signalement envoyé. Merci.
+                </p>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {REPORT_REASONS.map(r => (
+                      <button
+                        key={r.id}
+                        onClick={() => setReportReason(r.id)}
+                        style={{
+                          ...mono, fontSize: 15, textAlign: 'left',
+                          padding: '10px 14px',
+                          background: 'transparent',
+                          border: reportReason === r.id ? `1.5px solid ${accent}` : `0.5px solid ${encre}30`,
+                          color: reportReason === r.id ? accent : encre,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={reportDetails}
+                    onChange={e => setReportDetails(e.target.value)}
+                    placeholder="Détails (facultatif)…"
+                    maxLength={500}
+                    rows={3}
+                    style={{
+                      ...mono, fontSize: 14, color: encre,
+                      background: `${encre}08`,
+                      border: `0.5px solid ${encre}30`,
+                      padding: '10px 12px',
+                      resize: 'none',
+                      outline: 'none',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={() => { setReportingId(null); setReportReason(''); setReportDetails('') }}
+                      style={{
+                        flex: 1, ...mono, fontSize: 14,
+                        padding: '12px 0',
+                        background: 'transparent',
+                        border: `0.5px solid ${encre}30`,
+                        color: encre, opacity: 0.7,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ANNULER
+                    </button>
+                    <button
+                      onClick={envoyerSignalement}
+                      disabled={!reportReason || reportSending}
+                      style={{
+                        flex: 2, ...mono, fontSize: 14, fontWeight: 700,
+                        padding: '12px 0',
+                        background: reportReason && !reportSending ? accent : `${accent}55`,
+                        border: 'none',
+                        color: btnText,
+                        cursor: reportReason && !reportSending ? 'pointer' : 'default',
+                      }}
+                    >
+                      {reportSending ? '…' : 'SIGNALER'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── LIGHTBOX ── */}
       <AnimatePresence>
@@ -659,6 +820,40 @@ export default function Galerie() {
                           <span style={{ fontSize: 17 }}>👁</span>
                           {item.views_count ?? 0}
                         </span>
+                      </div>
+
+                      {/* ── ACTIONS (signaler / supprimer) ── */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+                        {user && item.author_id === user.id ? (
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              if (deletingId === item.id) return
+                              if (confirm('Supprimer cette publication ?')) supprimerItem(item.id)
+                            }}
+                            style={{
+                              ...mono, fontSize: 12, color: accent, opacity: 0.75,
+                              background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                            }}
+                          >
+                            {deletingId === item.id ? '…' : '✕ SUPPRIMER'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              setReportingId(item.id)
+                              setReportReason('')
+                              setReportDetails('')
+                            }}
+                            style={{
+                              ...mono, fontSize: 12, color: encre, opacity: 0.45,
+                              background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                            }}
+                          >
+                            ⚑ SIGNALER
+                          </button>
+                        )}
                       </div>
                     </div>
                   </motion.div>

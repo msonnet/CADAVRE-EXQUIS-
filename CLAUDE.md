@@ -7,10 +7,10 @@ Me prévenir dès que l'application atteint les critères de maturité pour une 
 ## Critères App Store manquants (à tracker)
 
 ### Bloquants
-- [ ] **Rate limiting distribué** — l'implémentation in-memory actuelle ne survit pas à plusieurs instances Vercel ; migrer vers Upstash Redis ou Supabase RPC
-- [ ] **Modération galerie** — signalement / suppression de contenu ; Apple rejette sans mécanisme de modération
-- [ ] **Politique de confidentialité** — URL obligatoire pour toute app avec compte utilisateur
-- [ ] **Packaging natif** — la PWA seule ne suffit pas pour l'App Store ; utiliser Capacitor (wrapper natif iOS/Android) ou soumettre comme app web via Safari (pas d'App Store)
+- [x] **Rate limiting distribué** — migré vers Supabase RPC `check_rate_limit()` (atomic upsert), fallback in-memory conservé (`api/_rateLimit.ts`)
+- [x] **Modération galerie** — signalement (`api/report.ts` + bouton ⚑ dans Galerie) + suppression de ses propres publications (colonne `author_id` + RLS delete policy)
+- [x] **Politique de confidentialité** — page `/privacy` (RGPD) accessible depuis Réglages
+- [x] **Packaging natif** — Capacitor installé (`@capacitor/core/cli/ios/android`), `capacitor.config.ts` créé, scripts `cap:ios` / `cap:android` dans package.json ; reste à ajouter les plateformes sur Mac avec Xcode
 
 ### Importants mais non bloquants
 - [ ] Dessins base64 → Supabase Storage (scalabilité)
