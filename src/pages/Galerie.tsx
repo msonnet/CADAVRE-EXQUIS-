@@ -832,8 +832,9 @@ export default function Galerie() {
                               if (confirm('Supprimer cette publication ?')) supprimerItem(item.id)
                             }}
                             style={{
-                              ...mono, fontSize: 12, color: accent, opacity: 0.75,
-                              background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                              ...mono, fontSize: 13, color: accent, opacity: 0.85,
+                              background: 'none', border: `0.5px solid ${accent}40`,
+                              cursor: 'pointer', padding: '3px 10px',
                             }}
                           >
                             {deletingId === item.id ? '…' : '✕ SUPPRIMER'}
@@ -847,11 +848,12 @@ export default function Galerie() {
                               setReportDetails('')
                             }}
                             style={{
-                              ...mono, fontSize: 12, color: encre, opacity: 0.45,
-                              background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                              ...mono, fontSize: 13, color: encre, opacity: 0.65,
+                              background: 'none', border: `0.5px solid ${encre}30`,
+                              cursor: 'pointer', padding: '3px 10px',
                             }}
                           >
-                            ⚑ SIGNALER
+                            ⚑ Signaler
                           </button>
                         )}
                       </div>

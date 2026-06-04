@@ -243,9 +243,9 @@ export default function Reglages() {
         <div style={{ textAlign: 'center', paddingBottom: 8 }}>
           <Link
             to="/privacy"
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5, textDecoration: 'none' }}
+            style={{ ...mono, fontSize: 13, color: accent, opacity: 0.75, textDecoration: 'underline', textUnderlineOffset: 3 }}
           >
-            Politique de confidentialité
+            Politique de confidentialité →
           </Link>
         </div>
 
