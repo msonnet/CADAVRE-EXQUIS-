@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const ip = getClientIp(req)
-  if (!await checkRateLimit(ip, 30)) {
+  if (!checkRateLimit(ip, 30)) {
     res.status(429).json({ error: 'Trop de requêtes. Attendez une minute.' }); return
   }
 

@@ -9,7 +9,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const ip = getClientIp(req)
-  if (!await checkRateLimit(`report:${ip}`, 5)) {
+  if (!checkRateLimit(`report:${ip}`, 5)) {
     res.status(429).json({ error: 'Trop de signalements. Réessayez dans une minute.' }); return
   }
 
