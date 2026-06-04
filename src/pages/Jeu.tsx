@@ -59,10 +59,13 @@ function buildSequence(
     if (i < second.length) seq.push(second[i])
   }
 
-  // Solo uniquement : rotation si l'IA doit ouvrir
-  if (nb === 1 && premierJoueur === 'ia' && seq[0].type === 'humain') {
-    const iaIdx = seq.findIndex(p => p.type === 'ia')
-    if (iaIdx > 0) return [...seq.slice(iaIdx), ...seq.slice(0, iaIdx)]
+  // Rotation : garantir que le bon type ouvre la séquence
+  if (premierJoueur === 'humain' && seq[0].type !== 'humain') {
+    const idx = seq.findIndex(p => p.type === 'humain')
+    if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
+  } else if (premierJoueur === 'ia' && seq[0].type !== 'ia') {
+    const idx = seq.findIndex(p => p.type === 'ia')
+    if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
   }
 
   return seq
