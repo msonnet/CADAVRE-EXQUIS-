@@ -229,7 +229,17 @@ export default async function handler(req: any, res: any): Promise<void> {
       .replace(/[.!?;,]+$/, '')
       .trim()
 
-    const texte = normaliserSortie(propre, type as TypeCase)
+    // Detect meta-responses where the AI explains its task instead of generating poetic content
+    const isMetaResponse =
+      /^je vais\b/i.test(propre) ||
+      /^voici\b/i.test(propre) ||
+      /^d['']accord\b/i.test(propre) ||
+      /^bien s[uû]r\b/i.test(propre) ||
+      /^pour\s+(répondre|compléter|créer|générer)\b/i.test(propre) ||
+      /\bétapes?\b/i.test(propre) ||
+      propre.endsWith(':')
+
+    const texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase)
     res.status(200).json({
       texte: texte || pickFallback(type as TypeCase, motsEviter),
       source: texte ? 'ia' : 'fallback',
