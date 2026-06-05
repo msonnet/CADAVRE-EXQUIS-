@@ -8,7 +8,7 @@ import type { ConfigPartie, StructureId, Visibilite } from '../types'
 
 const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },
-  { id: 'phrase-etoffee', romain: 'II',  label: 'Phrase étoffée', description: '7 cases · la canonique de Breton',  detail: 'La structure originale inventée en 1925 : article + adjectif + nom + verbe + article + adjectif + nom.' },
+  { id: 'phrase-etoffee', romain: 'II',  label: 'Phrase étoffée', description: '5 cases · la canonique de Breton',  detail: 'La structure originale inventée en 1925 : « Le cadavre exquis boira le vin nouveau » — article+nom · adjectif · verbe · article+nom · adjectif.' },
   { id: 'vers-libre',     romain: 'III', label: 'Vers libre',     description: '4 à 12 vers · sans contrainte',     detail: 'Chaque joueur écrit un vers entier. Le poème s\'assemble sans règle grammaticale.' },
 ]
 

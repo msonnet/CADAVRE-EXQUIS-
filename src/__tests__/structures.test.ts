@@ -13,10 +13,10 @@ describe('getStructure', () => {
     expect(s.cases).toHaveLength(3)
   })
 
-  it('returns phrase-etoffee with 7 cases', () => {
+  it('returns phrase-etoffee with 5 cases', () => {
     const s = getStructure('phrase-etoffee')
     expect(s.id).toBe('phrase-etoffee')
-    expect(s.cases).toHaveLength(7)
+    expect(s.cases).toHaveLength(5)
   })
 
   it('falls back to vers-libre for unknown IDs', () => {
@@ -34,7 +34,7 @@ describe('getStructure', () => {
 describe('nombreCasesEffectif', () => {
   it('returns exact count for fixed structures', () => {
     expect(nombreCasesEffectif(getStructure('phrase-simple'))).toBe(3)
-    expect(nombreCasesEffectif(getStructure('phrase-etoffee'))).toBe(7)
+    expect(nombreCasesEffectif(getStructure('phrase-etoffee'))).toBe(5)
   })
 
   it('returns a value within [min, max] for vers-libre', () => {
@@ -65,9 +65,9 @@ describe('reconstruirePoeme', () => {
     expect(poeme).toContain('la nuit épaisse')
   })
 
-  it('assembles phrase-etoffee with all 7 fragments', () => {
+  it('assembles phrase-etoffee with all 5 fragments', () => {
     const s = getStructure('phrase-etoffee')
-    const words = ['un sombre', 'chien', 'nocturne', 'dévore', 'la froide', 'cendre', 'muette']
+    const words = ['le cadavre', 'exquis', 'boira', 'le vin', 'nouveau']
     const cases = words.map(fakeCase)
     const poeme = reconstruirePoeme(cases, s)
     words.forEach(w => expect(poeme).toContain(w))

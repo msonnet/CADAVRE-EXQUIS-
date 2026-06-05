@@ -6,7 +6,7 @@ import { Decor, useReve } from '../reve'
 
 const STRUCTURES = [
   { romain: 'I',   label: 'Phrase courte',  detail: '3 cases · sujet, verbe, complément', exemple: "L'ombre / glisse / dans la nuit froide" },
-  { romain: 'II',  label: 'Phrase étoffée', detail: '7 cases · la canonique de Breton', exemple: 'Un beau soleil caressera lentement une mer endormie' },
+  { romain: 'II',  label: 'Phrase étoffée', detail: '5 cases · la canonique de Breton', exemple: 'Le cadavre exquis boira le vin nouveau' },
   { romain: 'III', label: 'Vers libre',     detail: '4 à 12 vers · sans contrainte fixe' },
 ]
 

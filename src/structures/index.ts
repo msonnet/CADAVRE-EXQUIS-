@@ -29,19 +29,19 @@ export const STRUCTURES: Structure[] = [
     ],
   },
 
-  // 2. Phrase étoffée — canonique de Breton (7 cases)
+  // 2. Phrase étoffée — canonique de Breton (5 cases)
+  //    « Le cadavre exquis boira le vin nouveau »
+  //    article+nom · adjectif · verbe · article+nom · adjectif
   {
     id: 'phrase-etoffee',
     nom: 'Phrase étoffée',
-    description: '7 cases — la canonique de Breton',
+    description: '5 cases — la canonique de Breton',
     cases: [
-      { fonction: 'article + adjectif', consigne: "article + adjectif — ex : 'un sombre', 'une pâle', 'le vieux'", type: 'article-adj' },
-      { fonction: 'nom sujet', consigne: 'nom seul, sans article — ex : "cœur", "nuage", "couteau"', type: 'nom' },
-      { fonction: 'adjectif du sujet', consigne: "adjectif qualificatif seul — ex : 'nocturne', 'brisé', 'profond'", type: 'adjectif' },
-      { fonction: 'verbe', consigne: "verbe conjugué — ex : 'dévore', 'hante', 'veille'", type: 'verbe' },
-      { fonction: 'article + adjectif', consigne: "article + adjectif — ex : 'la douce', 'un long', 'une froide'", type: 'article-adj' },
-      { fonction: 'nom COD', consigne: 'nom seul, sans article — ex : "flamme", "miroir", "os"', type: 'nom' },
-      { fonction: 'adjectif du COD', consigne: "adjectif qualificatif seul — ex : 'éternel', 'opaque', 'sourd'", type: 'adjectif' },
+      { fonction: 'sujet', consigne: 'article + nom — ex : "le cadavre", "une ombre", "un couteau"', type: 'groupe-nominal' },
+      { fonction: 'adjectif du sujet', consigne: "adjectif qualificatif seul — ex : 'exquis', 'nocturne', 'brisé'", type: 'adjectif' },
+      { fonction: 'verbe', consigne: "verbe conjugué — ex : 'boira', 'dévore', 'hante'", type: 'verbe' },
+      { fonction: 'complément', consigne: 'article + nom — ex : "le vin", "la flamme", "un miroir"', type: 'groupe-nominal' },
+      { fonction: 'adjectif du complément', consigne: "adjectif qualificatif seul — ex : 'nouveau', 'opaque', 'sourd'", type: 'adjectif' },
     ],
   },
 

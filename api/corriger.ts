@@ -25,18 +25,15 @@ export default async function handler(req: any, res: any): Promise<void> {
   let prompt: string
 
   if (Array.isArray(blocs) && blocs.length > 0) {
-    if (structureId === 'phrase-etoffee' && blocs.length === 7) {
-      // 7 blocs — canonique de Breton.
-      // Approche sémantique : Claude identifie le nom noyau de chaque groupe
-      // plutôt que de supposer que bloc 2 = nom sujet (les joueurs font des erreurs).
+    if (structureId === 'phrase-etoffee' && blocs.length === 5) {
+      // 5 blocs — canonique de Breton « Le cadavre exquis boira le vin nouveau ».
+      // article+nom · adjectif · verbe · article+nom · adjectif
       const labels = [
-        'article + adjectif épithète',
-        'nom sujet (prévu)',
+        'groupe nominal sujet (article + nom)',
         'adjectif du sujet',
         'verbe conjugué',
-        'article + adjectif épithète',
-        'nom COD (prévu)',
-        'adjectif du COD',
+        'groupe nominal complément (article + nom)',
+        'adjectif du complément',
       ]
       const blocLines = blocs.map((b, i) =>
         `  Bloc ${i + 1} (${labels[i]}) : «${b.texte.trim()}»`
@@ -44,18 +41,17 @@ export default async function handler(req: any, res: any): Promise<void> {
 
       prompt = `Tu es un correcteur de grammaire française pour le jeu du cadavre exquis.
 
-Sept joueurs ont chacun écrit un bloc en aveugle, dans cet ordre :
+Cinq joueurs ont chacun écrit un bloc en aveugle, dans cet ordre :
 ${blocLines}
 
 Phrase assemblée : «${texte}»
 
 TÂCHE — effectue exactement ces étapes dans l'ordre :
-1. Identifie le NOM PRINCIPAL du groupe sujet (cherche dans les blocs 1, 2 et 3 — les joueurs font parfois des erreurs de catégorie).
-2. Accorde le déterminant et les adjectifs des blocs 1 et 3 avec ce nom (genre et nombre).
-3. Identifie le NOM PRINCIPAL du groupe COD (cherche dans les blocs 5, 6 et 7).
-4. Accorde le déterminant et les adjectifs des blocs 5 et 7 avec ce nom (genre et nombre).
-5. Garde rigoureusement identiques : tous les noms, le verbe (bloc 4), les adverbes.
-6. Si un bloc "article + adjectif" ne contient pas d'adjectif mais un nom (ex : «la terreur», «le chagrin»), remplace-le par article + adjectif du bon genre, en gardant l'esprit surréaliste.
+1. Identifie le NOM PRINCIPAL du groupe sujet (bloc 1).
+2. Accorde l'adjectif du bloc 2 avec ce nom (genre et nombre). Accorde aussi l'article interne du bloc 1 si nécessaire.
+3. Identifie le NOM PRINCIPAL du groupe complément (bloc 4).
+4. Accorde l'adjectif du bloc 5 avec ce nom (genre et nombre). Accorde aussi l'article interne du bloc 4 si nécessaire.
+5. Garde rigoureusement identiques : tous les noms, le verbe (bloc 3), les adverbes.
 
 Réponds avec LA PHRASE CORRIGÉE UNIQUEMENT, sur une seule ligne, sans guillemets ni explication.`
 
