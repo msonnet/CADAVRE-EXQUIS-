@@ -20,7 +20,7 @@ const MAX_TOKENS: Record<TypeCase, number> = {
   'verbe': 5,
   'adjectif': 5,
   'adverbe': 6,
-  'groupe-nominal': 8,
+  'groupe-nominal': 6,
   'groupe-verbal': 8,
   'proposition': 18,
   'libre': 18,
@@ -33,7 +33,7 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'verbe': '1 mot (verbe conjugué — ex : "dévore", "hante", "veille", "frôle")',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
   'adverbe': '1 à 2 mots',
-  'groupe-nominal': '2 à 3 mots (article + nom, ex: "le silence", "une ombre froide")',
+  'groupe-nominal': '2 MOTS EXACTEMENT : article + nom — ex : "le silence", "une ombre", "la pluie", "un couteau". JAMAIS d\'adjectif après le nom.',
   'groupe-verbal': '2 mots (verbe + 1 complément court)',
   'proposition': '4 à 6 mots (phrase courte)',
   'libre': '3 à 6 mots (un vers)',
@@ -53,11 +53,13 @@ const FALLBACKS: Record<TypeCase, string[]> = {
   'adverbe': ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs',
               'en vain', 'presque', 'toujours', 'parfois', 'nulle part', 'jadis', 'désormais'],
   'groupe-nominal': [
-    "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
-    'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
-    'la pluie fine', 'un mur de brume', 'la main tendue',
-    'un silence épais', 'le bord du gouffre', 'une voix creuse', "l'eau noire",
-    'le corps absent', 'une ombre familière', 'la porte close', 'un feu mourant',
+    "l'ombre", 'la nuit', 'un souffle', 'la cendre',
+    'le bruit', 'une lumière', 'la terre', 'un regard',
+    'la pluie', 'un mur', 'la main',
+    'le silence', 'le bord', 'une voix', "l'eau",
+    'le corps', 'une ombre', 'la porte', 'un feu',
+    'le ventre', 'une bouche', 'le ciel', 'un os',
+    'la pierre', 'un crâne', 'le sel', 'une racine',
   ],
   'groupe-verbal': [
     'traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit',
@@ -114,6 +116,11 @@ function normaliserSortie(texte: string, type: TypeCase): string {
     }
     case 'verbe': {
       if (mots.length > 3) return mots.slice(0, 2).join(' ')
+      return t
+    }
+    case 'groupe-nominal': {
+      // Strictly article + noun — never let an adjective sneak in (phrase-étoffée has a dedicated adjectif slot)
+      if (mots.length > 2) return mots.slice(0, 2).join(' ')
       return t
     }
     default:
