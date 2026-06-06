@@ -216,7 +216,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         messages: [
           {
             role: 'user',
-            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nContrainte absolue : ${contrainte}.\nSois inattendu — choisis l'image concrète et physique qui ne vient pas en premier.${echoLine}${eviterLine}\nRéponds avec le fragment seul.`,
+            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),
