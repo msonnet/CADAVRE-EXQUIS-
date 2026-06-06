@@ -182,6 +182,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     : choisirVoixAleatoire()
   const maxTokens = MAX_TOKENS[type as TypeCase] ?? 14
   const contrainte = CONTRAINTES[type as TypeCase] ?? '2 à 4 mots'
+  // Strip the « — ex : … » part so examples never influence the AI (they're only for human players)
+  const consigneIA = consigne.replace(/\s*[—–-]\s*ex\s*:.*$/i, '').trim()
 
   const echoLine = contexte
     ? `\nTu entends en écho : "${contexte}".`
@@ -216,7 +218,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         messages: [
           {
             role: 'user',
-            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigne}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}\nRéponds avec le fragment seul.`,
+            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),
