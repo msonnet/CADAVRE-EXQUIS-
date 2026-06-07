@@ -168,7 +168,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
   const lastPos = useRef<{ x: number; y: number } | null>(null)
   const lastMid = useRef<{ x: number; y: number } | null>(null)
   const velocityRef = useRef(0)
-  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const pointersRef = useRef<Map<number, { x: number; y: number; type: string }>>(new Map())
   const lastPinchDist = useRef<number | null>(null)
   const lastPinchMid = useRef<{ x: number; y: number } | null>(null)
   const undoStackRef = useRef<ImageData[]>([])
@@ -362,8 +362,11 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
   }
 
   function onPointerDown(e: React.PointerEvent) {
+    // Palm rejection: ignore touch while a pen is active
+    const hasPen = [...pointersRef.current.values()].some(p => p.type === 'pen')
+    if (hasPen && e.pointerType === 'touch') return
     // Capture pointer so events keep firing even if stylus lifts briefly or moves outside
-    ;(e.target as Element).setPointerCapture(e.pointerId)
+    e.currentTarget.setPointerCapture(e.pointerId)
     if (pipetteActive) {
       const col = echantillonnerCouleur(e.clientX, e.clientY)
       if (col) { setColor(col); ajouterCouleurRecente(col) }
@@ -371,7 +374,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
       setTool(toolAvantPipette.current === 'eraser' ? 'pen' : toolAvantPipette.current)
       return
     }
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType })
     if (pointersRef.current.size === 1) {
       if (panMode) { isDrawing.current = false }
       else {
@@ -384,9 +387,10 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
   }
 
   function onPointerMove(e: React.PointerEvent) {
+    if (!pointersRef.current.has(e.pointerId) && e.pointerType !== 'pen') return
     if (!isDrawing.current && !panMode) setGhost({ x: e.clientX, y: e.clientY })
     const prevPt = pointersRef.current.get(e.pointerId)
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: prevPt?.type ?? e.pointerType })
     const pts = [...pointersRef.current.values()]
     if (pts.length >= 2) {
       isDrawing.current = false
@@ -396,8 +400,9 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
         const scale = dist / lastPinchDist.current
         const newZoom = Math.max(1, Math.min(6, zoomRef.current * scale))
         const as = newZoom / zoomRef.current
-        const newPanX = mid.x - (mid.x - panXRef.current) * as + (mid.x - lastPinchMid.current.x)
-        const newPanY = mid.y - (mid.y - panYRef.current) * as + (mid.y - lastPinchMid.current.y)
+        const rect = containerRef.current!.getBoundingClientRect()
+        const newPanX = (mid.x - rect.left) - (lastPinchMid.current.x - rect.left - panXRef.current) * as
+        const newPanY = (mid.y - rect.top) - (lastPinchMid.current.y - rect.top - panYRef.current) * as
         zoomRef.current = newZoom; panXRef.current = newPanX; panYRef.current = newPanY
         setZoom(newZoom); setPanX(newPanX); setPanY(newPanY)
       } else if (lastPinchMid.current !== null) {
@@ -418,6 +423,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
   }
 
   function onPointerUp(e: React.PointerEvent) {
+    if (!pointersRef.current.has(e.pointerId)) return
     const wasDrawing = isDrawing.current && pointersRef.current.size === 1
     pointersRef.current.delete(e.pointerId)
     if (pointersRef.current.size === 0) {
@@ -464,7 +470,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
         style={{ position: 'relative', flex: 1, overflow: 'hidden', background: CANVAS_BG_ACTUEL, touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' } as React.CSSProperties}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}
         onPointerLeave={e => { setGhost(null); onPointerUp(e) }} onPointerCancel={onPointerUp}>
-        <div style={{ position: 'absolute', left: 0, top: 0, transform: `translate(${panX}px,${panY}px) scale(${zoom})`, transformOrigin: 'center center', width: '100%', height: '100%' }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, transform: `translate(${panX}px,${panY}px) scale(${zoom})`, transformOrigin: '0 0', width: '100%', height: '100%' }}>
           <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: pipetteActive ? 'copy' : panMode ? 'grab' : tool === 'eraser' ? 'cell' : 'crosshair' }} />
         </div>
 
