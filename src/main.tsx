@@ -1,8 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
+import { inject as injectAnalytics } from '@vercel/analytics'
 import App from './App'
 import './index.css'
+
+injectAnalytics()
 
 // Attrape toute erreur JS non gérée et l'affiche dans la page
 window.addEventListener('error', (e) => {

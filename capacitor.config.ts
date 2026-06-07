@@ -10,10 +10,20 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     scrollEnabled: false,
+    // Minimum iOS version for App Store submission
+    minVersion: '16.0',
+  },
+  android: {
+    // Minimum SDK version 24 = Android 7.0 (covers ~95% of devices)
+    minWebViewVersion: 60,
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0,
+      launchShowDuration: 800,
+      backgroundColor: '#0f0805',
+      androidSplashResourceName: 'splash',
+      showSpinner: false,
+      launchAutoHide: true,
     },
   },
 }

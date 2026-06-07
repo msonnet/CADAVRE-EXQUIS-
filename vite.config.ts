@@ -8,13 +8,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'audio/**/*'],
+      includeAssets: ['favicon.svg', 'icons/*.png', 'audio/**/*'],
       manifest: {
         name: 'Cadavre Exquis',
         short_name: 'Cadavre Exquis',
         description: 'Jeu surréaliste pour une voix humaine et quarante inconnus',
-        theme_color: '#FAF6EE',
-        background_color: '#FAF6EE',
+        theme_color: '#0f0805',
+        background_color: '#0f0805',
         display: 'standalone',
         orientation: 'portrait',
         lang: 'fr',
@@ -30,7 +30,7 @@ export default defineConfig({
             type: 'image/png',
           },
           {
-            src: '/icons/icon-512.png',
+            src: '/icons/icon-512-maskable.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
