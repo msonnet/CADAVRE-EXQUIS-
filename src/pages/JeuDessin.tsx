@@ -232,7 +232,7 @@ export default function JeuDessin() {
   // Point médian du segment précédent — sommet de contrôle pour le lissage Bézier quadratique
   const lastMid = useRef<{ x: number; y: number } | null>(null)
   const velocityRef = useRef(0)
-  const pointersRef = useRef<Map<number, { x: number; y: number; type: string }>>(new Map())
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const lastPinchDist = useRef<number | null>(null)
   const lastPinchMid = useRef<{ x: number; y: number } | null>(null)
 
@@ -567,12 +567,7 @@ export default function JeuDessin() {
       setTool(toolAvantPipette.current === 'eraser' ? 'pen' : toolAvantPipette.current)
       return
     }
-    // Palm rejection : if a pen is active, ignore accidental touch contacts (palm)
-    const hasPen = [...pointersRef.current.values()].some(p => p.type === 'pen')
-    if (hasPen && e.pointerType === 'touch') return
-    // Capture so stylus events keep firing even when briefly hovering or leaving bounds
-    e.currentTarget.setPointerCapture(e.pointerId)
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType })
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointersRef.current.size === 1) {
       if (panMode) {
         isDrawing.current = false
@@ -591,13 +586,11 @@ export default function JeuDessin() {
   }
 
   function onPointerMove(e: React.PointerEvent) {
-    // Ignore pointers rejected by palm rejection (not in our map)
-    if (!pointersRef.current.has(e.pointerId) && e.pointerType !== 'pen') return
     // Curseur fantôme uniquement au survol (souris/stylet sans appui) : éviter un
     // re-render à chaque point pendant le tracé, qui nuirait à la fluidité.
     if (!isDrawing.current && !panMode) setGhost({ x: e.clientX, y: e.clientY })
     const prevPt = pointersRef.current.get(e.pointerId)
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: prevPt?.type ?? e.pointerType })
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     const pts = [...pointersRef.current.values()]
     if (pts.length >= 2) {
       isDrawing.current = false
@@ -639,7 +632,6 @@ export default function JeuDessin() {
   }
 
   function onPointerUp(e: React.PointerEvent) {
-    if (!pointersRef.current.has(e.pointerId)) return
     const wasDrawing = isDrawing.current && pointersRef.current.size === 1
     pointersRef.current.delete(e.pointerId)
     if (pointersRef.current.size === 0) {
