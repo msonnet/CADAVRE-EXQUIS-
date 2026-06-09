@@ -10,7 +10,7 @@ import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 import { corrigerAccords } from '../api/corriger'
 import { Decor, useReve } from '../reve'
-import { partagerStory } from '../utils/partager'
+import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
 
@@ -165,15 +165,18 @@ export default function FinDePartie() {
   async function partager() {
     if (!poeme || partageEnCours) return
     setPartageEnCours(true)
+    const opts = {
+      type: 'poeme' as const,
+      titre: poeme.titre ?? '',
+      texte: texteAffiche,
+      accent, bg, ink: encre,
+      date: poeme.dateCreation,
+      seed: poeme.id,
+    }
     try {
-      await partagerStory({
-        type: 'poeme',
-        titre: poeme.titre ?? '',
-        texte: texteAffiche,
-        accent, bg, ink: encre,
-        date: poeme.dateCreation,
-        seed: poeme.id,
-      })
+      // Vidéo animée (le format viral) ; repli automatique sur l'affiche fixe si l'encodage est indisponible
+      const ok = await partagerVideoStory(opts)
+      if (!ok) await partagerStory(opts)
       setPartageOk(true)
       setTimeout(() => setPartageOk(false), 2000)
     } finally {
@@ -457,7 +460,7 @@ export default function FinDePartie() {
             disabled={partageEnCours}
             style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.5, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '2px 0' }}
           >
-            {partageEnCours ? '✦ AFFICHE…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
+            {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}

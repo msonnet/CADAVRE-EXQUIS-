@@ -5,7 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin } from '../db'
-import { partagerStory } from '../utils/partager'
+import { partagerStory, partagerVideoStory } from '../utils/partager'
 import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 
@@ -84,6 +84,7 @@ export default function FinDessin() {
   const [texteVision, setTexteVision] = useState<string>('')
   const [pleinEcran, setPleinEcran] = useState(false)
   const [sauvegarde, setSauvegarde] = useState(false)
+  const [partageEnCours, setPartageEnCours] = useState(false)
   const [nbBandes, setNbBandes] = useState(0)
   const [erreurVision, setErreurVision] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
@@ -155,16 +156,23 @@ export default function FinDessin() {
   }
 
   async function partager() {
-    if (!imageAssemblee) return
-    await partagerStory({
-      type: 'dessin',
+    if (!imageAssemblee || partageEnCours) return
+    setPartageEnCours(true)
+    const opts = {
+      type: 'dessin' as const,
       titre: '',
       texte: texteVision,
       imageDataUrl: imageAssemblee,
       accent, bg, ink: encre,
       date: Date.now(),
       seed: texteVision || 'dessin',
-    }, 'cadavre-dessiné')
+    }
+    try {
+      const ok = await partagerVideoStory(opts, 'cadavre-dessiné')
+      if (!ok) await partagerStory(opts, 'cadavre-dessiné')
+    } finally {
+      setPartageEnCours(false)
+    }
   }
 
   async function sauvegarder() {
@@ -352,17 +360,18 @@ export default function FinDessin() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={partager}
+                  disabled={partageEnCours}
                   style={{
                     flex: 1,
                     ...mono, fontSize: 13,
                     background: 'transparent',
-                    color: `${encre}70`,
-                    border: `0.5px solid ${encre}25`,
+                    color: partageEnCours ? accent : `${encre}70`,
+                    border: `0.5px solid ${partageEnCours ? accent : `${encre}25`}`,
                     padding: '10px 8px',
-                    cursor: 'pointer',
+                    cursor: partageEnCours ? 'default' : 'pointer',
                   }}
                 >
-                  ↗ PARTAGER
+                  {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
                 </button>
                 <button
                   onClick={() => navigate('/')}

@@ -564,6 +564,447 @@ export async function partagerStory(opts: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Vidéo verticale animée (le format viral) — révélation filmée + bande-son embarquée
+// Dégradation : renvoie null si l'appareil ne sait pas encoder → l'appelant retombe sur l'affiche fixe.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function pickVideoMime(): string | null {
+  if (typeof MediaRecorder === 'undefined') return null
+  const cands = [
+    'video/mp4;codecs=avc1.42E01E',
+    'video/mp4',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+  ]
+  for (const m of cands) {
+    try { if (MediaRecorder.isTypeSupported(m)) return m } catch { /* ignore */ }
+  }
+  return null
+}
+
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+const clamp01 = (t: number) => Math.max(0, Math.min(1, t))
+
+interface LayoutPoeme {
+  fragments: { texte: string; x0: number; y0: number; rot: number }[]
+  lettrine: { char: string; baselineY: number; size: number } | null
+  lignes: { texte: string; y: number }[]
+  bodySize: number
+}
+
+function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number): LayoutPoeme {
+  const hasTitle = !!opts.titre?.trim()
+  const zoneTop = hasTitle ? 620 : 460, zoneBottom = 1560
+  let bodySize = 42, bodyLineH = 66
+  const sourceLines = (opts.texte ?? '').split('\n')
+  ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
+  let wrapped: string[] = []
+  for (const src of sourceLines) {
+    if (!src.trim()) { wrapped.push(''); continue }
+    for (const p of wrapText(ctx, src, ZONE_W)) wrapped.push(p)
+  }
+  if (wrapped.length > 13) { bodySize = 36; bodyLineH = 56; ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif` }
+  if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
+
+  const lettrineActive = wrapped.length <= 8 && !!wrapped[0] && wrapped[0] !== '[…]'
+  const lettrineSize = 240
+  const lettrineVisual = lettrineSize * 0.72
+  const gap = 28
+  const blockH = wrapped.length * bodyLineH
+  const totalH = (lettrineActive ? lettrineVisual + gap : 0) + blockH
+  let startY = zoneTop + (zoneBottom - zoneTop - totalH) / 2 - 30
+  startY = Math.max(startY, zoneTop - 40)
+
+  let y = startY
+  let lettrine: LayoutPoeme['lettrine'] = null
+  if (lettrineActive) {
+    const baseline = y + lettrineVisual
+    lettrine = { char: wrapped[0].charAt(0).toUpperCase(), baselineY: baseline, size: lettrineSize }
+    y = baseline + gap
+  }
+  const lignes = wrapped.map((texte, i) => ({ texte, y: y + (i + 1) * bodyLineH }))
+
+  // Positions de départ des fragments (cercle autour du centre, hors champ)
+  const R = Math.max(W, 1920) * 0.6
+  const fragments = sourceLines.filter(l => l.trim()).map((texte, i, arr) => {
+    const angle = (i / Math.max(arr.length, 1)) * Math.PI * 2 + (i % 2 ? 0.6 : -0.6)
+    return { texte: texte.trim(), x0: W / 2 + Math.cos(angle) * R, y0: 960 + Math.sin(angle) * R, rot: (i % 2 ? 1 : -1) * (3 + (i % 3) * 2) }
+  })
+
+  return { fragments, lettrine, lignes, bodySize }
+}
+
+// Partition de la révélation — un rideau de théâtre qui se lève (la mineur, cohérent avec l'app)
+// Partition composée en direction sonore (Fable 5) : nappe qui enfle → battement → éclosion → plume → impact → résonance.
+function scoreRevelation(ac: AudioContext, dest: AudioNode, variant: 'poeme' | 'dessin' = 'poeme') {
+  const t0 = ac.currentTime
+  const filtre = ac.createBiquadFilter()
+  filtre.type = 'lowpass'; filtre.frequency.value = 2400
+  filtre.connect(dest)
+  const note = (freq: number, start: number, dur: number, peak: number) => {
+    const o = ac.createOscillator(), g = ac.createGain()
+    o.type = 'sine'; o.frequency.value = freq
+    g.gain.setValueAtTime(0.0001, t0 + start)
+    g.gain.exponentialRampToValueAtTime(peak, t0 + start + Math.min(0.04, dur * 0.2))
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + start + dur)
+    o.connect(g); g.connect(filtre); o.start(t0 + start); o.stop(t0 + start + dur + 0.05)
+  }
+
+  // III. Éclosion — accord la mineur add9 arpégé
+  const eclosion = (decal: number) => {
+    note(220, decal, 3.2, 0.070); note(261.6, decal + 0.06, 3.0, 0.060)
+    note(329.6, decal + 0.12, 2.8, 0.060); note(493.9, decal + 0.20, 2.6, 0.045)
+    note(659.3, decal + 0.30, 2.2, 0.030); note(1318.5, decal + 0.41, 0.9, 0.018)
+  }
+
+  if (variant === 'dessin') {
+    // Trois vagues graves aux départs de bandes
+    note(110, 0.80, 1.4, 0.04); note(110, 2.15, 1.4, 0.04); note(110, 3.50, 1.4, 0.04)
+    eclosion(4.62)
+    note(880, 4.70, 0.06, 0.013); note(987.8, 5.06, 0.06, 0.011)
+    note(220, 5.30, 1.2, 0.022)
+    return
+  }
+
+  // I. La nappe qui enfle
+  note(55, 0.40, 3.4, 0.050); note(110, 0.80, 3.0, 0.045); note(110.7, 1.20, 2.6, 0.035)
+  note(164.8, 1.90, 2.0, 0.040); note(220, 2.60, 1.1, 0.045)
+  // II. Le battement
+  note(82.4, 3.42, 0.18, 0.050)
+  // III. L'éclosion
+  eclosion(3.64)
+  // IV. La plume
+  note(880, 3.72, 0.06, 0.015); note(987.8, 3.98, 0.06, 0.013); note(880, 4.24, 0.06, 0.012); note(987.8, 4.50, 0.06, 0.011)
+  // V. La chute et l'impact de la lettrine
+  note(659.3, 4.78, 0.12, 0.020); note(440, 4.90, 0.12, 0.025); note(293.7, 5.00, 0.10, 0.030)
+  note(110, 5.08, 1.6, 0.080); note(55, 5.08, 2.0, 0.050); note(1760, 5.08, 0.05, 0.020)
+  // VI. La résonance
+  note(220, 5.25, 1.3, 0.022)
+}
+
+export async function genererVideoStory(opts: {
+  type: 'poeme' | 'dessin'
+  titre: string
+  texte?: string
+  imageDataUrl?: string
+  accent: string
+  bg: string
+  ink: string
+  date?: number
+  invitation?: string
+  seed?: string
+}, dureeMs = 6000): Promise<Blob | null> {
+  const mime = pickVideoMime()
+  if (!mime) return null
+
+  await prechargerPolices()
+  const W = 1080, H = 1920, MARGE = 96, ZONE_W = W - MARGE * 2
+  const { accent, ink, bg } = opts
+  const invitation = opts.invitation ?? INVITATION_DEFAUT
+
+  const canvas = document.createElement('canvas')
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')!
+
+  // Fond fixe pré-rendu (le grain ne doit pas scintiller d'une frame à l'autre)
+  const bgCanvas = document.createElement('canvas')
+  bgCanvas.width = W; bgCanvas.height = H
+  const bx = bgCanvas.getContext('2d')!
+  bx.fillStyle = bg; bx.fillRect(0, 0, W, H)
+  grainEtVignette(bx, W, H, ink)
+  cadreDouble(bx, W, H, accent)
+  enTete(bx, W, accent, ink, opts.date)
+  marque(bx, W, accent, ink)
+
+  // Layout du contenu animé
+  let poemeLayout: LayoutPoeme | null = null
+  let img: HTMLImageElement | null = null
+  let imgBox = { x: 0, y: 0, w: 0, h: 0 }
+  let readingTop = 1430
+  if (opts.type === 'poeme') {
+    if (opts.titre?.trim()) {
+      // titre + filet figurent sur le fond fixe
+      bx.fillStyle = ink; bx.textAlign = 'center'
+      bx.font = `800 italic 76px 'Bodoni Moda', Georgia, serif`
+      let tl = wrapText(bx, opts.titre, ZONE_W)
+      let ts = 76
+      if (tl.length > 2) { ts = 64; bx.font = `800 italic 64px 'Bodoni Moda', Georgia, serif`; tl = wrapText(bx, opts.titre, ZONE_W).slice(0, 2) }
+      const tlh = ts + 12
+      tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
+      filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
+    }
+    poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W)
+  } else if (opts.imageDataUrl) {
+    try {
+      img = await chargerImage(opts.imageDataUrl)
+      const r = img.width / img.height
+      const zoneTop = 300, zoneBottom = r < 0.9 ? 1300 : 1100
+      const maxW = r < 0.9 ? 700 : ZONE_W, maxH = zoneBottom - zoneTop
+      const ratio = Math.min(maxW / img.width, maxH / img.height)
+      const w = img.width * ratio, h = img.height * ratio
+      const x = (W - w) / 2
+      const y = r < 0.9 ? zoneTop + (maxH - h) / 2 : 540 - h / 2
+      imgBox = { x, y, w, h }
+      readingTop = r < 0.9 ? 1400 : Math.max(y + h + 80, 1180)
+    } catch { /* ignore */ }
+  }
+
+  // Audio embarqué dans la vidéo
+  let audioCtx: AudioContext | null = null
+  let audioDest: MediaStreamAudioDestinationNode | null = null
+  try {
+    const AC = (window as any).AudioContext || (window as any).webkitAudioContext
+    if (AC) { audioCtx = new AC(); audioDest = audioCtx!.createMediaStreamDestination() }
+  } catch { /* pas d'audio */ }
+
+  const videoStream = (canvas as any).captureStream(30) as MediaStream
+  const tracks: MediaStreamTrack[] = [...videoStream.getVideoTracks()]
+  if (audioDest) tracks.push(...audioDest.stream.getAudioTracks())
+  const stream = new MediaStream(tracks)
+
+  let rec: MediaRecorder
+  try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 }) }
+  catch { return null }
+  const chunks: Blob[] = []
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
+  const done = new Promise<Blob>(res => { rec.onstop = () => res(new Blob(chunks, { type: mime })) })
+
+  rec.start()
+  if (audioCtx && audioDest) { try { await audioCtx.resume() } catch { /* ignore */ }; scoreRevelation(audioCtx, audioDest, opts.type) }
+
+  await new Promise<void>(resolve => {
+    const start = performance.now()
+    const frame = () => {
+      const t = performance.now() - start
+      ctx.drawImage(bgCanvas, 0, 0)
+      if (opts.type === 'poeme' && poemeLayout) dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
+      else if (img) dessinerDessinAnime(ctx, img, imgBox, opts.texte ?? '', readingTop, t, W, ZONE_W, accent, ink, bg)
+      // Voile de boucle — un cillement crème masque le raccord début/fin sur les réseaux
+      if (t < 130) {
+        ctx.save(); ctx.globalAlpha = 0.6 * (1 - t / 130); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.restore()
+      }
+      if (t < dureeMs) requestAnimationFrame(frame)
+      else resolve()
+    }
+    requestAnimationFrame(frame)
+  })
+
+  rec.stop()
+  try { await audioCtx?.close() } catch { /* ignore */ }
+  return await done
+}
+
+function flash(ctx: CanvasRenderingContext2D, W: number, t: number, t0: number, dur: number, bg: string, accent: string) {
+  if (t < t0 || t > t0 + dur) return
+  const p = (t - t0) / dur
+  const a = Math.sin(p * Math.PI) // 0→1→0
+  const r = (0.2 + p * 2.8) * Math.max(W, 1920) * 0.3
+  ctx.save()
+  ctx.globalAlpha = a * 0.9
+  const grad = ctx.createRadialGradient(W / 2, 960, 0, W / 2, 960, r)
+  grad.addColorStop(0, bg)
+  grad.addColorStop(0.4, withAlpha(accent, 0.35))
+  grad.addColorStop(1, withAlpha(bg, 0))
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, W, 1920)
+  ctx.restore()
+}
+
+// Tremblé d'encre « boiling » — sous-échantillonné à 10 fps pour l'effet dessin animé à la main
+const TREMOR = [[0.5, -0.4, 0.12], [-0.6, 0.3, -0.1], [0.2, 0.5, 0.08]]
+function tremor(t: number, actif: boolean): [number, number, number] {
+  if (!actif) return [0, 0, 0]
+  const seed = Math.floor(Math.floor(t / 33.33) / 3) % 3
+  return TREMOR[seed] as [number, number, number]
+}
+
+function dessinerPoemeAnime(
+  ctx: CanvasRenderingContext2D, L: LayoutPoeme, t: number, W: number, accent: string, ink: string, bg: string,
+) {
+  const CONV_FIN = 3300, SUSP_FIN = 3640, FLASH_T = 3640, FLASH_DUR = 320
+  const LIGNE_T = 3700, LIGNE_PAS = 260, LIGNE_DUR = 260
+  const LETT_T = 4760, LETT_DUR = 320
+  const TREMOR_FIN = 5700
+
+  // Convergence + suspension des fragments (les voix éparses se rassemblent)
+  if (t < FLASH_T) {
+    ctx.textAlign = 'center'
+    ctx.font = `italic 38px 'Playfair Display', Georgia, serif`
+    L.fragments.forEach((f, i) => {
+      const dep = 360 + i * 160
+      const local = clamp01((t - dep) / (CONV_FIN - dep))
+      const e = easeInOut(local)
+      const x = f.x0 + (W / 2 - f.x0) * e
+      const flot = t < CONV_FIN ? Math.sin(t / 1000 * 0.8 * Math.PI * 2 + i * 1.7) * 4 * (1 - e * 0.5) : 0
+      const y = f.y0 + (960 - f.y0) * e + flot
+      const op = (t < CONV_FIN ? Math.min(0.82, local * 1.2) : 0.92) * (t > SUSP_FIN - 60 ? Math.max(0, (FLASH_T - t) / 60) : 1)
+      if (op <= 0) return
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate((f.rot * (1 - e) * Math.PI) / 180)
+      ctx.globalAlpha = op
+      ctx.fillStyle = ink
+      ctx.fillText(f.texte, 0, 0)
+      ctx.restore()
+    })
+  }
+
+  flash(ctx, W, t, FLASH_T, FLASH_DUR, bg, accent)
+
+  // Vers qui s'inscrivent — révélés par masque horizontal (l'écriture), avec tremblé d'encre
+  ctx.textAlign = 'center'
+  ctx.font = `italic ${L.bodySize}px 'Playfair Display', Georgia, serif`
+  const visibles = L.lignes.filter(l => l.texte)
+  visibles.forEach((ligne, i) => {
+    const lt = LIGNE_T + i * LIGNE_PAS
+    if (t < lt) return
+    const p = clamp01((t - lt) / LIGNE_DUR)
+    const e = easeOutCubic(p)
+    const w = ctx.measureText(ligne.texte).width
+    const [tx, ty] = tremor(t, t < TREMOR_FIN)
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(W / 2 - w / 2 - 4, ligne.y - L.bodySize, (w + 8) * e, L.bodySize * 1.6)
+    ctx.clip()
+    ctx.globalAlpha = 0.88
+    ctx.fillStyle = ink
+    ctx.fillText(ligne.texte, W / 2 + tx, ligne.y + ty)
+    ctx.restore()
+  })
+
+  // Lettrine qui tombe, avec traîne lumineuse puis settle (le coup)
+  const lettrine = L.lettrine
+  if (lettrine && t >= LETT_T) {
+    const p = clamp01((t - LETT_T) / LETT_DUR)
+    const fall = p * p * (0.6 + 0.4 * p) // accélération gravitaire
+    ctx.textAlign = 'center'
+    ctx.font = `900 italic ${lettrine.size}px 'Fraunces', Georgia, serif`
+    // Traîne : 5 fantômes aux positions antérieures de la chute, résorbée 100 ms après l'impact
+    const trailFade = clamp01(1 - (t - (LETT_T + LETT_DUR)) / 100)
+    if (trailFade > 0) {
+      const trail = [0.03, 0.06, 0.11, 0.18, 0.28]
+      trail.forEach((a, k) => {
+        const pk = Math.max(0, p - (trail.length - k) * 0.06)
+        const fk = pk * pk * (0.6 + 0.4 * pk)
+        const dy = (1 - fk) * -260
+        ctx.save(); ctx.globalAlpha = a * trailFade; ctx.fillStyle = accent
+        ctx.fillText(lettrine.char, W / 2, lettrine.baselineY + dy)
+        ctx.restore()
+      })
+    }
+    // settle (léger dépassement après l'impact)
+    let scale = 1
+    if (p >= 1) { const s = clamp01((t - (LETT_T + LETT_DUR)) / 180); scale = 1 + Math.sin(s * Math.PI) * 0.04 }
+    const dy = (1 - fall) * -260
+    ctx.save()
+    ctx.globalAlpha = 0.92 * clamp01(p / 0.3)
+    ctx.fillStyle = accent
+    ctx.translate(W / 2, lettrine.baselineY + dy)
+    ctx.scale(scale, scale)
+    ctx.fillText(lettrine.char, 0, 0)
+    ctx.restore()
+  }
+}
+
+function dessinerDessinAnime(
+  ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
+  texte: string, readingTop: number, t: number, W: number, ZONE_W: number, accent: string, ink: string, bg: string,
+) {
+  const FLASH_T = 4620, FLASH_DUR = 280, LECT_T = 4700, LECT_DUR = 700
+
+  // Passe-partout toujours présent
+  passePartout(ctx, box.x, box.y, box.w, box.h, ink)
+
+  // Révélation bande par bande (les trois mains), avec pauses
+  // [début, fin, fractionDébut, fractionFin]
+  const bandes: [number, number, number, number][] = [
+    [800, 1900, 0, 1 / 3],
+    [2150, 3250, 1 / 3, 2 / 3],
+    [3500, 4400, 2 / 3, 1],
+  ]
+  let frac = 0, scanActif = false
+  for (const [t0, t1, f0, f1] of bandes) {
+    if (t >= t1) { frac = f1 }
+    else if (t >= t0) { frac = f0 + (f1 - f0) * easeInOut((t - t0) / (t1 - t0)); scanActif = true; break }
+    else break
+  }
+
+  if (frac > 0) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(box.x, box.y, box.w, box.h * frac)
+    ctx.clip()
+    ctx.drawImage(img, box.x, box.y, box.w, box.h)
+    ctx.restore()
+    if (scanActif && frac < 1) {
+      const yScan = box.y + box.h * frac
+      ctx.save()
+      ctx.strokeStyle = withAlpha(accent, 0.5)
+      ctx.lineWidth = 3
+      ctx.shadowColor = withAlpha(accent, 0.12); ctx.shadowBlur = 24
+      ctx.beginPath(); ctx.moveTo(box.x, yScan); ctx.lineTo(box.x + box.w, yScan); ctx.stroke()
+      ctx.restore()
+    }
+  }
+
+  flash(ctx, W, t, FLASH_T, FLASH_DUR, bg, accent)
+
+  // Lecture surréaliste
+  if (texte.trim() && t >= LECT_T) {
+    const op = clamp01((t - LECT_T) / LECT_DUR)
+    filetOrne(ctx, W / 2, readingTop - 50, accent, bg)
+    ctx.save()
+    ctx.globalAlpha = op
+    ctx.fillStyle = withAlpha(accent, 0.65)
+    ctx.textAlign = 'center'
+    ctx.font = "22px 'Raleway', sans-serif"
+    texteEspace(ctx, '— LECTURE —', W / 2, readingTop, 22 * 0.3)
+    ctx.font = "italic 36px 'Playfair Display', Georgia, serif"
+    const lignes = wrapText(ctx, texte.replace(/\n+/g, ' ').trim(), ZONE_W - 60).slice(0, 4)
+    ctx.fillStyle = withAlpha(ink, 0.85)
+    lignes.forEach((line, i) => {
+      const txt = (i === 0 ? '« ' : '') + line + (i === lignes.length - 1 ? ' »' : '')
+      ctx.fillText(txt, W / 2, readingTop + 56 + i * 56)
+    })
+    ctx.restore()
+  }
+}
+
+// Génère la vidéo et la partage ; renvoie false si l'encodage vidéo est indisponible (→ repli affiche)
+export async function partagerVideoStory(opts: {
+  type: 'poeme' | 'dessin'
+  titre: string
+  texte?: string
+  imageDataUrl?: string
+  accent: string
+  bg: string
+  ink: string
+  date?: number
+  invitation?: string
+  seed?: string
+}, nomFichier = 'cadavre-exquis'): Promise<boolean> {
+  let blob: Blob | null = null
+  try { blob = await genererVideoStory(opts) } catch { blob = null }
+  if (!blob || blob.size < 2000) return false
+  const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
+  const file = new File([blob], `${nomFichier}.${ext}`, { type: blob.type })
+  try {
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Cadavre Exquis' })
+      return true
+    }
+  } catch { /* fall through to download */ }
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = file.name
+  document.body.appendChild(a); a.click(); document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 4000)
+  return true
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PDF export
 // ─────────────────────────────────────────────────────────────────────────────
 

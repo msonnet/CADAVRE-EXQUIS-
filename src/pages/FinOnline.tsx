@@ -9,7 +9,7 @@ import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
-import { partagerStory } from '../utils/partager'
+import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
@@ -128,6 +128,7 @@ export default function FinOnline() {
   const [revealReady, setRevealReady] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
+  const [partageEnCours, setPartageEnCours] = useState(false)
 
   const load = useCallback(async () => {
     if (!code || !user) return
@@ -288,20 +289,27 @@ export default function FinOnline() {
   }
 
   async function partagerEcrit() {
-    await partagerStory({
-      type: 'poeme', titre: '',
+    if (partageEnCours) return
+    setPartageEnCours(true)
+    const opts = {
+      type: 'poeme' as const, titre: '',
       texte: texteCorrige ?? texteAssemble,
       accent, bg, ink: encre, date: Date.now(), seed: code ?? texteAssemble,
-    })
+    }
+    try { const ok = await partagerVideoStory(opts); if (!ok) await partagerStory(opts) }
+    finally { setPartageEnCours(false) }
   }
 
   async function partagerDessin() {
-    if (!imageAssemblee) return
-    await partagerStory({
-      type: 'dessin', titre: '', texte: texteVision,
+    if (!imageAssemblee || partageEnCours) return
+    setPartageEnCours(true)
+    const opts = {
+      type: 'dessin' as const, titre: '', texte: texteVision,
       imageDataUrl: imageAssemblee,
       accent, bg, ink: encre, date: Date.now(), seed: code ?? 'dessin',
-    }, 'cadavre-dessiné')
+    }
+    try { const ok = await partagerVideoStory(opts, 'cadavre-dessiné'); if (!ok) await partagerStory(opts, 'cadavre-dessiné') }
+    finally { setPartageEnCours(false) }
   }
 
   async function sauvegarderDessinLocal() {
@@ -451,9 +459,9 @@ export default function FinOnline() {
                       </button>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                      <button onClick={partagerDessin}
-                        style={{ ...mono, fontSize: 13, background: 'transparent', color: `${encre}70`, border: `0.5px solid ${encre}25`, padding: '10px 12px', cursor: 'pointer' }}>
-                        ↗ PARTAGER
+                      <button onClick={partagerDessin} disabled={partageEnCours}
+                        style={{ ...mono, fontSize: 13, background: 'transparent', color: partageEnCours ? accent : `${encre}70`, border: `0.5px solid ${partageEnCours ? accent : `${encre}25`}`, padding: '10px 12px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                        {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
                       </button>
                       <button onClick={() => setPleinEcranDessin(true)}
                         style={{ ...mono, fontSize: 13, background: 'transparent', color: `${encre}70`, border: `0.5px solid ${encre}25`, padding: '10px 12px', cursor: 'pointer' }}>
@@ -565,9 +573,9 @@ export default function FinOnline() {
                         style={{ ...mono, fontSize: 13, color: `${encre}60`, background: 'none', border: `0.5px solid ${encre}20`, padding: '6px 10px', cursor: 'pointer' }}>
                         ⛶ PLEIN ÉCRAN
                       </button>
-                      <button onClick={partagerEcrit}
-                        style={{ ...mono, fontSize: 13, color: `${encre}60`, background: 'none', border: `0.5px solid ${encre}20`, padding: '6px 10px', cursor: 'pointer' }}>
-                        ↗ PARTAGER
+                      <button onClick={partagerEcrit} disabled={partageEnCours}
+                        style={{ ...mono, fontSize: 13, color: partageEnCours ? accent : `${encre}60`, background: 'none', border: `0.5px solid ${partageEnCours ? accent : `${encre}20`}`, padding: '6px 10px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                        {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
                       </button>
                       <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
                         style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : `${encre}60`, background: publishedGallery ? `${accent}15` : 'none', border: `0.5px solid ${publishedGallery ? accent : encre}20`, padding: '6px 10px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
@@ -579,9 +587,9 @@ export default function FinOnline() {
 
                 {!illustrationUrl && !generatingIllus && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                    <button onClick={partagerEcrit}
-                      style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer' }}>
-                      ↗ PARTAGER LE POÈME
+                    <button onClick={partagerEcrit} disabled={partageEnCours}
+                      style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                      {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER LE POÈME'}
                     </button>
                     <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
                       style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : encre, background: publishedGallery ? `${accent}15` : 'transparent', border: `0.5px solid ${publishedGallery ? accent : encre}30`, padding: '7px 14px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
