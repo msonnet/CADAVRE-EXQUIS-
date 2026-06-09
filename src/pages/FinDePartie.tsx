@@ -10,7 +10,9 @@ import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 import { corrigerAccords } from '../api/corriger'
 import { Decor, useReve } from '../reve'
-import { partagerTexte } from '../utils/partager'
+import { partagerStory } from '../utils/partager'
+import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
+import { vibrer } from '../utils/haptics'
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -56,6 +58,7 @@ export default function FinDePartie() {
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
+  const [partageEnCours, setPartageEnCours] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -73,15 +76,6 @@ export default function FinDePartie() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
-
-  useEffect(() => {
-    jouer('revelation')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    const t = setTimeout(() => setRevealReady(true), 3000)
-    return () => clearTimeout(t)
-  }, [])
 
   useEffect(() => {
     if (!poeme) {
@@ -169,11 +163,22 @@ export default function FinDePartie() {
   const voixCount = poeme.cases.length
 
   async function partager() {
-    if (!poeme) return
-    const dateStr = new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-    await partagerTexte(`${texteAffiche}\n\n— Cadavre Exquis · ${dateStr}`, 'Cadavre Exquis')
-    setPartageOk(true)
-    setTimeout(() => setPartageOk(false), 2000)
+    if (!poeme || partageEnCours) return
+    setPartageEnCours(true)
+    try {
+      await partagerStory({
+        type: 'poeme',
+        titre: poeme.titre ?? '',
+        texte: texteAffiche,
+        accent, bg, ink: encre,
+        date: poeme.dateCreation,
+        seed: poeme.id,
+      })
+      setPartageOk(true)
+      setTimeout(() => setPartageOk(false), 2000)
+    } finally {
+      setPartageEnCours(false)
+    }
   }
   const structLabel = STRUCT_LABELS[poeme.structureId] ?? poeme.structureId
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -182,74 +187,18 @@ export default function FinDePartie() {
 
   return (
     <>
-      {/* ── ÉCRAN D'ASSEMBLAGE ── */}
+      {/* ── SÉQUENCE D'ASSEMBLAGE THÉÂTRALE ── */}
       <AnimatePresence>
         {!revealReady && poeme && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.9, ease: 'easeInOut' } }}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 250,
-              background: bg, overflow: 'hidden',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 20, textAlign: 'center', padding: '0 28px',
-            }}
-          >
-            {Array.from({ length: voixCount }).map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ x: i % 2 === 0 ? '-110%' : '110%' }}
-                animate={{ x: 0 }}
-                transition={{ delay: i * 0.28, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
-                style={{
-                  position: 'absolute', left: 0, right: 0,
-                  height: `${100 / voixCount}%`,
-                  top: `${(i * 100) / voixCount}%`,
-                  background: accent, opacity: 0.12,
-                  pointerEvents: 'none',
-                }}
-              />
-            ))}
-            <motion.div
-              style={{ position: 'relative', zIndex: 1 }}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 + voixCount * 0.14, duration: 0.7 }}
-            >
-              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
-                — {voixCount} VOIX —
-              </div>
-              <div style={{
-                fontFamily: "'Fraunces', serif", fontWeight: 900, fontStyle: 'italic',
-                fontSize: 'clamp(2.2rem, 10vw, 3.8rem)',
-                color: encre, lineHeight: 1.0,
-                letterSpacing: '-0.01em',
-              }}>
-                Le cadavre
-              </div>
-              <div style={{
-                fontFamily: "'Fraunces', serif", fontWeight: 900, fontStyle: 'italic',
-                fontSize: 'clamp(2.2rem, 10vw, 3.8rem)',
-                color: accent, lineHeight: 1.0,
-                letterSpacing: '-0.01em',
-              }}>
-                se reconstitue
-                <motion.span
-                  animate={{ opacity: [1, 0, 1] }}
-                  transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-                >…</motion.span>
-              </div>
-            </motion.div>
-            <motion.div
-              style={{ position: 'relative', zIndex: 1, fontSize: 18, color: accent }}
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              ✦
-            </motion.div>
-          </motion.div>
+          <RevealAssemblageTexte
+            fragments={poeme.cases.map(c => ({ texte: c.texte }))}
+            voixCount={voixCount}
+            accent={accent}
+            encre={encre}
+            bg={bg}
+            jouerClimax={() => jouer('revelation')}
+            onTermine={() => setRevealReady(true)}
+          />
         )}
       </AnimatePresence>
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
@@ -310,12 +259,12 @@ export default function FinDePartie() {
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-        {/* ── TITLE ── */}
+        {/* ── TITLE — frappé au lever de rideau ── */}
         <motion.div
           className="mt-5 mb-4"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.7 }}
+          initial={{ opacity: 0, scale: 1.09 }}
+          animate={revealReady ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.09 }}
+          transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
         >
           <div
             className="font-bodoni font-black"
@@ -365,7 +314,7 @@ export default function FinDePartie() {
                 style={{ display: 'block', minHeight: '1.65em' }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.7, duration: 0.7, ease: 'easeOut' }}
+                transition={{ delay: 0.25 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
               >
                 {i === 0 && lettrine && (
                   <span style={{
@@ -505,9 +454,10 @@ export default function FinDePartie() {
           </button>
           <button
             onClick={partager}
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: partageOk ? accent : encre, opacity: partageOk ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '2px 0' }}
+            disabled={partageEnCours}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.5, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '2px 0' }}
           >
-            {partageOk ? '✓ COPIÉ' : '— PARTAGER —'}
+            {partageEnCours ? '✦ AFFICHE…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}

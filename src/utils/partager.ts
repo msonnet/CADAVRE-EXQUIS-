@@ -143,8 +143,183 @@ function composerImageAvecTexte(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Story format (9:16, 1080×1920) generator
+// Story format (9:16, 1080×1920) generator — affiche partageable
+// L'invitation virale par défaut, validée en direction artistique.
 // ─────────────────────────────────────────────────────────────────────────────
+
+export const INVITATION_DEFAUT = 'Ajoute ta main au cadavre.'
+const LIEN_MARQUE = 'cadavre-exquis-beta.vercel.app'
+
+function withAlpha(hex: string, a: number): string {
+  const h = hex.replace('#', '')
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h.slice(0, 6)
+  const aa = Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0')
+  return `#${full}${aa}`
+}
+
+// Bruit déterministe seedé sur une chaîne — la même partie produit toujours la même affiche
+function mulberry32(seed: number) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+function hashSeed(s: string): number {
+  let h = 2166136261
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) }
+  return h >>> 0
+}
+
+// Texte centré dessiné glyphe par glyphe avec une chasse (petites capitales espacées)
+function texteEspace(
+  ctx: CanvasRenderingContext2D, text: string, cx: number, y: number, spacingPx: number,
+): { left: number; right: number } {
+  const chars = [...text]
+  const widths = chars.map(c => ctx.measureText(c).width)
+  const total = widths.reduce((s, w) => s + w, 0) + spacingPx * (chars.length - 1)
+  let x = cx - total / 2
+  const left = x
+  const prevAlign = ctx.textAlign
+  ctx.textAlign = 'left'
+  for (let i = 0; i < chars.length; i++) { ctx.fillText(chars[i], x, y); x += widths[i] + spacingPx }
+  ctx.textAlign = prevAlign
+  return { left, right: x - spacingPx }
+}
+
+// Bavure d'encre : fantômes translucides sous le glyphe, puis tracé net
+function bavure(ctx: CanvasRenderingContext2D, draw: () => void, sharpAlpha: number) {
+  const offsets = [[1.5, 1.5], [-1, 2], [2, -1]]
+  ctx.save()
+  ctx.globalAlpha = 0.06
+  for (const [dx, dy] of offsets) { ctx.save(); ctx.translate(dx, dy); draw(); ctx.restore() }
+  ctx.restore()
+  ctx.save()
+  ctx.globalAlpha = sharpAlpha
+  draw()
+  ctx.restore()
+}
+
+function grainEtVignette(ctx: CanvasRenderingContext2D, W: number, H: number, ink: string) {
+  for (let i = 0; i < 9000; i++) {
+    ctx.fillStyle = i % 2 ? '#ffffff' : ink
+    ctx.globalAlpha = 0.015 + Math.random() * 0.025
+    ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1)
+  }
+  ctx.globalAlpha = 1
+  const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.55, W / 2, H / 2, H * 1.05)
+  g.addColorStop(0, 'transparent')
+  g.addColorStop(1, withAlpha(ink, 0.07))
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, W, H)
+}
+
+// Filet tiré « à la main » : segments avec déviation perpendiculaire imperceptible
+function traitImparfait(
+  ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, phase: number,
+) {
+  const len = Math.hypot(x2 - x1, y2 - y1)
+  const n = Math.max(2, Math.round(len / 80))
+  const nx = -(y2 - y1) / len, ny = (x2 - x1) / len
+  ctx.moveTo(x1, y1)
+  for (let i = 1; i <= n; i++) {
+    const t = i / n
+    const dev = Math.sin((i + phase) * 12.9898) * 0.8
+    ctx.lineTo(x1 + (x2 - x1) * t + nx * dev, y1 + (y2 - y1) * t + ny * dev)
+  }
+}
+
+function cadreDouble(ctx: CanvasRenderingContext2D, W: number, H: number, accent: string) {
+  for (const [inset, lw, alpha, phase] of [[40, 3, 0.30, 0], [52, 1, 0.55, 7]] as const) {
+    ctx.strokeStyle = withAlpha(accent, alpha)
+    ctx.lineWidth = lw
+    ctx.beginPath()
+    traitImparfait(ctx, inset, inset, W - inset, inset, phase)
+    traitImparfait(ctx, W - inset, inset, W - inset, H - inset, phase + 1)
+    traitImparfait(ctx, W - inset, H - inset, inset, H - inset, phase + 2)
+    traitImparfait(ctx, inset, H - inset, inset, inset, phase + 3)
+    ctx.stroke()
+  }
+}
+
+// Filet ornemental court avec un ✦ posé au centre sur fond papier
+function filetOrne(ctx: CanvasRenderingContext2D, cx: number, y: number, accent: string, bg: string) {
+  ctx.strokeStyle = withAlpha(accent, 0.55)
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(cx - 110, y); ctx.lineTo(cx + 110, y)
+  ctx.stroke()
+  ctx.fillStyle = bg
+  ctx.fillRect(cx - 22, y - 15, 44, 30)
+  ctx.fillStyle = accent
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = "22px 'Raleway', sans-serif"
+  ctx.fillText('✦', cx, y + 1)
+  ctx.textBaseline = 'alphabetic'
+}
+
+// En-tête commun : ✦ + date en petites capitales murmurées
+function enTete(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: string, date?: number) {
+  ctx.fillStyle = accent
+  ctx.textAlign = 'center'
+  ctx.font = "32px 'Raleway', sans-serif"
+  ctx.fillText('✦', W / 2, 192)
+  if (date) {
+    const d = new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+    ctx.fillStyle = withAlpha(ink, 0.42)
+    ctx.font = "24px 'Raleway', sans-serif"
+    texteEspace(ctx, d, W / 2, 248, 24 * 0.35)
+  }
+}
+
+// Signature de marque (zone F) — l'ancre mémorable, en bas
+function marque(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: string) {
+  ctx.beginPath()
+  ctx.strokeStyle = withAlpha(ink, 0.20)
+  ctx.lineWidth = 1
+  ctx.moveTo(W / 2 - 60, 1770); ctx.lineTo(W / 2 + 60, 1770)
+  ctx.stroke()
+
+  ctx.fillStyle = ink
+  ctx.font = "600 30px 'Bodoni Moda', Georgia, serif"
+  const { left, right } = texteEspace(ctx, 'CADAVRE EXQUIS', W / 2, 1822, 30 * 0.45)
+  ctx.fillStyle = accent
+  ctx.textAlign = 'center'
+  ctx.font = "22px 'Raleway', sans-serif"
+  ctx.fillText('✦', left - 26, 1820)
+  ctx.fillText('✦', right + 26, 1820)
+
+  ctx.fillStyle = withAlpha(ink, 0.45)
+  ctx.font = "24px 'Raleway', sans-serif"
+  ctx.fillText(LIEN_MARQUE, W / 2, 1862)
+}
+
+function invitationLigne(ctx: CanvasRenderingContext2D, W: number, accent: string, y: number, texte: string) {
+  ctx.fillStyle = withAlpha(accent, 0.80)
+  ctx.textAlign = 'center'
+  let size = 32
+  ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif`
+  if (ctx.measureText(texte).width > W - 192) { size = 28; ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif` }
+  ctx.fillText(texte, W / 2, y)
+}
+
+async function prechargerPolices() {
+  try {
+    const fonts = [
+      "italic 900 300px 'Fraunces'",
+      "800 italic 76px 'Bodoni Moda'",
+      "600 30px 'Bodoni Moda'",
+      "italic 42px 'Playfair Display'",
+      "italic 36px 'Playfair Display'",
+      "24px 'Raleway'",
+    ]
+    const d = document as any
+    if (d.fonts?.load) await Promise.all(fonts.map((f: string) => d.fonts.load(f).catch(() => {})))
+    if (d.fonts?.ready) await d.fonts.ready
+  } catch { /* ignore */ }
+}
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(' ')
@@ -185,120 +360,181 @@ export async function genererImageStory(opts: {
   accent: string
   bg: string
   ink: string
+  date?: number
+  invitation?: string
+  seed?: string
 }): Promise<string> {
   const W = 1080
   const H = 1920
+  const MARGE = 96
+  const ZONE_W = W - MARGE * 2
+  const { accent, ink, bg } = opts
+  const invitation = opts.invitation ?? INVITATION_DEFAUT
+  const rng = mulberry32(hashSeed(opts.seed ?? opts.titre ?? 'cadavre'))
+
+  await prechargerPolices()
+
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
 
-  // Wait for fonts if possible
-  try {
-    if (typeof document !== 'undefined' && (document as any).fonts?.ready) {
-      await (document as any).fonts.ready
-    }
-  } catch { /* ignore */ }
-
-  // Background
-  ctx.fillStyle = opts.bg
+  // Fond papier + grain + vignettage + cadre tiré à la main
+  ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
-
-  // Subtle inner frame
-  ctx.strokeStyle = `${opts.accent}33`
-  ctx.lineWidth = 2
-  ctx.strokeRect(48, 48, W - 96, H - 96)
-
-  const marginX = 90
+  grainEtVignette(ctx, W, H, ink)
+  cadreDouble(ctx, W, H, accent)
+  enTete(ctx, W, accent, ink, opts.date)
 
   if (opts.type === 'poeme') {
-    // Title
-    ctx.fillStyle = opts.ink
-    ctx.textAlign = 'center'
-    ctx.font = "bold 80px 'Bodoni Moda', 'Playfair Display', Georgia, serif"
-    const titleLines = wrapText(ctx, opts.titre, W - marginX * 2)
-    const titleLineH = 92
-    const titleTop = 200
-    titleLines.forEach((line, i) => {
-      ctx.fillText(line, W / 2, titleTop + i * titleLineH)
-    })
-    const titleBottom = titleTop + titleLines.length * titleLineH
-
-    // Ornament
-    ctx.fillStyle = opts.accent
-    ctx.font = "32px 'Raleway', monospace"
-    ctx.fillText('✦   ✦   ✦', W / 2, titleBottom + 60)
-
-    // Body text — handle \n as forced break
-    ctx.fillStyle = opts.ink
-    ctx.font = "48px 'Bodoni Moda', 'Playfair Display', Georgia, serif"
-    const bodyLineH = 48 * 1.5
-    const sourceLines = (opts.texte ?? '').split('\n')
-    const wrapped: string[] = []
-    for (const src of sourceLines) {
-      if (!src.trim()) { wrapped.push(''); continue }
-      const pieces = wrapText(ctx, src, W - marginX * 2)
-      for (const p of pieces) wrapped.push(p)
+    // ── Titre (optionnel : sans titre, le poème lui-même est le héros) ──
+    const hasTitle = !!opts.titre?.trim()
+    if (hasTitle) {
+      ctx.fillStyle = ink
+      ctx.textAlign = 'center'
+      let titleSize = 76
+      ctx.font = `800 italic ${titleSize}px 'Bodoni Moda', Georgia, serif`
+      let titleLines = wrapText(ctx, opts.titre, ZONE_W)
+      if (titleLines.length > 2) {
+        titleSize = 64
+        ctx.font = `800 italic ${titleSize}px 'Bodoni Moda', Georgia, serif`
+        titleLines = wrapText(ctx, opts.titre, ZONE_W).slice(0, 2)
+      }
+      const titleLineH = titleSize + 12
+      const titleTop = 360
+      titleLines.forEach((line, i) => ctx.fillText(line, W / 2, titleTop + i * titleLineH))
+      const titleBottom = titleTop + (titleLines.length - 1) * titleLineH
+      filetOrne(ctx, W / 2, titleBottom + 56, accent, bg)
     }
 
-    // Vertically center body between titleBottom+120 and H-220
-    const bodyTopBoundary = titleBottom + 140
-    const bodyBottomBoundary = H - 220
-    const totalBodyH = wrapped.length * bodyLineH
-    const bodyStartY = Math.max(
-      bodyTopBoundary + bodyLineH,
-      (bodyTopBoundary + bodyBottomBoundary) / 2 - totalBodyH / 2 + bodyLineH,
-    )
-    wrapped.forEach((line, i) => {
-      ctx.fillText(line, W / 2, bodyStartY + i * bodyLineH)
-    })
-  } else {
-    // Drawing variant
-    ctx.fillStyle = opts.ink
-    ctx.textAlign = 'center'
-    ctx.font = "bold 60px 'Bodoni Moda', 'Playfair Display', Georgia, serif"
-    const titleLines = wrapText(ctx, opts.titre, W - marginX * 2)
-    const titleLineH = 72
-    const titleTop = 170
-    titleLines.forEach((line, i) => {
-      ctx.fillText(line, W / 2, titleTop + i * titleLineH)
-    })
-    const titleBottom = titleTop + titleLines.length * titleLineH
+    // ── Corps du poème ──
+    const zoneTop = hasTitle ? 620 : 460, zoneBottom = 1560
+    let bodySize = 42, bodyLineH = 66
+    const sourceLines = (opts.texte ?? '').split('\n')
+    ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
+    let wrapped: string[] = []
+    for (const src of sourceLines) {
+      if (!src.trim()) { wrapped.push(''); continue }
+      for (const p of wrapText(ctx, src, ZONE_W)) wrapped.push(p)
+    }
+    if (wrapped.length > 13) { bodySize = 36; bodyLineH = 56; ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif` }
+    if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
 
-    // Image area: max 900×1400 centered vertically
+    const lettrineActive = wrapped.length <= 8 && wrapped[0] && wrapped[0] !== '[…]'
+    const lettrineSize = 240
+    const lettrineVisual = lettrineSize * 0.72
+    const gap = 28
+    const blockH = wrapped.length * bodyLineH
+    const totalH = (lettrineActive ? lettrineVisual + gap : 0) + blockH
+    let startY = zoneTop + (zoneBottom - zoneTop - totalH) / 2 - 30
+    startY = Math.max(startY, zoneTop - 40)
+
+    let y = startY
+    if (lettrineActive) {
+      const lettre = wrapped[0].charAt(0).toUpperCase()
+      const baseline = y + lettrineVisual
+      ctx.font = `900 italic ${lettrineSize}px 'Fraunces', Georgia, serif`
+      ctx.fillStyle = accent
+      bavure(ctx, () => ctx.fillText(lettre, W / 2, baseline), 0.92)
+      // éclaboussures déterministes
+      ctx.fillStyle = withAlpha(accent, 0.25)
+      for (let i = 0; i < 3; i++) {
+        const ang = rng() * Math.PI * 2
+        const dist = 30 + rng() * 50
+        const r = 2 + rng() * 2
+        ctx.beginPath()
+        ctx.arc(W / 2 + Math.cos(ang) * dist, baseline - lettrineVisual / 2 + Math.sin(ang) * dist, r, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      y = baseline + gap
+    }
+
+    // Vers
+    ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
+    ctx.fillStyle = withAlpha(ink, 0.88)
+    ctx.textAlign = 'center'
+    wrapped.forEach((line, i) => {
+      if (!line) return
+      ctx.fillText(line, W / 2, y + (i + 1) * bodyLineH)
+    })
+
+    invitationLigne(ctx, W, accent, 1660, invitation)
+  } else {
+    // ── Variante dessin ──
+    let readingTop = 1430
     if (opts.imageDataUrl) {
       try {
         const img = await chargerImage(opts.imageDataUrl)
-        const maxW = 900
-        const maxH = 1400
-        const ratio = Math.min(maxW / img.width, maxH / img.height)
-        const drawW = img.width * ratio
-        const drawH = img.height * ratio
-        const areaTop = titleBottom + 60
-        const areaBottom = H - 220
-        const drawX = (W - drawW) / 2
-        const drawY = areaTop + ((areaBottom - areaTop) - drawH) / 2
-        ctx.drawImage(img, drawX, drawY, drawW, drawH)
+        const r = img.width / img.height
+        if (r > 1.6) {
+          // Le rouleau : image très horizontale couchée verticalement
+          const zoneTop = 300, zoneBottom = 1300
+          const maxW = 700, maxH = zoneBottom - zoneTop
+          // Après rotation 90°, la largeur de l'image devient la hauteur dessinée
+          const ratio = Math.min(maxW / img.height, maxH / img.width)
+          const dW = img.height * ratio, dH = img.width * ratio
+          const cx = W / 2, cy = zoneTop + (zoneBottom - zoneTop) / 2
+          passePartout(ctx, cx - dW / 2, cy - dH / 2, dW, dH, ink)
+          ctx.save()
+          ctx.translate(cx, cy)
+          ctx.rotate(-Math.PI / 2)
+          ctx.drawImage(img, -dH / 2, -dW / 2, dH, dW)
+          ctx.restore()
+          readingTop = 1400
+        } else {
+          const zoneTop = 300, zoneBottom = r < 0.9 ? 1300 : 1100
+          const maxW = r < 0.9 ? 700 : ZONE_W, maxH = zoneBottom - zoneTop
+          const ratio = Math.min(maxW / img.width, maxH / img.height)
+          const dW = img.width * ratio, dH = img.height * ratio
+          const dX = (W - dW) / 2
+          const dY = r < 0.9 ? zoneTop + (maxH - dH) / 2 : 540 - dH / 2
+          passePartout(ctx, dX, dY, dW, dH, ink)
+          ctx.drawImage(img, dX, dY, dW, dH)
+          readingTop = r < 0.9 ? 1400 : Math.max(dY + dH + 80, 1180)
+        }
       } catch (e) {
         console.error('Failed to load image for story', e)
       }
     }
+
+    // Lecture surréaliste — la notice du spécimen
+    if (opts.texte && opts.texte.trim()) {
+      filetOrne(ctx, W / 2, readingTop - 50, accent, bg)
+      ctx.fillStyle = withAlpha(accent, 0.65)
+      ctx.textAlign = 'center'
+      ctx.font = "22px 'Raleway', sans-serif"
+      texteEspace(ctx, '— LECTURE —', W / 2, readingTop, 22 * 0.3)
+
+      ctx.font = "italic 36px 'Playfair Display', Georgia, serif"
+      const lignes = wrapText(ctx, opts.texte.replace(/\n+/g, ' ').trim(), ZONE_W - 60).slice(0, 4)
+      ctx.fillStyle = withAlpha(ink, 0.85)
+      const lh = 56
+      lignes.forEach((line, i) => {
+        const txt = (i === 0 ? '« ' : '') + line + (i === lignes.length - 1 ? ' »' : '')
+        ctx.fillText(txt, W / 2, readingTop + 56 + i * lh)
+      })
+    }
+
+    invitationLigne(ctx, W, accent, 1680, invitation)
   }
 
-  // Bottom mark
-  ctx.fillStyle = opts.accent
-  ctx.textAlign = 'center'
-  ctx.font = "28px 'Raleway', monospace"
-  const mark = 'C A D A V R E   E X Q U I S'
-  ctx.fillText(mark, W / 2, H - 110)
-  // small sub-mark
-  ctx.fillStyle = opts.ink
-  ctx.globalAlpha = 0.55
-  ctx.font = "20px 'Raleway', monospace"
-  ctx.fillText('— JEU SURRÉALISTE —', W / 2, H - 75)
-  ctx.globalAlpha = 1
-
+  marque(ctx, W, accent, ink)
   return canvas.toDataURL('image/png')
+}
+
+// Passe-partout de gravure : fond clair débordant + filet + ombre portée
+function passePartout(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, ink: string) {
+  const p = 28
+  ctx.save()
+  ctx.shadowColor = withAlpha(ink, 0.18)
+  ctx.shadowBlur = 30
+  ctx.shadowOffsetY = 12
+  ctx.fillStyle = withAlpha('#ffffff', 0.30)
+  ctx.fillRect(x - p, y - p, w + p * 2, h + p * 2)
+  ctx.restore()
+  ctx.strokeStyle = withAlpha(ink, 0.25)
+  ctx.lineWidth = 1.5
+  ctx.strokeRect(x - p, y - p, w + p * 2, h + p * 2)
 }
 
 export async function telechargerStory(dataUrl: string, nom: string): Promise<void> {
@@ -308,6 +544,23 @@ export async function telechargerStory(dataUrl: string, nom: string): Promise<vo
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+// Génère l'affiche 9:16 puis la partage via la feuille native (ou la télécharge en repli).
+export async function partagerStory(opts: {
+  type: 'poeme' | 'dessin'
+  titre: string
+  texte?: string
+  imageDataUrl?: string
+  accent: string
+  bg: string
+  ink: string
+  date?: number
+  invitation?: string
+  seed?: string
+}, nomFichier = 'cadavre-exquis'): Promise<void> {
+  const url = await genererImageStory(opts)
+  await partagerImage(url, nomFichier)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

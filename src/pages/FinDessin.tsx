@@ -5,7 +5,8 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin } from '../db'
-import { partagerDessinAvecTexte, partagerImage } from '../utils/partager'
+import { partagerStory } from '../utils/partager'
+import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 
 const RACCORD_H = 80
@@ -92,6 +93,7 @@ export default function FinDessin() {
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
@@ -140,6 +142,7 @@ export default function FinDessin() {
     if (phase === 'revele' && !revelationPlayedRef.current) {
       revelationPlayedRef.current = true
       jouer('revelation')
+      vibrer('devoilement')
     }
   }, [phase, jouer])
 
@@ -153,11 +156,15 @@ export default function FinDessin() {
 
   async function partager() {
     if (!imageAssemblee) return
-    if (texteVision) {
-      await partagerDessinAvecTexte(imageAssemblee, texteVision, 'cadavre-dessiné', accent)
-    } else {
-      await partagerImage(imageAssemblee, 'cadavre-dessiné')
-    }
+    await partagerStory({
+      type: 'dessin',
+      titre: '',
+      texte: texteVision,
+      imageDataUrl: imageAssemblee,
+      accent, bg, ink: encre,
+      date: Date.now(),
+      seed: texteVision || 'dessin',
+    }, 'cadavre-dessiné')
   }
 
   async function sauvegarder() {
@@ -265,9 +272,9 @@ export default function FinDessin() {
                   <motion.img
                     src={imageAssemblee}
                     alt="Cadavre exquis dessiné"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 2.8, ease: 'easeInOut' }}
+                    initial={{ clipPath: 'inset(0 0 100% 0)', opacity: 0.5 }}
+                    animate={{ clipPath: 'inset(0 0 0% 0)', opacity: 1 }}
+                    transition={{ duration: 2, ease: [0.3, 0, 0.2, 1] }}
                     style={{ display: 'block', width: '100%', maxHeight: '45vh', objectFit: 'contain' }}
                   />
                 </button>

@@ -9,7 +9,9 @@ import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
-import { partagerTexte, partagerImage, partagerDessinAvecTexte, partagerImageDistante } from '../utils/partager'
+import { partagerStory } from '../utils/partager'
+import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
+import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import type { DessinCadavre } from '../types'
 
@@ -192,16 +194,22 @@ export default function FinOnline() {
     return () => { supabase.removeChannel(channel) }
   }, [code, navigate])
 
+  // Mode dessin : rideau temporisé (l'assemblage du dessin suit). Mode écrit : la séquence de convergence pilote elle-même le dévoilement.
   useEffect(() => {
-    if (revelationPlayedRef.current) return
-    revelationPlayedRef.current = true
-    jouer('revelation')
-  }, [jouer])
+    if (room?.mode === 'dessin') {
+      const t = setTimeout(() => setRevealReady(true), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [room?.mode])
 
+  // Son + haptique de révélation pour le mode dessin (le mode écrit le déclenche via la séquence)
   useEffect(() => {
-    const t = setTimeout(() => setRevealReady(true), 3000)
-    return () => clearTimeout(t)
-  }, [])
+    if (room?.mode === 'dessin' && revealReady && !revelationPlayedRef.current) {
+      revelationPlayedRef.current = true
+      jouer('revelation')
+      vibrer('devoilement')
+    }
+  }, [room?.mode, revealReady, jouer])
 
   // Close fullscreen on Escape
   useEffect(() => {
@@ -280,17 +288,20 @@ export default function FinOnline() {
   }
 
   async function partagerEcrit() {
-    if (illustrationUrl) {
-      await partagerImageDistante(illustrationUrl, 'cadavre-exquis', texteCorrige ?? texteAssemble, 'Cadavre Exquis')
-    } else {
-      await partagerTexte(texteCorrige ?? texteAssemble, 'Cadavre Exquis')
-    }
+    await partagerStory({
+      type: 'poeme', titre: '',
+      texte: texteCorrige ?? texteAssemble,
+      accent, bg, ink: encre, date: Date.now(), seed: code ?? texteAssemble,
+    })
   }
 
   async function partagerDessin() {
     if (!imageAssemblee) return
-    if (texteVision) await partagerDessinAvecTexte(imageAssemblee, texteVision, 'cadavre-dessiné', accent)
-    else await partagerImage(imageAssemblee, 'cadavre-dessiné')
+    await partagerStory({
+      type: 'dessin', titre: '', texte: texteVision,
+      imageDataUrl: imageAssemblee,
+      accent, bg, ink: encre, date: Date.now(), seed: code ?? 'dessin',
+    }, 'cadavre-dessiné')
   }
 
   async function sauvegarderDessinLocal() {
@@ -329,9 +340,23 @@ export default function FinOnline() {
 
   return (
     <>
-      {/* ── ÉCRAN D'ASSEMBLAGE ── */}
+      {/* ── SÉQUENCE D'ASSEMBLAGE ── */}
       <AnimatePresence>
-        {!revealReady && (
+        {!revealReady && room.mode !== 'dessin' && (
+          <RevealAssemblageTexte
+            fragments={[...contributions].sort((a, b) => a.case_index - b.case_index).map(c => ({
+              texte: c.texte,
+              auteur: players.find(p => p.player_id === c.player_id)?.pseudo ?? null,
+            }))}
+            voixCount={Math.max(players.length, 2)}
+            accent={accent}
+            encre={encre}
+            bg={bg}
+            jouerClimax={() => jouer('revelation')}
+            onTermine={() => setRevealReady(true)}
+          />
+        )}
+        {!revealReady && room.mode === 'dessin' && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.9, ease: 'easeInOut' } }}
@@ -385,7 +410,7 @@ export default function FinOnline() {
                       style={{ display: 'block', width: '100%', padding: 0, border: `0.5px solid ${encre}20`, background: 'none', cursor: 'zoom-in' }}>
                       <motion.img
                         src={imageAssemblee} alt="Cadavre exquis dessiné"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2.8, ease: 'easeInOut' }}
+                        initial={{ clipPath: 'inset(0 0 100% 0)', opacity: 0.5 }} animate={{ clipPath: 'inset(0 0 0% 0)', opacity: 1 }} transition={{ duration: 2, ease: [0.3, 0, 0.2, 1] }}
                         style={{ display: 'block', width: '100%', maxHeight: '50vh', objectFit: 'contain' }}
                       />
                     </button>
@@ -475,7 +500,7 @@ export default function FinOnline() {
                 {lignes.map((ligne, i) => (
                   <motion.p key={i}
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.7, duration: 0.7, ease: 'easeOut' }}
+                    transition={{ delay: 0.1 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
                     style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
                     {i === 0 && lettrine ? (
                       <>
