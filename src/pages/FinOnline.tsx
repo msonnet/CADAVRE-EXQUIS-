@@ -109,6 +109,7 @@ export default function FinOnline() {
 
   // Écrit mode
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
+  const correctionPromise = useRef<Promise<string> | null>(null)
   const [texteAssemble, setTexteAssemble] = useState<string>('')
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
@@ -157,7 +158,9 @@ export default function FinOnline() {
         texte: caseMap.get(i) ?? '',
         type: def.type,
       }))
-      corrigerAccords(brut, r.structure_id, blocs).then(t => { if (!cancelled) setTexteCorrige(t) })
+      const p = corrigerAccords(brut, r.structure_id, blocs)
+      correctionPromise.current = p
+      p.then(t => { if (!cancelled) setTexteCorrige(t) })
       return () => { cancelled = true }
     }
 
@@ -291,9 +294,10 @@ export default function FinOnline() {
   async function partagerEcrit() {
     if (partageEnCours) return
     setPartageEnCours(true)
+    const textePartage = texteCorrige ?? (correctionPromise.current ? await correctionPromise.current : texteAssemble)
     const opts = {
       type: 'poeme' as const, titre: '',
-      texte: texteCorrige ?? texteAssemble,
+      texte: textePartage,
       accent, bg, ink: encre, date: Date.now(), seed: code ?? texteAssemble,
     }
     try { const ok = await partagerVideoStory(opts); if (!ok) await partagerStory(opts) }

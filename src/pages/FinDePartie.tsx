@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -56,6 +56,7 @@ export default function FinDePartie() {
   const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
   const [promptVisible, setPromptVisible] = useState(false)
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
+  const correctionPromise = useRef<Promise<string> | null>(null)
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
@@ -103,7 +104,9 @@ export default function FinDePartie() {
       texte: c.texte,
       type: structure.cases[i]?.type ?? 'libre',
     }))
-    corrigerAccords(brut, poeme.structureId, blocs).then(t => { if (!cancelled) setTexteCorrige(t) })
+    const p = corrigerAccords(brut, poeme.structureId, blocs)
+    correctionPromise.current = p
+    p.then(t => { if (!cancelled) setTexteCorrige(t) })
     return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -166,10 +169,11 @@ export default function FinDePartie() {
   async function partager() {
     if (!poeme || partageEnCours) return
     setPartageEnCours(true)
+    const textePartage = texteCorrige ?? (correctionPromise.current ? await correctionPromise.current : texte)
     const opts = {
       type: 'poeme' as const,
       titre: poeme.titre ?? '',
-      texte: texteAffiche,
+      texte: textePartage,
       imageDataUrl: illustrationUrl || undefined,
       accent, bg, ink: encre,
       date: poeme.dateCreation,

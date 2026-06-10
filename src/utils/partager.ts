@@ -691,6 +691,8 @@ interface LayoutPoeme {
 const ANIM_FLASH_T = 3640
 const ANIM_LIGNE_T = 3700
 const ANIM_LIGNE_PAS = 260
+const LETT_T = 5080
+const LETT_DUR = 340
 
 function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false, avecLettrine = true): LayoutPoeme {
   const hasTitle = !!opts.titre?.trim()
