@@ -463,7 +463,7 @@ export async function genererImageStory(opts: {
     }
 
     // ── Corps du poème ──
-    const zoneTop = hasTitle ? 620 : 460, zoneBottom = illustImg ? 980 : 1560
+    const zoneTop = hasTitle ? 520 : 360, zoneBottom = illustImg ? 820 : 1560
     let bodySize = 50, bodyLineH = 74
     const sourceLines = (opts.texte ?? '').split('\n')
 
@@ -538,17 +538,17 @@ export async function genererImageStory(opts: {
 
     // ── Illustration sous le poème ──
     if (illustImg) {
-      const imgZoneTop = 1040, imgZoneBottom = 1840
-      const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop
+      const imgZoneTop = 880, imgZoneBottom = 1860
+      const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop - 56
       const ratio = Math.min(maxW / illustImg.width, maxH / illustImg.height)
       const dW = illustImg.width * ratio, dH = illustImg.height * ratio
-      const dX = (W - dW) / 2, dY = imgZoneTop + (maxH - dH) / 2
-      filetOrne(ctx, W / 2, imgZoneTop - 44, accent, bg)
+      const dX = (W - dW) / 2, dY = imgZoneTop + 28 + (maxH - dH) / 2
+      filetOrne(ctx, W / 2, imgZoneTop - 40, accent, bg)
       passePartout(ctx, dX, dY, dW, dH, ink)
       ctx.drawImage(illustImg, dX, dY, dW, dH)
     }
 
-    invitationLigne(ctx, W, accent, illustImg ? 1870 : 1660, invitation)
+    invitationLigne(ctx, W, accent, illustImg ? 1888 : 1660, invitation)
   } else {
     // ── Variante dessin ──
     let readingTop = 1430
