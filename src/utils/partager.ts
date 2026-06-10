@@ -684,7 +684,13 @@ interface LayoutPoeme {
   bodySize: number
   bodyLineH: number
   separatorYs: number[]
+  centreY: number
 }
+
+// Timing de l'animation poème (partagé entre vidéo et GIF)
+const ANIM_FLASH_T = 3640
+const ANIM_LIGNE_T = 3700
+const ANIM_LIGNE_PAS = 260
 
 function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false, avecLettrine = true): LayoutPoeme {
   const hasTitle = !!opts.titre?.trim()
@@ -693,7 +699,7 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
   const sourceLines = (opts.texte ?? '').split('\n')
 
   const doWrap = (size: number) => {
-    ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif`
+    ctx.font = `italic ${size}px 'Fraunces', Georgia, serif`
     const result: string[] = []
     for (const src of sourceLines) {
       if (!src.trim()) { result.push(''); continue }
@@ -751,14 +757,20 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
     }
   }
 
-  // Positions de départ des fragments (cercle autour du centre, hors champ)
+  // Centre réel du bloc de texte — point de convergence de l'animation
+  const visiblesLignes = lignes.filter(l => l.texte)
+  const centreY = visiblesLignes.length > 0
+    ? (visiblesLignes[0].y + visiblesLignes[visiblesLignes.length - 1].y) / 2
+    : 960
+
+  // Positions de départ des fragments (cercle autour du centre du poème, hors champ)
   const R = Math.max(W, 1920) * 0.6
   const fragments = sourceLines.filter(l => l.trim()).map((texte, i, arr) => {
     const angle = (i / Math.max(arr.length, 1)) * Math.PI * 2 + (i % 2 ? 0.6 : -0.6)
-    return { texte: texte.trim(), x0: W / 2 + Math.cos(angle) * R, y0: 960 + Math.sin(angle) * R, rot: (i % 2 ? 1 : -1) * (3 + (i % 3) * 2) }
+    return { texte: texte.trim(), x0: W / 2 + Math.cos(angle) * R, y0: centreY + Math.sin(angle) * R, rot: (i % 2 ? 1 : -1) * (3 + (i % 3) * 2) }
   })
 
-  return { fragments, lettrine, lignes, bodySize, bodyLineH, separatorYs }
+  return { fragments, lettrine, lignes, bodySize, bodyLineH, separatorYs, centreY }
 }
 
 // Partition de la révélation — un rideau de théâtre qui se lève (la mineur, cohérent avec l'app)
@@ -861,18 +873,18 @@ export async function genererVideoStory(opts: {
       tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
       filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
     }
-    // Illustration IA sous le poème — dessinée sur le fond fixe
+    // Illustration IA — zone élargie, rendue en fondu animé (pas sur le fond fixe)
+    let illustBox = { x: 0, y: 0, w: 0, h: 0 }
     if (opts.imageDataUrl) {
       try {
         poemeIllustImg = await chargerImage(opts.imageDataUrl)
-        const imgZoneTop = 1220, imgZoneBottom = 1640
-        const maxW = ZONE_W - 40, maxH = imgZoneBottom - imgZoneTop
+        const imgZoneTop = 1195, imgZoneBottom = 1760
+        const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop
         const ratio = Math.min(maxW / poemeIllustImg.width, maxH / poemeIllustImg.height)
         const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
         const dX = (W - dW) / 2, dY = imgZoneTop + (maxH - dH) / 2
-        filetOrne(bx, W / 2, imgZoneTop - 44, accent, bg)
-        passePartout(bx, dX, dY, dW, dH, ink)
-        bx.drawImage(poemeIllustImg, dX, dY, dW, dH)
+        filetOrne(bx, W / 2, imgZoneTop - 50, accent, bg)
+        illustBox = { x: dX, y: dY, w: dW, h: dH }
       } catch { poemeIllustImg = null }
     }
     poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, !!poemeIllustImg, false)
@@ -924,8 +936,19 @@ export async function genererVideoStory(opts: {
     const frame = () => {
       const t = performance.now() - start
       ctx.drawImage(bgCanvas, 0, 0)
-      if (opts.type === 'poeme' && poemeLayout) dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
-      else if (img) dessinerDessinAnime(ctx, img, imgBox, opts.texte ?? '', readingTop, t, W, ZONE_W, accent, ink, bg)
+      if (opts.type === 'poeme' && poemeLayout) {
+        dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
+        if (poemeIllustImg && illustBox.w > 0) {
+          const illustAlpha = clamp01((t - ANIM_LIGNE_T) / 900)
+          if (illustAlpha > 0) {
+            ctx.save()
+            ctx.globalAlpha = illustAlpha
+            passePartout(ctx, illustBox.x, illustBox.y, illustBox.w, illustBox.h, ink)
+            ctx.drawImage(poemeIllustImg, illustBox.x, illustBox.y, illustBox.w, illustBox.h)
+            ctx.restore()
+          }
+        }
+      } else if (img) dessinerDessinAnime(ctx, img, imgBox, opts.texte ?? '', readingTop, t, W, ZONE_W, accent, ink, bg)
       // Voile de boucle — un cillement crème masque le raccord début/fin sur les réseaux
       if (t < 130) {
         ctx.save(); ctx.globalAlpha = 0.6 * (1 - t / 130); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.restore()
@@ -968,23 +991,22 @@ function tremor(t: number, actif: boolean): [number, number, number] {
 function dessinerPoemeAnime(
   ctx: CanvasRenderingContext2D, L: LayoutPoeme, t: number, W: number, accent: string, ink: string, bg: string,
 ) {
-  const CONV_FIN = 3300, SUSP_FIN = 3640, FLASH_T = 3640, FLASH_DUR = 320
-  const LIGNE_T = 3700, LIGNE_PAS = 260, LIGNE_DUR = 260
-  const LETT_T = 4760, LETT_DUR = 320
-  const TREMOR_FIN = 5700
+  const CONV_FIN = 3300, SUSP_FIN = 3640, FLASH_DUR = 320
+  const LIGNE_DUR = 260, TREMOR_FIN = 5700
+  const convergeY = L.centreY
 
   // Convergence + suspension des fragments (les voix éparses se rassemblent)
-  if (t < FLASH_T) {
+  if (t < ANIM_FLASH_T) {
     ctx.textAlign = 'center'
-    ctx.font = `italic 38px 'Playfair Display', Georgia, serif`
+    ctx.font = `italic 36px 'Fraunces', Georgia, serif`
     L.fragments.forEach((f, i) => {
       const dep = 360 + i * 160
       const local = clamp01((t - dep) / (CONV_FIN - dep))
       const e = easeInOut(local)
       const x = f.x0 + (W / 2 - f.x0) * e
       const flot = t < CONV_FIN ? Math.sin(t / 1000 * 0.8 * Math.PI * 2 + i * 1.7) * 4 * (1 - e * 0.5) : 0
-      const y = f.y0 + (960 - f.y0) * e + flot
-      const op = (t < CONV_FIN ? Math.min(0.82, local * 1.2) : 0.92) * (t > SUSP_FIN - 60 ? Math.max(0, (FLASH_T - t) / 60) : 1)
+      const y = f.y0 + (convergeY - f.y0) * e + flot
+      const op = (t < CONV_FIN ? Math.min(0.82, local * 1.2) : 0.92) * (t > SUSP_FIN - 60 ? Math.max(0, (ANIM_FLASH_T - t) / 60) : 1)
       if (op <= 0) return
       ctx.save()
       ctx.translate(x, y)
@@ -996,14 +1018,14 @@ function dessinerPoemeAnime(
     })
   }
 
-  flash(ctx, W, t, FLASH_T, FLASH_DUR, bg, accent)
+  flash(ctx, W, t, ANIM_FLASH_T, FLASH_DUR, bg, accent)
 
-  // Vers qui s'inscrivent — révélés par masque horizontal (l'écriture), avec tremblé d'encre
+  // Vers qui s'inscrivent — révélés par masque horizontal, avec tremblé d'encre
   ctx.textAlign = 'center'
-  ctx.font = `italic ${L.bodySize}px 'Playfair Display', Georgia, serif`
+  ctx.font = `italic ${L.bodySize}px 'Fraunces', Georgia, serif`
   const visibles = L.lignes.filter(l => l.texte)
   visibles.forEach((ligne, i) => {
-    const lt = LIGNE_T + i * LIGNE_PAS
+    const lt = ANIM_LIGNE_T + i * ANIM_LIGNE_PAS
     if (t < lt) return
     const p = clamp01((t - lt) / LIGNE_DUR)
     const e = easeOutCubic(p)
@@ -1135,6 +1157,156 @@ export async function partagerVideoStory(opts: {
   if (!blob || blob.size < 2000) return false
   const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
   const file = new File([blob], `${nomFichier}.${ext}`, { type: blob.type })
+  try {
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Cadavre Exquis' })
+      return true
+    }
+  } catch { /* fall through to download */ }
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = file.name
+  document.body.appendChild(a); a.click(); document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 4000)
+  return true
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GIF export
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function genererGifStory(opts: {
+  type: 'poeme' | 'dessin'
+  titre: string
+  texte?: string
+  imageDataUrl?: string
+  accent: string
+  bg: string
+  ink: string
+  date?: number
+  seed?: string
+}): Promise<Blob | null> {
+  let gifenc: { GIFEncoder: unknown; quantize: unknown; applyPalette: unknown }
+  try { gifenc = await import('gifenc') } catch { return null }
+  const { GIFEncoder, quantize, applyPalette } = gifenc as {
+    GIFEncoder: () => { writeFrame: (idx: Uint8Array, w: number, h: number, o: { palette: number[][]; delay: number; repeat?: number }) => void; finish: () => void; bytes: () => Uint8Array }
+    quantize: (data: Uint8ClampedArray, colors: number) => number[][]
+    applyPalette: (data: Uint8ClampedArray, palette: number[][]) => Uint8Array
+  }
+
+  await prechargerPolices()
+  const FULL_W = 1080, FULL_H = 1920, FULL_MARGE = 96, FULL_ZONE_W = FULL_W - FULL_MARGE * 2
+  const GIF_W = 540, GIF_H = 960
+  const { accent, ink, bg } = opts
+
+  // Canvas pleine résolution pour le rendu
+  const fullCanvas = document.createElement('canvas')
+  fullCanvas.width = FULL_W; fullCanvas.height = FULL_H
+  const fc = fullCanvas.getContext('2d')!
+
+  // Fond fixe
+  const bgCanvas = document.createElement('canvas')
+  bgCanvas.width = FULL_W; bgCanvas.height = FULL_H
+  const bx = bgCanvas.getContext('2d')!
+  bx.fillStyle = bg; bx.fillRect(0, 0, FULL_W, FULL_H)
+  grainEtVignette(bx, FULL_W, FULL_H, ink)
+  cadreDouble(bx, FULL_W, FULL_H, accent)
+  enTete(bx, FULL_W, accent, ink, opts.date, opts.seed)
+  marque(bx, FULL_W, accent, ink)
+
+  // Canvas de sortie GIF (demi-résolution)
+  const gifCanvas = document.createElement('canvas')
+  gifCanvas.width = GIF_W; gifCanvas.height = GIF_H
+  const gc = gifCanvas.getContext('2d')!
+
+  let poemeLayout: LayoutPoeme | null = null
+  let poemeIllustImg: HTMLImageElement | null = null
+  let illustBox = { x: 0, y: 0, w: 0, h: 0 }
+
+  if (opts.type === 'poeme') {
+    if (opts.titre?.trim()) {
+      bx.fillStyle = ink; bx.textAlign = 'center'
+      bx.font = `800 italic 76px 'Bodoni Moda', Georgia, serif`
+      let tl = wrapText(bx, opts.titre, FULL_ZONE_W)
+      const ts = tl.length > 2 ? 64 : 76
+      if (tl.length > 2) { bx.font = `800 italic 64px 'Bodoni Moda', Georgia, serif`; tl = wrapText(bx, opts.titre, FULL_ZONE_W).slice(0, 2) }
+      tl.forEach((line, i) => bx.fillText(line, FULL_W / 2, 360 + i * (ts + 12)))
+      filetOrne(bx, FULL_W / 2, 360 + (tl.length - 1) * (ts + 12) + 56, accent, bg)
+    }
+    if (opts.imageDataUrl) {
+      try {
+        poemeIllustImg = await chargerImage(opts.imageDataUrl)
+        const imgZoneTop = 1195, imgZoneBottom = 1760
+        const maxW = FULL_ZONE_W, maxH = imgZoneBottom - imgZoneTop
+        const ratio = Math.min(maxW / poemeIllustImg.width, maxH / poemeIllustImg.height)
+        const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
+        const dX = (FULL_W - dW) / 2, dY = imgZoneTop + (maxH - dH) / 2
+        filetOrne(bx, FULL_W / 2, imgZoneTop - 50, accent, bg)
+        illustBox = { x: dX, y: dY, w: dW, h: dH }
+      } catch { poemeIllustImg = null }
+    }
+    poemeLayout = layoutPoeme(fc, opts, FULL_W, FULL_ZONE_W, !!poemeIllustImg, false)
+    for (const sy of poemeLayout.separatorYs) drawFragmentSeparator(bx, FULL_W, sy, accent)
+  }
+
+  const FPS = 12
+  const FRAME_DELAY = Math.round(100 / FPS)
+  const nVisibles = poemeLayout?.lignes.filter(l => l.texte).length ?? 0
+  const startT = ANIM_FLASH_T - 240
+  const endT = Math.min(6200, ANIM_LIGNE_T + nVisibles * ANIM_LIGNE_PAS + 1400)
+
+  const renderFrame = (t: number) => {
+    fc.drawImage(bgCanvas, 0, 0)
+    if (poemeLayout) {
+      dessinerPoemeAnime(fc, poemeLayout, t, FULL_W, accent, ink, bg)
+      if (poemeIllustImg && illustBox.w > 0) {
+        const illustAlpha = clamp01((t - ANIM_LIGNE_T) / 900)
+        if (illustAlpha > 0) {
+          fc.save(); fc.globalAlpha = illustAlpha
+          passePartout(fc, illustBox.x, illustBox.y, illustBox.w, illustBox.h, ink)
+          fc.drawImage(poemeIllustImg, illustBox.x, illustBox.y, illustBox.w, illustBox.h)
+          fc.restore()
+        }
+      }
+    }
+    gc.drawImage(fullCanvas, 0, 0, GIF_W, GIF_H)
+  }
+
+  // Palette globale construite sur 3 frames représentatives (plus rapide qu'une palette par frame)
+  const sampleTs = [startT, (startT + endT) / 2, endT - 80]
+  const sampleData = new Uint8ClampedArray(GIF_W * GIF_H * 4 * sampleTs.length)
+  for (let i = 0; i < sampleTs.length; i++) {
+    renderFrame(sampleTs[i])
+    sampleData.set(gc.getImageData(0, 0, GIF_W, GIF_H).data, i * GIF_W * GIF_H * 4)
+  }
+  const globalPalette = (quantize as (d: Uint8ClampedArray, n: number) => number[][])(sampleData, 256)
+
+  const gif = (GIFEncoder as () => ReturnType<typeof GIFEncoder>)()
+  const frameStep = 1000 / FPS
+
+  for (let t = startT; t <= endT; t += frameStep) {
+    renderFrame(t)
+    const data = gc.getImageData(0, 0, GIF_W, GIF_H)
+    const index = (applyPalette as (d: Uint8ClampedArray, p: number[][]) => Uint8Array)(data.data, globalPalette)
+    gif.writeFrame(index, GIF_W, GIF_H, { palette: globalPalette, delay: FRAME_DELAY, repeat: 0 })
+  }
+  // Maintien de la dernière frame 1,5 seconde
+  renderFrame(endT)
+  const lastData = gc.getImageData(0, 0, GIF_W, GIF_H)
+  const lastIndex = (applyPalette as (d: Uint8ClampedArray, p: number[][]) => Uint8Array)(lastData.data, globalPalette)
+  for (let i = 0; i < Math.round(FPS * 1.5); i++) {
+    gif.writeFrame(lastIndex, GIF_W, GIF_H, { palette: globalPalette, delay: FRAME_DELAY, repeat: 0 })
+  }
+
+  gif.finish()
+  return new Blob([gif.bytes()], { type: 'image/gif' })
+}
+
+export async function partagerGifStory(opts: Parameters<typeof genererGifStory>[0], nomFichier = 'cadavre-exquis'): Promise<boolean> {
+  let blob: Blob | null = null
+  try { blob = await genererGifStory(opts) } catch { blob = null }
+  if (!blob || blob.size < 100) return false
+  const file = new File([blob], `${nomFichier}.gif`, { type: 'image/gif' })
   try {
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], title: 'Cadavre Exquis' })

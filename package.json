@@ -25,6 +25,7 @@
     "@vercel/analytics": "^2.0.1",
     "dexie": "^4.0.11",
     "framer-motion": "^11.18.2",
+    "gifenc": "^1.0.3",
     "jspdf": "^4.2.1",
     "minimatch": "^10.2.5",
     "react": "^18.3.1",
