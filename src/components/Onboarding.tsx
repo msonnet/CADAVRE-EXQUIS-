@@ -56,6 +56,11 @@ function PhraseFondatrice({ accent, ink }: { accent: string; ink: string }) {
 function makeSlides(accent: string, ink: string): Slide[] {
   return [
     {
+      title: 'Le cadavre exquis',
+      body: "Un jeu surréaliste inventé en 1925. Chaque joueur contribue à une œuvre commune — sans voir ce qu'ont écrit ou dessiné les autres.",
+      hint: '✦ ✦ ✦',
+    },
+    {
       title: 'Personne ne voit rien.',
       body: <PhraseFondatrice accent={accent} ink={ink} />,
     },

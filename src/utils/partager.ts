@@ -686,7 +686,7 @@ interface LayoutPoeme {
   separatorYs: number[]
 }
 
-function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false): LayoutPoeme {
+function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false, avecLettrine = true): LayoutPoeme {
   const hasTitle = !!opts.titre?.trim()
   const zoneTop = hasTitle ? 620 : 460, zoneBottom = avecImage ? 1150 : 1560
   let bodySize = 42, bodyLineH = 66
@@ -723,7 +723,7 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
     }
   }
 
-  const lettrineActive = wrapped.length <= 8 && !!wrapped[0] && wrapped[0] !== '[…]'
+  const lettrineActive = avecLettrine && wrapped.length <= 8 && !!wrapped[0] && wrapped[0] !== '[…]'
   const lettrineSize = 240
   const lettrineVisual = lettrineSize * 0.72
   const gap = 28
@@ -875,7 +875,7 @@ export async function genererVideoStory(opts: {
         bx.drawImage(poemeIllustImg, dX, dY, dW, dH)
       } catch { poemeIllustImg = null }
     }
-    poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, !!poemeIllustImg)
+    poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, !!poemeIllustImg, false)
     // Lignes de pli entre fragments — sur le fond fixe, révélées dès le début
     for (const sy of poemeLayout.separatorYs) {
       drawFragmentSeparator(bx, W, sy, accent)

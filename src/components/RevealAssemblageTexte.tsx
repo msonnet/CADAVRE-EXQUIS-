@@ -24,7 +24,7 @@ const reduced =
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 // Phases de la séquence (ms)
-const T_CONVERGENCE = reduced ? 600 : 2200
+const T_CONVERGENCE = reduced ? 600 : 3700
 const T_BATTEMENT = reduced ? 250 : 650
 const T_FLASH = reduced ? 200 : 480
 

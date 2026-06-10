@@ -340,8 +340,9 @@ export default function Jeu() {
     if (!muted) ambianceStart()
   }, [muted, ambianceStart])
 
-  // Écran de passage avant chaque tour humain
+  // Écran de passage avant chaque tour humain + reset de l'animation de soumission
   useEffect(() => {
+    setSealing(false)
     if (participantActuel?.type === 'humain') {
       setAttendPassage(true)
     }
@@ -510,6 +511,7 @@ export default function Jeu() {
   }
 
   function abandonner() {
+    jouer('abandon')
     localStorage.removeItem('brouillon-actuel')
     ambianceStop()
     navigate('/')
