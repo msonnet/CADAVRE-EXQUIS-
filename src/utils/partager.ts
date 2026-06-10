@@ -694,8 +694,8 @@ const ANIM_LIGNE_PAS = 260
 
 function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false, avecLettrine = true): LayoutPoeme {
   const hasTitle = !!opts.titre?.trim()
-  const zoneTop = hasTitle ? 620 : 460, zoneBottom = avecImage ? 1150 : 1560
-  let bodySize = 42, bodyLineH = 66
+  const zoneTop = hasTitle ? 520 : 360, zoneBottom = avecImage ? 820 : 1560
+  let bodySize = 50, bodyLineH = 74
   const sourceLines = (opts.texte ?? '').split('\n')
 
   const doWrap = (size: number) => {
@@ -710,7 +710,7 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
 
   let wrapped = doWrap(bodySize)
   if (wrapped.length > 13) {
-    bodySize = 36; bodyLineH = 56
+    bodySize = 40; bodyLineH = 62
     wrapped = doWrap(bodySize)
   }
   if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
@@ -878,12 +878,12 @@ export async function genererVideoStory(opts: {
     if (opts.imageDataUrl) {
       try {
         poemeIllustImg = await chargerImage(opts.imageDataUrl)
-        const imgZoneTop = 1195, imgZoneBottom = 1760
-        const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop
+        const imgZoneTop = 880, imgZoneBottom = 1860
+        const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop - 56
         const ratio = Math.min(maxW / poemeIllustImg.width, maxH / poemeIllustImg.height)
         const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
-        const dX = (W - dW) / 2, dY = imgZoneTop + (maxH - dH) / 2
-        filetOrne(bx, W / 2, imgZoneTop - 50, accent, bg)
+        const dX = (W - dW) / 2, dY = imgZoneTop + 28 + (maxH - dH) / 2
+        filetOrne(bx, W / 2, imgZoneTop - 44, accent, bg)
         illustBox = { x: dX, y: dY, w: dW, h: dH }
       } catch { poemeIllustImg = null }
     }
@@ -892,7 +892,7 @@ export async function genererVideoStory(opts: {
     for (const sy of poemeLayout.separatorYs) {
       drawFragmentSeparator(bx, W, sy, accent)
     }
-    invitationLigne(bx, W, accent, poemeIllustImg ? 1720 : 1660, invitation)
+    invitationLigne(bx, W, accent, poemeIllustImg ? 1888 : 1660, invitation)
   } else if (opts.imageDataUrl) {
     try {
       img = await chargerImage(opts.imageDataUrl)
