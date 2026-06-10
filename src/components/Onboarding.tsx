@@ -61,7 +61,7 @@ function makeSlides(accent: string, ink: string): Slide[] {
       hint: '✦ ✦ ✦',
     },
     {
-      title: 'Personne ne voit rien.',
+      title: 'Écrire sans se lire.',
       body: <PhraseFondatrice accent={accent} ink={ink} />,
     },
     {

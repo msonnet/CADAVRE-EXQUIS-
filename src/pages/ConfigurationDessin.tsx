@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -11,6 +11,8 @@ const CONFIG_PAR_DEFAUT: ConfigDessin = {
   joueurs: 2,
   visibilite: 'raccord',
 }
+
+type SlotType = 'vide' | 'humain'
 
 // Références historiques au cadavre exquis dessiné
 const REFS = [
@@ -25,6 +27,27 @@ export default function ConfigurationDessin() {
   const { jouer } = useSound()
   const [config, setConfig] = useState<ConfigDessin>(CONFIG_PAR_DEFAUT)
 
+  const [slots, setSlots] = useState<SlotType[]>(() => {
+    const result: SlotType[] = Array(6).fill('vide') as SlotType[]
+    for (let i = 0; i < CONFIG_PAR_DEFAUT.joueurs && i < 6; i++) result[i] = 'humain'
+    return result
+  })
+
+  const joueurs = Math.max(1, slots.filter(s => s === 'humain').length)
+
+  useEffect(() => {
+    setConfig(prev => ({ ...prev, joueurs }))
+  }, [joueurs])
+
+  function cyclerSlot(i: number) {
+    setSlots(prev => {
+      const next = [...prev] as SlotType[]
+      if (next[i] === 'humain' && prev.filter(s => s === 'humain').length <= 1) return prev
+      next[i] = next[i] === 'humain' ? 'vide' : 'humain'
+      return next
+    })
+  }
+
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
@@ -34,7 +57,6 @@ export default function ConfigurationDessin() {
 
   const ref = REFS[(seance?.seed ?? 0) % REFS.length]
   const totalBandes = config.nbBandes
-  const joueurs = config.joueurs
   const cycleNote = joueurs < totalBandes
     ? `les ${joueurs} joueurs se partagent ${totalBandes} bandes — certains dessinent deux fois`
     : joueurs === totalBandes
@@ -121,34 +143,37 @@ export default function ConfigurationDessin() {
           </div>
         </motion.div>
 
-        {/* ── JOUEURS ── */}
+        {/* ── AUTOUR DE LA TABLE ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.28 }} style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-            — JOUEURS —
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — AUTOUR DE LA TABLE —
           </div>
-          <div className="flex gap-2 mb-2">
-            {[1, 2, 3, 4, 5].map(n => {
-              const active = config.joueurs === n
-              return (
-                <button
-                  key={n}
-                  onClick={() => setConfig(c => ({ ...c, joueurs: n }))}
-                  style={{
-                    flex: 1, padding: '10px 4px', minHeight: 44,
-                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
-                    background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
-                    color: active ? accent : `${encre}60`,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {n}
-                </button>
-              )
-            })}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            {slots.map((slot, i) => (
+              <button
+                key={i}
+                onClick={() => cyclerSlot(i)}
+                aria-label={slot === 'vide' ? 'Ajouter un dessinateur' : 'Retirer ce dessinateur'}
+                style={{
+                  width: 44, height: 44, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: `0.5px solid ${slot === 'vide' ? `${encre}20` : encre}`,
+                  background: slot === 'vide' ? 'transparent' : `${encre}10`,
+                  cursor: 'pointer',
+                  transition: 'all 0.18s',
+                  fontSize: 20,
+                  borderRadius: 0,
+                }}
+              >
+                {slot === 'vide' ? (
+                  <span style={{ color: `${encre}20`, fontSize: 14 }}>·</span>
+                ) : (
+                  <span style={{ color: encre }}>✏</span>
+                )}
+              </button>
+            ))}
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {cycleNote}
           </div>
         </motion.div>
@@ -226,8 +251,9 @@ export default function ConfigurationDessin() {
             className="w-full flex flex-col items-center justify-center"
             style={{
               background: accent, color: btnText,
-              ...mono, fontSize: 17, fontWeight: 700, textTransform: 'uppercase',
+              ...mono, fontSize: 17, textTransform: 'uppercase',
               padding: '1.15em 1em', border: 'none', cursor: 'pointer', gap: 2,
+              borderRadius: 0,
             }}
           >
             <span>Commencer le dessin</span>
