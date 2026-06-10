@@ -874,25 +874,30 @@ export async function genererVideoStory(opts: {
       tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
       filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
     }
-    // Illustration IA — zone élargie, rendue en fondu animé (pas sur le fond fixe)
+    // Pré-chargement de l'illustration IA (sans calcul de zone encore)
     if (opts.imageDataUrl) {
-      try {
-        poemeIllustImg = await chargerImage(opts.imageDataUrl)
-        const imgZoneTop = 880, imgZoneBottom = 1860
-        const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop - 56
-        const ratio = Math.min(maxW / poemeIllustImg.width, maxH / poemeIllustImg.height)
-        const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
-        const dX = (W - dW) / 2, dY = imgZoneTop + 28 + (maxH - dH) / 2
-        filetOrne(bx, W / 2, imgZoneTop - 44, accent, bg)
-        illustBox = { x: dX, y: dY, w: dW, h: dH }
-      } catch { poemeIllustImg = null }
+      try { poemeIllustImg = await chargerImage(opts.imageDataUrl) }
+      catch { poemeIllustImg = null }
     }
+    // Layout texte en premier — pour connaître la position réelle du bas du poème
     poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, !!poemeIllustImg, false)
+    // Zone illustration dynamique : l'image commence juste sous la dernière ligne du texte
+    if (poemeIllustImg) {
+      const lastLine = poemeLayout.lignes.filter(l => l.texte).at(-1)
+      const textBottom = lastLine ? lastLine.y + poemeLayout.bodyLineH * 0.4 : 820
+      const imgZoneTop = Math.max(880, textBottom + 80)
+      const imgZoneBottom = 1860
+      const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop - 56
+      const ratio = Math.min(maxW / poemeIllustImg.width, maxH / poemeIllustImg.height)
+      const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
+      const dX = (W - dW) / 2, dY = imgZoneTop + 28 + (maxH - dH) / 2
+      filetOrne(bx, W / 2, imgZoneTop - 44, accent, bg)
+      illustBox = { x: dX, y: dY, w: dW, h: dH }
+    }
     // Lignes de pli entre fragments — sur le fond fixe, révélées dès le début
     for (const sy of poemeLayout.separatorYs) {
       drawFragmentSeparator(bx, W, sy, accent)
     }
-    invitationLigne(bx, W, accent, poemeIllustImg ? 1888 : 1660, invitation)
   } else if (opts.imageDataUrl) {
     try {
       img = await chargerImage(opts.imageDataUrl)

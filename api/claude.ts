@@ -30,7 +30,7 @@ const MAX_TOKENS: Record<TypeCase, number> = {
 // Contraintes de longueur explicites dans le prompt
 const CONTRAINTES: Record<TypeCase, string> = {
   'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "cœur", "nuage", "cendre", "os")',
-  'verbe': '1 mot (verbe conjugué — ex : "dévore", "hante", "veille", "frôle")',
+  'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier présent de l\'indicatif uniquement (ex : "dévore", "hante", "veille", "frôle", "vacille", "glisse", "rôde"). INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms, participes passés, adverbes.',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
   'adverbe': '1 à 2 mots',
   'groupe-nominal': '2 MOTS EXACTEMENT : article + nom — ex : "le silence", "une ombre", "la pluie", "un couteau". JAMAIS d\'adjectif après le nom.',
