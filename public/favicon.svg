@@ -4,127 +4,113 @@
   <rect width="64" height="64" rx="12" fill="#0f0805"/>
 
   <!--
-    PLUME DE CALAME — 45°, fibre très détaillée.
-    Dessinée verticalement (rachis = axe y) puis rotate(45) :
-    pointe en haut-droite, calame en bas-gauche.
-    Densité : 11 barbes principales par côté + barbules secondaires
-    + fibres libres effilées côté gauche (bord de fuite naturel).
+    PLUME D'ENCRIER — dessinée en coordonnées absolues, sans transform.
+    Rachis : de (49,9) [pointe de la plume, haut-droite] à (15,57) [pointe du calame, bas-gauche].
+    Vexille externe (côté bas-droite) : LARGE — barbes balayées vers le bas
+    Vexille interne (côté haut-gauche) : COURT — barbes serrées, balayées vers le haut
+    Calame : tuyau nu effilé, ivoire
+    Asymétrie typique de la plume d'oie pour écrire.
   -->
 
-  <g transform="rotate(45,32,32)">
+  <!-- Vexille externe — large, lumineux -->
+  <path d="M 49 9 C 53 14,54 23,49 34 C 45 42,38 47,29 50 L 25 43 Z"
+        fill="#ede3ce"/>
 
-    <!-- Vexille droit — bord d'attaque, convexe, lumineux -->
-    <path d="M 32 5
-             C 35.5 9,44 16,45 26
-             C 45 35,41 42,36 47
-             L 32 49 Z"
-          fill="#ece3d0"/>
+  <!-- Vexille interne — court, ombré -->
+  <path d="M 49 9 C 46 7,39 11,33 19 C 27 27,23 35,22 41 L 25 43 Z"
+        fill="#dccfb5"/>
 
-    <!-- Vexille gauche — bord de fuite, concave, ombré -->
-    <path d="M 32 5
-             C 28.5 9,20 16,19 26
-             C 19 35,23 42,28 47
-             L 32 49 Z"
-          fill="#ddd0b8"/>
+  <!-- Reflet axial vexille externe -->
+  <path d="M 49 9 C 51 15,51 24,47 33 C 44 39,39 44,32 47 L 29 49 L 25 43 Z"
+        fill="#f8eedd" opacity="0.25"/>
 
-    <!-- Reflet axial droit (veinage lumineux) -->
-    <path d="M 32 5 C 34 9,38 16,39 26 C 39 34,37 41,35 46 L 32 49 Z"
-          fill="#f5eedd" opacity="0.28"/>
+  <!-- Calame (tuyau nu, ivoire doré) -->
+  <path d="M 25 43 Q 20 50,15 57 Q 19 50,23 43 Z"
+        fill="#ccba70"/>
+  <path d="M 24 44 Q 19 51,15 57 L 16 57 Q 21 50,25 43 Z"
+        fill="#e0ce82" opacity="0.4"/>
 
-    <!-- Calame — tuyau nu, ivoire doré -->
-    <path d="M 28.5 47 Q 30 54,32 62 Q 34 54,35.5 47 Q 33.5 48,32 48 Q 30.5 48,28.5 47 Z"
-          fill="#d0c27a"/>
-    <line x1="32" y1="47" x2="32" y2="62" stroke="#e8d888" stroke-width="0.65" opacity="0.38"/>
-
-    <!-- ══ BARBES DROIT — 11 barbes courtes, bord serré ══ -->
-    <g fill="none" stroke="#bca870" stroke-width="0.55" stroke-linecap="round" opacity="0.88">
-      <path d="M 32 8  Q 34.5 9,  36.5 11"/>
-      <path d="M 32 11 Q 35.5 12, 38.5 14"/>
-      <path d="M 32 14 Q 36.5 15, 40 18"/>
-      <path d="M 32 17 Q 37.5 18, 41.5 21"/>
-      <path d="M 32 20 Q 38.5 21, 43 24"/>
-      <path d="M 32 23 Q 39 24,  44 26"/>
-      <path d="M 32 26 Q 39 27,  44 29"/>
-      <path d="M 32 29 Q 38.5 30, 43 33"/>
-      <path d="M 32 32 Q 37.5 33, 42 36"/>
-      <path d="M 32 36 Q 37 37,  40 40"/>
-      <path d="M 32 40 Q 36 41,  38.5 44"/>
-    </g>
-
-    <!-- ══ BARBES GAUCHE — 11 barbes, bord de fuite, légèrement + longues ══ -->
-    <g fill="none" stroke="#bca870" stroke-width="0.55" stroke-linecap="round" opacity="0.68">
-      <path d="M 32 8  Q 29.5 9,  27.5 11"/>
-      <path d="M 32 11 Q 28.5 12, 25.5 14"/>
-      <path d="M 32 14 Q 27.5 15, 24 18"/>
-      <path d="M 32 17 Q 26.5 18, 22.5 21"/>
-      <path d="M 32 20 Q 25.5 21, 21 24"/>
-      <path d="M 32 23 Q 25 24,  20 26"/>
-      <path d="M 32 26 Q 25 27,  20 29"/>
-      <path d="M 32 29 Q 25.5 30, 21 33"/>
-      <path d="M 32 32 Q 26.5 33, 22 36"/>
-      <path d="M 32 36 Q 27 37,  24 40"/>
-      <path d="M 32 40 Q 28 41,  25.5 44"/>
-    </g>
-
-    <!-- ══ BARBULES SECONDAIRES droit — entre chaque paire de barbes ══ -->
-    <g fill="none" stroke="#c8b47e" stroke-width="0.35" stroke-linecap="round" opacity="0.50">
-      <path d="M 32 9.5  Q 35 10.5,37 12.5"/>
-      <path d="M 32 12.5 Q 36 13.5,39.5 16"/>
-      <path d="M 32 15.5 Q 37 16.5,41 19.5"/>
-      <path d="M 32 18.5 Q 38 19.5,42 22.5"/>
-      <path d="M 32 21.5 Q 38.5 22.5,43.5 25"/>
-      <path d="M 32 24.5 Q 38.5 25.5,43.5 27.5"/>
-      <path d="M 32 27.5 Q 38 28.5,42.5 31"/>
-      <path d="M 32 30.5 Q 37.5 31.5,41.5 34.5"/>
-      <path d="M 32 34   Q 37 35,  39.5 38"/>
-      <path d="M 32 38   Q 36.5 39,38.5 42"/>
-    </g>
-
-    <!-- ══ BARBULES SECONDAIRES gauche ══ -->
-    <g fill="none" stroke="#c8b47e" stroke-width="0.35" stroke-linecap="round" opacity="0.38">
-      <path d="M 32 9.5  Q 29 10.5,27 12.5"/>
-      <path d="M 32 12.5 Q 28 13.5,24.5 16"/>
-      <path d="M 32 15.5 Q 27 16.5,23 19.5"/>
-      <path d="M 32 18.5 Q 26 19.5,22 22.5"/>
-      <path d="M 32 21.5 Q 25.5 22.5,20.5 25"/>
-      <path d="M 32 24.5 Q 25.5 25.5,20.5 27.5"/>
-      <path d="M 32 27.5 Q 26 28.5,21.5 31"/>
-      <path d="M 32 30.5 Q 26.5 31.5,22.5 34.5"/>
-      <path d="M 32 34   Q 27 35,  24.5 38"/>
-      <path d="M 32 38   Q 27.5 39,25.5 42"/>
-    </g>
-
-    <!-- ══ FIBRES LIBRES — bord de fuite gauche, effilées + légèrement divergentes ══ -->
-    <g fill="none" stroke="#c8b888" stroke-width="0.4" stroke-linecap="round" opacity="0.45">
-      <!-- Quelques barbes plus longues qui "s'échappent" -->
-      <path d="M 23 22 Q 20.5 23,18 25"/>
-      <path d="M 22 26 Q 19.5 27.5,17.5 30"/>
-      <path d="M 22 30 Q 19.5 31.5,18 34"/>
-      <path d="M 22 34 Q 20 36,18.5 38"/>
-      <!-- Fibres fines effilées vers le calame -->
-      <path d="M 25.5 43 Q 24 44.5,23 46"/>
-      <path d="M 27 45  Q 25.5 46.5,24.5 48"/>
-    </g>
-
-    <!-- Rachis -->
-    <line x1="32" y1="5"  x2="32" y2="62" stroke="#5a3e18" stroke-width="1.1"/>
-    <!-- Reflet rachis -->
-    <line x1="32.4" y1="5" x2="32.4" y2="50" stroke="#c8a850" stroke-width="0.32" opacity="0.42"/>
-
-    <!-- Contour silhouette -->
-    <path d="M 32 5
-             C 35.5 9,44 16,45 26
-             C 45 35,41 42,36 47
-             Q 34 54,32 62
-             Q 30 54,28.5 47
-             C 23 42,19 35,19 26
-             C 19 16,28.5 9,32 5 Z"
-          fill="none" stroke="#7a6040" stroke-width="0.5" opacity="0.45"/>
-
-    <!-- Goutte d'encre -->
-    <ellipse cx="32" cy="61.2" rx="2.4" ry="1.0" fill="#c11c14" opacity="0.90"/>
-    <ellipse cx="31.1" cy="60.7" rx="0.7" ry="0.38" fill="#f2ede2" opacity="0.35"/>
-
+  <!-- ══ BARBES VEXILLE EXTERNE
+       Partent du rachis, balayent vers bas-droite (direction du calame)
+       Barbes courbées : plus longues au milieu ══ -->
+  <g fill="none" stroke="#b8a268" stroke-width="0.65" stroke-linecap="round" opacity="0.88">
+    <path d="M 46 13 Q 50 17,52 21"/>
+    <path d="M 43 17 Q 48 22,51 27"/>
+    <path d="M 40 21 Q 46 27,49 33"/>
+    <path d="M 37 25 Q 44 32,46 38"/>
+    <path d="M 34 29 Q 41 36,43 43"/>
+    <path d="M 31 33 Q 38 40,39 46"/>
+    <path d="M 28 37 Q 34 43,35 48"/>
+    <path d="M 26 41 Q 31 46,32 50"/>
   </g>
+
+  <!-- ══ BARBULES SECONDAIRES VEXILLE EXTERNE (lignes fines entre barbes) ══ -->
+  <g fill="none" stroke="#c8b478" stroke-width="0.32" stroke-linecap="round" opacity="0.50">
+    <path d="M 44 15 Q 48.5 19.5,51 24"/>
+    <path d="M 41 19 Q 47 25,50 30"/>
+    <path d="M 38 23 Q 45 29.5,47.5 35.5"/>
+    <path d="M 35 27 Q 42.5 34,44.5 40.5"/>
+    <path d="M 32 31 Q 39.5 38,41 44.5"/>
+    <path d="M 29 35 Q 36 42,37 47"/>
+    <path d="M 27 39 Q 33 44.5,33.5 49"/>
+  </g>
+
+  <!-- ══ BARBES VEXILLE INTERNE
+       Partent du rachis, balayent vers haut-gauche (direction opposée)
+       Plus courtes — bord d'attaque serré ══ -->
+  <g fill="none" stroke="#b09060" stroke-width="0.55" stroke-linecap="round" opacity="0.70">
+    <path d="M 46 13 Q 42 11,39 10"/>
+    <path d="M 43 17 Q 38 14,35 13"/>
+    <path d="M 40 21 Q 34 18,30 17"/>
+    <path d="M 37 25 Q 30 22,27 21"/>
+    <path d="M 34 29 Q 27 26,24 25"/>
+    <path d="M 31 33 Q 25 30,22 29"/>
+    <path d="M 28 37 Q 23 34,21 33"/>
+    <path d="M 26 41 Q 22 38,20 37"/>
+  </g>
+
+  <!-- ══ BARBULES SECONDAIRES VEXILLE INTERNE ══ -->
+  <g fill="none" stroke="#b09060" stroke-width="0.28" stroke-linecap="round" opacity="0.38">
+    <path d="M 44 15 Q 40 13,37 12"/>
+    <path d="M 41 19 Q 36 16,32 15"/>
+    <path d="M 38 23 Q 32 20,28 19"/>
+    <path d="M 35 27 Q 28 24,25 23"/>
+    <path d="M 32 31 Q 26 28,23 27"/>
+    <path d="M 29 35 Q 24 32,21 31"/>
+    <path d="M 27 39 Q 22 36,20 35"/>
+  </g>
+
+  <!-- Quelques fibres libres qui s'échappent — bord de fuite externe -->
+  <g fill="none" stroke="#c8b478" stroke-width="0.4" stroke-linecap="round" opacity="0.38">
+    <path d="M 50 24 Q 53 28,54 32"/>
+    <path d="M 47 30 Q 51 35,52 40"/>
+    <path d="M 44 36 Q 48 41,48 45"/>
+    <path d="M 40 42 Q 43 47,43 51"/>
+  </g>
+
+  <!-- Rachis principal -->
+  <line x1="49" y1="9" x2="25" y2="43" stroke="#5a3e18" stroke-width="1.05"/>
+  <!-- Extension dans le calame -->
+  <line x1="25" y1="43" x2="15" y2="57" stroke="#6a4e28" stroke-width="0.7" opacity="0.75"/>
+  <!-- Reflet rachis -->
+  <line x1="49.4" y1="9.2" x2="25.4" y2="43.2" stroke="#c8a850" stroke-width="0.3" opacity="0.42"/>
+
+  <!-- Contour de la plume (silhouette) -->
+  <path d="M 49 9
+           C 53 14,54 23,49 34
+           C 45 42,38 47,29 50
+           Q 22 53,15 57
+           Q 19 50,23 43
+           C 22 38,22 30,27 22
+           C 30 15,39 8,49 9 Z"
+        fill="none" stroke="#7a6040" stroke-width="0.52" opacity="0.48"/>
+
+  <!-- Goutte d'encre à la pointe du calame -->
+  <ellipse cx="15.5" cy="56.8" rx="2.2" ry="0.88"
+           fill="#c11c14" opacity="0.90"
+           transform="rotate(-53,15.5,56.8)"/>
+  <ellipse cx="14.8" cy="56.1" rx="0.65" ry="0.32"
+           fill="#f2ede2" opacity="0.36"
+           transform="rotate(-53,14.8,56.1)"/>
 
 </svg>
