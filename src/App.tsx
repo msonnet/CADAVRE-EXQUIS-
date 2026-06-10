@@ -28,6 +28,8 @@ const Configuration = React.lazy(() => import('./pages/Configuration'))
 const ConfigurationDessin = React.lazy(() => import('./pages/ConfigurationDessin'))
 const Jeu = React.lazy(() => import('./pages/Jeu'))
 const JeuDessin = React.lazy(() => import('./pages/JeuDessin'))
+const Atelier = React.lazy(() => import('./pages/Atelier'))
+const JeuAtelier = React.lazy(() => import('./pages/JeuAtelier'))
 const FinDePartie = React.lazy(() => import('./pages/FinDePartie'))
 const FinDessin = React.lazy(() => import('./pages/FinDessin'))
 const Bibliotheque = React.lazy(() => import('./pages/Bibliotheque'))
@@ -78,6 +80,8 @@ export default function App() {
               <Route path="/config-dessin" element={<ConfigurationDessin />} />
               <Route path="/jeu" element={<Jeu />} />
               <Route path="/jeu-dessin" element={<JeuDessin />} />
+              <Route path="/atelier" element={<Atelier />} />
+              <Route path="/jeu-atelier" element={<JeuAtelier />} />
               <Route path="/fin" element={<FinDePartie />} />
               <Route path="/fin-dessin" element={<FinDessin />} />
               <Route path="/bibliotheque" element={<Bibliotheque />} />

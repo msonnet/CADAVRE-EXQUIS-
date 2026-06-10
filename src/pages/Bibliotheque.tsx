@@ -11,6 +11,7 @@ const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
   'phrase-etoffee':   'Phrase étoffée',
   'vers-libre':       'Vers libre',
+  'atelier':          "L'Atelier",
 }
 
 function formatDate(ts: number): string {

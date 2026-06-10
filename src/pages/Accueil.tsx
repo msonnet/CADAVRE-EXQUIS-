@@ -270,6 +270,18 @@ export default function Accueil() {
               {label}
             </button>
           ))}
+          {/* Entrée discrète — l'atelier du recueil */}
+          <button
+            onClick={() => nav('/atelier')}
+            style={{
+              ...ui, gridColumn: '1 / -1', fontSize: 11, letterSpacing: '0.3em',
+              textTransform: 'uppercase', color: encre, opacity: 0.35,
+              background: 'none', border: 'none', cursor: 'pointer',
+              textAlign: 'center', padding: '7px 0 2px',
+            }}
+          >
+            ✧ l'atelier ✧
+          </button>
         </div>
 
       </motion.div>

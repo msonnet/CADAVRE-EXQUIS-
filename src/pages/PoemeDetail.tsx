@@ -17,6 +17,7 @@ const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
   'phrase-etoffee': 'Structure étoffée',
   'vers-libre':     'Vers libre',
+  'atelier':        "L'Atelier",
 }
 
 const MEDIUMS: Record<string, string> = {

@@ -37,6 +37,7 @@ const STRUCT_LABELS: Record<string, string> = {
   'phrase-simple': 'Structure courte',
   'phrase-etoffee': 'Structure étoffée',
   'vers-libre': 'Vers libre',
+  'atelier': "L'Atelier",
 }
 
 export default function FinDePartie() {

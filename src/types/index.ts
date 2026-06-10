@@ -4,6 +4,7 @@ export type StructureId =
   | 'phrase-simple'
   | 'phrase-etoffee'
   | 'vers-libre'
+  | 'atelier'
 
 export type ModeJeu = 'standard' | 'hypnotique'
 

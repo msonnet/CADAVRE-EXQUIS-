@@ -155,7 +155,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type, voiceId, contexte, eviter } = req.body ?? {}
+  const { consigne, type, voiceId, contexte, eviter, mots } = req.body ?? {}
 
   if (typeof consigne !== 'string' || typeof type !== 'string' || !consigne || !type) {
     res.status(400).json({ error: 'Champs manquants : consigne et type requis.' })
@@ -180,8 +180,14 @@ export default async function handler(req: any, res: any): Promise<void> {
   const voix = voiceId
     ? (VOIX.find(v => v.id === voiceId) ?? choisirVoixAleatoire())
     : choisirVoixAleatoire()
-  const maxTokens = MAX_TOKENS[type as TypeCase] ?? 14
-  const contrainte = CONTRAINTES[type as TypeCase] ?? '2 à 4 mots'
+  // Mode atelier : nombre de mots imposé dynamiquement (1 à 8) — prime sur la contrainte du type
+  const motsCible = Number.isInteger(mots) && mots >= 1 && mots <= 8 ? (mots as number) : null
+  const maxTokens = motsCible
+    ? Math.min(motsCible * 4 + 4, 40)
+    : (MAX_TOKENS[type as TypeCase] ?? 14)
+  const contrainte = motsCible
+    ? `${motsCible} MOT${motsCible > 1 ? 'S' : ''} EXACTEMENT — un fragment de vers, pas une phrase complète, sans ponctuation`
+    : (CONTRAINTES[type as TypeCase] ?? '2 à 4 mots')
   // Strip the « — ex : … » part so examples never influence the AI (they're only for human players)
   const consigneIA = consigne.replace(/\s*[—–-]\s*ex\s*:.*$/i, '').trim()
 
@@ -248,7 +254,12 @@ export default async function handler(req: any, res: any): Promise<void> {
       /\bétapes?\b/i.test(propre) ||
       propre.endsWith(':')
 
-    const texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase)
+    let texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase)
+    // Si un nombre de mots est imposé, tronquer doucement les débordements
+    if (texte && motsCible) {
+      const m = texte.split(/\s+/)
+      if (m.length > motsCible + 1) texte = m.slice(0, motsCible).join(' ')
+    }
     res.status(200).json({
       texte: texte || pickFallback(type as TypeCase, motsEviter),
       source: texte ? 'ia' : 'fallback',

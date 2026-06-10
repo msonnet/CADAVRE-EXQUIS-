@@ -6,6 +6,7 @@ export interface RequeteIA {
   voiceId?: string
   contexte?: string
   eviter?: string[]
+  mots?: number   // atelier : nombre de mots imposé au fragment (1–8)
 }
 
 export interface ReponseIA {

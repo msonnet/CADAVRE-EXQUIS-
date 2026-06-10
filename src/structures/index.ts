@@ -61,7 +61,17 @@ export const STRUCTURES: Structure[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// L'Atelier — mode spécial hors liste (entrée discrète, non proposé dans /config).
+// Le nombre de vers est tiré au sort à chaque séance (5 à 27) : cases vides ici.
+export const STRUCTURE_ATELIER: Structure = {
+  id: 'atelier',
+  nom: "L'Atelier",
+  description: '5 à 27 vers — toutes les voix convoquées',
+  cases: [],
+}
+
 export function getStructure(id: string): Structure {
+  if (id === 'atelier') return STRUCTURE_ATELIER
   const s = STRUCTURES.find(s => s.id === id)
   // Fallback gracieux pour les anciens poèmes avec des structures supprimées
   return s ?? STRUCTURES.find(s => s.id === 'vers-libre')!
@@ -74,7 +84,7 @@ export function nombreCasesEffectif(structure: Structure): number {
 }
 
 export function reconstruirePoeme(cases: Case[], structure: Structure): string {
-  if (structure.id === 'vers-libre') {
+  if (structure.id === 'vers-libre' || structure.id === 'atelier') {
     return cases.map(c => c.texte.trim()).join('\n')
   }
   const sep = structure.separateurs ?? {}

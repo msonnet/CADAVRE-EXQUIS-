@@ -23,8 +23,25 @@ export default async function handler(req: any, res: any): Promise<void> {
   // Build a structured prompt when individual blocs are available (always preferred).
   // Without blocs, the model can't know which words are invariable → corrections are unreliable.
   let prompt: string
+  // Atelier : poème multiligne — chaque vers est corrigé indépendamment, la réponse garde une ligne par vers
+  const multiligne = structureId === 'atelier' && Array.isArray(blocs) && blocs.length > 0
 
-  if (Array.isArray(blocs) && blocs.length > 0) {
+  if (multiligne) {
+    const versLines = (blocs as { texte: string }[]).map((b, i) => `${i + 1}. «${b.texte.trim()}»`).join('\n')
+    prompt = `Tu es un correcteur de grammaire française pour un poème surréaliste en vers libres. Chaque vers a été cousu à partir de fragments écrits à l'aveugle par plusieurs mains — les accords internes peuvent être brisés.
+
+Vers :
+${versLines}
+
+RÈGLES STRICTES :
+1. Corrige uniquement les accords en genre et en nombre À L'INTÉRIEUR de chaque vers (articles et adjectifs s'accordent avec leur nom ; sujet et verbe en nombre).
+2. Ne crée AUCUN accord entre vers différents — chaque vers est un monde clos.
+3. Ne modifie aucun mot lexical (noms, verbes, adverbes restent identiques).
+4. Conserve l'ordre des mots de chaque vers.
+
+Réponds avec EXACTEMENT ${(blocs as unknown[]).length} lignes — les vers corrigés dans l'ordre, un par ligne, sans numérotation, sans guillemets, sans commentaire.`
+
+  } else if (Array.isArray(blocs) && blocs.length > 0) {
     if (structureId === 'phrase-etoffee' && blocs.length === 5) {
       // 5 blocs — canonique de Breton « Le cadavre exquis boira le vin nouveau ».
       // article+nom · adjectif · verbe · article+nom · adjectif
@@ -109,7 +126,7 @@ Phrase : ${texte}`
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 300,
+        max_tokens: multiligne ? 1000 : 300,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -117,8 +134,20 @@ Phrase : ${texte}`
     if (!response.ok) throw new Error(`Anthropic ${response.status}`)
 
     const data = await response.json()
-    const corrige = (data.content?.[0]?.text ?? '')
-      .trim()
+    const brut = (data.content?.[0]?.text ?? '').trim()
+
+    if (multiligne) {
+      // Une ligne corrigée par vers — si le compte ne correspond pas, on garde l'original
+      const lignes = brut
+        .split('\n')
+        .map((l: string) => l.replace(/^\s*\d+[.)]\s*/, '').replace(/^[«"''"]|[«»"''"]$/g, '').trim())
+        .filter((l: string) => l.length > 0)
+      const attendu = (blocs as unknown[]).length
+      res.status(200).json({ texte: lignes.length === attendu ? lignes.join('\n') : texte })
+      return
+    }
+
+    const corrige = brut
       .split('\n')[0]  // keep only the first line in case the model adds a comment
       .replace(/^[«"''"]|[«»"''"]$/g, '')
       .trim()
