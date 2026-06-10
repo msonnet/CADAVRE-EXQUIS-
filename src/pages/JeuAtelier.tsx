@@ -25,15 +25,66 @@ interface VersAtelier {
 
 interface VoixEnCours {
   num: number
-  mots: number
+  role: string
   fait: boolean
 }
 
-// Réserve locale si l'API est injoignable — le poème ne s'arrête jamais
-const RESERVE = [
-  "l'ombre", 'un souffle froid', 'la cendre', 'sans bruit', 'le sel de la nuit',
-  'une porte close', 'la pierre humide', 'un os de verre', 'le vent du nord', "l'eau noire",
-]
+// ── Gabarits grammaticaux — le principe du cadavre écrit ──────────────────────
+// Chaque voix remplit une case syntaxique définie : le vers assemblé reste
+// grammaticalement valide même quand l'image est absurde. Les longueurs
+// arbitraires produisaient des tas de noms juxtaposés sans syntaxe.
+
+interface RoleFragment {
+  type: string       // type de case envoyé à l'API (contraintes serveur)
+  consigne: string
+  role: string       // étiquette affichée pendant que la voix écrit
+  mots?: number      // uniquement pour le vers à une voix (longueur aléatoire)
+}
+
+const GN_SUJET: RoleFragment = {
+  type: 'groupe-nominal', consigne: 'un groupe nominal sujet', role: 'SUJET',
+}
+const GN_COMPLEMENT: RoleFragment = {
+  type: 'groupe-nominal', consigne: 'un groupe nominal complément', role: 'COMPLÉMENT',
+}
+const VERBE: RoleFragment = {
+  type: 'verbe', consigne: 'un verbe conjugué', role: 'VERBE',
+}
+const GROUPE_VERBAL: RoleFragment = {
+  type: 'groupe-verbal', consigne: "un verbe conjugué suivi d'un complément court", role: 'VERBE + COMPL.',
+}
+const ADJECTIF: RoleFragment = {
+  type: 'adjectif', consigne: 'un adjectif qualificatif seul', role: 'ADJECTIF',
+}
+
+function tirerGabarit(nVoix: number): RoleFragment[] {
+  if (nVoix === 1) {
+    // Une seule plume écrit le vers entier — longueur tirée au sort (2 à 6 mots)
+    const mots = 2 + Math.floor(Math.random() * 5)
+    return [{ type: 'libre', consigne: 'un vers — une image physique et inattendue', role: 'VERS ENTIER', mots }]
+  }
+  if (nVoix === 2) {
+    const variantes: RoleFragment[][] = [
+      [GN_SUJET, GROUPE_VERBAL],   // « le silence » + « traverse la nuit »
+      [GN_SUJET, VERBE],           // « la lumière » + « tremble »
+    ]
+    return variantes[Math.floor(Math.random() * variantes.length)]
+  }
+  const variantes: RoleFragment[][] = [
+    [GN_SUJET, VERBE, GN_COMPLEMENT],     // la phrase courte de Breton
+    [GN_SUJET, ADJECTIF, GROUPE_VERBAL],  // « la lumière » + « froide » + « traverse la nuit »
+  ]
+  return variantes[Math.floor(Math.random() * variantes.length)]
+}
+
+// Réserve locale par rôle si l'API est injoignable — le poème ne s'arrête jamais
+const RESERVE: Record<string, string[]> = {
+  'groupe-nominal': ['le silence', "l'ombre", 'une cendre', 'la nuit', 'un souffle', 'la pierre', 'le givre', 'une porte'],
+  'verbe': ['tremble', 'dévore', 'veille', 'chavire', 'demeure', 'glisse', 'rôde', 'vacille'],
+  'groupe-verbal': ['traverse la nuit', 'brûle en silence', 'tombe sans bruit', 'pèse sur le monde', "glisse dans l'ombre"],
+  'adjectif': ['pâle', 'sourd', 'creux', 'nocturne', 'amer', 'froid', 'opaque', 'muet'],
+  'libre': ["l'ombre se souvient", 'la nuit garde tout', 'le sel des heures', 'une porte respire', 'le vent du nord demeure'],
+}
 
 const CLE_BROUILLON = 'atelier-en-cours'
 
@@ -108,7 +159,8 @@ export default function JeuAtelier() {
     setVers(prev => [...prev, v])
   }
 
-  // ── Tour des voix : 1 à 3 voix se partagent le vers, fragments de longueur aléatoire ──
+  // ── Tour des voix : 1 à 3 voix se partagent le vers, chacune dans une case
+  // grammaticale tirée au sort — le principe du cadavre écrit ──
   useEffect(() => {
     if (!plan || termine || tourJoueur) return
     if (traites.current.has(idx)) return
@@ -121,15 +173,13 @@ export default function JeuAtelier() {
       const p = plan!
       const nVoix = Math.min(1 + Math.floor(Math.random() * 3), p.voixPool.length)
       const indices = p.voixPool.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, nVoix)
-      // Nombre de mots par fragment : 2–6 pour une voix seule, 1–5 par voix en partage
-      const tailles = indices.map(() =>
-        nVoix === 1 ? 2 + Math.floor(Math.random() * 5) : 1 + Math.floor(Math.random() * 5)
-      )
-      setVoixEnCours(indices.map((vi, k) => ({ num: vi + 1, mots: tailles[k], fait: false })))
+      const gabarit = tirerGabarit(nVoix)
+      setVoixEnCours(indices.map((vi, k) => ({ num: vi + 1, role: gabarit[k].role, fait: false })))
 
       const fragments: string[] = []
       for (let k = 0; k < indices.length; k++) {
         if (annule) return
+        const caseRole = gabarit[k]
         const precedent = versRef.current[idx - 1]?.texte
         const enCours = fragments.join(' ')
         const contexte = p.echo
@@ -144,18 +194,21 @@ export default function JeuAtelier() {
         try {
           const [reponse] = await Promise.all([
             demanderFragmentIA({
-              consigne: "un fragment de vers — une image physique, concrète, inattendue",
-              type: 'libre',
+              consigne: caseRole.consigne,
+              type: caseRole.type,
               voiceId: p.voixPool[indices[k]],
               contexte,
               eviter,
-              mots: tailles[k],
+              ...(caseRole.mots ? { mots: caseRole.mots } : {}),
             }),
             attendre(650 + Math.random() * 450),   // respiration théâtrale minimale par voix
           ])
           texte = reponse.texte.trim()
         } catch { /* réserve locale */ }
-        if (!texte) texte = RESERVE[Math.floor(Math.random() * RESERVE.length)]
+        if (!texte) {
+          const pool = RESERVE[caseRole.type] ?? RESERVE['libre']
+          texte = pool[Math.floor(Math.random() * pool.length)]
+        }
 
         // Les fragments suivants se cousent en minuscule — un seul fil
         fragments.push(k === 0 ? texte : texte.charAt(0).toLowerCase() + texte.slice(1))
@@ -375,7 +428,7 @@ export default function JeuAtelier() {
                   transition={{ duration: 0.3 }}
                   style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginBottom: 7 }}
                 >
-                  VOIX {toRomain(v.num)} · {v.mots} {v.mots > 1 ? 'MOTS' : 'MOT'}{' '}
+                  VOIX {toRomain(v.num)} · {v.role}{' '}
                   {v.fait
                     ? <span style={{ color: accent }}>✦</span>
                     : <motion.span
