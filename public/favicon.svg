@@ -4,104 +4,35 @@
   <rect width="64" height="64" rx="12" fill="#0f0805"/>
 
   <!--
-    PLUME D'OIE POUR ÉCRIRE — asymétrie forte, barbes balayées vers le calame
-    Rachis : (50,7) [pointe plume] → (22,50) [jonction calame] → (13,60) [pointe calame]
-    Vexille externe (droite/bas) : très large, s'élance jusqu'à x≈63
-    Vexille interne (gauche/haut) : étroit, x≈37 max — ratio ~3:1
-    Barbes externes : courbure caractéristique vers le bas (balayage vers calame)
-    → silhouette en virgule, PAS en feuille
+    FIGURE TRISECTÉE — le cadavre exquis
+    3 bandes horizontales décalées comme les feuillets pliés du jeu :
+      · Tête     : +5 px à droite  (cx 37)
+      · Tronc    :  0  centré      (cx 32)
+      · Jambes   : −5 px à gauche  (cx 27)
+    Les deux coupures rouges = lignes de pliage du papier
   -->
 
-  <!-- Vexille externe — large, crème lumineux -->
-  <path d="M 50 7
-           C 58 11,63 19,62 29
-           C 60 39,52 47,40 51
-           C 33 54,26 54,22 50
-           Z"
-        fill="#ede3ce"/>
+  <!-- ── TÊTE (offset +5 → cx=37) ── -->
+  <ellipse cx="37" cy="11" rx="8" ry="9" fill="#ede3ce"/>
+  <!-- Cou -->
+  <rect x="34" y="18" width="6" height="5" fill="#ede3ce"/>
 
-  <!-- Vexille interne — étroit, ombré -->
-  <path d="M 50 7
-           C 47 5,42 10,37 18
-           C 32 27,26 38,22 50
-           Z"
-        fill="#d0c4a4"/>
+  <!-- ── COUPURE 1 ── -->
+  <line x1="4" y1="23" x2="60" y2="23"
+        stroke="#c11c14" stroke-width="1.0"
+        stroke-dasharray="3,1.5" opacity="0.88"/>
 
-  <!-- Reflet axial vexille externe -->
-  <path d="M 50 7 C 57 12,61 22,59 32 C 57 40,49 47,37 51 L 27 53 L 22 50 Z"
-        fill="#f7edd8" opacity="0.27"/>
+  <!-- ── TRONC (offset 0 → centré cx=32) — épaules larges, taille étroite ── -->
+  <path d="M 14 25 L 50 25 L 45 43 L 19 43 Z" fill="#ede3ce"/>
 
-  <!-- Calame (tuyau nu, or ivoire) -->
-  <path d="M 22 50 C 18 54,15 57,13 60 C 15 56,19 53,22 50 Z"
-        fill="#c4a840"/>
-  <path d="M 21 51 C 17 55,14 58,13 60 L 14 60 C 16 57,20 54,23 50 Z"
-        fill="#ddc060" opacity="0.5"/>
+  <!-- ── COUPURE 2 ── -->
+  <line x1="4" y1="44" x2="60" y2="44"
+        stroke="#c11c14" stroke-width="1.0"
+        stroke-dasharray="3,1.5" opacity="0.88"/>
 
-  <!-- ══ BARBES VEXILLE EXTERNE
-       Signature visuelle de la plume : elles partent du rachis,
-       s'élancent vers la droite, puis COURBENT vers le bas (vers le calame).
-       Chaque barbe finit plus bas que sa racine → "balayage" ══ -->
-  <g fill="none" stroke="#b09060" stroke-width="0.7" stroke-linecap="round" opacity="0.87">
-    <path d="M 46 12 C 54 16,61 22,60 30"/>
-    <path d="M 42 18 C 50 24,56 31,54 39"/>
-    <path d="M 38 25 C 46 31,51 38,49 46"/>
-    <path d="M 34 31 C 41 37,46 44,43 51"/>
-    <path d="M 30 38 C 36 43,40 49,37 54"/>
-    <path d="M 26 44 C 31 48,34 53,31 57"/>
-  </g>
-
-  <!-- ══ BARBULES SECONDAIRES vexille externe ══ -->
-  <g fill="none" stroke="#c8b070" stroke-width="0.3" stroke-linecap="round" opacity="0.45">
-    <path d="M 44 14 C 52 19,58 26,57 34"/>
-    <path d="M 40 21 C 48 27,53 35,51 43"/>
-    <path d="M 36 28 C 43 34,48 41,46 48"/>
-    <path d="M 32 35 C 38 41,43 47,40 52"/>
-    <path d="M 28 41 C 33 46,37 51,34 55"/>
-  </g>
-
-  <!-- ══ BARBES VEXILLE INTERNE — courtes, vers le haut-gauche ══ -->
-  <g fill="none" stroke="#a07850" stroke-width="0.55" stroke-linecap="round" opacity="0.65">
-    <path d="M 46 12 C 42 10,38 9,36 9"/>
-    <path d="M 42 18 C 37 15,33 14,30 15"/>
-    <path d="M 38 25 C 32 22,28 21,25 22"/>
-    <path d="M 34 31 C 28 28,24 28,22 29"/>
-    <path d="M 30 38 C 25 35,21 34,19 35"/>
-    <path d="M 26 44 C 22 41,18 41,17 43"/>
-  </g>
-
-  <!-- ══ BARBULES SECONDAIRES vexille interne ══ -->
-  <g fill="none" stroke="#a07850" stroke-width="0.27" stroke-linecap="round" opacity="0.32">
-    <path d="M 44 14 C 40 11,36 10,33 11"/>
-    <path d="M 40 21 C 35 18,31 17,28 18"/>
-    <path d="M 36 28 C 30 25,26 24,23 25"/>
-    <path d="M 32 35 C 26 32,22 31,20 32"/>
-    <path d="M 28 41 C 23 38,19 38,17 39"/>
-  </g>
-
-  <!-- Rachis principal -->
-  <line x1="50" y1="7" x2="22" y2="50" stroke="#4a3010" stroke-width="1.1"/>
-  <!-- Extension dans le calame -->
-  <line x1="22" y1="50" x2="13" y2="60" stroke="#5a4020" stroke-width="0.72" opacity="0.8"/>
-  <!-- Reflet rachis -->
-  <line x1="50.4" y1="7.2" x2="22.4" y2="50.2" stroke="#c8a840" stroke-width="0.28" opacity="0.48"/>
-
-  <!-- Contour de la plume (silhouette) -->
-  <path d="M 50 7
-           C 58 11,63 19,62 29
-           C 60 39,52 47,40 51
-           C 33 54,26 54,22 50
-           C 18 54,15 57,13 60
-           C 15 56,19 53,22 50
-           C 23 43,26 32,31 22
-           C 35 13,42 5,50 7 Z"
-        fill="none" stroke="#7a5830" stroke-width="0.52" opacity="0.5"/>
-
-  <!-- Goutte d'encre à la pointe du calame -->
-  <ellipse cx="13.5" cy="59.5" rx="2.3" ry="0.88"
-           fill="#c11c14" opacity="0.92"
-           transform="rotate(-53,13.5,59.5)"/>
-  <ellipse cx="12.8" cy="58.8" rx="0.65" ry="0.3"
-           fill="#f2ede0" opacity="0.42"
-           transform="rotate(-53,12.8,58.8)"/>
+  <!-- ── JAMBES (offset −5 → centrées cx=27) ── -->
+  <!-- Jambe gauche : x 19→26 (cx 22.5), jambe droite : x 28→35 (cx 31.5) → cx global 27 ✓ -->
+  <rect x="19" y="46" width="7" height="16" rx="3" fill="#ede3ce"/>
+  <rect x="28" y="46" width="7" height="16" rx="3" fill="#ede3ce"/>
 
 </svg>
