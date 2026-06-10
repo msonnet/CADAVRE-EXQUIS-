@@ -16,7 +16,6 @@ const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
 export default function Reglages() {
   const navigate = useNavigate()
   const seance = useReve()
-  const [sonActif, setSonActif] = useState(() => localStorage.getItem('ambiance-muted') !== 'true')
   const [validation, setValidation] = useState<NiveauValidation>(
     () => (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
   )
@@ -25,15 +24,8 @@ export default function Reglages() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
-
-  function toggleSon() {
-    const next = !sonActif
-    setSonActif(next)
-    localStorage.setItem('ambiance-muted', String(!next))
-  }
 
   function changerValidation(niveau: NiveauValidation) {
     setValidation(niveau)
@@ -95,42 +87,6 @@ export default function Reglages() {
         </motion.div>
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
-
-        {/* ── SON ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          style={{ marginBottom: 24 }}
-        >
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — SON —
-          </div>
-          <div className="flex justify-between items-center">
-            <div>
-              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 3 }}>AUDIO AMBIANT</div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
-                Drone atmosphérique pendant le jeu
-              </div>
-            </div>
-            <button
-              onClick={toggleSon}
-              style={{
-                width: 44, height: 24, borderRadius: 12, flexShrink: 0, marginLeft: 12,
-                background: sonActif ? accent : `${encre}20`,
-                border: 'none', cursor: 'pointer', position: 'relative',
-                transition: 'background 0.25s',
-              }}
-            >
-              <span style={{
-                position: 'absolute', top: 3, left: sonActif ? 23 : 3,
-                width: 18, height: 18, borderRadius: '50%',
-                background: sonActif ? btnText : encre,
-                transition: 'left 0.25s',
-              }} />
-            </button>
-          </div>
-        </motion.div>
 
         {/* ── VALIDATION ── */}
         <motion.div
