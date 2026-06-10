@@ -9,7 +9,7 @@ import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { partagerVideoStory, partagerStory, exporterPDF, partagerGifStory } from '../utils/partager'
+import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
@@ -39,8 +39,6 @@ export default function PoemeDetail() {
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
-  const [gifEnCours, setGifEnCours] = useState(false)
-  const [gifOk, setGifOk] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState(false)
@@ -159,29 +157,6 @@ export default function PoemeDetail() {
       setTimeout(() => setPartageOk(false), 2200)
     } finally {
       setPartageEnCours(false)
-    }
-  }
-
-  async function partagerGif() {
-    if (!poeme || gifEnCours) return
-    setGifEnCours(true)
-    const struct = getStructure(poeme.structureId)
-    const textePoeme = texteCorrige ?? reconstruirePoeme(poeme.cases, struct)
-    const opts = {
-      type: 'poeme' as const,
-      titre: poeme.titre ?? '',
-      texte: textePoeme,
-      imageDataUrl: poeme.illustration?.url || undefined,
-      accent, bg: fond, ink: encre,
-      date: poeme.dateCreation,
-      seed: poeme.id,
-    }
-    try {
-      await partagerGifStory(opts)
-      setGifOk(true)
-      setTimeout(() => setGifOk(false), 2200)
-    } finally {
-      setGifEnCours(false)
     }
   }
 
@@ -486,14 +461,6 @@ export default function PoemeDetail() {
             style={{ ...mono, fontSize: 13, color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer' }}
           >
             {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
-          </button>
-          <button
-            onClick={partagerGif}
-            disabled={gifEnCours}
-            aria-label="Exporter en GIF"
-            style={{ ...mono, fontSize: 13, color: gifOk || gifEnCours ? accent : encre, opacity: gifOk || gifEnCours ? 0.9 : 0.65, background: 'none', border: 'none', cursor: gifEnCours ? 'default' : 'pointer' }}
-          >
-            {gifEnCours ? '✦ GIF…' : gifOk ? '✓ GIF' : '— GIF —'}
           </button>
           <button
             onClick={imprimerPoeme}
