@@ -1,26 +1,90 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <clipPath id="haut"><rect x="0" y="0" width="64" height="27"/></clipPath>
-    <clipPath id="milieu"><rect x="0" y="27" width="64" height="13"/></clipPath>
-    <clipPath id="bas"><rect x="0" y="40" width="64" height="24"/></clipPath>
-    <path id="plume" d="M32 10 C23 17 21 25 21 31 C21 40 26 47 32 54 C38 47 43 40 43 31 C43 25 41 17 32 10 Z"/>
-  </defs>
 
-  <!-- fond sombre -->
+  <!-- Fond application -->
   <rect width="64" height="64" rx="12" fill="#0f0805"/>
-  <!-- feuille de papier -->
+
+  <!-- Feuille de papier -->
   <rect x="10" y="6" width="44" height="52" rx="2" fill="#f2ede2"/>
 
-  <!-- plis de la feuille -->
-  <line x1="10" y1="27" x2="54" y2="27" stroke="#0f0805" stroke-width="0.6" opacity="0.25"/>
-  <line x1="10" y1="40" x2="54" y2="40" stroke="#0f0805" stroke-width="0.6" opacity="0.25"/>
+  <!-- Plis de la feuille -->
+  <line x1="10" y1="27" x2="54" y2="27" stroke="#0f0805" stroke-width="0.5" opacity="0.16"/>
+  <line x1="10" y1="41" x2="54" y2="41" stroke="#0f0805" stroke-width="0.5" opacity="0.16"/>
 
-  <!-- plume en trois tranches — la tranche du milieu est décalée de 4px -->
-  <g fill="#c01c14">
-    <use href="#plume" clip-path="url(#haut)"/>
-    <use href="#plume" clip-path="url(#milieu)" transform="translate(4 0)"/>
-    <use href="#plume" clip-path="url(#bas)"/>
-  </g>
-  <!-- trou d'aération sur la tranche haute uniquement -->
-  <circle cx="32" cy="22" r="2.4" fill="#f2ede2" clip-path="url(#haut)"/>
+  <!--
+    PLUME MÉTALLIQUE — bec de plume d'acier, vue de face, pointe vers le bas
+    Anatomie :
+      · Collet    : tige rectangulaire en haut, s'emboîte dans le porte-plume
+      · Épaules   : flairage soudain et symétrique de part et d'autre (signature visuelle du bec)
+      · Corps     : converge progressivement vers la pointe
+      · Canal     : rainure centrale de l'évent à la pointe, capillarité de l'encre
+      · Évent     : ouverture ovale qui permet la flexion sans casser
+      · Deux pointes (demi-becs) séparées par la rainure
+  -->
+
+  <!-- Corps principal du bec -->
+  <path d="
+    M 30 9 L 34 9
+    L 34 15
+    C 41 15 45 20 45 27
+    C 45 35 42 44 38 53
+    L 35 57 32 58.5 29 57
+    L 26 53
+    C 22 44 19 35 19 27
+    C 19 20 23 15 30 15
+    Z
+  " fill="#c11c14"/>
+
+  <!-- Demi-ombre droite — profondeur métallique -->
+  <path d="
+    M 32 9 L 34 9 L 34 15
+    C 41 15 45 20 45 27
+    C 45 35 42 44 38 53
+    L 35 57 32 58.5
+    Z
+  " fill="#7c0c09" opacity="0.44"/>
+
+  <!-- Reflet gauche — arête de l'épaule illuminée -->
+  <path d="M 30 15 C 23 17 19 22 19 27 C 19 21 23 16 30 15 Z"
+        fill="#e85040" opacity="0.50"/>
+
+  <!-- Reflet droit bas — lumière rasante sur la pointe -->
+  <path d="M 38 43 C 42 38 45 32 45 27 C 45 34 43 42 39 51 Z"
+        fill="#e04030" opacity="0.20"/>
+
+  <!-- Collet (tige d'emboîtement) sur fond du corps -->
+  <rect x="29.5" y="8" width="5" height="8.5" rx="1.5" fill="#a41310"/>
+  <!-- Reflet mat en haut du collet -->
+  <rect x="30.5" y="8.5" width="3" height="2.5" rx="0.7" fill="#d83525" opacity="0.50"/>
+  <!-- Bord inférieur du collet -->
+  <rect x="29.5" y="14" width="5" height="1.5" rx="0.3" fill="#7c0c09" opacity="0.40"/>
+
+  <!-- Arête centrale (nervure rigidifiante qui court le long du bec) -->
+  <line x1="32" y1="16" x2="32" y2="42" stroke="#dd4535" stroke-width="1" opacity="0.28"/>
+
+  <!-- Lignes d'épaule — découpe du métal -->
+  <path d="M 30.5 15.5 C 26 17 21 21 19.5 27"
+        stroke="#e04030" stroke-width="0.7" fill="none" opacity="0.35"/>
+  <path d="M 33.5 15.5 C 38 17 43 21 44.5 27"
+        stroke="#7c0c09" stroke-width="0.7" fill="none" opacity="0.30"/>
+
+  <!-- Évent (trou ovale de flexion — marqueur iconique du bec de plume) -->
+  <ellipse cx="32" cy="29" rx="3.4" ry="4.6" fill="#f2ede2"/>
+  <!-- Bord intérieur de l'évent (ombre douce) -->
+  <ellipse cx="32.5" cy="29.5" rx="2.3" ry="3.1" fill="#ddd5c0" opacity="0.55"/>
+
+  <!-- Canal central — de l'évent à la pointe -->
+  <line x1="32" y1="33.5" x2="32" y2="58"
+        stroke="#600908" stroke-width="1.3"/>
+
+  <!-- Séparation des deux pointes (demi-becs) -->
+  <path d="M 32 51 Q 30 55 29.5 57.5"
+        stroke="#920e0b" stroke-width="1" fill="none"/>
+  <path d="M 32 51 Q 34 55 34.5 57.5"
+        stroke="#920e0b" stroke-width="1" fill="none"/>
+
+  <!-- Goutte d'encre à la pointe — bec encré, prêt à écrire -->
+  <ellipse cx="32" cy="57.8" rx="2.2" ry="1" fill="#110201" opacity="0.72"/>
+  <!-- Reflet de la goutte -->
+  <ellipse cx="31.4" cy="57.3" rx="0.7" ry="0.4" fill="#f2ede2" opacity="0.30"/>
+
 </svg>
