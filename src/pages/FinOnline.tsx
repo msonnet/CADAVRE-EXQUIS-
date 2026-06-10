@@ -11,6 +11,7 @@ import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
+import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import type { DessinCadavre } from '../types'
@@ -127,6 +128,7 @@ export default function FinOnline() {
   const [sauvegardeDessin_, setSauvegardeDessin] = useState(false)
 
   const [revealReady, setRevealReady] = useState(false)
+  const [revealDessinJoue, setRevealDessinJoue] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
@@ -389,6 +391,17 @@ export default function FinOnline() {
             </motion.div>
             <motion.div style={{ position: 'relative', zIndex: 1, fontSize: 18, color: accent }} animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}>✦</motion.div>
           </motion.div>
+        )}
+        {/* ── Révélation plein écran du dessin — la même animation que la vidéo partagée ── */}
+        {room.mode === 'dessin' && revealReady && imageAssemblee && !loadingDessin && !revealDessinJoue && (
+          <RevealDessin
+            imageUrl={imageAssemblee}
+            texte={texteVision || null}
+            accent={accent}
+            encre={encre}
+            bg={bg}
+            onTermine={() => setRevealDessinJoue(true)}
+          />
         )}
       </AnimatePresence>
 

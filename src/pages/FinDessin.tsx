@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
+import RevealDessin from '../components/RevealDessin'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin } from '../db'
@@ -87,6 +88,7 @@ export default function FinDessin() {
   const [partageEnCours, setPartageEnCours] = useState(false)
   const [nbBandes, setNbBandes] = useState(0)
   const [erreurVision, setErreurVision] = useState(false)
+  const [revealJoue, setRevealJoue] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
   const { jouer } = useSound()
   const revelationPlayedRef = useRef(false)
@@ -203,6 +205,20 @@ export default function FinDessin() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="fin-dessin" />
+
+      {/* ── RÉVÉLATION PLEIN ÉCRAN — la même animation que la vidéo partagée ── */}
+      <AnimatePresence>
+        {(phase === 'revele' || phase === 'sauvegarde') && imageAssemblee && !revealJoue && (
+          <RevealDessin
+            imageUrl={imageAssemblee}
+            texte={texteVision || null}
+            accent={accent}
+            encre={encre}
+            bg={bg}
+            onTermine={() => setRevealJoue(true)}
+          />
+        )}
+      </AnimatePresence>
 
       <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 

@@ -847,71 +847,75 @@ export async function genererVideoStory(opts: {
   canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')!
 
-  // Fond fixe pré-rendu (le grain ne doit pas scintiller d'une frame à l'autre)
+  // Fond fixe pré-rendu (le grain ne doit pas scintiller d'une frame à l'autre).
+  // Quand une image occupe toute la page, les ornements (cadre, en-tête, marque)
+  // partent sur un calque séparé dessiné PAR-DESSUS l'image à chaque frame.
+  const pleinCadre = !!opts.imageDataUrl
   const bgCanvas = document.createElement('canvas')
   bgCanvas.width = W; bgCanvas.height = H
   const bx = bgCanvas.getContext('2d')!
   bx.fillStyle = bg; bx.fillRect(0, 0, W, H)
   grainEtVignette(bx, W, H, ink)
-  cadreDouble(bx, W, H, accent)
-  enTete(bx, W, accent, ink, opts.date, opts.seed)
-  marque(bx, W, accent, ink)
+  let ornCanvas: HTMLCanvasElement | null = null
+  if (pleinCadre) {
+    ornCanvas = document.createElement('canvas')
+    ornCanvas.width = W; ornCanvas.height = H
+    const ox = ornCanvas.getContext('2d')!
+    cadreDouble(ox, W, H, accent)
+    // Illustration IA (souvent sombre, sous voile d'encre) → ornements clairs ;
+    // dessin (papier clair) → ornements à l'encre
+    const ornInk = opts.type === 'poeme' ? bg : ink
+    enTete(ox, W, accent, ornInk, opts.date, opts.seed)
+    marque(ox, W, accent, ornInk)
+  } else {
+    cadreDouble(bx, W, H, accent)
+    enTete(bx, W, accent, ink, opts.date, opts.seed)
+    marque(bx, W, accent, ink)
+  }
 
   // Layout du contenu animé
   let poemeLayout: LayoutPoeme | null = null
   let img: HTMLImageElement | null = null
   let imgBox = { x: 0, y: 0, w: 0, h: 0 }
-  let readingTop = 1430
   let poemeIllustImg: HTMLImageElement | null = null
   let illustBox = { x: 0, y: 0, w: 0, h: 0 }
+  let overlay: OverlayTexte | null = null
   if (opts.type === 'poeme') {
-    if (opts.titre?.trim()) {
-      // titre + filet figurent sur le fond fixe
-      bx.fillStyle = ink; bx.textAlign = 'center'
-      bx.font = `800 italic 76px 'Bodoni Moda', Georgia, serif`
-      let tl = wrapText(bx, opts.titre, ZONE_W)
-      let ts = 76
-      if (tl.length > 2) { ts = 64; bx.font = `800 italic 64px 'Bodoni Moda', Georgia, serif`; tl = wrapText(bx, opts.titre, ZONE_W).slice(0, 2) }
-      const tlh = ts + 12
-      tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
-      filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
-    }
-    // Pré-chargement de l'illustration IA (sans calcul de zone encore)
     if (opts.imageDataUrl) {
       try { poemeIllustImg = await chargerImage(opts.imageDataUrl) }
       catch { poemeIllustImg = null }
     }
-    // Layout texte en premier — pour connaître la position réelle du bas du poème
-    poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, !!poemeIllustImg, false)
-    // Zone illustration dynamique : l'image commence juste sous la dernière ligne du texte
     if (poemeIllustImg) {
-      const lastLine = poemeLayout.lignes.filter(l => l.texte).at(-1)
-      const textBottom = lastLine ? lastLine.y + poemeLayout.bodyLineH * 0.4 : 820
-      const imgZoneTop = Math.max(880, textBottom + 80)
-      const imgZoneBottom = 1860
-      const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop - 56
-      const ratio = Math.min(maxW / poemeIllustImg.width, maxH / poemeIllustImg.height)
+      // ── Plein cadre : l'image couvre toute la page, le texte vient en surimpression ──
+      const ratio = Math.max(W / poemeIllustImg.width, H / poemeIllustImg.height)
       const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
-      const dX = (W - dW) / 2, dY = imgZoneTop + 28 + (maxH - dH) / 2
-      filetOrne(bx, W / 2, imgZoneTop - 44, accent, bg)
-      illustBox = { x: dX, y: dY, w: dW, h: dH }
-    }
-    // Lignes de pli entre fragments — sur le fond fixe, révélées dès le début
-    for (const sy of poemeLayout.separatorYs) {
-      drawFragmentSeparator(bx, W, sy, accent)
+      illustBox = { x: (W - dW) / 2, y: (H - dH) / 2, w: dW, h: dH }
+      overlay = layoutTexteOverlay(ctx, opts.titre, opts.texte, W, H, ZONE_W)
+    } else {
+      // ── Texte seul : mise en page et animation existantes ──
+      if (opts.titre?.trim()) {
+        bx.fillStyle = ink; bx.textAlign = 'center'
+        bx.font = `800 italic 76px 'Bodoni Moda', Georgia, serif`
+        let tl = wrapText(bx, opts.titre, ZONE_W)
+        let ts = 76
+        if (tl.length > 2) { ts = 64; bx.font = `800 italic 64px 'Bodoni Moda', Georgia, serif`; tl = wrapText(bx, opts.titre, ZONE_W).slice(0, 2) }
+        const tlh = ts + 12
+        tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
+        filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
+      }
+      poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, false, false)
+      // Lignes de pli entre fragments — sur le fond fixe, révélées dès le début
+      for (const sy of poemeLayout.separatorYs) {
+        drawFragmentSeparator(bx, W, sy, accent)
+      }
     }
   } else if (opts.imageDataUrl) {
     try {
+      // ── Dessin plein cadre : couvre toute la page, lecture en surimpression ──
       img = await chargerImage(opts.imageDataUrl)
-      const r = img.width / img.height
-      const zoneTop = 300, zoneBottom = r < 0.9 ? 1300 : 1100
-      const maxW = r < 0.9 ? 700 : ZONE_W, maxH = zoneBottom - zoneTop
-      const ratio = Math.min(maxW / img.width, maxH / img.height)
+      const ratio = Math.max(W / img.width, H / img.height)
       const w = img.width * ratio, h = img.height * ratio
-      const x = (W - w) / 2
-      const y = r < 0.9 ? zoneTop + (maxH - h) / 2 : 540 - h / 2
-      imgBox = { x, y, w, h }
-      readingTop = r < 0.9 ? 1400 : Math.max(y + h + 80, 1180)
+      imgBox = { x: (W - w) / 2, y: (H - h) / 2, w, h }
     } catch { /* ignore */ }
   }
 
@@ -943,19 +947,11 @@ export async function genererVideoStory(opts: {
     const frame = () => {
       const t = performance.now() - start
       ctx.drawImage(bgCanvas, 0, 0)
-      if (opts.type === 'poeme' && poemeLayout) {
+      if (opts.type === 'poeme' && poemeIllustImg && overlay) {
+        dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeMs, W, H, ink, bg)
+      } else if (opts.type === 'poeme' && poemeLayout) {
         dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
-        if (poemeIllustImg && illustBox.w > 0) {
-          const illustAlpha = clamp01((t - ANIM_LIGNE_T) / 900)
-          if (illustAlpha > 0) {
-            ctx.save()
-            ctx.globalAlpha = illustAlpha
-            passePartout(ctx, illustBox.x, illustBox.y, illustBox.w, illustBox.h, ink)
-            ctx.drawImage(poemeIllustImg, illustBox.x, illustBox.y, illustBox.w, illustBox.h)
-            ctx.restore()
-          }
-        }
-      } else if (img) dessinerDessinAnime(ctx, img, imgBox, opts.texte ?? '', readingTop, t, W, ZONE_W, accent, ink, bg)
+      } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, ink, bg)
       // Voile de boucle — un cillement crème masque le raccord début/fin sur les réseaux
       if (t < 130) {
         ctx.save(); ctx.globalAlpha = 0.6 * (1 - t / 130); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.restore()
@@ -1082,65 +1078,197 @@ function dessinerPoemeAnime(
   }
 }
 
-function dessinerDessinAnime(
+// ── Texte en surimpression sur l'illustration plein cadre ──────────────────────
+
+interface OverlayTexte {
+  lignes: string[]
+  size: number
+  lineH: number
+  top: number
+  titre: string[] | null
+  titreSize: number
+  titreTop: number
+}
+
+function layoutTexteOverlay(
+  ctx: CanvasRenderingContext2D, titre: string | undefined, texte: string | undefined,
+  W: number, H: number, ZONE_W: number,
+): OverlayTexte {
+  let size = 52, lineH = 78
+  const sourceLines = (texte ?? '').split('\n')
+  const doWrap = (s: number) => {
+    ctx.font = `italic ${s}px 'Fraunces', Georgia, serif`
+    const r: string[] = []
+    for (const src of sourceLines) {
+      if (!src.trim()) { r.push(''); continue }
+      for (const p of wrapText(ctx, src, ZONE_W)) r.push(p)
+    }
+    return r
+  }
+  let lignes = doWrap(size)
+  if (lignes.length > 12) { size = 42; lineH = 64; lignes = doWrap(size) }
+  if (lignes.length > 16) { lignes = lignes.slice(0, 15); lignes.push('[…]') }
+
+  let titreLines: string[] | null = null
+  let titreSize = 64
+  if (titre?.trim()) {
+    ctx.font = `800 italic ${titreSize}px 'Bodoni Moda', Georgia, serif`
+    titreLines = wrapText(ctx, titre, ZONE_W).slice(0, 2)
+  }
+  const titreH = titreLines ? titreLines.length * (titreSize + 12) + 44 : 0
+  const blockH = lignes.length * lineH
+  let top = H * 0.44 - (blockH + titreH) / 2
+  top = Math.max(420, Math.min(top, 1640 - blockH))
+  return { lignes, size, lineH, top: top + titreH, titre: titreLines, titreSize, titreTop: top }
+}
+
+// Poème + illustration : l'image couvre la page et apparaît petit à petit,
+// le texte vient en surimpression dans un léger fondu — rien ne glisse.
+function dessinerPoemePleinCadre(
   ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
-  texte: string, readingTop: number, t: number, W: number, ZONE_W: number, accent: string, ink: string, bg: string,
+  L: OverlayTexte, orn: HTMLCanvasElement, t: number, duree: number, W: number, H: number, ink: string, bg: string,
 ) {
-  const FLASH_T = 4620, FLASH_DUR = 280, LECT_T = 4700, LECT_DUR = 700
-
-  // Passe-partout toujours présent
-  passePartout(ctx, box.x, box.y, box.w, box.h, ink)
-
-  // Révélation bande par bande (les trois mains), avec pauses
-  // [début, fin, fractionDébut, fractionFin]
-  const bandes: [number, number, number, number][] = [
-    [800, 1900, 0, 1 / 3],
-    [2150, 3250, 1 / 3, 2 / 3],
-    [3500, 4400, 2 / 3, 1],
-  ]
-  let frac = 0, scanActif = false
-  for (const [t0, t1, f0, f1] of bandes) {
-    if (t >= t1) { frac = f1 }
-    else if (t >= t0) { frac = f0 + (f1 - f0) * easeInOut((t - t0) / (t1 - t0)); scanActif = true; break }
-    else break
+  // Image en fondu progressif, avec une très lente respiration de zoom
+  const a = easeInOut(clamp01((t - 250) / 2150))
+  if (a > 0) {
+    const sc = 1.06 - 0.06 * clamp01(t / duree)
+    const w = box.w * sc, h = box.h * sc
+    ctx.save()
+    ctx.globalAlpha = a
+    ctx.drawImage(img, W / 2 - w / 2, H / 2 - h / 2, w, h)
+    // Voile d'encre — la lisibilité du texte sur n'importe quelle image
+    const g = ctx.createLinearGradient(0, 0, 0, H)
+    g.addColorStop(0, withAlpha(ink, 0.50))
+    g.addColorStop(0.5, withAlpha(ink, 0.34))
+    g.addColorStop(0.82, withAlpha(ink, 0.16))
+    g.addColorStop(1, withAlpha(ink, 0.32))
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, W, H)
+    ctx.restore()
   }
 
-  if (frac > 0) {
-    ctx.save()
-    ctx.beginPath()
-    ctx.rect(box.x, box.y, box.w, box.h * frac)
-    ctx.clip()
-    ctx.drawImage(img, box.x, box.y, box.w, box.h)
-    ctx.restore()
-    if (scanActif && frac < 1) {
-      const yScan = box.y + box.h * frac
+  // Ornements (cadre, en-tête, marque) par-dessus l'image
+  ctx.drawImage(orn, 0, 0)
+
+  // Titre + vers : léger fondu ligne à ligne
+  const TXT_T = 2050, FADE = 650
+  const n = L.lignes.length
+  const stagger = n > 1 ? Math.min(240, Math.max(110, (duree - TXT_T - FADE - 350) / (n - 1))) : 0
+  ctx.textAlign = 'center'
+
+  if (L.titre) {
+    const ta = clamp01((t - TXT_T) / FADE)
+    if (ta > 0) {
       ctx.save()
-      ctx.strokeStyle = withAlpha(accent, 0.5)
-      ctx.lineWidth = 3
-      ctx.shadowColor = withAlpha(accent, 0.12); ctx.shadowBlur = 24
-      ctx.beginPath(); ctx.moveTo(box.x, yScan); ctx.lineTo(box.x + box.w, yScan); ctx.stroke()
+      ctx.globalAlpha = ta
+      ctx.shadowColor = withAlpha(ink, 0.55); ctx.shadowBlur = 16; ctx.shadowOffsetY = 2
+      ctx.fillStyle = bg
+      ctx.font = `800 italic ${L.titreSize}px 'Bodoni Moda', Georgia, serif`
+      L.titre.forEach((line, i) => ctx.fillText(line, W / 2, L.titreTop + (i + 1) * (L.titreSize + 12)))
       ctx.restore()
     }
   }
 
-  flash(ctx, W, t, FLASH_T, FLASH_DUR, bg, accent)
-
-  // Lecture surréaliste
-  if (texte.trim() && t >= LECT_T) {
-    const op = clamp01((t - LECT_T) / LECT_DUR)
-    filetOrne(ctx, W / 2, readingTop - 50, accent, bg)
+  ctx.font = `italic ${L.size}px 'Fraunces', Georgia, serif`
+  L.lignes.forEach((ligne, i) => {
+    if (!ligne) return
+    const la = clamp01((t - (TXT_T + i * stagger)) / FADE)
+    if (la <= 0) return
     ctx.save()
-    ctx.globalAlpha = op
-    ctx.fillStyle = withAlpha(accent, 0.65)
+    ctx.globalAlpha = la * 0.96
+    ctx.shadowColor = withAlpha(ink, 0.55); ctx.shadowBlur = 16; ctx.shadowOffsetY = 2
+    ctx.fillStyle = bg
+    ctx.fillText(ligne, W / 2, L.top + (i + 1) * L.lineH)
+    ctx.restore()
+  })
+}
+
+// Partition de la révélation dessin — partagée entre la vidéo et la révélation à l'écran
+export const REVEAL_DESSIN = {
+  // [début, fin, fractionDébut, fractionFin] — bande par bande, avec pauses
+  bandes: [
+    [800, 1900, 0, 1 / 3],
+    [2150, 3250, 1 / 3, 2 / 3],
+    [3500, 4400, 2 / 3, 1],
+  ] as [number, number, number, number][],
+  flashT: 4620, flashDur: 280,
+  lectT: 4700, lectDur: 700,
+  total: 6000,
+}
+
+export function fracRevealDessin(t: number): { frac: number; scanActif: boolean } {
+  let frac = 0, scanActif = false
+  for (const [t0, t1, f0, f1] of REVEAL_DESSIN.bandes) {
+    if (t >= t1) { frac = f1 }
+    else if (t >= t0) { frac = f0 + (f1 - f0) * easeInOut((t - t0) / (t1 - t0)); scanActif = true; break }
+    else break
+  }
+  return { frac, scanActif }
+}
+
+// Dessin plein cadre : il couvre toute la page, révélé bande par bande,
+// la lecture surréaliste apparaît en surimpression dans un léger fondu.
+function dessinerDessinPleinCadre(
+  ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
+  texte: string, orn: HTMLCanvasElement, t: number, W: number, H: number, ZONE_W: number,
+  accent: string, ink: string, bg: string,
+) {
+  const { frac, scanActif } = fracRevealDessin(t)
+
+  if (frac > 0) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(0, 0, W, H * frac)
+    ctx.clip()
+    ctx.drawImage(img, box.x, box.y, box.w, box.h)
+    ctx.restore()
+    if (scanActif && frac < 1) {
+      const yScan = H * frac
+      ctx.save()
+      ctx.strokeStyle = withAlpha(accent, 0.5)
+      ctx.lineWidth = 3
+      ctx.shadowColor = withAlpha(accent, 0.12); ctx.shadowBlur = 24
+      ctx.beginPath(); ctx.moveTo(0, yScan); ctx.lineTo(W, yScan); ctx.stroke()
+      ctx.restore()
+    }
+  }
+
+  flash(ctx, W, t, REVEAL_DESSIN.flashT, REVEAL_DESSIN.flashDur, bg, accent)
+
+  // Voile papier de la lecture — sous les ornements pour que la marque reste lisible
+  const lectOp = texte.trim() && t >= REVEAL_DESSIN.lectT
+    ? clamp01((t - REVEAL_DESSIN.lectT) / REVEAL_DESSIN.lectDur)
+    : 0
+  if (lectOp > 0) {
+    ctx.save()
+    ctx.globalAlpha = lectOp
+    const g = ctx.createLinearGradient(0, H * 0.55, 0, H)
+    g.addColorStop(0, withAlpha(bg, 0))
+    g.addColorStop(0.4, withAlpha(bg, 0.72))
+    g.addColorStop(1, withAlpha(bg, 0.95))
+    ctx.fillStyle = g
+    ctx.fillRect(0, H * 0.55, W, H * 0.45)
+    ctx.restore()
+  }
+
+  // Ornements par-dessus le dessin et le voile
+  ctx.drawImage(orn, 0, 0)
+
+  // Lecture surréaliste — léger fondu en surimpression
+  if (lectOp > 0) {
+    ctx.save()
+    ctx.globalAlpha = lectOp
+    const lectTop = 1380
+    ctx.fillStyle = withAlpha(accent, 0.8)
     ctx.textAlign = 'center'
     ctx.font = "22px 'Raleway', sans-serif"
-    texteEspace(ctx, '— LECTURE —', W / 2, readingTop, 22 * 0.3)
+    texteEspace(ctx, '— LECTURE —', W / 2, lectTop, 22 * 0.3)
     ctx.font = "italic 36px 'Playfair Display', Georgia, serif"
     const lignes = wrapText(ctx, texte.replace(/\n+/g, ' ').trim(), ZONE_W - 60).slice(0, 4)
-    ctx.fillStyle = withAlpha(ink, 0.85)
+    ctx.fillStyle = withAlpha(ink, 0.88)
     lignes.forEach((line, i) => {
       const txt = (i === 0 ? '« ' : '') + line + (i === lignes.length - 1 ? ' »' : '')
-      ctx.fillText(txt, W / 2, readingTop + 56 + i * 56)
+      ctx.fillText(txt, W / 2, lectTop + 56 + i * 56)
     })
     ctx.restore()
   }
