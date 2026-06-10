@@ -463,8 +463,8 @@ export async function genererImageStory(opts: {
     }
 
     // ── Corps du poème ──
-    const zoneTop = hasTitle ? 620 : 460, zoneBottom = illustImg ? 1150 : 1560
-    let bodySize = 42, bodyLineH = 66
+    const zoneTop = hasTitle ? 620 : 460, zoneBottom = illustImg ? 980 : 1560
+    let bodySize = 50, bodyLineH = 74
     const sourceLines = (opts.texte ?? '').split('\n')
 
     const doWrapImg = (size: number) => {
@@ -477,7 +477,7 @@ export async function genererImageStory(opts: {
       return r
     }
     let wrapped = doWrapImg(bodySize)
-    if (wrapped.length > 13) { bodySize = 36; bodyLineH = 56; wrapped = doWrapImg(bodySize) }
+    if (wrapped.length > 13) { bodySize = 40; bodyLineH = 62; wrapped = doWrapImg(bodySize) }
     if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
 
     // Positions de fin de chaque fragment pour les lignes de pli
@@ -538,8 +538,8 @@ export async function genererImageStory(opts: {
 
     // ── Illustration sous le poème ──
     if (illustImg) {
-      const imgZoneTop = 1220, imgZoneBottom = 1640
-      const maxW = ZONE_W - 40, maxH = imgZoneBottom - imgZoneTop
+      const imgZoneTop = 1040, imgZoneBottom = 1840
+      const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop
       const ratio = Math.min(maxW / illustImg.width, maxH / illustImg.height)
       const dW = illustImg.width * ratio, dH = illustImg.height * ratio
       const dX = (W - dW) / 2, dY = imgZoneTop + (maxH - dH) / 2
@@ -548,7 +548,7 @@ export async function genererImageStory(opts: {
       ctx.drawImage(illustImg, dX, dY, dW, dH)
     }
 
-    invitationLigne(ctx, W, accent, illustImg ? 1720 : 1660, invitation)
+    invitationLigne(ctx, W, accent, illustImg ? 1870 : 1660, invitation)
   } else {
     // ── Variante dessin ──
     let readingTop = 1430

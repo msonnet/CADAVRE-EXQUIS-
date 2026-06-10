@@ -137,13 +137,6 @@ export default function Accueil() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.0, delay: 0.3 }}
         >
-          {/* Nom de l'application au-dessus du titre */}
-          <div style={{
-            ...ui, fontSize: 13, letterSpacing: '0.28em', color: accent,
-            fontWeight: 700, marginBottom: 6,
-          }}>
-            CADAVRE
-          </div>
           <div
             className="font-bodoni font-black"
             style={{

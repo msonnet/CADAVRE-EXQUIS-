@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { chargerPoemes } from '../db'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import type { NiveauValidation } from '../utils/validation'
@@ -19,8 +18,6 @@ export default function Reglages() {
   const [validation, setValidation] = useState<NiveauValidation>(
     () => (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
   )
-  const [exportOk, setExportOk] = useState(false)
-
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
@@ -30,22 +27,6 @@ export default function Reglages() {
   function changerValidation(niveau: NiveauValidation) {
     setValidation(niveau)
     localStorage.setItem('validation-niveau', niveau)
-  }
-
-  async function exporterPoemes() {
-    const poemes = await chargerPoemes()
-    const json = JSON.stringify(poemes, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `cadavre-exquis-${new Date().toISOString().slice(0, 10)}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 5000)
-    setExportOk(true)
-    setTimeout(() => setExportOk(false), 2500)
   }
 
   return (
@@ -122,39 +103,6 @@ export default function Reglages() {
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
             {NIVEAUX.find(n => n.id === validation)?.desc}
-          </div>
-        </motion.div>
-
-        {/* ── DONNÉES ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          style={{ marginBottom: 28 }}
-        >
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — DONNÉES —
-          </div>
-          <div className="flex justify-between items-center" style={{ paddingBottom: 12, borderBottom: `0.5px solid ${encre}10` }}>
-            <div>
-              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 3 }}>EXPORTER MES POÈMES</div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
-                Télécharge tous les poèmes en JSON
-              </div>
-            </div>
-            <button
-              onClick={exporterPoemes}
-              style={{
-                ...mono, fontSize: 13,
-                color: exportOk ? accent : encre,
-                background: 'none',
-                border: `0.5px solid ${exportOk ? accent : `${encre}30`}`,
-                padding: '7px 12px', cursor: 'pointer', flexShrink: 0, marginLeft: 12,
-                transition: 'all 0.2s',
-              }}
-            >
-              {exportOk ? '✓ EXPORTÉ' : '↓ JSON'}
-            </button>
           </div>
         </motion.div>
 
