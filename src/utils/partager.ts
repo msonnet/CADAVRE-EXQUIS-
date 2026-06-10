@@ -172,6 +172,49 @@ function hashSeed(s: string): number {
   return h >>> 0
 }
 
+function toRomainLocal(n: number): string {
+  const map: [number, string][] = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]
+  return map.reduce((r, [v, s]) => { while (n >= v) { r += s; n -= v } return r }, '')
+}
+
+function deriverNum(seed?: string): string {
+  if (!seed) return '—'
+  return String((hashSeed(seed) % 999) + 1).padStart(3, '0')
+}
+
+// La plume en trois tranches décalées — marque de fabrique du jeu
+function drawNibMark(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, accent: string): void {
+  const scale = size / 64
+  ctx.save()
+  ctx.translate(cx - 32 * scale, cy - 32 * scale)
+  ctx.scale(scale, scale)
+  const nib = () => {
+    ctx.beginPath()
+    ctx.moveTo(32, 10)
+    ctx.bezierCurveTo(23, 17, 21, 25, 21, 31)
+    ctx.bezierCurveTo(21, 40, 26, 47, 32, 54)
+    ctx.bezierCurveTo(38, 47, 43, 40, 43, 31)
+    ctx.bezierCurveTo(43, 25, 41, 17, 32, 10)
+    ctx.closePath()
+  }
+  ctx.fillStyle = withAlpha(accent, 0.85)
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, 64, 27); ctx.clip(); nib(); ctx.fill(); ctx.restore()
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 27, 64, 13); ctx.clip(); ctx.translate(4, 0); nib(); ctx.fill(); ctx.restore()
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 40, 64, 24); ctx.clip(); nib(); ctx.fill(); ctx.restore()
+  ctx.restore()
+}
+
+// Filet de pli entre deux fragments de cadavre
+function drawFragmentSeparator(ctx: CanvasRenderingContext2D, W: number, y: number, accent: string): void {
+  ctx.save()
+  ctx.strokeStyle = withAlpha(accent, 0.22)
+  ctx.lineWidth = 0.8
+  ctx.beginPath()
+  ctx.moveTo(W / 2 - 100, y); ctx.lineTo(W / 2 + 100, y)
+  ctx.stroke()
+  ctx.restore()
+}
+
 // Texte centré dessiné glyphe par glyphe avec une chasse (petites capitales espacées)
 function texteEspace(
   ctx: CanvasRenderingContext2D, text: string, cx: number, y: number, spacingPx: number,
@@ -260,17 +303,19 @@ function filetOrne(ctx: CanvasRenderingContext2D, cx: number, y: number, accent:
   ctx.textBaseline = 'alphabetic'
 }
 
-// En-tête commun : ✦ + date en petites capitales murmurées
-function enTete(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: string, date?: number) {
+// En-tête commun : ✦ + numéro de séance + année en chiffres romains
+function enTete(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: string, date?: number, seed?: string) {
   ctx.fillStyle = accent
   ctx.textAlign = 'center'
   ctx.font = "32px 'Raleway', sans-serif"
   ctx.fillText('✦', W / 2, 192)
-  if (date) {
-    const d = new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  const parts: string[] = []
+  if (seed) parts.push(`N° ${deriverNum(seed)}`)
+  if (date) parts.push(toRomainLocal(new Date(date).getFullYear()))
+  if (parts.length) {
     ctx.fillStyle = withAlpha(ink, 0.42)
     ctx.font = "24px 'Raleway', sans-serif"
-    texteEspace(ctx, d, W / 2, 248, 24 * 0.35)
+    texteEspace(ctx, parts.join(' · '), W / 2, 248, 24 * 0.35)
   }
 }
 
@@ -291,9 +336,12 @@ function marque(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: s
   ctx.fillText('✦', left - 26, 1820)
   ctx.fillText('✦', right + 26, 1820)
 
+  // Le Pli — plume glitchée, marque de fabrique
+  drawNibMark(ctx, W / 2, 1848, 28, accent)
+
   ctx.fillStyle = withAlpha(ink, 0.45)
   ctx.font = "24px 'Raleway', sans-serif"
-  ctx.fillText(LIEN_MARQUE, W / 2, 1862)
+  ctx.fillText(LIEN_MARQUE, W / 2, 1882)
 }
 
 function invitationLigne(ctx: CanvasRenderingContext2D, W: number, accent: string, y: number, texte: string) {
@@ -384,7 +432,7 @@ export async function genererImageStory(opts: {
   ctx.fillRect(0, 0, W, H)
   grainEtVignette(ctx, W, H, ink)
   cadreDouble(ctx, W, H, accent)
-  enTete(ctx, W, accent, ink, opts.date)
+  enTete(ctx, W, accent, ink, opts.date, opts.seed)
 
   if (opts.type === 'poeme') {
     const avecImage = !!(opts.imageDataUrl)
@@ -418,14 +466,31 @@ export async function genererImageStory(opts: {
     const zoneTop = hasTitle ? 620 : 460, zoneBottom = illustImg ? 1150 : 1560
     let bodySize = 42, bodyLineH = 66
     const sourceLines = (opts.texte ?? '').split('\n')
-    ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
-    let wrapped: string[] = []
-    for (const src of sourceLines) {
-      if (!src.trim()) { wrapped.push(''); continue }
-      for (const p of wrapText(ctx, src, ZONE_W)) wrapped.push(p)
+
+    const doWrapImg = (size: number) => {
+      ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif`
+      const r: string[] = []
+      for (const src of sourceLines) {
+        if (!src.trim()) { r.push(''); continue }
+        for (const p of wrapText(ctx, src, ZONE_W)) r.push(p)
+      }
+      return r
     }
-    if (wrapped.length > 13) { bodySize = 36; bodyLineH = 56; ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif` }
+    let wrapped = doWrapImg(bodySize)
+    if (wrapped.length > 13) { bodySize = 36; bodyLineH = 56; wrapped = doWrapImg(bodySize) }
     if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
+
+    // Positions de fin de chaque fragment pour les lignes de pli
+    const fragEndsImg: number[] = []
+    { let wi = 0
+      for (const src of sourceLines) {
+        if (wi >= wrapped.length) break
+        if (!src.trim()) { wi++; continue }
+        const wl = wrapText(ctx, src, ZONE_W)
+        fragEndsImg.push(Math.min(wi + wl.length - 1, wrapped.length - 1))
+        wi += wl.length
+      }
+    }
 
     const lettrineActive = wrapped.length <= 8 && wrapped[0] && wrapped[0] !== '[…]'
     const lettrineSize = 240
@@ -460,9 +525,15 @@ export async function genererImageStory(opts: {
     ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
     ctx.fillStyle = withAlpha(ink, 0.88)
     ctx.textAlign = 'center'
+    const fragEndSetImg = new Set(fragEndsImg)
     wrapped.forEach((line, i) => {
       if (!line) return
-      ctx.fillText(line, W / 2, y + (i + 1) * bodyLineH)
+      const lineY = y + (i + 1) * bodyLineH
+      ctx.fillText(line, W / 2, lineY)
+      // Filet de pli entre les fragments (sauf après le dernier)
+      if (fragEndSetImg.has(i) && i < wrapped.length - 1 && wrapped[i + 1]) {
+        drawFragmentSeparator(ctx, W, lineY + Math.round(bodyLineH / 2), accent)
+      }
     })
 
     // ── Illustration sous le poème ──
@@ -611,6 +682,8 @@ interface LayoutPoeme {
   lettrine: { char: string; baselineY: number; size: number } | null
   lignes: { texte: string; y: number }[]
   bodySize: number
+  bodyLineH: number
+  separatorYs: number[]
 }
 
 function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false): LayoutPoeme {
@@ -618,14 +691,37 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
   const zoneTop = hasTitle ? 620 : 460, zoneBottom = avecImage ? 1150 : 1560
   let bodySize = 42, bodyLineH = 66
   const sourceLines = (opts.texte ?? '').split('\n')
-  ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
-  let wrapped: string[] = []
-  for (const src of sourceLines) {
-    if (!src.trim()) { wrapped.push(''); continue }
-    for (const p of wrapText(ctx, src, ZONE_W)) wrapped.push(p)
+
+  const doWrap = (size: number) => {
+    ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif`
+    const result: string[] = []
+    for (const src of sourceLines) {
+      if (!src.trim()) { result.push(''); continue }
+      for (const p of wrapText(ctx, src, ZONE_W)) result.push(p)
+    }
+    return result
   }
-  if (wrapped.length > 13) { bodySize = 36; bodyLineH = 56; ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif` }
+
+  let wrapped = doWrap(bodySize)
+  if (wrapped.length > 13) {
+    bodySize = 36; bodyLineH = 56
+    wrapped = doWrap(bodySize)
+  }
   if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
+
+  // Positions de fin de chaque fragment source dans le tableau wrapped[]
+  const fragEndIndices: number[] = []
+  {
+    let wi = 0
+    for (const src of sourceLines) {
+      if (wi >= wrapped.length) break
+      if (!src.trim()) { wi++; continue }
+      const wlines = wrapText(ctx, src, ZONE_W)
+      const endIdx = Math.min(wi + wlines.length - 1, wrapped.length - 1)
+      fragEndIndices.push(endIdx)
+      wi += wlines.length
+    }
+  }
 
   const lettrineActive = wrapped.length <= 8 && !!wrapped[0] && wrapped[0] !== '[…]'
   const lettrineSize = 240
@@ -645,6 +741,16 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
   }
   const lignes = wrapped.map((texte, i) => ({ texte, y: y + (i + 1) * bodyLineH }))
 
+  // Lignes de pli entre les fragments
+  const separatorYs: number[] = []
+  for (let fi = 0; fi < fragEndIndices.length - 1; fi++) {
+    const endIdx = fragEndIndices[fi]
+    const nextIdx = endIdx + 1
+    if (nextIdx < lignes.length && lignes[endIdx]?.texte && lignes[nextIdx]?.texte) {
+      separatorYs.push(Math.round(lignes[endIdx].y + bodyLineH / 2))
+    }
+  }
+
   // Positions de départ des fragments (cercle autour du centre, hors champ)
   const R = Math.max(W, 1920) * 0.6
   const fragments = sourceLines.filter(l => l.trim()).map((texte, i, arr) => {
@@ -652,7 +758,7 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
     return { texte: texte.trim(), x0: W / 2 + Math.cos(angle) * R, y0: 960 + Math.sin(angle) * R, rot: (i % 2 ? 1 : -1) * (3 + (i % 3) * 2) }
   })
 
-  return { fragments, lettrine, lignes, bodySize }
+  return { fragments, lettrine, lignes, bodySize, bodyLineH, separatorYs }
 }
 
 // Partition de la révélation — un rideau de théâtre qui se lève (la mineur, cohérent avec l'app)
@@ -734,7 +840,7 @@ export async function genererVideoStory(opts: {
   bx.fillStyle = bg; bx.fillRect(0, 0, W, H)
   grainEtVignette(bx, W, H, ink)
   cadreDouble(bx, W, H, accent)
-  enTete(bx, W, accent, ink, opts.date)
+  enTete(bx, W, accent, ink, opts.date, opts.seed)
   marque(bx, W, accent, ink)
 
   // Layout du contenu animé
@@ -770,6 +876,10 @@ export async function genererVideoStory(opts: {
       } catch { poemeIllustImg = null }
     }
     poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, !!poemeIllustImg)
+    // Lignes de pli entre fragments — sur le fond fixe, révélées dès le début
+    for (const sy of poemeLayout.separatorYs) {
+      drawFragmentSeparator(bx, W, sy, accent)
+    }
     invitationLigne(bx, W, accent, poemeIllustImg ? 1720 : 1660, invitation)
   } else if (opts.imageDataUrl) {
     try {
