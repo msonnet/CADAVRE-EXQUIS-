@@ -1,11 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#2a1810"/>
-      <stop offset="100%" stop-color="#0f0805"/>
-    </radialGradient>
+    <clipPath id="haut"><rect x="0" y="0" width="64" height="27"/></clipPath>
+    <clipPath id="milieu"><rect x="0" y="27" width="64" height="13"/></clipPath>
+    <clipPath id="bas"><rect x="0" y="40" width="64" height="24"/></clipPath>
+    <path id="plume" d="M32 10 C23 17 21 25 21 31 C21 40 26 47 32 54 C38 47 43 40 43 31 C43 25 41 17 32 10 Z"/>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#bg)"/>
-  <rect x="2" y="2" width="28" height="28" rx="4" fill="none" stroke="#b8956a" stroke-width="0.4" opacity="0.5"/>
-  <text x="16" y="22" font-family="Georgia,serif" font-style="italic" font-weight="700" font-size="13" fill="#FAF6EE" text-anchor="middle">CE</text>
+
+  <!-- fond sombre -->
+  <rect width="64" height="64" rx="12" fill="#0f0805"/>
+  <!-- feuille de papier -->
+  <rect x="10" y="6" width="44" height="52" rx="2" fill="#f2ede2"/>
+
+  <!-- plis de la feuille -->
+  <line x1="10" y1="27" x2="54" y2="27" stroke="#0f0805" stroke-width="0.6" opacity="0.25"/>
+  <line x1="10" y1="40" x2="54" y2="40" stroke="#0f0805" stroke-width="0.6" opacity="0.25"/>
+
+  <!-- plume en trois tranches — la tranche du milieu est décalée de 4px -->
+  <g fill="#c01c14">
+    <use href="#plume" clip-path="url(#haut)"/>
+    <use href="#plume" clip-path="url(#milieu)" transform="translate(4 0)"/>
+    <use href="#plume" clip-path="url(#bas)"/>
+  </g>
+  <!-- trou d'aération sur la tranche haute uniquement -->
+  <circle cx="32" cy="22" r="2.4" fill="#f2ede2" clip-path="url(#haut)"/>
 </svg>

@@ -137,6 +137,13 @@ export default function Accueil() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.0, delay: 0.3 }}
         >
+          {/* Nom de l'application au-dessus du titre */}
+          <div style={{
+            ...ui, fontSize: 13, letterSpacing: '0.28em', color: accent,
+            fontWeight: 700, marginBottom: 6,
+          }}>
+            CADAVRE
+          </div>
           <div
             className="font-bodoni font-black"
             style={{
@@ -159,115 +166,119 @@ export default function Accueil() {
         </motion.div>
       </div>
 
-      {/* ── CITATION ── */}
-      {seance?.citation && (
-        <motion.div
-          style={{ position: 'relative', zIndex: 10, marginBottom: 14 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.3, duration: 0.7 }}
-        >
-          <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: 10 }} />
-          <span style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
-            color: encre, display: '-webkit-box', fontStyle: 'italic',
-            overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          } as React.CSSProperties}>
-            {seance.citation.t}
-          </span>
-          <div style={{
-            ...ui, fontSize: 13, letterSpacing: '0.1em', fontWeight: 700,
-            textTransform: 'uppercase', color: accent, marginTop: 5,
-          }}>
-            {seance.citation.a}
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── CTA ── */}
-      <motion.div
-        style={{ position: 'relative', zIndex: 10, marginBottom: 10 }}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5, duration: 0.4 }}
-      >
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button
-            onClick={() => nav('/config')}
-            style={{
-              flex: 1, minWidth: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: encre, color: bg,
-              ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
-              padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
-              borderRadius: 4,
-            }}
-          >
-            <span>Cadavre Écrit</span>
-            <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✒</span>
-          </button>
-          <button
-            onClick={() => nav('/config-dessin')}
-            style={{
-              flex: 1, minWidth: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: second, color: bg,
-              ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
-              padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
-              borderRadius: 4,
-            }}
-          >
-            <span>Cadavre Dessiné</span>
-            <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✎</span>
-          </button>
-        </div>
-        <button
-          onClick={() => nav('/online')}
-          style={{
-            width: '100%', marginTop: 6,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            background: 'transparent', color: encre,
-            ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
-            padding: '0.55em 1em', border: `1px solid ${encre}40`, cursor: 'pointer',
-            borderRadius: 4,
-          }}
-        >
-          <span>Mode en ligne</span>
-          <span aria-hidden style={{ fontSize: 14, opacity: 0.65 }}>⊕</span>
-        </button>
-      </motion.div>
-
-      {/* ── FOOTER ── */}
+      {/* ── PLI — Citation + CTAs + Footer s'ouvrent comme une feuille pliée ── */}
       <motion.div
         style={{
           position: 'relative', zIndex: 10,
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          gap: '4px 0', paddingBottom: 4,
+          transformPerspective: 900,
+          transformOrigin: 'top center',
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.9, duration: 0.4 }}
+        initial={{ rotateX: -72, opacity: 0 }}
+        animate={{ rotateX: 0, opacity: 1 }}
+        transition={{ delay: 0.9, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
       >
-        {[
-          { label: 'Recueil', path: '/bibliotheque' },
-          { label: 'Galerie',  path: '/galerie',       align: 'right' },
-          { label: 'Règles',   path: '/aide' },
-          { label: 'Réglages', path: '/reglages',      align: 'right' },
-        ].map(({ label, path, align }) => (
+        {/* Ligne de pli — l'encre de la charnière */}
+        <div style={{
+          height: 10,
+          marginBottom: 6,
+          background: `linear-gradient(to bottom, transparent, ${encre}12 49%, ${encre}22 50%, transparent)`,
+        }} />
+
+        {/* ── CITATION ── */}
+        {seance?.citation && (
+          <div style={{ marginBottom: 14 }}>
+            <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: 10 }} />
+            <span style={{
+              fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
+              color: encre, display: '-webkit-box', fontStyle: 'italic',
+              overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            } as React.CSSProperties}>
+              {seance.citation.t}
+            </span>
+            <div style={{
+              ...ui, fontSize: 13, letterSpacing: '0.1em', fontWeight: 700,
+              textTransform: 'uppercase', color: accent, marginTop: 5,
+            }}>
+              {seance.citation.a}
+            </div>
+          </div>
+        )}
+
+        {/* ── CTA ── */}
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              onClick={() => nav('/config')}
+              style={{
+                flex: 1, minWidth: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                background: encre, color: bg,
+                ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
+                padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
+                borderRadius: 0,
+              }}
+            >
+              <span>Cadavre Écrit</span>
+              <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✒</span>
+            </button>
+            <button
+              onClick={() => nav('/config-dessin')}
+              style={{
+                flex: 1, minWidth: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                background: second, color: bg,
+                ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
+                padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
+                borderRadius: 0,
+              }}
+            >
+              <span>Cadavre Dessiné</span>
+              <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✎</span>
+            </button>
+          </div>
           <button
-            key={path}
-            onClick={() => nav(path)}
+            onClick={() => nav('/online')}
             style={{
-              ...ui, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: encre, opacity: 0.65, fontWeight: 700,
-              background: 'none', border: 'none', cursor: 'pointer',
-              textAlign: (align as 'right') ?? 'left',
-              padding: '2px 0',
+              width: '100%', marginTop: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              background: 'transparent', color: encre,
+              ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '0.55em 1em', border: `1px solid ${encre}40`, cursor: 'pointer',
+              borderRadius: 0,
             }}
           >
-            {label}
+            <span>Mode en ligne</span>
+            <span aria-hidden style={{ fontSize: 14, opacity: 0.65 }}>⊕</span>
           </button>
-        ))}
+        </div>
+
+        {/* ── FOOTER ── */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          gap: '4px 0', paddingBottom: 4,
+        }}>
+          {[
+            { label: 'Recueil', path: '/bibliotheque' },
+            { label: 'Galerie',  path: '/galerie',       align: 'right' },
+            { label: 'Règles',   path: '/aide' },
+            { label: 'Réglages', path: '/reglages',      align: 'right' },
+          ].map(({ label, path, align }) => (
+            <button
+              key={path}
+              onClick={() => nav(path)}
+              style={{
+                ...ui, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: encre, opacity: 0.65, fontWeight: 700,
+                background: 'none', border: 'none', cursor: 'pointer',
+                textAlign: (align as 'right') ?? 'left',
+                padding: '2px 0',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
       </motion.div>
 
     </PageTransition>

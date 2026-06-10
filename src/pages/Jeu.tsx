@@ -264,6 +264,7 @@ export default function Jeu() {
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
   const [attendPassage, setAttendPassage] = useState(false)
   const [confirmAbandon, setConfirmAbandon] = useState(false)
+  const [sealing, setSealing] = useState(false)
 
   const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
 
@@ -493,6 +494,10 @@ export default function Jeu() {
     if (!v.valide) { setErreur(v.message ?? 'Texte invalide.'); return }
     ambianceStart()
     jouer('soumettre')
+    setSealing(true)
+  }
+
+  function vraimentSoumettre() {
     const joueurNum = participantActuel?.type === 'humain' ? participantActuel.num : undefined
     pousserCase(inputValue.trim(), joueurNum)
   }
@@ -806,34 +811,53 @@ export default function Jeu() {
 
             {/* Textarea section */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.35 }}
+              animate={sealing ? { scaleY: 0, opacity: 0.4, filter: 'brightness(0.7)' } : { scaleY: 1, opacity: 1, filter: 'brightness(1)' }}
+              style={{ transformOrigin: 'top center' }}
+              transition={{ duration: 0.4, ease: [0.7, 0, 0.84, 0] }}
+              onAnimationComplete={() => { if (sealing) vraimentSoumettre() }}
             >
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-                — ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —
-              </div>
-              <textarea
-                className="champ-carnet w-full min-h-[96px] resize-none"
-                style={{ borderLeftColor: accent }}
-                value={inputValue}
-                onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
-                onKeyDown={handleKeyDown}
-                placeholder="…"
-                aria-label="Votre contribution"
-                autoFocus
-                rows={3}
-              />
-              {hintQuestion && (
-                <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginTop: 4 }}>
-                  LES QUESTIONS SE TERMINENT PAR UN ?
-                </p>
-              )}
-              {erreur && (
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, marginTop: 6 }}>
-                  {erreur}
-                </p>
-              )}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.35 }}
+              >
+                {/* Encre qui transperce le papier — reflet renversé du texte en cours */}
+                <div
+                  aria-hidden
+                  style={{
+                    fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
+                    fontSize: '1.35rem', lineHeight: 1.55, padding: '0 16px',
+                    transform: 'scaleY(-1)', filter: 'blur(2.5px)',
+                    opacity: inputValue ? 0.10 : 0, color: encre,
+                    maxHeight: 48, overflow: 'hidden', pointerEvents: 'none',
+                    transition: 'opacity 0.6s', userSelect: 'none',
+                  }}
+                >{inputValue}</div>
+                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+                  — ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —
+                </div>
+                <textarea
+                  className="champ-carnet w-full min-h-[96px] resize-none"
+                  style={{ borderLeftColor: accent }}
+                  value={inputValue}
+                  onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="…"
+                  aria-label="Votre contribution"
+                  autoFocus
+                  rows={3}
+                />
+                {hintQuestion && (
+                  <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginTop: 4 }}>
+                    LES QUESTIONS SE TERMINENT PAR UN ?
+                  </p>
+                )}
+                {erreur && (
+                  <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, marginTop: 6 }}>
+                    {erreur}
+                  </p>
+                )}
+              </motion.div>
             </motion.div>
 
             <div style={{ flex: 1 }} />

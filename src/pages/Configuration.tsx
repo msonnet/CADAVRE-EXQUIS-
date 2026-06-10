@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
@@ -18,6 +18,8 @@ const VISIBILITE_DESC: Record<string, string> = {
   'derniere-case':'La case entière précédente est révélée avant d\'écrire.',
 }
 
+type SlotType = 'vide' | 'humain' | 'ia'
+
 const CONFIG_PAR_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
   visibilite: 'aveugle',
@@ -27,11 +29,48 @@ const CONFIG_PAR_DEFAUT: ConfigPartie = {
   voixIA: 1,
 }
 
+function descriptionTable(humains: number, ia: number): string {
+  const mains = humains === 1 ? '1 main' : `${humains} mains`
+  if (ia === 0) return `${mains} — la séance peut commencer.`
+  const voix = ia === 1 ? '1 voix' : `${ia} voix`
+  return `${mains}, ${voix} — la séance peut commencer.`
+}
+
 export default function Configuration() {
   const navigate = useNavigate()
   const { jouer } = useSound()
   const seance = useReve()
+
+  const [slots, setSlots] = useState<SlotType[]>(() => {
+    const h = CONFIG_PAR_DEFAUT.joueursHumains
+    const ia = CONFIG_PAR_DEFAUT.voixIA
+    const result: SlotType[] = Array(6).fill('vide') as SlotType[]
+    for (let i = 0; i < h && i < 6; i++) result[i] = 'humain'
+    for (let i = h; i < h + ia && i < 6; i++) result[i] = 'ia'
+    return result
+  })
+
   const [config, setConfig] = useState<ConfigPartie>(CONFIG_PAR_DEFAUT)
+
+  const joueursHumains = Math.max(1, slots.filter(s => s === 'humain').length)
+  const voixIA = slots.filter(s => s === 'ia').length
+
+  useEffect(() => {
+    setConfig(prev => ({ ...prev, joueursHumains, voixIA }))
+  }, [joueursHumains, voixIA])
+
+  function cyclerSlot(i: number) {
+    setSlots(prev => {
+      const next = [...prev] as SlotType[]
+      const cycle: SlotType[] = ['vide', 'humain', 'ia']
+      const currentIdx = cycle.indexOf(next[i])
+      const nextType = cycle[(currentIdx + 1) % 3]
+      // Prevent removing the last human
+      if (next[i] === 'humain' && prev.filter(s => s === 'humain').length <= 1) return prev
+      next[i] = nextType
+      return next
+    })
+  }
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -165,66 +204,59 @@ export default function Configuration() {
           </div>
         </div>
 
-        {/* ── JOUEURS ── */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — JOUEURS —
+        {/* ── AUTOUR DE LA TABLE ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+          style={{ marginBottom: 18 }}
+        >
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — AUTOUR DE LA TABLE —
           </div>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4].map(n => {
-              const active = config.joueursHumains === n
-              return (
-                <button
-                  key={n}
-                  onClick={() => setConfig(c => ({ ...c, joueursHumains: n }))}
-                  style={{
-                    flex: 1, padding: '8px 4px', minHeight: 44,
-                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
-                    background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
-                    color: active ? accent : `${encre}80`,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {n}
-                </button>
-              )
-            })}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            {slots.map((slot, i) => (
+              <button
+                key={i}
+                onClick={() => cyclerSlot(i)}
+                aria-label={slot === 'vide' ? 'Ajouter un joueur' : slot === 'humain' ? 'Joueur humain — changer' : 'Voix IA — changer'}
+                style={{
+                  width: 44, height: 44, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: `0.5px solid ${slot === 'vide' ? `${encre}20` : slot === 'humain' ? encre : accent}`,
+                  background: slot === 'vide' ? 'transparent' : slot === 'humain' ? `${encre}10` : `${accent}10`,
+                  cursor: 'pointer',
+                  transition: 'all 0.18s',
+                  fontSize: 20,
+                  borderRadius: 0,
+                }}
+              >
+                {slot === 'vide' && (
+                  <span style={{ color: `${encre}20`, fontSize: 14 }}>·</span>
+                )}
+                {slot === 'humain' && (
+                  <span style={{ color: encre }}>✒</span>
+                )}
+                {slot === 'ia' && (
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key="ia"
+                      animate={{ opacity: [0.55, 1, 0.55] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                      style={{ color: accent, display: 'inline-block' }}
+                    >✦</motion.span>
+                  </AnimatePresence>
+                )}
+              </button>
+            ))}
           </div>
-        </div>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
+            {descriptionTable(joueursHumains, voixIA)}
+          </div>
+        </motion.div>
 
-        {/* ── VOIX IA ── */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — VOIX IA —
-          </div>
-          <div className="flex gap-2">
-            {[0, 1, 2, 3, 4].map(n => {
-              const active = config.voixIA === n
-              return (
-                <button
-                  key={n}
-                  onClick={() => setConfig(c => ({ ...c, voixIA: n }))}
-                  style={{
-                    flex: 1, padding: '8px 4px', minHeight: 44,
-                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
-                    background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
-                    color: active ? accent : `${encre}80`,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {n === 0 ? '—' : n}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* ── PREMIER JOUEUR ── */}
-        {config.voixIA > 0 && config.joueursHumains === 1 && (
+        {/* ── PREMIER JOUEUR — uniquement solo avec IA ── */}
+        {voixIA > 0 && joueursHumains === 1 && (
           <div style={{ marginBottom: 18 }}>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
               — OUVRE LA SÉANCE —
@@ -303,6 +335,7 @@ export default function Configuration() {
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',
               gap: 2,
+              borderRadius: 0,
             }}
           >
             <span>Commencer la séance</span>
