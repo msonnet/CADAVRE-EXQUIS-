@@ -387,6 +387,13 @@ export async function genererImageStory(opts: {
   enTete(ctx, W, accent, ink, opts.date)
 
   if (opts.type === 'poeme') {
+    const avecImage = !!(opts.imageDataUrl)
+    // ── Illustration (pré-chargée) ──
+    let illustImg: HTMLImageElement | null = null
+    if (avecImage) {
+      try { illustImg = await chargerImage(opts.imageDataUrl!) } catch { /* ignore */ }
+    }
+
     // ── Titre (optionnel : sans titre, le poème lui-même est le héros) ──
     const hasTitle = !!opts.titre?.trim()
     if (hasTitle) {
@@ -408,7 +415,7 @@ export async function genererImageStory(opts: {
     }
 
     // ── Corps du poème ──
-    const zoneTop = hasTitle ? 620 : 460, zoneBottom = 1560
+    const zoneTop = hasTitle ? 620 : 460, zoneBottom = illustImg ? 1150 : 1560
     let bodySize = 42, bodyLineH = 66
     const sourceLines = (opts.texte ?? '').split('\n')
     ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
@@ -458,7 +465,19 @@ export async function genererImageStory(opts: {
       ctx.fillText(line, W / 2, y + (i + 1) * bodyLineH)
     })
 
-    invitationLigne(ctx, W, accent, 1660, invitation)
+    // ── Illustration sous le poème ──
+    if (illustImg) {
+      const imgZoneTop = 1220, imgZoneBottom = 1640
+      const maxW = ZONE_W - 40, maxH = imgZoneBottom - imgZoneTop
+      const ratio = Math.min(maxW / illustImg.width, maxH / illustImg.height)
+      const dW = illustImg.width * ratio, dH = illustImg.height * ratio
+      const dX = (W - dW) / 2, dY = imgZoneTop + (maxH - dH) / 2
+      filetOrne(ctx, W / 2, imgZoneTop - 44, accent, bg)
+      passePartout(ctx, dX, dY, dW, dH, ink)
+      ctx.drawImage(illustImg, dX, dY, dW, dH)
+    }
+
+    invitationLigne(ctx, W, accent, illustImg ? 1720 : 1660, invitation)
   } else {
     // ── Variante dessin ──
     let readingTop = 1430
@@ -594,9 +613,9 @@ interface LayoutPoeme {
   bodySize: number
 }
 
-function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number): LayoutPoeme {
+function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false): LayoutPoeme {
   const hasTitle = !!opts.titre?.trim()
-  const zoneTop = hasTitle ? 620 : 460, zoneBottom = 1560
+  const zoneTop = hasTitle ? 620 : 460, zoneBottom = avecImage ? 1150 : 1560
   let bodySize = 42, bodyLineH = 66
   const sourceLines = (opts.texte ?? '').split('\n')
   ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
@@ -723,6 +742,7 @@ export async function genererVideoStory(opts: {
   let img: HTMLImageElement | null = null
   let imgBox = { x: 0, y: 0, w: 0, h: 0 }
   let readingTop = 1430
+  let poemeIllustImg: HTMLImageElement | null = null
   if (opts.type === 'poeme') {
     if (opts.titre?.trim()) {
       // titre + filet figurent sur le fond fixe
@@ -735,7 +755,22 @@ export async function genererVideoStory(opts: {
       tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
       filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
     }
-    poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W)
+    // Illustration IA sous le poème — dessinée sur le fond fixe
+    if (opts.imageDataUrl) {
+      try {
+        poemeIllustImg = await chargerImage(opts.imageDataUrl)
+        const imgZoneTop = 1220, imgZoneBottom = 1640
+        const maxW = ZONE_W - 40, maxH = imgZoneBottom - imgZoneTop
+        const ratio = Math.min(maxW / poemeIllustImg.width, maxH / poemeIllustImg.height)
+        const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
+        const dX = (W - dW) / 2, dY = imgZoneTop + (maxH - dH) / 2
+        filetOrne(bx, W / 2, imgZoneTop - 44, accent, bg)
+        passePartout(bx, dX, dY, dW, dH, ink)
+        bx.drawImage(poemeIllustImg, dX, dY, dW, dH)
+      } catch { poemeIllustImg = null }
+    }
+    poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, !!poemeIllustImg)
+    invitationLigne(bx, W, accent, poemeIllustImg ? 1720 : 1660, invitation)
   } else if (opts.imageDataUrl) {
     try {
       img = await chargerImage(opts.imageDataUrl)

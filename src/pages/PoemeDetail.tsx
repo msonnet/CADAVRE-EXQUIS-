@@ -9,7 +9,7 @@ import type { Poeme } from '../types'
 import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { partagerTexte, partagerImageDistante, exporterPDF } from '../utils/partager'
+import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
@@ -37,6 +37,8 @@ export default function PoemeDetail() {
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppression, setConfirmSuppression] = useState(false)
   const [pleinEcran, setPleinEcran] = useState(false)
+  const [partageEnCours, setPartageEnCours] = useState(false)
+  const [partageOk, setPartageOk] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState(false)
@@ -135,15 +137,26 @@ export default function PoemeDetail() {
   }
 
   async function partager() {
-    if (!poeme) return
+    if (!poeme || partageEnCours) return
+    setPartageEnCours(true)
     const struct = getStructure(poeme.structureId)
     const textePoeme = texteCorrige ?? reconstruirePoeme(poeme.cases, struct)
-    const titre = poeme.titre ?? 'Cadavre Exquis'
-    const contenu = `${titre}\n\n${textePoeme}\n\n— Cadavre Exquis, jeu surréaliste`
-    if (poeme.illustration?.url) {
-      await partagerImageDistante(poeme.illustration.url, titre, contenu, titre)
-    } else {
-      await partagerTexte(contenu, titre)
+    const opts = {
+      type: 'poeme' as const,
+      titre: poeme.titre ?? '',
+      texte: textePoeme,
+      imageDataUrl: poeme.illustration?.url || undefined,
+      accent, bg: fond, ink: encre,
+      date: poeme.dateCreation,
+      seed: poeme.id,
+    }
+    try {
+      const ok = await partagerVideoStory(opts)
+      if (!ok) await partagerStory(opts)
+      setPartageOk(true)
+      setTimeout(() => setPartageOk(false), 2200)
+    } finally {
+      setPartageEnCours(false)
     }
   }
 
@@ -443,10 +456,11 @@ export default function PoemeDetail() {
           </button>
           <button
             onClick={partager}
+            disabled={partageEnCours}
             aria-label="Partager le poème"
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer' }}
           >
-            — PARTAGER —
+            {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={imprimerPoeme}

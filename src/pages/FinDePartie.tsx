@@ -169,6 +169,7 @@ export default function FinDePartie() {
       type: 'poeme' as const,
       titre: poeme.titre ?? '',
       texte: texteAffiche,
+      imageDataUrl: illustrationUrl || undefined,
       accent, bg, ink: encre,
       date: poeme.dateCreation,
       seed: poeme.id,
