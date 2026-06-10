@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import { getAudioContext, notifyContextRunning } from '../audio/sharedCtx'
 
-export type SoundName = 'demarrage' | 'soumettre' | 'revelation' | 'ia' | 'clic'
+export type SoundName = 'demarrage' | 'soumettre' | 'revelation' | 'ia' | 'clic' | 'lettrine'
 
 // Impulsion synthétique — reverbe de salon sans fichier audio
 function makeIR(ctx: AudioContext, dur = 1.4, decay = 4): AudioBuffer {
@@ -200,6 +200,23 @@ export function useSound() {
             g.connect(dry); g.connect(rev)
             lfo.start(t); osc.start(t)
             lfo.stop(t + 0.65); osc.stop(t + 0.65)
+            break
+          }
+
+          case 'lettrine': {
+            // Impact de la lettrine — sub-bass qui ébranle la page (bypass filtre master)
+            const kick = ctx.createOscillator()
+            const kickG = ctx.createGain()
+            kick.type = 'sine'
+            kick.frequency.setValueAtTime(80, t)
+            kick.frequency.exponentialRampToValueAtTime(45, t + 0.12)
+            kickG.gain.setValueAtTime(0.0001, t)
+            kickG.gain.linearRampToValueAtTime(0.18, t + 0.005)
+            kickG.gain.exponentialRampToValueAtTime(0.0001, t + 0.35)
+            kick.connect(kickG); kickG.connect(ctx.destination) // bypass filtre — sub-bass intact
+            kick.start(t); kick.stop(t + 0.4)
+            // Poussière — bruit graves bref
+            noiseBuffer(ctx, ctx.destination, t, 0.08, 0.040, 200, 500)
             break
           }
 

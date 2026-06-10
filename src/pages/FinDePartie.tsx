@@ -59,6 +59,7 @@ export default function FinDePartie() {
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
+  const [lettrineChutee, setLettrineChutee] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -289,8 +290,8 @@ export default function FinDePartie() {
         {/* ── POEM CARD ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
+          animate={lettrineChutee ? { opacity: 1, y: [0, -5, 3, -2, 0] } : { opacity: 1, y: 0 }}
+          transition={lettrineChutee ? { duration: 0.28, ease: 'easeOut' } : { delay: 0.7, duration: 0.8 }}
           style={{
             border: `1px solid ${accent}40`,
             borderLeft: `3px solid ${accent}`,
@@ -321,15 +322,28 @@ export default function FinDePartie() {
                 transition={{ delay: 0.25 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
               >
                 {i === 0 && lettrine && (
-                  <span style={{
-                    fontFamily: "'Bodoni Moda', serif",
-                    fontWeight: 900,
-                    fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
-                    lineHeight: 0.85, color: accent,
-                    float: 'left', marginRight: 6, marginTop: 4,
-                  }}>
+                  <motion.span
+                    initial={{ y: -40, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.5, ease: [0.22, 1.4, 0.36, 1] }}
+                    onAnimationComplete={() => {
+                      if (!lettrineChutee) {
+                        setLettrineChutee(true)
+                        jouer('lettrine')
+                        vibrer('devoilement')
+                      }
+                    }}
+                    style={{
+                      display: 'inline-block',
+                      fontFamily: "'Bodoni Moda', serif",
+                      fontWeight: 900,
+                      fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
+                      lineHeight: 0.85, color: accent,
+                      float: 'left', marginRight: 6, marginTop: 4,
+                    }}
+                  >
                     {lettrine}
-                  </span>
+                  </motion.span>
                 )}
                 {i === 0 ? resteLigne0 : (ligne || ' ')}
               </motion.span>
