@@ -861,6 +861,7 @@ export async function genererVideoStory(opts: {
   let imgBox = { x: 0, y: 0, w: 0, h: 0 }
   let readingTop = 1430
   let poemeIllustImg: HTMLImageElement | null = null
+  let illustBox = { x: 0, y: 0, w: 0, h: 0 }
   if (opts.type === 'poeme') {
     if (opts.titre?.trim()) {
       // titre + filet figurent sur le fond fixe
@@ -874,7 +875,6 @@ export async function genererVideoStory(opts: {
       filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
     }
     // Illustration IA — zone élargie, rendue en fondu animé (pas sur le fond fixe)
-    let illustBox = { x: 0, y: 0, w: 0, h: 0 }
     if (opts.imageDataUrl) {
       try {
         poemeIllustImg = await chargerImage(opts.imageDataUrl)
