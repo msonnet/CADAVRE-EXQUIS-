@@ -138,7 +138,8 @@ export default function Atelier() {
                 propre mémoire.</>
               : <>Le sort fixera la longueur du poème — de V à XXVII vers. Vous l'ouvrirez,
                 vous le refermerez, et la main vous reviendra tous les {toRomain(cadenceRetour(nbVoix)[0])} à {toRomain(cadenceRetour(nbVoix)[1])} vers
-                — plus les voix sont nombreuses, plus elle se fait rare.</>}
+                — plus les voix sont nombreuses, plus elle se fait rare.</>
+            }
           </div>
         </motion.div>
 
