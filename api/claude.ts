@@ -14,17 +14,18 @@ type TypeCase =
   | 'libre'
   | 'article-adj'
 
-// Tokens hard-cap par type
+// Tokens hard-cap par type — marges larges : le français tokenise lourdement,
+// un plafond trop serré coupe les mots en plein milieu (« l'asymét »)
 const MAX_TOKENS: Record<TypeCase, number> = {
-  'nom': 6,
-  'verbe': 5,
-  'adjectif': 5,
-  'adverbe': 6,
-  'groupe-nominal': 6,
-  'groupe-verbal': 8,
-  'proposition': 18,
-  'libre': 18,
-  'article-adj': 6,
+  'nom': 8,
+  'verbe': 8,
+  'adjectif': 8,
+  'adverbe': 10,
+  'groupe-nominal': 10,
+  'groupe-verbal': 14,
+  'proposition': 24,
+  'libre': 24,
+  'article-adj': 10,
 }
 
 // Contraintes de longueur explicites dans le prompt
@@ -119,9 +120,12 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       return t
     }
     case 'groupe-nominal': {
-      // Strictly article + noun — never let an adjective sneak in (phrase-étoffée has a dedicated adjectif slot)
-      if (mots.length > 2) return mots.slice(0, 2).join(' ')
-      return t
+      // Strictement article + nom — un GN sans article (« racines », « chair opposée »)
+      // casse la syntaxe du vers cousu : on rejette → fallback avec article garanti
+      const gn = mots.length > 2 ? mots.slice(0, 2).join(' ') : t
+      const gm = gn.split(/\s+/)
+      if (gm.length === 1) return /^[lLdD][''’]\S+/.test(gm[0]) ? gn : ''
+      return ARTICLES_FR.has(gm[0].toLowerCase()) ? gn : ''
     }
     default:
       return t
@@ -192,7 +196,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   const consigneIA = consigne.replace(/\s*[—–-]\s*ex\s*:.*$/i, '').trim()
 
   const echoLine = contexte
-    ? `\nTu entends en écho : "${contexte}".`
+    ? `\nTu entends en écho : "${contexte}". Libre à toi d'y rebondir ou de l'ignorer — reste dans ton propre monde.`
     : ''
 
   // Anti-répétition : liste des mots déjà employés dans la partie, à ne jamais réutiliser.
@@ -236,13 +240,18 @@ export default async function handler(req: any, res: any): Promise<void> {
 
     const data = await response.json()
     const brut = (data.content?.[0]?.text ?? '').trim()
-    const propre = brut
+    let propre = brut
       .replace(/\*+([^*]*)\*+/g, '$1')
       .replace(/#+\s*/g, '')
       .replace(/\n+/g, ' ')
       .replace(/\d{1,2}\s+\w+\s+\d{4}/g, '')
       .replace(/[.!?;,]+$/, '')
       .trim()
+
+    // Plafond de tokens atteint → le dernier mot est probablement tronqué (« l'asymét ») : on le retire
+    if (data.stop_reason === 'max_tokens') {
+      propre = propre.replace(/\s*\S+$/, '').trim()
+    }
 
     // Detect meta-responses where the AI explains its task instead of generating poetic content
     const isMetaResponse =

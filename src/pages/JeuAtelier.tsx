@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { demanderFragmentIA } from '../api/claude'
+import { corrigerAccords } from '../api/corriger'
 import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
 import type { PlanAtelier } from './Atelier'
@@ -39,6 +40,7 @@ interface RoleFragment {
   consigne: string
   role: string       // étiquette affichée pendant que la voix écrit
   mots?: number      // uniquement pour le vers à une voix (longueur aléatoire)
+  apres?: string     // ponctuation cousue après le fragment (ex : virgule de l'adverbe en tête)
 }
 
 const GN_SUJET: RoleFragment = {
@@ -56,10 +58,21 @@ const GROUPE_VERBAL: RoleFragment = {
 const ADJECTIF: RoleFragment = {
   type: 'adjectif', consigne: 'un adjectif qualificatif seul', role: 'ADJECTIF',
 }
+const ADVERBE_TETE: RoleFragment = {
+  type: 'adverbe', consigne: 'un adverbe ou une locution adverbiale', role: 'ADVERBE', apres: ',',
+}
+const ADVERBE_FIN: RoleFragment = {
+  type: 'adverbe', consigne: 'un adverbe ou une locution adverbiale', role: 'ADVERBE',
+}
+const QUESTION: RoleFragment = {
+  type: 'proposition', consigne: 'une question courte et étrange', role: 'QUESTION',
+}
 
 function tirerGabarit(nVoix: number): RoleFragment[] {
   if (nVoix === 1) {
-    // Une seule plume écrit le vers entier — longueur tirée au sort (2 à 6 mots)
+    // Une seule plume écrit le vers entier — parfois une question, sinon
+    // un vers libre de longueur tirée au sort (2 à 6 mots)
+    if (Math.random() < 0.22) return [QUESTION]
     const mots = 2 + Math.floor(Math.random() * 5)
     return [{ type: 'libre', consigne: 'un vers — une image physique et inattendue', role: 'VERS ENTIER', mots }]
   }
@@ -67,23 +80,33 @@ function tirerGabarit(nVoix: number): RoleFragment[] {
     const variantes: RoleFragment[][] = [
       [GN_SUJET, GROUPE_VERBAL],   // « le silence » + « traverse la nuit »
       [GN_SUJET, VERBE],           // « la lumière » + « tremble »
+      [GN_SUJET, ADJECTIF],        // « une lumière » + « froide » — vers nominal
     ]
     return variantes[Math.floor(Math.random() * variantes.length)]
   }
   const variantes: RoleFragment[][] = [
-    [GN_SUJET, VERBE, GN_COMPLEMENT],     // la phrase courte de Breton
-    [GN_SUJET, ADJECTIF, GROUPE_VERBAL],  // « la lumière » + « froide » + « traverse la nuit »
+    [GN_SUJET, VERBE, GN_COMPLEMENT],       // la phrase courte de Breton
+    [GN_SUJET, ADJECTIF, GROUPE_VERBAL],    // « la lumière » + « froide » + « traverse la nuit »
+    [ADVERBE_TETE, GN_SUJET, GROUPE_VERBAL], // « doucement, » + « la cendre » + « pèse sur le monde »
+    [GN_SUJET, GROUPE_VERBAL, ADVERBE_FIN],  // « le sel » + « traverse la nuit » + « lentement »
+    [GN_SUJET, VERBE, ADVERBE_FIN],          // « une écluse » + « chavire » + « sans bruit »
   ]
   return variantes[Math.floor(Math.random() * variantes.length)]
 }
 
 // Réserve locale par rôle si l'API est injoignable — le poème ne s'arrête jamais
 const RESERVE: Record<string, string[]> = {
-  'groupe-nominal': ['le silence', "l'ombre", 'une cendre', 'la nuit', 'un souffle', 'la pierre', 'le givre', 'une porte'],
-  'verbe': ['tremble', 'dévore', 'veille', 'chavire', 'demeure', 'glisse', 'rôde', 'vacille'],
-  'groupe-verbal': ['traverse la nuit', 'brûle en silence', 'tombe sans bruit', 'pèse sur le monde', "glisse dans l'ombre"],
-  'adjectif': ['pâle', 'sourd', 'creux', 'nocturne', 'amer', 'froid', 'opaque', 'muet'],
-  'libre': ["l'ombre se souvient", 'la nuit garde tout', 'le sel des heures', 'une porte respire', 'le vent du nord demeure'],
+  'groupe-nominal': ['le silence', "l'ombre", 'une cendre', 'la nuit', 'un souffle', 'la pierre', 'le givre', 'une porte',
+                     'la rouille', 'un seuil', "l'écume", 'le lierre', 'une aiguille', 'le limon'],
+  'verbe': ['tremble', 'dévore', 'veille', 'chavire', 'demeure', 'glisse', 'rôde', 'vacille',
+            'affleure', 'se penche', 'consent', 'recule'],
+  'groupe-verbal': ['traverse la nuit', 'brûle en silence', 'tombe sans bruit', 'pèse sur le monde', "glisse dans l'ombre",
+                    'compte les heures', 'retient son souffle', 'efface les seuils'],
+  'adjectif': ['pâle', 'sourd', 'creux', 'nocturne', 'amer', 'froid', 'opaque', 'muet', 'fendu', 'tiède'],
+  'adverbe': ['sans bruit', 'doucement', 'à jamais', 'ailleurs', 'en silence', 'à rebours', 'de biais'],
+  'proposition': ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui veille encore ?', "Jusqu'où va le vide ?"],
+  'libre': ["l'ombre se souvient", 'la nuit garde tout', 'le sel des heures', 'une porte respire', 'le vent du nord demeure',
+            'quelque chose consent', "l'eau noire patiente"],
 }
 
 const CLE_BROUILLON = 'atelier-en-cours'
@@ -176,31 +199,38 @@ export default function JeuAtelier() {
       const gabarit = tirerGabarit(nVoix)
       setVoixEnCours(indices.map((vi, k) => ({ num: vi + 1, role: gabarit[k].role, fait: false })))
 
+      // L'écho au dernier mot : seule la dernière trace du vers précédent est
+      // transmise — assez pour un raccord, pas assez pour imposer un thème.
+      // La voix décide librement d'y rebondir ou de l'ignorer.
+      const precedent = versRef.current[idx - 1]?.texte
+      const dernierMot = precedent
+        ?.trim().split(/\s+/).at(-1)
+        ?.replace(/^[«"(]+|[»".,;:!?)]+$/g, '')
+      const contexte = p.echo && dernierMot ? dernierMot : undefined
+
       const fragments: string[] = []
       for (let k = 0; k < indices.length; k++) {
         if (annule) return
         const caseRole = gabarit[k]
-        const precedent = versRef.current[idx - 1]?.texte
         const enCours = fragments.join(' ')
-        const contexte = p.echo
-          ? ([precedent, enCours].filter(Boolean).join(' ').slice(-400) || undefined)
-          : undefined
         const eviter = [
           ...versRef.current.flatMap(v => v.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []),
           ...(enCours.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []),
         ].filter(m => m.length > 2)
 
+        const requete = {
+          consigne: caseRole.consigne,
+          type: caseRole.type,
+          voiceId: p.voixPool[indices[k]],
+          contexte,
+          eviter,
+          ...(caseRole.mots ? { mots: caseRole.mots } : {}),
+        }
         let texte = ''
         try {
           const [reponse] = await Promise.all([
-            demanderFragmentIA({
-              consigne: caseRole.consigne,
-              type: caseRole.type,
-              voiceId: p.voixPool[indices[k]],
-              contexte,
-              eviter,
-              ...(caseRole.mots ? { mots: caseRole.mots } : {}),
-            }),
+            // Une reprise avant la réserve locale — les lignes en conserve se reconnaissent
+            demanderFragmentIA(requete).catch(async () => { await attendre(800); return demanderFragmentIA(requete) }),
             attendre(650 + Math.random() * 450),   // respiration théâtrale minimale par voix
           ])
           texte = reponse.texte.trim()
@@ -209,9 +239,12 @@ export default function JeuAtelier() {
           const pool = RESERVE[caseRole.type] ?? RESERVE['libre']
           texte = pool[Math.floor(Math.random() * pool.length)]
         }
+        // Les questions retrouvent leur point d'interrogation (le serveur coupe la ponctuation finale)
+        if (caseRole.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += ' ?'
 
         // Les fragments suivants se cousent en minuscule — un seul fil
-        fragments.push(k === 0 ? texte : texte.charAt(0).toLowerCase() + texte.slice(1))
+        const cousu = k === 0 ? texte : texte.charAt(0).toLowerCase() + texte.slice(1)
+        fragments.push(cousu + (caseRole.apres ?? ''))
         if (annule) return
         setVoixEnCours(prev => prev.map((v, j) => j === k ? { ...v, fait: true } : v))
       }
@@ -230,39 +263,55 @@ export default function JeuAtelier() {
     return () => { annule = true }
   }, [idx, plan, termine, tourJoueur]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Fin : sauvegarde et révélation ──
+  // ── Fin : correction des accords vers par vers, sauvegarde et révélation ──
   useEffect(() => {
     if (!plan || !termine || sauvegardeFaite.current) return
     sauvegardeFaite.current = true
 
-    const cases: Case[] = versRef.current.map((v, i) => ({
-      numero: i + 1,
-      fonction: `vers ${i + 1}`,
-      consigne: v.auteur === 'humain'
-        ? 'vers du médium'
-        : `vers des voix ${v.voixNums.map(toRomain).join(' · ')}`,
-      auteur: v.auteur,
-      texte: v.texte,
-      ts: Date.now(),
-    }))
+    finaliser()
 
-    const poeme: Poeme = {
-      id: `atelier-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      titre: null,
-      structureId: 'atelier',
-      mode: 'standard',
-      visibilite: plan.echo ? 'derniere-case' : 'aveugle',
-      cases,
-      dateCreation: Date.now(),
-      dateModification: Date.now(),
+    async function finaliser() {
+      // Les accords sont cousus dans le poème lui-même : les coutures
+      // (vue vers par vers) montrent le même texte que le feuillet.
+      let textes = versRef.current.map(v => v.texte)
+      try {
+        const corrige = await corrigerAccords(
+          textes.join('\n'), 'atelier',
+          textes.map(t => ({ texte: t, type: 'libre' })),
+        )
+        const lignes = corrige.split('\n').map(l => l.trim()).filter(Boolean)
+        if (lignes.length === textes.length) textes = lignes
+      } catch { /* texte brut */ }
+
+      const cases: Case[] = versRef.current.map((v, i) => ({
+        numero: i + 1,
+        fonction: `vers ${i + 1}`,
+        consigne: v.auteur === 'humain'
+          ? 'vers du médium'
+          : `vers des voix ${v.voixNums.map(toRomain).join(' · ')}`,
+        auteur: v.auteur,
+        texte: textes[i],
+        ts: Date.now(),
+      }))
+
+      const poeme: Poeme = {
+        id: `atelier-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        titre: null,
+        structureId: 'atelier',
+        mode: 'standard',
+        visibilite: plan!.echo ? 'derniere-case' : 'aveugle',
+        cases,
+        dateCreation: Date.now(),
+        dateModification: Date.now(),
+      }
+
+      sauvegarderPoeme(poeme)
+        .catch(console.error)
+        .finally(() => {
+          localStorage.removeItem(CLE_BROUILLON)
+          navigate('/fin', { state: { poeme } })
+        })
     }
-
-    sauvegarderPoeme(poeme)
-      .catch(console.error)
-      .finally(() => {
-        localStorage.removeItem(CLE_BROUILLON)
-        navigate('/fin', { state: { poeme } })
-      })
   }, [termine, plan]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function deposerVers() {
