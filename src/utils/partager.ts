@@ -930,17 +930,31 @@ export async function genererVideoStory(opts: {
   const videoStream = (canvas as any).captureStream(30) as MediaStream
   const tracks: MediaStreamTrack[] = [...videoStream.getVideoTracks()]
   if (audioDest) tracks.push(...audioDest.stream.getAudioTracks())
-  const stream = new MediaStream(tracks)
 
-  let rec: MediaRecorder
-  try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 }) }
-  catch { return null }
+  // Créer + démarrer l'enregistreur. Sur iOS, une piste audio dont la session
+  // est interrompue fait échouer start() (« Failed to start the audio device ») :
+  // on retente alors sans audio — une vidéo muette vaut mieux que pas de vidéo.
   const chunks: Blob[] = []
-  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
-  const done = new Promise<Blob>(res => { rec.onstop = () => res(new Blob(chunks, { type: mime })) })
+  const creerRecorder = (pistes: MediaStreamTrack[]): MediaRecorder | null => {
+    try {
+      const r = new MediaRecorder(new MediaStream(pistes), { mimeType: mime, videoBitsPerSecond: 8_000_000 })
+      r.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
+      r.start()
+      return r
+    } catch { chunks.length = 0; return null }
+  }
+  let rec = creerRecorder(tracks)
+  let audioActif = !!audioDest
+  if (!rec && audioDest) { rec = creerRecorder(videoStream.getVideoTracks()); audioActif = false }
+  if (!rec) return null
+  const done = new Promise<Blob>(res => { rec!.onstop = () => res(new Blob(chunks, { type: mime })) })
 
-  rec.start()
-  if (audioCtx && audioDest) { try { await audioCtx.resume() } catch { /* ignore */ }; scoreRevelation(audioCtx, audioDest, opts.type) }
+  if (audioActif && audioCtx && audioDest) {
+    try {
+      await audioCtx.resume()
+      scoreRevelation(audioCtx, audioDest, opts.type)
+    } catch { /* partition silencieuse — la vidéo continue */ }
+  }
 
   await new Promise<void>(resolve => {
     const start = performance.now()

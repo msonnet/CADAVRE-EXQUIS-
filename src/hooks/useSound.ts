@@ -118,7 +118,7 @@ export function useSound() {
         ctx.resume().then(() => {
           notifyContextRunning()
           play()
-        })
+        }).catch(() => { /* session audio indisponible (iOS) — le son est non-bloquant */ })
       }
     } catch {
       // audio non-bloquant

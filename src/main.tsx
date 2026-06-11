@@ -7,12 +7,16 @@ import './index.css'
 
 injectAnalytics()
 
-// Attrape toute erreur JS non gérée et l'affiche dans la page
+// Journalise les erreurs non gérées sans jamais détruire la page —
+// un hoquet bénin (ex : session audio iOS interrompue) ne doit pas
+// effacer l'application. Les erreurs de rendu fatales passent par
+// l'ErrorBoundary de App.tsx.
 window.addEventListener('error', (e) => {
-  document.body.innerHTML = `<pre style="padding:24px;font-family:monospace;font-size:13px;color:#b22c20;white-space:pre-wrap;background:#f5ede0">ERREUR JS:\n${e.message}\n\n${e.filename}:${e.lineno}\n\n${e.error?.stack ?? ''}</pre>`
+  console.error('Erreur JS non gérée :', e.message, `${e.filename}:${e.lineno}`, e.error?.stack ?? '')
 })
 window.addEventListener('unhandledrejection', (e) => {
-  document.body.innerHTML = `<pre style="padding:24px;font-family:monospace;font-size:13px;color:#b22c20;white-space:pre-wrap;background:#f5ede0">PROMESSE REJETÉE:\n${e.reason}</pre>`
+  console.error('Promesse rejetée non gérée :', e.reason)
+  e.preventDefault()
 })
 
 // Mise à jour non intrusive : on ne recharge JAMAIS en pleine partie.
