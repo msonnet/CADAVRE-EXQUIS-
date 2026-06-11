@@ -394,10 +394,22 @@ export default function Jeu() {
     // Anti-répétition : mots déjà employés dans la partie (>2 lettres) + mots produits
     // par l'IA lors des parties récentes, pour que chaque partie diverge vraiment et que
     // la même imagerie ne revienne pas trois fois de suite. Vocabulaire libre par ailleurs.
-    const motsPartie = cases
+    // Conjonctions courtes (≤2 lettres) : échappent au filtre habituel > 2 chars.
+    // On extrait explicitement celles utilisées en tête de vers pour les bannir.
+    const CONJ_COURTES = new Set(['or', 'si'])
+    const conjCourtesUsees = cases
       .filter(c => c.texte)
-      .flatMap(c => c.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? [])
-      .filter(m => m.length > 2)
+      .flatMap(c => {
+        const m = c.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
+        return m && CONJ_COURTES.has(m[0]) ? [m[0]] : []
+      })
+    const motsPartie = [
+      ...cases
+        .filter(c => c.texte)
+        .flatMap(c => c.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? [])
+        .filter(m => m.length > 2),
+      ...conjCourtesUsees,
+    ]
     // Les mots les plus récents d'abord (le serveur tronque la liste) : on garantit
     // ainsi que l'imagerie de la partie précédente est bien interdite.
     const eviterIA = [...motsPartie, ...[...motsIaRecents.current].reverse()]
