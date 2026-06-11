@@ -69,6 +69,18 @@ const ADVERBE_TETE: RoleFragment = {
 const ADVERBE_FIN: RoleFragment = {
   type: 'adverbe', consigne: 'un adverbe ou une locution adverbiale', role: 'ADVERBE',
 }
+const CONJ_COORD: RoleFragment = {
+  type: 'conjonction-coord', consigne: 'une conjonction de coordination ou un adverbe de liaison', role: 'CONJONCTION',
+}
+const CONJ_SUBORD: RoleFragment = {
+  type: 'conjonction-subord', consigne: 'une conjonction de subordination', role: 'CONJONCTION',
+}
+const INFINITIF: RoleFragment = {
+  type: 'infinitif', consigne: "un verbe à l'infinitif", role: 'INFINITIF',
+}
+const GERONDIF: RoleFragment = {
+  type: 'gérondif', consigne: 'un gérondif (en + participe présent)', role: 'GÉRONDIF', apres: ',',
+}
 const QUESTION: RoleFragment = {
   type: 'proposition', consigne: 'une question courte et étrange', role: 'QUESTION',
 }
@@ -86,6 +98,7 @@ function tirerGabarit(nVoix: number): RoleFragment[] {
       [GN_SUJET, GROUPE_VERBAL],   // « le silence » + « traverse la nuit »
       [GN_SUJET, VERBE],           // « la lumière » + « tremble »
       [GN_SUJET, ADJECTIF],        // « une lumière » + « froide » — vers nominal
+      [INFINITIF, GN_COMPLEMENT],  // « brûler » + « la cendre »
     ]
     return variantes[Math.floor(Math.random() * variantes.length)]
   }
@@ -95,6 +108,9 @@ function tirerGabarit(nVoix: number): RoleFragment[] {
     [ADVERBE_TETE, GN_SUJET, GROUPE_VERBAL], // « doucement, » + « la cendre » + « pèse sur le monde »
     [GN_SUJET, GROUPE_VERBAL, ADVERBE_FIN],  // « le sel » + « traverse la nuit » + « lentement »
     [GN_SUJET, VERBE, ADVERBE_FIN],          // « une écluse » + « chavire » + « sans bruit »
+    [CONJ_COORD, GN_SUJET, GROUPE_VERBAL],   // « mais » + « la cendre » + « pèse sur le monde »
+    [CONJ_SUBORD, GN_SUJET, VERBE],          // « quand » + « le sel » + « chavire »
+    [GERONDIF, GN_SUJET, VERBE],             // « en tombant, » + « la lumière » + « tremble »
   ]
   return variantes[Math.floor(Math.random() * variantes.length)]
 }
@@ -124,6 +140,10 @@ const RESERVE: Record<string, string[]> = {
   'proposition': ['Que reste-t-il encore ?', 'Où vont les ombres ?', 'Qui veille encore ?', "Jusqu'où va le vide ?"],
   'libre': ["l'ombre se souvient", 'la nuit garde tout', 'le sel des heures', 'une porte respire', 'le vent du nord demeure',
             'quelque chose consent', "l'eau noire patiente"],
+  'conjonction-coord': ['mais', 'car', 'or', 'pourtant', 'cependant', 'donc'],
+  'conjonction-subord': ['quand', 'si', 'comme', 'lorsque', 'dès que', 'tandis que'],
+  'infinitif': ['brûler', 'attendre', 'traverser', 'descendre', 'effacer', 'tenir', 'sentir', 'glisser'],
+  'gérondif': ['en tombant', 'en glissant', 'en brûlant', 'en tremblant', 'en dormant', 'en cherchant'],
 }
 
 const CLE_BROUILLON = 'atelier-en-cours'

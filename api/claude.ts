@@ -14,6 +14,10 @@ type TypeCase =
   | 'proposition'
   | 'libre'
   | 'article-adj'
+  | 'conjonction-coord'
+  | 'conjonction-subord'
+  | 'infinitif'
+  | 'gérondif'
 
 // Tokens hard-cap par type — marges larges : le français tokenise lourdement,
 // un plafond trop serré coupe les mots en plein milieu (« l'asymét »)
@@ -28,6 +32,10 @@ const MAX_TOKENS: Record<TypeCase, number> = {
   'proposition': 24,
   'libre': 24,
   'article-adj': 10,
+  'conjonction-coord': 6,
+  'conjonction-subord': 12,
+  'infinitif': 8,
+  'gérondif': 14,
 }
 
 // Contraintes de longueur explicites dans le prompt
@@ -42,6 +50,10 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'proposition': '4 à 6 mots (phrase courte)',
   'libre': '3 à 6 mots (un vers)',
   'article-adj': '2 MOTS EXACTEMENT : article défini ou indéfini + adjectif qualificatif. Exemples valides : "un sombre", "la vieille", "une pâle", "le lourd", "un creux". INTERDIT : noms, pronoms, expressions figées.',
+  'conjonction-coord': "1 MOT SEUL — une conjonction de coordination ou un adverbe de liaison ('mais', 'car', 'or', 'pourtant', 'cependant', 'donc'). JAMAIS de phrase, jamais 2 mots.",
+  'conjonction-subord': "1 ou 2 mots — une conjonction de subordination ('quand', 'si', 'comme', 'lorsque', 'dès que', 'tandis que', 'tant que'). JAMAIS une proposition complète.",
+  'infinitif': "1 MOT SEUL — un verbe à l'infinitif (ex : 'brûler', 'attendre', 'traverser', 'descendre'). JAMAIS d'article ni de pronom.",
+  'gérondif': "2 ou 3 mots — un gérondif : 'en' + participe présent (ex : 'en tombant', 'en glissant', 'en brûlant lentement'). TOUJOURS commencer par 'en'. JAMAIS de sujet.",
 }
 
 const FALLBACKS: Record<TypeCase, string[]> = {
@@ -89,6 +101,10 @@ const FALLBACKS: Record<TypeCase, string[]> = {
     'un noir', 'une lente', 'le vieux', 'une étrange', 'un creux', 'la froide',
     'un lourd', 'une brisée', 'le muet', 'une profonde', 'un nu', 'la dense',
   ],
+  'conjonction-coord': ['mais', 'car', 'or', 'pourtant', 'cependant', 'donc', 'et'],
+  'conjonction-subord': ['quand', 'si', 'comme', 'lorsque', 'dès que', 'tandis que', 'tant que'],
+  'infinitif': ['brûler', 'attendre', 'traverser', 'descendre', 'effacer', 'tenir', 'sentir', 'glisser', 'peser', 'fuir'],
+  'gérondif': ['en tombant', 'en glissant', 'en brûlant', 'en tremblant', 'en dormant', 'en cherchant', 'en pleurant', 'en pesant'],
 }
 
 const ARTICLES_FR = new Set([
@@ -158,6 +174,26 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       if (gm.length === 1) return /^[lLdD][''’]\S+/.test(gm[0]) ? gn : ''
       return ARTICLES_FR.has(gm[0].toLowerCase()) ? gn : ''
     }
+    case 'conjonction-coord': {
+      // Strip anything past the first word — the model sometimes adds context
+      return mots[0]
+    }
+    case 'conjonction-subord': {
+      // Accept "dès que", "tandis que" etc. (2 words), truncate beyond
+      if (mots.length > 2) return mots.slice(0, 2).join(' ')
+      return t
+    }
+    case 'infinitif': {
+      // Single verb at infinitive — trim any extras the model appended
+      if (mots.length > 1) return mots[0]
+      return t
+    }
+    case 'gérondif': {
+      // Must start with "en" — if not, the fallback is safer than a bad output
+      if (mots[0].toLowerCase() !== 'en') return ''
+      if (mots.length > 3) return mots.slice(0, 3).join(' ')
+      return t
+    }
     default:
       return t
   }
@@ -176,6 +212,7 @@ const TYPES_VALIDES: Set<string> = new Set([
   'nom', 'verbe', 'verbe-transitif', 'adjectif', 'adverbe',
   'groupe-nominal', 'groupe-verbal',
   'proposition', 'libre', 'article-adj',
+  'conjonction-coord', 'conjonction-subord', 'infinitif', 'gérondif',
 ])
 
 export default async function handler(req: any, res: any): Promise<void> {
