@@ -919,13 +919,27 @@ export async function genererVideoStory(opts: {
     } catch { /* ignore */ }
   }
 
-  // Audio embarqué dans la vidéo
+  // Audio embarqué dans la vidéo — seulement si la session audio démarre vraiment.
+  // Sur iOS, une session interrompue peut laisser resume() en suspens pour toujours :
+  // on borne l'attente, et la vidéo part muette plutôt que de ne jamais partir.
   let audioCtx: AudioContext | null = null
   let audioDest: MediaStreamAudioDestinationNode | null = null
   try {
     const AC = (window as any).AudioContext || (window as any).webkitAudioContext
-    if (AC) { audioCtx = new AC(); audioDest = audioCtx!.createMediaStreamDestination() }
-  } catch { /* pas d'audio */ }
+    if (AC) {
+      const ctxAudio: AudioContext = new AC()
+      const demarre = await Promise.race([
+        ctxAudio.resume().then(() => true, () => false),
+        new Promise<boolean>(r => setTimeout(() => r(false), 1200)),
+      ])
+      if (demarre && ctxAudio.state === 'running') {
+        audioCtx = ctxAudio
+        audioDest = ctxAudio.createMediaStreamDestination()
+      } else {
+        ctxAudio.close().catch(() => { /* ignore */ })
+      }
+    }
+  } catch { audioCtx = null; audioDest = null }
 
   const videoStream = (canvas as any).captureStream(30) as MediaStream
   const tracks: MediaStreamTrack[] = [...videoStream.getVideoTracks()]
@@ -950,35 +964,44 @@ export async function genererVideoStory(opts: {
   const done = new Promise<Blob>(res => { rec!.onstop = () => res(new Blob(chunks, { type: mime })) })
 
   if (audioActif && audioCtx && audioDest) {
-    try {
-      await audioCtx.resume()
-      scoreRevelation(audioCtx, audioDest, opts.type)
-    } catch { /* partition silencieuse — la vidéo continue */ }
+    try { scoreRevelation(audioCtx, audioDest, opts.type) } catch { /* partition silencieuse — la vidéo continue */ }
   }
 
   await new Promise<void>(resolve => {
     const start = performance.now()
+    let fini = false
+    const terminer = () => { if (!fini) { fini = true; clearInterval(garde); resolve() } }
+    // Garde-fou : si requestAnimationFrame se fige (onglet masqué, throttling iOS)
+    // ou qu'une frame lève, on conclut quand même — la composition ne doit jamais tourner en rond
+    const garde = setInterval(() => { if (performance.now() - start >= dureeMs + 1500) terminer() }, 400)
     const frame = () => {
+      if (fini) return
       const t = performance.now() - start
-      ctx.drawImage(bgCanvas, 0, 0)
-      if (opts.type === 'poeme' && poemeIllustImg && overlay) {
-        dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeMs, W, H, ink, bg)
-      } else if (opts.type === 'poeme' && poemeLayout) {
-        dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
-      } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, ink, bg)
-      // Voile de boucle — un cillement crème masque le raccord début/fin sur les réseaux
-      if (t < 130) {
-        ctx.save(); ctx.globalAlpha = 0.6 * (1 - t / 130); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.restore()
-      }
+      try {
+        ctx.drawImage(bgCanvas, 0, 0)
+        if (opts.type === 'poeme' && poemeIllustImg && overlay) {
+          dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeMs, W, H, ink, bg)
+        } else if (opts.type === 'poeme' && poemeLayout) {
+          dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
+        } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, ink, bg)
+        // Voile de boucle — un cillement crème masque le raccord début/fin sur les réseaux
+        if (t < 130) {
+          ctx.save(); ctx.globalAlpha = 0.6 * (1 - t / 130); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.restore()
+        }
+      } catch { terminer(); return }
       if (t < dureeMs) requestAnimationFrame(frame)
-      else resolve()
+      else terminer()
     }
     requestAnimationFrame(frame)
   })
 
-  rec.stop()
-  try { await audioCtx?.close() } catch { /* ignore */ }
-  return await done
+  try { rec.stop() } catch { /* déjà arrêté */ }
+  try { audioCtx?.close().catch(() => {}) } catch { /* close() peut pendre sur iOS — jamais attendu */ }
+  // Si onstop ne vient jamais (enregistreur figé), on rend null → repli sur l'affiche fixe
+  return await Promise.race([
+    done,
+    new Promise<Blob | null>(r => setTimeout(() => r(null), 8000)),
+  ])
 }
 
 function flash(ctx: CanvasRenderingContext2D, W: number, t: number, t0: number, dur: number, bg: string, accent: string) {

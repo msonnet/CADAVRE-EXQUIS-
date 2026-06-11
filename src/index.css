@@ -43,7 +43,6 @@
   body {
     margin: 0;
     background-color: var(--reve-bg);
-    background-image: var(--reve-halo);
     color: var(--reve-ink);
     font-family: 'Inter', 'IM Fell English', Georgia, serif;
     font-size: 17px;
@@ -51,6 +50,16 @@
     min-height: 100dvh;
     overflow-x: hidden;
     transition: background-color 0.5s ease, color 0.5s ease;
+  }
+  /* Halo d'ambiance fixé au viewport : peint sur le document entier il créerait
+     une frontière claire/sombre qui se déplace au scroll des pages longues. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: var(--reve-halo);
+    pointer-events: none;
+    z-index: 0;
   }
   #root {
     min-height: 100dvh;
