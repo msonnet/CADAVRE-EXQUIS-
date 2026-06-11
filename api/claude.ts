@@ -33,8 +33,8 @@ const MAX_TOKENS: Record<TypeCase, number> = {
 // Contraintes de longueur explicites dans le prompt
 const CONTRAINTES: Record<TypeCase, string> = {
   'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "cœur", "nuage", "cendre", "os")',
-  'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier (tout temps : "dévore", "hantait", "boira", "frôle", "vacilla", "glissera"). INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms, participes passés non conjugués, adverbes.',
-  'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes.',
+  'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier (tout temps : "dévore", "hantait", "boira", "frôle", "vacilla", "glissera"). INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms, participes passés non conjugués, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
+  'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
   'adverbe': '1 SEUL ADVERBE INVARIABLE (en -ment : "doucement", "obliquement") ou une locution adverbiale de 2 mots ("sans bruit", "à rebours"). INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
   'groupe-nominal': '2 MOTS EXACTEMENT : article + nom — ex : "le silence", "une ombre", "la pluie", "un couteau". JAMAIS d\'adjectif après le nom.',
@@ -257,7 +257,9 @@ export default async function handler(req: any, res: any): Promise<void> {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        // Vers entiers ('libre') : Opus 4.8 — c'est là que la qualité poétique se joue.
+        // Fragments d'1 à 4 mots : Sonnet 4.6 suffit, plus rapide.
+        model: type === 'libre' ? 'claude-opus-4-8' : 'claude-sonnet-4-6',
         max_tokens: maxTokens,
         stop_sequences: ['.', '!', '?'],
         system: voix.systemPrompt,
