@@ -357,7 +357,9 @@ export default function JeuAtelier() {
     ? 'Ouvrez la séance — le premier vers vous appartient.'
     : idx === total - 1
       ? 'Refermez le poème — le dernier vers vous appartient.'
-      : 'La main vous revient.'
+      : plan.voixPool.length === 0
+        ? 'Poursuivez, sans vous relire.'
+        : 'La main vous revient.'
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -387,7 +389,7 @@ export default function JeuAtelier() {
           </span>
         </div>
         <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.45, marginTop: 3 }}>
-          {toRomain(plan.voixPool.length)} VOIX · {plan.echo ? "L'ÉCHO" : 'OBSCURITÉ TOTALE'}
+          {plan.voixPool.length === 0 ? 'SEUL' : `${toRomain(plan.voixPool.length)} VOIX`} · {plan.echo ? "L'ÉCHO" : 'OBSCURITÉ TOTALE'}
         </div>
 
         {/* ── FEUILLET MASQUÉ : la forme du poème, jamais le texte ── */}

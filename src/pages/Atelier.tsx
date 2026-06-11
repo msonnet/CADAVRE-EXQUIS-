@@ -22,8 +22,18 @@ export interface PlanAtelier {
 }
 
 // La main revient : le médium ouvre, referme, et la main lui revient tous les 2 à 4 vers.
+// À zéro voix (« seul »), tous les vers lui reviennent — le cadavre exquis se joue
+// contre sa propre mémoire : l'écho ou l'obscurité s'applique à sa propre trace.
 export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
   const totalVers = 5 + Math.floor(Math.random() * 23) // 5–27
+  if (nbVoix === 0) {
+    return {
+      totalVers,
+      toursJoueur: Array.from({ length: totalVers }, (_, i) => i),
+      voixPool: [],
+      echo,
+    }
+  }
   const tours = [0]
   let curseur = 0
   for (;;) {
@@ -42,9 +52,12 @@ export default function Atelier() {
   const navigate = useNavigate()
   const seance = useReve()
   const { jouer } = useSound()
-  const [nbVoix, setNbVoix] = useState<number>(
-    () => Number(localStorage.getItem('atelier-nb-voix')) || VOICE_IDS.length
-  )
+  const [nbVoix, setNbVoix] = useState<number>(() => {
+    // `|| défaut` avalerait le zéro (« seul ») — on valide explicitement
+    const brut = localStorage.getItem('atelier-nb-voix')
+    const n = brut === null ? NaN : Number(brut)
+    return Number.isInteger(n) && n >= 0 && n <= VOICE_IDS.length ? n : VOICE_IDS.length
+  })
   const [echo, setEcho] = useState<boolean>(
     () => (localStorage.getItem('atelier-visibilite') ?? 'echo') === 'echo'
   )
@@ -103,9 +116,13 @@ export default function Atelier() {
             Écrire avec <span style={{ color: accent }}>les voix.</span>
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, fontStyle: 'italic', lineHeight: 1.5 }}>
-            Le sort fixera la longueur du poème — de V à XXVII vers. Vous l'ouvrirez,
-            vous le refermerez, et la main vous reviendra tous les deux à quatre vers.
-            Entre vos passages, les voix se partagent les vers, à une, deux ou trois mains.
+            {nbVoix === 0
+              ? <>Le sort fixera la longueur du poème — de V à XXVII vers. Vous les écrirez
+                tous, seul, sans jamais relire : le cadavre exquis se joue contre votre
+                propre mémoire.</>
+              : <>Le sort fixera la longueur du poème — de V à XXVII vers. Vous l'ouvrirez,
+                vous le refermerez, et la main vous reviendra tous les deux à quatre vers.
+                Entre vos passages, les voix se partagent les vers, à une, deux ou trois mains.</>}
           </div>
         </motion.div>
 
@@ -123,15 +140,15 @@ export default function Atelier() {
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 10 }}>
             <span className="font-bodoni font-black" style={{ fontSize: 44, color: accent, lineHeight: 1 }}>
-              {toRomain(nbVoix)}
+              {nbVoix === 0 ? 'Seul' : toRomain(nbVoix)}
             </span>
             <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, textTransform: 'uppercase' }}>
-              {toutes ? 'Toutes les voix' : nbVoix === 1 ? 'une seule voix' : `${nbVoix} voix`}
+              {nbVoix === 0 ? 'votre main uniquement' : toutes ? 'Toutes les voix' : nbVoix === 1 ? 'une seule voix' : `${nbVoix} voix`}
             </span>
           </div>
           <input
             type="range"
-            min={1}
+            min={0}
             max={VOICE_IDS.length}
             value={nbVoix}
             onChange={e => setNbVoix(Number(e.target.value))}
@@ -139,7 +156,9 @@ export default function Atelier() {
             aria-label="Nombre de voix"
           />
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: encre, opacity: 0.7, marginTop: 8 }}>
-            Les voix sont tirées au sort — vous ne saurez jamais lesquelles parlent.
+            {nbVoix === 0
+              ? 'Aucune voix ne parlera — la dernière main se passe le papier à elle-même.'
+              : 'Les voix sont tirées au sort — vous ne saurez jamais lesquelles parlent.'}
           </div>
         </motion.div>
 
@@ -180,8 +199,12 @@ export default function Atelier() {
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
             {echo
-              ? 'Chaque main — la vôtre comme celles des voix — n’entend que le dernier mot du vers précédent.'
-              : 'Personne ne voit rien. Le poème se coud dans le noir absolu.'}
+              ? (nbVoix === 0
+                ? 'Vous n’entendrez que le dernier mot de votre propre vers précédent.'
+                : 'Chaque main — la vôtre comme celles des voix — n’entend que le dernier mot du vers précédent.')
+              : (nbVoix === 0
+                ? 'Vous ne relirez rien. Le poème se coud dans le noir, vers après vers.'
+                : 'Personne ne voit rien. Le poème se coud dans le noir absolu.')}
           </div>
         </motion.div>
 
