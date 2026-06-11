@@ -79,6 +79,17 @@ function toRomain(n: number): string {
   return map.reduce((r, [v, s]) => { while (n >= v) { r += s; n -= v } return r }, '')
 }
 
+// ~36 % des vers libres s'ouvrent autrement que par un article — conjonctions,
+// infinitif, gérondif — pour briser la succession « le… la… un… ».
+function ouvertureAleatoire(consigneBase: string): string {
+  const r = Math.random()
+  if (r < 0.13) return 'un vers de 3 à 6 mots — commence par une conjonction de coordination (mais, car, or, pourtant, cependant) suivie d\'une image physique et inattendue'
+  if (r < 0.23) return 'un vers de 3 à 6 mots — commence par une conjonction de subordination (quand, si, comme, lorsque) suivie d\'une image physique et inattendue'
+  if (r < 0.30) return "un vers de 3 à 6 mots — commence par un verbe à l'infinitif (brûler, attendre, traverser, descendre) suivi d'une image physique et inattendue"
+  if (r < 0.36) return 'un vers de 3 à 6 mots — commence par un gérondif (en tombant, en glissant, en brûlant) suivi d\'une image physique et inattendue'
+  return consigneBase
+}
+
 const TYPE_SUBTITLE: Partial<Record<string, string>> = {
   'nom':             "AVEC ARTICLE · OU SANS",
   'verbe':           "À L'INFINITIF · OU CONJUGUÉ",
@@ -390,7 +401,8 @@ export default function Jeu() {
     // Les mots les plus récents d'abord (le serveur tronque la liste) : on garantit
     // ainsi que l'imagerie de la partie précédente est bien interdite.
     const eviterIA = [...motsPartie, ...[...motsIaRecents.current].reverse()]
-    demanderFragmentIA({ consigne: def.consigne, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA })
+    const consigneIA = def.type === 'libre' ? ouvertureAleatoire(def.consigne) : def.consigne
+    demanderFragmentIA({ consigne: consigneIA, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA })
       .then(({ texte, source }) => finaliser(texte.trim(), source))
       .catch(()  => finaliser('', 'fallback'))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
