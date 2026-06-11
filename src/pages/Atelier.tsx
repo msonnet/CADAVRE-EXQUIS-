@@ -21,7 +21,17 @@ export interface PlanAtelier {
   echo: boolean              // true = l'écho (dernier mot du vers précédent) ; false = obscurité totale
 }
 
-// La main revient : le médium ouvre, referme, et la main lui revient tous les 2 à 4 vers.
+// La cadence du retour glisse avec le nombre de voix : plus la foule est
+// nombreuse, plus le médium se fait rare. Le pas (distance entre deux retours
+// de la main) est tiré au sort dans une fourchette qui s'incline —
+// 1 voix → pas de 1 à 2, 46 voix → pas de 6 à 10 (vers 10 voix on retrouve 2 à 4).
+// Le hasard garde sa part : seule la fourchette est liée, jamais le tirage.
+export function cadenceRetour(nbVoix: number): [number, number] {
+  const t = (Math.min(Math.max(nbVoix, 1), VOICE_IDS.length) - 1) / (VOICE_IDS.length - 1)
+  return [Math.round(1 + t * 5), Math.round(2 + t * 8)]
+}
+
+// La main revient : le médium ouvre, referme, et la main lui revient selon la cadence.
 // À zéro voix (« seul »), tous les vers lui reviennent — le cadavre exquis se joue
 // contre sa propre mémoire : l'écho ou l'obscurité s'applique à sa propre trace.
 export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
@@ -34,16 +44,22 @@ export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
       echo,
     }
   }
+  const [pasMin, pasMax] = cadenceRetour(nbVoix)
   const tours = [0]
   let curseur = 0
   for (;;) {
-    const pas = 2 + Math.floor(Math.random() * 3)      // 2–4
+    const pas = pasMin + Math.floor(Math.random() * (pasMax - pasMin + 1))
     const suivant = curseur + pas
     if (suivant >= totalVers - 1) break
     tours.push(suivant)
     curseur = suivant
   }
   tours.push(totalVers - 1)
+  // Des voix sont convoquées : au moins un vers doit leur revenir.
+  // (À pas 1, le sort peut couvrir tout le poème — on libère un vers du milieu.)
+  if (tours.length >= totalVers) {
+    tours.splice(1 + Math.floor(Math.random() * (tours.length - 2)), 1)
+  }
   const pool = [...VOICE_IDS].sort(() => Math.random() - 0.5).slice(0, nbVoix)
   return { totalVers, toursJoueur: tours, voixPool: pool, echo }
 }
@@ -121,8 +137,8 @@ export default function Atelier() {
                 tous, seul, sans jamais relire : le cadavre exquis se joue contre votre
                 propre mémoire.</>
               : <>Le sort fixera la longueur du poème — de V à XXVII vers. Vous l'ouvrirez,
-                vous le refermerez, et la main vous reviendra tous les deux à quatre vers.
-                Entre vos passages, les voix se partagent les vers, à une, deux ou trois mains.</>}
+                vous le refermerez, et la main vous reviendra tous les {toRomain(cadenceRetour(nbVoix)[0])} à {toRomain(cadenceRetour(nbVoix)[1])} vers
+                — plus les voix sont nombreuses, plus elle se fait rare.</>}
           </div>
         </motion.div>
 
