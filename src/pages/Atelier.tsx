@@ -18,7 +18,7 @@ export interface PlanAtelier {
   totalVers: number          // 5–27, tiré au sort
   toursJoueur: number[]      // indices des vers écrits par le médium (toujours 0 et totalVers-1)
   voixPool: string[]         // ids des voix convoquées, mélangées
-  echo: boolean              // true = l'écho (vers précédent visible) ; false = obscurité totale
+  echo: boolean              // true = l'écho (dernier mot du vers précédent) ; false = obscurité totale
 }
 
 // La main revient : le médium ouvre, referme, et la main lui revient tous les 2 à 4 vers.
@@ -180,7 +180,7 @@ export default function Atelier() {
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
             {echo
-              ? 'Chaque main — la vôtre comme celles des voix — entend le vers précédent.'
+              ? 'Chaque main — la vôtre comme celles des voix — n’entend que le dernier mot du vers précédent.'
               : 'Personne ne voit rien. Le poème se coud dans le noir absolu.'}
           </div>
         </motion.div>

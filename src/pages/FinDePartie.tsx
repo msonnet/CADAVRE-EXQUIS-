@@ -357,7 +357,7 @@ export default function FinDePartie() {
 
           {/* Card footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
-            {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
+            {voixCount} {poeme.structureId === 'atelier' ? 'VERS' : 'VOIX'} · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </motion.div>
 

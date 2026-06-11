@@ -52,6 +52,11 @@ const GN_COMPLEMENT: RoleFragment = {
 const VERBE: RoleFragment = {
   type: 'verbe', consigne: 'un verbe conjugué', role: 'VERBE',
 }
+// Devant un complément, le gabarit exige un verbe transitif — la voix ne sait pas
+// qu'un complément suit (principe du cadavre), mais le gabarit, lui, le sait
+const VERBE_TRANSITIF: RoleFragment = {
+  type: 'verbe-transitif', consigne: 'un verbe transitif conjugué', role: 'VERBE',
+}
 const GROUPE_VERBAL: RoleFragment = {
   type: 'groupe-verbal', consigne: "un verbe conjugué suivi d'un complément court", role: 'VERBE + COMPL.',
 }
@@ -71,9 +76,9 @@ const QUESTION: RoleFragment = {
 function tirerGabarit(nVoix: number): RoleFragment[] {
   if (nVoix === 1) {
     // Une seule plume écrit le vers entier — parfois une question, sinon
-    // un vers libre de longueur tirée au sort (2 à 6 mots)
+    // un vers libre de longueur tirée au sort (3 à 6 mots)
     if (Math.random() < 0.22) return [QUESTION]
-    const mots = 2 + Math.floor(Math.random() * 5)
+    const mots = 3 + Math.floor(Math.random() * 4)
     return [{ type: 'libre', consigne: 'un vers — une image physique et inattendue', role: 'VERS ENTIER', mots }]
   }
   if (nVoix === 2) {
@@ -85,7 +90,7 @@ function tirerGabarit(nVoix: number): RoleFragment[] {
     return variantes[Math.floor(Math.random() * variantes.length)]
   }
   const variantes: RoleFragment[][] = [
-    [GN_SUJET, VERBE, GN_COMPLEMENT],       // la phrase courte de Breton
+    [GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT], // la phrase courte de Breton
     [GN_SUJET, ADJECTIF, GROUPE_VERBAL],    // « la lumière » + « froide » + « traverse la nuit »
     [ADVERBE_TETE, GN_SUJET, GROUPE_VERBAL], // « doucement, » + « la cendre » + « pèse sur le monde »
     [GN_SUJET, GROUPE_VERBAL, ADVERBE_FIN],  // « le sel » + « traverse la nuit » + « lentement »
@@ -94,12 +99,24 @@ function tirerGabarit(nVoix: number): RoleFragment[] {
   return variantes[Math.floor(Math.random() * variantes.length)]
 }
 
+// Signature d'un gabarit — pour ne jamais tirer deux fois de suite la même forme
+function signatureGabarit(g: RoleFragment[]): string {
+  return g.map(f => `${f.type}:${f.mots ?? ''}`).join('|')
+}
+
+// Dernier mot d'un vers, dépouillé de sa ponctuation — la seule trace transmise en écho
+function dernierMot(texte: string): string | undefined {
+  return texte.trim().split(/\s+/).at(-1)?.replace(/^[«"(]+|[»".,;:!?…)]+$/g, '')
+}
+
 // Réserve locale par rôle si l'API est injoignable — le poème ne s'arrête jamais
 const RESERVE: Record<string, string[]> = {
   'groupe-nominal': ['le silence', "l'ombre", 'une cendre', 'la nuit', 'un souffle', 'la pierre', 'le givre', 'une porte',
                      'la rouille', 'un seuil', "l'écume", 'le lierre', 'une aiguille', 'le limon'],
   'verbe': ['tremble', 'dévore', 'veille', 'chavire', 'demeure', 'glisse', 'rôde', 'vacille',
             'affleure', 'se penche', 'consent', 'recule'],
+  'verbe-transitif': ['dévore', 'effleure', 'avale', 'fissure', 'traverse', 'ronge',
+                      'soulève', 'recoud', 'berce', 'creuse', 'apprivoise', 'engloutit'],
   'groupe-verbal': ['traverse la nuit', 'brûle en silence', 'tombe sans bruit', 'pèse sur le monde', "glisse dans l'ombre",
                     'compte les heures', 'retient son souffle', 'efface les seuils'],
   'adjectif': ['pâle', 'sourd', 'creux', 'nocturne', 'amer', 'froid', 'opaque', 'muet', 'fendu', 'tiède'],
@@ -154,6 +171,7 @@ export default function JeuAtelier() {
   const [voixEnCours, setVoixEnCours] = useState<VoixEnCours[]>([])
   const traites = useRef<Set<number>>(new Set())
   const sauvegardeFaite = useRef(false)
+  const dernierGabarit = useRef('')
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -196,17 +214,20 @@ export default function JeuAtelier() {
       const p = plan!
       const nVoix = Math.min(1 + Math.floor(Math.random() * 3), p.voixPool.length)
       const indices = p.voixPool.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, nVoix)
-      const gabarit = tirerGabarit(nVoix)
+      // Jamais deux fois de suite la même forme — la métrique respire
+      let gabarit = tirerGabarit(nVoix)
+      for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
+        gabarit = tirerGabarit(nVoix)
+      }
+      dernierGabarit.current = signatureGabarit(gabarit)
       setVoixEnCours(indices.map((vi, k) => ({ num: vi + 1, role: gabarit[k].role, fait: false })))
 
       // L'écho au dernier mot : seule la dernière trace du vers précédent est
       // transmise — assez pour un raccord, pas assez pour imposer un thème.
       // La voix décide librement d'y rebondir ou de l'ignorer.
       const precedent = versRef.current[idx - 1]?.texte
-      const dernierMot = precedent
-        ?.trim().split(/\s+/).at(-1)
-        ?.replace(/^[«"(]+|[»".,;:!?)]+$/g, '')
-      const contexte = p.echo && dernierMot ? dernierMot : undefined
+      const echo = precedent ? dernierMot(precedent) : undefined
+      const contexte = p.echo && echo ? echo : undefined
 
       const fragments: string[] = []
       for (let k = 0; k < indices.length; k++) {
@@ -330,7 +351,8 @@ export default function JeuAtelier() {
 
   if (!plan) return null
 
-  const echoTexte = plan.echo && tourJoueur && idx > 0 ? vers[idx - 1].texte : null
+  // Le médium reçoit le même écho que les voix : le dernier mot du vers précédent, rien de plus
+  const echoTexte = plan.echo && tourJoueur && idx > 0 ? (dernierMot(vers[idx - 1].texte) ?? null) : null
   const consigneJoueur = idx === 0
     ? 'Ouvrez la séance — le premier vers vous appartient.'
     : idx === total - 1
@@ -404,14 +426,14 @@ export default function JeuAtelier() {
               transition={{ duration: 0.4 }}
               style={{ paddingBottom: 8 }}
             >
-              {/* L'écho — le vers précédent, si la visibilité le permet */}
+              {/* L'écho — le dernier mot du vers précédent, si la visibilité le permet */}
               {echoTexte ? (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
                     — L'ÉCHO —
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
-                    « {echoTexte} »
+                    « … {echoTexte} »
                   </div>
                 </div>
               ) : idx > 0 && (

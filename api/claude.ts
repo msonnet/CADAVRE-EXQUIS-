@@ -6,6 +6,7 @@ import { checkRateLimit, getClientIp } from './_rateLimit.js'
 type TypeCase =
   | 'nom'
   | 'verbe'
+  | 'verbe-transitif'
   | 'adjectif'
   | 'adverbe'
   | 'groupe-nominal'
@@ -19,10 +20,11 @@ type TypeCase =
 const MAX_TOKENS: Record<TypeCase, number> = {
   'nom': 8,
   'verbe': 8,
+  'verbe-transitif': 8,
   'adjectif': 8,
   'adverbe': 10,
   'groupe-nominal': 10,
-  'groupe-verbal': 14,
+  'groupe-verbal': 16,
   'proposition': 24,
   'libre': 24,
   'article-adj': 10,
@@ -32,10 +34,11 @@ const MAX_TOKENS: Record<TypeCase, number> = {
 const CONTRAINTES: Record<TypeCase, string> = {
   'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "cœur", "nuage", "cendre", "os")',
   'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier (tout temps : "dévore", "hantait", "boira", "frôle", "vacilla", "glissera"). INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms, participes passés non conjugués, adverbes.',
+  'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes.',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
-  'adverbe': '1 à 2 mots',
+  'adverbe': '1 SEUL ADVERBE INVARIABLE (en -ment : "doucement", "obliquement") ou une locution adverbiale de 2 mots ("sans bruit", "à rebours"). INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
   'groupe-nominal': '2 MOTS EXACTEMENT : article + nom — ex : "le silence", "une ombre", "la pluie", "un couteau". JAMAIS d\'adjectif après le nom.',
-  'groupe-verbal': '2 mots (verbe + 1 complément court)',
+  'groupe-verbal': '3 à 4 mots — verbe conjugué à la 3e personne du singulier + complément AVEC son article ou sa préposition (ex : "traverse la nuit", "pèse sur le monde"). JAMAIS de complément sans article ("cède terrain" est INTERDIT, "cède du terrain" est correct).',
   'proposition': '4 à 6 mots (phrase courte)',
   'libre': '3 à 6 mots (un vers)',
   'article-adj': '2 MOTS EXACTEMENT : article défini ou indéfini + adjectif qualificatif. Exemples valides : "un sombre", "la vieille", "une pâle", "le lourd", "un creux". INTERDIT : noms, pronoms, expressions figées.',
@@ -48,6 +51,9 @@ const FALLBACKS: Record<TypeCase, string[]> = {
   'verbe': ['glisse', 'brûle', 'tombe', 'tremble', 'demeure', 'se tait', 'disparaît', 'pèse',
             'erre', 'veille', 'frôle', 'hante', 'effleure', 'résiste', 'chavire', 'murmure',
             'vacille', 'sombre', 'rôde', 'dérive'],
+  'verbe-transitif': ['dévore', 'effleure', 'avale', 'fissure', 'traverse', 'ronge', 'soulève',
+                      'recoud', 'berce', 'creuse', 'apprivoise', 'engloutit', 'caresse', 'déchire',
+                      'hante', 'épouse', 'retient', 'efface'],
   'adjectif': ['immobile', 'pâle', 'profond', 'étrange', 'brisé', 'nocturne', 'creux', 'lourd',
                'froid', 'sourd', 'amer', 'voilé', 'opaque', 'lent', 'nu', 'aigre',
                'muet', 'dense', 'sombre', 'fragile'],
@@ -88,6 +94,19 @@ const FALLBACKS: Record<TypeCase, string[]> = {
 const ARTICLES_FR = new Set([
   'un', 'une', 'le', 'la', 'les', 'du', 'des', 'au', 'aux',
   'ce', 'cet', 'cette', 'ces', 'mon', 'ton', 'son', 'ma', 'ta', 'sa',
+  'mes', 'tes', 'ses', 'nos', 'vos', 'leurs', 'notre', 'votre', 'leur',
+])
+
+const ADVERBES_INVARIABLES = new Set([
+  'encore', 'toujours', 'jamais', 'ailleurs', 'presque', 'parfois', 'souvent', 'déjà',
+  'demain', 'hier', 'ici', 'là', 'loin', 'partout', 'jadis', 'désormais', 'soudain',
+  'ensemble', 'dedans', 'dehors', 'tard', 'tôt', 'vite', 'mal', 'bien', 'peu', 'trop',
+  'ensuite', 'pourtant', 'longtemps', 'autrefois', 'alentour', 'çà',
+])
+// Premiers mots admis pour une locution adverbiale de 2 mots (« sans bruit », « à rebours », « nulle part »)
+const TETES_LOCUTION_ADV = new Set([
+  'à', 'au', 'aux', 'en', 'sans', 'sous', 'de', 'par', 'pour', 'vers', 'contre',
+  'dans', 'entre', 'sur', 'nulle', 'quelque', 'tout', 'là-bas',
 ])
 
 // Valide et normalise la sortie du modèle selon le type attendu.
@@ -115,9 +134,21 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       if (mots.length > 2) return mots[0]
       return t
     }
-    case 'verbe': {
+    case 'verbe':
+    case 'verbe-transitif': {
       if (mots.length > 3) return mots.slice(0, 2).join(' ')
       return t
+    }
+    case 'adverbe': {
+      // Un adjectif glissé dans la case adverbe (« pesants ») casse l'accord du
+      // vers cousu et la correction le protège ensuite comme un adverbe : on
+      // n'accepte qu'un -ment, un invariable connu ou une locution adverbiale.
+      if (mots.length === 1) {
+        const w = mots[0].toLowerCase()
+        return /ment$/.test(w) || ADVERBES_INVARIABLES.has(w) ? t : ''
+      }
+      if (mots.length === 2 && TETES_LOCUTION_ADV.has(mots[0].toLowerCase())) return t
+      return ''
     }
     case 'groupe-nominal': {
       // Strictement article + nom — un GN sans article (« racines », « chair opposée »)
@@ -142,7 +173,7 @@ function pickFallback(type: TypeCase, eviter: string[] = []): string {
 }
 
 const TYPES_VALIDES: Set<string> = new Set([
-  'nom', 'verbe', 'adjectif', 'adverbe',
+  'nom', 'verbe', 'verbe-transitif', 'adjectif', 'adverbe',
   'groupe-nominal', 'groupe-verbal',
   'proposition', 'libre', 'article-adj',
 ])
@@ -187,10 +218,15 @@ export default async function handler(req: any, res: any): Promise<void> {
   // Mode atelier : nombre de mots imposé dynamiquement (1 à 8) — prime sur la contrainte du type
   const motsCible = Number.isInteger(mots) && mots >= 1 && mots <= 8 ? (mots as number) : null
   const maxTokens = motsCible
-    ? Math.min(motsCible * 4 + 4, 40)
+    ? Math.min(motsCible * 4 + 8, 44)
     : (MAX_TOKENS[type as TypeCase] ?? 14)
+  // Vers entier ('libre') : la voix écrit seule tout le vers — il doit être
+  // grammatical et garder ses articles. « N mots exactement, pas une phrase
+  // complète » produisait des télégrammes (« câble vibre chair absente froide »).
   const contrainte = motsCible
-    ? `${motsCible} MOT${motsCible > 1 ? 'S' : ''} EXACTEMENT — un fragment de vers, pas une phrase complète, sans ponctuation`
+    ? (type === 'libre'
+      ? `environ ${motsCible} mots — un vers COMPLET et grammatical : un sujet avec son article et un verbe conjugué, ou une image nominale complète. JAMAIS de style télégraphique : chaque nom garde son article. Sans ponctuation finale.`
+      : `${motsCible} MOT${motsCible > 1 ? 'S' : ''} EXACTEMENT — un fragment de vers, pas une phrase complète, sans ponctuation`)
     : (CONTRAINTES[type as TypeCase] ?? '2 à 4 mots')
   // Strip the « — ex : … » part so examples never influence the AI (they're only for human players)
   const consigneIA = consigne.replace(/\s*[—–-]\s*ex\s*:.*$/i, '').trim()
@@ -264,10 +300,13 @@ export default async function handler(req: any, res: any): Promise<void> {
       propre.endsWith(':')
 
     let texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase)
-    // Si un nombre de mots est imposé, tronquer doucement les débordements
+    // Si un nombre de mots est imposé, tronquer doucement les débordements.
+    // Pour un vers entier ('libre'), couper en plein vers recréerait le
+    // télégramme : on tolère le dépassement, garde-fou à 9 mots seulement.
     if (texte && motsCible) {
       const m = texte.split(/\s+/)
-      if (m.length > motsCible + 1) texte = m.slice(0, motsCible).join(' ')
+      const plafond = type === 'libre' ? Math.max(motsCible + 3, 9) : motsCible + 1
+      if (m.length > plafond) texte = m.slice(0, type === 'libre' ? plafond : motsCible).join(' ')
     }
     res.status(200).json({
       texte: texte || pickFallback(type as TypeCase, motsEviter),
