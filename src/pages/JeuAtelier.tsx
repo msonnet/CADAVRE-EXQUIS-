@@ -525,12 +525,17 @@ export default function JeuAtelier() {
 
   // Le médium reçoit le même écho que les voix : le dernier mot du vers précédent, rien de plus
   const echoTexte = plan.echo && tourJoueur && idx > 0 ? (dernierMot(vers[idx - 1].texte) ?? null) : null
+  const seul = plan.voixPool.length === 0
   const consigneJoueur = idx === 0
-    ? 'Ouvrez la séance — le premier vers vous appartient.'
+    ? seul
+      ? 'Ouvrez la séance — vous jouez contre votre propre mémoire.'
+      : 'Ouvrez la séance — le premier vers vous appartient.'
     : idx === total - 1
-      ? 'Refermez le poème — le dernier vers vous appartient.'
-      : plan.voixPool.length === 0
-        ? 'Poursuivez, sans vous relire.'
+      ? seul
+        ? 'Refermez le poème — sans vous relire.'
+        : 'Refermez le poème — le dernier vers vous appartient.'
+      : seul
+        ? 'Continuez à l\'aveugle — votre mémoire seule guide la main.'
         : 'La main vous revient.'
 
   return (

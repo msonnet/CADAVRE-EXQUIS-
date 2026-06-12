@@ -242,12 +242,54 @@ export function validerCase(
       return { valide: false, message: "Un gérondif commence par « en » (ex : 'en tombant', 'en brûlant')." }
     }
 
+    case 'adverbe': {
+      if (contientVerbe(texte) && mots(texte).length > 2) {
+        return { valide: false, message: "La consigne demande un adverbe ou une locution adverbiale (ex : 'doucement', 'sans bruit', 'à jamais')." }
+      }
+      return { valide: true }
+    }
+
+    case 'groupe-verbal': {
+      if (!contientVerbe(texte) && mots(texte).length > 2) {
+        return { valide: false, message: "Un groupe verbal doit contenir un verbe conjugué (ex : 'traverse la nuit', 'brûle en silence')." }
+      }
+      return { valide: true }
+    }
+
+    case 'conjonction-coord': {
+      const ms = mots(texte)
+      if (ms.length > 2) {
+        return { valide: false, message: "La consigne demande une conjonction, un mot seul (ex : 'mais', 'car', 'or', 'pourtant')." }
+      }
+      if (contientVerbe(texte)) {
+        return { valide: false, message: "La consigne demande une conjonction, pas une phrase complète." }
+      }
+      return { valide: true }
+    }
+
+    case 'conjonction-subord': {
+      const ms = mots(texte)
+      if (ms.length > 3) {
+        return { valide: false, message: "La consigne demande une conjonction de subordination (ex : 'quand', 'lorsque', 'dès que')." }
+      }
+      if (contientVerbe(texte) && ms.length > 2) {
+        return { valide: false, message: "La consigne demande une conjonction, pas une proposition complète." }
+      }
+      return { valide: true }
+    }
+
+    case 'infinitif': {
+      const ms = mots(texte)
+      if (ms.length > 2) {
+        return { valide: false, message: "La consigne demande un infinitif : un seul verbe (ex : 'brûler', 'attendre', 'traverser')." }
+      }
+      if (contientArticle(texte)) {
+        return { valide: false, message: "Un infinitif est un verbe seul, sans article." }
+      }
+      return { valide: true }
+    }
+
     case 'libre':
-    case 'adverbe':
-    case 'groupe-verbal':
-    case 'conjonction-coord':
-    case 'conjonction-subord':
-    case 'infinitif':
     default:
       return { valide: true }
   }
