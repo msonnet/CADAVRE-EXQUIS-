@@ -293,6 +293,8 @@ export default function Jeu() {
   const MOTS_IA_MAX = 140
   function memoriserMotsIa(texte: string) {
     const mots = (texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2)
+    const debut = texte.trim().toLowerCase().match(/^(or|si|en|et|ni)\b/)
+    if (debut) mots.unshift(debut[0])
     if (!mots.length) return
     const fusion = [...motsIaRecents.current, ...mots]
     motsIaRecents.current = fusion.slice(-MOTS_IA_MAX)
@@ -396,7 +398,7 @@ export default function Jeu() {
     // la même imagerie ne revienne pas trois fois de suite. Vocabulaire libre par ailleurs.
     // Conjonctions courtes (≤2 lettres) : échappent au filtre habituel > 2 chars.
     // On extrait explicitement celles utilisées en tête de vers pour les bannir.
-    const CONJ_COURTES = new Set(['or', 'si'])
+    const CONJ_COURTES = new Set(['or', 'si', 'en', 'et', 'ni'])
     const conjCourtesUsees = cases
       .filter(c => c.texte)
       .flatMap(c => {

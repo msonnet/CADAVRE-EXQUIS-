@@ -253,22 +253,23 @@ export default function JeuAtelier() {
       const contexte = p.echo && echo ? echo : undefined
 
       const fragments: string[] = []
+      // Conjonctions courtes (≤2 lettres) : "en" (gérondif), "or", "si", "et", "ni"
+      // échappent au filtre > 2 chars. Calculé avant la boucle : versRef est stable
+      // entre itérations, inutile de refaire le scan à chaque fragment.
+      const CONJ_COURTES = new Set(['or', 'si', 'en', 'et', 'ni'])
+      const conjCourtesUsees = versRef.current.flatMap(v => {
+        const m = v.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
+        return m && CONJ_COURTES.has(m[0]) ? [m[0]] : []
+      })
       for (let k = 0; k < indices.length; k++) {
         if (annule) return
         const caseRole = gabarit[k]
         const enCours = fragments.join(' ')
-        // Conjonctions courtes (≤2 lettres) : échappent au filtre > 2 chars.
-        // On extrait celles déjà utilisées en tête de vers pour les bannir.
-        const CONJ_COURTES = new Set(['or', 'si'])
-        const conjCourtesUsees = versRef.current.flatMap(v => {
-          const m = v.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
-          return m && CONJ_COURTES.has(m[0]) ? [m[0]] : []
-        })
         const eviter = [
-          ...versRef.current.flatMap(v => v.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []),
-          ...(enCours.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []),
+          ...versRef.current.flatMap(v => v.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2),
+          ...(enCours.toLowerCase().match(/[a-zà-ÿ]+/gi)?.filter(m => m.length > 2) ?? []),
           ...conjCourtesUsees,
-        ].filter(m => m.length > 2 || CONJ_COURTES.has(m))
+        ]
 
         const requete = {
           consigne: caseRole.consigne,
