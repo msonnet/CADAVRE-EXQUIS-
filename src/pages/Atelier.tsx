@@ -24,16 +24,16 @@ export interface PlanAtelier {
   echo: boolean              // true = l'écho (dernier mot du vers précédent) ; false = obscurité totale
 }
 
-// La cadence du retour glisse avec le nombre de voix : plus la foule est
-// nombreuse, plus le médium se fait rare. Le pas (distance entre deux retours
-// de la main) est tiré au sort dans une fourchette qui s'incline —
-// 1 voix → pas de 1 à 2, 46 voix → pas de 3 à 6.
-// Fourchette resserrée depuis les tours fragment : la plupart des retours ne
-// demandent qu'un mot ou deux, la main peut revenir souvent sans peser.
+// La cadence du retour est quasi plate : la présence du médium ne se mesure
+// pas en nombre de tours mais en mots contribués — et c'est probFragment
+// (plus bas) qui porte cette variation. Plus les voix sont nombreuses, plus
+// les retours du médium se font fragments (un mot ou deux), donc la main peut
+// revenir souvent sans peser sur le poème.
+// 1 voix → pas de 1 à 2, 46 voix → pas de 2 à 3 — une inclinaison de courtoisie.
 // Le hasard garde sa part : seule la fourchette est liée, jamais le tirage.
 export function cadenceRetour(nbVoix: number): [number, number] {
   const t = (Math.min(Math.max(nbVoix, 1), VOICE_IDS.length) - 1) / (VOICE_IDS.length - 1)
-  return [Math.round(1 + t * 2), Math.round(2 + t * 4)]
+  return [Math.round(1 + t), Math.round(2 + t)]
 }
 
 // La main revient : le médium ouvre, referme, et la main lui revient selon la cadence.
@@ -69,6 +69,9 @@ export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
   const pool = [...VOICE_IDS].sort(() => Math.random() - 0.5).slice(0, nbVoix)
   // Tours fragment : parmi les retours du milieu, une proportion dépend du nombre de voix.
   // 0 voix → 0 %, max voix → 100 % — le médium devient une voix parmi d'autres.
+  // Une voix parmi d'autres jusqu'au bout : même sur un tour fragment, le sort
+  // peut le tirer seul sur le vers (1 chance sur 3, comme les voix IA) — il
+  // écrit alors le vers entier. Le tirage vit dans JeuAtelier (initFragment).
   const probFragment = nbVoix / VOICE_IDS.length
   const toursFragmentJoueur = tours.filter(
     t => t !== 0 && t !== totalVers - 1 && Math.random() < probFragment
@@ -150,7 +153,7 @@ export default function Atelier() {
                 propre mémoire.</>
               : <>Le sort fixera la longueur du poème — de V à XXVII vers. Vous l'ouvrirez,
                 vous le refermerez, et la main vous reviendra tous les {toRomain(cadenceRetour(nbVoix)[0])} à {toRomain(cadenceRetour(nbVoix)[1])} vers
-                — plus les voix sont nombreuses, plus elle se fait rare.</>
+                — plus les voix sont nombreuses, plus vos retours se font fragments.</>
             }
           </div>
         </motion.div>

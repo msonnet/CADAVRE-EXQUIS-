@@ -343,12 +343,17 @@ export default function JeuAtelier() {
 
     async function initFragment() {
       const p = plan!
-      // 1 ou 2 voix IA (+ le médium = 2 ou 3 participants au total)
-      const nAI = Math.min(1 + Math.floor(Math.random() * 2), p.voixPool.length)
+      // Le médium est une voix parmi d'autres : même tirage que le tour IA
+      // (1 à 3 plumes par vers, médium compris). Tiré seul — 1 chance sur 3,
+      // comme une voix IA — il écrit le vers entier.
+      const nAI = Math.min(Math.floor(Math.random() * 3), p.voixPool.length)
       const nTotal = nAI + 1
-      let gabarit = tirerGabarit(nTotal)
+      // Le budget interrogatif s'applique aussi à la plume du médium
+      const questionsOk = versRef.current.filter(v => v.texte.includes('?')).length
+        < Math.max(1, Math.floor(p.totalVers / 10))
+      let gabarit = tirerGabarit(nTotal, questionsOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nTotal)
+        gabarit = tirerGabarit(nTotal, questionsOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -442,7 +447,8 @@ export default function JeuAtelier() {
     const voixNums = fragVoixIndices.map(i => i + 1)
 
     setVoixEnCours([])
-    ajouterVers({ texte, auteur: 'mixte', voixNums })
+    // Tiré seul sur le vers, le médium signe seul — pas de couture mixte
+    ajouterVers({ texte, auteur: voixNums.length === 0 ? 'humain' : 'mixte', voixNums })
     setFragGabarit(null)
     setFragTextes([])
   }, [fragTextes, fragGabarit]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -509,8 +515,10 @@ export default function JeuAtelier() {
   }
 
   function deposerFragment() {
-    const t = saisie.trim()
+    let t = saisie.trim()
     if (!t || !fragGabarit || fragTextes[fragSlotJoueur] !== null) return
+    // La question du médium retrouve son point d'interrogation, comme celle des voix
+    if (fragGabarit[fragSlotJoueur].type === 'proposition' && !/[?!.]\s*$/.test(t)) t += ' ?'
     jouer('soumettre')
     setSaisie('')
     setFragTextes(prev => {
@@ -656,7 +664,9 @@ export default function JeuAtelier() {
               {fragTextes[fragSlotJoueur] === null ? (
                 <>
                   <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                    — FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —
+                    {fragGabarit.length === 1
+                      ? <>— LE SORT VOUS TIRE SEUL · {fragGabarit[fragSlotJoueur].role} —</>
+                      : <>— FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —</>}
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontStyle: 'italic', color: encre, opacity: 0.7, marginBottom: 10 }}>
                     {fragGabarit[fragSlotJoueur].consigne}

@@ -7,7 +7,7 @@ const NB_VOIX_MAX = 46 // VOICE_IDS.length
 
 function cadenceRetour(nbVoix: number): [number, number] {
   const t = (Math.min(Math.max(nbVoix, 1), NB_VOIX_MAX) - 1) / (NB_VOIX_MAX - 1)
-  return [Math.round(1 + t * 2), Math.round(2 + t * 4)]
+  return [Math.round(1 + t), Math.round(2 + t)]
 }
 
 interface PlanAtelier {
@@ -60,8 +60,8 @@ describe('cadenceRetour', () => {
     expect(cadenceRetour(1)).toEqual([1, 2])
   })
 
-  it('returns [3, 6] for maximum voices (slowest cadence)', () => {
-    expect(cadenceRetour(NB_VOIX_MAX)).toEqual([3, 6])
+  it('returns [2, 3] for maximum voices (slowest cadence)', () => {
+    expect(cadenceRetour(NB_VOIX_MAX)).toEqual([2, 3])
   })
 
   it('always returns pasMin <= pasMax', () => {
