@@ -99,6 +99,7 @@ function tirerGabarit(nVoix: number): RoleFragment[] {
       [GN_SUJET, VERBE],           // « la lumière » + « tremble »
       [GN_SUJET, ADJECTIF],        // « une lumière » + « froide » — vers nominal
       [INFINITIF, GN_COMPLEMENT],  // « brûler » + « la cendre »
+      [CONJ_COORD, GROUPE_VERBAL], // « mais » + « traverse la nuit » — ellipse sans sujet
     ]
     return variantes[Math.floor(Math.random() * variantes.length)]
   }
@@ -109,7 +110,9 @@ function tirerGabarit(nVoix: number): RoleFragment[] {
     [GN_SUJET, GROUPE_VERBAL, ADVERBE_FIN],  // « le sel » + « traverse la nuit » + « lentement »
     [GN_SUJET, VERBE, ADVERBE_FIN],          // « une écluse » + « chavire » + « sans bruit »
     [CONJ_COORD, GN_SUJET, GROUPE_VERBAL],   // « mais » + « la cendre » + « pèse sur le monde »
+    [CONJ_COORD, GN_SUJET, VERBE],           // « car » + « la lumière » + « tremble »
     [CONJ_SUBORD, GN_SUJET, VERBE],          // « quand » + « le sel » + « chavire »
+    [CONJ_SUBORD, GN_SUJET, GROUPE_VERBAL],  // « lorsque » + « la cendre » + « pèse sur le monde »
     [GERONDIF, GN_SUJET, VERBE],             // « en tombant, » + « la lumière » + « tremble »
   ]
   return variantes[Math.floor(Math.random() * variantes.length)]
