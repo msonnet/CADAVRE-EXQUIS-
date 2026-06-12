@@ -129,7 +129,7 @@ const MOTS_INTERROGATIFS = new Set([
   'quel','quelle','quels','quelles','lequel','laquelle','lesquels','lesquelles',
 ])
 
-export type TypeCase = 'nom' | 'verbe' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj'
+export type TypeCase = 'nom' | 'verbe' | 'verbe-transitif' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj' | 'conjonction-coord' | 'conjonction-subord' | 'infinitif' | 'gérondif'
 export type NiveauValidation = 'stricte' | 'souple' | 'desactivee'
 
 export interface ResultatValidation {
@@ -182,7 +182,8 @@ export function validerCase(
 
   // Mode strict : heuristiques par type
   switch (type) {
-    case 'verbe': {
+    case 'verbe':
+    case 'verbe-transitif': {
       if (contientVerbe(texte)) return { valide: true }
       // Tolerer les formes non reconnues si mot unique sans article
       if (mots(texte).length === 1 && !contientArticle(texte)) return { valide: true }
@@ -233,9 +234,20 @@ export function validerCase(
       return { valide: true }
     }
 
+    case 'gérondif': {
+      const ms = mots(texte)
+      // Doit commencer par "en" (gérondif = "en + participe présent")
+      if (ms.length >= 2 && normaliser(ms[0]) === 'en') return { valide: true }
+      if (ms.length === 1 && !contientArticle(texte)) return { valide: true }
+      return { valide: false, message: "Un gérondif commence par « en » (ex : 'en tombant', 'en brûlant')." }
+    }
+
     case 'libre':
     case 'adverbe':
     case 'groupe-verbal':
+    case 'conjonction-coord':
+    case 'conjonction-subord':
+    case 'infinitif':
     default:
       return { valide: true }
   }

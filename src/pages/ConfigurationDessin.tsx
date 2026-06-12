@@ -176,6 +176,11 @@ export default function ConfigurationDessin() {
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {cycleNote}
           </div>
+          {joueurs > 1 && (
+            <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.5, marginTop: 7, lineHeight: 1.55 }}>
+              Passez l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.
+            </div>
+          )}
         </motion.div>
 
         {/* ── VISIBILITÉ ── */}

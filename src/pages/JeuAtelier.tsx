@@ -646,7 +646,7 @@ export default function JeuAtelier() {
               {fragTextes[fragSlotJoueur] === null ? (
                 <>
                   <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                    — VOTRE RÔLE : {fragGabarit[fragSlotJoueur].role} —
+                    — FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontStyle: 'italic', color: encre, opacity: 0.7, marginBottom: 10 }}>
                     {fragGabarit[fragSlotJoueur].consigne}
