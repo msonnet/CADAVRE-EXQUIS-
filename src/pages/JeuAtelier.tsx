@@ -20,8 +20,8 @@ function toRomain(n: number): string {
 
 interface VersAtelier {
   texte: string
-  auteur: 'humain' | 'ia'
-  voixNums: number[]   // numéros (1-based) des voix qui ont cousu ce vers — vide pour le médium
+  auteur: 'humain' | 'ia' | 'mixte'  // 'mixte' = médium + voix(es) sur le même vers
+  voixNums: number[]   // numéros (1-based) des voix IA qui ont participé — vide pour 'humain' pur
 }
 
 interface VoixEnCours {
@@ -193,8 +193,15 @@ export default function JeuAtelier() {
   const [saisie, setSaisie] = useState('')
   const [voixEnCours, setVoixEnCours] = useState<VoixEnCours[]>([])
   const traites = useRef<Set<number>>(new Set())
+  const traiteFragment = useRef<Set<number>>(new Set())
   const sauvegardeFaite = useRef(false)
   const dernierGabarit = useRef('')
+
+  // État pour les tours fragment du médium (verse co-écrit avec des voix IA)
+  const [fragGabarit, setFragGabarit] = useState<RoleFragment[] | null>(null)
+  const [fragSlotJoueur, setFragSlotJoueur] = useState(0)
+  const [fragVoixIndices, setFragVoixIndices] = useState<number[]>([])
+  const [fragTextes, setFragTextes] = useState<(string | null)[]>([])
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -207,6 +214,8 @@ export default function JeuAtelier() {
   const total = plan?.totalVers ?? 0
   const termine = plan !== null && idx >= total
   const tourJoueur = plan !== null && !termine && plan.toursJoueur.includes(idx)
+  // toursFragmentJoueur peut être absent des vieux brouillons sauvegardés → ?? []
+  const tourFragmentJoueur = tourJoueur && (plan?.toursFragmentJoueur ?? []).includes(idx)
 
   // Pas de plan (accès direct à l'URL) → retour à la configuration
   useEffect(() => {
@@ -226,7 +235,7 @@ export default function JeuAtelier() {
   // ── Tour des voix : 1 à 3 voix se partagent le vers, chacune dans une case
   // grammaticale tirée au sort — le principe du cadavre écrit ──
   useEffect(() => {
-    if (!plan || termine || tourJoueur) return
+    if (!plan || termine || tourJoueur) return   // tourFragmentJoueur ⊂ tourJoueur — couvert ici
     if (traites.current.has(idx)) return
     traites.current.add(idx)
     jouer('ia')
@@ -316,6 +325,123 @@ export default function JeuAtelier() {
     return () => { annule = true }
   }, [idx, plan, termine, tourJoueur]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Tour fragment : le médium remplit un slot, les voix remplissent les autres ──
+  // Le gabarit est tiré, un slot est assigné au médium, les voix IA cherchent
+  // leurs fragments en parallèle pendant que le médium tape le sien.
+  useEffect(() => {
+    if (!plan || termine || !tourFragmentJoueur) return
+    if (traiteFragment.current.has(idx)) return
+    traiteFragment.current.add(idx)
+    jouer('ia')
+
+    let annule = false
+
+    async function initFragment() {
+      const p = plan!
+      // 1 ou 2 voix IA (+ le médium = 2 ou 3 participants au total)
+      const nAI = Math.min(1 + Math.floor(Math.random() * 2), p.voixPool.length)
+      const nTotal = nAI + 1
+      let gabarit = tirerGabarit(nTotal)
+      for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
+        gabarit = tirerGabarit(nTotal)
+      }
+      dernierGabarit.current = signatureGabarit(gabarit)
+
+      const slotJoueur = Math.floor(Math.random() * gabarit.length)
+      const aiIndices = p.voixPool.map((_, i) => i)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, nAI)
+
+      setFragGabarit(gabarit)
+      setFragSlotJoueur(slotJoueur)
+      setFragVoixIndices(aiIndices)
+      setFragTextes(new Array(gabarit.length).fill(null))
+
+      // Voix IA affichées comme en cours (hors slot médium)
+      let aiCounter = 0
+      setVoixEnCours(
+        gabarit
+          .map((role, k) => k !== slotJoueur
+            ? { num: aiIndices[aiCounter++] + 1, role: role.role, fait: false }
+            : null)
+          .filter(Boolean) as VoixEnCours[]
+      )
+
+      // Eviter — calculé une fois, partagé par tous les fetches parallèles
+      const CONJ_COURTES_F = new Set(['or', 'si', 'en', 'et', 'ni'])
+      const conjCourtesUsees = versRef.current.flatMap(v => {
+        const m = v.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
+        return m && CONJ_COURTES_F.has(m[0]) ? [m[0]] : []
+      })
+      const eviterBase = [
+        ...versRef.current.flatMap(v => v.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2),
+        ...conjCourtesUsees,
+      ]
+
+      const echoVers = versRef.current[idx - 1]?.texte
+      const echoMot = echoVers ? dernierMot(echoVers) : undefined
+      const contexte = p.echo && echoMot ? echoMot : undefined
+
+      // Slots IA numérotés pour mise à jour de voixEnCours
+      const aiSlots: { k: number; aiIdx: number }[] = []
+      let c = 0
+      for (let k = 0; k < gabarit.length; k++) {
+        if (k !== slotJoueur) aiSlots.push({ k, aiIdx: c++ })
+      }
+
+      // Fetch en parallèle — le médium tape pendant que les voix cherchent
+      await Promise.all(aiSlots.map(async ({ k, aiIdx: localIdx }) => {
+        if (annule) return
+        const role = gabarit[k]
+        const requete = {
+          consigne: role.consigne,
+          type: role.type,
+          voiceId: p.voixPool[aiIndices[localIdx]],
+          contexte,
+          eviter: eviterBase,
+        }
+        let texte = ''
+        try {
+          const [reponse] = await Promise.all([
+            demanderFragmentIA(requete).catch(async () => { await attendre(800); return demanderFragmentIA(requete) }),
+            attendre(400 + Math.random() * 400),
+          ])
+          texte = reponse.texte.trim()
+        } catch { /* réserve locale */ }
+        if (!texte) {
+          const pool = RESERVE[role.type] ?? RESERVE['libre']
+          texte = pool[Math.floor(Math.random() * pool.length)]
+        }
+        if (role.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += ' ?'
+        if (annule) return
+        setFragTextes(prev => { const next = [...prev]; if (next.length > k) next[k] = texte; return next })
+        setVoixEnCours(prev => prev.map((v, i) => i === localIdx ? { ...v, fait: true } : v))
+      }))
+    }
+
+    initFragment()
+    return () => { annule = true }
+  }, [idx, plan, termine, tourFragmentJoueur]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Assemblage fragment : quand tous les slots sont remplis (médium + voix) ──
+  useEffect(() => {
+    if (!fragGabarit || fragTextes.length === 0) return
+    if (fragTextes.some(t => t === null)) return
+
+    const coutures = fragGabarit.map((role, k) => {
+      const t = fragTextes[k] as string
+      const cousu = k === 0 ? t : t.charAt(0).toLowerCase() + t.slice(1)
+      return cousu + (role.apres ?? '')
+    })
+    const texte = coutures.join(' ').replace(/\s+/g, ' ').trim()
+    const voixNums = fragVoixIndices.map(i => i + 1)
+
+    setVoixEnCours([])
+    ajouterVers({ texte, auteur: 'mixte', voixNums })
+    setFragGabarit(null)
+    setFragTextes([])
+  }, [fragTextes, fragGabarit]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Fin : correction des accords vers par vers, sauvegarde et révélation ──
   useEffect(() => {
     if (!plan || !termine || sauvegardeFaite.current) return
@@ -341,7 +467,9 @@ export default function JeuAtelier() {
         fonction: `vers ${i + 1}`,
         consigne: v.auteur === 'humain'
           ? 'vers du médium'
-          : `vers des voix ${v.voixNums.map(toRomain).join(' · ')}`,
+          : v.auteur === 'mixte'
+            ? `vers du médium et des voix ${v.voixNums.map(toRomain).join(' · ')}`
+            : `vers des voix ${v.voixNums.map(toRomain).join(' · ')}`,
         auteur: v.auteur,
         texte: textes[i],
         ts: Date.now(),
@@ -369,10 +497,22 @@ export default function JeuAtelier() {
 
   function deposerVers() {
     const t = saisie.trim()
-    if (!t || !tourJoueur) return
+    if (!t || !tourJoueur || tourFragmentJoueur) return
     jouer('soumettre')
     setSaisie('')
     ajouterVers({ texte: t, auteur: 'humain', voixNums: [] })
+  }
+
+  function deposerFragment() {
+    const t = saisie.trim()
+    if (!t || !fragGabarit || fragTextes[fragSlotJoueur] !== null) return
+    jouer('soumettre')
+    setSaisie('')
+    setFragTextes(prev => {
+      const next = [...prev]
+      next[fragSlotJoueur] = t
+      return next
+    })
   }
 
   function quitter() {
@@ -432,13 +572,14 @@ export default function JeuAtelier() {
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              style={{
-                display: 'flex', alignItems: 'baseline', gap: 8,
-                marginBottom: 6, lineHeight: 1.2,
-              }}
+              style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6, lineHeight: 1.2 }}
             >
-              <span style={{ fontSize: 11, color: v.auteur === 'humain' ? accent : encre, opacity: v.auteur === 'humain' ? 0.9 : 0.4, flexShrink: 0 }}>
-                {v.auteur === 'humain' ? '✒' : '✦'}
+              <span style={{
+                fontSize: 11, flexShrink: 0,
+                color: v.auteur === 'ia' ? encre : accent,
+                opacity: v.auteur === 'humain' ? 0.9 : v.auteur === 'mixte' ? 0.55 : 0.4,
+              }}>
+                {v.auteur === 'ia' ? '✦' : '✒'}
               </span>
               <span style={{ fontSize: 13, color: encre, opacity: 0.35, letterSpacing: '0.02em', wordBreak: 'break-all' }}>
                 {masquer(v.texte)}
@@ -451,7 +592,104 @@ export default function JeuAtelier() {
 
         {/* ── ZONE ACTIVE ── */}
         <AnimatePresence mode="wait">
-          {tourJoueur ? (
+
+          {/* Tour fragment : le médium remplit un slot, les voix les autres */}
+          {tourFragmentJoueur && fragGabarit ? (
+            <motion.div
+              key={`fragment-${idx}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ paddingBottom: 8 }}
+            >
+              {echoTexte ? (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                    — L'ÉCHO —
+                  </div>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
+                    « … {echoTexte} »
+                  </div>
+                </div>
+              ) : idx > 0 && (
+                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginBottom: 14 }}>
+                  — VOUS ÉCRIVEZ DANS LE NOIR —
+                </div>
+              )}
+
+              {/* Voix IA travaillant en parallèle */}
+              {voixEnCours.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  {voixEnCours.map((v, k) => (
+                    <motion.div
+                      key={k}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: v.fait ? 0.5 : 0.75 }}
+                      transition={{ duration: 0.3 }}
+                      style={{ ...mono, fontSize: 12, color: encre, marginBottom: 5 }}
+                    >
+                      VOIX {toRomain(v.num)} · {v.role}{' '}
+                      {v.fait
+                        ? <span style={{ color: accent }}>✦</span>
+                        : <motion.span
+                            animate={{ opacity: [0.25, 1, 0.25] }}
+                            transition={{ repeat: Infinity, duration: 1.4 }}
+                            style={{ color: accent }}
+                          >…</motion.span>}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {/* Slot du médium — actif tant qu'il n'a pas soumis */}
+              {fragTextes[fragSlotJoueur] === null ? (
+                <>
+                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                    — VOTRE RÔLE : {fragGabarit[fragSlotJoueur].role} —
+                  </div>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontStyle: 'italic', color: encre, opacity: 0.7, marginBottom: 10 }}>
+                    {fragGabarit[fragSlotJoueur].consigne}
+                  </div>
+                  <input
+                    value={saisie}
+                    onChange={e => setSaisie(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); deposerFragment() } }}
+                    placeholder="votre fragment…"
+                    autoFocus
+                    style={{
+                      width: '100%',
+                      fontFamily: "'Playfair Display', serif", fontSize: 20, fontStyle: 'italic',
+                      color: encre, background: 'transparent',
+                      border: 'none', borderBottom: `1.2px solid ${accent}66`,
+                      outline: 'none', padding: '4px 2px 8px', lineHeight: 1.45,
+                    }}
+                  />
+                  <button
+                    onClick={deposerFragment}
+                    disabled={!saisie.trim()}
+                    style={{
+                      width: '100%', marginTop: 14,
+                      background: saisie.trim() ? encre : `${encre}30`,
+                      color: bg,
+                      ...mono, fontSize: 15, letterSpacing: '0.12em', textTransform: 'uppercase',
+                      padding: '0.85em 1em', border: 'none',
+                      cursor: saisie.trim() ? 'pointer' : 'default',
+                      transition: 'background 0.2s',
+                    }}
+                  >
+                    Glisser le fragment ✒
+                  </button>
+                </>
+              ) : (
+                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginTop: 8 }}>
+                  — LES VOIX TERMINENT —
+                </div>
+              )}
+            </motion.div>
+
+          /* Tour complet : le médium écrit le vers seul */
+          ) : tourJoueur ? (
             <motion.div
               key={`humain-${idx}`}
               initial={{ opacity: 0, y: 8 }}
@@ -460,7 +698,6 @@ export default function JeuAtelier() {
               transition={{ duration: 0.4 }}
               style={{ paddingBottom: 8 }}
             >
-              {/* L'écho — le dernier mot du vers précédent, si la visibilité le permet */}
               {echoTexte ? (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
@@ -513,6 +750,8 @@ export default function JeuAtelier() {
                 {idx === total - 1 ? 'Refermer le poème ✒' : 'Déposer le vers ✒'}
               </button>
             </motion.div>
+
+          /* Tour IA pur ou attente init fragment */
           ) : !termine ? (
             <motion.div
               key={`ia-${idx}`}

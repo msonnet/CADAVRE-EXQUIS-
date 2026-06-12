@@ -17,6 +17,9 @@ function toRomain(n: number): string {
 export interface PlanAtelier {
   totalVers: number          // 5–27, tiré au sort
   toursJoueur: number[]      // indices des vers écrits par le médium (toujours 0 et totalVers-1)
+  toursFragmentJoueur: number[] // sous-ensemble de toursJoueur (hors 0 et totalVers-1) où le médium
+                             // remplit un seul fragment parmi les voix — plus les voix sont nombreuses,
+                             // plus ces tours sont fréquents (0 voix → 0%, max voix → 100%)
   voixPool: string[]         // ids des voix convoquées, mélangées
   echo: boolean              // true = l'écho (dernier mot du vers précédent) ; false = obscurité totale
 }
@@ -40,6 +43,7 @@ export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
     return {
       totalVers,
       toursJoueur: Array.from({ length: totalVers }, (_, i) => i),
+      toursFragmentJoueur: [],
       voixPool: [],
       echo,
     }
@@ -61,7 +65,13 @@ export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
     tours.splice(1 + Math.floor(Math.random() * (tours.length - 2)), 1)
   }
   const pool = [...VOICE_IDS].sort(() => Math.random() - 0.5).slice(0, nbVoix)
-  return { totalVers, toursJoueur: tours, voixPool: pool, echo }
+  // Tours fragment : parmi les retours du milieu, une proportion dépend du nombre de voix.
+  // 0 voix → 0 %, max voix → 100 % — le médium devient une voix parmi d'autres.
+  const probFragment = nbVoix / VOICE_IDS.length
+  const toursFragmentJoueur = tours.filter(
+    t => t !== 0 && t !== totalVers - 1 && Math.random() < probFragment
+  )
+  return { totalVers, toursJoueur: tours, toursFragmentJoueur, voixPool: pool, echo }
 }
 
 export default function Atelier() {
