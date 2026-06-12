@@ -282,6 +282,11 @@ export default async function handler(req: any, res: any): Promise<void> {
     ? `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés (trouve autre chose) : ${motsEviter.join(', ')}.`
     : ''
 
+  // Pour un vers entier, la persona doit s'exprimer pleinement — pas d'image générique
+  const personaLine = type === 'libre'
+    ? "\nCe vers entier doit porter ton empreinte : une image concrète et singulière depuis ton univers propre. Évite les métaphores surréalistes attendues — choisis l'image que toi seul verrais."
+    : ''
+
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 25_000)
   try {
@@ -303,7 +308,7 @@ export default async function handler(req: any, res: any): Promise<void> {
         messages: [
           {
             role: 'user',
-            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}\nRéponds avec le fragment seul.`,
+            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}${personaLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),

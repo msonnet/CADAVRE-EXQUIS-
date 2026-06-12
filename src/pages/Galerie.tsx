@@ -98,6 +98,7 @@ export default function Galerie() {
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [onglet, setOnglet] = useState<GalleryType>('poeme')
+  const [recherche, setRecherche] = useState('')
   const [items, setItems] = useState<GalleryItem[]>([])
   const [chargement, setChargement] = useState(true)
   const [chargementPlus, setChargementPlus] = useState(false)
@@ -309,6 +310,7 @@ export default function Galerie() {
 
   useEffect(() => {
     setExpanded(null)
+    setRecherche('')
     chargerItems(onglet, 0, true)
   }, [onglet, chargerItems])
 
@@ -543,7 +545,7 @@ export default function Galerie() {
         {/* ── LÉGENDE DES RÉACTIONS ── */}
         <div style={{
           display: 'flex', flexWrap: 'wrap', gap: '4px 14px',
-          marginBottom: 14, opacity: 0.7,
+          marginBottom: 10, opacity: 0.7,
         }}>
           {REACTION_EMOJIS.map(em => (
             <span key={em} style={{ ...mono, fontSize: 13, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -551,6 +553,28 @@ export default function Galerie() {
               {REACTION_LABELS[em].toUpperCase()}
             </span>
           ))}
+        </div>
+
+        {/* ── RECHERCHE ── */}
+        <div style={{ marginBottom: 14 }}>
+          <input
+            type="search"
+            value={recherche}
+            onChange={e => setRecherche(e.target.value)}
+            placeholder="Rechercher par titre ou auteur…"
+            aria-label="Rechercher par titre ou auteur"
+            style={{
+              width: '100%',
+              ...mono, fontSize: 14,
+              color: encre,
+              background: `${encre}06`,
+              border: `0.5px solid ${encre}25`,
+              borderBottom: recherche ? `1px solid ${accent}` : `0.5px solid ${encre}25`,
+              outline: 'none',
+              padding: '8px 12px',
+              transition: 'border-color 0.2s',
+            }}
+          />
         </div>
 
         {/* ── CHARGEMENT ── */}
@@ -591,10 +615,23 @@ export default function Galerie() {
         )}
 
         {/* ── LISTE ── */}
-        {!chargement && !erreur && items.length > 0 && (
+        {!chargement && !erreur && items.length > 0 && (() => {
+          const q = recherche.trim().toLowerCase()
+          const itemsFiltres = q
+            ? items.filter(it =>
+                (it.titre ?? '').toLowerCase().includes(q) ||
+                it.author_pseudo.toLowerCase().includes(q)
+              )
+            : items
+          return (
           <AnimatePresence initial={false}>
+            {itemsFiltres.length === 0 ? (
+              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.6, textAlign: 'center', padding: '28px 0' }}>
+                Aucun résultat pour « {recherche} ».
+              </p>
+            ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {items.map((item, i) => {
+              {itemsFiltres.map((item, i) => {
                 const ouvert = expanded === item.id
                 const poemePayload = item.type === 'poeme' ? parsePoeme(item.payload) : null
                 const dessinPayload = item.type === 'dessin' ? parseDessin(item.payload) : null
@@ -862,8 +899,10 @@ export default function Galerie() {
                 )
               })}
             </div>
+            )}
           </AnimatePresence>
-        )}
+          )
+        })()}
 
         {/* ── CHARGER PLUS ── */}
         {!chargement && !erreur && items.length > 0 && encore && (

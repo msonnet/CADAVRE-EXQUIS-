@@ -25,7 +25,7 @@ export interface Case {
   numero: number
   fonction: string
   consigne: string
-  auteur: 'humain' | 'ia'
+  auteur: 'humain' | 'ia' | 'mixte'
   joueurNumero?: number   // numéro du joueur humain en mode multijoueur
   voixSlot?: number       // slot IA stable dans la séquence (1-based) — pour affichage cohérent
   texte: string

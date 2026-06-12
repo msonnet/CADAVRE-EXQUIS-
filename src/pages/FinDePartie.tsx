@@ -322,9 +322,9 @@ export default function FinDePartie() {
               <motion.span
                 key={i}
                 style={{ display: 'block', minHeight: '1.65em' }}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -14 : 14 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.55, duration: 0.7, ease: [0.22, 0.88, 0.32, 1] }}
               >
                 {i === 0 && lettrine && (
                   <motion.span
