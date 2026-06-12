@@ -85,11 +85,12 @@ const QUESTION: RoleFragment = {
   type: 'proposition', consigne: 'une question courte et étrange', role: 'QUESTION',
 }
 
-function tirerGabarit(nVoix: number): RoleFragment[] {
+function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
   if (nVoix === 1) {
-    // Une seule plume écrit le vers entier — parfois une question, sinon
+    // Une seule plume écrit le vers entier — rarement une question (l'interrogatif
+    // épuisé devient un tic sur un poème long : budget géré par l'appelant), sinon
     // un vers libre de longueur tirée au sort (3 à 6 mots)
-    if (Math.random() < 0.22) return [QUESTION]
+    if (questionPermise && Math.random() < 0.12) return [QUESTION]
     const mots = 3 + Math.floor(Math.random() * 4)
     return [{ type: 'libre', consigne: 'un vers — une image physique et inattendue', role: 'VERS ENTIER', mots }]
   }
@@ -246,10 +247,14 @@ export default function JeuAtelier() {
       const p = plan!
       const nVoix = Math.min(1 + Math.floor(Math.random() * 3), p.voixPool.length)
       const indices = p.voixPool.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, nVoix)
+      // L'interrogatif est plafonné : une question par poème (deux au-delà de XX vers)
+      // — sans budget, les « Qui pleure sous la craie ? » s'accumulent en tic
+      const questionsOk = versRef.current.filter(v => v.texte.includes('?')).length
+        < Math.max(1, Math.floor(p.totalVers / 10))
       // Jamais deux fois de suite la même forme — la métrique respire
-      let gabarit = tirerGabarit(nVoix)
+      let gabarit = tirerGabarit(nVoix, questionsOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nVoix)
+        gabarit = tirerGabarit(nVoix, questionsOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
       setVoixEnCours(indices.map((vi, k) => ({ num: vi + 1, role: gabarit[k].role, fait: false })))

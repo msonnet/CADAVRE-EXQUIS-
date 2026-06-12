@@ -27,11 +27,13 @@ export interface PlanAtelier {
 // La cadence du retour glisse avec le nombre de voix : plus la foule est
 // nombreuse, plus le médium se fait rare. Le pas (distance entre deux retours
 // de la main) est tiré au sort dans une fourchette qui s'incline —
-// 1 voix → pas de 1 à 2, 46 voix → pas de 6 à 10 (vers 10 voix on retrouve 2 à 4).
+// 1 voix → pas de 1 à 2, 46 voix → pas de 3 à 6.
+// Fourchette resserrée depuis les tours fragment : la plupart des retours ne
+// demandent qu'un mot ou deux, la main peut revenir souvent sans peser.
 // Le hasard garde sa part : seule la fourchette est liée, jamais le tirage.
 export function cadenceRetour(nbVoix: number): [number, number] {
   const t = (Math.min(Math.max(nbVoix, 1), VOICE_IDS.length) - 1) / (VOICE_IDS.length - 1)
-  return [Math.round(1 + t * 5), Math.round(2 + t * 8)]
+  return [Math.round(1 + t * 2), Math.round(2 + t * 4)]
 }
 
 // La main revient : le médium ouvre, referme, et la main lui revient selon la cadence.

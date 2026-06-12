@@ -7,7 +7,7 @@ const NB_VOIX_MAX = 46 // VOICE_IDS.length
 
 function cadenceRetour(nbVoix: number): [number, number] {
   const t = (Math.min(Math.max(nbVoix, 1), NB_VOIX_MAX) - 1) / (NB_VOIX_MAX - 1)
-  return [Math.round(1 + t * 5), Math.round(2 + t * 8)]
+  return [Math.round(1 + t * 2), Math.round(2 + t * 4)]
 }
 
 interface PlanAtelier {
@@ -60,8 +60,8 @@ describe('cadenceRetour', () => {
     expect(cadenceRetour(1)).toEqual([1, 2])
   })
 
-  it('returns [6, 10] for maximum voices (slowest cadence)', () => {
-    expect(cadenceRetour(NB_VOIX_MAX)).toEqual([6, 10])
+  it('returns [3, 6] for maximum voices (slowest cadence)', () => {
+    expect(cadenceRetour(NB_VOIX_MAX)).toEqual([3, 6])
   })
 
   it('always returns pasMin <= pasMax', () => {
@@ -263,5 +263,38 @@ describe('eviter — conjonctions courtes', () => {
     // 'le' (longueur 2) n'est pas dans la liste principale
     const fromMain = versTextes.flatMap(v => v.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2)
     expect(fromMain).not.toContain('le')
+  })
+})
+
+// ── Tests budget de questions — miroir de la logique JeuAtelier ──────────────
+
+describe('budget de questions par poème', () => {
+  // Miroir du calcul dans ecrireVersIA : une question max par poème,
+  // deux au-delà de XX vers — l'interrogatif reste un événement
+  function questionsOk(versTextes: string[], totalVers: number): boolean {
+    return versTextes.filter(t => t.includes('?')).length
+      < Math.max(1, Math.floor(totalVers / 10))
+  }
+
+  it('autorise une question quand le poème n\'en contient aucune', () => {
+    expect(questionsOk(['Le sel des heures', 'la nuit garde tout'], 19)).toBe(true)
+  })
+
+  it('bloque la deuxième question sur un poème de 19 vers', () => {
+    expect(questionsOk(['Qui pleure sous la craie ?'], 19)).toBe(false)
+  })
+
+  it('autorise deux questions sur un poème de 20 vers ou plus', () => {
+    expect(questionsOk(['Qui pleure sous la craie ?'], 20)).toBe(true)
+    expect(questionsOk(['Qui veille ?', 'Où vont les ombres ?'], 27)).toBe(false)
+  })
+
+  it('budget minimal de 1 même pour les poèmes courts (5 vers)', () => {
+    expect(questionsOk([], 5)).toBe(true)
+    expect(questionsOk(['Que reste-t-il encore ?'], 5)).toBe(false)
+  })
+
+  it('compte les questions où qu\'elles soient dans le vers', () => {
+    expect(questionsOk(['Pourquoi la terre tremble-t-elle la nuit ? murmure le vent'], 12)).toBe(false)
   })
 })
