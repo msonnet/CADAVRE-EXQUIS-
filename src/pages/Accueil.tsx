@@ -204,29 +204,27 @@ export default function Accueil() {
               onClick={() => nav('/config')}
               style={{
                 flex: 1, minWidth: 0,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                background: encre, color: bg,
-                ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
-                padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
-                borderRadius: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: accent, color: bg,
+                ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
+                padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
+                borderRadius: 0, whiteSpace: 'nowrap',
               }}
             >
-              <span>Cadavre Écrit</span>
-              <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✒</span>
+              Cadavre Écrit
             </button>
             <button
               onClick={() => nav('/config-dessin')}
               style={{
                 flex: 1, minWidth: 0,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: second, color: bg,
-                ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
-                padding: '0.75em 0.5em', border: 'none', cursor: 'pointer', gap: 4,
-                borderRadius: 0,
+                ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
+                padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
+                borderRadius: 0, whiteSpace: 'nowrap',
               }}
             >
-              <span>Cadavre Dessiné</span>
-              <span aria-hidden style={{ fontSize: 15, opacity: 0.7 }}>✎</span>
+              Cadavre Dessiné
             </button>
           </div>
           <button
