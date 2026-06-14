@@ -130,6 +130,8 @@ export default function FinDePartie() {
         } else {
           const msg = reason === 'not_configured'
             ? 'Génération d\'images non configurée (clé FAL_KEY manquante)'
+            : reason === 'timeout'
+            ? 'La génération a pris trop de temps — réessayez'
             : 'Illustration indisponible — réessayez dans un instant'
           setErreurIllustration(msg)
           setStyleChoisi(null)

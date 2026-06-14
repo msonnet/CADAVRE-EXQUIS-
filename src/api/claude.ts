@@ -1,5 +1,7 @@
 // Wrapper client vers /api/claude (Vercel Function)
 
+import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
+
 export interface RequeteIA {
   consigne: string
   type: string
@@ -20,26 +22,19 @@ export interface ReponseIA {
 const TIMEOUT_MS = 12_000
 
 export async function demanderFragmentIA(requete: RequeteIA): Promise<ReponseIA> {
-  const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
-  try {
-    const response = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requete),
-      signal: ctrl.signal,
-    })
+  const response = await fetchAvecTimeout('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requete),
+  }, TIMEOUT_MS)
 
-    if (!response.ok) {
-      throw new Error(`Erreur API: ${response.status}`)
-    }
+  if (!response.ok) {
+    throw new Error(`Erreur API: ${response.status}`)
+  }
 
-    const data = await response.json()
-    return {
-      texte: data.texte ?? '',
-      source: data.source === 'fallback' ? 'fallback' : 'ia',
-    }
-  } finally {
-    clearTimeout(timer)
+  const data = await response.json()
+  return {
+    texte: data.texte ?? '',
+    source: data.source === 'fallback' ? 'fallback' : 'ia',
   }
 }

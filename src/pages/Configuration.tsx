@@ -18,6 +18,11 @@ const VISIBILITE_DESC: Record<string, string> = {
   'derniere-case':'La case entière précédente est révélée avant d\'écrire.',
 }
 
+const MODE_DESC: Record<string, string> = {
+  standard:   'Prenez le temps qu\'il faut pour chaque fragment.',
+  hypnotique: '30 secondes par fragment. Le temps écoulé, le fragment se scelle de lui-même — l\'écriture automatique, sans retour en arrière.',
+}
+
 type SlotType = 'vide' | 'humain' | 'ia'
 
 const CONFIG_PAR_DEFAUT: ConfigPartie = {
@@ -250,6 +255,9 @@ export default function Configuration() {
               </button>
             ))}
           </div>
+          <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 8, letterSpacing: '0.08em' }}>
+            <span style={{ color: encre }}>✒</span> une main · <span style={{ color: accent }}>✦</span> une voix IA · <span style={{ opacity: 0.5 }}>·</span> libre — touchez une place pour changer
+          </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {descriptionTable(joueursHumains, voixIA)}
           </div>
@@ -312,6 +320,9 @@ export default function Configuration() {
                 </button>
               )
             })}
+          </div>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55, marginTop: 8 }}>
+            {MODE_DESC[config.mode]}
           </div>
         </div>
 

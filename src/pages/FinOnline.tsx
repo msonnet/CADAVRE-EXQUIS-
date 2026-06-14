@@ -10,6 +10,7 @@ import { getStructure, reconstruirePoeme } from '../structures'
 import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
+import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
@@ -68,11 +69,11 @@ async function interpreterDessin(imageDataUrl: string): Promise<string> {
   const base64 = imageDataUrl.split(',')[1]
   if (!base64) return ''
   try {
-    const res = await fetch('/api/interpreter-dessin', {
+    const res = await fetchAvecTimeout('/api/interpreter-dessin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64: base64 }),
-    })
+    }, 20_000)
     if (!res.ok) return ''
     const data = await res.json()
     return data.texte ?? ''

@@ -7,6 +7,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin } from '../db'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
+import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 
@@ -62,11 +63,11 @@ async function interpreterDessin(imageDataUrl: string): Promise<string> {
   const base64 = imageDataUrl.split(',')[1]
   if (!base64) return ''
   try {
-    const res = await fetch('/api/interpreter-dessin', {
+    const res = await fetchAvecTimeout('/api/interpreter-dessin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64: base64 }),
-    })
+    }, 20_000)
     if (!res.ok) return ''
     const data = await res.json()
     return data.texte ?? ''
