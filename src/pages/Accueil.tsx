@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
+import { pointerSerie, type Serie } from '../utils/streak'
+import { rearmerRappelSiActif } from '../utils/notifications'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -18,12 +20,16 @@ export default function Accueil() {
   const navigate = useNavigate()
   const seance = useReve()
   const { jouer } = useSound()
+  // L'ouverture de l'accueil = le passage du jour : on pointe la série une fois.
+  const [serie] = useState<Serie>(() => pointerSerie())
 
   useEffect(() => {
     const prevHtml = document.documentElement.style.overflow
     const prevBody = document.body.style.overflow
     document.documentElement.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
+    // Si le rappel quotidien était activé, on s'assure qu'il est toujours armé.
+    rearmerRappelSiActif()
     return () => {
       document.documentElement.style.overflow = prevHtml
       document.body.style.overflow = prevBody
@@ -93,14 +99,17 @@ export default function Accueil() {
         border: 'none', borderTop: `1.2px solid ${accent}`,
         marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10,
       }} />
-      {seance?.heure && (
+      {(serie.compte >= 2 || seance?.heure) && (
         <div style={{
-          position: 'relative', zIndex: 10,
-          textAlign: 'right', marginTop: 3,
+          position: 'relative', zIndex: 10, marginTop: 3,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
           ...ui, fontSize: 11, letterSpacing: '0.06em',
           color: accent, opacity: 0.5,
         }}>
-          rêvé à {seance.heure}
+          <span>
+            {serie.compte >= 2 ? `✦ ${toRomain(serie.compte)}ᵉ nuit de suite` : ''}
+          </span>
+          {seance?.heure && <span>rêvé à {seance.heure}</span>}
         </div>
       )}
 

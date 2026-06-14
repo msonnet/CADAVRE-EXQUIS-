@@ -5,6 +5,9 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import type { NiveauValidation } from '../utils/validation'
+import {
+  rappelDisponible, activerRappelQuotidien, desactiverRappelQuotidien, RAPPEL_KEY,
+} from '../utils/notifications'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
   { id: 'stricte',    label: 'Stricte',    desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
@@ -18,6 +21,11 @@ export default function Reglages() {
   const [validation, setValidation] = useState<NiveauValidation>(
     () => (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
   )
+  const [rappelActif, setRappelActif] = useState<boolean>(
+    () => localStorage.getItem(RAPPEL_KEY) === '1'
+  )
+  const [rappelBusy, setRappelBusy] = useState(false)
+  const [rappelRefuse, setRappelRefuse] = useState(false)
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
@@ -27,6 +35,29 @@ export default function Reglages() {
   function changerValidation(niveau: NiveauValidation) {
     setValidation(niveau)
     localStorage.setItem('validation-niveau', niveau)
+  }
+
+  async function changerRappel(actif: boolean) {
+    if (rappelBusy) return
+    setRappelRefuse(false)
+    if (!actif) {
+      setRappelActif(false)
+      localStorage.setItem(RAPPEL_KEY, '0')
+      await desactiverRappelQuotidien()
+      return
+    }
+    setRappelBusy(true)
+    const ok = await activerRappelQuotidien()
+    setRappelBusy(false)
+    if (ok) {
+      setRappelActif(true)
+      localStorage.setItem(RAPPEL_KEY, '1')
+    } else {
+      // Autorisation refusée (ou indisponible) : on n'active rien.
+      setRappelActif(false)
+      localStorage.setItem(RAPPEL_KEY, '0')
+      setRappelRefuse(true)
+    }
   }
 
   return (
@@ -136,6 +167,52 @@ export default function Reglages() {
             {seance?.ambiance.name}
           </div>
         </motion.div>
+
+        {/* ── RAPPEL QUOTIDIEN (app installée uniquement) ── */}
+        {rappelDisponible() && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            style={{ marginBottom: 28 }}
+          >
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+              — RAPPEL QUOTIDIEN —
+            </div>
+            <div className="flex gap-2 mb-3">
+              {[
+                { actif: true,  label: 'ACTIVÉ' },
+                { actif: false, label: 'AUCUN' },
+              ].map(opt => {
+                const active = rappelActif === opt.actif
+                return (
+                  <button
+                    key={String(opt.actif)}
+                    onClick={() => changerRappel(opt.actif)}
+                    disabled={rappelBusy}
+                    style={{
+                      flex: 1, padding: '8px 4px',
+                      border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                      borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                      background: 'transparent', cursor: rappelBusy ? 'default' : 'pointer',
+                      ...mono, fontSize: 13,
+                      color: active ? accent : `${encre}60`,
+                      opacity: rappelBusy ? 0.5 : 1,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
+              {rappelRefuse
+                ? 'Autorisation refusée — activez les notifications dans les réglages du téléphone.'
+                : 'Un rappel discret chaque soir, à 20 h : le poème du jour vous attend. Rien ne quitte l’appareil.'}
+            </div>
+          </motion.div>
+        )}
 
         <div style={{ flex: 1 }} />
 
