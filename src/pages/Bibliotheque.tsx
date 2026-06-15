@@ -132,7 +132,7 @@ export default function Bibliotheque() {
         {/* ── VIDE ── */}
         {!chargement && poemes.length === 0 && dessins.length === 0 && (
           <motion.div
-            className="flex flex-1 items-center justify-center"
+            className="flex flex-col flex-1 items-center justify-center gap-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -142,6 +142,28 @@ export default function Bibliotheque() {
             }}>
               Aucun poème pour l'instant.
             </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+              <button
+                onClick={() => navigate('/config')}
+                style={{
+                  width: '100%', background: accent, color: btnText,
+                  ...mono, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  padding: '0.9em 1em', border: 'none', cursor: 'pointer',
+                }}
+              >
+                Cadavre Écrit →
+              </button>
+              <button
+                onClick={() => navigate('/config-dessin')}
+                style={{
+                  width: '100%', background: 'transparent', color: encre,
+                  ...mono, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  padding: '0.9em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer',
+                }}
+              >
+                Cadavre Dessiné →
+              </button>
+            </div>
           </motion.div>
         )}
 

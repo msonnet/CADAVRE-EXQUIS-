@@ -270,7 +270,7 @@ export default function Accueil() {
                 color: encre, opacity: 0.65, fontWeight: 700,
                 background: 'none', border: 'none', cursor: 'pointer',
                 textAlign: (align as 'right') ?? 'left',
-                padding: '2px 0',
+                padding: '10px 0',
               }}
             >
               {label}

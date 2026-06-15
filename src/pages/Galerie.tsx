@@ -859,8 +859,8 @@ export default function Galerie() {
                         </span>
                       </div>
 
-                      {/* ── ACTIONS (signaler / supprimer) ── */}
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+                      {/* ── ACTIONS (signaler / supprimer) — uniquement carte ouverte ── */}
+                      {ouvert && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
                         {user && item.author_id === user.id ? (
                           <button
                             onClick={e => {
@@ -893,7 +893,7 @@ export default function Galerie() {
                             ⚑ Signaler
                           </button>
                         )}
-                      </div>
+                      </div>}
                     </div>
                   </motion.div>
                 )

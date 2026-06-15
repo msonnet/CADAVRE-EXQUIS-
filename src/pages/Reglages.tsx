@@ -148,7 +148,7 @@ export default function Reglages() {
             — AMBIANCE —
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
-            Chaque jour, une ambiance est tirée au sort. Vous pouvez en tirer une nouvelle maintenant.
+            Chaque jour, une ambiance est tirée au sort. Tu peux en tirer une nouvelle maintenant.
           </div>
           <button
             onClick={() => seance?.retirer()}

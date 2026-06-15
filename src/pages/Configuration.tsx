@@ -19,7 +19,7 @@ const VISIBILITE_DESC: Record<string, string> = {
 }
 
 const MODE_DESC: Record<string, string> = {
-  standard:   'Prenez le temps qu\'il faut pour chaque fragment.',
+  standard:   'Prends le temps qu\'il faut pour chaque fragment.',
   hypnotique: '30 secondes par fragment. Le temps écoulé, le fragment se scelle de lui-même — l\'écriture automatique, sans retour en arrière.',
 }
 
@@ -328,13 +328,14 @@ export default function Configuration() {
 
         <div style={{ flex: 1 }} />
 
-        {/* ── CTA ── */}
+        {/* ── CTA — sticky pour rester accessible même en bas de page ── */}
         <motion.div
           className="mb-3"
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.4 }}
           whileTap={{ scale: 0.98 }}
+          style={{ position: 'sticky', bottom: 8 }}
         >
           <button
             onClick={demarrer}
