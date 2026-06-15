@@ -6,6 +6,8 @@ const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbr
 const SIZES = [1.5, 4, 9, 17, 28]
 const TOOLBAR_H = 218
 const RACCORD_H = 80
+// Encre fixe de la barre d'outils — toujours lisible sur son fond beige fixe (#f0e9df).
+const TB_INK = '#1a1208'
 
 type Paper = 'lisse' | 'kraft' | 'parchemin' | 'ardoise'
 const PAPERS: { id: Paper; nom: string; bg: string; grain: string; ink: string }[] = [
@@ -472,7 +474,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
           const factor = tool === 'eraser' ? 2.8 : tool === 'marker' ? 2.6 : tool === 'airbrush' ? 4.4 : tool === 'crayon' ? 2.2 : tool === 'brush' ? 1.8 : 1
           const diam = Math.max(6, SIZES[sizeIdx] * factor * zoom)
           return (
-            <div style={{ position: 'fixed', left: ghost.x, top: ghost.y, width: diam, height: diam, marginLeft: -diam / 2, marginTop: -diam / 2, borderRadius: '50%', border: `1px solid ${tool === 'eraser' ? `${encre}66` : `${color}aa`}`, background: tool === 'eraser' ? 'transparent' : `${color}14`, pointerEvents: 'none', zIndex: 15 }} />
+            <div style={{ position: 'fixed', left: ghost.x, top: ghost.y, width: diam, height: diam, marginLeft: -diam / 2, marginTop: -diam / 2, borderRadius: '50%', border: `1px solid ${tool === 'eraser' ? `${paperDef.ink}66` : `${color}aa`}`, background: tool === 'eraser' ? 'transparent' : `${color}14`, pointerEvents: 'none', zIndex: 15 }} />
           )
         })()}
 
@@ -483,14 +485,14 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
           </div>
         )}
 
-        {/* Band badge */}
-        <div style={{ position: 'absolute', top: 10, left: 10, ...mono, fontSize: 13, color: encre, background: 'rgba(255,255,255,0.88)', padding: '4px 10px', border: `0.5px solid ${encre}15`, pointerEvents: 'none' }}>
+        {/* Band badge — couleurs liées au papier pour rester lisible sur tout fond */}
+        <div style={{ position: 'absolute', top: 10, left: 10, ...mono, fontSize: 13, color: paperDef.ink, background: `${paperDef.bg}ee`, padding: '4px 10px', border: `0.5px solid ${paperDef.ink}30`, borderRadius: 3, pointerEvents: 'none' }}>
           BANDE {bandeNum}/{totalBandes}
         </div>
 
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }}
-            style={{ position: 'absolute', top: 10, right: 10, ...mono, fontSize: 13, color: encre, background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
+            style={{ position: 'absolute', top: 10, right: 10, ...mono, fontSize: 13, color: paperDef.ink, background: `${paperDef.bg}ee`, border: `0.5px solid ${paperDef.ink}30`, borderRadius: 3, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
             ↺ {Math.round(zoom * 100)}%
           </button>
         )}
@@ -518,34 +520,34 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
               )
             })}
           </div>
-          <div style={{ width: 1, height: 38, background: `${encre}12`, flexShrink: 0 }} />
+          <div style={{ width: 1, height: 38, background: `${TB_INK}12`, flexShrink: 0 }} />
           <button onClick={() => setShowColorPanel(true)} aria-label="Choisir une couleur"
-            style={{ width: 44, height: 44, borderRadius: '50%', background: tool === 'eraser' ? '#f0ede8' : color, border: `2px solid ${tool === 'eraser' ? `${encre}20` : color === '#ffffff' ? `${encre}30` : 'transparent'}`, boxShadow: '0 1px 6px rgba(0,0,0,0.18)', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }} />
+            style={{ width: 44, height: 44, borderRadius: '50%', background: tool === 'eraser' ? '#f0ede8' : color, border: `2px solid ${tool === 'eraser' ? `${TB_INK}20` : color === '#ffffff' ? `${TB_INK}30` : 'transparent'}`, boxShadow: '0 1px 6px rgba(0,0,0,0.18)', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }} />
         </div>
 
         {/* Opacity row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
           <input type="range" min={10} max={100} step={5} value={Math.round(opacity * 100)} onChange={e => setOpacity(Number(e.target.value) / 100)} disabled={tool === 'eraser'}
             style={{ flex: 1, accentColor: accent, opacity: tool === 'eraser' ? 0.35 : 1 }} />
-          <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
+          <span style={{ ...mono, fontSize: 13, color: TB_INK, opacity: 0.7, width: 34, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
         </div>
 
         {/* Sizes + undo row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 32 }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button key={i} onClick={() => setSizeIdx(i)} aria-pressed={sizeIdx === i}
                 style={{ flex: 1, height: 34, background: sizeIdx === i ? '#f5f0ea' : 'transparent', border: 'none', borderRadius: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}>
-                <div style={{ width: Math.min(sz * 0.7 + 3, 22), height: Math.min(sz * 0.7 + 3, 22), borderRadius: '50%', background: sizeIdx === i ? (tool === 'eraser' ? encre : color) : `${encre}55`, transition: 'background 0.15s' }} />
+                <div style={{ width: Math.min(sz * 0.7 + 3, 22), height: Math.min(sz * 0.7 + 3, 22), borderRadius: '50%', background: sizeIdx === i ? (tool === 'eraser' ? TB_INK : color) : `${TB_INK}80`, transition: 'background 0.15s' }} />
               </button>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
             {([{ fn: undo, can: canUndo, icon: '↩', label: 'Annuler' }, { fn: redo, can: canRedo, icon: '↪', label: 'Rétablir' }] as const).map(({ fn, can, icon, label }) => (
               <button key={label} onClick={fn} disabled={!can} aria-label={label}
-                style={{ width: 34, height: 34, borderRadius: 3, border: 'none', background: can ? `${accent}18` : 'transparent', color: can ? accent : encre, opacity: can ? 1 : 0.35, fontSize: 18, cursor: can ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                style={{ width: 34, height: 34, borderRadius: 3, border: 'none', background: can ? `${accent}18` : 'transparent', color: can ? accent : TB_INK, opacity: can ? 1 : 0.35, fontSize: 18, cursor: can ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {icon}
               </button>
             ))}
@@ -582,11 +584,11 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
               <div style={{ width: 36, height: 4, borderRadius: 2, background: '#ddd', margin: '12px auto 16px' }} />
 
               {/* Paper selector */}
-              <span style={{ ...mono, fontSize: 13, color: `${encre}55`, display: 'block', marginBottom: 8 }}>FOND PAPIER</span>
+              <span style={{ ...mono, fontSize: 13, color: `${TB_INK}55`, display: 'block', marginBottom: 8 }}>FOND PAPIER</span>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 {PAPERS.map(p => (
                   <button key={p.id} onClick={() => changerPapier(p.id)}
-                    style={{ flex: 1, height: 44, borderRadius: 3, background: p.bg, border: paper === p.id ? `2.5px solid ${accent}` : `1px solid ${encre}22`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                    style={{ flex: 1, height: 44, borderRadius: 3, background: p.bg, border: paper === p.id ? `2.5px solid ${accent}` : `1px solid ${TB_INK}22`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                     <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 10, letterSpacing: '0.12em', color: p.ink, fontWeight: paper === p.id ? 700 : 400 }}>{p.nom.toUpperCase()}</span>
                   </button>
                 ))}
@@ -594,20 +596,20 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
 
               {/* Custom color */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 3, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
-                <span style={{ ...mono, fontSize: 13, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
+                <div style={{ width: 32, height: 32, borderRadius: 3, background: color, border: `1px solid ${TB_INK}20`, flexShrink: 0 }} />
+                <span style={{ ...mono, fontSize: 13, color: TB_INK, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
                 <input type="color" value={color} onChange={e => { setColor(e.target.value); if (tool === 'eraser') setTool('pen') }}
-                  style={{ width: 36, height: 36, padding: 3, border: `1px solid ${encre}20`, borderRadius: 3, cursor: 'pointer' }} />
+                  style={{ width: 36, height: 36, padding: 3, border: `1px solid ${TB_INK}20`, borderRadius: 3, cursor: 'pointer' }} />
               </div>
 
               {/* Recent colors */}
               {recentColors.length > 0 && (
                 <>
-                  <span style={{ ...mono, fontSize: 13, color: `${encre}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
+                  <span style={{ ...mono, fontSize: 13, color: `${TB_INK}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
                   <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
                     {recentColors.map(col => (
                       <button key={col} onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen'); setShowColorPanel(false) }}
-                        style={{ width: 32, height: 32, borderRadius: 3, flex: '0 0 auto', background: col, border: color.toLowerCase() === col.toLowerCase() ? `2.5px solid ${accent}` : `1px solid ${encre}22`, cursor: 'pointer' }} />
+                        style={{ width: 32, height: 32, borderRadius: 3, flex: '0 0 auto', background: col, border: color.toLowerCase() === col.toLowerCase() ? `2.5px solid ${accent}` : `1px solid ${TB_INK}22`, cursor: 'pointer' }} />
                     ))}
                   </div>
                 </>
@@ -617,10 +619,10 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: 5, marginBottom: 14 }}>
                 {PALETTE.map(col => (
                   <button key={col} onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen'); setShowColorPanel(false) }}
-                    style={{ height: 32, borderRadius: 3, background: col, border: color === col ? `2.5px solid ${accent}` : ['#ffffff','#e8e8e8','#f0e4cc','#FFF9C4','#FCE4EC','#F3E5F5'].includes(col) ? `1px solid ${encre}22` : '2.5px solid transparent', cursor: 'pointer' }} />
+                    style={{ height: 32, borderRadius: 3, background: col, border: color === col ? `2.5px solid ${accent}` : ['#ffffff','#e8e8e8','#f0e4cc','#FFF9C4','#FCE4EC','#F3E5F5'].includes(col) ? `1px solid ${TB_INK}22` : '2.5px solid transparent', cursor: 'pointer' }} />
                 ))}
               </div>
-              <button onClick={() => setShowColorPanel(false)} style={{ width: '100%', padding: '12px', ...mono, fontSize: 13, background: '#f5f0ea', color: encre, border: 'none', borderRadius: 3, cursor: 'pointer' }}>FERMER</button>
+              <button onClick={() => setShowColorPanel(false)} style={{ width: '100%', padding: '12px', ...mono, fontSize: 13, background: '#f5f0ea', color: TB_INK, border: 'none', borderRadius: 3, cursor: 'pointer' }}>FERMER</button>
             </motion.div>
           </>
         )}
