@@ -33,11 +33,6 @@ export interface SeanceReve {
 
 const ReveCtx = createContext<SeanceReve | null>(null)
 
-function storageKey(): string {
-  const today = new Date().toISOString().slice(0, 10)
-  return `cadavre-seed-${today}`
-}
-
 function composerSeance(seed: number): SeanceReve {
   const rng = mulberry32(seed)
   const ambianceKey = pickOne(rng, AMBIANCE_POOL) as AmbianceKey
@@ -75,27 +70,12 @@ function composerSeance(seed: number): SeanceReve {
 }
 
 export function ReveProvider({ children }: { children: React.ReactNode }) {
-  const [seed, setSeed] = useState<number>(() => {
-    if (typeof window === 'undefined') return 42
-    const k = storageKey()
-    try {
-      const saved = localStorage.getItem(k)
-      if (saved) {
-        const n = parseInt(saved, 10)
-        if (Number.isFinite(n)) return n
-      }
-      const fresh = Math.floor(Math.random() * 100000)
-      localStorage.setItem(k, String(fresh))
-      return fresh
-    } catch {
-      return Math.floor(Math.random() * 100000)
-    }
-  })
+  const [seed, setSeed] = useState<number>(
+    () => Math.floor(Math.random() * 100000)
+  )
 
   const retirer = useCallback(() => {
-    const newSeed = Math.floor(Math.random() * 100000)
-    localStorage.setItem(storageKey(), String(newSeed))
-    setSeed(newSeed)
+    setSeed(Math.floor(Math.random() * 100000))
   }, [])
 
   const seance = useMemo<SeanceReve>(() => {
