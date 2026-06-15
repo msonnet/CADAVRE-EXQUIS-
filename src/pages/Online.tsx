@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -50,6 +50,9 @@ export default function Online() {
   const [createError, setCreateError] = useState<string | null>(null)
   const [publicRooms, setPublicRooms] = useState<PublicRoom[]>([])
   const [loadingRooms, setLoadingRooms] = useState(false)
+  const [liveConnected, setLiveConnected] = useState(false)
+
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   const fetchPublicRooms = useCallback(async () => {
     setLoadingRooms(true)
@@ -75,8 +78,29 @@ export default function Online() {
     }
   }, [])
 
+  // Souscription Realtime : la liste se met à jour seule dès qu'un salon
+  // apparaît, se remplit ou passe en jeu — plus besoin du bouton ↺.
   useEffect(() => {
-    if (user && profile) fetchPublicRooms()
+    if (!user || !profile) return
+    fetchPublicRooms()
+
+    const ch = supabase
+      .channel('lobby-public')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: 'is_public=eq.true' }, () => {
+        fetchPublicRooms()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_players' }, () => {
+        fetchPublicRooms()
+      })
+      .subscribe(status => {
+        setLiveConnected(status === 'SUBSCRIBED')
+      })
+
+    channelRef.current = ch
+    return () => {
+      ch.unsubscribe()
+      setLiveConnected(false)
+    }
   }, [user, profile, fetchPublicRooms])
 
   async function handleAnonymousJoin(e: React.FormEvent) {
@@ -89,6 +113,34 @@ export default function Online() {
     if (err) setJoinError2(err)
   }
 
+  // Rejoindre en un clic : prend la première place disponible, ou crée un salon.
+  async function handleQuickJoin() {
+    if (!user || !profile) return
+    jouer('clic')
+    setJoining(true)
+    setJoinError(null)
+    try {
+      const dispo = publicRooms.find(r => r.player_count < r.nb_joueurs)
+      if (dispo) {
+        navigate(`/salon/${dispo.code}`)
+        return
+      }
+      // Aucune place disponible : créer un salon public et attendre des joueurs.
+      const code = genCode()
+      const { error } = await supabase.from('rooms').insert({
+        code, host_id: user.id, mode: 'ecrit',
+        structure_id: 'phrase-simple', nb_joueurs: 3,
+        status: 'waiting', is_public: true,
+      })
+      if (error) throw error
+      navigate(`/salon/${code}`)
+    } catch (err: any) {
+      setJoinError(err?.message ?? 'Impossible de rejoindre — réessayez.')
+    } finally {
+      setJoining(false)
+    }
+  }
+
   async function handleCreate() {
     if (!user || !profile) return
     jouer('clic')
@@ -97,13 +149,9 @@ export default function Online() {
     try {
       const code = genCode()
       const { error } = await supabase.from('rooms').insert({
-        code,
-        host_id: user.id,
-        mode: 'ecrit',
-        structure_id: 'phrase-simple',
-        nb_joueurs: 3,
-        status: 'waiting',
-        is_public: true,
+        code, host_id: user.id, mode: 'ecrit',
+        structure_id: 'phrase-simple', nb_joueurs: 3,
+        status: 'waiting', is_public: true,
       })
       if (error) throw error
       navigate(`/salon/${code}`)
@@ -234,6 +282,7 @@ export default function Online() {
       {/* ── LOGGED IN WITH PROFILE ── */}
       {user && profile && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
           {/* Profil courant */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: `0.5px solid ${encre}20` }}>
             {profile.avatar_url ? (
@@ -260,62 +309,103 @@ export default function Online() {
             </div>
           </div>
 
-          {/* Parties ouvertes */}
+          {/* ── REJOINDRE EN UN CLIC ── */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <motion.button
+              onClick={handleQuickJoin}
+              disabled={joining}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                width: '100%',
+                background: accent, color: btnText,
+                ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '1em 1.8em', border: 'none', cursor: joining ? 'wait' : 'pointer',
+                opacity: joining ? 0.6 : 1,
+              }}
+            >
+              {joining
+                ? 'RECHERCHE…'
+                : publicRooms.some(r => r.player_count < r.nb_joueurs)
+                  ? `REJOINDRE — ${publicRooms.filter(r => r.player_count < r.nb_joueurs).length} place${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''} libre${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''}`
+                  : 'CRÉER UNE PARTIE'}
+            </motion.button>
+            {joinError && (
+              <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{joinError}</p>
+            )}
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, color: encre, opacity: 0.55, marginTop: 8, lineHeight: 1.5 }}>
+              {publicRooms.some(r => r.player_count < r.nb_joueurs)
+                ? 'Vous rejoignez la première partie disponible.'
+                : "Aucune partie ouverte — un salon public est créé pour vous, d'autres pourront rejoindre."}
+            </p>
+          </div>
+
+          {/* ── PARTIES OUVERTES (liste détaillée) ── */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
                 — PARTIES OUVERTES —
               </div>
-              <button
-                onClick={fetchPublicRooms}
-                disabled={loadingRooms}
-                style={{ ...mono, fontSize: 13, color: encre, opacity: 0.65, background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                {loadingRooms ? '⟳' : '↺ ACTUALISER'}
-              </button>
+              {/* Indicateur de connexion temps réel */}
+              <motion.div
+                animate={liveConnected ? { opacity: [1, 0.4, 1] } : { opacity: 0.25 }}
+                transition={liveConnected ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } : {}}
+                style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: liveConnected ? '#4caf50' : encre,
+                  flexShrink: 0,
+                }}
+                title={liveConnected ? 'Mise à jour en direct' : 'Connexion…'}
+              />
             </div>
-            {loadingRooms ? (
+            {loadingRooms && publicRooms.length === 0 ? (
               <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>Recherche…</p>
             ) : publicRooms.length === 0 ? (
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.65, lineHeight: 1.5 }}>
-                Aucune partie ouverte pour l'instant. Créez la vôtre ou rejoignez par code.
+                Aucune partie ouverte pour l'instant.
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {publicRooms.map((r) => (
-                  <motion.button
-                    key={r.code}
-                    onClick={() => { jouer('clic'); navigate(`/salon/${r.code}`) }}
-                    whileTap={{ scale: 0.98 }}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '12px 14px',
-                      background: `${encre}06`, border: `1px solid ${encre}20`,
-                      borderLeft: `3px solid ${accent}`,
-                      cursor: 'pointer', textAlign: 'left', width: '100%',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 24, lineHeight: 1, letterSpacing: '-0.01em', color: encre, marginBottom: 3 }}>
-                        {r.code}
+                {publicRooms.map((r) => {
+                  const placesDispo = r.player_count < r.nb_joueurs
+                  return (
+                    <motion.button
+                      key={r.code}
+                      onClick={() => { jouer('clic'); navigate(`/salon/${r.code}`) }}
+                      whileTap={{ scale: 0.98 }}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        background: placesDispo ? `${accent}08` : `${encre}06`,
+                        border: `1px solid ${placesDispo ? accent : encre}20`,
+                        borderLeft: `3px solid ${placesDispo ? accent : `${encre}30`}`,
+                        cursor: 'pointer', textAlign: 'left', width: '100%',
+                        opacity: placesDispo ? 1 : 0.55,
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 24, lineHeight: 1, letterSpacing: '-0.01em', color: encre, marginBottom: 3 }}>
+                          {r.code}
+                        </div>
+                        <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em' }}>
+                          {MODE_LABEL[r.mode] ?? r.mode} · {STRUCT_SHORT[r.structure_id] ?? r.structure_id}
+                        </div>
                       </div>
-                      <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em' }}>
-                        {MODE_LABEL[r.mode] ?? r.mode} · {STRUCT_SHORT[r.structure_id] ?? r.structure_id}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ ...mono, fontSize: 13, color: placesDispo ? accent : encre, fontWeight: 700 }}>
+                          {r.player_count}/{r.nb_joueurs}
+                        </div>
+                        <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>
+                          {placesDispo ? 'REJOINDRE' : 'COMPLET'}
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700 }}>
-                        {r.player_count}/{r.nb_joueurs}
-                      </div>
-                      <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>JOUEURS</div>
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.button>
+                  )
+                })}
               </div>
             )}
           </div>
 
-          {/* Créer salon */}
+          {/* ── NOUVELLE PARTIE ── */}
           <div>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
               — NOUVELLE PARTIE —
@@ -326,7 +416,7 @@ export default function Online() {
             <button
               onClick={handleCreate}
               disabled={creating}
-              style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', borderRadius: 4, border: 'none', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
+              style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
             >
               {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
             </button>
@@ -335,7 +425,7 @@ export default function Online() {
             )}
           </div>
 
-          {/* Rejoindre salon */}
+          {/* ── REJOINDRE PAR CODE ── */}
           <div>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
               — REJOINDRE PAR CODE —
@@ -361,12 +451,13 @@ export default function Online() {
               <button
                 type="submit"
                 disabled={joining || !joinCode.trim()}
-                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', borderRadius: 4, border: `1px solid ${encre}`, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
+                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', border: `1px solid ${encre}`, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
               >
                 {joining ? 'RECHERCHE…' : 'REJOINDRE'}
               </button>
             </form>
           </div>
+
         </motion.div>
       )}
     </PageTransition>
