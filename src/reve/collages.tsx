@@ -195,7 +195,7 @@ const Poisson: React.FC<SVGProps> = ({ w = 140 }) => (
   </svg>
 )
 
-// 12 · La Lune absente — Desnos
+// 12 · La Lune — Desnos
 const Lune: React.FC<SVGProps> = ({ w = 100 }) => (
   <svg width={w} height={w} viewBox="0 0 100 100">
     <circle cx="50" cy="50" r="40" fill="url(#h45)" stroke={ENCRE} strokeWidth="1.3" />
@@ -290,7 +290,7 @@ const Poupee: React.FC<SVGProps> = ({ w = 90 }) => (
   </svg>
 )
 
-// 17 · La Spirale — figure du sommeil hypnotique
+// 17 · Rotorelief — Duchamp
 const Spirale: React.FC<SVGProps> = ({ w = 120 }) => {
   const cx = 60, cy = 60
   const ticks = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
@@ -353,7 +353,7 @@ export interface CollageDef {
 export const COLLAGES: CollageDef[] = [
   { id: 'oeil',       label: "L'Œil tranché",            ref: "Un Chien andalou · Buñuel & Dalí · 1929",    draw: OeilTranche,    w: 140 },
   { id: 'pipe',       label: "Ceci n'est pas une pipe",  ref: "La Trahison des images · Magritte · 1929",  draw: Pipe,           w: 140 },
-  { id: 'horloge',    label: "La Mémoire molle",         ref: "Persistance de la mémoire · Dalí · 1931",   draw: HorlogeMolle,   w: 130 },
+  { id: 'horloge',    label: "Les Montres molles",        ref: "Persistance de la mémoire · Dalí · 1931",   draw: HorlogeMolle,   w: 130 },
   { id: 'cage',       label: "L'Affinité élective",      ref: "d'après Magritte & Cornell",                draw: OiseauCage,     w: 100 },
   { id: 'clef',       label: "La Clef",                  ref: "Une semaine de bonté · Max Ernst · 1934",   draw: Clef,           w: 60  },
   { id: 'chapeau',    label: "Le Chapeau melon",         ref: "Golconde · Magritte · 1953",                draw: ChapeauMelon,   w: 120 },
@@ -362,11 +362,11 @@ export const COLLAGES: CollageDef[] = [
   { id: 'papillon',   label: "Le Papillon",              ref: "d'après Brauner & Carrington",              draw: Papillon,       w: 130 },
   { id: 'oeuf',       label: "L'Œuf philosophal",        ref: "d'après Brauner · 1947",                    draw: Oeuf,           w: 90  },
   { id: 'poisson',    label: "Le Poisson soluble",       ref: "d'après Breton · 1924",                     draw: Poisson,        w: 140 },
-  { id: 'lune',       label: "La Lune absente",          ref: "d'après Desnos · 1923",                     draw: Lune,           w: 100 },
+  { id: 'lune',       label: "La Lune",                   ref: "d'après Desnos · 1923",                     draw: Lune,           w: 100 },
   { id: 'mobile',     label: "Mobile",                   ref: "d'après Calder · 1932",                     draw: Mobile,         w: 130 },
   { id: 'tanguy',     label: "Paysage biomorphique",     ref: "d'après Y. Tanguy · 1929",                  draw: PaysageTanguy,  w: 140 },
   { id: 'mannequin',  label: "Le Mannequin métaphysique", ref: "d'après G. de Chirico · 1917",             draw: Mannequin,      w: 80  },
   { id: 'poupee',     label: "La Poupée articulée",      ref: "d'après H. Bellmer · 1934",                 draw: Poupee,         w: 90  },
   { id: 'merz',       label: "Ticket Merz",              ref: "d'après K. Schwitters · 1923",              draw: TicketMerz,     w: 120 },
-  { id: 'spirale',    label: "La Spirale",               ref: "figure du sommeil hypnotique",              draw: Spirale,        w: 120 },
+  { id: 'spirale',    label: "Rotorelief",                ref: "d'après M. Duchamp · 1935",                 draw: Spirale,        w: 120 },
 ]
