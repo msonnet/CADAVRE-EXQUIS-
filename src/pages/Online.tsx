@@ -405,25 +405,27 @@ export default function Online() {
             )}
           </div>
 
-          {/* ── NOUVELLE PARTIE ── */}
-          <div>
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-              — NOUVELLE PARTIE —
+          {/* ── NOUVELLE PARTIE — seulement quand des salons existent déjà ── */}
+          {publicRooms.length > 0 && (
+            <div>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+                — NOUVELLE PARTIE —
+              </div>
+              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
+                Créez un salon et partagez le code, ou laissez-le public pour que d'autres rejoignent.
+              </p>
+              <button
+                onClick={handleCreate}
+                disabled={creating}
+                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
+              >
+                {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
+              </button>
+              {createError && (
+                <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{createError}</p>
+              )}
             </div>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
-              Créez un salon et partagez le code, ou laissez-le public pour que d'autres rejoignent.
-            </p>
-            <button
-              onClick={handleCreate}
-              disabled={creating}
-              style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
-            >
-              {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
-            </button>
-            {createError && (
-              <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{createError}</p>
-            )}
-          </div>
+          )}
 
           {/* ── REJOINDRE PAR CODE ── */}
           <div>
