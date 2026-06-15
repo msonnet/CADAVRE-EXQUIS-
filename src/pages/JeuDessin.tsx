@@ -758,6 +758,7 @@ export default function JeuDessin() {
             position: 'absolute', top: 10, right: 10,
             ...mono, fontSize: 13, color: encre,
             background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
+            borderRadius: 3,
             padding: '4px 10px', cursor: 'pointer', zIndex: 10,
           }}>
             ↺ {Math.round(zoom * 100)}%

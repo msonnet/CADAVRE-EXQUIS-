@@ -291,7 +291,7 @@ export default function FinDessin() {
                   style={{
                     display: 'block', width: '100%',
                     padding: 0, border: `0.5px solid ${encre}20`,
-                    background: 'none', cursor: 'zoom-in',
+                    background: 'none', cursor: 'zoom-in', borderRadius: 3,
                   }}
                 >
                   <motion.img
@@ -342,6 +342,7 @@ export default function FinDessin() {
                     ...mono, fontSize: 13,
                     background: 'transparent', color: accent,
                     border: `0.5px solid ${accent}50`,
+                    borderRadius: 3,
                     padding: '7px 14px', cursor: 'pointer',
                   }}
                 >
@@ -367,6 +368,7 @@ export default function FinDessin() {
                   background: sauvegarde ? `${accent}20` : accent,
                   color: sauvegarde ? accent : btnText,
                   border: `0.5px solid ${accent}`,
+                  borderRadius: 3,
                   padding: '10px 8px',
                   cursor: sauvegarde ? 'default' : 'pointer',
                   transition: 'all 0.2s',
@@ -384,6 +386,7 @@ export default function FinDessin() {
                     background: 'transparent',
                     color: partageEnCours ? accent : `${encre}70`,
                     border: `0.5px solid ${partageEnCours ? accent : `${encre}25`}`,
+                    borderRadius: 3,
                     padding: '10px 8px',
                     cursor: partageEnCours ? 'default' : 'pointer',
                   }}
@@ -398,6 +401,7 @@ export default function FinDessin() {
                     background: 'transparent',
                     color: `${encre}70`,
                     border: `0.5px solid ${encre}25`,
+                    borderRadius: 3,
                     padding: '10px 8px',
                     cursor: 'pointer',
                   }}
@@ -443,6 +447,7 @@ export default function FinDessin() {
               style={{
                 position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))',
                 background: 'none', border: `0.5px solid rgba(232,212,184,0.4)`,
+                borderRadius: 3,
                 color: '#e8d4b8',
                 ...mono, fontSize: 13, padding: '8px 12px',
                 cursor: 'pointer',

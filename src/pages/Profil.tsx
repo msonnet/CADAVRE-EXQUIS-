@@ -151,6 +151,7 @@ export default function Profil() {
                   fontFamily: "'Playfair Display', serif", fontSize: 17,
                   color: encre, background: 'rgba(255,253,247,0.5)',
                   border: 'none', borderLeft: `2px solid ${encre}`, padding: '8px 12px',
+                  borderRadius: '0 3px 3px 0',
                   outline: 'none', caretColor: accent, resize: 'none', width: '100%',
                 }}
               />
@@ -206,6 +207,7 @@ export default function Profil() {
               fontFamily: "'Playfair Display', serif", fontSize: 18,
               color: encre, background: 'rgba(255,253,247,0.5)',
               border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
+              borderRadius: '0 3px 3px 0',
               outline: 'none', caretColor: accent, width: '100%',
             }}
           />

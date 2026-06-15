@@ -247,6 +247,7 @@ export default function Online() {
                 fontFamily: "'Playfair Display', serif", fontSize: 18,
                 color: encre, background: 'rgba(255,253,247,0.5)',
                 border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
+                borderRadius: '0 3px 3px 0',
                 outline: 'none', caretColor: accent, width: '100%',
               }}
             />
@@ -448,6 +449,7 @@ export default function Online() {
                   border: 'none',
                   borderLeft: `2px solid ${encre}`,
                   borderBottom: `1px solid ${encre}50`,
+                  borderRadius: '0 3px 3px 0',
                   padding: '12px 14px',
                   outline: 'none', caretColor: accent, letterSpacing: '0.15em',
                   width: '100%',

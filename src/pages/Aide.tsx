@@ -126,7 +126,7 @@ export default function Aide() {
                 <span style={{
                   ...mono, fontSize: 17, color: col, flexShrink: 0,
                   width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `0.5px solid ${col}50`,
+                  border: `0.5px solid ${col}50`, borderRadius: 3,
                 }}>
                   {isOpen ? '−' : '+'}
                 </span>

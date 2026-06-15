@@ -227,7 +227,7 @@ export default function PoemeDetail() {
         </p>
         <button
           onClick={() => navigate('/bibliotheque')}
-          style={{ marginTop: 28, background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
+          style={{ marginTop: 28, background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', borderRadius: 3, cursor: 'pointer' }}
         >
           Mes poèmes
         </button>
@@ -496,6 +496,7 @@ export default function PoemeDetail() {
               background: 'transparent', color: encre,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
+              borderRadius: 3,
               cursor: pdfBusy ? 'wait' : 'pointer',
               opacity: pdfBusy ? 0.55 : 0.75,
             }}
@@ -521,6 +522,7 @@ export default function PoemeDetail() {
               color: publishError ? accent : (published ? accent : encre),
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
+              borderRadius: 3,
               cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
               opacity: publishing ? 0.55 : (published ? 1 : 0.75),
             }}
@@ -588,7 +590,7 @@ export default function PoemeDetail() {
             style={{
               background: accent, color: btnText,
               ...mono, fontSize: 17, textTransform: 'uppercase',
-              padding: '1.1em 1em', border: 'none', cursor: 'pointer', gap: 2,
+              padding: '1.1em 1em', border: 'none', borderRadius: 3, cursor: 'pointer', gap: 2,
             }}
           >
             <span>Nouvelle partie</span>

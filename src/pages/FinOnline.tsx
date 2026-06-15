@@ -433,7 +433,7 @@ export default function FinOnline() {
                 {imageAssemblee && !loadingDessin && (
                   <div style={{ marginBottom: 20 }}>
                     <button onClick={() => setPleinEcranDessin(true)} aria-label="Agrandir en plein écran"
-                      style={{ display: 'block', width: '100%', padding: 0, border: `0.5px solid ${encre}20`, background: 'none', cursor: 'zoom-in' }}>
+                      style={{ display: 'block', width: '100%', padding: 0, border: `0.5px solid ${encre}20`, background: 'none', cursor: 'zoom-in', borderRadius: 3 }}>
                       <motion.img
                         src={imageAssemblee} alt="Cadavre exquis dessiné"
                         initial={{ clipPath: 'inset(0 0 100% 0)', opacity: 0.5 }} animate={{ clipPath: 'inset(0 0 0% 0)', opacity: 1 }} transition={{ duration: 2, ease: [0.3, 0, 0.2, 1] }}
@@ -461,28 +461,28 @@ export default function FinOnline() {
                     ) : erreurVision ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>La lecture surréaliste n'a pas pu avoir lieu.</p>
-                        <button onClick={reessayerVision} style={{ alignSelf: 'flex-start', ...mono, fontSize: 13, background: 'transparent', color: accent, border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer' }}>↺ RÉESSAYER</button>
+                        <button onClick={reessayerVision} style={{ alignSelf: 'flex-start', ...mono, fontSize: 13, background: 'transparent', color: accent, border: `0.5px solid ${accent}50`, borderRadius: 3, padding: '7px 14px', cursor: 'pointer' }}>↺ RÉESSAYER</button>
                       </div>
                     ) : null}
 
                     {/* Actions dessin */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button onClick={sauvegarderDessinLocal} disabled={sauvegardeDessin_}
-                        style={{ flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText, border: `0.5px solid ${accent}`, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer' }}>
+                        style={{ flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText, border: `0.5px solid ${accent}`, borderRadius: 3, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer' }}>
                         {sauvegardeDessin_ ? '✓ SAUVEGARDÉ' : '↓ MA GALERIE'}
                       </button>
                       <button onClick={publierDansGalerieDessin} disabled={publishingGallery || publishedGallery}
-                        style={{ flex: 1, ...mono, fontSize: 17, background: publishedGallery ? `${accent}20` : 'transparent', color: publishedGallery ? accent : `${encre}70`, border: `0.5px solid ${publishedGallery ? accent : encre}25`, padding: '10px 8px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                        style={{ flex: 1, ...mono, fontSize: 17, background: publishedGallery ? `${accent}20` : 'transparent', color: publishedGallery ? accent : `${encre}70`, border: `0.5px solid ${publishedGallery ? accent : encre}25`, borderRadius: 3, padding: '10px 8px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
                         {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE COMMUNE'}
                       </button>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                       <button onClick={partagerDessin} disabled={partageEnCours}
-                        style={{ ...mono, fontSize: 13, background: 'transparent', color: partageEnCours ? accent : `${encre}70`, border: `0.5px solid ${partageEnCours ? accent : `${encre}25`}`, padding: '10px 12px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, background: 'transparent', color: partageEnCours ? accent : `${encre}70`, border: `0.5px solid ${partageEnCours ? accent : `${encre}25`}`, borderRadius: 3, padding: '10px 12px', cursor: partageEnCours ? 'default' : 'pointer' }}>
                         {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
                       </button>
                       <button onClick={() => setPleinEcranDessin(true)}
-                        style={{ ...mono, fontSize: 13, background: 'transparent', color: `${encre}70`, border: `0.5px solid ${encre}25`, padding: '10px 12px', cursor: 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, background: 'transparent', color: `${encre}70`, border: `0.5px solid ${encre}25`, borderRadius: 3, padding: '10px 12px', cursor: 'pointer' }}>
                         ⛶ PLEIN ÉCRAN
                       </button>
                     </div>
@@ -588,15 +588,15 @@ export default function FinOnline() {
                     </button>
                     <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                       <button onClick={() => setPleinEcranIllus(true)}
-                        style={{ ...mono, fontSize: 13, color: `${encre}60`, background: 'none', border: `0.5px solid ${encre}20`, padding: '6px 10px', cursor: 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, color: `${encre}60`, background: 'none', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '6px 10px', cursor: 'pointer' }}>
                         ⛶ PLEIN ÉCRAN
                       </button>
                       <button onClick={partagerEcrit} disabled={partageEnCours}
-                        style={{ ...mono, fontSize: 13, color: partageEnCours ? accent : `${encre}60`, background: 'none', border: `0.5px solid ${partageEnCours ? accent : `${encre}20`}`, padding: '6px 10px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, color: partageEnCours ? accent : `${encre}60`, background: 'none', border: `0.5px solid ${partageEnCours ? accent : `${encre}20`}`, borderRadius: 3, padding: '6px 10px', cursor: partageEnCours ? 'default' : 'pointer' }}>
                         {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
                       </button>
                       <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
-                        style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : `${encre}60`, background: publishedGallery ? `${accent}15` : 'none', border: `0.5px solid ${publishedGallery ? accent : encre}20`, padding: '6px 10px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : `${encre}60`, background: publishedGallery ? `${accent}15` : 'none', border: `0.5px solid ${publishedGallery ? accent : encre}20`, borderRadius: 3, padding: '6px 10px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
                         {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE'}
                       </button>
                     </div>
@@ -606,11 +606,11 @@ export default function FinOnline() {
                 {!illustrationUrl && !generatingIllus && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
                     <button onClick={partagerEcrit} disabled={partageEnCours}
-                      style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                      style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, borderRadius: 3, padding: '7px 14px', cursor: partageEnCours ? 'default' : 'pointer' }}>
                       {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER LE POÈME'}
                     </button>
                     <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
-                      style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : encre, background: publishedGallery ? `${accent}15` : 'transparent', border: `0.5px solid ${publishedGallery ? accent : encre}30`, padding: '7px 14px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                      style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : encre, background: publishedGallery ? `${accent}15` : 'transparent', border: `0.5px solid ${publishedGallery ? accent : encre}30`, borderRadius: 3, padding: '7px 14px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
                       {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE COMMUNE'}
                     </button>
                   </div>
@@ -629,7 +629,7 @@ export default function FinOnline() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {STYLES.map(s => (
                       <button key={s.id} onClick={() => genererIllus(s.id)}
-                        style={{ ...mono, fontSize: 13, padding: '6px 12px', background: styleChoisi === s.id && illustrationUrl ? `${accent}20` : 'transparent', color: styleChoisi === s.id && illustrationUrl ? accent : encre, border: `0.5px solid ${styleChoisi === s.id && illustrationUrl ? accent : `${encre}25`}`, cursor: 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, padding: '6px 12px', background: styleChoisi === s.id && illustrationUrl ? `${accent}20` : 'transparent', color: styleChoisi === s.id && illustrationUrl ? accent : encre, border: `0.5px solid ${styleChoisi === s.id && illustrationUrl ? accent : `${encre}25`}`, borderRadius: 3, cursor: 'pointer' }}>
                         {s.label}
                       </button>
                     ))}
@@ -664,7 +664,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={imageAssemblee} alt="Cadavre exquis — plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranDessin(false)} aria-label="Fermer"
-              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ FERMER
             </button>
           </motion.div>
@@ -679,7 +679,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={illustrationUrl} alt="Illustration — plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranIllus(false)} aria-label="Fermer"
-              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ FERMER
             </button>
           </motion.div>

@@ -301,6 +301,7 @@ export default function DessinDetail() {
               color: partageOk || partageEnCours ? accent : encre,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${partageOk || partageEnCours ? accent : `${encre}25`}`,
+              borderRadius: 3,
               cursor: partageEnCours ? 'default' : 'pointer',
               opacity: partageEnCours ? 0.9 : 0.75,
             }}
@@ -325,6 +326,7 @@ export default function DessinDetail() {
               background: 'transparent', color: encre,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
+              borderRadius: 3,
               cursor: pdfBusy ? 'wait' : 'pointer',
               opacity: pdfBusy ? 0.55 : 0.7,
             }}
@@ -350,6 +352,7 @@ export default function DessinDetail() {
               color: publishError ? accent : (published ? accent : encre),
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
+              borderRadius: 3,
               cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
               opacity: publishing ? 0.55 : (published ? 1 : 0.75),
             }}
@@ -379,7 +382,7 @@ export default function DessinDetail() {
                   flex: 1, padding: '0.9em',
                   background: '#7B0000', color: '#e8d4b8',
                   ...mono, fontSize: 17, textTransform: 'uppercase',
-                  border: 'none', cursor: 'pointer',
+                  border: 'none', borderRadius: 3, cursor: 'pointer',
                 }}
               >
                 Confirmer la suppression
@@ -390,7 +393,7 @@ export default function DessinDetail() {
                   padding: '0.9em 1.2em',
                   background: 'transparent', color: encre,
                   ...mono, fontSize: 17,
-                  border: `0.5px solid ${encre}30`, cursor: 'pointer',
+                  border: `0.5px solid ${encre}30`, borderRadius: 3, cursor: 'pointer',
                 }}
               >
                 Annuler
@@ -403,7 +406,7 @@ export default function DessinDetail() {
                 width: '100%', padding: '0.75em',
                 background: 'transparent', color: encre,
                 ...mono, fontSize: 17, textTransform: 'uppercase', opacity: 0.7,
-                border: `0.5px solid ${encre}20`, cursor: 'pointer',
+                border: `0.5px solid ${encre}20`, borderRadius: 3, cursor: 'pointer',
               }}
             >
               Supprimer ce dessin

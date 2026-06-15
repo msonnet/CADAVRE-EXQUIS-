@@ -286,6 +286,7 @@ export default function Configuration() {
                       flex: 1, padding: '8px 4px', minHeight: 44,
                       border: `0.5px solid ${active ? accent : `${encre}20`}`,
                       borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                      borderRadius: 3,
                       background: 'transparent', cursor: 'pointer',
                       ...mono, fontSize: 13,
                       color: active ? accent : `${encre}80`,

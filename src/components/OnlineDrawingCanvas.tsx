@@ -490,7 +490,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
 
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }}
-            style={{ position: 'absolute', top: 10, right: 10, ...mono, fontSize: 13, color: encre, background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
+            style={{ position: 'absolute', top: 10, right: 10, ...mono, fontSize: 13, color: encre, background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '4px 10px', cursor: 'pointer', zIndex: 10 }}>
             ↺ {Math.round(zoom * 100)}%
           </button>
         )}
