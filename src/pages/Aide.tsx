@@ -124,7 +124,7 @@ export default function Aide() {
                   </div>
                 </div>
                 <span style={{
-                  ...mono, fontSize: 17, color: col, flexShrink: 0,
+                  ...mono, fontSize: 17, lineHeight: 1, letterSpacing: 0, color: col, flexShrink: 0,
                   width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   border: `0.5px solid ${col}50`, borderRadius: 3,
                 }}>
