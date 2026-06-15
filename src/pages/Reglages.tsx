@@ -10,9 +10,8 @@ import {
 } from '../utils/notifications'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
-  { id: 'stricte',    label: 'Stricte',    desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
-  { id: 'souple',     label: 'Souple',     desc: 'Accepte tout texte non vide.' },
-  { id: 'desactivee', label: 'Libre',      desc: 'Aucune vérification grammaticale.' },
+  { id: 'stricte', label: 'Stricte', desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
+  { id: 'souple',  label: 'Souple',  desc: 'Accepte tout texte non vide.' },
 ]
 
 export default function Reglages() {
@@ -153,15 +152,16 @@ export default function Reglages() {
           <button
             onClick={() => seance?.retirer()}
             style={{
-              ...mono, fontSize: 13,
+              ...mono, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.12em',
               color: encre,
               background: 'transparent',
-              border: `0.5px solid ${encre}30`,
-              padding: '7px 12px', cursor: 'pointer',
+              border: `0.5px solid ${encre}40`,
+              padding: '12px 0', cursor: 'pointer',
+              width: '100%',
               transition: 'all 0.2s',
             }}
           >
-            ✦ NOUVELLE AMBIANCE
+            NOUVELLE AMBIANCE
           </button>
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, marginTop: 8, textTransform: 'uppercase' }}>
             {seance?.ambiance.name}

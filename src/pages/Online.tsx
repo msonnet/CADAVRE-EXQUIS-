@@ -442,9 +442,13 @@ export default function Online() {
                 maxLength={12}
                 style={{
                   ...mono, fontSize: 17, textTransform: 'uppercase',
-                  color: encre, background: 'rgba(255,253,247,0.5)',
-                  border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
+                  color: encre, background: `${encre}14`,
+                  border: 'none',
+                  borderLeft: `2px solid ${encre}`,
+                  borderBottom: `1px solid ${encre}50`,
+                  padding: '12px 14px',
                   outline: 'none', caretColor: accent, letterSpacing: '0.15em',
+                  width: '100%',
                 }}
               />
               {joinError && (

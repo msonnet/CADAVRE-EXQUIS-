@@ -247,7 +247,6 @@ export default function Accueil() {
             }}
           >
             <span>Mode en ligne</span>
-            <span aria-hidden style={{ fontSize: 14, opacity: 0.65 }}>⊕</span>
           </button>
         </div>
 

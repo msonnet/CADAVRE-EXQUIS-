@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 
@@ -17,13 +17,18 @@ const VISIBILITE = [
 ]
 
 const MODES = [
-  { label: 'STANDARD',   detail: 'Aucune contrainte de temps. Tu prends le temps qu\'il faut.' },
-  { label: 'HYPNOTIQUE', detail: '30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place.' },
+  { label: 'STANDARD',   detail: "Aucune contrainte de temps. Tu prends le temps qu'il faut." },
+  { label: 'HYPNOTIQUE', detail: "30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place." },
 ]
 
 const RACCORD_DESSIN = [
-  { label: 'AVEUGLE', detail: 'Chaque bande commence dans l\'obscurité totale. Le monstre prend forme par hasard.' },
-  { label: 'RACCORD', detail: 'Un liseret du fragment précédent reste visible jusqu\'au premier trait. Assez pour raccorder les corps, pas assez pour tout voir.' },
+  { label: 'AVEUGLE', detail: "Chaque bande commence dans l'obscurité totale. Le monstre prend forme par hasard." },
+  { label: 'RACCORD', detail: "Un liseret du fragment précédent reste visible jusqu'au premier trait. Assez pour raccorder les corps, pas assez pour tout voir." },
+]
+
+const SECTIONS = [
+  { id: 'ecrit',     label: 'CADAVRE ÉCRIT' },
+  { id: 'dessine',   label: 'CADAVRE DESSINÉ' },
 ]
 
 export default function Aide() {
@@ -34,9 +39,14 @@ export default function Aide() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const second = encre
+  const second = c?.second ?? '#1d3a8c'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
+
+  const [ouvert, setOuvert] = useState<string[]>([])
+  function toggle(id: string) {
+    setOuvert(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -61,12 +71,12 @@ export default function Aide() {
           — RÈGLES —
         </div>
 
-        {/* ── TITRE ── */}
+        {/* ── INTRO ── */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          style={{ marginBottom: 20 }}
+          style={{ marginBottom: 24 }}
         >
           <div
             className="font-bodoni font-black leading-tight mb-3"
@@ -74,169 +84,171 @@ export default function Aide() {
           >
             Comment <span style={{ color: accent }}>jouer.</span>
           </div>
-          <p style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre,
-            lineHeight: 1.65, marginBottom: 10,
-          }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65 }}>
             Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.
           </p>
         </motion.div>
 
-        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
+        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 8 }} />
 
-        {/* ══════════════════════════════════════════
-            CADAVRE ÉCRIT  (couleur accent)
-        ══════════════════════════════════════════ */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          style={{ marginBottom: 32 }}
-        >
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — CADAVRE ÉCRIT —
-          </div>
-          <div
-            className="font-bodoni font-black leading-tight"
-            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: accent, marginBottom: 16 }}
-          >
-            Cadavre Écrit.
-          </div>
-          <p style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre,
-            lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
-          }}>
-            Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
-          </p>
+        {/* ── ACCORDÉON ── */}
+        {SECTIONS.map((section, si) => {
+          const isOpen = ouvert.includes(section.id)
+          const isEcrit = section.id === 'ecrit'
+          const col = isEcrit ? accent : second
 
-          {/* Structures */}
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — STRUCTURES —
-          </div>
-          {STRUCTURES.map(s => (
-            <div key={s.romain} style={{ display: 'flex', gap: 14, paddingBottom: 12, borderBottom: `0.5px solid ${encre}10`, marginBottom: 12 }}>
-              <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 22 }}>{s.romain}.</span>
-              <div>
-                <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 2 }}>
-                  {s.label}
-                </div>
-                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginBottom: s.exemple ? 5 : 0 }}>
-                  {s.detail}
-                </div>
-                {s.exemple && (
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
-                    « {s.exemple} »
+          return (
+            <motion.div
+              key={section.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 + si * 0.08 }}
+            >
+              {/* ── En-tête de section (toujours visible) ── */}
+              <button
+                onClick={() => toggle(section.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '18px 0', background: 'none', border: 'none', cursor: 'pointer',
+                  borderBottom: `0.5px solid ${encre}15`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+                  <div
+                    className="font-bodoni font-black"
+                    style={{ fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)', color: col, lineHeight: 1 }}
+                  >
+                    {isEcrit ? 'Cadavre Écrit.' : 'Cadavre Dessiné.'}
                   </div>
+                </div>
+                <span style={{
+                  ...mono, fontSize: 17, color: col, flexShrink: 0,
+                  width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: `0.5px solid ${col}50`,
+                }}>
+                  {isOpen ? '−' : '+'}
+                </span>
+              </button>
+
+              {/* ── Contenu dépliable ── */}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    key="content"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <div style={{ paddingTop: 16, paddingBottom: 8 }}>
+
+                      {isEcrit && (
+                        <>
+                          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
+                            Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
+                          </p>
+
+                          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+                            — STRUCTURES —
+                          </div>
+                          {STRUCTURES.map(s => (
+                            <div key={s.romain} style={{ display: 'flex', gap: 14, paddingBottom: 12, borderBottom: `0.5px solid ${encre}10`, marginBottom: 12 }}>
+                              <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 22 }}>{s.romain}.</span>
+                              <div>
+                                <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 2 }}>{s.label}</div>
+                                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginBottom: s.exemple ? 5 : 0 }}>{s.detail}</div>
+                                {s.exemple && (
+                                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>« {s.exemple} »</div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+
+                          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
+                            — VISIBILITÉ —
+                          </div>
+                          {VISIBILITE.map(v => (
+                            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+                              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+                              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
+                            </div>
+                          ))}
+
+                          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
+                            — MODES —
+                          </div>
+                          {MODES.map(m => (
+                            <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+                              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
+                              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{m.detail}</div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {!isEcrit && (
+                        <>
+                          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
+                            La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
+                          </p>
+
+                          <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+                            — RACCORD —
+                          </div>
+                          {RACCORD_DESSIN.map(v => (
+                            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+                              <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+                              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
+                            </div>
+                          ))}
+
+                          <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20, marginBottom: 8 }}>
+                            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
+                              « Le cadavre exquis boira le vin nouveau »
+                            </div>
+                            <div style={{ ...mono, fontSize: 13, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
+                              BRETON, ÉLUARD, MORISE, MAN RAY · 1925
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                    </div>
+                  </motion.div>
                 )}
-              </div>
-            </div>
-          ))}
-
-          {/* Visibilité */}
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
-            — VISIBILITÉ —
-          </div>
-          {VISIBILITE.map(v => (
-            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
-            </div>
-          ))}
-
-          {/* Modes */}
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
-            — MODES —
-          </div>
-          {MODES.map(m => (
-            <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{m.label}</div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{m.detail}</div>
-            </div>
-          ))}
-        </motion.div>
-
-        <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />
-
-        {/* ══════════════════════════════════════════
-            CADAVRE DESSINÉ  (couleur encre)
-        ══════════════════════════════════════════ */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          style={{ marginBottom: 32 }}
-        >
-          <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — CADAVRE DESSINÉ —
-          </div>
-          <div
-            className="font-bodoni font-black leading-tight"
-            style={{ fontSize: 'clamp(1.45rem, 6vw, 2rem)', color: encre, marginBottom: 16 }}
-          >
-            Cadavre Dessiné.
-          </div>
-          <p style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre,
-            lineHeight: 1.65, opacity: 0.88, marginBottom: 20,
-          }}>
-            La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
-          </p>
-
-          {/* Raccord */}
-          <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — RACCORD —
-          </div>
-          {RACCORD_DESSIN.map(v => (
-            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
-              <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
-            </div>
-          ))}
-
-          {/* Citation */}
-          <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20 }}>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
-              « Le cadavre exquis boira le vin nouveau »
-            </div>
-            <div style={{ ...mono, fontSize: 13, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
-              BRETON, ÉLUARD, MORISE, MAN RAY · 1925
-            </div>
-          </div>
-        </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          )
+        })}
 
         {/* ── CTA ── */}
         <motion.div
-          className="mb-3"
+          className="mt-6 mb-3"
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.3 }}
         >
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={() => navigate('/config')}
-              className="flex flex-col items-center justify-center"
               style={{
-                flex: 1,
-                background: accent, color: btnText,
-                ...mono, fontSize: 17, textTransform: 'uppercase',
-                padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+                flex: 1, background: accent, color: btnText,
+                ...mono, fontSize: 15, textTransform: 'uppercase',
+                padding: '1em 0.5em', border: 'none', cursor: 'pointer',
               }}
             >
-              <span>Cadavre Écrit</span>
-              <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>✒</span>
+              Cadavre Écrit
             </button>
             <button
               onClick={() => navigate('/config-dessin')}
-              className="flex flex-col items-center justify-center"
               style={{
-                flex: 1,
-                background: second, color: btnText,
-                ...mono, fontSize: 17, textTransform: 'uppercase',
-                padding: '1em 0.5em', border: 'none', cursor: 'pointer', gap: 2,
+                flex: 1, background: second, color: btnText,
+                ...mono, fontSize: 15, textTransform: 'uppercase',
+                padding: '1em 0.5em', border: 'none', cursor: 'pointer',
               }}
             >
-              <span>Cadavre Dessiné</span>
-              <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>✎</span>
+              Cadavre Dessiné
             </button>
           </div>
         </motion.div>

@@ -679,7 +679,11 @@ export default function Galerie() {
                           }}>
                             {titreAffiche}
                           </p>
-                          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.85, flexShrink: 0 }}>
+                          <span style={{
+                            ...mono, fontSize: 17, color: accent, flexShrink: 0,
+                            width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: `0.5px solid ${accent}50`, lineHeight: 1,
+                          }}>
                             {ouvert ? '−' : '+'}
                           </span>
                         </div>
