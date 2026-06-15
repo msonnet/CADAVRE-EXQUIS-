@@ -113,7 +113,7 @@ export default function Profil() {
             — IMAGE DE PROFIL —
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
-            Décrivez en quelques mots le personnage qui vous représente. L'IA générera votre portrait surréaliste.
+            Décris en quelques mots le personnage qui te représente. L'IA générera ton portrait surréaliste.
           </p>
 
           <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 12 }}>
@@ -123,7 +123,7 @@ export default function Profil() {
               border: `1px solid ${accent}40`,
               background: avatarUrl ? 'transparent' : `${accent}15`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              overflow: 'hidden', borderRadius: 4,
+              overflow: 'hidden', borderRadius: 3,
             }}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -145,7 +145,7 @@ export default function Profil() {
                 value={avatarPrompt}
                 onChange={e => setAvatarPrompt(e.target.value)}
                 placeholder="ex: un alchimiste aux yeux verts avec une barbe de brume…"
-                aria-label="Description de votre avatar"
+                aria-label="Description de ton avatar"
                 rows={2}
                 style={{
                   fontFamily: "'Playfair Display', serif", fontSize: 17,
@@ -165,6 +165,7 @@ export default function Profil() {
                       background: avatarStyle === s.id ? `${accent}20` : 'transparent',
                       color: avatarStyle === s.id ? accent : encre,
                       border: `0.5px solid ${avatarStyle === s.id ? accent : `${encre}25`}`,
+                      borderRadius: 3,
                       cursor: 'pointer',
                     }}
                   >{s.label}</button>
@@ -177,6 +178,7 @@ export default function Profil() {
                 style={{
                   ...mono, fontSize: 13, background: 'none', color: accent,
                   border: `0.5px solid ${accent}60`, padding: '6px 12px',
+                  borderRadius: 3,
                   cursor: generatingAvatar || !avatarPrompt.trim() ? 'not-allowed' : 'pointer',
                   opacity: generatingAvatar || !avatarPrompt.trim() ? 0.5 : 1,
                 }}
@@ -196,7 +198,7 @@ export default function Profil() {
             type="text"
             value={pseudo}
             onChange={e => setPseudo(e.target.value)}
-            placeholder="Votre nom de plume…"
+            placeholder="Ton nom de plume…"
             aria-label="Pseudonyme"
             maxLength={30}
             required
@@ -220,6 +222,7 @@ export default function Profil() {
             background: accent, color: btnText, ...mono, fontSize: 17,
             textTransform: 'uppercase', padding: '0.9em 1.8em',
             border: 'none', cursor: saving ? 'wait' : 'pointer',
+            borderRadius: 3,
             opacity: saving || !pseudo.trim() ? 0.5 : 1,
             marginTop: 8,
           }}

@@ -130,6 +130,7 @@ export default function ConfigurationDessin() {
                     flex: 1, padding: '10px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
                     ...mono, fontSize: 13,
                     color: active ? accent : `${encre}60`,
@@ -162,7 +163,7 @@ export default function ConfigurationDessin() {
                   cursor: 'pointer',
                   transition: 'all 0.18s',
                   fontSize: 20,
-                  borderRadius: 0,
+                  borderRadius: 3,
                 }}
               >
                 {slot === 'vide' ? (
@@ -170,7 +171,7 @@ export default function ConfigurationDessin() {
                 ) : (
                   <span style={{
                     display: 'block', width: 10, height: 10,
-                    background: encre, borderRadius: 0,
+                    background: encre, borderRadius: 1,
                   }} />
                 )}
               </button>
@@ -181,7 +182,7 @@ export default function ConfigurationDessin() {
           </div>
           {joueurs > 1 && (
             <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.5, marginTop: 7, lineHeight: 1.55 }}>
-              Passez l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.
+              Passe l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.
             </div>
           )}
         </motion.div>
@@ -205,6 +206,7 @@ export default function ConfigurationDessin() {
                     flex: 1, padding: '8px 4px',
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
                     background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
                     ...mono, fontSize: 13,
                     color: active ? accent : `${encre}60`,
@@ -261,7 +263,7 @@ export default function ConfigurationDessin() {
               background: accent, color: btnText,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               padding: '1.15em 1em', border: 'none', cursor: 'pointer', gap: 2,
-              borderRadius: 0,
+              borderRadius: 3,
             }}
           >
             <span>Commencer le dessin →</span>

@@ -148,7 +148,7 @@ export default function Bibliotheque() {
                 style={{
                   width: '100%', background: accent, color: btnText,
                   ...mono, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase',
-                  padding: '0.9em 1em', border: 'none', cursor: 'pointer',
+                  padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 3,
                 }}
               >
                 Cadavre Écrit →
@@ -158,7 +158,7 @@ export default function Bibliotheque() {
                 style={{
                   width: '100%', background: 'transparent', color: encre,
                   ...mono, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase',
-                  padding: '0.9em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer',
+                  padding: '0.9em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 3,
                 }}
               >
                 Cadavre Dessiné →
@@ -299,7 +299,7 @@ export default function Bibliotheque() {
               style={{
                 width: '100%', background: accent, color: btnText,
                 ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
-                padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 12,
+                padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 3,
               }}
             >
               Nouvelle partie →

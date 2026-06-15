@@ -290,7 +290,7 @@ export default function FinOnline() {
     setErreurIllus(null)
     const { url } = await genererIllustration(texteAssemble, style)
     if (url) { setIllustrationUrl(url) }
-    else { setErreurIllus('Génération indisponible — réessayez dans un instant'); setStyleChoisi(null) }
+    else { setErreurIllus('Génération indisponible — réessaie dans un instant'); setStyleChoisi(null) }
     setGeneratingIllus(false)
   }
 
@@ -642,14 +642,14 @@ export default function FinOnline() {
             {room.host_id === user?.id && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                 <button onClick={rejouerEnsemble}
-                  style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 4, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
+                  style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
                   ↻ REJOUER ENSEMBLE
                 </button>
               </motion.div>
             )}
 
             <button onClick={() => navigate('/online')}
-              style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 4, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
+              style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
               NOUVELLE PARTIE
             </button>
           </motion.div>

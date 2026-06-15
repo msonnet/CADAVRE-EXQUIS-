@@ -47,7 +47,7 @@ function PhraseFondatrice({ accent, ink }: { accent: string; ink: string }) {
         }}
       >
         Trois joueurs ont écrit cette phrase — sans jamais se lire.
-        <br />A vous, dans trente secondes.
+        <br />À toi, dans trente secondes.
       </motion.p>
     </div>
   )
@@ -69,10 +69,10 @@ function makeSlides(accent: string, ink: string): Slide[] {
       body: (
         <>
           <strong>Cadavre écrit</strong>
-          {" — composez un poème à plusieurs mains, avec ou sans l'IA."}
+          {" — compose un poème à plusieurs mains, avec ou sans l'IA."}
           <br /><br />
           <strong>Cadavre dessiné</strong>
-          {' — dessinez chaque bande sans voir les autres. Jouez seul, à plusieurs ou en ligne.'}
+          {' — dessine chaque bande sans voir les autres. Joue seul, à plusieurs ou en ligne.'}
         </>
       ),
       hint: '❆',
@@ -210,7 +210,7 @@ export default function Onboarding() {
     background: accent,
     color: btnText,
     border: 'none',
-    borderRadius: 10,
+    borderRadius: 3,
     fontFamily: "'Inter', sans-serif",
     fontSize: 17,
     fontWeight: 600,

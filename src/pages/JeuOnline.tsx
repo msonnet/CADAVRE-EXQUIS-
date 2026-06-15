@@ -312,11 +312,11 @@ export default function JeuOnline() {
         } else {
           // Real failure (network, RLS, …): reset so the timer effect can retry
           autoSubmittedRef.current = false
-          setSubmitError('Soumission automatique échouée — vérifiez votre connexion.')
+          setSubmitError('Soumission automatique échouée — vérifie ta connexion.')
         }
       } catch {
         autoSubmittedRef.current = false
-        setSubmitError('Soumission automatique échouée — vérifiez votre connexion.')
+        setSubmitError('Soumission automatique échouée — vérifie ta connexion.')
       }
     })()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -340,10 +340,10 @@ export default function JeuOnline() {
       mergeContribution({ case_index: currentCase, texte: input.trim(), player_id: user.id }); setMyContrib(input.trim()); setSubmitted(true); jouer('soumettre')
     } else if (error.code === '23505') {
       // Unique constraint: this case was already sealed (race condition)
-      setSubmitError('Ce fragment a déjà été scellé. Attendez votre prochain tour.')
+      setSubmitError('Ce fragment a déjà été scellé. Attends ton prochain tour.')
       setSubmitted(true)
     } else {
-      setSubmitError('Erreur lors de l\'envoi. Réessayez.')
+      setSubmitError('Erreur lors de l\'envoi. Réessaie.')
     }
     setSubmitting(false)
   }
@@ -370,7 +370,7 @@ export default function JeuOnline() {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
-          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
+          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
             {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
           </div>
         )}
@@ -393,7 +393,7 @@ export default function JeuOnline() {
             — BANDE {(myEffectiveIndex ?? 0) + 1} SUR {nbTotal} —
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
-            À vous<br />de dessiner
+            À toi<br />de dessiner
           </div>
           {raccordDataUrl && (
             <div style={{ ...mono, fontSize: 13, color: `${bg}60`, letterSpacing: '0.16em' }}>
@@ -425,7 +425,7 @@ export default function JeuOnline() {
 
   // ── Connection banner (reused in multiple views) ──────────────────────────
   const connBanner = connectionStatus !== 'connected' ? (
-    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 4, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
+    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
       {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
     </div>
   ) : null
@@ -446,7 +446,7 @@ export default function JeuOnline() {
                 : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda',serif", fontWeight: 900, fontSize: 17, color: accent }}>{p.pseudo[0]?.toUpperCase()}</span></div>}
             </div>
             <span style={{ ...mono, fontSize: 13, color: isTheirTurn ? accent : `${encre}50` }}>
-              {isMe ? (isTheirTurn ? '✎ VOUS' : submitted ? '✓' : '…') : isTheirTurn ? '✎' : hasDone ? '✓' : '…'}
+              {isMe ? (isTheirTurn ? 'À TOI' : submitted ? '✓' : '…') : isTheirTurn ? '▸' : hasDone ? '✓' : '…'}
             </span>
           </div>
         )
@@ -520,12 +520,12 @@ export default function JeuOnline() {
               if (!myContrib) return null
               const displayUrl = myContrib.startsWith('data:') ? myContrib : (() => { try { return (JSON.parse(myContrib) as { imageDataUrl: string }).imageDataUrl } catch { return null } })()
               return displayUrl
-                ? <img src={displayUrl} alt="votre dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 2, border: `1px solid ${accent}30` }} />
+                ? <img src={displayUrl} alt="ton dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 3, border: `1px solid ${accent}30` }} />
                 : <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>« {myContrib} »</div>
             })()}
             {room.mode === 'ecrit' && currentCase < nbTotal ? (
               <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
-                C'est au tour de <strong>{currentTurnPlayer?.pseudo ?? '…'}</strong>. Votre tour reviendra ensuite.
+                C'est au tour de <strong>{currentTurnPlayer?.pseudo ?? '…'}</strong>. Ton tour reviendra ensuite.
               </p>
             ) : (
               <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
@@ -544,7 +544,7 @@ export default function JeuOnline() {
               — CASE {currentCase + 1} SUR {nbTotal} —
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.8rem,8vw,2.6rem)', color: encre, lineHeight: 1.3 }}>
-              À vous<br />d'écrire
+              À toi<br />d'écrire
             </div>
             <motion.div style={{ ...mono, fontSize: 13, color: `${encre}45`, letterSpacing: '0.2em', marginTop: 8 }}
               animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.8 }}>
@@ -578,7 +578,7 @@ export default function JeuOnline() {
                     <button type="button" onClick={() => setShowLastWord(false)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>masquer</button>
                   </div>
                 ) : (
-                  <button type="button" onClick={() => setShowLastWord(true)} style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', cursor: 'pointer', letterSpacing: '0.16em' }}>
+                  <button type="button" onClick={() => setShowLastWord(true)} style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.16em' }}>
                     👁 VOIR LE DERNIER MOT
                   </button>
                 )}
@@ -586,7 +586,7 @@ export default function JeuOnline() {
             )}
 
             {/* Input */}
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>— ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —</div>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>— ÉCRIS ICI · TOI SEUL LE VERRAS —</div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
               <textarea
                 value={input}
@@ -601,11 +601,11 @@ export default function JeuOnline() {
               {submitError && <div style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={handleIa} disabled={iaLoading}
-                  style={{ flex: 1, ...mono, fontSize: 13, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>
+                  style={{ flex: 1, ...mono, fontSize: 13, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, borderRadius: 3, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>
                   {iaLoading ? '…' : '✦ IA'}
                 </button>
                 <button type="submit" disabled={!input.trim() || submitting}
-                  style={{ flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.5em', borderRadius: 4, border: input.trim() ? 'none' : `1px solid ${encre}30`, cursor: input.trim() && !submitting ? 'pointer' : 'not-allowed' }}>
+                  style={{ flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.5em', borderRadius: 3, border: input.trim() ? 'none' : `1px solid ${encre}30`, cursor: input.trim() && !submitting ? 'pointer' : 'not-allowed' }}>
                   {submitting ? 'ENVOI…' : 'SCELLER CETTE VOIX →'}
                 </button>
               </div>

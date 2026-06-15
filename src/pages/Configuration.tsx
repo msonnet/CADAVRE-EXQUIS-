@@ -153,6 +153,7 @@ export default function Configuration() {
                   background: active ? `${accent}12` : 'transparent',
                   border: `0.5px solid ${active ? accent : `${encre}20`}`,
                   borderLeft: `3px solid ${active ? accent : 'transparent'}`,
+                  borderRadius: 3,
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'all 0.2s',
@@ -193,6 +194,7 @@ export default function Configuration() {
                     flex: 1, padding: '8px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
                     background: 'transparent', cursor: 'pointer',
                     ...mono, fontSize: 13,
                     color: active ? accent : `${encre}80`,
@@ -233,7 +235,7 @@ export default function Configuration() {
                   cursor: 'pointer',
                   transition: 'all 0.18s',
                   fontSize: 20,
-                  borderRadius: 0,
+                  borderRadius: 3,
                 }}
               >
                 {slot === 'vide' && (
@@ -242,7 +244,7 @@ export default function Configuration() {
                 {slot === 'humain' && (
                   <span style={{
                     display: 'block', width: 10, height: 10,
-                    background: encre, borderRadius: 0,
+                    background: encre, borderRadius: 1,
                   }} />
                 )}
                 {slot === 'ia' && (
@@ -259,7 +261,8 @@ export default function Configuration() {
             ))}
           </div>
           <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 8, letterSpacing: '0.08em' }}>
-            ■ une main · <span style={{ color: accent }}>✦</span> une voix IA — toucher une case pour changer
+            <span style={{ display: 'inline-block', width: 9, height: 9, background: encre, borderRadius: 1, verticalAlign: 'middle', marginRight: 4 }} />
+            une main · <span style={{ color: accent }}>✦</span> une voix IA — toucher une case pour changer
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {descriptionTable(joueursHumains, voixIA)}
@@ -313,6 +316,7 @@ export default function Configuration() {
                     flex: 1, padding: '8px 4px', minHeight: 44,
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
                     background: 'transparent', cursor: 'pointer',
                     ...mono, fontSize: 13,
                     color: active ? accent : `${encre}80`,
@@ -350,7 +354,7 @@ export default function Configuration() {
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',
               gap: 2,
-              borderRadius: 0,
+              borderRadius: 3,
             }}
           >
             <span>Commencer la séance</span>

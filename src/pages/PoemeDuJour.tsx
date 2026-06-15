@@ -117,7 +117,7 @@ export default function PoemeDuJour() {
       {!loading && !item && (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 20, color: encre, opacity: 0.6 }}>
-            La galerie est encore vide.<br />Soyez le premier à composer.
+            La galerie est encore vide.<br />Sois le premier à composer.
           </p>
         </div>
       )}
@@ -184,13 +184,13 @@ export default function PoemeDuJour() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={partager}
-                style={{ flex: 1, ...mono, fontSize: 13, background: accent, color: '#0f0805', border: 'none', borderRadius: 4, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em' }}
+                style={{ flex: 1, ...mono, fontSize: 13, background: accent, color: '#0f0805', border: 'none', borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em' }}
               >
                 {partagé ? '✓ COPIÉ' : 'PARTAGER'}
               </button>
               <button
                 onClick={() => { jouer('clic'); navigate('/galerie') }}
-                style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: encre, border: `1px solid ${encre}30`, borderRadius: 4, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
+                style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: encre, border: `1px solid ${encre}30`, borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
               >
                 GALERIE →
               </button>

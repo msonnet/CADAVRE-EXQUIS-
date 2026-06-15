@@ -371,6 +371,7 @@ export default function Galerie() {
                           padding: '10px 14px',
                           background: 'transparent',
                           border: reportReason === r.id ? `1.5px solid ${accent}` : `0.5px solid ${encre}30`,
+                          borderRadius: 3,
                           color: reportReason === r.id ? accent : encre,
                           cursor: 'pointer',
                         }}
@@ -389,6 +390,7 @@ export default function Galerie() {
                       ...mono, fontSize: 14, color: encre,
                       background: `${encre}08`,
                       border: `0.5px solid ${encre}30`,
+                      borderRadius: 3,
                       padding: '10px 12px',
                       resize: 'none',
                       outline: 'none',
@@ -402,6 +404,7 @@ export default function Galerie() {
                         padding: '12px 0',
                         background: 'transparent',
                         border: `0.5px solid ${encre}30`,
+                        borderRadius: 3,
                         color: encre, opacity: 0.7,
                         cursor: 'pointer',
                       }}
@@ -416,6 +419,7 @@ export default function Galerie() {
                         padding: '12px 0',
                         background: reportReason && !reportSending ? accent : `${accent}55`,
                         border: 'none',
+                        borderRadius: 3,
                         color: btnText,
                         cursor: reportReason && !reportSending ? 'pointer' : 'default',
                       }}
@@ -570,6 +574,7 @@ export default function Galerie() {
               background: `${encre}06`,
               border: `0.5px solid ${encre}25`,
               borderBottom: recherche ? `1px solid ${accent}` : `0.5px solid ${encre}25`,
+              borderRadius: 3,
               outline: 'none',
               padding: '8px 12px',
               transition: 'border-color 0.2s',
@@ -602,6 +607,7 @@ export default function Galerie() {
         {!chargement && !erreur && items.length === 0 && (
           <motion.div
             className="flex flex-col items-center py-14"
+            style={{ gap: 18, width: '100%' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -611,6 +617,23 @@ export default function Galerie() {
             }}>
               Aucune création partagée pour l'instant.
             </p>
+            <p style={{
+              ...mono, fontSize: 13, color: encre, opacity: 0.55, textAlign: 'center', lineHeight: 1.6,
+            }}>
+              {onglet === 'poeme'
+                ? 'Compose un poème, puis publie-le ici depuis le recueil.'
+                : 'Dessine un cadavre, puis publie-le ici depuis le recueil.'}
+            </p>
+            <button
+              onClick={() => { jouer('clic'); navigate(onglet === 'poeme' ? '/config' : '/config-dessin') }}
+              style={{
+                background: accent, color: btnText,
+                ...mono, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '0.85em 1.6em', border: 'none', cursor: 'pointer', borderRadius: 3,
+              }}
+            >
+              {onglet === 'poeme' ? 'Cadavre Écrit →' : 'Cadavre Dessiné →'}
+            </button>
           </motion.div>
         )}
 
@@ -653,6 +676,7 @@ export default function Galerie() {
                         display: 'block', width: '100%', textAlign: 'left',
                         padding: 12,
                         border: `0.5px solid ${encre}15`,
+                        borderRadius: 3,
                         background: 'transparent',
                         transition: 'border-color 0.15s, background 0.15s',
                       }}
@@ -682,7 +706,7 @@ export default function Galerie() {
                           <span style={{
                             ...mono, fontSize: 17, color: accent, flexShrink: 0,
                             width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: `0.5px solid ${accent}50`, lineHeight: 1,
+                            border: `0.5px solid ${accent}50`, borderRadius: 3, lineHeight: 1,
                           }}>
                             {ouvert ? '−' : '+'}
                           </span>
@@ -840,6 +864,7 @@ export default function Galerie() {
                                 color: reacted ? accent : encre,
                                 opacity: reacted ? 1 : 0.6,
                                 border: reacted ? `1px solid ${accent}` : `0.5px solid ${encre}25`,
+                                borderRadius: 3,
                                 cursor: 'pointer',
                                 transition: 'opacity 0.15s, border-color 0.15s, color 0.15s',
                                 lineHeight: 1,
@@ -875,6 +900,7 @@ export default function Galerie() {
                             style={{
                               ...mono, fontSize: 13, color: accent, opacity: 0.85,
                               background: 'none', border: `0.5px solid ${accent}40`,
+                              borderRadius: 3,
                               cursor: 'pointer', padding: '3px 10px',
                             }}
                           >
@@ -891,6 +917,7 @@ export default function Galerie() {
                             style={{
                               ...mono, fontSize: 13, color: encre, opacity: 0.65,
                               background: 'none', border: `0.5px solid ${encre}30`,
+                              borderRadius: 3,
                               cursor: 'pointer', padding: '3px 10px',
                             }}
                           >
@@ -925,6 +952,7 @@ export default function Galerie() {
                 ...mono, fontSize: 17, textTransform: 'uppercase',
                 padding: '0.9em 1em',
                 border: 'none',
+                borderRadius: 3,
                 cursor: chargementPlus ? 'wait' : 'pointer',
               }}
             >

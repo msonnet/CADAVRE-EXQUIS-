@@ -1172,7 +1172,7 @@ export default function JeuDessin() {
                 Joueur {nextPlayerNum}.
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
-                Passez l'écran. Ne regardez pas.
+                Passe l'écran. Ne regarde pas.
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}

@@ -135,7 +135,7 @@ export default function Online() {
       if (error) throw error
       navigate(`/salon/${code}`)
     } catch (err: any) {
-      setJoinError(err?.message ?? 'Impossible de rejoindre — réessayez.')
+      setJoinError(err?.message ?? 'Impossible de rejoindre — réessaie.')
     } finally {
       setJoining(false)
     }
@@ -172,11 +172,11 @@ export default function Online() {
     setJoinError(null)
     try {
       const { data: room } = await supabase.from('rooms').select('*').eq('code', code).single()
-      if (!room) { setJoinError('Salon introuvable — vérifiez le code.'); setJoining(false); return }
+      if (!room) { setJoinError('Salon introuvable — vérifie le code.'); setJoining(false); return }
       if (room.status !== 'waiting') { setJoinError('Cette partie a déjà commencé.'); setJoining(false); return }
       navigate(`/salon/${code}`)
     } catch {
-      setJoinError('Impossible de rejoindre — réessayez.')
+      setJoinError('Impossible de rejoindre — réessaie.')
       setJoining(false)
     }
   }
@@ -226,11 +226,11 @@ export default function Online() {
             Jouer à plusieurs.
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, lineHeight: 1.65, marginBottom: 28 }}>
-            Chaque joueur sur son propre appareil. Composez ensemble un cadavre exquis, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.
+            Chaque joueur sur son propre appareil. Tu composes un cadavre exquis à plusieurs, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.
           </p>
 
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — VOTRE NOM DE PLUME —
+            — TON NOM DE PLUME —
           </div>
 
           <form onSubmit={handleAnonymousJoin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -256,7 +256,7 @@ export default function Online() {
             <button
               type="submit"
               disabled={signingIn || !pseudo.trim()}
-              style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', borderRadius: 4, border: 'none', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
+              style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', borderRadius: 3, border: 'none', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
             >
               {signingIn ? 'CONNEXION…' : 'ENTRER DANS LE JEU →'}
             </button>
@@ -268,11 +268,11 @@ export default function Online() {
       {user && !profile && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 20 }}>
-            Connecté. Créez votre profil pour continuer.
+            Connecté. Crée ton profil pour continuer.
           </p>
           <button
             onClick={() => navigate('/profil')}
-            style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 4, border: 'none', cursor: 'pointer' }}
+            style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: 'none', cursor: 'pointer' }}
           >
             CRÉER MON PROFIL →
           </button>
@@ -289,10 +289,10 @@ export default function Online() {
               <img
                 src={profile.avatar_url}
                 alt={profile.pseudo}
-                style={{ width: 48, height: 48, borderRadius: 4, objectFit: 'cover', border: `1px solid ${accent}40` }}
+                style={{ width: 48, height: 48, borderRadius: 3, objectFit: 'cover', border: `1px solid ${accent}40` }}
               />
             ) : (
-              <div style={{ width: 48, height: 48, borderRadius: 4, background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 3, background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 22, color: accent }}>
                   {profile.pseudo[0]?.toUpperCase()}
                 </span>
@@ -320,6 +320,7 @@ export default function Online() {
                 background: accent, color: btnText,
                 ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
                 padding: '1em 1.8em', border: 'none', cursor: joining ? 'wait' : 'pointer',
+                borderRadius: 3,
                 opacity: joining ? 0.6 : 1,
               }}
             >
@@ -334,8 +335,8 @@ export default function Online() {
             )}
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, color: encre, opacity: 0.55, marginTop: 8, lineHeight: 1.5 }}>
               {publicRooms.some(r => r.player_count < r.nb_joueurs)
-                ? 'Vous rejoignez la première partie disponible.'
-                : "Aucune partie ouverte — un salon public est créé pour vous, d'autres pourront rejoindre."}
+                ? 'Tu rejoins la première partie disponible.'
+                : "Aucune partie ouverte — un salon public est créé pour toi, d'autres pourront rejoindre."}
             </p>
           </div>
 
@@ -378,6 +379,7 @@ export default function Online() {
                         background: placesDispo ? `${accent}08` : `${encre}06`,
                         border: `1px solid ${placesDispo ? accent : encre}20`,
                         borderLeft: `3px solid ${placesDispo ? accent : `${encre}30`}`,
+                        borderRadius: 3,
                         cursor: 'pointer', textAlign: 'left', width: '100%',
                         opacity: placesDispo ? 1 : 0.55,
                       }}
@@ -412,12 +414,12 @@ export default function Online() {
                 — NOUVELLE PARTIE —
               </div>
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
-                Créez un salon et partagez le code, ou laissez-le public pour que d'autres rejoignent.
+                Crée un salon et partage le code, ou laisse-le public pour que d'autres rejoignent.
               </p>
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
+                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, borderRadius: 3, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
               >
                 {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
               </button>
@@ -457,7 +459,7 @@ export default function Online() {
               <button
                 type="submit"
                 disabled={joining || !joinCode.trim()}
-                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', border: `1px solid ${encre}`, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
+                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', border: `1px solid ${encre}`, borderRadius: 3, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
               >
                 {joining ? 'RECHERCHE…' : 'REJOINDRE'}
               </button>

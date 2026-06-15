@@ -200,7 +200,7 @@
     text-transform: uppercase;
     padding: 0.95em 1.7em;
     border: none;
-    border-radius: 10px;
+    border-radius: 3px;
     background: var(--reve-accent);
     color: var(--reve-button-text);
     cursor: pointer;
@@ -218,7 +218,7 @@
     color: var(--reve-ink);
     padding: 0.85em 1.5em;
     border: 1px solid var(--reve-ink);
-    border-radius: 10px;
+    border-radius: 3px;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
   }
@@ -240,7 +240,7 @@
     padding: 12px 16px;
     caret-color: var(--reve-accent);
     resize: none;
-    border-radius: 0 6px 6px 0;
+    border-radius: 0 3px 3px 0;
     transition: border-color 0.2s ease;
   }
   .champ-carnet::placeholder { color: var(--reve-ink-faint); opacity: 0.55; font-style: italic; }

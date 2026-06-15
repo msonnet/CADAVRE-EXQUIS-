@@ -717,7 +717,7 @@ export default function Jeu() {
                           letterSpacing: '0.22em',
                           border: `1px solid ${accent}55`,
                           padding: '2px 8px',
-                          borderRadius: 2,
+                          borderRadius: 3,
                         }}
                       >
                         RÉSERVE
@@ -862,7 +862,7 @@ export default function Jeu() {
                   }}
                 >{inputValue}</div>
                 <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-                  — ÉCRIVEZ ICI · VOUS SEUL LE VERREZ —
+                  — ÉCRIS ICI · TOI SEUL LE VERRAS —
                 </div>
                 <textarea
                   className="champ-carnet w-full min-h-[96px] resize-none"
@@ -871,7 +871,7 @@ export default function Jeu() {
                   onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
                   onKeyDown={handleKeyDown}
                   placeholder="…"
-                  aria-label="Votre contribution"
+                  aria-label="Ta contribution"
                   autoFocus
                   rows={3}
                 />
@@ -913,6 +913,7 @@ export default function Jeu() {
                   cursor: !inputValue.trim() ? 'not-allowed' : 'pointer',
                   transition: 'background 0.2s',
                   gap: 2,
+                  borderRadius: 3,
                 }}
               >
                 <span>Sceller cette voix</span>
@@ -938,13 +939,13 @@ export default function Jeu() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={abandonner}
-                    style={{ flex: 1, padding: '0.75em', background: '#7B0000', color: '#e8d4b8', ...mono, fontSize: 17, border: 'none', cursor: 'pointer', borderRadius: 4 }}
+                    style={{ flex: 1, padding: '0.75em', background: '#7B0000', color: '#e8d4b8', ...mono, fontSize: 17, border: 'none', cursor: 'pointer', borderRadius: 3 }}
                   >
                     Confirmer l'abandon
                   </button>
                   <button
                     onClick={() => setConfirmAbandon(false)}
-                    style={{ padding: '0.75em 1em', background: 'transparent', color: encre, ...mono, fontSize: 17, border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 4 }}
+                    style={{ padding: '0.75em 1em', background: 'transparent', color: encre, ...mono, fontSize: 17, border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 3 }}
                   >
                     Annuler
                   </button>

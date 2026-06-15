@@ -263,7 +263,7 @@ export default function Salon() {
           <div style={{
             position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
             left: '50%', transform: 'translateX(-50%)',
-            padding: '8px 14px', borderRadius: 4,
+            padding: '8px 14px', borderRadius: 3,
             background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
             color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
             fontSize: 13, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
@@ -293,7 +293,7 @@ export default function Salon() {
         <div style={{
           position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
           left: '50%', transform: 'translateX(-50%)',
-          padding: '8px 14px', borderRadius: 4,
+          padding: '8px 14px', borderRadius: 3,
           background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
           color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
           fontSize: 13, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
@@ -370,7 +370,7 @@ export default function Salon() {
           </AnimatePresence>
           {players.length < 2 && (
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.75, marginTop: 8 }}>
-              En attente d'autres joueurs… Partagez le code <strong>{code}</strong>.
+              En attente d'autres joueurs… Partage le code <strong>{code}</strong>.
             </p>
           )}
         </div>
@@ -453,7 +453,7 @@ export default function Salon() {
                   key={m}
                   onClick={() => updateRoom({ mode: m })}
                   style={{
-                    ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 0,
+                    ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 3,
                     background: room.mode === m ? accent : 'transparent',
                     color: room.mode === m ? btnText : encre,
                     border: `1px solid ${room.mode === m ? accent : `${encre}40`}`,
@@ -475,7 +475,7 @@ export default function Salon() {
                     key={id}
                     onClick={() => updateRoom({ structure_id: id })}
                     style={{
-                      ...mono, fontSize: 13, padding: '7px 14px', textAlign: 'left', borderRadius: 0,
+                      ...mono, fontSize: 13, padding: '7px 14px', textAlign: 'left', borderRadius: 3,
                       background: room.structure_id === id ? `${accent}18` : 'transparent',
                       color: room.structure_id === id ? accent : encre,
                       border: `1px solid ${room.structure_id === id ? accent : `${encre}25`}`,
@@ -493,7 +493,7 @@ export default function Salon() {
             <div>
               <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>BANDES</div>
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
-                Chaque joueur dessine une bande du corps à l'aveugle. Fixez le nombre de joueurs attendus.
+                Chaque joueur dessine une bande du corps à l'aveugle. Fixe le nombre de joueurs attendus.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 {[2, 3, 4, 5, 6, 7].map(n => (
@@ -501,7 +501,7 @@ export default function Salon() {
                     key={n}
                     onClick={() => updateRoom({ nb_joueurs: n })}
                     style={{
-                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 0,
+                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 3,
                       background: room.nb_joueurs === n ? `${accent}18` : 'transparent',
                       color: room.nb_joueurs === n ? accent : encre,
                       border: `1px solid ${room.nb_joueurs === n ? accent : `${encre}25`}`,
@@ -526,7 +526,7 @@ export default function Salon() {
                     key={opt.label}
                     onClick={() => updateRoom({ turn_seconds: opt.value })}
                     style={{
-                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 0,
+                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 3,
                       background: selected ? `${accent}18` : 'transparent',
                       color: selected ? accent : encre,
                       border: `1px solid ${selected ? accent : `${encre}25`}`,
@@ -554,7 +554,7 @@ export default function Salon() {
                     key={opt.label}
                     onClick={() => updateRoom({ is_public: opt.value })}
                     style={{
-                      flex: 1, ...mono, fontSize: 13, padding: '7px 10px', borderRadius: 0,
+                      flex: 1, ...mono, fontSize: 13, padding: '7px 10px', borderRadius: 3,
                       background: selected ? `${accent}18` : 'transparent',
                       color: selected ? accent : encre,
                       border: `1px solid ${selected ? accent : `${encre}25`}`,
@@ -584,7 +584,7 @@ export default function Salon() {
             padding: '10px 12px', background: `${encre}08`,
             borderLeft: `2px solid ${encre}40`, textAlign: 'center',
           }}>
-            👁 VOUS SUIVEZ LA PARTIE EN SPECTATEUR
+            👁 TU SUIS LA PARTIE EN SPECTATEUR
           </div>
         )}
 
@@ -596,7 +596,7 @@ export default function Salon() {
               background: mePlayer?.is_ready ? `${encre}15` : accent,
               color: mePlayer?.is_ready ? encre : btnText,
               ...mono, fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.08em',
-              padding: '0.85em 1.8em', borderRadius: 4, border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
+              padding: '0.85em 1.8em', borderRadius: 3, border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
               cursor: 'pointer', width: '100%',
             }}
           >
@@ -613,7 +613,7 @@ export default function Salon() {
               background: allReady ? encre : 'transparent',
               color: allReady ? 'var(--reve-bg)' : `${encre}50`,
               ...mono, fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.08em',
-              padding: '0.85em 1.8em', borderRadius: 4,
+              padding: '0.85em 1.8em', borderRadius: 3,
               border: allReady ? 'none' : `1px solid ${encre}30`,
               cursor: allReady && !starting ? 'pointer' : 'not-allowed',
               width: '100%',

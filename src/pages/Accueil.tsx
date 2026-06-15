@@ -216,7 +216,7 @@ export default function Accueil() {
                 background: accent, color: bg,
                 ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
                 padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
-                borderRadius: 0, whiteSpace: 'nowrap',
+                borderRadius: 3, whiteSpace: 'nowrap',
               }}
             >
               Cadavre Écrit
@@ -229,7 +229,7 @@ export default function Accueil() {
                 background: second, color: bg,
                 ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
                 padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
-                borderRadius: 0, whiteSpace: 'nowrap',
+                borderRadius: 3, whiteSpace: 'nowrap',
               }}
             >
               Cadavre Dessiné
@@ -243,7 +243,7 @@ export default function Accueil() {
               background: 'transparent', color: encre,
               ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
               padding: '0.55em 1em', border: `1px solid ${encre}40`, cursor: 'pointer',
-              borderRadius: 0,
+              borderRadius: 3,
             }}
           >
             <span>Mode en ligne</span>

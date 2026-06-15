@@ -541,15 +541,15 @@ export default function JeuAtelier() {
   const seul = plan.voixPool.length === 0
   const consigneJoueur = idx === 0
     ? seul
-      ? 'Ouvrez la séance — vous jouez contre votre propre mémoire.'
-      : 'Ouvrez la séance — le premier vers vous appartient.'
+      ? 'Ouvre la séance — tu joues contre ta propre mémoire.'
+      : 'Ouvre la séance — le premier vers t\'appartient.'
     : idx === total - 1
       ? seul
-        ? 'Refermez le poème — sans vous relire.'
-        : 'Refermez le poème — le dernier vers vous appartient.'
+        ? 'Referme le poème — sans te relire.'
+        : 'Referme le poème — le dernier vers t\'appartient.'
       : seul
-        ? 'Continuez à l\'aveugle — votre mémoire seule guide la main.'
-        : 'La main vous revient.'
+        ? 'Continue à l\'aveugle — ta mémoire seule guide la main.'
+        : 'La main te revient.'
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -594,10 +594,13 @@ export default function JeuAtelier() {
             >
               <span style={{
                 fontSize: 11, flexShrink: 0,
+                display: 'inline-flex', alignItems: 'center',
                 color: v.auteur === 'ia' ? encre : accent,
                 opacity: v.auteur === 'humain' ? 0.9 : v.auteur === 'mixte' ? 0.55 : 0.4,
               }}>
-                {v.auteur === 'ia' ? '✦' : '✒'}
+                {v.auteur === 'ia'
+                  ? '✦'
+                  : <span style={{ display: 'inline-block', width: 7, height: 7, background: 'currentColor', borderRadius: 1 }} />}
               </span>
               <span style={{ fontSize: 13, color: encre, opacity: 0.35, letterSpacing: '0.02em', wordBreak: 'break-all' }}>
                 {masquer(v.texte)}
@@ -632,7 +635,7 @@ export default function JeuAtelier() {
                 </div>
               ) : idx > 0 && (
                 <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginBottom: 14 }}>
-                  — VOUS ÉCRIVEZ DANS LE NOIR —
+                  — TU ÉCRIS DANS LE NOIR —
                 </div>
               )}
 
@@ -665,7 +668,7 @@ export default function JeuAtelier() {
                 <>
                   <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
                     {fragGabarit.length === 1
-                      ? <>— LE SORT VOUS TIRE SEUL · {fragGabarit[fragSlotJoueur].role} —</>
+                      ? <>— LE SORT TE TIRE SEUL · {fragGabarit[fragSlotJoueur].role} —</>
                       : <>— FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —</>}
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontStyle: 'italic', color: encre, opacity: 0.7, marginBottom: 10 }}>
@@ -675,7 +678,7 @@ export default function JeuAtelier() {
                     value={saisie}
                     onChange={e => setSaisie(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); deposerFragment() } }}
-                    placeholder="votre fragment…"
+                    placeholder="ton fragment…"
                     autoFocus
                     style={{
                       width: '100%',
@@ -694,11 +697,12 @@ export default function JeuAtelier() {
                       color: bg,
                       ...mono, fontSize: 15, letterSpacing: '0.12em', textTransform: 'uppercase',
                       padding: '0.85em 1em', border: 'none',
+                      borderRadius: 3,
                       cursor: saisie.trim() ? 'pointer' : 'default',
                       transition: 'background 0.2s',
                     }}
                   >
-                    Glisser le fragment ✒
+                    Glisser le fragment →
                   </button>
                 </>
               ) : (
@@ -729,7 +733,7 @@ export default function JeuAtelier() {
                 </div>
               ) : idx > 0 && (
                 <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginBottom: 16 }}>
-                  — VOUS ÉCRIVEZ DANS LE NOIR —
+                  — TU ÉCRIS DANS LE NOIR —
                 </div>
               )}
 
@@ -743,7 +747,7 @@ export default function JeuAtelier() {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); deposerVers() }
                 }}
-                placeholder="votre vers…"
+                placeholder="ton vers…"
                 rows={2}
                 autoFocus
                 style={{
@@ -763,11 +767,12 @@ export default function JeuAtelier() {
                   color: bg,
                   ...mono, fontSize: 15, letterSpacing: '0.12em', textTransform: 'uppercase',
                   padding: '0.85em 1em', border: 'none',
+                  borderRadius: 3,
                   cursor: saisie.trim() ? 'pointer' : 'default',
                   transition: 'background 0.2s',
                 }}
               >
-                {idx === total - 1 ? 'Refermer le poème ✒' : 'Déposer le vers ✒'}
+                {idx === total - 1 ? 'Refermer le poème →' : 'Déposer le vers →'}
               </button>
             </motion.div>
 

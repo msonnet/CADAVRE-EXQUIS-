@@ -131,8 +131,8 @@ export default function FinDePartie() {
           const msg = reason === 'not_configured'
             ? 'Génération d\'images non configurée (clé FAL_KEY manquante)'
             : reason === 'timeout'
-            ? 'La génération a pris trop de temps — réessayez'
-            : 'Illustration indisponible — réessayez dans un instant'
+            ? 'La génération a pris trop de temps — réessaie'
+            : 'Illustration indisponible — réessaie dans un instant'
           setErreurIllustration(msg)
           setStyleChoisi(null)
         }
@@ -152,7 +152,7 @@ export default function FinDePartie() {
         </p>
         <button
           onClick={() => navigate('/config')}
-          style={{ marginTop: 32, background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer' }}
+          style={{ marginTop: 32, background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer', borderRadius: 3 }}
         >
           Nouvelle partie
         </button>
@@ -302,6 +302,7 @@ export default function FinDePartie() {
           style={{
             border: `1px solid ${accent}40`,
             borderLeft: `3px solid ${accent}`,
+            borderRadius: 3,
             padding: '16px 16px 12px',
             background: 'rgba(240,228,204,0.25)',
             marginBottom: 20,
@@ -457,6 +458,7 @@ export default function FinDePartie() {
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',
               gap: 2,
+              borderRadius: 3,
             }}
           >
             <span>Sceller au recueil</span>
@@ -528,7 +530,7 @@ export default function FinDePartie() {
                           color: accent,
                           opacity: 0.55,
                           padding: '1px 5px',
-                          borderRadius: 2,
+                          borderRadius: 3,
                           marginLeft: 7,
                           fontFamily: "'Raleway', sans-serif",
                           verticalAlign: 'middle',
@@ -574,7 +576,7 @@ export default function FinDePartie() {
                 {promptLibre.trim() && (
                   <button
                     onClick={() => choisirStyle(styleChoisi || 'libre')}
-                    style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: `0.5px solid ${accent}50`, padding: '8px 12px', cursor: 'pointer', marginTop: 8, width: '100%' }}
+                    style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: `0.5px solid ${accent}50`, borderRadius: 3, padding: '8px 12px', cursor: 'pointer', marginTop: 8, width: '100%' }}
                   >
                     ✦ GÉNÉRER AVEC CETTE DIRECTION
                   </button>
@@ -594,7 +596,7 @@ export default function FinDePartie() {
                   {illustrationUrl && (
                     <button
                       onClick={() => styleChoisi && choisirStyle(styleChoisi)}
-                      style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: `0.5px solid ${encre}20`, padding: '8px', cursor: 'pointer' }}
+                      style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '8px', cursor: 'pointer' }}
                     >
                       ↺ RELANCER
                     </button>
@@ -609,6 +611,7 @@ export default function FinDePartie() {
                         opacity: styleChoisi === s.id && illustrationUrl ? 0.9 : 0.55,
                         background: 'transparent',
                         border: `0.5px solid ${styleChoisi === s.id && illustrationUrl ? accent : `${encre}20`}`,
+                        borderRadius: 3,
                         padding: '10px 12px', cursor: 'pointer', textAlign: 'left',
                         transition: 'all 0.15s',
                       }}

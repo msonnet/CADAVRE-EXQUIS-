@@ -148,12 +148,12 @@ export default function Atelier() {
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, fontStyle: 'italic', lineHeight: 1.5 }}>
             {nbVoix === 0
-              ? <>Le sort fixera la longueur du poème — de V à XXVII vers. Vous les écrirez
-                tous, seul, sans jamais relire : le cadavre exquis se joue contre votre
+              ? <>Le sort fixera la longueur du poème — de V à XXVII vers. Tu les écriras
+                tous, seul, sans jamais relire : le cadavre exquis se joue contre ta
                 propre mémoire.</>
-              : <>Le sort fixera la longueur du poème — de V à XXVII vers. Vous l'ouvrirez,
-                vous le refermerez, et la main vous reviendra tous les {toRomain(cadenceRetour(nbVoix)[0])} à {toRomain(cadenceRetour(nbVoix)[1])} vers
-                — plus les voix sont nombreuses, plus vos retours se font fragments.</>
+              : <>Le sort fixera la longueur du poème — de V à XXVII vers. Tu l'ouvriras,
+                tu le refermeras, et la main te reviendra tous les {toRomain(cadenceRetour(nbVoix)[0])} à {toRomain(cadenceRetour(nbVoix)[1])} vers
+                — plus les voix sont nombreuses, plus tes retours se font fragments.</>
             }
           </div>
         </motion.div>
@@ -175,7 +175,7 @@ export default function Atelier() {
               {nbVoix === 0 ? 'Seul' : toRomain(nbVoix)}
             </span>
             <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, textTransform: 'uppercase' }}>
-              {nbVoix === 0 ? 'votre main uniquement' : toutes ? 'Toutes les voix' : nbVoix === 1 ? 'une seule voix' : `${nbVoix} voix`}
+              {nbVoix === 0 ? 'ta main uniquement' : toutes ? 'Toutes les voix' : nbVoix === 1 ? 'une seule voix' : `${nbVoix} voix`}
             </span>
           </div>
           <input
@@ -190,7 +190,7 @@ export default function Atelier() {
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: encre, opacity: 0.7, marginTop: 8 }}>
             {nbVoix === 0
               ? 'Aucune voix ne parlera — la dernière main se passe le papier à elle-même.'
-              : 'Les voix sont tirées au sort — vous ne saurez jamais lesquelles parlent.'}
+              : 'Les voix sont tirées au sort — tu ne sauras jamais lesquelles parlent.'}
           </div>
         </motion.div>
 
@@ -218,6 +218,7 @@ export default function Atelier() {
                     flex: 1, padding: '8px 4px',
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
                     borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
                     background: 'transparent', cursor: 'pointer',
                     ...mono, fontSize: 13,
                     color: active ? accent : `${encre}60`,
@@ -232,10 +233,10 @@ export default function Atelier() {
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
             {echo
               ? (nbVoix === 0
-                ? 'Vous n’entendrez que le dernier mot de votre propre vers précédent.'
-                : 'Chaque main — la vôtre comme celles des voix — n’entend que le dernier mot du vers précédent.')
+                ? 'Tu n’entendras que le dernier mot de ton propre vers précédent.'
+                : 'Chaque main — la tienne comme celles des voix — n’entend que le dernier mot du vers précédent.')
               : (nbVoix === 0
-                ? 'Vous ne relirez rien. Le poème se coud dans le noir, vers après vers.'
+                ? 'Tu ne reliras rien. Le poème se coud dans le noir, vers après vers.'
                 : 'Personne ne voit rien. Le poème se coud dans le noir absolu.')}
           </div>
         </motion.div>
@@ -253,6 +254,7 @@ export default function Atelier() {
             background: encre, color: bg,
             ...mono, fontSize: 16, letterSpacing: '0.12em', textTransform: 'uppercase',
             padding: '0.9em 1em', border: 'none', cursor: 'pointer',
+            borderRadius: 3,
             marginBottom: 10,
           }}
         >

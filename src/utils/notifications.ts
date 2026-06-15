@@ -29,7 +29,7 @@ export async function activerRappelQuotidien(): Promise<boolean> {
       notifications: [{
         id: NOTIF_ID,
         title: 'Cadavre Exquis',
-        body: 'Le poème du jour vous attend — ajoutez votre main au cadavre.',
+        body: 'Le poème du jour t\'attend — ajoute ta main au cadavre.',
         schedule: { on: { hour: HEURE_RAPPEL, minute: 0 }, allowWhileIdle: true },
       }],
     })

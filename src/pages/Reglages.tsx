@@ -208,8 +208,8 @@ export default function Reglages() {
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
               {rappelRefuse
-                ? 'Autorisation refusée — activez les notifications dans les réglages du téléphone.'
-                : 'Un rappel discret chaque soir, à 20 h : le poème du jour vous attend. Rien ne quitte l’appareil.'}
+                ? 'Autorisation refusée — active les notifications dans les réglages du téléphone.'
+                : 'Un rappel discret chaque soir, à 20 h : le poème du jour t’attend. Rien ne quitte l’appareil.'}
             </div>
           </motion.div>
         )}
