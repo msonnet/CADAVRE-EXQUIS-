@@ -168,10 +168,7 @@ export default function ConfigurationDessin() {
                 {slot === 'vide' ? (
                   <span style={{ color: `${encre}20`, fontSize: 14 }}>·</span>
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden style={{ color: encre }}>
-                    <path d="M15 2L8 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                    <path d="M8 13C6.5 14.5 6 17 7.5 18C9 17 8.5 14.5 8 13Z" fill="currentColor"/>
-                  </svg>
+                  <span style={{ color: encre, fontSize: 18, lineHeight: 1 }}>✦</span>
                 )}
               </button>
             ))}
@@ -264,8 +261,7 @@ export default function ConfigurationDessin() {
               borderRadius: 0,
             }}
           >
-            <span>Commencer le dessin</span>
-            <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>✎</span>
+            <span>Commencer le dessin →</span>
           </button>
         </motion.div>
 

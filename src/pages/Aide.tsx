@@ -27,8 +27,9 @@ const RACCORD_DESSIN = [
 ]
 
 const SECTIONS = [
-  { id: 'ecrit',     label: 'CADAVRE ÉCRIT' },
-  { id: 'dessine',   label: 'CADAVRE DESSINÉ' },
+  { id: 'ecrit',    label: 'CADAVRE ÉCRIT' },
+  { id: 'dessine',  label: 'CADAVRE DESSINÉ' },
+  { id: 'atelier',  label: "L'ATELIER" },
 ]
 
 export default function Aide() {
@@ -95,7 +96,8 @@ export default function Aide() {
         {SECTIONS.map((section, si) => {
           const isOpen = ouvert.includes(section.id)
           const isEcrit = section.id === 'ecrit'
-          const col = isEcrit ? accent : second
+          const isAtelier = section.id === 'atelier'
+          const col = isEcrit ? accent : isAtelier ? encre : second
 
           return (
             <motion.div
@@ -118,7 +120,7 @@ export default function Aide() {
                     className="font-bodoni font-black"
                     style={{ fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)', color: col, lineHeight: 1 }}
                   >
-                    {isEcrit ? 'Cadavre Écrit.' : 'Cadavre Dessiné.'}
+                    {isEcrit ? 'Cadavre Écrit.' : isAtelier ? "L'Atelier." : 'Cadavre Dessiné.'}
                   </div>
                 </div>
                 <span style={{
@@ -187,7 +189,39 @@ export default function Aide() {
                         </>
                       )}
 
-                      {!isEcrit && (
+                      {isAtelier && (
+                        <>
+                          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
+                            Un mode solo et expérimental. Tu convoques des voix IA et tu co-écris avec elles un poème dont tu ne vois jamais l'ensemble — ni le leur, ni le tien passé.
+                          </p>
+
+                          {[
+                            { label: 'LE MÉDIUM', detail: "Tu ouvres le poème et tu le refermes. Entre ces deux moments, la main te revient à intervalles irréguliers — tous les deux à trois vers environ. Plus tu convoques de voix, plus tes retours se font fragments (un mot ou deux parmi une voix IA)." },
+                            { label: 'LES VOIX', detail: "Les voix IA complètent les vers entre tes tours. Tu choisis combien en convoquer — de 0 à 46. Plus elles sont nombreuses, plus ta présence dans le poème devient rare et fragmentaire." },
+                            { label: 'SEUL (0 VOIX)', detail: "Sans voix convoquées, tu écris tous les vers toi-même, mais sans jamais relire ce que tu as produit. Le cadavre exquis se joue alors contre ta propre mémoire." },
+                          ].map(item => (
+                            <div key={item.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+                              <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, marginBottom: 3 }}>{item.label}</div>
+                              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{item.detail}</div>
+                            </div>
+                          ))}
+
+                          <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
+                            — VISIBILITÉ —
+                          </div>
+                          {[
+                            { label: "L'ÉCHO", detail: "Le dernier mot du vers précédent est audible. Un fil ténu pour raccrocher la plume." },
+                            { label: 'OBSCURITÉ', detail: "Tu écris dans le silence total. Aucun contexte — ni le tien, ni celui des voix." },
+                          ].map(v => (
+                            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+                              <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+                              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {!isEcrit && !isAtelier && (
                         <>
                           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
                             La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
@@ -238,7 +272,7 @@ export default function Aide() {
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer',
               }}
             >
-              Cadavre Écrit
+              Cadavre Écrit →
             </button>
             <button
               onClick={() => navigate('/config-dessin')}
@@ -248,7 +282,7 @@ export default function Aide() {
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer',
               }}
             >
-              Cadavre Dessiné
+              Cadavre Dessiné →
             </button>
           </div>
         </motion.div>

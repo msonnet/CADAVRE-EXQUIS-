@@ -240,7 +240,10 @@ export default function Configuration() {
                   <span style={{ color: `${encre}20`, fontSize: 14 }}>·</span>
                 )}
                 {slot === 'humain' && (
-                  <span style={{ color: encre }}>✒</span>
+                  <span style={{
+                    display: 'block', width: 10, height: 10,
+                    background: encre, borderRadius: 0,
+                  }} />
                 )}
                 {slot === 'ia' && (
                   <AnimatePresence mode="wait">
@@ -256,7 +259,7 @@ export default function Configuration() {
             ))}
           </div>
           <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 8, letterSpacing: '0.08em' }}>
-            <span style={{ color: encre }}>✒</span> une main · <span style={{ color: accent }}>✦</span> une voix IA — toucher une case pour changer
+            ■ une main · <span style={{ color: accent }}>✦</span> une voix IA — toucher une case pour changer
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {descriptionTable(joueursHumains, voixIA)}
