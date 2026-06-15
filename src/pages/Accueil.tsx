@@ -7,6 +7,13 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
 import { rearmerRappelSiActif } from '../utils/notifications'
+import { supabase } from '../lib/supabase'
+import { getStructure, reconstruirePoeme } from '../structures'
+
+function dayOfYear(): number {
+  const now = new Date()
+  return Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86_400_000)
+}
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -22,6 +29,32 @@ export default function Accueil() {
   const { jouer } = useSound()
   // L'ouverture de l'accueil = le passage du jour : on pointe la série une fois.
   const [serie] = useState<Serie>(() => pointerSerie())
+  const [snippet, setSnippet] = useState<{ lignes: string[]; auteur: string } | null>(null)
+
+  useEffect(() => {
+    async function loadSnippet() {
+      try {
+        const { data } = await supabase
+          .from('gallery')
+          .select('payload,author_pseudo')
+          .eq('type', 'poeme')
+          .order('created_at', { ascending: false })
+          .limit(90)
+        const items = (data ?? []) as { payload: string; author_pseudo: string }[]
+        if (!items.length) return
+        const picked = items[dayOfYear() % items.length]
+        const p = JSON.parse(picked.payload) as { cases: { texte: string }[]; structureId: string }
+        const structure = getStructure(p.structureId)
+        const fakeCases = p.cases.map((c, i) => ({
+          numero: i + 1, fonction: '', consigne: '', auteur: 'humain' as const, texte: c.texte, ts: 0,
+        }))
+        const texte = reconstruirePoeme(fakeCases, structure)
+        const lignes = texte.split('\n').filter(Boolean).slice(0, 2)
+        if (lignes.length) setSnippet({ lignes, auteur: picked.author_pseudo })
+      } catch { /* silencieux */ }
+    }
+    loadSnippet()
+  }, [])
 
   useEffect(() => {
     const prevHtml = document.documentElement.style.overflow
@@ -186,23 +219,50 @@ export default function Accueil() {
           background: `linear-gradient(to bottom, transparent, ${encre}12 49%, ${encre}22 50%, transparent)`,
         }} />
 
-        {/* ── CITATION ── */}
-        {seance?.citation && (
+        {/* ── POÈME DU JOUR / CITATION ── */}
+        {(snippet || seance?.citation) && (
           <div style={{ marginBottom: 14 }}>
             <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: 10 }} />
-            <span style={{
-              fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
-              color: encre, display: '-webkit-box', fontStyle: 'italic',
-              overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-            } as React.CSSProperties}>
-              {seance.citation.t}
-            </span>
-            <div style={{
-              ...ui, fontSize: 13, letterSpacing: '0.1em', fontWeight: 700,
-              textTransform: 'uppercase', color: accent, marginTop: 5,
-            }}>
-              {seance.citation.a}
-            </div>
+            {snippet ? (
+              <button
+                onClick={() => nav('/poeme-du-jour')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', width: '100%' }}
+              >
+                {snippet.lignes.map((ligne, i) => (
+                  <div key={i} style={{
+                    fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
+                    color: encre, fontStyle: 'italic', overflow: 'hidden',
+                    display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical',
+                  } as React.CSSProperties}>
+                    {ligne}
+                  </div>
+                ))}
+                <div style={{
+                  ...ui, fontSize: 13, letterSpacing: '0.1em', fontWeight: 700,
+                  textTransform: 'uppercase', color: accent, marginTop: 5,
+                  display: 'flex', justifyContent: 'space-between',
+                }}>
+                  <span>{snippet.auteur}</span>
+                  <span style={{ opacity: 0.55 }}>POÈME DU JOUR →</span>
+                </div>
+              </button>
+            ) : (
+              <>
+                <span style={{
+                  fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
+                  color: encre, display: '-webkit-box', fontStyle: 'italic',
+                  overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                } as React.CSSProperties}>
+                  {seance!.citation!.t}
+                </span>
+                <div style={{
+                  ...ui, fontSize: 13, letterSpacing: '0.1em', fontWeight: 700,
+                  textTransform: 'uppercase', color: accent, marginTop: 5,
+                }}>
+                  {seance!.citation!.a}
+                </div>
+              </>
+            )}
           </div>
         )}
 
