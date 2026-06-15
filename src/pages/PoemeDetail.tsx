@@ -353,7 +353,7 @@ export default function PoemeDetail() {
               className="text-left w-full"
             >
               <div
-                className="font-bodoni font-black leading-tight"
+                className="font-fraunces font-black leading-tight"
                 style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: poeme.titre ? encre : `${encre}40` }}
               >
                 {poeme.titre ?? 'Sans titre'}

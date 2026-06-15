@@ -141,7 +141,7 @@ export default function Atelier() {
           style={{ marginBottom: 18 }}
         >
           <div
-            className="font-bodoni font-black leading-tight"
+            className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 6 }}
           >
             Écrire avec <span style={{ color: accent }}>les voix.</span>
@@ -171,7 +171,7 @@ export default function Atelier() {
             — VOIX CONVOQUÉES —
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 10 }}>
-            <span className="font-bodoni font-black" style={{ fontSize: 44, color: accent, lineHeight: 1 }}>
+            <span className="font-fraunces font-black" style={{ fontSize: 44, color: accent, lineHeight: 1 }}>
               {nbVoix === 0 ? 'Seul' : toRomain(nbVoix)}
             </span>
             <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, textTransform: 'uppercase' }}>

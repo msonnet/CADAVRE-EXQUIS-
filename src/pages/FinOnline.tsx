@@ -501,11 +501,11 @@ export default function FinOnline() {
                       {contributions.sort((a, b) => a.case_index - b.case_index).map(c => {
                         const p = players.find(pl => pl.player_id === c.player_id)
                         let preview: React.ReactNode = null
-                        try { const d = JSON.parse(c.texte) as BandeData; preview = <img src={d.imageDataUrl} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 2 }} /> }
-                        catch { if (c.texte.startsWith('data:')) preview = <img src={c.texte} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 2 }} /> }
+                        try { const d = JSON.parse(c.texte) as BandeData; preview = <img src={d.imageDataUrl} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 3 }} /> }
+                        catch { if (c.texte.startsWith('data:')) preview = <img src={c.texte} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 3 }} /> }
                         return (
                           <div key={c.case_index} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 2, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30` }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 3, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30` }}>
                               {p?.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 17, color: accent, fontWeight: 900 }}>{p?.pseudo[0]?.toUpperCase() ?? '?'}</span></div>}
                             </div>
@@ -553,7 +553,7 @@ export default function FinOnline() {
                       const p = players.find(pl => pl.player_id === c.player_id)
                       return (
                         <div key={c.case_index} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 2, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30`, marginTop: 2 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 3, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30`, marginTop: 2 }}>
                             {p?.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 17, color: accent, fontWeight: 900 }}>{p?.pseudo[0]?.toUpperCase() ?? '?'}</span></div>}
                           </div>
@@ -584,7 +584,7 @@ export default function FinOnline() {
                 {illustrationUrl && (
                   <div style={{ marginBottom: 12 }}>
                     <button onClick={() => setPleinEcranIllus(true)} style={{ display: 'block', width: '100%', padding: 0, border: 'none', background: 'none', cursor: 'zoom-in' }}>
-                      <img src={illustrationUrl} alt="illustration" style={{ width: '100%', borderRadius: 2, border: `0.5px solid ${accent}30`, display: 'block' }} />
+                      <img src={illustrationUrl} alt="illustration" style={{ width: '100%', borderRadius: 3, border: `0.5px solid ${accent}30`, display: 'block' }} />
                     </button>
                     <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                       <button onClick={() => setPleinEcranIllus(true)}

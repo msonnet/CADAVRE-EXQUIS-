@@ -120,7 +120,7 @@ export default function Configuration() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <div
-            className="font-bodoni font-black leading-tight mb-1"
+            className="font-fraunces font-black leading-tight mb-1"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
             Choisir la{' '}

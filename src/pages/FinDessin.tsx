@@ -241,7 +241,7 @@ export default function FinDessin() {
         </div>
 
         {/* ── TITRE ── */}
-        <div className="font-bodoni font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
+        <div className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
           Le cadavre <span style={{ color: accent }}>dessiné.</span>
         </div>
 

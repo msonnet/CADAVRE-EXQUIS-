@@ -806,7 +806,7 @@ export default function JeuDessin() {
                     paddingTop: 6, paddingBottom: 4,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
                     background: active ? '#ffffff' : 'transparent',
-                    border: 'none', borderRadius: 12,
+                    border: 'none', borderRadius: 3,
                     cursor: 'pointer',
                     transition: 'background 0.15s, opacity 0.15s',
                     opacity: active ? 1 : 0.42,
@@ -867,7 +867,7 @@ export default function JeuDessin() {
                 style={{
                   flex: 1, height: 34,
                   background: sizeIdx === i ? '#f5f0ea' : 'transparent',
-                  border: 'none', borderRadius: 8,
+                  border: 'none', borderRadius: 3,
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'background 0.12s',
@@ -895,7 +895,7 @@ export default function JeuDessin() {
                   aria-label="Annuler"
                   title="Annuler (Ctrl+Z)"
                   style={{
-                    width: 34, height: 34, borderRadius: 8, border: 'none',
+                    width: 34, height: 34, borderRadius: 3, border: 'none',
                     background: canUndo ? `${accent}18` : 'transparent',
                     color: canUndo ? accent : encre,
                     opacity: canUndo ? 1 : 0.35,
@@ -912,7 +912,7 @@ export default function JeuDessin() {
                   aria-label="Rétablir"
                   title="Rétablir (Ctrl+Shift+Z)"
                   style={{
-                    width: 34, height: 34, borderRadius: 8, border: 'none',
+                    width: 34, height: 34, borderRadius: 3, border: 'none',
                     background: canRedo ? `${accent}18` : 'transparent',
                     color: canRedo ? accent : encre,
                     opacity: canRedo ? 1 : 0.35,
@@ -933,7 +933,7 @@ export default function JeuDessin() {
           {/* Son */}
           <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Activer le son' : 'Couper le son'}
             style={{
-              width: 36, height: 36, borderRadius: 9, border: 'none',
+              width: 36, height: 36, borderRadius: 3, border: 'none',
               background: '#c8bfb0',
               fontSize: 17, cursor: 'pointer',
               color: muted ? '#888070' : '#1a1208',
@@ -948,7 +948,7 @@ export default function JeuDessin() {
             aria-label={panMode ? 'Retour au dessin' : 'Naviguer / zoomer'}
             title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
             style={{
-              width: 36, height: 36, borderRadius: 9, border: 'none',
+              width: 36, height: 36, borderRadius: 3, border: 'none',
               background: panMode ? accent : '#c8bfb0',
               color: panMode ? '#fff' : '#1a1208',
               fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -966,7 +966,7 @@ export default function JeuDessin() {
             aria-label="Compte-gouttes"
             title="Prélever une couleur sur le canvas"
             style={{
-              width: 36, height: 36, borderRadius: 9, border: 'none',
+              width: 36, height: 36, borderRadius: 3, border: 'none',
               background: pipetteActive ? accent : '#c8bfb0',
               color: pipetteActive ? '#fff' : '#1a1208',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -982,7 +982,7 @@ export default function JeuDessin() {
             ...mono, fontSize: 17,
             background: encre, color: bg,
             border: 'none', cursor: 'pointer',
-            padding: '10px 24px', borderRadius: 10,
+            padding: '10px 24px', borderRadius: 3,
             letterSpacing: '0.16em',
           }}>
             {bandeIdx + 1 < config.nbBandes ? 'VALIDER →' : 'RÉVÉLER →'}
@@ -1016,13 +1016,13 @@ export default function JeuDessin() {
 
               {/* Sélecteur natif + couleur custom */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
+                <div style={{ width: 32, height: 32, borderRadius: 3, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
                 <span style={{ ...mono, fontSize: 13, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
                 <input
                   type="color"
                   value={color}
                   onChange={e => { setColor(e.target.value); if (tool === 'eraser') setTool('pen') }}
-                  style={{ width: 36, height: 36, padding: 3, border: `1px solid ${encre}20`, borderRadius: 8, cursor: 'pointer' }}
+                  style={{ width: 36, height: 36, padding: 3, border: `1px solid ${encre}20`, borderRadius: 3, cursor: 'pointer' }}
                 />
               </div>
 
@@ -1036,7 +1036,7 @@ export default function JeuDessin() {
                         key={col}
                         onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen'); setShowColorPanel(false) }}
                         style={{
-                          width: 32, height: 32, borderRadius: 6, flex: '0 0 auto',
+                          width: 32, height: 32, borderRadius: 3, flex: '0 0 auto',
                           background: col,
                           border: color.toLowerCase() === col.toLowerCase() ? `2.5px solid ${accent}` : `1px solid ${encre}22`,
                           cursor: 'pointer',
@@ -1054,7 +1054,7 @@ export default function JeuDessin() {
                     key={col}
                     onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen'); setShowColorPanel(false) }}
                     style={{
-                      height: 32, borderRadius: 6,
+                      height: 32, borderRadius: 3,
                       background: col,
                       border: color === col
                         ? `2.5px solid ${accent}`
@@ -1071,7 +1071,7 @@ export default function JeuDessin() {
               <button onClick={() => setShowColorPanel(false)} style={{
                 width: '100%', padding: '12px',
                 ...mono, fontSize: 13, background: '#f5f0ea', color: encre,
-                border: 'none', borderRadius: 10, cursor: 'pointer',
+                border: 'none', borderRadius: 3, cursor: 'pointer',
               }}>
                 FERMER
               </button>
@@ -1128,7 +1128,7 @@ export default function JeuDessin() {
                     }}
                   >
                     <span style={{
-                      width: 40, height: 40, borderRadius: 8, background: p.bg,
+                      width: 40, height: 40, borderRadius: 3, background: p.bg,
                       border: paper === p.id ? `2.5px solid ${accent}` : `1px solid rgba(255,255,255,0.25)`,
                       boxShadow: paper === p.id ? `0 0 0 3px ${accent}33` : 'none',
                       transition: 'border 0.15s, box-shadow 0.15s',

@@ -90,7 +90,7 @@ export default function Reglages() {
           style={{ marginBottom: 24 }}
         >
           <div
-            className="font-bodoni font-black leading-tight"
+            className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 4 }}
           >
             Préférences <span style={{ color: accent }}>de séance.</span>

@@ -101,7 +101,7 @@ export default function ConfigurationDessin() {
           style={{ marginBottom: 20 }}
         >
           <div
-            className="font-bodoni font-black leading-tight"
+            className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.8rem, 8vw, 2.5rem)', color: encre, marginBottom: 6 }}
           >
             Préparer le <span style={{ color: accent }}>rituel.</span>

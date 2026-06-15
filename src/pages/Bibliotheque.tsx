@@ -82,7 +82,7 @@ export default function Bibliotheque() {
           transition={{ duration: 0.5 }}
         >
           <div
-            className="font-bodoni font-black leading-tight mb-1"
+            className="font-fraunces font-black leading-tight mb-1"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
             Mes <span style={{ color: accent }}>poèmes.</span>

@@ -29,7 +29,6 @@ export default {
         // Typographie unifiée
         // ── Système typographique (5 rôles) ──
         fraunces: ['Fraunces', 'serif'],            // manchettes display
-        bodoni:   ['Fraunces', 'serif'],            // alias historique des manchettes → Fraunces
         bodonimoda: ['"Bodoni Moda"', 'serif'],     // lettrines · « Joueur N. » · initiales
         playfair: ['"Playfair Display"', 'serif'],  // littéraire : vers · citations
         inter:    ['Inter', 'system-ui', 'sans-serif'], // corps de lecture

@@ -316,7 +316,7 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 /* ── Scrollbar discrète ── */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--reve-ink-faint); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--reve-ink-faint); border-radius: 3px; }
 
 /* ── Symbole décoratif accueil — scale adaptatif sur écrans courts ──
    Le symbole+cartel part de top:13% et peut atteindre ~200px de hauteur.

@@ -222,7 +222,7 @@ export default function DessinDetail() {
               onClick={() => { setTitreDraft(dessin.titre ?? ''); setEditTitre(true) }}
               style={{ background: 'none', border: 'none', cursor: 'text', textAlign: 'left', padding: 0 }}
             >
-              <div className="font-bodoni font-black leading-tight" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.2rem)', color: encre }}>
+              <div className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.2rem)', color: encre }}>
                 {titre}
               </div>
             </button>

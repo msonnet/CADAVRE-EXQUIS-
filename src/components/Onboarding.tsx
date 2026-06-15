@@ -146,7 +146,7 @@ export default function Onboarding() {
     maxWidth: 340,
     padding: 32,
     background: bg,
-    borderRadius: 14,
+    borderRadius: 3,
     boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
     boxSizing: 'border-box',
   }

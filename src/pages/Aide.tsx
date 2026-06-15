@@ -80,7 +80,7 @@ export default function Aide() {
           style={{ marginBottom: 24 }}
         >
           <div
-            className="font-bodoni font-black leading-tight mb-3"
+            className="font-fraunces font-black leading-tight mb-3"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
             Comment <span style={{ color: accent }}>jouer.</span>
@@ -117,7 +117,7 @@ export default function Aide() {
               >
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
                   <div
-                    className="font-bodoni font-black"
+                    className="font-fraunces font-black"
                     style={{ fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)', color: col, lineHeight: 1 }}
                   >
                     {isEcrit ? 'Cadavre Écrit.' : isAtelier ? "L'Atelier." : 'Cadavre Dessiné.'}

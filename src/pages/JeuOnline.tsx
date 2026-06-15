@@ -560,7 +560,7 @@ export default function JeuOnline() {
             {/* Consigne */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>— CONSIGNE —</div>
-              <div className="font-bodoni font-black" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.01em', color: encre, marginBottom: 4 }}>
+              <div className="font-fraunces font-black" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.01em', color: encre, marginBottom: 4 }}>
                 {caseDef.consigne.charAt(0).toUpperCase() + caseDef.consigne.slice(1)}.
               </div>
               {TYPE_LABEL[caseDef.type] && (

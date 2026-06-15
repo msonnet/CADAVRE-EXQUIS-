@@ -220,7 +220,7 @@ export default function Online() {
       {!user && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <div
-            className="font-bodoni font-black leading-tight"
+            className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.8rem, 8vw, 2.8rem)', color: encre, marginBottom: 12 }}
           >
             Jouer à plusieurs.

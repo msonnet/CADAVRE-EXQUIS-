@@ -279,7 +279,7 @@ export default function FinDePartie() {
           transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
         >
           <div
-            className="font-bodoni font-black"
+            className="font-fraunces font-black"
             style={{
               fontSize: 'clamp(3.5rem, 15vw, 6rem)',
               lineHeight: 0.92,

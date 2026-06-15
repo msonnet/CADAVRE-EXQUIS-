@@ -146,7 +146,7 @@ export default function Accueil() {
           transition={{ duration: 1.0, delay: 0.3 }}
         >
           <div
-            className="font-bodoni font-black"
+            className="font-fraunces font-black"
             style={{
               fontSize: 'clamp(5rem, 22vw, 9rem)',
               lineHeight: 0.9,

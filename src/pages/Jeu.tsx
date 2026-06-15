@@ -800,7 +800,7 @@ export default function Jeu() {
                 — CONSIGNE —
               </div>
               <div
-                className="font-bodoni font-black"
+                className="font-fraunces font-black"
                 style={{
                   fontSize: 'clamp(1.6rem, 7vw, 2.4rem)',
                   lineHeight: 1.05,
