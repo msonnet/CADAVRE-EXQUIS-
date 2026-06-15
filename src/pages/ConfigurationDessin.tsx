@@ -168,7 +168,10 @@ export default function ConfigurationDessin() {
                 {slot === 'vide' ? (
                   <span style={{ color: `${encre}20`, fontSize: 14 }}>·</span>
                 ) : (
-                  <span style={{ color: encre, fontSize: 18, lineHeight: 1 }}>✦</span>
+                  <span style={{
+                    display: 'block', width: 10, height: 10,
+                    background: encre, borderRadius: 0,
+                  }} />
                 )}
               </button>
             ))}
