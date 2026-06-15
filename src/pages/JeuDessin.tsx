@@ -844,7 +844,7 @@ export default function JeuDessin() {
 
         {/* Rangée opacité */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>OPACITÉ</span>
           <input
             type="range" min={10} max={100} step={5}
             value={Math.round(opacity * 100)}
@@ -860,7 +860,7 @@ export default function JeuDessin() {
 
         {/* Rangée tailles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 32 }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button
