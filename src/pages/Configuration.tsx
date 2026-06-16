@@ -4,7 +4,22 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
+import { PAPIER_TEXTURE, ENCRE_PAPIER, DECHIRE_1, Etiquette } from '../components/Papier'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
+
+// Intitulé de section = étiquette d'accent collée (même langage que les chips
+// de l'accueil), à la place de l'ancien « — TITRE — » en filet typographique.
+function Section({ children, accent, color, style }: {
+  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
+}) {
+  return (
+    <div style={style}>
+      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+        {children}
+      </Etiquette>
+    </div>
+  )
+}
 
 const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },
@@ -84,6 +99,20 @@ export default function Configuration() {
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
+  // Onglet de choix : l'option active devient une petite étiquette d'accent
+  // collée (aplat plein + ombre + léger pivot), les autres restent en mode
+  // éditorial discret — même grammaire de collage que l'accueil.
+  const ongletStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: '9px 4px', minHeight: 44, borderRadius: 2,
+    border: `0.5px solid ${active ? 'transparent' : `${encre}20`}`,
+    background: active ? accent : 'transparent',
+    boxShadow: active ? '0 2px 6px rgba(0,0,0,0.22)' : 'none',
+    transform: active ? 'rotate(-0.8deg)' : 'none',
+    ...mono, fontSize: 13, fontWeight: active ? 800 : 400,
+    color: active ? btnText : `${encre}80`,
+    cursor: 'pointer', transition: 'all 0.15s',
+  })
+
   function demarrer() {
     jouer('demarrage')
     sessionStorage.setItem('config-partie', JSON.stringify(config))
@@ -109,9 +138,7 @@ export default function Configuration() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── SECTION LABEL ── */}
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
-          — PRÉPARATIFS —
-        </div>
+        <Section accent={accent} color={btnText} style={{ marginTop: 24, marginBottom: 10 }}>PRÉPARATIFS</Section>
 
         {/* ── TITLE ── */}
         <motion.div
@@ -138,6 +165,10 @@ export default function Configuration() {
         <div className="flex flex-col gap-2 mb-8">
           {STRUCTURES.map((s, i) => {
             const active = config.structureId === s.id
+            // la structure choisie devient un vrai fragment de papier crème
+            // découpé (bord déchiré + grain), épinglé sur la page ; les autres
+            // restent en mode éditorial discret. Texte sur papier = encre fixe.
+            const tEncre = active ? ENCRE_PAPIER : encre
             return (
               <motion.button
                 key={s.id}
@@ -149,26 +180,25 @@ export default function Configuration() {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: 14,
-                  padding: '12px 14px',
-                  background: active ? `${accent}12` : 'transparent',
-                  border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                  borderLeft: `3px solid ${active ? accent : 'transparent'}`,
-                  borderRadius: 3,
+                  padding: active ? '14px 16px' : '12px 14px',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  transition: 'all 0.2s',
+                  transition: 'background 0.2s',
+                  ...(active
+                    ? { ...PAPIER_TEXTURE, clipPath: DECHIRE_1, boxShadow: '0 3px 11px rgba(0,0,0,0.28)', border: 'none' }
+                    : { background: 'transparent', border: `0.5px solid ${encre}20`, borderLeft: '3px solid transparent', borderRadius: 3 }),
                 }}
               >
                 <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 26, paddingTop: 2 }}>
                   {s.romain}.
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 3 }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: tEncre, marginBottom: 3 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
+                  <div style={{ ...mono, fontSize: 13, color: tEncre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
                   {active && (
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: tEncre, opacity: 0.80, lineHeight: 1.55 }}>
                       {s.detail}
                     </div>
                   )}
@@ -180,9 +210,7 @@ export default function Configuration() {
 
         {/* ── VISIBILITÉ ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — VISIBILITÉ —
-          </div>
+          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>VISIBILITÉ</Section>
           <div className="flex gap-2 mb-2">
             {(['aveugle', 'dernier-mot', 'derniere-case'] as Visibilite[]).map(v => {
               const active = config.visibilite === v
@@ -190,16 +218,7 @@ export default function Configuration() {
                 <button
                   key={v}
                   onClick={() => setConfig(c => ({ ...c, visibilite: v }))}
-                  style={{
-                    flex: 1, padding: '8px 4px', minHeight: 44,
-                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
-                    borderRadius: 3,
-                    background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
-                    color: active ? accent : `${encre}80`,
-                    transition: 'all 0.15s',
-                  }}
+                  style={ongletStyle(active)}
                 >
                   {v === 'aveugle' ? 'AVEUGLE' : v === 'dernier-mot' ? 'UN MOT' : 'UNE CASE'}
                 </button>
@@ -218,9 +237,7 @@ export default function Configuration() {
           transition={{ delay: 0.35 }}
           style={{ marginBottom: 18 }}
         >
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — AUTOUR DE LA TABLE —
-          </div>
+          <Section accent={accent} color={btnText} style={{ marginBottom: 12 }}>AUTOUR DE LA TABLE</Section>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             {slots.map((slot, i) => (
               <button
@@ -272,9 +289,7 @@ export default function Configuration() {
         {/* ── PREMIER JOUEUR — uniquement solo avec IA ── */}
         {voixIA > 0 && joueursHumains === 1 && (
           <div style={{ marginBottom: 18 }}>
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-              — OUVRE LA SÉANCE —
-            </div>
+            <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>OUVRE LA SÉANCE</Section>
             <div className="flex gap-2">
               {(['ia', 'humain'] as const).map(p => {
                 const active = config.premierJoueur === p
@@ -282,16 +297,7 @@ export default function Configuration() {
                   <button
                     key={p}
                     onClick={() => setConfig(c => ({ ...c, premierJoueur: p }))}
-                    style={{
-                      flex: 1, padding: '8px 4px', minHeight: 44,
-                      border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                      borderBottom: `2px solid ${active ? accent : 'transparent'}`,
-                      borderRadius: 3,
-                      background: 'transparent', cursor: 'pointer',
-                      ...mono, fontSize: 13,
-                      color: active ? accent : `${encre}80`,
-                      transition: 'all 0.15s',
-                    }}
+                    style={ongletStyle(active)}
                   >
                     {p === 'ia' ? 'VOIX IA' : 'JOUEUR'}
                   </button>
@@ -303,9 +309,7 @@ export default function Configuration() {
 
         {/* ── MODE ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — MODE —
-          </div>
+          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>MODE</Section>
           <div className="flex gap-2">
             {(['standard', 'hypnotique'] as const).map(m => {
               const active = config.mode === m
@@ -313,16 +317,7 @@ export default function Configuration() {
                 <button
                   key={m}
                   onClick={() => setConfig(c => ({ ...c, mode: m }))}
-                  style={{
-                    flex: 1, padding: '8px 4px', minHeight: 44,
-                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
-                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
-                    borderRadius: 3,
-                    background: 'transparent', cursor: 'pointer',
-                    ...mono, fontSize: 13,
-                    color: active ? accent : `${encre}80`,
-                    transition: 'all 0.15s',
-                  }}
+                  style={ongletStyle(active)}
                 >
                   {m === 'standard' ? 'STANDARD' : 'HYPNOTIQUE'}
                 </button>
@@ -355,7 +350,9 @@ export default function Configuration() {
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',
               gap: 2,
-              borderRadius: 3,
+              borderRadius: 2,
+              transform: 'rotate(-0.6deg)',
+              boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
             }}
           >
             <span>Commencer la séance</span>
