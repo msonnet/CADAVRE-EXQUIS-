@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useReve } from '../reve'
-import { PapierCard, Etiquette, type Bord } from './Papier'
+import { Etiquette } from './Papier'
 
 /**
  * TeteCollage — bouton « tête d'animal » du menu : une gravure monochrome
@@ -43,15 +43,6 @@ const DUREE_FERMETURE = 0.55
 // voisin (vérifié à l'écran le plus étroit visé, 360px).
 const ROTATION: Record<Espece, number> = { elephant: -2.5, papillon: 2.2, tigre: -1.6 }
 
-// bord du carton : net (borderRadius) pour le tigre, déchiré pour les deux
-// autres — variété de fragments comme un vrai collage, pas tous découpés
-// au même outil.
-const BORD: Record<Espece, Bord> = {
-  elephant: 'dechire1',
-  papillon: 'dechire2',
-  tigre: 'net',
-}
-
 let _uid = 0
 
 export default function TeteCollage({ espece, label, onActivate }: Props) {
@@ -61,7 +52,6 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
   const uid = useRef(`tc${_uid++}`).current
   const accent = s?.accent.hex ?? '#b22c20'
   const surAccent = s?.ambiance.buttonText ?? '#fff'
-  const bordure = s?.ambiance.rule ?? 'rgba(0,0,0,0.18)'
   const rotation = ROTATION[espece]
 
   function handle() {
@@ -92,21 +82,17 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
       }} onAnimationEnd={closing ? onEnd : undefined} />
       <style>{`@keyframes ${uid}-tick { to { opacity: 0; } }`}</style>
 
-      {/* cadre carré : papier de fond + bête, dans cet ordre de calque */}
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '1' }}>
-        {/* vrai carton de papier, légèrement pivoté, posé derrière la bête —
-            opaque, comme un découpage collé à la main sur la page. */}
-        <PapierCard
-          aria-hidden
-          rotation={rotation}
-          bord={BORD[espece]}
-          bordure={bordure}
-          style={{ position: 'absolute', inset: '6%' }}
-        />
-        {/* tête gravée détourée, posée à même le papier */}
-        <div style={{ position: 'absolute', inset: 0, lineHeight: 0 }}>
-          <RasterArt espece={espece} uid={uid} closing={closing} />
-        </div>
+      {/* cadre carré : la bête EST elle-même un fragment de papier découpé —
+          marge crème et bord déchiré sont cuits dans l'image (decouperPapier,
+          cf. _gravure.mjs), donc plus de carton rectangulaire derrière. Juste
+          une ombre portée qui épouse la silhouette (drop-shadow suit l'alpha,
+          pas un rectangle) et une légère rotation « collé à la main ». */}
+      <div style={{
+        position: 'relative', width: '100%', aspectRatio: '1', lineHeight: 0,
+        transform: `rotate(${rotation}deg)`,
+        filter: 'drop-shadow(0 3px 7px rgba(0,0,0,0.34))',
+      }}>
+        <RasterArt espece={espece} uid={uid} closing={closing} />
       </div>
 
       {/* légende — étiquette découpée façon collage, toujours posée devant */}
