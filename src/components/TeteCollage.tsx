@@ -8,18 +8,19 @@ import { useReve } from '../reve'
  * collage a été retiré, il chargeait l'écran et noyait la bête). Les couleurs
  * suivent l'ambiance du rêve via le même filtre invert() que Decor.tsx.
  *
- * Au clic, la bête « se referme » brièvement avant la navigation :
- *  - fourmi / tigre : deux gravures alignées pixel à pixel (ouverte → fermée,
- *    obtenues par inpainting ciblé sur la seule zone des mandibules/gueule,
- *    le reste de l'image est strictement identique) — fondu de l'une à l'autre.
- *  - papillon : une seule gravure (ailes ouvertes) ; aucun inpainting ne peut
- *    replier des ailes sans déplacer des pixels sur tout le cadre, donc la
- *    fermeture est un pliage CSS (clip-path + rotate/scaleX) sur cette même
- *    image, jamais redessinée — donc jamais désalignée.
+ * Au clic, la bête s'anime brièvement avant la navigation :
+ *  - tigre : deux gravures alignées pixel à pixel (gueule ouverte → fermée,
+ *    obtenues par inpainting ciblé sur la seule zone de la gueule, le reste
+ *    de l'image est strictement identique) — fondu de l'une à l'autre.
+ *  - éléphant / papillon : une seule gravure ; aucun inpainting ne peut lever
+ *    une trompe ou replier des ailes sans déplacer des pixels sur une grande
+ *    partie du cadre, donc l'animation est un pivot/pliage CSS (clip-path +
+ *    rotate/scaleX) sur cette même image, jamais redessinée — donc jamais
+ *    désalignée.
  * Le nom du mode est une légende sous la tête, en clair sur le fond.
  */
 
-export type Espece = 'fourmi' | 'papillon' | 'tigre'
+export type Espece = 'elephant' | 'papillon' | 'tigre'
 
 type Props = {
   espece: Espece
@@ -98,8 +99,8 @@ function masquer(e: React.SyntheticEvent<HTMLImageElement>) {
 }
 
 /**
- * fourmi / tigre : deux gravures alignées pixel à pixel, fondu bref de l'une
- * vers l'autre — jamais de désalignement puisque seule la zone anatomique
+ * tigre : deux gravures alignées pixel à pixel, fondu bref de l'une vers
+ * l'autre — jamais de désalignement puisque seule la zone anatomique
  * masquée diffère entre les deux fichiers.
  */
 function EtatsAlignes({ espece, closing }: { espece: Espece; closing: boolean }) {
@@ -152,7 +153,42 @@ function AilesPliantes({ uid, closing }: { uid: string; closing: boolean }) {
   )
 }
 
+// Bande verticale où vit la trompe au repos (mesurée par alpha sur l'image
+// générée) : x 42–58 %, à partir de y 71 % jusqu'au bas du cadre — sous cette
+// ligne, oreilles et défenses sont déjà retombées, seule la trompe reste.
+const TROMPE_X1 = 42, TROMPE_X2 = 58, TROMPE_Y = 71
+
+/**
+ * éléphant : une seule gravure (trompe pendante au repos), levée par un pivot
+ * CSS au clic — comme les ailes du papillon, jamais un second raster. La
+ * bande de la trompe est taillée en encoche dans le bord bas de la couche
+ * fixe (tête, oreilles, défenses) pour qu'aucun « fantôme » ne reste visible
+ * une fois la trompe pivotée hors de sa position de repos.
+ */
+function TrompeLevee({ uid, closing }: { uid: string; closing: boolean }) {
+  const commun: React.CSSProperties = {
+    position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain',
+  }
+  return (
+    <>
+      <img src="/tetes/elephant/ouvert.webp" alt="" onError={masquer} draggable={false} style={{
+        ...commun,
+        clipPath: `polygon(0 0, 100% 0, 100% 100%, ${TROMPE_X2}% 100%, ${TROMPE_X2}% ${TROMPE_Y}%, ` +
+          `${TROMPE_X1}% ${TROMPE_Y}%, ${TROMPE_X1}% 100%, 0 100%)`,
+      }} />
+      <img src="/tetes/elephant/ouvert.webp" alt="" onError={masquer} draggable={false} style={{
+        ...commun,
+        clipPath: `inset(${TROMPE_Y}% ${100 - TROMPE_X2}% 0 ${TROMPE_X1}%)`,
+        transformOrigin: `50% ${TROMPE_Y}%`,
+        animation: closing ? `${uid}-trompe 0.4s steps(4,end) forwards` : undefined,
+      }} />
+      <style>{`@keyframes ${uid}-trompe { to { transform: rotate(180deg); } }`}</style>
+    </>
+  )
+}
+
 function RasterArt({ espece, uid, closing }: { espece: Espece; uid: string; closing: boolean }) {
   if (espece === 'papillon') return <AilesPliantes uid={uid} closing={closing} />
+  if (espece === 'elephant') return <TrompeLevee uid={uid} closing={closing} />
   return <EtatsAlignes espece={espece} closing={closing} />
 }

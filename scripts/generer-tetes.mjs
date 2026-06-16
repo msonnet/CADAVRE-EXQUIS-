@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 /**
- * generer-tetes.mjs — génère les têtes de menu (fourmi, papillon, tigre) en
+ * generer-tetes.mjs — génère les têtes de menu (éléphant, papillon, tigre) en
  * gravure monochrome détourée par luminance (socle scripts/_gravure.mjs).
  *
- * Fourmi et tigre ont deux états ALIGNÉS pixel à pixel : mandibules/gueule
- * grand ouvertes, puis fermées. Le second état n'est pas régénéré de zéro
- * (ce qui décalerait les yeux, la tête, les hachures) mais obtenu par
- * inpainting FLUX Fill sur un masque anatomique : seule la zone masquée est
- * repeinte, le reste de l'image reste identique pixel pour pixel entre les
- * deux états — vérifié par diff (zone hors masque ≈ 0). Le papillon n'a
- * qu'un seul état (ailes ouvertes) : replier les ailes déplace les pixels
- * sur la quasi-totalité du cadre, ce qu'aucun masque d'inpainting ne peut
- * faire puisque l'inpainting repeint en place mais ne déplace rien — sa
- * fermeture est animée en CSS côté TeteCollage.tsx (clip-path + transform
- * sur cette même image, pas de second raster).
+ * Le tigre a deux états ALIGNÉS pixel à pixel : gueule grand ouverte, puis
+ * fermée. Le second état n'est pas régénéré de zéro (ce qui décalerait les
+ * yeux, la tête, les hachures) mais obtenu par inpainting FLUX Fill sur un
+ * masque anatomique : seule la zone masquée est repeinte, le reste de
+ * l'image reste identique pixel pour pixel entre les deux états — vérifié
+ * par diff (zone hors masque ≈ 0). Éléphant et papillon n'ont qu'un seul
+ * état raster : la trompe qui se lève et les ailes qui se replient déplacent
+ * des pixels sur une grande partie du cadre, ce qu'aucun masque d'inpainting
+ * ne peut faire puisque l'inpainting repeint en place mais ne déplace rien —
+ * leur animation est un pliage/pivot CSS côté TeteCollage.tsx (clip-path +
+ * transform sur cette même image, jamais un second raster).
  *
  * Usage :
  *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs            # les 3 espèces
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs fourmi     # une seule
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs elephant   # une seule
  *
- * Sortie : public/tetes/<espece>/ouvert.webp, + ferme.webp pour fourmi/tigre.
+ * Sortie : public/tetes/<espece>/ouvert.webp, + ferme.webp pour le tigre.
  */
 
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -35,29 +35,49 @@ const CADRAGE =
   'a single creature head portrait, perfectly centered, frontal symmetric view, ' +
   'filling exactly the same consistent frame, ' + GRAVURE
 
+// Chimères de cadavre exquis : chaque bête mêle des fragments incongrus
+// (objets, astres, mécanique) à son anatomie propre — l'esprit du jeu
+// transposé aux têtes de menu, pas de simples portraits naturalistes. Ton
+// volontairement doux et onirique (livre d'images, pas film d'épouvante).
+// Les essais précédents avec des négations dans le prompt ("no horror, no
+// gore, no dripping") ont produit l'effet inverse — un modèle de diffusion
+// peint souvent le concept même quand il est nié — donc ce prompt n'emploie
+// plus que des descriptions positives, douces et concrètes.
+const CHIMERE =
+  'surrealist exquisite-corpse chimera creature, dreamlike, whimsical, ' +
+  'gentle and charming, kind warm expression, elegant ornamental fused details, '
+
 // { x, y, w, h } en fraction du cadre [0,1] : zone anatomique repeinte par
 // l'inpainting pour passer de l'état ouvert à l'état fermé. trouCentral
 // (papillon) protège une bande verticale centrale — le corps — du masque.
 const ESPECES = {
-  fourmi: {
-    ouvert: 'an ant head with wide-open mandibles spread apart, antennae raised, ' +
-      'large round compound eyes, ' + CADRAGE,
-    ferme: 'an ant head with mandibles fully closed together, antennae raised, ' +
-      'large round compound eyes, ' + CADRAGE,
-    masque: { x: 0.18, y: 0.5, w: 0.64, h: 0.46 },
+  // La fourmi (crocs/pinces anatomiquement dentelés, gros yeux noirs pleins)
+  // lisait comme un monstre quelle que soit la formulation du prompt — un
+  // éléphant est par nature rond et doux, bien plus difficile à faire lire
+  // comme effrayant. La trompe se lève au clic (pivot CSS, cf. TeteCollage).
+  elephant: {
+    ouvert: CHIMERE + 'a gentle elephant head, frontal view, trunk hanging straight down at rest ' +
+      'along the vertical centerline, large round kind eyes, big ears patterned with tiny stars, ' +
+      'tusks curved like small crescent moons, a small delicate bell shape at the very tip of the ' +
+      'trunk, ' + CADRAGE,
   },
   papillon: {
-    ouvert: 'a butterfly with both wings spread fully open and flat, symmetric, ' +
-      'antennae visible, slender body, ' + CADRAGE,
+    ouvert: CHIMERE + 'a butterfly with both wings spread fully open and flat, symmetric, crisp clean ' +
+      'wing edges, wing patterns made of gentle watching eyes and tiny crescent moons and stars, ' +
+      'antennae tipped like fine paintbrushes, a small elegant human torso in place of ' +
+      'the insect body, ' + CADRAGE,
     // pas de "ferme" : le pliage déplace les ailes sur tout le cadre, donc pas
     // d'inpainting possible — fermeture animée en CSS sur cette seule image.
   },
   tigre: {
-    ouvert: 'a tiger head with jaws wide open showing the lower jaw dropped, ' +
-      'stripes, alert round eyes, ' + CADRAGE,
-    ferme: 'a tiger head with its mouth completely closed and sealed shut, lips together, ' +
+    ouvert: CHIMERE + 'a tiger head with jaws open, stripes that flow into soft crescent ' +
+      'moons and stars resting along the fur, one small extra eye like a gentle jewel set on ' +
+      'the forehead, delicate clockwork gear ornaments behind the ears, alert round eyes, ' + CADRAGE,
+    ferme: CHIMERE + 'a tiger head with its mouth completely closed and sealed shut, lips together, ' +
       'no fangs visible, no teeth visible, no tongue visible, no open gap at all, ' +
-      'calm relaxed expression, stripes, alert round eyes, ' + CADRAGE,
+      'calm relaxed expression, stripes that flow into soft crescent moons and stars resting ' +
+      'along the fur, one small extra eye like a gentle jewel set on the forehead, delicate ' +
+      'clockwork gear ornaments behind the ears, alert round eyes, ' + CADRAGE,
     // démarre plus haut que le menton : la lèvre supérieure et le retroussis du
     // museau (où vivent les babines/crocs de l'état ouvert) sont juste au-dessus
     // de la ligne précédente (y:0.52) — non recouverts, ils ne pouvaient donc

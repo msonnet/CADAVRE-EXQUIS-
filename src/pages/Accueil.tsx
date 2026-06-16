@@ -197,7 +197,7 @@ export default function Accueil() {
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <TeteCollage espece="fourmi" label="Cadavre Écrit" onActivate={() => nav('/config')} />
+              <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
