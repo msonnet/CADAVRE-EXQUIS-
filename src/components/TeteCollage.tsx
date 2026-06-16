@@ -4,9 +4,12 @@ import { useReve } from '../reve'
 /**
  * TeteCollage — bouton « tête d'animal » du menu : une gravure monochrome
  * générée par IA (scripts/generer-tetes.mjs) et détourée par luminance, posée
- * directement sur le fond d'ambiance — sans cadre ni papier découpé (l'effet
- * collage a été retiré, il chargeait l'écran et noyait la bête). Les couleurs
- * suivent l'ambiance du rêve via le même filtre invert() que Decor.tsx.
+ * sur une carte de couleur d'accent légèrement pivotée façon planche de
+ * collage découpée — sans cadre ni grain ni vignette (l'ancien fond chargé
+ * avait été retiré, il noyait la bête ; ici la « carte » est un simple aplat
+ * d'accent à 10 % d'opacité). Les couleurs de la gravure suivent l'ambiance
+ * du rêve via le même filtre invert() que Decor.tsx ; la carte de fond, elle,
+ * n'est jamais filtrée (c'est un aplat d'accent, pas une gravure).
  *
  * Au clic, la bête s'anime brièvement avant la navigation :
  *  - tigre : deux gravures alignées pixel à pixel (gueule ouverte → fermée,
@@ -17,7 +20,8 @@ import { useReve } from '../reve'
  *    partie du cadre, donc l'animation est un pivot/pliage CSS (clip-path +
  *    rotate/scaleX) sur cette même image, jamais redessinée — donc jamais
  *    désalignée.
- * Le nom du mode est une légende sous la tête, en clair sur le fond.
+ * Le nom du mode est une étiquette collée façon poster découpé (fond
+ * d'accent, légèrement contre-pivotée par rapport à la carte du dessus).
  */
 
 export type Espece = 'elephant' | 'papillon' | 'tigre'
@@ -36,6 +40,11 @@ const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
 // changement passe inaperçu (flash trop bref).
 const DUREE_FERMETURE = 0.55
 
+// Léger angle distinct par espèce — fait « collé à la main » plutôt
+// qu'aligné au cordeau, sans jamais assez pencher pour empiéter sur le
+// voisin (vérifié à l'écran le plus étroit visé, 360px).
+const ROTATION: Record<Espece, number> = { elephant: -2.5, papillon: 2.2, tigre: -1.6 }
+
 let _uid = 0
 
 export default function TeteCollage({ espece, label, onActivate }: Props) {
@@ -44,6 +53,9 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
   const [closing, setClosing] = useState(false)
   const fired = useRef(false)
   const uid = useRef(`tc${_uid++}`).current
+  const accent = s?.accent.hex ?? '#b22c20'
+  const surAccent = s?.ambiance.buttonText ?? '#fff'
+  const rotation = ROTATION[espece]
 
   function handle() {
     if (closing) return
@@ -62,7 +74,7 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
       style={{
         position: 'relative', width: '100%', padding: 0, border: 'none',
         background: 'none', cursor: 'pointer',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
       }}
     >
       {/* minuteur unique : déclenche onActivate une fois la fermeture jouée,
@@ -73,20 +85,36 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
       }} onAnimationEnd={closing ? onEnd : undefined} />
       <style>{`@keyframes ${uid}-tick { to { opacity: 0; } }`}</style>
 
-      {/* tête gravée détourée, posée à même le fond d'ambiance */}
-      <div style={{
-        position: 'relative', width: '100%', aspectRatio: '1', lineHeight: 0,
-        filter: isDark ? 'invert(1) brightness(0.88)' : undefined,
-      }}>
-        <RasterArt espece={espece} uid={uid} closing={closing} />
+      {/* cadre carré : papier de fond + bête, dans cet ordre de calque */}
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '1' }}>
+        {/* papier de fond — carte légèrement pivotée, posée derrière la bête,
+            pour l'effet « collé » façon planche découpée. Jamais filtrée par
+            invert() : c'est un aplat de couleur d'ambiance, pas une gravure. */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: '6%',
+          background: accent, opacity: 0.1,
+          transform: `rotate(${rotation}deg)`,
+          borderRadius: 3,
+        }} />
+        {/* tête gravée détourée, posée à même le papier */}
+        <div style={{
+          position: 'absolute', inset: 0, lineHeight: 0,
+          filter: isDark ? 'invert(1) brightness(0.88)' : undefined,
+        }}>
+          <RasterArt espece={espece} uid={uid} closing={closing} />
+        </div>
       </div>
 
-      {/* légende — nom du mode, en clair sous la bête */}
+      {/* légende — étiquette découpée façon collage, toujours posée devant */}
       <span style={{
-        fontFamily: "'Raleway', sans-serif", fontWeight: 700, lineHeight: 1.1,
-        fontSize: 'clamp(10px, 2.9vw, 13px)', letterSpacing: '0.1em',
-        textTransform: 'uppercase', color: 'var(--reve-ink)', opacity: 0.78,
-        textAlign: 'center',
+        position: 'relative', zIndex: 1,
+        fontFamily: "'Raleway', sans-serif", fontWeight: 800, lineHeight: 1.1,
+        fontSize: 'clamp(9.5px, 2.7vw, 12.5px)', letterSpacing: '0.08em',
+        textTransform: 'uppercase', color: surAccent,
+        textAlign: 'center', whiteSpace: 'nowrap',
+        background: accent, padding: '4px 9px',
+        borderRadius: 2, transform: `rotate(${-rotation * 0.6}deg)`,
+        boxShadow: '0 2px 5px rgba(0,0,0,0.22)',
       }}>
         {label}
       </span>
