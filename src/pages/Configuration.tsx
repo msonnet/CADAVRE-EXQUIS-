@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { PAPIER_TEXTURE, ENCRE_PAPIER, DECHIRE_1, Etiquette } from '../components/Papier'
+import { PAPIER_TEXTURE, ENCRE_PAPIER, DECHIRE_1, DECHIRE_2, Etiquette } from '../components/Papier'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 
 // Intitulé de section = étiquette d'accent collée (même langage que les chips
@@ -165,10 +165,10 @@ export default function Configuration() {
         <div className="flex flex-col gap-2 mb-8">
           {STRUCTURES.map((s, i) => {
             const active = config.structureId === s.id
-            // la structure choisie devient un vrai fragment de papier crème
-            // découpé (bord déchiré + grain), épinglé sur la page ; les autres
-            // restent en mode éditorial discret. Texte sur papier = encre fixe.
-            const tEncre = active ? ENCRE_PAPIER : encre
+            // les trois structures sont TOUTES des fragments de papier découpés
+            // (même matière), seule l'emphase change avec la sélection — sinon
+            // le choix actif a l'air d'être le seul collage du lot, les deux
+            // autres lisant comme une simple liste éditoriale dépareillée.
             return (
               <motion.button
                 key={s.id}
@@ -183,22 +183,25 @@ export default function Configuration() {
                   padding: active ? '14px 16px' : '12px 14px',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  transition: 'background 0.2s',
-                  ...(active
-                    ? { ...PAPIER_TEXTURE, clipPath: DECHIRE_1, boxShadow: '0 3px 11px rgba(0,0,0,0.28)', border: 'none' }
-                    : { background: 'transparent', border: `0.5px solid ${encre}20`, borderLeft: '3px solid transparent', borderRadius: 3 }),
+                  transition: 'box-shadow 0.2s, transform 0.2s, opacity 0.2s',
+                  ...PAPIER_TEXTURE,
+                  clipPath: i % 2 === 0 ? DECHIRE_1 : DECHIRE_2,
+                  border: 'none',
+                  opacity: active ? 1 : 0.62,
+                  transform: active ? 'rotate(-0.5deg)' : 'none',
+                  boxShadow: active ? '0 3px 11px rgba(0,0,0,0.28)' : '0 1px 3px rgba(0,0,0,0.16)',
                 }}
               >
                 <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 26, paddingTop: 2 }}>
                   {s.romain}.
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: tEncre, marginBottom: 3 }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: ENCRE_PAPIER, marginBottom: 3 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 13, color: tEncre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
+                  <div style={{ ...mono, fontSize: 13, color: ENCRE_PAPIER, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
                   {active && (
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: tEncre, opacity: 0.80, lineHeight: 1.55 }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: ENCRE_PAPIER, opacity: 0.80, lineHeight: 1.55 }}>
                       {s.detail}
                     </div>
                   )}
