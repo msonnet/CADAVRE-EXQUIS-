@@ -305,20 +305,23 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 // ─── Sous-composants ──
 
 function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: number }) {
+  // Filigrane : « CADAVRE » se lit avec le « Exquis. » du titre, mais en encre
+  // très atténuée — sinon ce gros mot vertical recouvre la citation et les
+  // bêtes qui descendent juste à côté (il est posé derrière, zIndex 2).
   return (
     <div style={{
-      position: 'absolute', top: '7%',
+      position: 'absolute', top: '6%',
       [side]: 0,
       writingMode: 'vertical-rl',
       fontFamily: "'Fraunces', 'Bodoni Moda', serif",
       fontWeight: 900, fontStyle: 'italic',
-      fontSize: 'clamp(3.5rem, 17vw, 6.5rem)',
+      fontSize: 'clamp(3rem, 15vw, 5.5rem)',
       lineHeight: 0.88, letterSpacing: '-0.03em',
-      color: 'var(--reve-ink)',
+      color: 'var(--reve-ink)', opacity: 0.1,
       textTransform: 'uppercase',
       transform: rotation ? `rotate(${rotation}deg)` : undefined,
-      zIndex: 2, pointerEvents: 'none',
-      animation: 'inkBloomQ 1.2s 0.2s both',
+      zIndex: 1, pointerEvents: 'none',
+      animation: 'inkBloomFaint 1.2s 0.2s both',
     } as React.CSSProperties}>CADAVRE</div>
   )
 }

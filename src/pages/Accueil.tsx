@@ -97,17 +97,13 @@ export default function Accueil() {
         border: 'none', borderTop: `1.2px solid ${accent}`,
         marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10,
       }} />
-      {(serie.compte >= 2 || seance?.heure) && (
+      {serie.compte >= 2 && (
         <div style={{
           position: 'relative', zIndex: 10, marginTop: 3,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
           ...ui, fontSize: 11, letterSpacing: '0.06em',
           color: accent, opacity: 0.5,
         }}>
-          <span>
-            {serie.compte >= 2 ? `✦ ${toRomain(serie.compte)}ᵉ nuit de suite` : ''}
-          </span>
-          {seance?.heure && <span>rêvé à {seance.heure}</span>}
+          ✦ {toRomain(serie.compte)}ᵉ nuit de suite
         </div>
       )}
 
@@ -177,13 +173,6 @@ export default function Accueil() {
         animate={{ rotateX: 0, opacity: 1 }}
         transition={{ delay: 0.9, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Ligne de pli — l'encre de la charnière */}
-        <div style={{
-          height: 10,
-          marginBottom: 6,
-          background: `linear-gradient(to bottom, transparent, ${encre}12 49%, ${encre}22 50%, transparent)`,
-        }} />
-
         {/* ── CITATION ── */}
         {seance?.citation && (
           <div style={{ marginBottom: 14 }}>
@@ -257,6 +246,16 @@ export default function Accueil() {
             ✧ l'atelier ✧
           </button>
         </div>
+
+        {/* Signature du rêve — heure, en bas à droite */}
+        {seance?.heure && (
+          <div style={{
+            ...ui, textAlign: 'right', fontSize: 11, letterSpacing: '0.06em',
+            color: accent, opacity: 0.5, paddingBottom: 2,
+          }}>
+            rêvé à {seance.heure}
+          </div>
+        )}
 
       </motion.div>
 
