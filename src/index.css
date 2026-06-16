@@ -264,7 +264,7 @@
     margin-inline: auto;
     width: 100%;
     min-height: 100dvh;
-    padding: 1.5rem clamp(0.75rem, 4vw, 3rem);
+    padding: 1.25rem clamp(0.75rem, 4vw, 3rem);
     overflow: hidden;
   }
 

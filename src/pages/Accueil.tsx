@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
-import TeteCollage, { PAPIER } from '../components/TeteCollage'
+import TeteCollage, { PAPIER, PAPIER_TEXTURE } from '../components/TeteCollage'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
@@ -51,6 +51,9 @@ export default function Accueil() {
   const accent2 = seance?.accent2.hex ?? accent
   const surAccent2 = seance?.ambiance.buttonText ?? '#fff'
   const encre = c?.encre ?? '#0f0805'
+  // encre garantie lisible sur le fond de l'ambiance (contrairement à
+  // `accent`, choisi pour les aplats de chips, pas pour du texte nu sur fond)
+  const ink = seance?.ambiance.ink ?? encre
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -102,13 +105,13 @@ export default function Accueil() {
 
       <hr style={{
         border: 'none', borderTop: `1.2px solid ${accent}`,
-        marginTop: 6, opacity: 0.45, position: 'relative', zIndex: 10,
+        marginTop: 4, opacity: 0.45, position: 'relative', zIndex: 10,
       }} />
       {serie.compte >= 2 && (
         <div style={{
           position: 'relative', zIndex: 10, marginTop: 1,
           fontFamily: "'Caveat', cursive", fontWeight: 600,
-          fontSize: 17, color: accent, opacity: 0.85,
+          fontSize: 17, color: ink, opacity: 0.85,
         }}>
           ✦ {toRomain(serie.compte)}ᵉ nuit de suite
         </div>
@@ -151,11 +154,11 @@ export default function Accueil() {
               du poster-collage, donc la plus grande et la plus pivotée */}
           <div style={{
             position: 'relative', display: 'inline-block',
-            background: PAPIER,
+            ...PAPIER_TEXTURE,
             border: `1px solid ${seance?.ambiance.rule ?? 'rgba(0,0,0,0.18)'}`,
             boxShadow: '0 6px 18px rgba(0,0,0,0.32)',
             borderRadius: 8,
-            padding: 'clamp(4px, 1.6vw, 10px) clamp(12px, 4vw, 26px)',
+            padding: 'clamp(3px, 1.2vw, 8px) clamp(12px, 4vw, 26px)',
             transform: 'rotate(-1.6deg)',
           }}>
             {/* étiquette « Cadavre » agrafée au coin du carton — se lit avec
@@ -208,13 +211,13 @@ export default function Accueil() {
         {/* ── CITATION — carton de papier, plus petit et contre-pivoté par
             rapport au titre, avec son étiquette d'auteur agrafée au coin ── */}
         {seance?.citation && (
-          <div style={{ position: 'relative', marginBottom: 22, marginTop: 4 }}>
+          <div style={{ position: 'relative', marginBottom: 13, marginTop: 2 }}>
             <div style={{
-              background: PAPIER,
+              ...PAPIER_TEXTURE,
               border: `1px solid ${seance.ambiance.rule}`,
               boxShadow: '0 4px 13px rgba(0,0,0,0.28)',
               borderRadius: 6,
-              padding: '13px 16px 16px',
+              padding: '10px 13px 12px',
               transform: 'rotate(0.9deg)',
             }}>
               <span style={{
@@ -239,7 +242,7 @@ export default function Accueil() {
         )}
 
         {/* ── CTA — têtes dessinées à l'encre (collage surréaliste intégré) ── */}
-        <div style={{ marginBottom: 10 }}>
+        <div style={{ marginBottom: 6 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
@@ -248,7 +251,7 @@ export default function Accueil() {
               <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
-          <div style={{ marginTop: 10, width: '58%', marginLeft: 'auto', marginRight: 'auto' }}>
+          <div style={{ marginTop: 6, width: '58%', marginLeft: 'auto', marginRight: 'auto' }}>
             <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>
@@ -257,7 +260,7 @@ export default function Accueil() {
             hiérarchie : même langage que les CTA, en plus petit ── */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr',
-          gap: '9px 0', paddingBottom: 6,
+          gap: '6px 0', paddingBottom: 0,
         }}>
           {[
             { label: 'Recueil', path: '/bibliotheque', rot: -1.4 },
@@ -278,7 +281,7 @@ export default function Accueil() {
                 textTransform: 'uppercase', fontWeight: 800, whiteSpace: 'nowrap',
                 color: surAccent2,
                 background: i % 2 === 0 ? accent : accent2,
-                padding: '5px 11px', borderRadius: 2,
+                padding: '4px 11px', borderRadius: 2,
                 transform: `rotate(${rot}deg)`,
                 boxShadow: '0 2px 6px rgba(0,0,0,0.22)',
               }}>
@@ -286,17 +289,27 @@ export default function Accueil() {
               </span>
             </button>
           ))}
-          {/* Entrée discrète — l'atelier du recueil */}
+          {/* Entrée discrète — l'atelier du recueil : un petit bout de
+              papier collé, même matière que le reste, mais le plus petit et
+              le moins saturé de tous, pour rester le dernier échelon */}
           <button
             onClick={() => nav('/atelier')}
             style={{
-              ...ui, gridColumn: '1 / -1', fontSize: 11, letterSpacing: '0.3em',
-              textTransform: 'uppercase', color: encre, opacity: 0.35,
-              background: 'none', border: 'none', cursor: 'pointer',
-              textAlign: 'center', padding: '7px 0 2px',
+              gridColumn: '1 / -1', background: 'none', border: 'none',
+              cursor: 'pointer', padding: '4px 0 0', textAlign: 'center',
             }}
           >
-            ✧ l'atelier ✧
+            <span style={{
+              display: 'inline-block',
+              background: PAPIER, color: ENCRE_PAPIER,
+              border: `1px solid ${seance?.ambiance.rule ?? 'rgba(0,0,0,0.18)'}`,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+              borderRadius: 2, padding: '2px 14px',
+              fontFamily: "'Caveat', cursive", fontWeight: 600, fontSize: 14,
+              transform: 'rotate(-1deg)',
+            }}>
+              ✧ l'atelier ✧
+            </span>
           </button>
         </div>
 
@@ -305,7 +318,7 @@ export default function Accueil() {
         {seance?.heure && (
           <div style={{
             textAlign: 'right', fontFamily: "'Caveat', cursive", fontWeight: 600,
-            fontSize: 18, color: accent, opacity: 0.85, paddingBottom: 2,
+            fontSize: 16, color: ink, opacity: 0.85, paddingBottom: 2,
           }}>
             rêvé à {seance.heure}
           </div>

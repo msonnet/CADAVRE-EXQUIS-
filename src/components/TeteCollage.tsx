@@ -35,6 +35,31 @@ type Props = {
 // l'ambiance : c'est un vrai bout de papier collé, pas une couleur de thème.
 export const PAPIER = '#f6ead0'
 
+// Grain de papier — bruit fractal léger, encodé une fois en SVG/base64 et
+// posé en multiply sur l'aplat PAPIER : un vrai bout de papier découpé n'est
+// jamais parfaitement lisse. `stitchTiles` évite toute couture visible quand
+// le motif se répète en arrière-plan.
+const GRAIN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
+  <filter id='n'>
+    <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='t'/>
+    <feColorMatrix in='t' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0'/>
+  </filter>
+  <rect width='100%' height='100%' filter='url(#n)'/>
+</svg>`
+const GRAIN = `url("data:image/svg+xml;base64,${btoa(GRAIN_SVG)}")`
+
+// Carte de papier texturée : grain + deux bandes de pli/ombre diagonales,
+// posées en multiply sur l'aplat PAPIER — réutilisée par tous les cartons de
+// cette page (têtes du menu, mais aussi titre/citation côté Accueil.tsx).
+export const PAPIER_TEXTURE: React.CSSProperties = {
+  backgroundColor: PAPIER,
+  backgroundImage:
+    'linear-gradient(118deg, rgba(0,0,0,0.08) 0%, transparent 16%, transparent 46%, ' +
+    `rgba(0,0,0,0.06) 50%, transparent 78%, rgba(0,0,0,0.09) 100%), ${GRAIN}`,
+  backgroundBlendMode: 'multiply, multiply',
+  backgroundSize: 'cover, 180px 180px',
+}
+
 // durée totale avant d'activer le mode — pilote un minuteur unique, indépendant
 // du timing propre à chaque animation visuelle (crossfade ou pliage d'ailes).
 // Laisse l'état fermé visible un instant avant la navigation, sinon le
@@ -92,7 +117,7 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
             opaque, comme un découpage collé à la main sur la page. */}
         <div aria-hidden style={{
           position: 'absolute', inset: '6%',
-          background: PAPIER,
+          ...PAPIER_TEXTURE,
           border: `1px solid ${bordure}`,
           boxShadow: '0 3px 11px rgba(0,0,0,0.3)',
           transform: `rotate(${rotation}deg)`,

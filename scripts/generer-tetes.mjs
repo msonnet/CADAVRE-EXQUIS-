@@ -57,27 +57,29 @@ const ESPECES = {
   // comme effrayant. La trompe se lève au clic (pivot CSS, cf. TeteCollage).
   elephant: {
     ouvert: CHIMERE + 'a gentle elephant head, frontal view, trunk hanging straight down at rest ' +
-      'along the vertical centerline, large round kind eyes, big ears patterned with tiny stars, ' +
-      'tusks curved like small crescent moons, a small delicate bell shape at the very tip of the ' +
-      'trunk, ' + CADRAGE,
+      'along the vertical centerline, large round kind eyes, delicate human ears in place of ' +
+      'elephant ears, a pair of slender graceful human arms hanging down in place of tusks with ' +
+      'open relaxed palms, a small delicate bell shape at the very tip of the trunk, ' + CADRAGE,
   },
   papillon: {
-    ouvert: CHIMERE + 'a butterfly with both wings spread fully open and flat, symmetric, crisp clean ' +
-      'wing edges, wing patterns made of gentle watching eyes and tiny crescent moons and stars, ' +
-      'antennae tipped like fine paintbrushes, a small elegant human torso in place of ' +
-      'the insect body, ' + CADRAGE,
+    ouvert: CHIMERE + 'a butterfly whose wings are a pair of feathered bird wings, spread fully ' +
+      'open and flat, symmetric, soft layered plumage, gentle watching-eye markings and tiny ' +
+      'crescent moons hidden among the feathers, antennae tipped like fine paintbrushes, a small ' +
+      'elegant human torso in place of the insect body, ' + CADRAGE,
     // pas de "ferme" : le pliage déplace les ailes sur tout le cadre, donc pas
     // d'inpainting possible — fermeture animée en CSS sur cette seule image.
   },
   tigre: {
-    ouvert: CHIMERE + 'a tiger head with jaws open, stripes that flow into soft crescent ' +
+    ouvert: CHIMERE + 'a tiger head with jaws open, large rounded elephant ears in place of tiger ' +
+      'ears, narrow serpent eyes with vertical slit pupils, stripes that flow into soft crescent ' +
       'moons and stars resting along the fur, one small extra eye like a gentle jewel set on ' +
-      'the forehead, delicate clockwork gear ornaments behind the ears, alert round eyes, ' + CADRAGE,
+      'the forehead, delicate clockwork gear ornaments behind the ears, ' + CADRAGE,
     ferme: CHIMERE + 'a tiger head with its mouth completely closed and sealed shut, lips together, ' +
-      'no fangs visible, no teeth visible, no tongue visible, no open gap at all, ' +
-      'calm relaxed expression, stripes that flow into soft crescent moons and stars resting ' +
-      'along the fur, one small extra eye like a gentle jewel set on the forehead, delicate ' +
-      'clockwork gear ornaments behind the ears, alert round eyes, ' + CADRAGE,
+      'no fangs visible, no teeth visible, no tongue visible, no open gap at all, calm relaxed ' +
+      'expression, large rounded elephant ears in place of tiger ears, narrow serpent eyes with ' +
+      'vertical slit pupils, stripes that flow into soft crescent moons and stars resting along ' +
+      'the fur, one small extra eye like a gentle jewel set on the forehead, delicate clockwork ' +
+      'gear ornaments behind the ears, ' + CADRAGE,
     // démarre plus haut que le menton : la lèvre supérieure et le retroussis du
     // museau (où vivent les babines/crocs de l'état ouvert) sont juste au-dessus
     // de la ligne précédente (y:0.52) — non recouverts, ils ne pouvaient donc
