@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
-import TeteCollage from '../components/TeteCollage'
+import TeteCollage, { PAPIER } from '../components/TeteCollage'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
 import { rearmerRappelSiActif } from '../utils/notifications'
+
+// Encre sombre fixe pour le texte posé sur le papier crème (PAPIER) — toujours
+// lisible, quelle que soit l'ambiance, puisque le papier est lui-même fixe.
+const ENCRE_PAPIER = '#241a10'
+
 function toRomain(n: number): string {
   const map: [number, string][] = [
     [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
@@ -43,6 +48,8 @@ export default function Accueil() {
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
+  const accent2 = seance?.accent2.hex ?? accent
+  const surAccent2 = seance?.ambiance.buttonText ?? '#fff'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
@@ -99,9 +106,9 @@ export default function Accueil() {
       }} />
       {serie.compte >= 2 && (
         <div style={{
-          position: 'relative', zIndex: 10, marginTop: 3,
-          ...ui, fontSize: 11, letterSpacing: '0.06em',
-          color: accent, opacity: 0.5,
+          position: 'relative', zIndex: 10, marginTop: 1,
+          fontFamily: "'Caveat', cursive", fontWeight: 600,
+          fontSize: 17, color: accent, opacity: 0.85,
         }}>
           ✦ {toRomain(serie.compte)}ᵉ nuit de suite
         </div>
@@ -140,24 +147,36 @@ export default function Accueil() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.0, delay: 0.3 }}
         >
-          <div
-            className="font-fraunces font-black"
-            style={{
-              fontSize: 'clamp(5rem, 22vw, 9rem)',
-              lineHeight: 0.9,
-              letterSpacing: '-0.02em',
-              color: accent,
-            }}
-          >
-            {[...letters].map((l, i) => (
-              <span key={i} style={{
-                display: 'inline-block',
-                transform: i === (idxBiais % letters.length)
-                  ? `rotate(${angleBiais}deg) translateY(${angleBiais > 0 ? 2 : -2}px)`
-                  : 'none',
-                transformOrigin: 'center bottom',
-              }}>{l}</span>
-            ))}
+          {/* carton de papier découpé, posé sous le titre — la pièce maîtresse
+              du poster-collage, donc la plus grande et la plus pivotée */}
+          <div style={{
+            position: 'relative', display: 'inline-block',
+            background: PAPIER,
+            border: `1px solid ${seance?.ambiance.rule ?? 'rgba(0,0,0,0.18)'}`,
+            boxShadow: '0 6px 18px rgba(0,0,0,0.32)',
+            borderRadius: 8,
+            padding: 'clamp(4px, 1.6vw, 10px) clamp(12px, 4vw, 26px)',
+            transform: 'rotate(-1.6deg)',
+          }}>
+            <div
+              className="font-fraunces font-black"
+              style={{
+                fontSize: 'clamp(4.4rem, 19vw, 8rem)',
+                lineHeight: 0.9,
+                letterSpacing: '-0.02em',
+                color: accent,
+              }}
+            >
+              {[...letters].map((l, i) => (
+                <span key={i} style={{
+                  display: 'inline-block',
+                  transform: i === (idxBiais % letters.length)
+                    ? `rotate(${angleBiais}deg) translateY(${angleBiais > 0 ? 2 : -2}px)`
+                    : 'none',
+                  transformOrigin: 'center bottom',
+                }}>{l}</span>
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>
@@ -173,20 +192,33 @@ export default function Accueil() {
         animate={{ rotateX: 0, opacity: 1 }}
         transition={{ delay: 0.9, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* ── CITATION ── */}
+        {/* ── CITATION — carton de papier, plus petit et contre-pivoté par
+            rapport au titre, avec son étiquette d'auteur agrafée au coin ── */}
         {seance?.citation && (
-          <div style={{ marginBottom: 14 }}>
-            <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.18, marginBottom: 10 }} />
-            <span style={{
-              fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
-              color: encre, display: '-webkit-box', fontStyle: 'italic',
-              overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-            } as React.CSSProperties}>
-              {seance.citation.t}
-            </span>
+          <div style={{ position: 'relative', marginBottom: 22, marginTop: 4 }}>
             <div style={{
-              ...ui, fontSize: 13, letterSpacing: '0.1em', fontWeight: 700,
-              textTransform: 'uppercase', color: accent, marginTop: 5,
+              background: PAPIER,
+              border: `1px solid ${seance.ambiance.rule}`,
+              boxShadow: '0 4px 13px rgba(0,0,0,0.28)',
+              borderRadius: 6,
+              padding: '13px 16px 16px',
+              transform: 'rotate(0.9deg)',
+            }}>
+              <span style={{
+                fontFamily: "'Playfair Display', serif", fontSize: 16.5, lineHeight: 1.48,
+                color: ENCRE_PAPIER, display: '-webkit-box', fontStyle: 'italic',
+                overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+              } as React.CSSProperties}>
+                {seance.citation.t}
+              </span>
+            </div>
+            <div style={{
+              position: 'absolute', right: 14, bottom: -11,
+              ...ui, fontSize: 11.5, letterSpacing: '0.08em', fontWeight: 800,
+              textTransform: 'uppercase', color: surAccent2,
+              background: accent2, padding: '4px 9px', borderRadius: 2,
+              transform: 'rotate(-2.2deg)', whiteSpace: 'nowrap',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
             }}>
               {seance.citation.a}
             </div>
@@ -208,29 +240,37 @@ export default function Accueil() {
           </div>
         </div>
 
-        {/* ── FOOTER ── */}
+        {/* ── FOOTER — petites étiquettes collées, dernier échelon de la
+            hiérarchie : même langage que les CTA, en plus petit ── */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr',
-          gap: '4px 0', paddingBottom: 4,
+          gap: '9px 0', paddingBottom: 6,
         }}>
           {[
-            { label: 'Recueil', path: '/bibliotheque' },
-            { label: 'Galerie',  path: '/galerie',       align: 'right' },
-            { label: 'Règles',   path: '/aide' },
-            { label: 'Réglages', path: '/reglages',      align: 'right' },
-          ].map(({ label, path, align }) => (
+            { label: 'Recueil', path: '/bibliotheque', rot: -1.4 },
+            { label: 'Galerie',  path: '/galerie',       align: 'right', rot: 1.1 },
+            { label: 'Règles',   path: '/aide',           rot: 1.3 },
+            { label: 'Réglages', path: '/reglages',      align: 'right', rot: -1.2 },
+          ].map(({ label, path, align, rot }, i) => (
             <button
               key={path}
               onClick={() => nav(path)}
               style={{
-                ...ui, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
-                color: encre, opacity: 0.65, fontWeight: 700,
-                background: 'none', border: 'none', cursor: 'pointer',
+                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                 textAlign: (align as 'right') ?? 'left',
-                padding: '10px 0',
               }}
             >
-              {label}
+              <span style={{
+                ...ui, display: 'inline-block', fontSize: 11.5, letterSpacing: '0.1em',
+                textTransform: 'uppercase', fontWeight: 800, whiteSpace: 'nowrap',
+                color: surAccent2,
+                background: i % 2 === 0 ? accent : accent2,
+                padding: '5px 11px', borderRadius: 2,
+                transform: `rotate(${rot}deg)`,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.22)',
+              }}>
+                {label}
+              </span>
             </button>
           ))}
           {/* Entrée discrète — l'atelier du recueil */}
@@ -247,11 +287,12 @@ export default function Accueil() {
           </button>
         </div>
 
-        {/* Signature du rêve — heure, en bas à droite */}
+        {/* Signature du rêve — note manuscrite, posée à même le fond comme
+            les annotations légères du collage de référence (pas de carton) */}
         {seance?.heure && (
           <div style={{
-            ...ui, textAlign: 'right', fontSize: 11, letterSpacing: '0.06em',
-            color: accent, opacity: 0.5, paddingBottom: 2,
+            textAlign: 'right', fontFamily: "'Caveat', cursive", fontWeight: 600,
+            fontSize: 18, color: accent, opacity: 0.85, paddingBottom: 2,
           }}>
             rêvé à {seance.heure}
           </div>

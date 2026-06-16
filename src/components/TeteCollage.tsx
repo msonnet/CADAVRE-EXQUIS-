@@ -4,12 +4,11 @@ import { useReve } from '../reve'
 /**
  * TeteCollage — bouton « tête d'animal » du menu : une gravure monochrome
  * générée par IA (scripts/generer-tetes.mjs) et détourée par luminance, posée
- * sur une carte de couleur d'accent légèrement pivotée façon planche de
- * collage découpée — sans cadre ni grain ni vignette (l'ancien fond chargé
- * avait été retiré, il noyait la bête ; ici la « carte » est un simple aplat
- * d'accent à 10 % d'opacité). Les couleurs de la gravure suivent l'ambiance
- * du rêve via le même filtre invert() que Decor.tsx ; la carte de fond, elle,
- * n'est jamais filtrée (c'est un aplat d'accent, pas une gravure).
+ * sur un vrai carton de papier crème (PAPIER, cf. plus bas), légèrement
+ * pivoté, façon planche de musée découpée et collée sur la page — la
+ * gravure garde donc toujours sa lecture d'origine (encre sombre sur papier
+ * clair) quelle que soit l'ambiance, sans filtre invert() : c'est le papier
+ * qui assure le contraste avec le fond, jamais la gravure elle-même.
  *
  * Au clic, la bête s'anime brièvement avant la navigation :
  *  - tigre : deux gravures alignées pixel à pixel (gueule ouverte → fermée,
@@ -21,7 +20,7 @@ import { useReve } from '../reve'
  *    rotate/scaleX) sur cette même image, jamais redessinée — donc jamais
  *    désalignée.
  * Le nom du mode est une étiquette collée façon poster découpé (fond
- * d'accent, légèrement contre-pivotée par rapport à la carte du dessus).
+ * d'accent plein, contre-pivotée par rapport à la carte de papier).
  */
 
 export type Espece = 'elephant' | 'papillon' | 'tigre'
@@ -32,7 +31,9 @@ type Props = {
   onActivate: () => void
 }
 
-const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
+// Carton de papier crème — toujours la même teinte, quelle que soit
+// l'ambiance : c'est un vrai bout de papier collé, pas une couleur de thème.
+export const PAPIER = '#f6ead0'
 
 // durée totale avant d'activer le mode — pilote un minuteur unique, indépendant
 // du timing propre à chaque animation visuelle (crossfade ou pliage d'ailes).
@@ -49,12 +50,12 @@ let _uid = 0
 
 export default function TeteCollage({ espece, label, onActivate }: Props) {
   const s = useReve()
-  const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
   const [closing, setClosing] = useState(false)
   const fired = useRef(false)
   const uid = useRef(`tc${_uid++}`).current
   const accent = s?.accent.hex ?? '#b22c20'
   const surAccent = s?.ambiance.buttonText ?? '#fff'
+  const bordure = s?.ambiance.rule ?? 'rgba(0,0,0,0.18)'
   const rotation = ROTATION[espece]
 
   function handle() {
@@ -87,20 +88,18 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
 
       {/* cadre carré : papier de fond + bête, dans cet ordre de calque */}
       <div style={{ position: 'relative', width: '100%', aspectRatio: '1' }}>
-        {/* papier de fond — carte légèrement pivotée, posée derrière la bête,
-            pour l'effet « collé » façon planche découpée. Jamais filtrée par
-            invert() : c'est un aplat de couleur d'ambiance, pas une gravure. */}
+        {/* vrai carton de papier, légèrement pivoté, posé derrière la bête —
+            opaque, comme un découpage collé à la main sur la page. */}
         <div aria-hidden style={{
           position: 'absolute', inset: '6%',
-          background: accent, opacity: 0.1,
+          background: PAPIER,
+          border: `1px solid ${bordure}`,
+          boxShadow: '0 3px 11px rgba(0,0,0,0.3)',
           transform: `rotate(${rotation}deg)`,
-          borderRadius: 3,
+          borderRadius: 4,
         }} />
         {/* tête gravée détourée, posée à même le papier */}
-        <div style={{
-          position: 'absolute', inset: 0, lineHeight: 0,
-          filter: isDark ? 'invert(1) brightness(0.88)' : undefined,
-        }}>
+        <div style={{ position: 'absolute', inset: 0, lineHeight: 0 }}>
           <RasterArt espece={espece} uid={uid} closing={closing} />
         </div>
       </div>
