@@ -216,7 +216,7 @@ export default function Accueil() {
               <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 10, width: '58%', marginLeft: 'auto', marginRight: 'auto' }}>
             <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>

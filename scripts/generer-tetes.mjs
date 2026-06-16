@@ -56,9 +56,14 @@ const ESPECES = {
   tigre: {
     ouvert: 'a tiger head with jaws wide open showing the lower jaw dropped, ' +
       'stripes, alert round eyes, ' + CADRAGE,
-    ferme: 'a tiger head with jaws fully closed, mouth shut, ' +
-      'stripes, alert round eyes, ' + CADRAGE,
-    masque: { x: 0.16, y: 0.52, w: 0.68, h: 0.44 },
+    ferme: 'a tiger head with its mouth completely closed and sealed shut, lips together, ' +
+      'no fangs visible, no teeth visible, no tongue visible, no open gap at all, ' +
+      'calm relaxed expression, stripes, alert round eyes, ' + CADRAGE,
+    // démarre plus haut que le menton : la lèvre supérieure et le retroussis du
+    // museau (où vivent les babines/crocs de l'état ouvert) sont juste au-dessus
+    // de la ligne précédente (y:0.52) — non recouverts, ils ne pouvaient donc
+    // jamais changer, d'où la gueule restée ouverte au premier essai.
+    masque: { x: 0.13, y: 0.4, w: 0.74, h: 0.54 },
   },
 }
 

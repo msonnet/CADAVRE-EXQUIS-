@@ -12,13 +12,13 @@ import { useReve } from '../reve'
  * ailes, gueule). Au clic :
  *  - fourmi / tigre : deux gravures alignées pixel à pixel (ouverte → fermée,
  *    obtenues par inpainting ciblé sur la seule zone des mandibules/gueule,
- *    le reste de l'image est strictement identique) — l'une se substitue à
- *    l'autre par à-coups.
+ *    le reste de l'image est strictement identique) — un fondu bref entre les
+ *    deux, puis l'état fermé reste affiché un instant avant la navigation
+ *    (sinon le changement passe inaperçu, trop vite enchaîné).
  *  - papillon : une seule gravure (ailes ouvertes) ; aucun inpainting ne peut
  *    replier des ailes sans déplacer des pixels sur tout le cadre, donc la
  *    fermeture est un pliage CSS (clip-path + rotate/scaleX) sur cette même
  *    image, jamais redessinée — donc jamais désalignée.
- * Le mouvement reste par à-coups (steps), pas en fondu.
  */
 
 export type Espece = 'fourmi' | 'papillon' | 'tigre'
@@ -43,8 +43,13 @@ const LABEL_BOX: Record<Espece, { left: string; top: string; width: string; heig
   tigre:    { left: '22%', top: '58%', width: '56%', height: '22%' },
 }
 // durée totale avant d'activer le mode — pilote un minuteur unique, indépendant
-// du timing propre à chaque animation visuelle (crossfade ou pliage d'ailes)
-const DUREE_FERMETURE = 0.42
+// du timing propre à chaque animation visuelle (crossfade ou pliage d'ailes).
+// Le mot est tapi dans le creux de la gueule/mandibules : il doit avoir
+// disparu avant que le fondu ne commence, sinon il masque la toute première
+// partie de l'animation et la fermeture paraît instantanée. Puis l'état fermé
+// reste affiché un instant avant la navigation, sinon le changement passe
+// inaperçu (flash trop bref).
+const DUREE_FERMETURE = 0.8
 
 let _uid = 0
 
@@ -94,7 +99,7 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
       <div style={{
         position: 'relative', width: '100%', aspectRatio: '1',
         clipPath: BORD_DECHIRE, overflow: 'hidden',
-        background: 'var(--reve-bg)',
+        background: 'transparent',
         boxShadow: '0 3px 1px rgba(0,0,0,0.15)',
       }}>
         <div style={{
@@ -115,7 +120,7 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
         <div aria-hidden style={{
           position: 'absolute', ...labelBox,
           opacity: closing ? 0 : 1,
-          transition: closing ? 'opacity 0.1s steps(1,end) 0.18s' : undefined,
+          transition: closing ? 'opacity 0.001s steps(1,end) 0.1s' : undefined,
         }}>
           <svg viewBox="0 0 200 50" width="100%" height="100%" preserveAspectRatio="none"
                style={{ position: 'absolute', inset: 0, transform: 'rotate(-1.2deg)' }}>
@@ -143,9 +148,9 @@ function masquer(e: React.SyntheticEvent<HTMLImageElement>) {
 }
 
 /**
- * fourmi / tigre : deux gravures alignées pixel à pixel, l'une se substitue
- * à l'autre par à-coups (steps) — jamais de fondu, jamais de désalignement
- * puisque seule la zone anatomique masquée diffère entre les deux fichiers.
+ * fourmi / tigre : deux gravures alignées pixel à pixel, fondu bref de l'une
+ * vers l'autre — jamais de désalignement puisque seule la zone anatomique
+ * masquée diffère entre les deux fichiers.
  */
 function EtatsAlignes({ espece, closing }: { espece: Espece; closing: boolean }) {
   const base = `/tetes/${espece}`
@@ -156,11 +161,11 @@ function EtatsAlignes({ espece, closing }: { espece: Espece; closing: boolean })
     <>
       <img src={`${base}/ouvert.webp`} alt="" onError={masquer} draggable={false} style={{
         ...commun, opacity: closing ? 0 : 1,
-        transition: closing ? 'opacity 0.06s steps(1,end) 0.15s' : undefined,
+        transition: closing ? 'opacity 0.32s ease-out 0.12s' : undefined,
       }} />
       <img src={`${base}/ferme.webp`} alt="" onError={masquer} draggable={false} style={{
         ...commun, opacity: closing ? 1 : 0,
-        transition: closing ? 'opacity 0.06s steps(1,end) 0.15s' : undefined,
+        transition: closing ? 'opacity 0.32s ease-out 0.12s' : undefined,
       }} />
     </>
   )
