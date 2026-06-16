@@ -7,6 +7,7 @@ import { useSound } from '../hooks/useSound'
 import { demanderFragmentIA } from '../api/claude'
 import { corrigerAccords } from '../api/corriger'
 import { sauvegarderPoeme } from '../db'
+import { Etiquette } from '../components/Papier'
 import type { Poeme, Case } from '../types'
 import type { PlanAtelier } from './Atelier'
 
@@ -154,6 +155,18 @@ const CLE_BROUILLON = 'atelier-en-cours'
 
 const attendre = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 
+function Section({ children, accent, color, style }: {
+  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
+}) {
+  return (
+    <div style={style}>
+      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+        {children}
+      </Etiquette>
+    </div>
+  )
+}
+
 // Masque un vers : la forme des mots sans le texte (traits proportionnels)
 function masquer(texte: string): string {
   return texte
@@ -209,6 +222,7 @@ export default function JeuAtelier() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const colorLabel = c?.name.toUpperCase() ?? ''
+  const btnText = seance?.ambiance.buttonText ?? '#fff'
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const idx = vers.length
@@ -570,10 +584,8 @@ export default function JeuAtelier() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── ÉTAT DE SÉANCE ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-          <span style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
-            — L'ATELIER —
-          </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+          <Section accent={accent} color={btnText}>L'ATELIER</Section>
           <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6 }}>
             VERS {toRomain(Math.min(idx + 1, total))} / {toRomain(total)}
           </span>
@@ -626,17 +638,13 @@ export default function JeuAtelier() {
             >
               {echoTexte ? (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                    — L'ÉCHO —
-                  </div>
+                  <Section accent={accent} color={btnText} style={{ marginBottom: 6 }}>L'ÉCHO</Section>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
                     « … {echoTexte} »
                   </div>
                 </div>
               ) : idx > 0 && (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginBottom: 14 }}>
-                  — TU ÉCRIS DANS LE NOIR —
-                </div>
+                <Section accent={accent} color={btnText} style={{ marginBottom: 14 }}>TU ÉCRIS DANS LE NOIR</Section>
               )}
 
               {/* Voix IA travaillant en parallèle */}
@@ -666,11 +674,11 @@ export default function JeuAtelier() {
               {/* Slot du médium — actif tant qu'il n'a pas soumis */}
               {fragTextes[fragSlotJoueur] === null ? (
                 <>
-                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                  <Section accent={accent} color={btnText} style={{ marginBottom: 6 }}>
                     {fragGabarit.length === 1
-                      ? <>— LE SORT TE TIRE SEUL · {fragGabarit[fragSlotJoueur].role} —</>
-                      : <>— FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —</>}
-                  </div>
+                      ? <>LE SORT TE TIRE SEUL · {fragGabarit[fragSlotJoueur].role}</>
+                      : <>FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role}</>}
+                  </Section>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontStyle: 'italic', color: encre, opacity: 0.7, marginBottom: 10 }}>
                     {fragGabarit[fragSlotJoueur].consigne}
                   </div>
@@ -697,7 +705,9 @@ export default function JeuAtelier() {
                       color: bg,
                       ...mono, fontSize: 15, letterSpacing: '0.12em', textTransform: 'uppercase',
                       padding: '0.85em 1em', border: 'none',
-                      borderRadius: 3,
+                      borderRadius: 2,
+                      transform: saisie.trim() ? 'rotate(-0.6deg)' : 'none',
+                      boxShadow: saisie.trim() ? '0 3px 10px rgba(0,0,0,0.28)' : 'none',
                       cursor: saisie.trim() ? 'pointer' : 'default',
                       transition: 'background 0.2s',
                     }}
@@ -706,9 +716,7 @@ export default function JeuAtelier() {
                   </button>
                 </>
               ) : (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginTop: 8 }}>
-                  — LES VOIX TERMINENT —
-                </div>
+                <Section accent={accent} color={btnText} style={{ marginTop: 8 }}>LES VOIX TERMINENT</Section>
               )}
             </motion.div>
 
@@ -724,17 +732,13 @@ export default function JeuAtelier() {
             >
               {echoTexte ? (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                    — L'ÉCHO —
-                  </div>
+                  <Section accent={accent} color={btnText} style={{ marginBottom: 6 }}>L'ÉCHO</Section>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
                     « … {echoTexte} »
                   </div>
                 </div>
               ) : idx > 0 && (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginBottom: 16 }}>
-                  — TU ÉCRIS DANS LE NOIR —
-                </div>
+                <Section accent={accent} color={btnText} style={{ marginBottom: 16 }}>TU ÉCRIS DANS LE NOIR</Section>
               )}
 
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontStyle: 'italic', color: encre, opacity: 0.75, marginBottom: 12 }}>
@@ -767,7 +771,9 @@ export default function JeuAtelier() {
                   color: bg,
                   ...mono, fontSize: 15, letterSpacing: '0.12em', textTransform: 'uppercase',
                   padding: '0.85em 1em', border: 'none',
-                  borderRadius: 3,
+                  borderRadius: 2,
+                  transform: saisie.trim() ? 'rotate(-0.6deg)' : 'none',
+                  boxShadow: saisie.trim() ? '0 3px 10px rgba(0,0,0,0.28)' : 'none',
                   cursor: saisie.trim() ? 'pointer' : 'default',
                   transition: 'background 0.2s',
                 }}
@@ -786,9 +792,7 @@ export default function JeuAtelier() {
               transition={{ duration: 0.4 }}
               style={{ paddingBottom: 24, textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.26em', marginBottom: 14 }}>
-                — LES VOIX ÉCRIVENT —
-              </div>
+              <Section accent={accent} color={btnText} style={{ marginBottom: 14, display: 'flex', justifyContent: 'center' }}>LES VOIX ÉCRIVENT</Section>
               {voixEnCours.map((v, k) => (
                 <motion.div
                   key={k}
@@ -813,9 +817,9 @@ export default function JeuAtelier() {
               key="fin"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              style={{ paddingBottom: 24, textAlign: 'center', ...mono, fontSize: 13, color: accent, letterSpacing: '0.22em' }}
+              style={{ paddingBottom: 24, display: 'flex', justifyContent: 'center' }}
             >
-              — LE POÈME SE REFERME —
+              <Section accent={accent} color={btnText}>LE POÈME SE REFERME</Section>
             </motion.div>
           )}
         </AnimatePresence>
