@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
 import TeteCollage from '../components/TeteCollage'
+import SceneDecor from '../components/SceneDecor'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
@@ -61,6 +62,7 @@ export default function Accueil() {
   return (
     <PageTransition className="page-carnet relative flex flex-col h-dvh overflow-hidden safe-top safe-bottom">
 
+      <SceneDecor id="accueil" />
       <Decor variant="accueil" hideCitation hideSignature />
       <Onboarding />
 
@@ -204,18 +206,18 @@ export default function Accueil() {
           </div>
         )}
 
-        {/* ── CTA — têtes gravure (collage surréaliste) ── */}
+        {/* ── CTA — têtes dessinées à l'encre (collage surréaliste intégré) ── */}
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <TeteCollage espece="fourmi" src="/tetes/fourmi.png" label="Cadavre Écrit" onActivate={() => nav('/config')} />
+              <TeteCollage espece="fourmi" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <TeteCollage espece="papillon" src="/tetes/papillon.png" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
+              <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
           <div style={{ marginTop: 10 }}>
-            <TeteCollage espece="tigre" src="/tetes/tigre.png" label="Mode en ligne" onActivate={() => nav('/online')} />
+            <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>
 

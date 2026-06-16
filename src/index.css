@@ -308,6 +308,7 @@
 @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes pulseQ { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
 @keyframes plume { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(5deg) translateY(-4px); } }
+@keyframes sceneDrift { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(0, -1.2%, 0) scale(1.015); } }
 
 /* ── Focus clavier (accessibilité) ── */
 :focus-visible { outline: 2px solid var(--reve-accent); outline-offset: 3px; }
