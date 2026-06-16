@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
+import { Etiquette } from '../components/Papier'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,18 @@ async function callClaude(consigne: string, type: string): Promise<{ texte: stri
 }
 
 // ── JeuOnline ─────────────────────────────────────────────────────────────────
+
+function Section({ children, accent, color, style }: {
+  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
+}) {
+  return (
+    <div style={style}>
+      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+        {children}
+      </Etiquette>
+    </div>
+  )
+}
 
 export default function JeuOnline() {
   const { code } = useParams<{ code: string }>()
@@ -389,9 +402,9 @@ export default function JeuOnline() {
           onClick={() => setShowIntro(false)}
           style={{ position: 'fixed', inset: 0, zIndex: 50, background: encre, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, cursor: 'pointer', textAlign: 'center', padding: '0 28px' }}
         >
-          <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
-            — BANDE {(myEffectiveIndex ?? 0) + 1} SUR {nbTotal} —
-          </div>
+          <Section accent={accent} color={btnText}>
+            BANDE {(myEffectiveIndex ?? 0) + 1} SUR {nbTotal}
+          </Section>
           <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
             À toi<br />de dessiner
           </div>
@@ -465,7 +478,7 @@ export default function JeuOnline() {
           <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{submitted_count}/{nbTotal} SOUMIS</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 4 }}>👁 SPECTATEUR</div>
+        <Section accent={accent} color={btnText} style={{ marginTop: 16, marginBottom: 4 }}>👁 SPECTATEUR</Section>
         {avatarsRow}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           {currentTurnPlayer && currentCase < nbTotal && (
@@ -515,7 +528,7 @@ export default function JeuOnline() {
         {submitted ? (
           <motion.div key="waiting" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 16 }}>
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>✓ CONTRIBUTION REÇUE</div>
+            <Section accent={accent} color={btnText}>✓ CONTRIBUTION REÇUE</Section>
             {(() => {
               if (!myContrib) return null
               const displayUrl = myContrib.startsWith('data:') ? myContrib : (() => { try { return (JSON.parse(myContrib) as { imageDataUrl: string }).imageDataUrl } catch { return null } })()
@@ -540,9 +553,9 @@ export default function JeuOnline() {
           <motion.div key={`intro-${currentCase}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setShowIntro(false)}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
-              — CASE {currentCase + 1} SUR {nbTotal} —
-            </div>
+            <Section accent={accent} color={btnText}>
+              CASE {currentCase + 1} SUR {nbTotal}
+            </Section>
             <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.8rem,8vw,2.6rem)', color: encre, lineHeight: 1.3 }}>
               À toi<br />d'écrire
             </div>
@@ -559,7 +572,7 @@ export default function JeuOnline() {
 
             {/* Consigne */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>— CONSIGNE —</div>
+              <Section accent={accent} color={btnText} style={{ marginBottom: 6 }}>CONSIGNE</Section>
               <div className="font-fraunces font-black" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.01em', color: encre, marginBottom: 4 }}>
                 {caseDef.consigne.charAt(0).toUpperCase() + caseDef.consigne.slice(1)}.
               </div>
@@ -586,7 +599,7 @@ export default function JeuOnline() {
             )}
 
             {/* Input */}
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>— ÉCRIS ICI · TOI SEUL LE VERRAS —</div>
+            <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>ÉCRIS ICI · TOI SEUL LE VERRAS</Section>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
               <textarea
                 value={input}
@@ -605,7 +618,14 @@ export default function JeuOnline() {
                   {iaLoading ? '…' : '✦ IA'}
                 </button>
                 <button type="submit" disabled={!input.trim() || submitting}
-                  style={{ flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.5em', borderRadius: 3, border: input.trim() ? 'none' : `1px solid ${encre}30`, cursor: input.trim() && !submitting ? 'pointer' : 'not-allowed' }}>
+                  style={{
+                    flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`,
+                    ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.5em',
+                    borderRadius: 2, border: input.trim() ? 'none' : `1px solid ${encre}30`,
+                    transform: input.trim() ? 'rotate(-0.6deg)' : 'none',
+                    boxShadow: input.trim() ? '0 3px 10px rgba(0,0,0,0.28)' : 'none',
+                    cursor: input.trim() && !submitting ? 'pointer' : 'not-allowed',
+                  }}>
                   {submitting ? 'ENVOI…' : 'SCELLER CETTE VOIX →'}
                 </button>
               </div>
@@ -618,7 +638,7 @@ export default function JeuOnline() {
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center' }}>
             {currentTurnPlayer && currentCase < nbTotal ? (
               <>
-                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55, letterSpacing: '0.22em' }}>— EN ATTENTE —</div>
+                <Section accent={accent} color={btnText}>EN ATTENTE</Section>
                 <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: encre, lineHeight: 1.6 }}>
                   C'est le tour de <strong>{currentTurnPlayer.pseudo}</strong>…
                 </p>
