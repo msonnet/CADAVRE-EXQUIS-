@@ -145,7 +145,7 @@ interface VariantZones {
 
 const ZONES: Record<Variant, VariantZones> = {
   accueil: {
-    symbol: { top: '13%', sizeMul: 0.9 },
+    symbol: null,
     etiqs: [],
     stripesMax: 0,
     verticalTitle: { side: 'right' },

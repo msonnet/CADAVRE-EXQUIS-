@@ -1,94 +1,145 @@
 #!/usr/bin/env node
 /**
- * generer-tetes.mjs — génère les têtes d'animaux « gravure » des boutons du menu.
+ * generer-tetes.mjs — génère les têtes de menu (fourmi, papillon, tigre) en
+ * gravure monochrome détourée par luminance, même pipeline que
+ * generer-decor.mjs (scripts/_gravure.mjs).
+ *
+ * Fourmi et tigre ont deux états ALIGNÉS pixel à pixel : mandibules/gueule
+ * grand ouvertes, puis fermées. Le second état n'est pas régénéré de zéro
+ * (ce qui décalerait les yeux, la tête, les hachures) mais obtenu par
+ * inpainting FLUX Fill sur un masque anatomique : seule la zone masquée est
+ * repeinte, le reste de l'image reste identique pixel pour pixel entre les
+ * deux états — vérifié par diff (zone hors masque ≈ 0). Le papillon n'a
+ * qu'un seul état (ailes ouvertes) : replier les ailes déplace les pixels
+ * sur la quasi-totalité du cadre, ce qu'aucun masque d'inpainting ne peut
+ * faire puisque l'inpainting repeint en place mais ne déplace rien — sa
+ * fermeture est animée en CSS côté TeteCollage.tsx (clip-path + transform
+ * sur cette même image, pas de second raster).
  *
  * Usage :
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs tigre   # une seule
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs            # les 3 espèces
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs fourmi     # une seule
  *
- * Produit public/tetes/{fourmi,papillon,tigre,elephant}.png — gravures
- * sépia sur papier vieilli, cadrage paysage (le bas reste sobre pour laisser
- * la place au cartouche du nom de mode). Le composant TeteCollage les pose en
- * fond ; si une image manque, il affiche un repli papier hachuré.
+ * Sortie : public/tetes/<espece>/ouvert.webp, + ferme.webp pour fourmi/tigre.
  */
 
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
+import { GRAVURE, genererImage, detourerParLuminance } from './_gravure.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const OUT = join(__dirname, '..', 'public', 'tetes')
+const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
 
-const GRAVURE =
-  'antique copperplate intaglio engraving, dense cross-hatching and stippling, ' +
-  'Max Ernst surrealist collage from "Une Semaine de Bonté", 19th-century natural-history plate, ' +
-  'warm sepia ink on aged cream paper, museum specimen, ' +
-  'perfectly frontal symmetrical view facing the camera directly, subject fills the frame, ' +
-  'no text, no letters, no caption, no border, no frame'
+const CADRAGE =
+  'a single creature head portrait, perfectly centered, frontal symmetric view, ' +
+  'filling exactly the same consistent frame, ' + GRAVURE
 
-const TETES = {
-  // Cadavre Écrit — la fourmi, mandibules grand ouvertes (le texte logé dans le vide entre elles)
-  fourmi:
-    'monstrous ant head facing the camera perfectly frontally, symmetrical, ' +
-    'mandibles spread wide open downward forming a clear V-shaped gap of dark empty space between them, ' +
-    'two large faceted compound eyes flanking the head symmetrically, segmented antennae curving up and outward, ' + GRAVURE,
-  // Cadavre Dessiné — la phalène vue de dessus, ailes grand ouvertes (le texte posé sur les ailes)
-  papillon:
-    'great moth viewed directly from above, wings fully spread flat and symmetrical like a pinned museum specimen, ' +
-    'intricate radiating wing patterns, furred body and head centered between the wings, feathered antennae, ' + GRAVURE,
-  // Mode en ligne — le tigre, gueule grand ouverte de face (le texte logé dans la bouche)
-  tigre:
-    'tiger head facing the camera perfectly frontally, symmetrical, ' +
-    'jaws wide open vertically forming a dark open mouth gap with fangs visible on both sides, ' +
-    'symmetrical facial stripes, fierce eyes, ' + GRAVURE,
-  // Atelier — l'éléphant, trompe et oreilles déployées de face
-  elephant:
-    'elephant head facing the camera perfectly frontally, symmetrical, ' +
-    'trunk raised and curled open at the tip forming a gap, both great ears unfurled wide, tusks visible, ' +
-    'wrinkled hide, ' + GRAVURE,
+// { x, y, w, h } en fraction du cadre [0,1] : zone anatomique repeinte par
+// l'inpainting pour passer de l'état ouvert à l'état fermé. trouCentral
+// (papillon) protège une bande verticale centrale — le corps — du masque.
+const ESPECES = {
+  fourmi: {
+    ouvert: 'an ant head with wide-open mandibles spread apart, antennae raised, ' +
+      'large round compound eyes, ' + CADRAGE,
+    ferme: 'an ant head with mandibles fully closed together, antennae raised, ' +
+      'large round compound eyes, ' + CADRAGE,
+    masque: { x: 0.18, y: 0.5, w: 0.64, h: 0.46 },
+  },
+  papillon: {
+    ouvert: 'a butterfly with both wings spread fully open and flat, symmetric, ' +
+      'antennae visible, slender body, ' + CADRAGE,
+    // pas de "ferme" : le pliage déplace les ailes sur tout le cadre, donc pas
+    // d'inpainting possible — fermeture animée en CSS sur cette seule image.
+  },
+  tigre: {
+    ouvert: 'a tiger head with jaws wide open showing the lower jaw dropped, ' +
+      'stripes, alert round eyes, ' + CADRAGE,
+    ferme: 'a tiger head with jaws fully closed, mouth shut, ' +
+      'stripes, alert round eyes, ' + CADRAGE,
+    masque: { x: 0.16, y: 0.52, w: 0.68, h: 0.44 },
+  },
 }
 
-async function gen(nom, prompt, falKey) {
-  process.stdout.write(`· ${nom} … `)
-  const r = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
+async function genererMasque({ x, y, w, h, trouCentral }) {
+  const px = (v) => Math.round(v * TAILLE)
+  const trou = trouCentral
+    ? `<rect x="${px(0.5 - trouCentral / 2)}" y="${px(y)}" width="${px(trouCentral)}" height="${px(h)}" fill="black" />`
+    : ''
+  const svg = `<svg width="${TAILLE}" height="${TAILLE}">
+    <rect width="${TAILLE}" height="${TAILLE}" fill="black" />
+    <rect x="${px(x)}" y="${px(y)}" width="${px(w)}" height="${px(h)}" fill="white" />
+    ${trou}
+  </svg>`
+  return sharp(Buffer.from(svg)).png().toBuffer()
+}
+
+const versDataUri = (buf, mime) => `data:${mime};base64,${buf.toString('base64')}`
+
+async function remplir(imagePng, masquePng, prompt, falKey) {
+  const r = await fetch('https://fal.run/fal-ai/flux-pro/v1/fill', {
     method: 'POST',
     headers: { Authorization: `Key ${falKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prompt,
-      image_size: 'square_hd',
-      num_inference_steps: 32,
-      guidance_scale: 4.0,
-      safety_tolerance: 5,
+      image_url: versDataUri(imagePng, 'image/png'),
+      mask_url: versDataUri(masquePng, 'image/png'),
       num_images: 1,
+      output_format: 'png',
     }),
   })
-  if (!r.ok) { console.log(`échec FLUX ${r.status}`); return false }
+  if (!r.ok) throw new Error(`FLUX Fill ${r.status}`)
   const data = await r.json()
   const url = data.images?.[0]?.url
-  if (!url) { console.log('pas d’image'); return false }
+  if (!url) throw new Error('pas d’image renvoyée (fill)')
   const img = await fetch(url)
-  const buf = Buffer.from(await img.arrayBuffer())
-  await writeFile(join(OUT, `${nom}.png`), buf)
-  console.log(`ok (${(buf.length / 1024).toFixed(0)} ko)`)
-  return true
+  return Buffer.from(await img.arrayBuffer())
+}
+
+async function gen(espece, def, falKey, outDir) {
+  process.stdout.write(`· ${espece} (ouvert) … `)
+  const ouvertBrut = await genererImage(def.ouvert, falKey, { image_size: 'square_hd' })
+  const ouvertPng = await sharp(ouvertBrut).resize(TAILLE, TAILLE).png().toBuffer()
+  console.log('ok')
+
+  const etats = [['ouvert', ouvertPng]]
+  if (def.ferme) {
+    process.stdout.write(`· ${espece} (fermé, inpainting aligné) … `)
+    const masque = await genererMasque(def.masque)
+    const fermePng = await remplir(ouvertPng, masque, def.ferme, falKey)
+    etats.push(['ferme', fermePng])
+    console.log('ok')
+  }
+
+  for (const [etat, buf] of etats) {
+    const webp = (await detourerParLuminance(buf))
+      .resize(480, 480)
+      .webp({ quality: 72, alphaQuality: 80, effort: 6 })
+    const outBuf = await webp.toBuffer()
+    await writeFile(join(outDir, `${etat}.webp`), outBuf)
+    console.log(`  → ${etat}.webp (${(outBuf.length / 1024).toFixed(0)} ko)`)
+  }
 }
 
 const falKey = process.env.FAL_KEY
 if (!falKey) {
-  console.error('✗ FAL_KEY manquante.  Usage : FAL_KEY=xxx node scripts/generer-tetes.mjs')
+  console.error('✗ FAL_KEY manquante.  Usage : FAL_KEY=xxx node scripts/generer-tetes.mjs [espèce]')
   process.exit(1)
 }
 
-await mkdir(OUT, { recursive: true })
-const seul = process.argv[2]
-const cibles = seul ? { [seul]: TETES[seul] } : TETES
-if (seul && !TETES[seul]) {
-  console.error(`✗ tête inconnue : ${seul}.  Choix : ${Object.keys(TETES).join(', ')}`)
+const [especeSeule] = process.argv.slice(2)
+if (especeSeule && !ESPECES[especeSeule]) {
+  console.error(`✗ espèce inconnue : ${especeSeule}.  Choix : ${Object.keys(ESPECES).join(', ')}`)
   process.exit(1)
 }
 
-console.log(`Génération des têtes gravure → public/tetes/`)
-for (const [nom, prompt] of Object.entries(cibles)) {
-  try { await gen(nom, prompt, falKey) } catch (e) { console.log(`erreur : ${e.message}`) }
+console.log('Génération des têtes de menu → public/tetes/<espèce>/')
+const cibles = especeSeule ? { [especeSeule]: ESPECES[especeSeule] } : ESPECES
+for (const [espece, def] of Object.entries(cibles)) {
+  const outDir = join(__dirname, '..', 'public', 'tetes', espece)
+  await mkdir(outDir, { recursive: true })
+  try { await gen(espece, def, falKey, outDir) }
+  catch (e) { console.log(`erreur : ${e.message}`) }
 }
 console.log('Terminé.')

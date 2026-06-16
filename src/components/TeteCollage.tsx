@@ -1,17 +1,23 @@
 import { useRef, useState } from 'react'
+import { useReve } from '../reve'
 
 /**
- * TeteCollage — bouton « tête d'animal » dessinée à l'encre, dans le même
- * style que les collages surréalistes déjà présents dans le jeu
- * (src/reve/collages.tsx) : trait noir + hachures, sur une carte de papier
- * déchiré. Les couleurs suivent l'ambiance du rêve en cours
- * (var(--reve-ink) / var(--reve-bg)) au lieu d'un sépia figé.
+ * TeteCollage — bouton « tête d'animal » du menu, gravure monochrome
+ * générée par IA (scripts/generer-tetes.mjs) et détourée par luminance,
+ * même pipeline que les calques de SceneDecor — fini le SVG dessiné à la
+ * main qui rendait mal sur les boutons. Les couleurs suivent l'ambiance du
+ * rêve en cours via le même filtre invert() que SceneDecor/Decor.tsx.
  *
  * Le mot du mode est posé dans le creux anatomique de la bête (mandibules,
- * ailes, gueule). Au clic, ce n'est pas un volet de papier qui vient
- * recouvrir un visuel séparé : la bouche/les ailes ELLES-MÊMES pivotent
- * pour se refermer, dessinées dans le même système de coordonnées que le
- * reste de la créature — donc toujours alignées, jamais de collage raté.
+ * ailes, gueule). Au clic :
+ *  - fourmi / tigre : deux gravures alignées pixel à pixel (ouverte → fermée,
+ *    obtenues par inpainting ciblé sur la seule zone des mandibules/gueule,
+ *    le reste de l'image est strictement identique) — l'une se substitue à
+ *    l'autre par à-coups.
+ *  - papillon : une seule gravure (ailes ouvertes) ; aucun inpainting ne peut
+ *    replier des ailes sans déplacer des pixels sur tout le cadre, donc la
+ *    fermeture est un pliage CSS (clip-path + rotate/scaleX) sur cette même
+ *    image, jamais redessinée — donc jamais désalignée.
  * Le mouvement reste par à-coups (steps), pas en fondu.
  */
 
@@ -22,6 +28,8 @@ type Props = {
   label: string
   onActivate: () => void
 }
+
+const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
 
 const BORD_DECHIRE =
   'polygon(1% 5%,7% 1%,17% 4%,29% 0%,44% 3%,59% 0%,74% 4%,87% 1%,99% 6%,' +
@@ -34,10 +42,15 @@ const LABEL_BOX: Record<Espece, { left: string; top: string; width: string; heig
   papillon: { left: '24%', top: '44%', width: '52%', height: '20%' },
   tigre:    { left: '22%', top: '58%', width: '56%', height: '22%' },
 }
+// durée totale avant d'activer le mode — pilote un minuteur unique, indépendant
+// du timing propre à chaque animation visuelle (crossfade ou pliage d'ailes)
+const DUREE_FERMETURE = 0.42
 
 let _uid = 0
 
 export default function TeteCollage({ espece, label, onActivate }: Props) {
+  const s = useReve()
+  const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
   const [closing, setClosing] = useState(false)
   const fired = useRef(false)
   const uid = useRef(`tc${_uid++}`).current
@@ -52,7 +65,6 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
     onActivate()
   }
 
-  const Art = ART[espece]
   const labelBox = LABEL_BOX[espece]
 
   return (
@@ -65,6 +77,14 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
         transform: `rotate(${ROTATE[espece]}deg)`,
       }}
     >
+      {/* minuteur unique : déclenche onActivate une fois la fermeture jouée,
+          quelle que soit la durée propre à l'animation visuelle de l'espèce */}
+      <div aria-hidden style={{
+        position: 'absolute', width: 0, height: 0,
+        animation: closing ? `${uid}-tick ${DUREE_FERMETURE}s steps(1,end) forwards` : undefined,
+      }} onAnimationEnd={closing ? onEnd : undefined} />
+      <style>{`@keyframes ${uid}-tick { to { opacity: 0; } }`}</style>
+
       {/* doublure — papier de fond qui dépasse, légèrement décalé */}
       <div aria-hidden style={{
         position: 'absolute', inset: '-3%', background: 'var(--reve-ink)', opacity: 0.18,
@@ -77,9 +97,12 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
         background: 'var(--reve-bg)',
         boxShadow: '0 3px 1px rgba(0,0,0,0.15)',
       }}>
-        <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ position: 'absolute', inset: 0, display: 'block' }}>
-          <Art uid={uid} closing={closing} onEnd={onEnd} />
-        </svg>
+        <div style={{
+          position: 'absolute', inset: 0,
+          filter: isDark ? 'invert(1) brightness(0.88)' : undefined,
+        }}>
+          <RasterArt espece={espece} uid={uid} closing={closing} />
+        </div>
 
         {/* grain + vignette papier */}
         <div aria-hidden style={{
@@ -115,149 +138,66 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
   )
 }
 
-type ArtProps = { uid: string; closing: boolean; onEnd: (e: React.AnimationEvent) => void }
+function masquer(e: React.SyntheticEvent<HTMLImageElement>) {
+  e.currentTarget.style.display = 'none'
+}
 
-const STROKE = 1.6
-
-function Defs({ uid }: { uid: string }) {
+/**
+ * fourmi / tigre : deux gravures alignées pixel à pixel, l'une se substitue
+ * à l'autre par à-coups (steps) — jamais de fondu, jamais de désalignement
+ * puisque seule la zone anatomique masquée diffère entre les deux fichiers.
+ */
+function EtatsAlignes({ espece, closing }: { espece: Espece; closing: boolean }) {
+  const base = `/tetes/${espece}`
+  const commun: React.CSSProperties = {
+    position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+  }
   return (
-    <defs>
-      <pattern id={`${uid}-h45`} width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <line x1="0" y1="0" x2="0" y2="3" stroke="var(--reve-ink)" strokeWidth="0.5" />
-      </pattern>
-      <pattern id={`${uid}-h30`} width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
-        <line x1="0" y1="0" x2="0" y2="2.6" stroke="var(--reve-ink)" strokeWidth="0.4" />
-      </pattern>
-    </defs>
+    <>
+      <img src={`${base}/ouvert.webp`} alt="" onError={masquer} draggable={false} style={{
+        ...commun, opacity: closing ? 0 : 1,
+        transition: closing ? 'opacity 0.06s steps(1,end) 0.15s' : undefined,
+      }} />
+      <img src={`${base}/ferme.webp`} alt="" onError={masquer} draggable={false} style={{
+        ...commun, opacity: closing ? 1 : 0,
+        transition: closing ? 'opacity 0.06s steps(1,end) 0.15s' : undefined,
+      }} />
+    </>
   )
 }
 
-// ════════════════════════════════════════════════
-// FOURMI — mandibules qui se referment sur le mot
-// ════════════════════════════════════════════════
-function FourmiArt({ uid, closing, onEnd }: ArtProps) {
+/**
+ * papillon : une seule gravure, repliée en CSS par moitié (clip-path gauche/
+ * droite) pivotant et se rétractant vers la ligne du corps, comme l'ancienne
+ * animation SVG des ailes — mais appliqué à l'image réelle, jamais redessinée.
+ */
+function AilesPliantes({ uid, closing }: { uid: string; closing: boolean }) {
+  const commun: React.CSSProperties = {
+    position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+  }
   return (
     <>
-      <Defs uid={uid} />
-      {/* tête */}
-      <path d="M50,8 C68,8 80,22 80,40 C80,54 70,61 50,61 C30,61 20,54 20,40 C20,22 32,8 50,8 Z"
-        fill={`url(#${uid}-h45)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-      {/* antennes */}
-      <path d="M40,12 C32,2 22,-2 16,2" stroke="var(--reve-ink)" strokeWidth="1.3" fill="none" />
-      <circle cx="16" cy="2" r="2" fill="var(--reve-ink)" />
-      <path d="M60,12 C68,2 78,-2 84,2" stroke="var(--reve-ink)" strokeWidth="1.3" fill="none" />
-      <circle cx="84" cy="2" r="2" fill="var(--reve-ink)" />
-      {/* yeux */}
-      <circle cx="33" cy="30" r="10" fill="var(--reve-ink)" />
-      <circle cx="30" cy="26" r="2.4" fill="var(--reve-bg)" />
-      <circle cx="67" cy="30" r="10" fill="var(--reve-ink)" />
-      <circle cx="64" cy="26" r="2.4" fill="var(--reve-bg)" />
-
-      {/* mandibules — pivotent autour de leur attache sur la tête */}
-      <g className={closing ? `${uid}-mandL` : ''} onAnimationEnd={onEnd} style={{ transformOrigin: '42px 56px' }}>
-        <path d="M42,56 C30,60 17,70 14,85 C12,94 19,98 28,93 C36,88 41,76 43,64 Z"
-          fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} strokeLinejoin="round" />
-      </g>
-      <g className={closing ? `${uid}-mandR` : ''} style={{ transformOrigin: '58px 56px' }}>
-        <path d="M58,56 C70,60 83,70 86,85 C88,94 81,98 72,93 C64,88 59,76 57,64 Z"
-          fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} strokeLinejoin="round" />
-      </g>
-
+      <img src="/tetes/papillon/ouvert.webp" alt="" onError={masquer} draggable={false} style={{
+        ...commun,
+        clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)',
+        transformOrigin: '100% 42%',
+        animation: closing ? `${uid}-wL 0.36s steps(3,end) forwards` : undefined,
+      }} />
+      <img src="/tetes/papillon/ouvert.webp" alt="" onError={masquer} draggable={false} style={{
+        ...commun,
+        clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)',
+        transformOrigin: '0% 42%',
+        animation: closing ? `${uid}-wR 0.36s steps(3,end) forwards` : undefined,
+      }} />
       <style>{`
-        @keyframes ${uid}-mL { 0% { transform: rotate(0deg); } 100% { transform: rotate(-50deg); } }
-        @keyframes ${uid}-mR { 0% { transform: rotate(0deg); } 100% { transform: rotate(50deg); } }
-        .${uid}-mandL { animation: ${uid}-mL 0.36s steps(3,end) forwards; }
-        .${uid}-mandR { animation: ${uid}-mR 0.36s steps(3,end) forwards; }
+        @keyframes ${uid}-wL { 0% { transform: rotate(0deg) scaleX(1); } 100% { transform: rotate(4deg) scaleX(0.3); } }
+        @keyframes ${uid}-wR { 0% { transform: rotate(0deg) scaleX(1); } 100% { transform: rotate(-4deg) scaleX(0.3); } }
       `}</style>
     </>
   )
 }
 
-// ════════════════════════════════════════════════
-// PAPILLON — ailes qui se replient verticalement sur le mot
-// ════════════════════════════════════════════════
-function PapillonArt({ uid, closing, onEnd }: ArtProps) {
-  return (
-    <>
-      <Defs uid={uid} />
-      {/* corps + tête */}
-      <line x1="50" y1="18" x2="50" y2="78" stroke="var(--reve-ink)" strokeWidth="2.2" />
-      <circle cx="50" cy="15" r="4" fill="var(--reve-ink)" />
-      <path d="M47,11 L40,2" stroke="var(--reve-ink)" strokeWidth="1.1" fill="none" />
-      <path d="M53,11 L60,2" stroke="var(--reve-ink)" strokeWidth="1.1" fill="none" />
-      {[28, 38, 48, 58, 68].map(y => (
-        <line key={y} x1="47" y1={y} x2="53" y2={y} stroke="var(--reve-ink)" strokeWidth="1" />
-      ))}
-
-      {/* ailes — pivotent autour de la ligne du corps (x=50) */}
-      <g className={closing ? `${uid}-wingL` : ''} onAnimationEnd={onEnd} style={{ transformOrigin: '50px 40px' }}>
-        <path d="M50,30 C30,14 8,18 4,34 C1,46 14,54 30,50 C42,47 50,40 50,30 Z"
-          fill={`url(#${uid}-h45)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-        <path d="M50,48 C34,52 16,64 14,78 C13,86 24,88 36,78 C46,70 50,58 50,48 Z"
-          fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-      </g>
-      <g className={closing ? `${uid}-wingR` : ''} style={{ transformOrigin: '50px 40px' }}>
-        <path d="M50,30 C70,14 92,18 96,34 C99,46 86,54 70,50 C58,47 50,40 50,30 Z"
-          fill={`url(#${uid}-h45)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-        <path d="M50,48 C66,52 84,64 86,78 C87,86 76,88 64,78 C54,70 50,58 50,48 Z"
-          fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-      </g>
-
-      <style>{`
-        @keyframes ${uid}-wL { 0% { transform: rotate(0deg) scaleX(1); } 100% { transform: rotate(4deg) scaleX(0.32); } }
-        @keyframes ${uid}-wR { 0% { transform: rotate(0deg) scaleX(1); } 100% { transform: rotate(-4deg) scaleX(0.32); } }
-        .${uid}-wingL { animation: ${uid}-wL 0.36s steps(3,end) forwards; }
-        .${uid}-wingR { animation: ${uid}-wR 0.36s steps(3,end) forwards; }
-      `}</style>
-    </>
-  )
-}
-
-// ════════════════════════════════════════════════
-// TIGRE — gueule qui se referme sur le mot
-// ════════════════════════════════════════════════
-function TigreArt({ uid, closing, onEnd }: ArtProps) {
-  return (
-    <>
-      <Defs uid={uid} />
-      {/* oreilles */}
-      <path d="M22,20 L8,2 L34,14 Z" fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-      <path d="M78,20 L92,2 L66,14 Z" fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-      {/* tête */}
-      <path d="M50,10 C72,10 85,28 85,46 C85,68 70,82 50,82 C30,82 15,68 15,46 C15,28 28,10 50,10 Z"
-        fill={`url(#${uid}-h45)`} stroke="var(--reve-ink)" strokeWidth={STROKE} />
-      {/* rayures */}
-      {[[20, 36, 30, 30], [22, 46, 33, 42], [78, 36, 68, 30], [76, 46, 65, 42]].map(([x1, y1, x2, y2], i) => (
-        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--reve-ink)" strokeWidth="1.1" />
-      ))}
-      {/* yeux — grand ouverts */}
-      <path d="M27,37 Q35,28 43,37 Q35,44 27,37 Z" fill="var(--reve-ink)" />
-      <path d="M57,37 Q65,28 73,37 Q65,44 57,37 Z" fill="var(--reve-ink)" />
-      {/* truffe */}
-      <path d="M45,50 L55,50 L50,56 Z" fill="var(--reve-ink)" />
-
-      {/* mâchoires — pivotent autour de l'attache au museau */}
-      <g className={closing ? `${uid}-jawU` : ''} onAnimationEnd={onEnd} style={{ transformOrigin: '50px 58px' }}>
-        <path d="M30,58 C30,56 35,54 50,54 C65,54 70,56 70,58 L68,64 L60,60 L52,65 L44,60 L36,64 Z"
-          fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} strokeLinejoin="round" />
-      </g>
-      <g className={closing ? `${uid}-jawD` : ''} style={{ transformOrigin: '50px 80px' }}>
-        <path d="M32,80 C32,78 38,76 50,76 C62,76 68,78 68,80 L66,73 L58,77 L50,72 L42,77 L34,73 Z"
-          fill={`url(#${uid}-h30)`} stroke="var(--reve-ink)" strokeWidth={STROKE} strokeLinejoin="round" />
-      </g>
-
-      <style>{`
-        @keyframes ${uid}-jU { 0% { transform: rotate(0deg) translateY(0); } 100% { transform: rotate(-2deg) translateY(7px); } }
-        @keyframes ${uid}-jD { 0% { transform: rotate(0deg) translateY(0); } 100% { transform: rotate(2deg) translateY(-7px); } }
-        .${uid}-jawU { animation: ${uid}-jU 0.36s steps(3,end) forwards; }
-        .${uid}-jawD { animation: ${uid}-jD 0.36s steps(3,end) forwards; }
-      `}</style>
-    </>
-  )
-}
-
-const ART: Record<Espece, React.FC<ArtProps>> = {
-  fourmi: FourmiArt,
-  papillon: PapillonArt,
-  tigre: TigreArt,
+function RasterArt({ espece, uid, closing }: { espece: Espece; uid: string; closing: boolean }) {
+  if (espece === 'papillon') return <AilesPliantes uid={uid} closing={closing} />
+  return <EtatsAlignes espece={espece} closing={closing} />
 }
