@@ -9,10 +9,23 @@ import { sauvegarderDessin } from '../db'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { vibrer } from '../utils/haptics'
+import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
 import type { BandeDessin, DessinCadavre } from '../types'
 
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
+
+function Section({ children, accent, color, style }: {
+  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
+}) {
+  return (
+    <div style={style}>
+      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+        {children}
+      </Etiquette>
+    </div>
+  )
+}
 
 async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
   if (bandes.length === 0) return ''
@@ -236,9 +249,7 @@ export default function FinDessin() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — RÉVÉLATION —
-        </div>
+        <Section accent={accent} color={btnText} style={{ marginTop: 20, marginBottom: 8 }}>RÉVÉLATION</Section>
 
         {/* ── TITRE ── */}
         <div className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
@@ -254,9 +265,9 @@ export default function FinDessin() {
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center', textAlign: 'center' }}
           >
             <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
-                — {nbBandes} BANDE{nbBandes > 1 ? 'S' : ''} —
-              </div>
+              <Section accent={accent} color={btnText} style={{ marginBottom: 20 }}>
+                {nbBandes} BANDE{nbBandes > 1 ? 'S' : ''}
+              </Section>
               <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
                 Le cadavre
               </div>
@@ -319,16 +330,20 @@ export default function FinDessin() {
             {/* Texte Vision */}
             {texteVision ? (
               <div>
-                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-                  — LECTURE SURRÉALISTE —
-                </div>
-                <div style={{
-                  fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7,
-                  color: encre,
-                  whiteSpace: 'pre-line',
-                }}>
-                  {texteVision}
-                </div>
+                <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} style={{ padding: '14px 16px 16px' }}>
+                  <div style={{ marginBottom: 10 }}>
+                    <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+                      LECTURE SURRÉALISTE
+                    </Etiquette>
+                  </div>
+                  <div style={{
+                    fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7,
+                    color: ENCRE_PAPIER,
+                    whiteSpace: 'pre-line',
+                  }}>
+                    {texteVision}
+                  </div>
+                </PapierCard>
               </div>
             ) : erreurVision ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -368,7 +383,9 @@ export default function FinDessin() {
                   background: sauvegarde ? `${accent}20` : accent,
                   color: sauvegarde ? accent : btnText,
                   border: `0.5px solid ${accent}`,
-                  borderRadius: 3,
+                  borderRadius: 2,
+                  transform: sauvegarde ? 'none' : 'rotate(-0.6deg)',
+                  boxShadow: sauvegarde ? 'none' : '0 3px 10px rgba(0,0,0,0.28)',
                   padding: '10px 8px',
                   cursor: sauvegarde ? 'default' : 'pointer',
                   transition: 'all 0.2s',
