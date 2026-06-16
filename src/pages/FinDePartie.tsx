@@ -13,6 +13,7 @@ import { Decor, useReve } from '../reve'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
+import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -294,30 +295,26 @@ export default function FinDePartie() {
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
-        {/* ── POEM CARD ── */}
+        {/* ── POEM CARD — carton de papier, l'artefact révélé ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={lettrineChutee ? { opacity: 1, y: [0, -5, 3, -2, 0] } : { opacity: 1, y: 0 }}
           transition={lettrineChutee ? { duration: 0.28, ease: 'easeOut' } : { delay: 0.7, duration: 0.8 }}
-          style={{
-            border: `1px solid ${accent}40`,
-            borderLeft: `3px solid ${accent}`,
-            borderRadius: 3,
-            padding: '16px 16px 12px',
-            background: 'rgba(240,228,204,0.25)',
-            marginBottom: 20,
-          }}
+          style={{ marginBottom: 20 }}
         >
-          {/* Poem title in mono */}
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
+        <PapierCard rotation={-0.5} bord="dechire1" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
+          {/* Poem title */}
+          <div style={{ marginBottom: 12 }}>
+            <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+              CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
+            </Etiquette>
           </div>
 
           {/* Poem text — lignes dévoilées une à une après le rideau */}
           <div
             style={{
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-              color: encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
+              color: ENCRE_PAPIER, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
               overflowWrap: 'break-word', wordBreak: 'break-word',
             }}
           >
@@ -359,9 +356,10 @@ export default function FinDePartie() {
           </div>
 
           {/* Card footer */}
-          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
+          <div style={{ ...mono, fontSize: 13, color: ENCRE_PAPIER, opacity: 0.65, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${ENCRE_PAPIER}20` }}>
             {voixCount} {poeme.structureId === 'atelier' ? 'VERS' : 'VOIX'} · {structLabel.toUpperCase()} · {heureStr}
           </div>
+        </PapierCard>
         </motion.div>
 
         {/* ── IMAGE (if already generated) ── */}
@@ -458,7 +456,9 @@ export default function FinDePartie() {
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',
               gap: 2,
-              borderRadius: 3,
+              borderRadius: 2,
+              transform: 'rotate(-0.6deg)',
+              boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
             }}
           >
             <span>Sceller au recueil</span>
