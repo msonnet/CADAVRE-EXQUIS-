@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
-import TeteCollage, { PAPIER, PAPIER_TEXTURE } from '../components/TeteCollage'
+import TeteCollage, { PAPIER, PAPIER_TEXTURE, DECHIRE_1 } from '../components/TeteCollage'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
@@ -216,7 +216,7 @@ export default function Accueil() {
               ...PAPIER_TEXTURE,
               border: `1px solid ${seance.ambiance.rule}`,
               boxShadow: '0 4px 13px rgba(0,0,0,0.28)',
-              borderRadius: 6,
+              clipPath: DECHIRE_1,
               padding: '10px 13px 12px',
               transform: 'rotate(0.9deg)',
             }}>

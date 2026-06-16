@@ -48,17 +48,37 @@ const GRAIN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='1
 </svg>`
 const GRAIN = `url("data:image/svg+xml;base64,${btoa(GRAIN_SVG)}")`
 
-// Carte de papier texturée : grain + deux bandes de pli/ombre diagonales,
-// posées en multiply sur l'aplat PAPIER — réutilisée par tous les cartons de
-// cette page (têtes du menu, mais aussi titre/citation côté Accueil.tsx).
+// Carte de papier texturée : grain + deux bandes de pli/ombre croisées en
+// diagonale (froissé), posées en multiply sur l'aplat PAPIER — réutilisée par
+// tous les cartons de cette page (têtes du menu, mais aussi titre/citation
+// côté Accueil.tsx).
 export const PAPIER_TEXTURE: React.CSSProperties = {
   backgroundColor: PAPIER,
   backgroundImage:
     'linear-gradient(118deg, rgba(0,0,0,0.08) 0%, transparent 16%, transparent 46%, ' +
-    `rgba(0,0,0,0.06) 50%, transparent 78%, rgba(0,0,0,0.09) 100%), ${GRAIN}`,
-  backgroundBlendMode: 'multiply, multiply',
-  backgroundSize: 'cover, 180px 180px',
+    'rgba(0,0,0,0.06) 50%, transparent 78%, rgba(0,0,0,0.09) 100%), ' +
+    'linear-gradient(34deg, transparent 0%, rgba(0,0,0,0.06) 20%, transparent 38%, ' +
+    `transparent 58%, rgba(0,0,0,0.08) 74%, transparent 90%), ${GRAIN}`,
+  backgroundBlendMode: 'multiply, multiply, multiply',
+  backgroundSize: 'cover, cover, 180px 180px',
 }
+
+// Bords déchirés : deux découpes irrégulières (silhouette de papier arraché à
+// la main, pas un rectangle net) — utilisées sur certains cartons seulement,
+// d'autres restent à bord droit (borderRadius), pour varier comme un vrai
+// collage de fragments découpés/arrachés au fil du temps.
+export const DECHIRE_1 = 'polygon(' +
+  '0% 3%, 12% 0%, 28% 4%, 45% 1%, 62% 3%, 78% 0%, 100% 2%, ' +
+  '97% 15%, 100% 30%, 96% 48%, 100% 65%, 97% 82%, 100% 97%, ' +
+  '85% 100%, 68% 97%, 52% 100%, 35% 98%, 18% 100%, 0% 96%, ' +
+  '3% 80%, 0% 62%, 4% 45%, 0% 28%, 3% 12%' +
+  ')'
+export const DECHIRE_2 = 'polygon(' +
+  '0% 0%, 15% 4%, 32% 0%, 50% 3%, 68% 0%, 85% 4%, 100% 0%, ' +
+  '100% 18%, 96% 35%, 100% 52%, 97% 70%, 100% 88%, 100% 100%, ' +
+  '88% 97%, 70% 100%, 52% 96%, 35% 100%, 18% 97%, 0% 100%, ' +
+  '3% 85%, 0% 68%, 4% 50%, 0% 32%, 3% 15%' +
+  ')'
 
 // durée totale avant d'activer le mode — pilote un minuteur unique, indépendant
 // du timing propre à chaque animation visuelle (crossfade ou pliage d'ailes).
@@ -70,6 +90,15 @@ const DUREE_FERMETURE = 0.55
 // qu'aligné au cordeau, sans jamais assez pencher pour empiéter sur le
 // voisin (vérifié à l'écran le plus étroit visé, 360px).
 const ROTATION: Record<Espece, number> = { elephant: -2.5, papillon: 2.2, tigre: -1.6 }
+
+// bord du carton : net (borderRadius) pour le tigre, déchiré pour les deux
+// autres — variété de fragments comme un vrai collage, pas tous découpés
+// au même outil.
+const BORD: Record<Espece, React.CSSProperties> = {
+  elephant: { clipPath: DECHIRE_1 },
+  papillon: { clipPath: DECHIRE_2 },
+  tigre: { borderRadius: 4 },
+}
 
 let _uid = 0
 
@@ -121,7 +150,7 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
           border: `1px solid ${bordure}`,
           boxShadow: '0 3px 11px rgba(0,0,0,0.3)',
           transform: `rotate(${rotation}deg)`,
-          borderRadius: 4,
+          ...BORD[espece],
         }} />
         {/* tête gravée détourée, posée à même le papier */}
         <div style={{ position: 'absolute', inset: 0, lineHeight: 0 }}>

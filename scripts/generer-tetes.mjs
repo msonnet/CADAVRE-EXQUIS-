@@ -65,15 +65,18 @@ const ESPECES = {
   // éléphant est par nature rond et doux, bien plus difficile à faire lire
   // comme effrayant. La trompe se lève au clic (pivot CSS, cf. TeteCollage).
   elephant: {
-    // les substitutions anatomiques (oreilles/bras humains) ont été essayées
-    // en prompt texte seul (toujours ignorées, l'a priori « éléphant » du
-    // modèle est trop fort) puis en retouche FLUX Fill ciblée (résultat
-    // effrayant et hors-sujet : cornes, visages grimaçants, mains agrippantes
-    // — contraire à l'exigence « doux, jamais effrayant ») : on s'en tient
-    // donc à l'éléphant chimérique simple ci-dessous.
-    ouvert: CHIMERE + 'a gentle elephant head, large round kind eyes, frontal view, trunk ' +
-      'hanging straight down at rest along the vertical centerline, a small delicate bell shape ' +
-      'at the very tip of the trunk, ' + CADRAGE,
+    // dire « tête d'éléphant + oreilles de lapin » régénère systématiquement
+    // les oreilles d'éléphant canoniques : l'identité de base « éléphant »
+    // est trop forte. À l'inverse, le tigre à oreilles d'éléphant a marché
+    // en gardant l'identité de base inchangée (tigre) et en ne greffant que
+    // les oreilles — donc ici on inverse : l'identité de base devient un
+    // LAPIN (qui produit ses propres oreilles par défaut), seul le nez est
+    // remplacé par une trompe greffée. « plain bare head, no crown » retire
+    // la couronne ornementale ajoutée spontanément par le CHIMERE partagé.
+    ouvert: CHIMERE + 'a rabbit head with two long upright rabbit ears, but with a long gentle ' +
+      'elephant trunk in place of a nose, hanging straight down at rest along the vertical ' +
+      'centerline, a small delicate bell shape at the very tip of the trunk, large round kind ' +
+      'eyes, frontal view, smooth bare forehead between the ears with nothing resting on it, ' + CADRAGE,
   },
   papillon: {
     ouvert: CHIMERE + 'a butterfly whose wings are a pair of feathered bird wings, spread fully ' +
@@ -84,8 +87,9 @@ const ESPECES = {
     // d'inpainting possible — fermeture animée en CSS sur cette seule image.
   },
   tigre: {
-    ouvert: CHIMERE + 'a tiger head with jaws open, a tiger\'s own short flat nose and whisker ' +
-      'pad at the very center of the face, large rounded elephant ears in place of tiger ears, ' +
+    ouvert: CHIMERE + 'a tiger head with its mouth wide open, jaws spread wide apart, fangs and ' +
+      'tongue clearly visible, a tiger\'s own short flat nose and whisker pad ' +
+      'at the very center of the face, large rounded elephant ears in place of tiger ears, ' +
       'narrow eyes glowing pale yellow-green with thin vertical slit pupils like a cat at night, ' +
       'stripes that flow into soft crescent moons and stars resting along the fur, one small ' +
       'extra eye like a gentle jewel set on the forehead, ' + CADRAGE,
