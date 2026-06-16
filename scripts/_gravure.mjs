@@ -1,8 +1,8 @@
 /**
- * _gravure.mjs — socle commun des scripts de génération d'illustrations IA
- * (generer-decor.mjs, generer-tetes.mjs) : appel FLUX et détourage par
- * luminance. Un seul jeu d'images en gravure monochrome s'adapte ensuite aux
- * 5 ambiances du jeu via le filtre invert() (cf. SceneDecor.tsx, Decor.tsx).
+ * _gravure.mjs — socle commun de la génération d'illustrations IA
+ * (generer-tetes.mjs) : appel FLUX et détourage par luminance. Un seul jeu
+ * d'images en gravure monochrome s'adapte ensuite aux 5 ambiances du jeu via
+ * le filtre invert() (cf. Decor.tsx, TeteCollage.tsx).
  */
 
 import sharp from 'sharp'

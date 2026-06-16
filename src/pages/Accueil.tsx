@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
 import TeteCollage from '../components/TeteCollage'
-import SceneDecor from '../components/SceneDecor'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
@@ -62,7 +61,6 @@ export default function Accueil() {
   return (
     <PageTransition className="page-carnet relative flex flex-col h-dvh overflow-hidden safe-top safe-bottom">
 
-      <SceneDecor id="accueil" />
       <Decor variant="accueil" hideCitation hideSignature />
       <Onboarding />
 

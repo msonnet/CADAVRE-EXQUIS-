@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 /**
  * generer-tetes.mjs — génère les têtes de menu (fourmi, papillon, tigre) en
- * gravure monochrome détourée par luminance, même pipeline que
- * generer-decor.mjs (scripts/_gravure.mjs).
+ * gravure monochrome détourée par luminance (socle scripts/_gravure.mjs).
  *
  * Fourmi et tigre ont deux états ALIGNÉS pixel à pixel : mandibules/gueule
  * grand ouvertes, puis fermées. Le second état n'est pas régénéré de zéro
