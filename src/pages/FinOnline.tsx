@@ -15,6 +15,7 @@ import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
+import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
 import type { DessinCadavre } from '../types'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
@@ -78,6 +79,18 @@ async function interpreterDessin(imageDataUrl: string): Promise<string> {
     const data = await res.json()
     return data.texte ?? ''
   } catch { return '' }
+}
+
+function Section({ children, accent, color, style }: {
+  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
+}) {
+  return (
+    <div style={style}>
+      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+        {children}
+      </Etiquette>
+    </div>
+  )
 }
 
 const STYLES = [
@@ -384,7 +397,7 @@ export default function FinOnline() {
                 style={{ position: 'absolute', left: 0, right: 0, height: `${100 / Math.max(players.length, 2)}%`, top: `${(i * 100) / Math.max(players.length, 2)}%`, background: accent, opacity: 0.12, pointerEvents: 'none' }} />
             ))}
             <motion.div style={{ position: 'relative', zIndex: 1 }} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.7 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>— {players.length} VOIX —</div>
+              <Section accent={accent} color={btnText} style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>{players.length} VOIX</Section>
               <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
                 Le cadavre<br />se reconstitue
                 <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>
@@ -415,7 +428,7 @@ export default function FinOnline() {
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 12 }}>— RÉVÉLATION —</div>
+        <Section accent={accent} color={btnText} style={{ marginTop: 24, marginBottom: 12 }}>RÉVÉLATION</Section>
 
         {revealReady && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -454,10 +467,18 @@ export default function FinOnline() {
                   <div style={{ marginBottom: 20 }}>
                     <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />
                     {texteVision ? (
-                      <>
-                        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>— LECTURE SURRÉALISTE —</div>
-                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
-                      </>
+                      <div style={{ marginBottom: 16 }}>
+                        <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} style={{ padding: '14px 16px 16px' }}>
+                          <div style={{ marginBottom: 10 }}>
+                            <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+                              LECTURE SURRÉALISTE
+                            </Etiquette>
+                          </div>
+                          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: ENCRE_PAPIER, whiteSpace: 'pre-line' }}>
+                            {texteVision}
+                          </div>
+                        </PapierCard>
+                      </div>
                     ) : erreurVision ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>La lecture surréaliste n'a pas pu avoir lieu.</p>
@@ -468,7 +489,12 @@ export default function FinOnline() {
                     {/* Actions dessin */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button onClick={sauvegarderDessinLocal} disabled={sauvegardeDessin_}
-                        style={{ flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText, border: `0.5px solid ${accent}`, borderRadius: 3, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer' }}>
+                        style={{
+                          flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText,
+                          border: `0.5px solid ${accent}`, borderRadius: 2, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer',
+                          transform: sauvegardeDessin_ ? 'none' : 'rotate(-0.6deg)',
+                          boxShadow: sauvegardeDessin_ ? 'none' : '0 3px 10px rgba(0,0,0,0.28)',
+                        }}>
                         {sauvegardeDessin_ ? '✓ SAUVEGARDÉ' : '↓ MA GALERIE'}
                       </button>
                       <button onClick={publierDansGalerieDessin} disabled={publishingGallery || publishedGallery}
@@ -523,19 +549,26 @@ export default function FinOnline() {
             {/* ── Mode écrit : poème ── */}
             {room.mode !== 'dessin' && (
               <div style={{ marginBottom: 28 }}>
-                {lignes.map((ligne, i) => (
-                  <motion.p key={i}
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
-                    style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
-                    {i === 0 && lettrine ? (
-                      <>
-                        <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>
-                        {resteLigne0}
-                      </>
-                    ) : (ligne || ' ')}
-                  </motion.p>
-                ))}
+                <PapierCard rotation={-0.5} bord="dechire1" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
+                  <div style={{ marginBottom: 12 }}>
+                    <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+                      CADAVRE EXQUIS · {code}
+                    </Etiquette>
+                  </div>
+                  {lignes.map((ligne, i) => (
+                    <motion.p key={i}
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
+                      style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: ENCRE_PAPIER, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
+                      {i === 0 && lettrine ? (
+                        <>
+                          <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>
+                          {resteLigne0}
+                        </>
+                      ) : (ligne || ' ')}
+                    </motion.p>
+                  ))}
+                </PapierCard>
               </div>
             )}
 
@@ -579,7 +612,7 @@ export default function FinOnline() {
             {/* Illustration — écrit */}
             {room.mode !== 'dessin' && (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>— ILLUSTRATION —</div>
+                <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>ILLUSTRATION</Section>
 
                 {illustrationUrl && (
                   <div style={{ marginBottom: 12 }}>
