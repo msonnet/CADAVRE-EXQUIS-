@@ -9,6 +9,19 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import type { DessinCadavre } from '../types'
+import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+
+function Section({ children, accent, color, style }: {
+  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
+}) {
+  return (
+    <div style={style}>
+      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+        {children}
+      </Etiquette>
+    </div>
+  )
+}
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString('fr-FR', {
@@ -40,6 +53,7 @@ export default function DessinDetail() {
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const fond = c?.bg ?? '#faf8f3'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -196,9 +210,7 @@ export default function DessinDetail() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — CADAVRE DESSINÉ —
-        </div>
+        <Section accent={accent} color={btnText} style={{ marginTop: 20, marginBottom: 8 }}>CADAVRE DESSINÉ</Section>
 
         {/* ── TITRE ── */}
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ marginBottom: 16 }}>
@@ -264,22 +276,21 @@ export default function DessinDetail() {
             transition={{ delay: 0.35 }}
             style={{ marginBottom: 24 }}
           >
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-              — VISION —
-            </div>
-            <div style={{
-              borderLeft: `1.5px solid ${accent}`,
-              paddingLeft: 14,
-            }}>
+            <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} style={{ padding: '14px 16px 16px' }}>
+              <div style={{ marginBottom: 10 }}>
+                <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+                  VISION
+                </Etiquette>
+              </div>
               {dessin.texteVision.split('\n').filter(Boolean).map((ligne, i) => (
                 <p key={i} style={{
-                  fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre,
+                  fontFamily: "'Playfair Display', serif", fontSize: 17, color: ENCRE_PAPIER,
                   lineHeight: 1.65, marginBottom: 6,
                 }}>
                   {ligne}
                 </p>
               ))}
-            </div>
+            </PapierCard>
           </motion.div>
         )}
 
