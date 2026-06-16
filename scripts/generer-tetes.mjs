@@ -9,11 +9,20 @@
  * masque anatomique : seule la zone masquée est repeinte, le reste de
  * l'image reste identique pixel pour pixel entre les deux états — vérifié
  * par diff (zone hors masque ≈ 0). Éléphant et papillon n'ont qu'un seul
- * état raster : la trompe qui se lève et les ailes qui se replient déplacent
- * des pixels sur une grande partie du cadre, ce qu'aucun masque d'inpainting
- * ne peut faire puisque l'inpainting repeint en place mais ne déplace rien —
- * leur animation est un pliage/pivot CSS côté TeteCollage.tsx (clip-path +
- * transform sur cette même image, jamais un second raster).
+ * état raster final : la trompe qui se lève et les ailes qui se replient
+ * déplacent des pixels sur une grande partie du cadre, ce qu'aucun masque
+ * d'inpainting ne peut faire puisque l'inpainting repeint en place mais ne
+ * déplace rien — leur animation est un pliage/pivot CSS côté
+ * TeteCollage.tsx (clip-path + transform sur cette même image, jamais un
+ * second raster).
+ *
+ * L'éléphant a un fort a priori anatomique (oreilles/défenses canoniques) :
+ * ni le prompt texte (toute formulation essayée régénère un éléphant
+ * standard) ni une retouche FLUX Fill ciblée sur les oreilles/défenses
+ * (résultat effrayant et hors-sujet — cornes, visages, mains agrippantes)
+ * n'ont permis la substitution demandée ; ESPECES.elephant s'en tient donc
+ * à un éléphant chimérique simple plutôt que de risquer un résultat hors
+ * charte (« doux, jamais effrayant »).
  *
  * Usage :
  *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs            # les 3 espèces
@@ -56,10 +65,15 @@ const ESPECES = {
   // éléphant est par nature rond et doux, bien plus difficile à faire lire
   // comme effrayant. La trompe se lève au clic (pivot CSS, cf. TeteCollage).
   elephant: {
-    ouvert: CHIMERE + 'a gentle elephant head, frontal view, trunk hanging straight down at rest ' +
-      'along the vertical centerline, large round kind eyes, delicate human ears in place of ' +
-      'elephant ears, a pair of slender graceful human arms hanging down in place of tusks with ' +
-      'open relaxed palms, a small delicate bell shape at the very tip of the trunk, ' + CADRAGE,
+    // les substitutions anatomiques (oreilles/bras humains) ont été essayées
+    // en prompt texte seul (toujours ignorées, l'a priori « éléphant » du
+    // modèle est trop fort) puis en retouche FLUX Fill ciblée (résultat
+    // effrayant et hors-sujet : cornes, visages grimaçants, mains agrippantes
+    // — contraire à l'exigence « doux, jamais effrayant ») : on s'en tient
+    // donc à l'éléphant chimérique simple ci-dessous.
+    ouvert: CHIMERE + 'a gentle elephant head, large round kind eyes, frontal view, trunk ' +
+      'hanging straight down at rest along the vertical centerline, a small delicate bell shape ' +
+      'at the very tip of the trunk, ' + CADRAGE,
   },
   papillon: {
     ouvert: CHIMERE + 'a butterfly whose wings are a pair of feathered bird wings, spread fully ' +
@@ -70,16 +84,18 @@ const ESPECES = {
     // d'inpainting possible — fermeture animée en CSS sur cette seule image.
   },
   tigre: {
-    ouvert: CHIMERE + 'a tiger head with jaws open, large rounded elephant ears in place of tiger ' +
-      'ears, narrow serpent eyes with vertical slit pupils, stripes that flow into soft crescent ' +
-      'moons and stars resting along the fur, one small extra eye like a gentle jewel set on ' +
-      'the forehead, delicate clockwork gear ornaments behind the ears, ' + CADRAGE,
+    ouvert: CHIMERE + 'a tiger head with jaws open, a tiger\'s own short flat nose and whisker ' +
+      'pad at the very center of the face, large rounded elephant ears in place of tiger ears, ' +
+      'narrow eyes glowing pale yellow-green with thin vertical slit pupils like a cat at night, ' +
+      'stripes that flow into soft crescent moons and stars resting along the fur, one small ' +
+      'extra eye like a gentle jewel set on the forehead, ' + CADRAGE,
     ferme: CHIMERE + 'a tiger head with its mouth completely closed and sealed shut, lips together, ' +
       'no fangs visible, no teeth visible, no tongue visible, no open gap at all, calm relaxed ' +
-      'expression, large rounded elephant ears in place of tiger ears, narrow serpent eyes with ' +
-      'vertical slit pupils, stripes that flow into soft crescent moons and stars resting along ' +
-      'the fur, one small extra eye like a gentle jewel set on the forehead, delicate clockwork ' +
-      'gear ornaments behind the ears, ' + CADRAGE,
+      'expression, a tiger\'s own short flat nose and whisker pad at the very center of the face, ' +
+      'large rounded elephant ears in place of tiger ears, narrow eyes glowing pale yellow-green ' +
+      'with thin vertical slit pupils like a cat at night, stripes that flow into soft crescent ' +
+      'moons and stars resting along the fur, one small extra eye like a gentle jewel set on the ' +
+      'forehead, ' + CADRAGE,
     // démarre plus haut que le menton : la lèvre supérieure et le retroussis du
     // museau (où vivent les babines/crocs de l'état ouvert) sont juste au-dessus
     // de la ligne précédente (y:0.52) — non recouverts, ils ne pouvaient donc
