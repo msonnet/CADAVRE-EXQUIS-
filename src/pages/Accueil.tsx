@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
+import TeteCollage from '../components/TeteCollage'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
@@ -205,49 +206,19 @@ export default function Accueil() {
           </div>
         )}
 
-        {/* ── CTA ── */}
+        {/* ── CTA — têtes gravure (collage surréaliste) ── */}
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              onClick={() => nav('/config')}
-              style={{
-                flex: 1, minWidth: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: accent, color: bg,
-                ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
-                padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
-                borderRadius: 3, whiteSpace: 'nowrap',
-              }}
-            >
-              Cadavre Écrit
-            </button>
-            <button
-              onClick={() => nav('/config-dessin')}
-              style={{
-                flex: 1, minWidth: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: second, color: bg,
-                ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
-                padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
-                borderRadius: 3, whiteSpace: 'nowrap',
-              }}
-            >
-              Cadavre Dessiné
-            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <TeteCollage src="/tetes/fourmi.png" label="Cadavre Écrit" accent={accent} onActivate={() => nav('/config')} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <TeteCollage src="/tetes/papillon.png" label="Cadavre Dessiné" accent={second} onActivate={() => nav('/config-dessin')} />
+            </div>
           </div>
-          <button
-            onClick={() => nav('/online')}
-            style={{
-              width: '100%', marginTop: 6,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              background: 'transparent', color: encre,
-              ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
-              padding: '0.55em 1em', border: `1px solid ${encre}40`, cursor: 'pointer',
-              borderRadius: 3,
-            }}
-          >
-            <span>Mode en ligne</span>
-          </button>
+          <div style={{ marginTop: 6 }}>
+            <TeteCollage src="/tetes/tigre.png" label="Mode en ligne" accent={encre} onActivate={() => nav('/online')} />
+          </div>
         </div>
 
         {/* ── FOOTER ── */}
