@@ -158,6 +158,19 @@ export default function Accueil() {
             padding: 'clamp(4px, 1.6vw, 10px) clamp(12px, 4vw, 26px)',
             transform: 'rotate(-1.6deg)',
           }}>
+            {/* étiquette « Cadavre » agrafée au coin du carton — se lit avec
+                « Exquis. » juste dessous comme le titre complet du jeu, en
+                pleine opacité (remplace l'ancien filigrane vertical illisible) */}
+            <span style={{
+              position: 'absolute', top: -15, [cadavreSide]: 14,
+              ...ui, fontSize: 'clamp(13px, 4.2vw, 19px)', letterSpacing: '0.14em',
+              fontWeight: 800, textTransform: 'uppercase', whiteSpace: 'nowrap',
+              color: surAccent2, background: accent2, padding: '5px 12px',
+              borderRadius: 2, transform: 'rotate(-3deg)',
+              boxShadow: '0 3px 9px rgba(0,0,0,0.3)', zIndex: 1,
+            }}>
+              Cadavre
+            </span>
             <div
               className="font-fraunces font-black"
               style={{

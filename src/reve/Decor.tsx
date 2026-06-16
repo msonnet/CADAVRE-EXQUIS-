@@ -138,7 +138,6 @@ interface VariantZones {
   symbol: { top?: string; bottom?: string; left?: string; right?: string; sizeMul: number } | null
   etiqs: React.CSSProperties[]
   stripesMax: number
-  verticalTitle: { side: 'left' | 'right' } | null
   citation: boolean
   signature: boolean
 }
@@ -148,7 +147,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: null,
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: { side: 'right' },
     citation: true,
     signature: true,
   },
@@ -156,7 +154,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -164,7 +161,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -172,7 +168,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { bottom: '14%', right: '4%', sizeMul: 0.5 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: false,
   },
@@ -180,7 +175,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { top: '20%', sizeMul: 0.7 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: false,
   },
@@ -188,7 +182,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { bottom: '10%', right: '4%', sizeMul: 0.45 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: false,
   },
@@ -196,7 +189,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { top: '14%', sizeMul: 0.65 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -204,7 +196,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { top: '12%', right: '5%', sizeMul: 0.55 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -212,7 +203,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { top: '12%', right: '5%', sizeMul: 0.55 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -220,7 +210,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: null,
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -228,7 +217,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { bottom: '18%', right: '4%', sizeMul: 0.38 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -236,7 +224,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: null,
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -244,7 +231,6 @@ const ZONES: Record<Variant, VariantZones> = {
     symbol: { top: '14%', left: '4%', sizeMul: 0.5 },
     etiqs: [],
     stripesMax: 0,
-    verticalTitle: null,
     citation: false,
     signature: true,
   },
@@ -275,13 +261,6 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 
   return (
     <>
-      {zones.verticalTitle && (
-        <VerticalAccent
-          side={s.symbolSide === 'right' ? 'left' : 'right'}
-          rotation={s.titreRotation}
-        />
-      )}
-
       {symbolPos && (
         <SymboleAvecCartel
           symbole={s.symbole}
@@ -303,28 +282,6 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 }
 
 // ─── Sous-composants ──
-
-function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: number }) {
-  // Filigrane : « CADAVRE » se lit avec le « Exquis. » du titre, mais en encre
-  // très atténuée — sinon ce gros mot vertical recouvre la citation et les
-  // bêtes qui descendent juste à côté (il est posé derrière, zIndex 2).
-  return (
-    <div style={{
-      position: 'absolute', top: '6%',
-      [side]: 0,
-      writingMode: 'vertical-rl',
-      fontFamily: "'Fraunces', 'Bodoni Moda', serif",
-      fontWeight: 900, fontStyle: 'italic',
-      fontSize: 'clamp(3rem, 15vw, 5.5rem)',
-      lineHeight: 0.88, letterSpacing: '-0.03em',
-      color: 'var(--reve-ink)', opacity: 0.1,
-      textTransform: 'uppercase',
-      transform: rotation ? `rotate(${rotation}deg)` : undefined,
-      zIndex: 1, pointerEvents: 'none',
-      animation: 'inkBloomFaint 1.2s 0.2s both',
-    } as React.CSSProperties}>CADAVRE</div>
-  )
-}
 
 const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
 
