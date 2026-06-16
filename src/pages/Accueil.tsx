@@ -3,15 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
-import TeteCollage, { PAPIER, PAPIER_TEXTURE, DECHIRE_1 } from '../components/TeteCollage'
+import TeteCollage from '../components/TeteCollage'
+import { PAPIER, PAPIER_TEXTURE, DECHIRE_1, ENCRE_PAPIER } from '../components/Papier'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
 import { rearmerRappelSiActif } from '../utils/notifications'
-
-// Encre sombre fixe pour le texte posé sur le papier crème (PAPIER) — toujours
-// lisible, quelle que soit l'ambiance, puisque le papier est lui-même fixe.
-const ENCRE_PAPIER = '#241a10'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
