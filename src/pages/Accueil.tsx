@@ -44,7 +44,6 @@ export default function Accueil() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const second = c?.second ?? '#1d3a8c'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -52,7 +51,6 @@ export default function Accueil() {
   const angleBiais = seance?.angleBiais ?? 0
   const letters = 'Exquis.'
 
-  const bg = c?.bg ?? '#0f0805'
   const ui: React.CSSProperties = { fontFamily: "'Raleway', sans-serif" }
 
   const cadavreSide = seance?.symbolSide === 'right' ? 'left' : 'right'
@@ -210,14 +208,14 @@ export default function Accueil() {
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <TeteCollage src="/tetes/fourmi.png" label="Cadavre Écrit" accent={accent} onActivate={() => nav('/config')} />
+              <TeteCollage src="/tetes/fourmi.png" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <TeteCollage src="/tetes/papillon.png" label="Cadavre Dessiné" accent={second} onActivate={() => nav('/config-dessin')} />
+              <TeteCollage src="/tetes/papillon.png" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
           <div style={{ marginTop: 6 }}>
-            <TeteCollage src="/tetes/tigre.png" label="Mode en ligne" accent={encre} onActivate={() => nav('/online')} />
+            <TeteCollage src="/tetes/tigre.png" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>
 

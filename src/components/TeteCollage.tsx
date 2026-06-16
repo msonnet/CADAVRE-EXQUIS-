@@ -18,8 +18,6 @@ import { useRef, useState } from 'react'
 type Props = {
   src?: string
   label: string
-  accent: string
-  /** couleur d'encre du cartouche (sépia par défaut) */
   onActivate: () => void
 }
 
@@ -29,7 +27,7 @@ const TRAIT = '#2c1e10'
 
 let _uid = 0
 
-export default function TeteCollage({ src, label, accent, onActivate }: Props) {
+export default function TeteCollage({ src, label, onActivate }: Props) {
   const [closing, setClosing] = useState(false)
   const [broken, setBroken] = useState(false)
   const fired = useRef(false)
@@ -105,7 +103,7 @@ export default function TeteCollage({ src, label, accent, onActivate }: Props) {
             position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: "'Raleway', sans-serif", fontWeight: 700,
             fontSize: 'clamp(11px, 3.4vw, 15px)', letterSpacing: '0.14em',
-            textTransform: 'uppercase', color: accent, textAlign: 'center',
+            textTransform: 'uppercase', color: TRAIT, textAlign: 'center',
           }}>
             {label}
           </span>
