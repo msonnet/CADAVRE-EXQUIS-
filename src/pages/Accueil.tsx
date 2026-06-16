@@ -208,14 +208,14 @@ export default function Accueil() {
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <TeteCollage src="/tetes/fourmi.png" label="Cadavre Écrit" onActivate={() => nav('/config')} />
+              <TeteCollage espece="fourmi" src="/tetes/fourmi.png" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <TeteCollage src="/tetes/papillon.png" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
+              <TeteCollage espece="papillon" src="/tetes/papillon.png" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
-          <div style={{ marginTop: 6 }}>
-            <TeteCollage src="/tetes/tigre.png" label="Mode en ligne" onActivate={() => nav('/online')} />
+          <div style={{ marginTop: 10 }}>
+            <TeteCollage espece="tigre" src="/tetes/tigre.png" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>
 

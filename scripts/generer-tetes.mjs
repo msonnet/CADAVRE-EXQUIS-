@@ -23,25 +23,28 @@ const GRAVURE =
   'antique copperplate intaglio engraving, dense cross-hatching and stippling, ' +
   'Max Ernst surrealist collage from "Une Semaine de Bonté", 19th-century natural-history plate, ' +
   'warm sepia ink on aged cream paper, museum specimen, ' +
-  'subject centered in the upper portion, lower third left as plain empty aged paper, ' +
+  'perfectly frontal symmetrical view facing the camera directly, subject fills the frame, ' +
   'no text, no letters, no caption, no border, no frame'
 
 const TETES = {
-  // Cadavre Écrit — la fourmi de Dalí, mandibules ouvrières
+  // Cadavre Écrit — la fourmi, mandibules grand ouvertes (le texte logé dans le vide entre elles)
   fourmi:
-    'monstrous giant ant head seen in three-quarter view, long segmented antennae, ' +
-    'sharp mandibles parted, faceted compound eye, ' + GRAVURE,
-  // Cadavre Dessiné — la phalène, antennes plumeuses (métamorphose, dessin)
+    'monstrous ant head facing the camera perfectly frontally, symmetrical, ' +
+    'mandibles spread wide open downward forming a clear V-shaped gap of dark empty space between them, ' +
+    'two large faceted compound eyes flanking the head symmetrically, segmented antennae curving up and outward, ' + GRAVURE,
+  // Cadavre Dessiné — la phalène vue de dessus, ailes grand ouvertes (le texte posé sur les ailes)
   papillon:
-    'great moth head facing forward, enormous feathered plumose antennae spreading wide, ' +
-    'furred thorax, patterned wing edges, ' + GRAVURE,
-  // Mode en ligne — le tigre de Dalí, bondissant
+    'great moth viewed directly from above, wings fully spread flat and symmetrical like a pinned museum specimen, ' +
+    'intricate radiating wing patterns, furred body and head centered between the wings, feathered antennae, ' + GRAVURE,
+  // Mode en ligne — le tigre, gueule grand ouverte de face (le texte logé dans la bouche)
   tigre:
-    'roaring tiger head in profile, jaws open showing fangs, striped fur, fierce eye, ' +
-    'mane of short fur, ' + GRAVURE,
-  // Atelier — l'éléphant à trompe de Dalí
+    'tiger head facing the camera perfectly frontally, symmetrical, ' +
+    'jaws wide open vertically forming a dark open mouth gap with fangs visible on both sides, ' +
+    'symmetrical facial stripes, fierce eyes, ' + GRAVURE,
+  // Atelier — l'éléphant, trompe et oreilles déployées de face
   elephant:
-    'elephant head in profile, long curling raised trunk, great ear unfurled, single tusk, ' +
+    'elephant head facing the camera perfectly frontally, symmetrical, ' +
+    'trunk raised and curled open at the tip forming a gap, both great ears unfurled wide, tusks visible, ' +
     'wrinkled hide, ' + GRAVURE,
 }
 
@@ -52,7 +55,7 @@ async function gen(nom, prompt, falKey) {
     headers: { Authorization: `Key ${falKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prompt,
-      image_size: 'landscape_16_9',
+      image_size: 'square_hd',
       num_inference_steps: 32,
       guidance_scale: 4.0,
       safety_tolerance: 5,
