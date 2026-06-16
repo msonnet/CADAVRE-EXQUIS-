@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
+import { Etiquette } from '../components/Papier'
 import type { ConfigDessin, BandeDessin } from '../types'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
@@ -249,6 +250,7 @@ export default function JeuDessin() {
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const bg = c?.bg ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#fff'
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   // Prévenir swipe-back iOS — uniquement sur la zone canvas
@@ -1100,8 +1102,10 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
-                — BANDE 1/{config.nbBandes} —
+              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+                  BANDE 1/{config.nbBandes}
+                </Etiquette>
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur 1.
@@ -1117,7 +1121,9 @@ export default function JeuDessin() {
               onClick={(e) => e.stopPropagation()}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
             >
-              <span style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.24em', opacity: 0.8 }}>— PAPIER —</span>
+              <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+                PAPIER
+              </Etiquette>
               <div style={{ display: 'flex', gap: 10 }}>
                 {PAPERS.map(p => (
                   <button
@@ -1169,8 +1175,10 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
-                — BANDE {bandeIdx + 2}/{config.nbBandes} —
+              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+                  BANDE {bandeIdx + 2}/{config.nbBandes}
+                </Etiquette>
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur {nextPlayerNum}.
