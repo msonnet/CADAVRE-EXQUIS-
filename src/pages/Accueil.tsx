@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
 import TeteCollage from '../components/TeteCollage'
-import { PAPIER, PAPIER_TEXTURE, DECHIRE_1, ENCRE_PAPIER } from '../components/Papier'
+import { PAPIER, ENCRE_PAPIER, PapierCard, Etiquette } from '../components/Papier'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
@@ -149,28 +149,30 @@ export default function Accueil() {
         >
           {/* carton de papier découpé, posé sous le titre — la pièce maîtresse
               du poster-collage, donc la plus grande et la plus pivotée */}
-          <div style={{
-            position: 'relative', display: 'inline-block',
-            ...PAPIER_TEXTURE,
-            border: `1px solid ${seance?.ambiance.rule ?? 'rgba(0,0,0,0.18)'}`,
-            boxShadow: '0 6px 18px rgba(0,0,0,0.32)',
-            borderRadius: 8,
-            padding: 'clamp(3px, 1.2vw, 8px) clamp(12px, 4vw, 26px)',
-            transform: 'rotate(-1.6deg)',
-          }}>
+          <PapierCard
+            rotation={-1.6}
+            bordure={seance?.ambiance.rule}
+            style={{
+              position: 'relative', display: 'inline-block',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.32)',
+              padding: 'clamp(3px, 1.2vw, 8px) clamp(12px, 4vw, 26px)',
+            }}
+          >
             {/* étiquette « Cadavre » agrafée au coin du carton — se lit avec
                 « Exquis. » juste dessous comme le titre complet du jeu, en
                 pleine opacité (remplace l'ancien filigrane vertical illisible) */}
-            <span style={{
-              position: 'absolute', top: -15, [cadavreSide]: 14,
-              ...ui, fontSize: 'clamp(13px, 4.2vw, 19px)', letterSpacing: '0.14em',
-              fontWeight: 800, textTransform: 'uppercase', whiteSpace: 'nowrap',
-              color: surAccent2, background: accent2, padding: '5px 12px',
-              borderRadius: 2, transform: 'rotate(-3deg)',
-              boxShadow: '0 3px 9px rgba(0,0,0,0.3)', zIndex: 1,
-            }}>
+            <Etiquette
+              bg={accent2}
+              color={surAccent2}
+              rotation={-3}
+              style={{
+                position: 'absolute', top: -15, [cadavreSide]: 14,
+                fontSize: 'clamp(13px, 4.2vw, 19px)', letterSpacing: '0.14em',
+                padding: '5px 12px', boxShadow: '0 3px 9px rgba(0,0,0,0.3)', zIndex: 1,
+              }}
+            >
               Cadavre
-            </span>
+            </Etiquette>
             <div
               className="font-fraunces font-black"
               style={{
@@ -190,7 +192,7 @@ export default function Accueil() {
                 }}>{l}</span>
               ))}
             </div>
-          </div>
+          </PapierCard>
         </motion.div>
       </div>
 
@@ -209,14 +211,12 @@ export default function Accueil() {
             rapport au titre, avec son étiquette d'auteur agrafée au coin ── */}
         {seance?.citation && (
           <div style={{ position: 'relative', marginBottom: 13, marginTop: 2 }}>
-            <div style={{
-              ...PAPIER_TEXTURE,
-              border: `1px solid ${seance.ambiance.rule}`,
-              boxShadow: '0 4px 13px rgba(0,0,0,0.28)',
-              clipPath: DECHIRE_1,
-              padding: '10px 13px 12px',
-              transform: 'rotate(0.9deg)',
-            }}>
+            <PapierCard
+              rotation={0.9}
+              bord="dechire1"
+              bordure={seance.ambiance.rule}
+              style={{ boxShadow: '0 4px 13px rgba(0,0,0,0.28)', padding: '10px 13px 12px' }}
+            >
               <span style={{
                 fontFamily: "'Playfair Display', serif", fontSize: 16.5, lineHeight: 1.48,
                 color: ENCRE_PAPIER, display: '-webkit-box', fontStyle: 'italic',
@@ -224,17 +224,18 @@ export default function Accueil() {
               } as React.CSSProperties}>
                 {seance.citation.t}
               </span>
-            </div>
-            <div style={{
-              position: 'absolute', right: 14, bottom: -11,
-              ...ui, fontSize: 11.5, letterSpacing: '0.08em', fontWeight: 800,
-              textTransform: 'uppercase', color: surAccent2,
-              background: accent2, padding: '4px 9px', borderRadius: 2,
-              transform: 'rotate(-2.2deg)', whiteSpace: 'nowrap',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-            }}>
+            </PapierCard>
+            <Etiquette
+              bg={accent2}
+              color={surAccent2}
+              rotation={-2.2}
+              style={{
+                position: 'absolute', right: 14, bottom: -11,
+                fontSize: 11.5, padding: '4px 9px', boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+              }}
+            >
               {seance.citation.a}
-            </div>
+            </Etiquette>
           </div>
         )}
 
@@ -273,17 +274,14 @@ export default function Accueil() {
                 textAlign: (align as 'right') ?? 'left',
               }}
             >
-              <span style={{
-                ...ui, display: 'inline-block', fontSize: 11.5, letterSpacing: '0.1em',
-                textTransform: 'uppercase', fontWeight: 800, whiteSpace: 'nowrap',
-                color: surAccent2,
-                background: i % 2 === 0 ? accent : accent2,
-                padding: '4px 11px', borderRadius: 2,
-                transform: `rotate(${rot}deg)`,
-                boxShadow: '0 2px 6px rgba(0,0,0,0.22)',
-              }}>
+              <Etiquette
+                bg={i % 2 === 0 ? accent : accent2}
+                color={surAccent2}
+                rotation={rot}
+                style={{ fontSize: 11.5, padding: '4px 11px' }}
+              >
                 {label}
-              </span>
+              </Etiquette>
             </button>
           ))}
           {/* Entrée discrète — l'atelier du recueil : un petit bout de
@@ -296,17 +294,20 @@ export default function Accueil() {
               cursor: 'pointer', padding: '4px 0 0', textAlign: 'center',
             }}
           >
-            <span style={{
-              display: 'inline-block',
-              background: PAPIER, color: ENCRE_PAPIER,
-              border: `1px solid ${seance?.ambiance.rule ?? 'rgba(0,0,0,0.18)'}`,
-              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-              borderRadius: 2, padding: '2px 14px',
-              fontFamily: "'Caveat', cursive", fontWeight: 600, fontSize: 14,
-              transform: 'rotate(-1deg)',
-            }}>
+            <Etiquette
+              bg={PAPIER}
+              color={ENCRE_PAPIER}
+              rotation={-1}
+              style={{
+                border: `1px solid ${seance?.ambiance.rule ?? 'rgba(0,0,0,0.18)'}`,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                padding: '2px 14px',
+                fontFamily: "'Caveat', cursive", fontWeight: 600, fontSize: 14,
+                letterSpacing: 'normal', textTransform: 'none',
+              }}
+            >
               ✧ l'atelier ✧
-            </span>
+            </Etiquette>
           </button>
         </div>
 
