@@ -115,12 +115,9 @@ export default function Accueil() {
         </div>
       )}
 
-      {/* ── ZONE CENTRALE ── */}
-      {/* flexGrow sans flexShrink : la zone grandit (écran haut) mais ne se
-          rétracte jamais sous la hauteur du titre (écran court, Safari adresse).
-          justify-start : le titre reste près du header, le blanc libre est sous
-          lui — pas au-dessus, ce qui l'aurait repoussé vers le bas de la zone. */}
-      <div className="relative flex flex-col justify-start" style={{ zIndex: 10, flexGrow: 1, flexShrink: 0, paddingTop: 18 }}>
+      {/* ── ZONE CENTRALE ── titre + citation groupés sous le header ;
+          pas de flexGrow ici — c'est le séparateur après qui absorbe le slack */}
+      <div className="relative flex flex-col justify-start" style={{ zIndex: 10, flexShrink: 0, paddingTop: 18 }}>
 
         {/* Accent vertical éditorial — chiffre de séance */}
         <motion.div
@@ -200,21 +197,8 @@ export default function Accueil() {
             </div>
           </PapierCard>
         </motion.div>
-      </div>
 
-      {/* ── PLI — Citation + CTAs + Footer s'ouvrent comme une feuille pliée ── */}
-      <motion.div
-        style={{
-          position: 'relative', zIndex: 10,
-          transformPerspective: 900,
-          transformOrigin: 'top center',
-        }}
-        initial={{ rotateX: -72, opacity: 0 }}
-        animate={{ rotateX: 0, opacity: 1 }}
-        transition={{ delay: 0.9, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {/* ── CITATION — carton de papier, plus petit et contre-pivoté par
-            rapport au titre, avec son étiquette d'auteur agrafée au coin ── */}
+        {/* ── CITATION — groupée avec le titre, juste en dessous ── */}
         {seance?.citation && (
           <div style={{ position: 'relative', marginBottom: 13, marginTop: 2 }}>
             <PapierCard
@@ -232,9 +216,6 @@ export default function Accueil() {
                 {seance.citation.t}
               </span>
             </PapierCard>
-            {/* attribution = ligne SECONDAIRE : annotation nue, jamais encadrée
-                (une étiquette d'accent lui donnait autant de poids qu'un mode de
-                jeu). Petit, contre-pivoté, posé à même le papier. */}
             <span style={{
               position: 'absolute', right: 16, bottom: -19,
               fontFamily: "'Raleway', sans-serif", fontSize: 10.5, fontWeight: 700,
@@ -245,7 +226,24 @@ export default function Accueil() {
             </span>
           </div>
         )}
+      </div>
 
+      {/* séparateur flexible : absorbe l'espace libre entre la citation et les
+          têtes, quelle que soit la hauteur d'écran — ni le titre ni les têtes
+          ne bougent quand l'écran est plus ou moins haut */}
+      <div style={{ flexGrow: 1 }} />
+
+      {/* ── PLI — CTAs + Footer s'ouvrent comme une feuille pliée ── */}
+      <motion.div
+        style={{
+          position: 'relative', zIndex: 10,
+          transformPerspective: 900,
+          transformOrigin: 'top center',
+        }}
+        initial={{ rotateX: -72, opacity: 0 }}
+        animate={{ rotateX: 0, opacity: 1 }}
+        transition={{ delay: 0.9, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      >
         {/* ── CTA — têtes-gravures « collées de travers » : tailles inégales,
             rotations et décentrage pour le caractère, MAIS chaque tête garde
             sa propre case verticale — aucun chevauchement ne masque jamais une
