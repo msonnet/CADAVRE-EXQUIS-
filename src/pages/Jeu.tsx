@@ -802,7 +802,7 @@ export default function Jeu() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <PapierCard rotation={-0.7} bord="dechire2" bordure={`${accent}55`} style={{ padding: '12px 14px 14px' }}>
+                <PapierCard rotation={-0.7} bord="net" bordure={`${accent}55`} style={{ padding: '12px 14px 14px' }}>
                   <p style={{
                     fontFamily: "'Playfair Display', serif", fontSize: 17, fontStyle: 'italic',
                     color: ENCRE_PAPIER, lineHeight: 1.5,

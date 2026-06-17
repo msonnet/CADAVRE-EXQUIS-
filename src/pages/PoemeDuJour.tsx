@@ -133,7 +133,7 @@ export default function PoemeDuJour() {
             transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1] }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', transformOrigin: 'top center' }}
           >
-            <PapierCard rotation={0} bord="dechire1" bordure={`${accent}55`} style={{ padding: '16px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
               {/* Poem title */}
               <div style={{ marginBottom: 12 }}>
                 <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
