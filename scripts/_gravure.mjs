@@ -20,20 +20,33 @@ export const GRAVURE =
   'no vignette and no gradient behind the subject, museum natural-history plate, ' +
   '19th-century engraving precision, no text, no letters, no caption, no border, no frame, no color'
 
-// Variante COULEUR « mélange de médiums » (cf. detourerFondClair) : la même
-// chimère, mais rendue comme un vrai collage surréaliste — gravure rehaussée à
-// l'aquarelle, papiers découpés, fragments de photo ancienne, couleurs vives.
-// Fond papier clair et uniforme imposé pour que le détourage couleur isole
-// proprement le sujet. Descriptions positives uniquement (un modèle de
-// diffusion peint souvent un concept même nié).
-export const MIXTE =
-  'vivid surrealist mixed-media collage in the bold colourful spirit of Max Ernst, Hannah Höch and Dada, ' +
-  'saturated technicolor risograph palette, bright cyan teal magenta ochre and vermilion, ' +
-  'thick loose gouache and watercolour washes layered over torn cut-paper shapes and vintage photo fragments, ' +
-  'a thin engraved line only as accent on top of the colour, visible paper grain and collage seams, ' +
-  'playful dreamlike storybook plate, perfectly flat uniform pale cream paper background with ' +
-  'absolutely no vignette and no gradient behind the subject, no text, no letters, no caption, ' +
-  'no border, no frame'
+// Trois médiums DISTINCTS, un par tête (cf. generer-tetes.mjs : STYLE par
+// espèce) — surtout pas la même teinte/grain partout, et pas d'arc-en-ciel.
+// Chacun est un remplaçant de GRAVURE (même rôle dans le prompt : décrit le
+// médium + impose un fond clair uniforme pour le détourage par propagation).
+
+// HALFTONE — trait noir & blanc dur, trame de journal (réf. oiseau).
+export const HALFTONE =
+  'high-contrast black and white halftone illustration, coarse newsprint dot screen and gritty ' +
+  'photocopy grain, pure monochrome black ink on white, bold graphic silhouette, strong solid blacks ' +
+  'and clean whites, perfectly flat uniform pure white paper background with absolutely no vignette ' +
+  'and no gradient behind the subject, no text, no letters, no caption, no border, no frame, no colour'
+
+// SEPIA_TEXTE — photogravure sépia vieillie + fragments de texte imprimé (réf. œil).
+export const SEPIA_TEXTE =
+  'aged sepia photogravure collage, warm grey-brown monochrome on yellowed antique paper, the subject ' +
+  'partly overlaid and surrounded by torn fragments of old printed book pages with faint blurred lines ' +
+  'of small vintage text used only as collage texture, soft film grain, muted and desaturated, ' +
+  'perfectly flat uniform pale cream paper background with absolutely no vignette and no gradient ' +
+  'behind the subject, no large caption, no title, no border, no frame, no bright colour'
+
+// ACCENT — gravure monochrome avec UN seul accent de couleur sourde (oxblood).
+export const ACCENT =
+  'antique copperplate engraving, dense fine cross-hatching and stippling, monochrome black ink, ' +
+  'with a single restrained accent of muted faded oxblood-red wash on a few elements only, everything ' +
+  'else strictly black and white with no other colours, 19th-century museum plate, perfectly flat ' +
+  'uniform pale cream paper background with absolutely no vignette and no gradient behind the subject, ' +
+  'no text, no letters, no caption, no border, no frame'
 
 export async function genererImage(prompt, falKey, opts = {}) {
   const r = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {

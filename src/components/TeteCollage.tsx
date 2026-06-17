@@ -70,8 +70,7 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
       aria-label={label}
       style={{
         position: 'relative', width: '100%', padding: 0, border: 'none',
-        background: 'none', cursor: 'pointer',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+        background: 'none', cursor: 'pointer', display: 'block',
       }}
     >
       {/* minuteur unique : déclenche onActivate une fois la fermeture jouée,
@@ -95,12 +94,19 @@ export default function TeteCollage({ espece, label, onActivate }: Props) {
         <RasterArt espece={espece} uid={uid} closing={closing} />
       </div>
 
-      {/* légende — étiquette découpée façon collage, toujours posée devant */}
+      {/* légende — étiquette collée DANS le collage : un bandeau de papier
+          d'accent agrafé en travers du bas de la découpe (chevauche le bord
+          inférieur ~ d'un cheveu), pas posé en dessous. Centré, contre-pivoté,
+          ombre marquée pour bien lire « par-dessus » la bête. */}
       <Etiquette
         bg={accent}
         color={surAccent}
-        rotation={-rotation * 0.6}
-        style={{ position: 'relative', zIndex: 1, fontSize: 'clamp(9.5px, 2.7vw, 12.5px)', padding: '4px 9px' }}
+        style={{
+          position: 'absolute', left: '50%', bottom: '4%', zIndex: 5,
+          transform: `translateX(-50%) rotate(${-rotation * 0.9}deg)`,
+          fontSize: 'clamp(9.5px, 2.7vw, 12.5px)', padding: '4px 9px',
+          boxShadow: '0 3px 9px rgba(0,0,0,0.4)',
+        }}
       >
         {label}
       </Etiquette>

@@ -24,14 +24,13 @@
  * à un éléphant chimérique simple plutôt que de risquer un résultat hors
  * charte (« doux, jamais effrayant »).
  *
- * Usage :
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs              # les 3, gravure
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs elephant     # une seule
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs --couleur    # les 3, collage coloré
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs papillon --couleur
+ * Chaque tête a son médium propre (STYLE par espèce, ci-dessous) : papillon en
+ * halftone noir & blanc, éléphant en sépia + fragments de texte, tigre en
+ * gravure avec un seul accent sourd. Pas de teinte ni de grain communs.
  *
- * --couleur : rend la même chimère en collage mixed-media coloré (prompt MIXTE
- * + détourage couleur), au lieu de la gravure monochrome. Écrase les fichiers.
+ * Usage :
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs              # les 3
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs elephant     # une seule
  *
  * Sortie : public/tetes/<espece>/ouvert.webp, + ferme.webp pour le tigre.
  */
@@ -40,10 +39,17 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { GRAVURE, MIXTE, genererImage, detourerParLuminance, detourerFondClair, decouperPapier } from './_gravure.mjs'
+import { GRAVURE, HALFTONE, SEPIA_TEXTE, ACCENT, genererImage, detourerFondClair, decouperPapier } from './_gravure.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
+
+// Un médium DISTINCT par tête (demande utilisateur : ni la même teinte ni le
+// même grain partout, pas d'arc-en-ciel). Le prompt de chaque espèce se termine
+// par GRAVURE (via CADRAGE) ; on le remplace par le style voulu. detourerFondClair
+// (détourage couleur par propagation depuis le bord) convient aux trois : il
+// préserve les pixels du sujet quels qu'ils soient et n'enlève que le fond clair.
+const STYLE = { papillon: HALFTONE, elephant: SEPIA_TEXTE, tigre: ACCENT }
 
 const CADRAGE =
   'a single creature head portrait, perfectly centered, frontal symmetric view, ' +
@@ -148,14 +154,13 @@ async function remplir(imagePng, masquePng, prompt, falKey) {
   return Buffer.from(await img.arrayBuffer())
 }
 
-async function gen(espece, def, falKey, outDir, couleur) {
-  // En mode couleur, on garde la chimère mais on échange le médium : le bloc
-  // GRAVURE des prompts devient MIXTE (collage coloré). Les prompts d'espèce
-  // se terminent tous par GRAVURE (via CADRAGE), d'où le simple replace.
-  const medium = (p) => couleur ? p.replace(GRAVURE, MIXTE) : p
-  const detourer = couleur ? detourerFondClair : detourerParLuminance
+async function gen(espece, def, falKey, outDir) {
+  // Chaque tête a son médium propre : on remplace le bloc GRAVURE (terminaison
+  // commune des prompts via CADRAGE) par le style de l'espèce.
+  const style = STYLE[espece] ?? GRAVURE
+  const medium = (p) => p.replace(GRAVURE, style)
 
-  process.stdout.write(`· ${espece} (ouvert${couleur ? ', couleur' : ''}) … `)
+  process.stdout.write(`· ${espece} (ouvert) … `)
   const ouvertBrut = await genererImage(medium(def.ouvert), falKey, { image_size: 'square_hd' })
   const ouvertPng = await sharp(ouvertBrut).resize(TAILLE, TAILLE).png().toBuffer()
   console.log('ok')
@@ -170,7 +175,7 @@ async function gen(espece, def, falKey, outDir, couleur) {
   }
 
   for (const [etat, buf] of etats) {
-    const detourePng = await (await detourer(buf)).resize(480, 480).png().toBuffer()
+    const detourePng = await (await detourerFondClair(buf)).resize(480, 480).png().toBuffer()
     const decoupe = await decouperPapier(detourePng)
     const outBuf = await decoupe.webp({ quality: 72, alphaQuality: 80, effort: 6 }).toBuffer()
     await writeFile(join(outDir, `${etat}.webp`), outBuf)
@@ -184,22 +189,19 @@ if (!falKey) {
   process.exit(1)
 }
 
-// --couleur (ou COULEUR=1) : rend les chimères en collage mixed-media coloré
-// au lieu de la gravure monochrome. Écrase les mêmes fichiers ouvert/ferme.webp.
 const args = process.argv.slice(2)
-const couleur = args.includes('--couleur') || process.env.COULEUR === '1'
 const especeSeule = args.find(a => !a.startsWith('--'))
 if (especeSeule && !ESPECES[especeSeule]) {
   console.error(`✗ espèce inconnue : ${especeSeule}.  Choix : ${Object.keys(ESPECES).join(', ')}`)
   process.exit(1)
 }
 
-console.log(`Génération des têtes de menu (${couleur ? 'COULEUR mixed-media' : 'gravure'}) → public/tetes/<espèce>/`)
+console.log('Génération des têtes de menu (médium par espèce) → public/tetes/<espèce>/')
 const cibles = especeSeule ? { [especeSeule]: ESPECES[especeSeule] } : ESPECES
 for (const [espece, def] of Object.entries(cibles)) {
   const outDir = join(__dirname, '..', 'public', 'tetes', espece)
   await mkdir(outDir, { recursive: true })
-  try { await gen(espece, def, falKey, outDir, couleur) }
+  try { await gen(espece, def, falKey, outDir) }
   catch (e) { console.log(`erreur : ${e.message}`) }
 }
 console.log('Terminé.')
