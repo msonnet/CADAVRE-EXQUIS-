@@ -252,7 +252,7 @@ export default function Accueil() {
         <div style={{ position: 'relative', marginBottom: 10, marginTop: 24 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             {/* éléphant — bord gauche, remonté sur sa diagonale haut-gauche */}
-            <div style={{ width: '46%', marginTop: -18, transform: 'translate(-3%, 0) rotate(-3deg)', zIndex: 2 }}>
+            <div style={{ width: '46%', marginTop: -36, transform: 'translate(-3%, 0) rotate(-3deg)', zIndex: 2 }}>
               <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
             {/* papillon — bord droit, légèrement au-dessus de l'éléphant */}
