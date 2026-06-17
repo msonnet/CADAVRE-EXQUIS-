@@ -244,24 +244,23 @@ export default function Accueil() {
         animate={{ rotateX: 0, opacity: 1 }}
         transition={{ delay: 0.9, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* ── CTA — têtes-gravures « collées de travers » : tailles inégales,
-            rotations et décentrage pour le caractère, MAIS chaque tête garde
-            sa propre case verticale — aucun chevauchement ne masque jamais une
-            étiquette de mode (le désordre ne doit pas coûter la lisibilité). ── */}
-        <div style={{ position: 'relative', marginBottom: 10, marginTop: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: '4%' }}>
-            {/* éléphant — un peu plus grand, penché à gauche */}
-            <div style={{ width: '47%', transform: 'rotate(-3deg)', zIndex: 2 }}>
+        {/* ── CTA — éléphant bord gauche, papillon bord droit (space-between),
+            tigre décalé en dessous. marginTop 24 garantit que l'attribution
+            de la citation (bottom:-19 = ~6px sous le bord de la zone centrale)
+            ne chevauche jamais la première tête, même quand le séparateur
+            flexible rétrécit à zéro sur les écrans courts. ── */}
+        <div style={{ position: 'relative', marginBottom: 10, marginTop: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            {/* éléphant — bord gauche, tête de liste */}
+            <div style={{ width: '46%', transform: 'rotate(-3deg)', zIndex: 2 }}>
               <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
-            {/* papillon — nettement DÉSAXÉ par rapport à l'éléphant : posé plus
-                bas et poussé d'un cran vers la droite, penché plus franchement */}
-            <div style={{ width: '40%', marginTop: 30, transform: 'translateX(7%) rotate(4.5deg)', zIndex: 3 }}>
+            {/* papillon — bord droit, légèrement au-dessus de l'éléphant */}
+            <div style={{ width: '42%', marginTop: -8, transform: 'rotate(4.5deg)', zIndex: 3 }}>
               <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
-          {/* tigre — décalé vers la DROITE (jamais pile sous l'éléphant), un cran
-              sous la rangée : marges POSITIVES pour ne masquer aucune étiquette */}
+          {/* tigre — décalé vers la DROITE (jamais pile sous l'éléphant) */}
           <div style={{ width: '49%', marginLeft: '36%', marginTop: 6, transform: 'rotate(-2.5deg)', zIndex: 4 }}>
             <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
