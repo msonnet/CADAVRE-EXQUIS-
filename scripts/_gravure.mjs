@@ -20,6 +20,25 @@ export const GRAVURE =
   'no vignette and no gradient behind the subject, museum natural-history plate, ' +
   '19th-century engraving precision, no text, no letters, no caption, no border, no frame, no color'
 
+// Variante COULEUR « mélange de médiums » (cf. detourerFondClair) : la même
+// chimère, mais rendue comme un vrai collage surréaliste — gravure rehaussée à
+// l'aquarelle, papiers découpés, fragments de photo ancienne, couleurs vives.
+// Fond papier clair et uniforme imposé pour que le détourage couleur isole
+// proprement le sujet. Descriptions positives uniquement (un modèle de
+// diffusion peint souvent un concept même nié).
+export const MIXTE =
+  'surrealist mixed-media collage illustration in the spirit of Max Ernst and Dada, ' +
+  'hand-coloured antique engraving combined with loose watercolour washes, torn cut-paper shapes ' +
+  'and faded vintage photograph fragments, bold vivid saturated colours, visible paper grain, ' +
+  'playful dreamlike storybook plate, perfectly flat uniform pale cream paper background with ' +
+  'absolutely no vignette and no gradient behind the subject, no text, no letters, no caption, ' +
+  'no border, no frame'
+
+// Saturation (max-min sur RVB) sous laquelle un pixel TRÈS clair est lu comme
+// fond papier (donc rendu transparent) par detourerFondClair. Assez bas pour
+// préserver les aplats pâles mais colorés du sujet (aquarelles claires).
+export const SAT_FOND = 30
+
 export async function genererImage(prompt, falKey, opts = {}) {
   const r = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
     method: 'POST',
@@ -70,6 +89,31 @@ export async function detourerParLuminance(buf, { lumiere = false } = {}) {
     out[o + 1] = teinte.g
     out[o + 2] = teinte.b
     out[o + 3] = alpha
+  }
+  return sharp(out, { raw: { width, height, channels: 4 } })
+}
+
+/**
+ * Détourage pour images COLORÉES (mixed-media) : retire le fond papier clair
+ * (très lumineux ET quasi neutre) en PRÉSERVANT les couleurs du sujet — les
+ * RVB d'origine sont conservés tels quels, seul l'alpha est calculé. À
+ * utiliser à la place de detourerParLuminance pour les têtes en couleur, puis
+ * passer le résultat à decouperPapier (qui pose la marge de papier déchirée ;
+ * les clairs enclavés dans le sujet laisseront voir le papier dessous).
+ */
+export async function detourerFondClair(buf) {
+  const img = sharp(buf).ensureAlpha()
+  const { width, height } = await img.metadata()
+  const { data } = await img.raw().toBuffer({ resolveWithObject: true })
+  const out = Buffer.alloc(width * height * 4)
+  for (let i = 0; i < width * height; i++) {
+    const o = i * 4
+    const r = data[o], g = data[o + 1], b = data[o + 2]
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b
+    const sat = Math.max(r, g, b) - Math.min(r, g, b)
+    const estFond = lum >= SEUIL_BLANC && sat <= SAT_FOND
+    out[o] = r; out[o + 1] = g; out[o + 2] = b
+    out[o + 3] = estFond ? 0 : 255
   }
   return sharp(out, { raw: { width, height, channels: 4 } })
 }

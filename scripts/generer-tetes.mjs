@@ -25,8 +25,13 @@
  * charte (« doux, jamais effrayant »).
  *
  * Usage :
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs            # les 3 espèces
- *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs elephant   # une seule
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs              # les 3, gravure
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs elephant     # une seule
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs --couleur    # les 3, collage coloré
+ *   FAL_KEY=xxxxx node scripts/generer-tetes.mjs papillon --couleur
+ *
+ * --couleur : rend la même chimère en collage mixed-media coloré (prompt MIXTE
+ * + détourage couleur), au lieu de la gravure monochrome. Écrase les fichiers.
  *
  * Sortie : public/tetes/<espece>/ouvert.webp, + ferme.webp pour le tigre.
  */
@@ -35,7 +40,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { GRAVURE, genererImage, detourerParLuminance, decouperPapier } from './_gravure.mjs'
+import { GRAVURE, MIXTE, genererImage, detourerParLuminance, detourerFondClair, decouperPapier } from './_gravure.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
@@ -143,9 +148,15 @@ async function remplir(imagePng, masquePng, prompt, falKey) {
   return Buffer.from(await img.arrayBuffer())
 }
 
-async function gen(espece, def, falKey, outDir) {
-  process.stdout.write(`· ${espece} (ouvert) … `)
-  const ouvertBrut = await genererImage(def.ouvert, falKey, { image_size: 'square_hd' })
+async function gen(espece, def, falKey, outDir, couleur) {
+  // En mode couleur, on garde la chimère mais on échange le médium : le bloc
+  // GRAVURE des prompts devient MIXTE (collage coloré). Les prompts d'espèce
+  // se terminent tous par GRAVURE (via CADRAGE), d'où le simple replace.
+  const medium = (p) => couleur ? p.replace(GRAVURE, MIXTE) : p
+  const detourer = couleur ? detourerFondClair : detourerParLuminance
+
+  process.stdout.write(`· ${espece} (ouvert${couleur ? ', couleur' : ''}) … `)
+  const ouvertBrut = await genererImage(medium(def.ouvert), falKey, { image_size: 'square_hd' })
   const ouvertPng = await sharp(ouvertBrut).resize(TAILLE, TAILLE).png().toBuffer()
   console.log('ok')
 
@@ -153,13 +164,13 @@ async function gen(espece, def, falKey, outDir) {
   if (def.ferme) {
     process.stdout.write(`· ${espece} (fermé, inpainting aligné) … `)
     const masque = await genererMasque(def.masque)
-    const fermePng = await remplir(ouvertPng, masque, def.ferme, falKey)
+    const fermePng = await remplir(ouvertPng, masque, medium(def.ferme), falKey)
     etats.push(['ferme', fermePng])
     console.log('ok')
   }
 
   for (const [etat, buf] of etats) {
-    const detourePng = await (await detourerParLuminance(buf)).resize(480, 480).png().toBuffer()
+    const detourePng = await (await detourer(buf)).resize(480, 480).png().toBuffer()
     const decoupe = await decouperPapier(detourePng)
     const outBuf = await decoupe.webp({ quality: 72, alphaQuality: 80, effort: 6 }).toBuffer()
     await writeFile(join(outDir, `${etat}.webp`), outBuf)
@@ -173,18 +184,22 @@ if (!falKey) {
   process.exit(1)
 }
 
-const [especeSeule] = process.argv.slice(2)
+// --couleur (ou COULEUR=1) : rend les chimères en collage mixed-media coloré
+// au lieu de la gravure monochrome. Écrase les mêmes fichiers ouvert/ferme.webp.
+const args = process.argv.slice(2)
+const couleur = args.includes('--couleur') || process.env.COULEUR === '1'
+const especeSeule = args.find(a => !a.startsWith('--'))
 if (especeSeule && !ESPECES[especeSeule]) {
   console.error(`✗ espèce inconnue : ${especeSeule}.  Choix : ${Object.keys(ESPECES).join(', ')}`)
   process.exit(1)
 }
 
-console.log('Génération des têtes de menu → public/tetes/<espèce>/')
+console.log(`Génération des têtes de menu (${couleur ? 'COULEUR mixed-media' : 'gravure'}) → public/tetes/<espèce>/`)
 const cibles = especeSeule ? { [especeSeule]: ESPECES[especeSeule] } : ESPECES
 for (const [espece, def] of Object.entries(cibles)) {
   const outDir = join(__dirname, '..', 'public', 'tetes', espece)
   await mkdir(outDir, { recursive: true })
-  try { await gen(espece, def, falKey, outDir) }
+  try { await gen(espece, def, falKey, outDir, couleur) }
   catch (e) { console.log(`erreur : ${e.message}`) }
 }
 console.log('Terminé.')
