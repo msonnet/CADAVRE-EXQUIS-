@@ -27,17 +27,13 @@ export const GRAVURE =
 // proprement le sujet. Descriptions positives uniquement (un modèle de
 // diffusion peint souvent un concept même nié).
 export const MIXTE =
-  'surrealist mixed-media collage illustration in the spirit of Max Ernst and Dada, ' +
-  'hand-coloured antique engraving combined with loose watercolour washes, torn cut-paper shapes ' +
-  'and faded vintage photograph fragments, bold vivid saturated colours, visible paper grain, ' +
+  'vivid surrealist mixed-media collage in the bold colourful spirit of Max Ernst, Hannah Höch and Dada, ' +
+  'saturated technicolor risograph palette, bright cyan teal magenta ochre and vermilion, ' +
+  'thick loose gouache and watercolour washes layered over torn cut-paper shapes and vintage photo fragments, ' +
+  'a thin engraved line only as accent on top of the colour, visible paper grain and collage seams, ' +
   'playful dreamlike storybook plate, perfectly flat uniform pale cream paper background with ' +
   'absolutely no vignette and no gradient behind the subject, no text, no letters, no caption, ' +
   'no border, no frame'
-
-// Saturation (max-min sur RVB) sous laquelle un pixel TRÈS clair est lu comme
-// fond papier (donc rendu transparent) par detourerFondClair. Assez bas pour
-// préserver les aplats pâles mais colorés du sujet (aquarelles claires).
-export const SAT_FOND = 30
 
 export async function genererImage(prompt, falKey, opts = {}) {
   const r = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
@@ -105,17 +101,53 @@ export async function detourerFondClair(buf) {
   const img = sharp(buf).ensureAlpha()
   const { width, height } = await img.metadata()
   const { data } = await img.raw().toBuffer({ resolveWithObject: true })
-  const out = Buffer.alloc(width * height * 4)
-  for (let i = 0; i < width * height; i++) {
+  const N = width * height
+
+  // Le fond d'un collage coloré n'est PAS forcément un blanc pur peu saturé :
+  // FLUX rend souvent un crème chaud (saturation ~35-40) ou légèrement teinté,
+  // qu'un seuil absolu lum/sat laisse passer (→ pas de transparence, rectangle
+  // plein). On détoure donc par PROPAGATION depuis le bord du cadre : la
+  // couleur de référence est la médiane des pixels du pourtour (le vrai fond,
+  // quelle que soit sa teinte), et on inonde l'intérieur tant qu'on reste
+  // proche de cette couleur. Un aplat pâle ENCLAVÉ dans le sujet (non relié au
+  // bord) est donc préservé, contrairement à un seuil global.
+  const echant = []
+  const lire = (i) => { const o = i * 4; echant.push([data[o], data[o + 1], data[o + 2]]) }
+  for (let x = 0; x < width; x++) { lire(x); lire((height - 1) * width + x) }
+  for (let y = 0; y < height; y++) { lire(y * width); lire(y * width + width - 1) }
+  const median = (k) => { const v = echant.map((p) => p[k]).sort((a, b) => a - b); return v[v.length >> 1] }
+  const refR = median(0), refG = median(1), refB = median(2)
+
+  // tolérance large mais bornée : assez pour absorber le grain/dégradé léger du
+  // fond sans manger les aplats colorés du sujet (qui en diffèrent nettement).
+  const TOL = 62
+  const proche = (i) => {
     const o = i * 4
-    const r = data[o], g = data[o + 1], b = data[o + 2]
-    const lum = 0.299 * r + 0.587 * g + 0.114 * b
-    const sat = Math.max(r, g, b) - Math.min(r, g, b)
-    const estFond = lum >= SEUIL_BLANC && sat <= SAT_FOND
-    out[o] = r; out[o + 1] = g; out[o + 2] = b
-    out[o + 3] = estFond ? 0 : 255
+    const dr = data[o] - refR, dg = data[o + 1] - refG, db = data[o + 2] - refB
+    return Math.sqrt(dr * dr + dg * dg + db * db) <= TOL
   }
-  return sharp(out, { raw: { width, height, channels: 4 } })
+
+  const fond = new Uint8Array(N)
+  const pile = []
+  const pousser = (i) => { if (!fond[i] && proche(i)) { fond[i] = 1; pile.push(i) } }
+  for (let x = 0; x < width; x++) { pousser(x); pousser((height - 1) * width + x) }
+  for (let y = 0; y < height; y++) { pousser(y * width); pousser(y * width + width - 1) }
+  while (pile.length) {
+    const i = pile.pop(), x = i % width, y = (i / width) | 0
+    if (x > 0) pousser(i - 1)
+    if (x < width - 1) pousser(i + 1)
+    if (y > 0) pousser(i - width)
+    if (y < height - 1) pousser(i + width)
+  }
+
+  const out = Buffer.alloc(N * 4)
+  for (let i = 0; i < N; i++) {
+    const o = i * 4
+    out[o] = data[o]; out[o + 1] = data[o + 1]; out[o + 2] = data[o + 2]
+    out[o + 3] = fond[i] ? 0 : 255
+  }
+  // léger feutrage du bord (anti-escalier) avant le découpage papier.
+  return sharp(out, { raw: { width, height, channels: 4 } }).blur(0.4)
 }
 
 // Carton de papier crème — identique à PAPIER (src/components/Papier.tsx) ;
@@ -267,15 +299,27 @@ export async function decouperPapier(buf, { marge = 16, dechirure = 18, graine =
   // 5) anti-alias léger du bord déchiré (sinon escalier de pixels visible).
   const paperMask = await rawMono(sharp(paperMaskRaw, { raw: { width, height, channels: 1 } }).blur(0.8), N)
 
-  // 6) carton crème avec un grain léger (même bruit, juste atténué), alpha
-  // = la marge déchirée calculée ci-dessus.
+  // 5bis) tranche fibreuse : un papier déchiré laisse voir ses fibres internes,
+  // plus claires que la surface (cf. réf. bord blanc du pigeon, tranche kraft de
+  // la lune). On érode le masque vers l'intérieur (flou large + lecture du
+  // niveau) ; la couronne « dans le masque mais près du bord » est la tranche,
+  // qu'on éclaircit vers un blanc cassé fibreux. RIM_PX ≈ épaisseur visible.
+  const RIM_PX = 7
+  const erode = await rawMono(sharp(paperMaskRaw, { raw: { width, height, channels: 1 } }).blur(RIM_PX), N)
+  const FIBRE = { r: 0xfb, g: 0xf6, b: 0xec } // blanc cassé fibreux
+
+  // 6) carton crème avec un grain léger (même bruit, juste atténué) + tranche
+  // fibreuse claire sur la couronne du bord, alpha = la marge déchirée ci-dessus.
   const paperLayer = Buffer.alloc(N * 4)
   for (let i = 0; i < N; i++) {
     const o = i * 4
     const grain = (noise[i] - 128) * 0.07
-    paperLayer[o] = clamp255(PAPIER.r + grain)
-    paperLayer[o + 1] = clamp255(PAPIER.g + grain)
-    paperLayer[o + 2] = clamp255(PAPIER.b + grain)
+    // t = proximité du bord extérieur (1 sur la tranche, 0 au cœur du papier)
+    const t = paperMask[i] > 20 ? Math.max(0, Math.min(1, (200 - erode[i]) / 200)) : 0
+    const k = t * t * 0.85 // courbe : tranche franche au tout bord, vite atténuée
+    paperLayer[o] = clamp255((PAPIER.r + grain) * (1 - k) + FIBRE.r * k)
+    paperLayer[o + 1] = clamp255((PAPIER.g + grain) * (1 - k) + FIBRE.g * k)
+    paperLayer[o + 2] = clamp255((PAPIER.b + grain) * (1 - k) + FIBRE.b * k)
     paperLayer[o + 3] = paperMask[i]
   }
 

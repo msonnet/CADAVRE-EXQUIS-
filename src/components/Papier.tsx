@@ -34,25 +34,25 @@ export function usePapier(): { bg: string; encre: string } {
   return key ? PAPIERS_AMBIANCE[key] : { bg: PAPIER, encre: ENCRE_PAPIER }
 }
 
-const GRAIN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
-  <filter id='n'>
-    <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='t'/>
-    <feColorMatrix in='t' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0'/>
-  </filter>
-  <rect width='100%' height='100%' filter='url(#n)'/>
-</svg>`
-const GRAIN = `url("data:image/svg+xml;base64,${btoa(GRAIN_SVG)}")`
+// Froissé du papier — texture pré-cuite (public/textures/papier-froisse.webp).
+// C'est une carte de plis TRANSPARENTE (ombres sombres dans les creux + reflets
+// blancs sur les crêtes + grain fin) posée par-dessus la couleur de l'ambiance.
+// On la cuit en raster plutôt que de la calculer en filtre SVG au runtime parce
+// que (1) WebKit iOS rend mal — voire pas du tout — les filtres SVG en
+// background-image, et (2) background-blend-mode aplatit silencieusement une
+// couche issue d'un filtre SVG sous Chromium. Un WebP transparent superposé
+// (sans blend-mode) est fiable partout.
+const FROISSE = 'url(/textures/papier-froisse.webp)'
 
 export function makePapierTexture(bg: string): React.CSSProperties {
   return {
     backgroundColor: bg,
     backgroundImage:
-      'linear-gradient(118deg, rgba(0,0,0,0.08) 0%, transparent 16%, transparent 46%, ' +
-      'rgba(0,0,0,0.06) 50%, transparent 78%, rgba(0,0,0,0.09) 100%), ' +
-      'linear-gradient(34deg, transparent 0%, rgba(0,0,0,0.06) 20%, transparent 38%, ' +
-      `transparent 58%, rgba(0,0,0,0.08) 74%, transparent 90%), ${GRAIN}`,
-    backgroundBlendMode: 'multiply, multiply, multiply',
-    backgroundSize: 'cover, cover, 180px 180px',
+      // léger lustre diagonal de la feuille (par-dessus, semi-transparent)
+      'linear-gradient(118deg, rgba(255,255,255,0.06) 0%, transparent 26%, transparent 72%, ' +
+      `rgba(0,0,0,0.05) 100%), ${FROISSE}`,
+    backgroundSize: 'cover, cover',
+    backgroundPosition: 'center, center',
   }
 }
 
