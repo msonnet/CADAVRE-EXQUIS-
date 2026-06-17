@@ -116,12 +116,11 @@ export default function Accueil() {
       )}
 
       {/* ── ZONE CENTRALE ── */}
-      {/* flexGrow sans flexShrink : sur un écran haut (PWA installée) la zone
-          grandit et le titre se groupe au-dessus de la citation (justify-end) ;
-          sur un écran court (Safari avec barre d'adresse) elle NE se rétracte
-          PAS sous la hauteur du titre — c'est le bas (signature) qui déborde et
-          se fait rogner, jamais le titre qui remonte couvrir l'ambiance. */}
-      <div className="relative flex flex-col justify-end" style={{ zIndex: 10, flexGrow: 1, flexShrink: 0, paddingTop: 18 }}>
+      {/* flexGrow sans flexShrink : la zone grandit (écran haut) mais ne se
+          rétracte jamais sous la hauteur du titre (écran court, Safari adresse).
+          justify-start : le titre reste près du header, le blanc libre est sous
+          lui — pas au-dessus, ce qui l'aurait repoussé vers le bas de la zone. */}
+      <div className="relative flex flex-col justify-start" style={{ zIndex: 10, flexGrow: 1, flexShrink: 0, paddingTop: 18 }}>
 
         {/* Accent vertical éditorial — chiffre de séance */}
         <motion.div
