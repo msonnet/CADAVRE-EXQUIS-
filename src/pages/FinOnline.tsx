@@ -548,8 +548,14 @@ export default function FinOnline() {
 
             {/* ── Mode écrit : poème ── */}
             {room.mode !== 'dessin' && (
-              <div style={{ marginBottom: 28 }}>
-                <PapierCard rotation={-0.5} bord="dechire1" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
+              <div style={{ marginBottom: 28, perspective: '1200px' }}>
+                <motion.div
+                  initial={{ rotateX: -90, opacity: 0 }}
+                  animate={{ rotateX: 0, opacity: 1 }}
+                  transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1] }}
+                  style={{ transformOrigin: 'top center' }}
+                >
+                <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
                   <div style={{ marginBottom: 12 }}>
                     <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                       CADAVRE EXQUIS · {code}
@@ -558,7 +564,7 @@ export default function FinOnline() {
                   {lignes.map((ligne, i) => (
                     <motion.p key={i}
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
+                      transition={{ delay: 0.7 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
                       style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: ENCRE_PAPIER, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
                       {i === 0 && lettrine ? (
                         <>
@@ -569,6 +575,7 @@ export default function FinOnline() {
                     </motion.p>
                   ))}
                 </PapierCard>
+                </motion.div>
               </div>
             )}
 

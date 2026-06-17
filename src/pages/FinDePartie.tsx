@@ -296,13 +296,20 @@ export default function FinDePartie() {
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
         {/* ── POEM CARD — carton de papier, l'artefact révélé ── */}
+        <div style={{ marginBottom: 20, perspective: '1200px' }}>
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={lettrineChutee ? { opacity: 1, y: [0, -5, 3, -2, 0] } : { opacity: 1, y: 0 }}
-          transition={lettrineChutee ? { duration: 0.28, ease: 'easeOut' } : { delay: 0.7, duration: 0.8 }}
-          style={{ marginBottom: 20 }}
+          initial={{ rotateX: -90, opacity: 0 }}
+          animate={lettrineChutee
+            ? { rotateX: 0, opacity: 1, y: [0, -5, 3, -2, 0] }
+            : { rotateX: 0, opacity: 1, y: 0 }
+          }
+          transition={lettrineChutee
+            ? { duration: 0.28, ease: 'easeOut' }
+            : { delay: 0.7, duration: 0.8, ease: [0.22, 0.61, 0.36, 1] }
+          }
+          style={{ transformOrigin: 'top center' }}
         >
-        <PapierCard rotation={-0.5} bord="dechire1" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
+        <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
           {/* Poem title */}
           <div style={{ marginBottom: 12 }}>
             <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
@@ -361,6 +368,7 @@ export default function FinDePartie() {
           </div>
         </PapierCard>
         </motion.div>
+        </div>
 
         {/* ── IMAGE (if already generated) ── */}
         {illustrationUrl && (
