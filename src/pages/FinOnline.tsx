@@ -16,7 +16,7 @@ import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
-import RevealPapierPleinEcran from '../components/RevealPapierPleinEcran'
+
 import type { DessinCadavre } from '../types'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
@@ -143,7 +143,7 @@ export default function FinOnline() {
   const [sauvegardeDessin_, setSauvegardeDessin] = useState(false)
 
   const [revealReady, setRevealReady] = useState(false)
-  const [papierTermine, setPapierTermine] = useState(false)
+
   const [revealDessinJoue, setRevealDessinJoue] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
@@ -421,14 +421,6 @@ export default function FinOnline() {
         )}
       </AnimatePresence>
 
-      {/* Plein écran papier qui se déplie — mode écrit uniquement */}
-      {revealReady && !papierTermine && room.mode !== 'dessin' && (
-        <RevealPapierPleinEcran
-          lignes={lignes}
-          onTermine={() => setPapierTermine(true)}
-        />
-      )}
-
       <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom relative">
         <Decor variant="fin" />
 
@@ -440,8 +432,7 @@ export default function FinOnline() {
 
         <Section accent={accent} color={btnText} style={{ marginTop: 24, marginBottom: 12 }}>RÉVÉLATION</Section>
 
-        {/* Mode dessin gate sur revealReady ; mode écrit gate sur papierTermine (après le dépli plein-écran) */}
-        {(room.mode === 'dessin' ? revealReady : papierTermine) && (
+        {revealReady && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
 
             {/* ── Mode dessin : dessin assemblé ── */}

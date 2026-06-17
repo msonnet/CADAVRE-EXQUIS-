@@ -14,7 +14,7 @@ import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
 import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
-import RevealPapierPleinEcran from '../components/RevealPapierPleinEcran'
+
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -51,7 +51,7 @@ export default function FinDePartie() {
   )
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
   const [revealReady, setRevealReady] = useState(false)
-  const [papierTermine, setPapierTermine] = useState(false)
+
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [promptLibre, setPromptLibre] = useState('')
@@ -64,7 +64,7 @@ export default function FinDePartie() {
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
-  const [lettrineChutee, setLettrineChutee] = useState(false)
+  const lettrinePlayedRef = useRef(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -217,14 +217,6 @@ export default function FinDePartie() {
         )}
       </AnimatePresence>
 
-      {/* Plein écran papier qui se déplie — joue après l'assemblage, juste avant le poème */}
-      {revealReady && !papierTermine && (
-        <RevealPapierPleinEcran
-          lignes={lignes}
-          onTermine={() => setPapierTermine(true)}
-        />
-      )}
-
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
         <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
 
@@ -306,18 +298,13 @@ export default function FinDePartie() {
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
-        {/* ── POEM CARD — apparaît une fois le papier plein-écran entièrement déroulé ── */}
-        {papierTermine && (
+        {/* ── POEM CARD ── */}
+        {revealReady && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: 'easeOut' }}
           style={{ marginBottom: 20 }}
-        >
-        <motion.div
-          initial={false}
-          animate={lettrineChutee ? { y: [0, -5, 3, -2, 0] } : { y: 0 }}
-          transition={lettrineChutee ? { duration: 0.28, ease: 'easeOut' } : { duration: 0 }}
         >
         <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
           {/* Poem title */}
@@ -349,8 +336,8 @@ export default function FinDePartie() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5, ease: [0.22, 1.4, 0.36, 1] }}
                     onAnimationComplete={() => {
-                      if (!lettrineChutee) {
-                        setLettrineChutee(true)
+                      if (!lettrinePlayedRef.current) {
+                        lettrinePlayedRef.current = true
                         jouer('lettrine')
                         vibrer('devoilement')
                       }
@@ -377,7 +364,6 @@ export default function FinDePartie() {
             {voixCount} {poeme.structureId === 'atelier' ? 'VERS' : 'VOIX'} · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </PapierCard>
-        </motion.div>
         </motion.div>
         )}
 
