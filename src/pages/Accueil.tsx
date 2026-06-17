@@ -116,7 +116,12 @@ export default function Accueil() {
       )}
 
       {/* ── ZONE CENTRALE ── */}
-      <div className="relative flex flex-col flex-1 justify-end" style={{ zIndex: 10 }}>
+      {/* flexGrow sans flexShrink : sur un écran haut (PWA installée) la zone
+          grandit et le titre se groupe au-dessus de la citation (justify-end) ;
+          sur un écran court (Safari avec barre d'adresse) elle NE se rétracte
+          PAS sous la hauteur du titre — c'est le bas (signature) qui déborde et
+          se fait rogner, jamais le titre qui remonte couvrir l'ambiance. */}
+      <div className="relative flex flex-col justify-end" style={{ zIndex: 10, flexGrow: 1, flexShrink: 0, paddingTop: 18 }}>
 
         {/* Accent vertical éditorial — chiffre de séance */}
         <motion.div
@@ -168,8 +173,8 @@ export default function Accueil() {
               color={surAccent2}
               rotation={-3}
               style={{
-                position: 'absolute', top: -15, [cadavreSide]: 14,
-                fontSize: 'clamp(13px, 4.2vw, 19px)', letterSpacing: '0.14em',
+                position: 'absolute', top: -12, [cadavreSide]: 14,
+                fontSize: 'clamp(13px, 4.2vw, 18px)', letterSpacing: '0.14em',
                 padding: '5px 12px', boxShadow: '0 3px 9px rgba(0,0,0,0.3)', zIndex: 1,
               }}
             >
@@ -178,7 +183,7 @@ export default function Accueil() {
             <div
               className="font-fraunces font-black"
               style={{
-                fontSize: 'clamp(4.4rem, 19vw, 8rem)',
+                fontSize: 'clamp(4rem, 17vw, 7rem)',
                 lineHeight: 0.9,
                 letterSpacing: '-0.02em',
                 color: accent,
@@ -228,17 +233,17 @@ export default function Accueil() {
                 {seance.citation.t}
               </span>
             </PapierCard>
-            <Etiquette
-              bg={accent2}
-              color={surAccent2}
-              rotation={-2.2}
-              style={{
-                position: 'absolute', right: 14, bottom: -11,
-                fontSize: 11.5, padding: '4px 9px', boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-              }}
-            >
+            {/* attribution = ligne SECONDAIRE : annotation nue, jamais encadrée
+                (une étiquette d'accent lui donnait autant de poids qu'un mode de
+                jeu). Petit, contre-pivoté, posé à même le papier. */}
+            <span style={{
+              position: 'absolute', right: 16, bottom: -19,
+              fontFamily: "'Raleway', sans-serif", fontSize: 10.5, fontWeight: 700,
+              letterSpacing: '0.07em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+              color: ink, opacity: 0.62, transform: 'rotate(-2.2deg)',
+            }}>
               {seance.citation.a}
-            </Etiquette>
+            </span>
           </div>
         )}
 
@@ -247,19 +252,20 @@ export default function Accueil() {
             sa propre case verticale — aucun chevauchement ne masque jamais une
             étiquette de mode (le désordre ne doit pas coûter la lisibilité). ── */}
         <div style={{ position: 'relative', marginBottom: 10, marginTop: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: '5%' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: '4%' }}>
             {/* éléphant — un peu plus grand, penché à gauche */}
             <div style={{ width: '47%', transform: 'rotate(-3deg)', zIndex: 2 }}>
               <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
-            {/* papillon — plus petit, posé un cran plus bas, penché à droite */}
-            <div style={{ width: '40%', marginTop: 16, transform: 'rotate(3.5deg)', zIndex: 3 }}>
+            {/* papillon — nettement DÉSAXÉ par rapport à l'éléphant : posé plus
+                bas et poussé d'un cran vers la droite, penché plus franchement */}
+            <div style={{ width: '40%', marginTop: 30, transform: 'translateX(7%) rotate(4.5deg)', zIndex: 3 }}>
               <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
-          {/* tigre — sous la rangée, décalé à gauche (jamais centré), sans la
-              recouvrir : marge POSITIVE pour laisser respirer les étiquettes */}
-          <div style={{ width: '50%', marginLeft: '9%', marginTop: 10, transform: 'rotate(-2deg)', zIndex: 4 }}>
+          {/* tigre — décalé vers la DROITE (jamais pile sous l'éléphant), un cran
+              sous la rangée : marges POSITIVES pour ne masquer aucune étiquette */}
+          <div style={{ width: '49%', marginLeft: '36%', marginTop: 6, transform: 'rotate(-2.5deg)', zIndex: 4 }}>
             <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>
