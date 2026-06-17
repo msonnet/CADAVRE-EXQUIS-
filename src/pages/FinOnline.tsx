@@ -425,10 +425,6 @@ export default function FinOnline() {
       {revealReady && !papierTermine && room.mode !== 'dessin' && (
         <RevealPapierPleinEcran
           lignes={lignes}
-          accent={accent}
-          encre={encre}
-          btnText={btnText}
-          bg={bg}
           onTermine={() => setPapierTermine(true)}
         />
       )}

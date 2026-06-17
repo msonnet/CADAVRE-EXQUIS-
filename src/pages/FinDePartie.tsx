@@ -221,10 +221,6 @@ export default function FinDePartie() {
       {revealReady && !papierTermine && (
         <RevealPapierPleinEcran
           lignes={lignes}
-          accent={accent}
-          encre={encre}
-          btnText={btnText}
-          bg={bg}
           onTermine={() => setPapierTermine(true)}
         />
       )}
