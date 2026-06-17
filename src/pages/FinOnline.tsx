@@ -16,6 +16,7 @@ import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import PapierDeplie from '../components/PapierDeplie'
 import type { DessinCadavre } from '../types'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
@@ -548,13 +549,7 @@ export default function FinOnline() {
 
             {/* ── Mode écrit : poème ── */}
             {room.mode !== 'dessin' && (
-              <div style={{ marginBottom: 28, perspective: '1200px' }}>
-                <motion.div
-                  initial={{ rotateX: -90, opacity: 0 }}
-                  animate={{ rotateX: 0, opacity: 1 }}
-                  transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1] }}
-                  style={{ transformOrigin: 'top center' }}
-                >
+              <PapierDeplie bordure={`${accent}55`} duration={1.6} style={{ marginBottom: 28 }}>
                 <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
                   <div style={{ marginBottom: 12 }}>
                     <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
@@ -575,8 +570,7 @@ export default function FinOnline() {
                     </motion.p>
                   ))}
                 </PapierCard>
-                </motion.div>
-              </div>
+              </PapierDeplie>
             )}
 
             {/* Coutures — écrit */}

@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import PapierDeplie from '../components/PapierDeplie'
 
 interface PoemeCase { texte: string }
 interface PoemePayload { cases: PoemeCase[]; structureId: string; titre?: string }
@@ -125,14 +126,7 @@ export default function PoemeDuJour() {
       )}
 
       {!loading && item && (
-        /* Perspective container — needed for the 3-D unfold */
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', perspective: '1200px' }}>
-          <motion.div
-            initial={{ rotateX: -90, opacity: 0 }}
-            animate={{ rotateX: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1] }}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', transformOrigin: 'top center' }}
-          >
+        <PapierDeplie bordure={`${accent}55`} duration={1.6} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
               {/* Poem title */}
               <div style={{ marginBottom: 12 }}>
@@ -206,8 +200,7 @@ export default function PoemeDuJour() {
                 </div>
               </motion.div>
             </PapierCard>
-          </motion.div>
-        </div>
+        </PapierDeplie>
       )}
     </PageTransition>
   )

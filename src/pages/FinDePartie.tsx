@@ -14,6 +14,7 @@ import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
 import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import PapierDeplie from '../components/PapierDeplie'
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -295,19 +296,15 @@ export default function FinDePartie() {
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
-        {/* ── POEM CARD — carton de papier, l'artefact révélé ── */}
-        <div style={{ marginBottom: 20, perspective: '1200px' }}>
+        {/* ── POEM CARD — le papier se déplie pour révéler le poème.
+            Monté seulement quand le rideau d'assemblage s'efface (revealReady),
+            sinon le dépli se jouerait caché derrière l'intro. ── */}
+        {revealReady && (
+        <PapierDeplie bordure={`${accent}55`} duration={1.6} style={{ marginBottom: 20 }}>
         <motion.div
-          initial={{ rotateX: -90, opacity: 0 }}
-          animate={lettrineChutee
-            ? { rotateX: 0, opacity: 1, y: [0, -5, 3, -2, 0] }
-            : { rotateX: 0, opacity: 1, y: 0 }
-          }
-          transition={lettrineChutee
-            ? { duration: 0.28, ease: 'easeOut' }
-            : { delay: 0.7, duration: 0.8, ease: [0.22, 0.61, 0.36, 1] }
-          }
-          style={{ transformOrigin: 'top center' }}
+          initial={false}
+          animate={lettrineChutee ? { y: [0, -5, 3, -2, 0] } : { y: 0 }}
+          transition={lettrineChutee ? { duration: 0.28, ease: 'easeOut' } : { duration: 0 }}
         >
         <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
           {/* Poem title */}
@@ -368,7 +365,8 @@ export default function FinDePartie() {
           </div>
         </PapierCard>
         </motion.div>
-        </div>
+        </PapierDeplie>
+        )}
 
         {/* ── IMAGE (if already generated) ── */}
         {illustrationUrl && (
