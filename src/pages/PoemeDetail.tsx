@@ -12,7 +12,7 @@ import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
-import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 
 function Section({ children, accent, color, style }: {
   children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
@@ -61,6 +61,7 @@ export default function PoemeDetail() {
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
   const { profile } = useAuth()
+  const papier = usePapier()
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -422,13 +423,13 @@ export default function PoemeDetail() {
           transition={{ delay: 0.35, duration: 0.7 }}
           style={{ marginBottom: 16 }}
         >
-          <PapierCard rotation={-0.5} bord="dechire1" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
+          <PapierCard rotation={-0.5} bord="dechire1" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
             <div style={{ marginBottom: 12 }}>
               <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                 LE CADAVRE
               </Etiquette>
             </div>
-            <div style={{ fontFamily: "'Playfair Display', serif", color: ENCRE_PAPIER, fontSize: 17, lineHeight: 1.7 }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", color: papier.encre, fontSize: 17, lineHeight: 1.7 }}>
               {lettrine && (
                 <span style={{
                   fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
@@ -447,7 +448,7 @@ export default function PoemeDetail() {
                 </React.Fragment>
               ))}
             </div>
-            <div style={{ ...mono, fontSize: 13, color: ENCRE_PAPIER, opacity: 0.65, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${ENCRE_PAPIER}20` }}>
+            <div style={{ ...mono, fontSize: 13, color: papier.encre, opacity: 0.65, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${papier.encre}20` }}>
               {dateStr} · {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
             </div>
           </PapierCard>

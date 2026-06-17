@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
-import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 import type { ConfigDessin } from '../types'
 
 // Intitulé de section = étiquette d'accent collée (même langage que
@@ -67,6 +67,7 @@ export default function ConfigurationDessin() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -237,11 +238,12 @@ export default function ConfigurationDessin() {
             rotation={0.9}
             bord="dechire1"
             bordure={`${accent}55`}
+            papierBg={papier.bg}
             style={{ padding: '12px 14px 14px' }}
           >
             <div style={{
               fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5,
-              color: ENCRE_PAPIER, fontStyle: 'italic',
+              color: papier.encre, fontStyle: 'italic',
             }}>
               « {ref.titre} »
             </div>

@@ -9,7 +9,7 @@ import { sauvegarderDessin } from '../db'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { vibrer } from '../utils/haptics'
-import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 import type { BandeDessin, DessinCadavre } from '../types'
 
 const RACCORD_H = 80
@@ -112,6 +112,7 @@ export default function FinDessin() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -330,7 +331,7 @@ export default function FinDessin() {
             {/* Texte Vision */}
             {texteVision ? (
               <div>
-                <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} style={{ padding: '14px 16px 16px' }}>
+                <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
                   <div style={{ marginBottom: 10 }}>
                     <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                       LECTURE SURRÉALISTE
@@ -338,7 +339,7 @@ export default function FinDessin() {
                   </div>
                   <div style={{
                     fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7,
-                    color: ENCRE_PAPIER,
+                    color: papier.encre,
                     whiteSpace: 'pre-line',
                   }}>
                     {texteVision}

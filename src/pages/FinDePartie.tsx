@@ -13,7 +13,7 @@ import { Decor, useReve } from '../reve'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
-import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 
 
 const STYLES = [
@@ -80,6 +80,7 @@ export default function FinDePartie() {
   const encre = sc?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -306,7 +307,7 @@ export default function FinDePartie() {
           transition={{ duration: 0.55, ease: 'easeOut' }}
           style={{ marginBottom: 20 }}
         >
-        <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
+        <PapierCard rotation={0} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
           {/* Poem title */}
           <div style={{ marginBottom: 12 }}>
             <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
@@ -318,7 +319,7 @@ export default function FinDePartie() {
           <div
             style={{
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-              color: ENCRE_PAPIER, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
+              color: papier.encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
               overflowWrap: 'break-word', wordBreak: 'break-word',
             }}
           >
@@ -360,7 +361,7 @@ export default function FinDePartie() {
           </div>
 
           {/* Card footer */}
-          <div style={{ ...mono, fontSize: 13, color: ENCRE_PAPIER, opacity: 0.65, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${ENCRE_PAPIER}20` }}>
+          <div style={{ ...mono, fontSize: 13, color: papier.encre, opacity: 0.65, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${papier.encre}20` }}>
             {voixCount} {poeme.structureId === 'atelier' ? 'VERS' : 'VOIX'} · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </PapierCard>

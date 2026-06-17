@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import type { DessinCadavre } from '../types'
-import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 
 function Section({ children, accent, color, style }: {
   children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
@@ -54,6 +54,7 @@ export default function DessinDetail() {
   const encre = c?.encre ?? '#0f0805'
   const fond = c?.bg ?? '#faf8f3'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -276,7 +277,7 @@ export default function DessinDetail() {
             transition={{ delay: 0.35 }}
             style={{ marginBottom: 24 }}
           >
-            <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} style={{ padding: '14px 16px 16px' }}>
+            <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
               <div style={{ marginBottom: 10 }}>
                 <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                   VISION
@@ -284,7 +285,7 @@ export default function DessinDetail() {
               </div>
               {dessin.texteVision.split('\n').filter(Boolean).map((ligne, i) => (
                 <p key={i} style={{
-                  fontFamily: "'Playfair Display', serif", fontSize: 17, color: ENCRE_PAPIER,
+                  fontFamily: "'Playfair Display', serif", fontSize: 17, color: papier.encre,
                   lineHeight: 1.65, marginBottom: 6,
                 }}>
                   {ligne}

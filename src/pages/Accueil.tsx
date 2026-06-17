@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import Onboarding from '../components/Onboarding'
 import TeteCollage from '../components/TeteCollage'
-import { PAPIER, ENCRE_PAPIER, PapierCard, Etiquette } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
@@ -51,6 +51,7 @@ export default function Accueil() {
   // encre garantie lisible sur le fond de l'ambiance (contrairement à
   // `accent`, choisi pour les aplats de chips, pas pour du texte nu sur fond)
   const ink = seance?.ambiance.ink ?? encre
+  const papier = usePapier()
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -152,6 +153,7 @@ export default function Accueil() {
           <PapierCard
             rotation={-1.6}
             bordure={seance?.ambiance.rule}
+            papierBg={papier.bg}
             style={{
               position: 'relative', display: 'inline-block',
               boxShadow: '0 6px 18px rgba(0,0,0,0.32)',
@@ -215,11 +217,12 @@ export default function Accueil() {
               rotation={0.9}
               bord="dechire1"
               bordure={seance.ambiance.rule}
+              papierBg={papier.bg}
               style={{ boxShadow: '0 4px 13px rgba(0,0,0,0.28)', padding: '10px 13px 12px' }}
             >
               <span style={{
                 fontFamily: "'Playfair Display', serif", fontSize: 16.5, lineHeight: 1.48,
-                color: ENCRE_PAPIER, display: '-webkit-box', fontStyle: 'italic',
+                color: papier.encre, display: '-webkit-box', fontStyle: 'italic',
                 overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
               } as React.CSSProperties}>
                 {seance.citation.t}
@@ -295,8 +298,8 @@ export default function Accueil() {
             }}
           >
             <Etiquette
-              bg={PAPIER}
-              color={ENCRE_PAPIER}
+              bg={papier.bg}
+              color={papier.encre}
               rotation={-1}
               style={{
                 border: `1px solid ${seance?.ambiance.rule ?? 'rgba(0,0,0,0.18)'}`,

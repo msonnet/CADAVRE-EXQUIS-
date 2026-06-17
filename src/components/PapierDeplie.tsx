@@ -14,11 +14,12 @@
  */
 import React from 'react'
 import { motion } from 'framer-motion'
-import { PAPIER_TEXTURE } from './Papier'
+import { PAPIER_TEXTURE, makePapierTexture } from './Papier'
 
 export default function PapierDeplie({
   children,
   bordure = 'rgba(0,0,0,0.18)',
+  papierBg,
   duration = 1.5,
   delay = 0.2,
   ease = [0.33, 0, 0.2, 1],
@@ -28,12 +29,15 @@ export default function PapierDeplie({
   children: React.ReactNode
   /** couleur de la fine bordure du rabat — à accorder à celle de la carte */
   bordure?: string
+  /** teinte du papier du rabat — à accorder à celle de la carte (usePapier().bg) */
+  papierBg?: string
   duration?: number
   delay?: number
   ease?: number[] | string
   className?: string
   style?: React.CSSProperties
 }) {
+  const texture = papierBg ? makePapierTexture(papierBg) : PAPIER_TEXTURE
   return (
     <div className={className} style={{ ...style, position: 'relative', perspective: '1500px' }}>
       {children}
@@ -46,7 +50,7 @@ export default function PapierDeplie({
         aria-hidden
         style={{
           position: 'absolute', left: 0, right: 0, top: 0, height: '50%',
-          ...PAPIER_TEXTURE,
+          ...texture,
           border: `1px solid ${bordure}`,
           borderRadius: '4px 4px 0 0',
           transformOrigin: 'center bottom',

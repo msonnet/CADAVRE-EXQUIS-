@@ -13,7 +13,7 @@ import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { Etiquette, PapierCard, ENCRE_PAPIER } from '../components/Papier'
+import { Etiquette, PapierCard, usePapier } from '../components/Papier'
 
 // Intitulé de section = étiquette d'accent collée (même langage que
 // Configuration.tsx / ConfigurationDessin.tsx), à la place de l'ancien filet
@@ -335,6 +335,7 @@ export default function Jeu() {
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
@@ -802,10 +803,10 @@ export default function Jeu() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <PapierCard rotation={-0.7} bord="net" bordure={`${accent}55`} style={{ padding: '12px 14px 14px' }}>
+                <PapierCard rotation={-0.7} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '12px 14px 14px' }}>
                   <p style={{
                     fontFamily: "'Playfair Display', serif", fontSize: 17, fontStyle: 'italic',
-                    color: ENCRE_PAPIER, lineHeight: 1.5,
+                    color: papier.encre, lineHeight: 1.5,
                   }}>
                     « {contexteVisible} »
                   </p>

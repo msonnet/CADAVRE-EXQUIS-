@@ -6,7 +6,7 @@ import { Decor, useReve } from '../reve'
 import { supabase } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 import PapierDeplie from '../components/PapierDeplie'
 
 interface PoemeCase { texte: string }
@@ -37,6 +37,7 @@ export default function PoemeDuJour() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [item, setItem] = useState<GalleryItem | null>(null)
@@ -126,8 +127,8 @@ export default function PoemeDuJour() {
       )}
 
       {!loading && item && (
-        <PapierDeplie bordure={`${accent}55`} duration={1.6} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <PapierDeplie bordure={`${accent}55`} papierBg={papier.bg} duration={1.6} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <PapierCard rotation={0} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
               {/* Poem title */}
               <div style={{ marginBottom: 12 }}>
                 <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
@@ -148,7 +149,7 @@ export default function PoemeDuJour() {
                       fontStyle: 'italic',
                       fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)',
                       lineHeight: 1.65,
-                      color: ENCRE_PAPIER,
+                      color: papier.encre,
                       margin: '0 0 2px',
                     }}
                   >
@@ -162,7 +163,7 @@ export default function PoemeDuJour() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.1 + lignes.length * 0.18, duration: 0.5 }}
-                style={{ marginTop: 28, paddingTop: 16, borderTop: `0.5px solid ${ENCRE_PAPIER}20` }}
+                style={{ marginTop: 28, paddingTop: 16, borderTop: `0.5px solid ${papier.encre}20` }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                   {item.author_avatar ? (
@@ -175,8 +176,8 @@ export default function PoemeDuJour() {
                     </div>
                   )}
                   <div>
-                    <div style={{ ...mono, fontSize: 13, color: ENCRE_PAPIER, fontWeight: 700 }}>{item.author_pseudo}</div>
-                    <div style={{ ...mono, fontSize: 11, color: ENCRE_PAPIER, opacity: 0.45, marginTop: 2 }}>{date}</div>
+                    <div style={{ ...mono, fontSize: 13, color: papier.encre, fontWeight: 700 }}>{item.author_pseudo}</div>
+                    <div style={{ ...mono, fontSize: 11, color: papier.encre, opacity: 0.45, marginTop: 2 }}>{date}</div>
                   </div>
                 </div>
 
@@ -193,7 +194,7 @@ export default function PoemeDuJour() {
                   </button>
                   <button
                     onClick={() => { jouer('clic'); navigate('/galerie') }}
-                    style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: ENCRE_PAPIER, border: `1px solid ${ENCRE_PAPIER}30`, borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
+                    style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: papier.encre, border: `1px solid ${papier.encre}30`, borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
                   >
                     GALERIE →
                   </button>

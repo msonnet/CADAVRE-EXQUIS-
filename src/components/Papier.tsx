@@ -2,22 +2,38 @@
  * Papier.tsx — socle partagé de la direction artistique « collage de papier » :
  * tout élément (carte, étiquette) a l'air d'un vrai bout de papier découpé ou
  * arraché à la main et collé sur la page, légèrement pivoté, avec son grain et
- * son ombre propres. Extrait de TeteCollage.tsx/Accueil.tsx pour être réutilisé
- * par le reste du jeu sans dupliquer ces styles page après page.
+ * son ombre propres.
+ *
+ * Le papier n'est plus une teinte unique : chaque ambiance du Rêve a son propre
+ * bout de papier (teinte + encre assortie). Utilise `usePapier()` pour récupérer
+ * celui de la séance courante, et passe `papierBg` à <PapierCard>.
  */
+import { useReve } from '../reve'
+import type { AmbianceKey } from '../reve/pools'
 
-// Carton de papier crème — toujours la même teinte, quelle que soit
-// l'ambiance : c'est un vrai bout de papier collé, pas une couleur de thème.
+// Papier crème historique — sert de repli quand aucune séance n'est active.
 export const PAPIER = '#f6ead0'
-
-// Encre sombre fixe pour le texte posé sur PAPIER — toujours lisible, quelle
-// que soit l'ambiance, puisque le papier est lui-même fixe.
 export const ENCRE_PAPIER = '#241a10'
 
-// Grain de papier — bruit fractal léger, encodé une fois en SVG/base64 et
-// posé en multiply sur l'aplat PAPIER : un vrai bout de papier découpé n'est
-// jamais parfaitement lisse. `stitchTiles` évite toute couture visible quand
-// le motif se répète en arrière-plan.
+// Un papier par ambiance — teinte + encre assortie, lisible quel que soit l'accent.
+export const PAPIERS_AMBIANCE: Record<AmbianceKey, { bg: string; encre: string }> = {
+  minuit: { bg: '#f2eef8', encre: '#1c1832' }, // lune — crème lavandé
+  encre:  { bg: '#e6dfd0', encre: '#1e1610' }, // gazette — gris chaud
+  argile: { bg: '#ecdaaa', encre: '#200e04' }, // miel — kraft doux
+  lin:    { bg: '#f6ead0', encre: '#241a10' }, // vergé crème — inchangé
+  aube:   { bg: '#edf0f8', encre: '#0e1220' }, // pelure — froid clair
+}
+
+/**
+ * Le papier de la séance courante (teinte + encre). Repli sur le vergé crème
+ * historique hors d'un ReveProvider.
+ */
+export function usePapier(): { bg: string; encre: string } {
+  const seance = useReve()
+  const key = seance?.ambiance.id
+  return key ? PAPIERS_AMBIANCE[key] : { bg: PAPIER, encre: ENCRE_PAPIER }
+}
+
 const GRAIN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
   <filter id='n'>
     <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='t'/>
@@ -27,24 +43,21 @@ const GRAIN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='1
 </svg>`
 const GRAIN = `url("data:image/svg+xml;base64,${btoa(GRAIN_SVG)}")`
 
-// Carte de papier texturée : grain + deux bandes de pli/ombre croisées en
-// diagonale (froissé), posées en multiply sur l'aplat PAPIER — base de tous
-// les cartons de cette direction artistique.
-export const PAPIER_TEXTURE: React.CSSProperties = {
-  backgroundColor: PAPIER,
-  backgroundImage:
-    'linear-gradient(118deg, rgba(0,0,0,0.08) 0%, transparent 16%, transparent 46%, ' +
-    'rgba(0,0,0,0.06) 50%, transparent 78%, rgba(0,0,0,0.09) 100%), ' +
-    'linear-gradient(34deg, transparent 0%, rgba(0,0,0,0.06) 20%, transparent 38%, ' +
-    `transparent 58%, rgba(0,0,0,0.08) 74%, transparent 90%), ${GRAIN}`,
-  backgroundBlendMode: 'multiply, multiply, multiply',
-  backgroundSize: 'cover, cover, 180px 180px',
+export function makePapierTexture(bg: string): React.CSSProperties {
+  return {
+    backgroundColor: bg,
+    backgroundImage:
+      'linear-gradient(118deg, rgba(0,0,0,0.08) 0%, transparent 16%, transparent 46%, ' +
+      'rgba(0,0,0,0.06) 50%, transparent 78%, rgba(0,0,0,0.09) 100%), ' +
+      'linear-gradient(34deg, transparent 0%, rgba(0,0,0,0.06) 20%, transparent 38%, ' +
+      `transparent 58%, rgba(0,0,0,0.08) 74%, transparent 90%), ${GRAIN}`,
+    backgroundBlendMode: 'multiply, multiply, multiply',
+    backgroundSize: 'cover, cover, 180px 180px',
+  }
 }
 
-// Bords déchirés : deux découpes irrégulières (silhouette de papier arraché à
-// la main, pas un rectangle net) — à réserver à certains cartons seulement,
-// d'autres restent à bord droit (borderRadius), pour varier comme un vrai
-// collage de fragments découpés/arrachés au fil du temps.
+export const PAPIER_TEXTURE: React.CSSProperties = makePapierTexture(PAPIER)
+
 export const DECHIRE_1 = 'polygon(' +
   '0% 3%, 12% 0%, 28% 4%, 45% 1%, 62% 3%, 78% 0%, 100% 2%, ' +
   '97% 15%, 100% 30%, 96% 48%, 100% 65%, 97% 82%, 100% 97%, ' +
@@ -67,33 +80,27 @@ const BORD_STYLE: Record<Bord, React.CSSProperties> = {
 }
 
 type PapierCardProps = {
-  /** rotation légère, fait « collé à la main » plutôt qu'aligné au cordeau */
   rotation?: number
-  /** net = bord droit (borderRadius) ; dechire1/2 = silhouette arrachée */
   bord?: Bord
-  /** couleur de la fine bordure — typiquement seance.ambiance.rule */
   bordure?: string
+  /** Override de la couleur de fond — utilise makePapierTexture() */
+  papierBg?: string
   children?: React.ReactNode
   className?: string
   style?: React.CSSProperties
   'aria-hidden'?: boolean
 }
 
-/**
- * Un bout de papier crème texturé (grain + plis), légèrement pivoté, posé
- * comme un fragment de collage. Sert aussi bien de fond décoratif (derrière
- * une gravure, en aria-hidden, position absolute fournie par l'appelant) que
- * de conteneur de contenu réel (titre, citation...).
- */
 export function PapierCard({
-  rotation = 0, bord = 'net', bordure = 'rgba(0,0,0,0.18)', children, className, style, ...rest
+  rotation = 0, bord = 'net', bordure = 'rgba(0,0,0,0.18)', papierBg, children, className, style, ...rest
 }: PapierCardProps) {
+  const texture = papierBg ? makePapierTexture(papierBg) : PAPIER_TEXTURE
   return (
     <div
       className={className}
       {...rest}
       style={{
-        ...PAPIER_TEXTURE,
+        ...texture,
         border: `1px solid ${bordure}`,
         boxShadow: '0 3px 11px rgba(0,0,0,0.3)',
         transform: `rotate(${rotation}deg)`,
@@ -114,13 +121,6 @@ type EtiquetteProps = {
   style?: React.CSSProperties
 }
 
-/**
- * Étiquette collée façon poster découpé : un aplat de couleur plein avec son
- * propre pivot et son ombre — le nom d'un mode, une légende, un lien de menu.
- * Visuel seul (span) : si l'étiquette doit être cliquable, l'appelant la pose
- * dans son propre <button> (évite les boutons imbriqués quand l'étiquette
- * vit déjà à l'intérieur d'une carte cliquable, cf. TeteCollage).
- */
 export function Etiquette({ children, bg, color, rotation = 0, style }: EtiquetteProps) {
   return (
     <span style={{

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { PAPIER_TEXTURE, ENCRE_PAPIER, DECHIRE_1, DECHIRE_2, Etiquette } from '../components/Papier'
+import { makePapierTexture, usePapier, DECHIRE_1, DECHIRE_2, Etiquette } from '../components/Papier'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 
 // Intitulé de section = étiquette d'accent collée (même langage que les chips
@@ -96,6 +96,7 @@ export default function Configuration() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -184,7 +185,7 @@ export default function Configuration() {
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'box-shadow 0.2s, transform 0.2s, opacity 0.2s',
-                  ...PAPIER_TEXTURE,
+                  ...makePapierTexture(papier.bg),
                   clipPath: i % 2 === 0 ? DECHIRE_1 : DECHIRE_2,
                   border: 'none',
                   opacity: active ? 1 : 0.62,
@@ -196,12 +197,12 @@ export default function Configuration() {
                   {s.romain}.
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: ENCRE_PAPIER, marginBottom: 3 }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: papier.encre, marginBottom: 3 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 13, color: ENCRE_PAPIER, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
+                  <div style={{ ...mono, fontSize: 13, color: papier.encre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
                   {active && (
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: ENCRE_PAPIER, opacity: 0.80, lineHeight: 1.55 }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: papier.encre, opacity: 0.80, lineHeight: 1.55 }}>
                       {s.detail}
                     </div>
                   )}

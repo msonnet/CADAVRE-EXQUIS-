@@ -15,7 +15,7 @@ import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
-import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
+import { PapierCard, Etiquette, usePapier } from '../components/Papier'
 
 import type { DessinCadavre } from '../types'
 
@@ -113,6 +113,7 @@ export default function FinOnline() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
@@ -470,13 +471,13 @@ export default function FinOnline() {
                     <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />
                     {texteVision ? (
                       <div style={{ marginBottom: 16 }}>
-                        <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} style={{ padding: '14px 16px 16px' }}>
+                        <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
                           <div style={{ marginBottom: 10 }}>
                             <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                               LECTURE SURRÉALISTE
                             </Etiquette>
                           </div>
-                          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: ENCRE_PAPIER, whiteSpace: 'pre-line' }}>
+                          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: papier.encre, whiteSpace: 'pre-line' }}>
                             {texteVision}
                           </div>
                         </PapierCard>
@@ -556,7 +557,7 @@ export default function FinOnline() {
                 transition={{ duration: 0.55, ease: 'easeOut' }}
                 style={{ marginBottom: 28 }}
               >
-                <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
+                <PapierCard rotation={0} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
                   <div style={{ marginBottom: 12 }}>
                     <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                       CADAVRE EXQUIS · {code}
@@ -566,7 +567,7 @@ export default function FinOnline() {
                     <motion.p key={i}
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
-                      style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: ENCRE_PAPIER, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
+                      style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: papier.encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
                       {i === 0 && lettrine ? (
                         <>
                           <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>
