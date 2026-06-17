@@ -224,6 +224,7 @@ export default function FinDePartie() {
           accent={accent}
           encre={encre}
           btnText={btnText}
+          bg={bg}
           onTermine={() => setPapierTermine(true)}
         />
       )}

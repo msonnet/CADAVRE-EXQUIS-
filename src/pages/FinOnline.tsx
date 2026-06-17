@@ -428,6 +428,7 @@ export default function FinOnline() {
           accent={accent}
           encre={encre}
           btnText={btnText}
+          bg={bg}
           onTermine={() => setPapierTermine(true)}
         />
       )}
