@@ -17,11 +17,11 @@ export const ENCRE_PAPIER = '#241a10'
 
 // Un papier par ambiance — teinte + encre assortie, lisible quel que soit l'accent.
 export const PAPIERS_AMBIANCE: Record<AmbianceKey, { bg: string; encre: string }> = {
-  minuit: { bg: '#ddd5f2', encre: '#1a1535' }, // lavande — papier à lettres mauve
-  encre:  { bg: '#ccc4ad', encre: '#1a1208' }, // gazette — bistre chaud
-  argile: { bg: '#e8c260', encre: '#200a04' }, // kraft — ambré saturé
-  lin:    { bg: '#f6ead0', encre: '#241a10' }, // vergé crème — référence neutre
-  aube:   { bg: '#ccd9ea', encre: '#0c1428' }, // pelure — bleu acier
+  minuit: { bg: '#d6d2f5', encre: '#1a1535' }, // lavande vive — papier à lettres mauve
+  encre:  { bg: '#f2c8a8', encre: '#2a1208' }, // terre de rose — chaud, saturé
+  argile: { bg: '#ecc24e', encre: '#200a04' }, // ambre vif — kraft doré
+  lin:    { bg: '#f6ead0', encre: '#241a10' }, // crème — ancre neutre chaude
+  aube:   { bg: '#c6e6da', encre: '#0c2428' }, // menthe vive — bleu-vert froid
 }
 
 /**
@@ -58,17 +58,20 @@ export function makePapierTexture(bg: string): React.CSSProperties {
 
 export const PAPIER_TEXTURE: React.CSSProperties = makePapierTexture(PAPIER)
 
+// Bords arrachés à la main : amplitude forte (jusqu'à ~8%), pas irrégulier,
+// chaque côté son propre rythme — volontairement asymétrique et brutal pour
+// fuir le polygone « propre » fait à l'ordinateur.
 export const DECHIRE_1 = 'polygon(' +
-  '0% 3%, 12% 0%, 28% 4%, 45% 1%, 62% 3%, 78% 0%, 100% 2%, ' +
-  '97% 15%, 100% 30%, 96% 48%, 100% 65%, 97% 82%, 100% 97%, ' +
-  '85% 100%, 68% 97%, 52% 100%, 35% 98%, 18% 100%, 0% 96%, ' +
-  '3% 80%, 0% 62%, 4% 45%, 0% 28%, 3% 12%' +
+  '2% 5%, 9% 1%, 14% 7%, 23% 2%, 31% 6%, 39% 0%, 48% 5%, 57% 1%, 65% 8%, 74% 2%, 83% 6%, 92% 1%, 99% 4%, ' +
+  '97% 12%, 100% 21%, 94% 29%, 99% 39%, 95% 48%, 100% 57%, 93% 66%, 98% 75%, 95% 84%, 100% 93%, ' +
+  '94% 99%, 86% 95%, 77% 100%, 68% 96%, 59% 100%, 50% 95%, 41% 100%, 32% 96%, 23% 100%, 14% 95%, 6% 99%, ' +
+  '1% 93%, 5% 84%, 0% 75%, 4% 66%, 1% 57%, 5% 48%, 0% 39%, 4% 29%, 1% 21%, 5% 12%' +
   ')'
 export const DECHIRE_2 = 'polygon(' +
-  '0% 0%, 15% 4%, 32% 0%, 50% 3%, 68% 0%, 85% 4%, 100% 0%, ' +
-  '100% 18%, 96% 35%, 100% 52%, 97% 70%, 100% 88%, 100% 100%, ' +
-  '88% 97%, 70% 100%, 52% 96%, 35% 100%, 18% 97%, 0% 100%, ' +
-  '3% 85%, 0% 68%, 4% 50%, 0% 32%, 3% 15%' +
+  '0% 3%, 8% 6%, 12% 0%, 21% 5%, 27% 1%, 36% 8%, 44% 2%, 53% 6%, 61% 0%, 70% 5%, 78% 1%, 88% 7%, 95% 2%, 100% 6%, ' +
+  '96% 14%, 100% 24%, 92% 33%, 98% 43%, 91% 52%, 100% 61%, 94% 71%, 97% 80%, 90% 89%, 100% 97%, ' +
+  '92% 100%, 83% 96%, 74% 100%, 64% 95%, 55% 100%, 45% 96%, 36% 100%, 27% 95%, 18% 100%, 9% 96%, 2% 100%, ' +
+  '6% 91%, 0% 81%, 5% 72%, 1% 62%, 6% 53%, 0% 43%, 5% 34%, 1% 24%, 6% 15%, 0% 6%' +
   ')'
 
 export type Bord = 'net' | 'dechire1' | 'dechire2'

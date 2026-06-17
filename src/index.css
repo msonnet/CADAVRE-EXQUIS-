@@ -44,7 +44,7 @@
     margin: 0;
     background-color: var(--reve-bg);
     color: var(--reve-ink);
-    font-family: 'Inter', 'IM Fell English', Georgia, serif;
+    font-family: 'Raleway', system-ui, sans-serif;
     font-size: 17px;
     line-height: 1.55;
     min-height: 100dvh;
@@ -78,7 +78,7 @@
 
   /* DISPLAY */
   .titre-principal {
-    font-family: 'Fraunces', 'Bodoni Moda', serif;
+    font-family: 'Bodoni Moda', serif;
     font-weight: 900;
     font-style: italic;
     font-size: clamp(3.5rem, 13vw, 5.5rem);
@@ -87,7 +87,7 @@
     color: var(--reve-ink);
   }
   .titre-rouge, .titre-accent {
-    font-family: 'Fraunces', 'Bodoni Moda', serif;
+    font-family: 'Bodoni Moda', serif;
     font-weight: 900;
     font-style: italic;
     line-height: 0.92;
@@ -95,7 +95,7 @@
   }
   /* Extrême display — posters, révélation, manchettes choc */
   .titre-poster {
-    font-family: 'Fraunces', 'Bodoni Moda', serif;
+    font-family: 'Bodoni Moda', serif;
     font-weight: 900;
     font-style: italic;
     font-size: clamp(5rem, 24vw, 10rem);
@@ -104,7 +104,7 @@
     color: var(--reve-accent);
   }
   .h-section, .titre-section {
-    font-family: 'Fraunces', 'Bodoni Moda', serif;
+    font-family: 'Bodoni Moda', serif;
     font-weight: 700;
     font-style: italic;
     font-size: clamp(2rem, 7vw, 3rem);
@@ -135,7 +135,7 @@
 
   /* UI */
   .lien-texte {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Raleway', sans-serif;
     font-weight: 500;
     font-size: 17px;
     color: var(--reve-ink);
@@ -148,7 +148,7 @@
   .lien-texte:hover { border-bottom-color: var(--reve-accent); color: var(--reve-accent); }
 
   .nav-discrete {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Raleway', sans-serif;
     font-weight: 500;
     font-size: 14px;
     letter-spacing: 0.04em;
@@ -184,7 +184,7 @@
   }
 
   .consigne-grammaticale {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Raleway', sans-serif;
     font-weight: 500;
     font-size: 17px;
     letter-spacing: 0.04em;
@@ -238,7 +238,7 @@
 
   /* Lettrine — Bodoni Moda (cohérent avec les lettrines inline du poème) */
   .lettrine {
-    font-family: 'Bodoni Moda', 'Fraunces', serif;
+    font-family: 'Bodoni Moda', serif;
     font-weight: 900;
     font-style: italic;
     font-size: 3.6rem;

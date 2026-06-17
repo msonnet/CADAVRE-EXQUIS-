@@ -244,15 +244,15 @@ const TicketMerz: React.FC<SVGProps> = ({ w = 120 }) => (
     <path d="M5,10 L100,5 L115,8 L108,55 L112,80 L98,95 L20,92 L8,85 L3,40 Z"
       fill="#e8d8b0" stroke={ENCRE} strokeWidth="0.9" />
     <rect x="12" y="14" width="32" height="22" fill={PAPIER} stroke={ENCRE} strokeWidth="0.8" />
-    <text x="28" y="22" textAnchor="middle" fontFamily="IM Fell English" fontSize="5" fill={ENCRE}>POSTES</text>
+    <text x="28" y="22" textAnchor="middle" fontFamily="'Playfair Display', serif" fontSize="5" fill={ENCRE}>POSTES</text>
     <circle cx="28" cy="29" r="5" fill="url(#h45)" stroke={ENCRE} strokeWidth="0.5" />
     <circle cx="68" cy="22" r="11" fill="none" stroke={ENCRE} strokeWidth="0.8" />
-    <text x="68" y="25" textAnchor="middle" fontFamily="IM Fell English" fontSize="5" fill={ENCRE}>BERLIN</text>
-    <text x="68" y="20" textAnchor="middle" fontFamily="IM Fell English" fontSize="3.5" fill={ENCRE}>1923</text>
+    <text x="68" y="25" textAnchor="middle" fontFamily="'Playfair Display', serif" fontSize="5" fill={ENCRE}>BERLIN</text>
+    <text x="68" y="20" textAnchor="middle" fontFamily="'Playfair Display', serif" fontSize="3.5" fill={ENCRE}>1923</text>
     <text x="12" y="50" fontFamily="Bodoni Moda" fontWeight="900" fontStyle="italic" fontSize="11" fill={ENCRE}>MERZ</text>
     <line x1="12" y1="55" x2="80" y2="55" stroke={ENCRE} strokeWidth="0.5" />
-    <text x="12" y="64" fontFamily="IM Fell English" fontSize="5" fill={ENCRE}>billet annulé · 14h22</text>
-    <text x="12" y="72" fontFamily="IM Fell English" fontSize="5" fill={ENCRE}>1 cl. unique · n° 7</text>
+    <text x="12" y="64" fontFamily="'Playfair Display', serif" fontSize="5" fill={ENCRE}>billet annulé · 14h22</text>
+    <text x="12" y="72" fontFamily="'Playfair Display', serif" fontSize="5" fill={ENCRE}>1 cl. unique · n° 7</text>
     <text x="80" y="82" fontFamily="Caveat" fontSize="12" fill={ROUGE}>№ 477</text>
     <line x1="15" y1="80" x2="55" y2="78" stroke={ENCRE} strokeWidth="0.4" opacity="0.6" />
   </svg>

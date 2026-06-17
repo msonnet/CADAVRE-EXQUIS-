@@ -27,18 +27,19 @@ export default {
       },
       fontFamily: {
         // Typographie unifiée
-        // ── Système typographique (5 rôles) ──
-        fraunces: ['Fraunces', 'serif'],            // manchettes display
-        bodonimoda: ['"Bodoni Moda"', 'serif'],     // lettrines · « Joueur N. » · initiales
-        playfair: ['"Playfair Display"', 'serif'],  // littéraire : vers · citations
-        inter:    ['Inter', 'system-ui', 'sans-serif'], // corps de lecture
-        raleway:  ['Raleway', 'sans-serif'],        // labels capitales trackés
+        // ── Polices réellement chargées (4) : Bodoni Moda · Playfair Display · Raleway · Caveat ──
+        bodonimoda: ['"Bodoni Moda"', 'serif'],     // display/manchette · lettrines · « Joueur N. » · chiffres romains
+        playfair: ['"Playfair Display"', 'serif'],  // littéraire : vers · citations · titres de section
+        raleway:  ['Raleway', 'sans-serif'],        // labels capitales trackés · boutons · cartels
+        caveat:   ['Caveat', 'cursive'],            // manuscrit : annotations marginales · signatures
 
-        // Compat legacy → repointent vers le système (plus de Cormorant)
+        // Alias legacy → repointent vers le système (Fraunces et Inter ne sont plus chargés)
+        fraunces: ['"Bodoni Moda"', 'serif'],       // ancien display → Bodoni Moda
+        inter:    ['Raleway', 'system-ui', 'sans-serif'], // ancien corps → Raleway
         cormorant: ['"Playfair Display"', 'Georgia', 'serif'],
         garamond:  ['"Playfair Display"', 'serif'],
-        lora: ['Inter', 'sans-serif'],
-        fell: ['Inter', 'sans-serif'],
+        lora: ['Raleway', 'sans-serif'],
+        fell: ['Raleway', 'sans-serif'],
       },
       fontSize: {
         'micro': ['0.875rem', { lineHeight: '1.4' }],

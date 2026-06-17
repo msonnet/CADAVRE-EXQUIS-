@@ -147,13 +147,13 @@ export default function RevealAssemblageTexte({
           — {voixCount} VOIX —
         </div>
         <div style={{
-          fontFamily: "'Fraunces', serif", fontWeight: 900, fontStyle: 'italic',
+          fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',
           fontSize: 'clamp(2rem, 9vw, 3.4rem)', color: encre, lineHeight: 1.0, letterSpacing: '-0.01em',
         }}>
           Le cadavre
         </div>
         <div style={{
-          fontFamily: "'Fraunces', serif", fontWeight: 900, fontStyle: 'italic',
+          fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',
           fontSize: 'clamp(2rem, 9vw, 3.4rem)', color: accent, lineHeight: 1.0, letterSpacing: '-0.01em',
         }}>
           se reconstitue

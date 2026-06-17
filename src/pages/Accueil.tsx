@@ -242,17 +242,33 @@ export default function Accueil() {
           </div>
         )}
 
-        {/* ── CTA — têtes dessinées à l'encre (collage surréaliste intégré) ── */}
-        <div style={{ marginBottom: 6 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
+        {/* ── CTA — têtes-gravures épinglées en désordre, façon planches de
+            musée arrachées et recollées : tailles inégales, hauteurs décalées,
+            légers chevauchements. Le chaos est voulu (folie surréaliste), mais
+            mesuré pour rester tapable à 360px. ── */}
+        <div style={{ position: 'relative', marginBottom: 10, marginTop: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+            {/* éléphant — le plus grand, posé bas et penché à gauche */}
+            <div style={{
+              width: '50%', transformOrigin: 'center bottom',
+              transform: 'translateY(14px) rotate(-3deg)', zIndex: 2,
+            }}>
               <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            {/* papillon — plus petit, remonté, chevauche légèrement l'éléphant */}
+            <div style={{
+              width: '42%', marginLeft: '-3%', transformOrigin: 'center top',
+              transform: 'translateY(-12px) rotate(4deg)', zIndex: 3,
+            }}>
               <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
-          <div style={{ marginTop: 6, width: '58%', marginLeft: 'auto', marginRight: 'auto' }}>
+          {/* tigre — décalé sous le creux, jamais centré, mordant la rangée du dessus */}
+          <div style={{
+            width: '52%', marginLeft: '8%', marginTop: '-9%',
+            transformOrigin: 'center top',
+            transform: 'rotate(-2.5deg)', position: 'relative', zIndex: 4,
+          }}>
             <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>

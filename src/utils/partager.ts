@@ -356,7 +356,7 @@ function invitationLigne(ctx: CanvasRenderingContext2D, W: number, accent: strin
 async function prechargerPolices() {
   try {
     const fonts = [
-      "italic 900 300px 'Fraunces'",
+      "italic 900 300px 'Bodoni Moda'",
       "800 italic 76px 'Bodoni Moda'",
       "600 30px 'Bodoni Moda'",
       "italic 42px 'Playfair Display'",
@@ -505,7 +505,7 @@ export async function genererImageStory(opts: {
     if (lettrineActive) {
       const lettre = wrapped[0].charAt(0).toUpperCase()
       const baseline = y + lettrineVisual
-      ctx.font = `900 italic ${lettrineSize}px 'Fraunces', Georgia, serif`
+      ctx.font = `900 italic ${lettrineSize}px 'Bodoni Moda', Georgia, serif`
       ctx.fillStyle = accent
       bavure(ctx, () => ctx.fillText(lettre, W / 2, baseline), 0.92)
       // éclaboussures déterministes
@@ -701,7 +701,7 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
   const sourceLines = (opts.texte ?? '').split('\n')
 
   const doWrap = (size: number) => {
-    ctx.font = `italic ${size}px 'Fraunces', Georgia, serif`
+    ctx.font = `italic ${size}px 'Bodoni Moda', Georgia, serif`
     const result: string[] = []
     for (const src of sourceLines) {
       if (!src.trim()) { result.push(''); continue }
@@ -1038,7 +1038,7 @@ function dessinerPoemeAnime(
   // Convergence + suspension des fragments (les voix éparses se rassemblent)
   if (t < ANIM_FLASH_T) {
     ctx.textAlign = 'center'
-    ctx.font = `italic 36px 'Fraunces', Georgia, serif`
+    ctx.font = `italic 36px 'Bodoni Moda', Georgia, serif`
     L.fragments.forEach((f, i) => {
       const dep = 360 + i * 160
       const local = clamp01((t - dep) / (CONV_FIN - dep))
@@ -1062,7 +1062,7 @@ function dessinerPoemeAnime(
 
   // Vers qui s'inscrivent — révélés par masque horizontal, avec tremblé d'encre
   ctx.textAlign = 'center'
-  ctx.font = `italic ${L.bodySize}px 'Fraunces', Georgia, serif`
+  ctx.font = `italic ${L.bodySize}px 'Bodoni Moda', Georgia, serif`
   const visibles = L.lignes.filter(l => l.texte)
   visibles.forEach((ligne, i) => {
     const lt = ANIM_LIGNE_T + i * ANIM_LIGNE_PAS
@@ -1087,7 +1087,7 @@ function dessinerPoemeAnime(
     const p = clamp01((t - LETT_T) / LETT_DUR)
     const fall = p * p * (0.6 + 0.4 * p) // accélération gravitaire
     ctx.textAlign = 'center'
-    ctx.font = `900 italic ${lettrine.size}px 'Fraunces', Georgia, serif`
+    ctx.font = `900 italic ${lettrine.size}px 'Bodoni Moda', Georgia, serif`
     // Traîne : 5 fantômes aux positions antérieures de la chute, résorbée 100 ms après l'impact
     const trailFade = clamp01(1 - (t - (LETT_T + LETT_DUR)) / 100)
     if (trailFade > 0) {
@@ -1134,7 +1134,7 @@ function layoutTexteOverlay(
   let size = 52, lineH = 78
   const sourceLines = (texte ?? '').split('\n')
   const doWrap = (s: number) => {
-    ctx.font = `italic ${s}px 'Fraunces', Georgia, serif`
+    ctx.font = `italic ${s}px 'Bodoni Moda', Georgia, serif`
     const r: string[] = []
     for (const src of sourceLines) {
       if (!src.trim()) { r.push(''); continue }
@@ -1206,7 +1206,7 @@ function dessinerPoemePleinCadre(
     }
   }
 
-  ctx.font = `italic ${L.size}px 'Fraunces', Georgia, serif`
+  ctx.font = `italic ${L.size}px 'Bodoni Moda', Georgia, serif`
   L.lignes.forEach((ligne, i) => {
     if (!ligne) return
     const la = clamp01((t - (TXT_T + i * stagger)) / FADE)

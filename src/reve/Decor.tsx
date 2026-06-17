@@ -324,7 +324,7 @@ function SymboleAvecCartel({
             background: 'var(--reve-bg)',
             border: '0.5px solid var(--reve-ink)',
             padding: '4px 8px 5px',
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
             color: 'var(--reve-ink)',
             transform: 'rotate(-2deg)',
             maxWidth: 150, lineHeight: 1.25,
@@ -346,7 +346,7 @@ function Etiquette({ children, style, delay }: { children: React.ReactNode; styl
       ...style,
       background: 'rgba(128,128,128,0.12)',
       padding: '6px 12px 7px',
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'Raleway', sans-serif",
       fontSize: 17, lineHeight: 1.3,
       color: 'var(--reve-ink)',
       boxShadow: '1px 2px 0 rgba(0,0,0,0.18)',
@@ -375,7 +375,7 @@ function CitationManifeste() {
       <div style={{
         fontSize: 17, fontWeight: 600,
         letterSpacing: '0.16em', textTransform: 'uppercase',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         color: 'var(--reve-accent)', marginTop: 8,
       }}>{s.citation.a}</div>
     </div>
@@ -387,7 +387,7 @@ function SignatureReve() {
   return (
     <div style={{
       position: 'absolute', bottom: 6, right: 12,
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'Raleway', sans-serif",
       fontWeight: 500,
       color: 'var(--reve-accent)',
       fontSize: 17, opacity: 0.7,
@@ -416,7 +416,7 @@ export function HeaderKeywords({ count = 8 }: { count?: number }) {
     <div style={{ position: 'absolute', top: '3%', left: '5%', right: '5%', zIndex: 3, pointerEvents: 'none' }}>
       <div style={{
         fontSize: 17,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         fontWeight: 500,
         color: 'var(--reve-accent)',
         lineHeight: 1.55, letterSpacing: '0.04em',
