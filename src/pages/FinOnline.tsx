@@ -16,7 +16,7 @@ import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
-import PapierDeplie from '../components/PapierDeplie'
+import RevealPapierPleinEcran from '../components/RevealPapierPleinEcran'
 import type { DessinCadavre } from '../types'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
@@ -143,6 +143,7 @@ export default function FinOnline() {
   const [sauvegardeDessin_, setSauvegardeDessin] = useState(false)
 
   const [revealReady, setRevealReady] = useState(false)
+  const [papierTermine, setPapierTermine] = useState(false)
   const [revealDessinJoue, setRevealDessinJoue] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
@@ -420,6 +421,11 @@ export default function FinOnline() {
         )}
       </AnimatePresence>
 
+      {/* Plein écran papier qui se déplie — mode écrit uniquement */}
+      {revealReady && !papierTermine && room.mode !== 'dessin' && (
+        <RevealPapierPleinEcran onTermine={() => setPapierTermine(true)} />
+      )}
+
       <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom relative">
         <Decor variant="fin" />
 
@@ -431,7 +437,8 @@ export default function FinOnline() {
 
         <Section accent={accent} color={btnText} style={{ marginTop: 24, marginBottom: 12 }}>RÉVÉLATION</Section>
 
-        {revealReady && (
+        {/* Mode dessin gate sur revealReady ; mode écrit gate sur papierTermine (après le dépli plein-écran) */}
+        {(room.mode === 'dessin' ? revealReady : papierTermine) && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
 
             {/* ── Mode dessin : dessin assemblé ── */}
@@ -547,9 +554,14 @@ export default function FinOnline() {
               </div>
             )}
 
-            {/* ── Mode écrit : poème ── */}
+            {/* ── Mode écrit : poème — révélé après le dépli plein-écran ── */}
             {room.mode !== 'dessin' && (
-              <PapierDeplie bordure={`${accent}55`} duration={1.6} style={{ marginBottom: 28 }}>
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, ease: 'easeOut' }}
+                style={{ marginBottom: 28 }}
+              >
                 <PapierCard rotation={0} bord="net" bordure={`${accent}55`} style={{ padding: '16px 16px 12px' }}>
                   <div style={{ marginBottom: 12 }}>
                     <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
@@ -570,7 +582,7 @@ export default function FinOnline() {
                     </motion.p>
                   ))}
                 </PapierCard>
-              </PapierDeplie>
+              </motion.div>
             )}
 
             {/* Coutures — écrit */}

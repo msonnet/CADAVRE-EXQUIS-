@@ -14,7 +14,7 @@ import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
 import { PapierCard, Etiquette, ENCRE_PAPIER } from '../components/Papier'
-import PapierDeplie from '../components/PapierDeplie'
+import RevealPapierPleinEcran from '../components/RevealPapierPleinEcran'
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -51,6 +51,7 @@ export default function FinDePartie() {
   )
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
   const [revealReady, setRevealReady] = useState(false)
+  const [papierTermine, setPapierTermine] = useState(false)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [promptLibre, setPromptLibre] = useState('')
@@ -215,6 +216,12 @@ export default function FinDePartie() {
           />
         )}
       </AnimatePresence>
+
+      {/* Plein écran papier qui se déplie — joue après l'assemblage, juste avant le poème */}
+      {revealReady && !papierTermine && (
+        <RevealPapierPleinEcran onTermine={() => setPapierTermine(true)} />
+      )}
+
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
         <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
 
@@ -296,11 +303,14 @@ export default function FinDePartie() {
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
-        {/* ── POEM CARD — le papier se déplie pour révéler le poème.
-            Monté seulement quand le rideau d'assemblage s'efface (revealReady),
-            sinon le dépli se jouerait caché derrière l'intro. ── */}
-        {revealReady && (
-        <PapierDeplie bordure={`${accent}55`} duration={1.6} style={{ marginBottom: 20 }}>
+        {/* ── POEM CARD — apparaît une fois le papier plein-écran entièrement déroulé ── */}
+        {papierTermine && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: 'easeOut' }}
+          style={{ marginBottom: 20 }}
+        >
         <motion.div
           initial={false}
           animate={lettrineChutee ? { y: [0, -5, 3, -2, 0] } : { y: 0 }}
@@ -322,7 +332,7 @@ export default function FinDePartie() {
               overflowWrap: 'break-word', wordBreak: 'break-word',
             }}
           >
-            {revealReady && lignes.map((ligne, i) => (
+            {lignes.map((ligne, i) => (
               <motion.span
                 key={i}
                 style={{ display: 'block', minHeight: '1.65em' }}
@@ -365,7 +375,7 @@ export default function FinDePartie() {
           </div>
         </PapierCard>
         </motion.div>
-        </PapierDeplie>
+        </motion.div>
         )}
 
         {/* ── IMAGE (if already generated) ── */}
