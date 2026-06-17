@@ -251,8 +251,8 @@ export default function Accueil() {
             flexible rétrécit à zéro sur les écrans courts. ── */}
         <div style={{ position: 'relative', marginBottom: 10, marginTop: 24 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-            {/* éléphant — bord gauche, tête de liste */}
-            <div style={{ width: '46%', transform: 'rotate(-3deg)', zIndex: 2 }}>
+            {/* éléphant — bord gauche, remonté sur sa diagonale haut-gauche */}
+            <div style={{ width: '46%', marginTop: -18, transform: 'translate(-3%, 0) rotate(-3deg)', zIndex: 2 }}>
               <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
             {/* papillon — bord droit, légèrement au-dessus de l'éléphant */}
