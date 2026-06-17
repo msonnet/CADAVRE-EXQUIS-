@@ -17,11 +17,11 @@ export const ENCRE_PAPIER = '#241a10'
 
 // Un papier par ambiance — teinte + encre assortie, lisible quel que soit l'accent.
 export const PAPIERS_AMBIANCE: Record<AmbianceKey, { bg: string; encre: string }> = {
-  minuit: { bg: '#f2eef8', encre: '#1c1832' }, // lune — crème lavandé
-  encre:  { bg: '#e6dfd0', encre: '#1e1610' }, // gazette — gris chaud
-  argile: { bg: '#ecdaaa', encre: '#200e04' }, // miel — kraft doux
-  lin:    { bg: '#f6ead0', encre: '#241a10' }, // vergé crème — inchangé
-  aube:   { bg: '#edf0f8', encre: '#0e1220' }, // pelure — froid clair
+  minuit: { bg: '#ddd5f2', encre: '#1a1535' }, // lavande — papier à lettres mauve
+  encre:  { bg: '#ccc4ad', encre: '#1a1208' }, // gazette — bistre chaud
+  argile: { bg: '#e8c260', encre: '#200a04' }, // kraft — ambré saturé
+  lin:    { bg: '#f6ead0', encre: '#241a10' }, // vergé crème — référence neutre
+  aube:   { bg: '#ccd9ea', encre: '#0c1428' }, // pelure — bleu acier
 }
 
 /**

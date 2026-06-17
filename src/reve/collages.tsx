@@ -85,27 +85,6 @@ const HorlogeMolle: React.FC<SVGProps> = ({ w = 130 }) => (
   </svg>
 )
 
-// 4 · L'Oiseau-cage — Magritte / Cornell
-const OiseauCage: React.FC<SVGProps> = ({ w = 100 }) => (
-  <svg width={w} height={w * 1.4} viewBox="0 0 100 140">
-    <rect x="15" y="20" width="70" height="100" fill="none" stroke={ENCRE} strokeWidth="1.2" />
-    <path d="M15,20 Q50,5 85,20" stroke={ENCRE} strokeWidth="1.2" fill="none" />
-    <circle cx="50" cy="6" r="3" stroke={ENCRE} strokeWidth="1" fill={PAPIER} />
-    {[28, 40, 50, 60, 72].map(x => (
-      <line key={x} x1={x} y1="20" x2={x} y2="120" stroke={ENCRE} strokeWidth="0.5" />
-    ))}
-    <line x1="15" y1="70" x2="85" y2="70" stroke={ENCRE} strokeWidth="0.6" />
-    <g transform="translate(35, 60)">
-      <path d="M0,8 Q5,0 15,2 Q22,4 25,10 L23,16 L8,16 L4,12 Z" fill="url(#h45)" stroke={ENCRE} strokeWidth="1" />
-      <line x1="10" y1="16" x2="10" y2="22" stroke={ENCRE} strokeWidth="0.8" />
-      <line x1="18" y1="16" x2="18" y2="22" stroke={ENCRE} strokeWidth="0.8" />
-      <circle cx="22" cy="5" r="1.5" fill={ENCRE} />
-      <path d="M25,7 L30,8 L25,9 Z" fill={ENCRE} />
-    </g>
-    <line x1="15" y1="120" x2="85" y2="120" stroke={ENCRE} strokeWidth="1.5" />
-  </svg>
-)
-
 // 5 · La Clef — Une semaine de bonté (Max Ernst, 1934)
 const Clef: React.FC<SVGProps> = ({ w = 60 }) => (
   <svg width={w} height={w * 2.2} viewBox="0 0 60 132">
@@ -142,16 +121,6 @@ const Pomme: React.FC<SVGProps> = ({ w = 100 }) => (
   </svg>
 )
 
-// 8 · La Main qui écrit — Bataille / Magritte
-const MainAnatomique: React.FC<SVGProps> = ({ w = 110 }) => (
-  <svg width={w} height={w * 1.25} viewBox="0 0 100 125">
-    <path d="M25,125 Q22,80 30,55 Q22,45 25,30 Q30,25 35,32 L37,55 Q40,30 45,15 Q52,12 54,20 L52,50 Q56,18 62,10 Q70,10 70,18 L66,52 Q72,25 78,22 Q85,25 82,35 L74,60 Q88,55 88,68 Q85,80 75,82 L70,90 Q72,115 65,125 Z"
-      fill="url(#h30)" stroke={ENCRE} strokeWidth="1.1" />
-    <path d="M40,90 Q55,95 70,88" stroke={ENCRE} strokeWidth="0.6" fill="none" />
-    <path d="M38,105 Q55,108 68,100" stroke={ENCRE} strokeWidth="0.6" fill="none" />
-  </svg>
-)
-
 // 9 · Le Papillon — Carrington / Brauner
 const Papillon: React.FC<SVGProps> = ({ w = 130 }) => (
   <svg width={w} height={w * 0.7} viewBox="0 0 130 90">
@@ -167,14 +136,6 @@ const Papillon: React.FC<SVGProps> = ({ w = 130 }) => (
     <circle cx="35" cy="32" r="1.5" fill={PAPIER} />
     <circle cx="95" cy="32" r="4" fill={ENCRE} />
     <circle cx="95" cy="32" r="1.5" fill={PAPIER} />
-  </svg>
-)
-
-// 10 · L'Œuf philosophal — Brauner
-const Oeuf: React.FC<SVGProps> = ({ w = 90 }) => (
-  <svg width={w} height={w * 1.25} viewBox="0 0 90 112">
-    <ellipse cx="45" cy="62" rx="38" ry="48" fill="url(#h60)" stroke={ENCRE} strokeWidth="1.3" />
-    <path d="M20,40 Q35,28 50,30" stroke={ENCRE} strokeWidth="0.5" fill="none" />
   </svg>
 )
 
@@ -248,48 +209,6 @@ const PaysageTanguy: React.FC<SVGProps> = ({ w = 140 }) => (
   </svg>
 )
 
-// 15 · Le Mannequin métaphysique — de Chirico
-const Mannequin: React.FC<SVGProps> = ({ w = 80 }) => (
-  <svg width={w} height={w * 1.5} viewBox="0 0 80 120">
-    <ellipse cx="40" cy="20" rx="11" ry="14" fill="url(#h30)" stroke={ENCRE} strokeWidth="1" />
-    <line x1="32" y1="20" x2="48" y2="20" stroke={ENCRE} strokeWidth="0.7" />
-    <rect x="36" y="32" width="8" height="6" fill={ENCRE} opacity="0.3" />
-    <path d="M22,38 L58,38 L62,90 L18,90 Z" fill="url(#h45)" stroke={ENCRE} strokeWidth="1.1" />
-    <rect x="28" y="48" width="24" height="3" fill={PAPIER} stroke={ENCRE} strokeWidth="0.5" />
-    {[32, 36, 40, 44, 48].map(x => (
-      <line key={x} x1={x} y1="48" x2={x} y2="51" stroke={ENCRE} strokeWidth="0.4" />
-    ))}
-    <path d="M14,90 L66,90 L70,105 L10,105 Z" fill={PAPIER} stroke={ENCRE} strokeWidth="1" />
-    <line x1="10" y1="98" x2="70" y2="98" stroke={ENCRE} strokeWidth="0.5" />
-    <ellipse cx="40" cy="115" rx="28" ry="3" fill={ENCRE} opacity="0.4" />
-  </svg>
-)
-
-// 16 · La Poupée articulée — Bellmer
-const Poupee: React.FC<SVGProps> = ({ w = 90 }) => (
-  <svg width={w} height={w * 1.35} viewBox="0 0 90 122">
-    <circle cx="45" cy="14" r="11" fill="url(#h45)" stroke={ENCRE} strokeWidth="1.1" />
-    <circle cx="42" cy="13" r="1.2" fill={ENCRE} />
-    <circle cx="48" cy="13" r="1.2" fill={ENCRE} />
-    <circle cx="45" cy="26" r="2.5" fill={PAPIER} stroke={ENCRE} strokeWidth="0.7" />
-    <line x1="45" y1="25" x2="45" y2="27" stroke={ENCRE} strokeWidth="0.5" />
-    <circle cx="45" cy="45" r="14" fill="url(#h60)" stroke={ENCRE} strokeWidth="1.1" />
-    <circle cx="45" cy="72" r="15" fill="url(#hcross)" stroke={ENCRE} strokeWidth="1.1" />
-    <circle cx="32" cy="42" r="2" fill={PAPIER} stroke={ENCRE} strokeWidth="0.6" />
-    <circle cx="58" cy="42" r="2" fill={PAPIER} stroke={ENCRE} strokeWidth="0.6" />
-    <path d="M30,44 Q22,55 18,68" stroke={ENCRE} strokeWidth="1.4" fill="none" />
-    <path d="M60,44 Q70,55 76,72" stroke={ENCRE} strokeWidth="1.4" fill="none" />
-    <circle cx="18" cy="71" r="3.5" fill={PAPIER} stroke={ENCRE} strokeWidth="0.8" />
-    <circle cx="76" cy="75" r="3.5" fill={PAPIER} stroke={ENCRE} strokeWidth="0.8" />
-    <circle cx="38" cy="88" r="2" fill={PAPIER} stroke={ENCRE} strokeWidth="0.6" />
-    <circle cx="52" cy="88" r="2" fill={PAPIER} stroke={ENCRE} strokeWidth="0.6" />
-    <path d="M36,90 Q32,100 30,115" stroke={ENCRE} strokeWidth="1.4" fill="none" />
-    <path d="M54,90 Q58,100 62,115" stroke={ENCRE} strokeWidth="1.4" fill="none" />
-    <ellipse cx="28" cy="117" rx="4" ry="2" fill={ENCRE} />
-    <ellipse cx="64" cy="117" rx="4" ry="2" fill={ENCRE} />
-  </svg>
-)
-
 // 17 · Rotorelief — Duchamp
 const Spirale: React.FC<SVGProps> = ({ w = 120 }) => {
   const cx = 60, cy = 60
@@ -351,22 +270,17 @@ export interface CollageDef {
 }
 
 export const COLLAGES: CollageDef[] = [
-  { id: 'oeil',       label: "L'Œil tranché",            ref: "Un Chien andalou · Buñuel & Dalí · 1929",    draw: OeilTranche,    w: 140 },
-  { id: 'pipe',       label: "Ceci n'est pas une pipe",  ref: "La Trahison des images · Magritte · 1929",  draw: Pipe,           w: 140 },
-  { id: 'horloge',    label: "Les Montres molles",        ref: "Persistance de la mémoire · Dalí · 1931",   draw: HorlogeMolle,   w: 130 },
-  { id: 'cage',       label: "L'Affinité élective",      ref: "d'après Magritte & Cornell",                draw: OiseauCage,     w: 100 },
-  { id: 'clef',       label: "La Clef",                  ref: "Une semaine de bonté · Max Ernst · 1934",   draw: Clef,           w: 60  },
-  { id: 'chapeau',    label: "Le Chapeau melon",         ref: "Golconde · Magritte · 1953",                draw: ChapeauMelon,   w: 120 },
-  { id: 'pomme',      label: "La Pomme",                 ref: "Le Fils de l'homme · Magritte · 1964",      draw: Pomme,          w: 100 },
-  { id: 'main',       label: "La Main qui écrit",        ref: "d'après Bataille & Magritte",               draw: MainAnatomique, w: 110 },
-  { id: 'papillon',   label: "Le Papillon",              ref: "d'après Brauner & Carrington",              draw: Papillon,       w: 130 },
-  { id: 'oeuf',       label: "L'Œuf philosophal",        ref: "d'après Brauner · 1947",                    draw: Oeuf,           w: 90  },
-  { id: 'poisson',    label: "Le Poisson soluble",       ref: "d'après Breton · 1924",                     draw: Poisson,        w: 140 },
-  { id: 'lune',       label: "La Lune",                   ref: "d'après Desnos · 1923",                     draw: Lune,           w: 100 },
-  { id: 'mobile',     label: "Mobile",                   ref: "d'après Calder · 1932",                     draw: Mobile,         w: 130 },
-  { id: 'tanguy',     label: "Paysage biomorphique",     ref: "d'après Y. Tanguy · 1929",                  draw: PaysageTanguy,  w: 140 },
-  { id: 'mannequin',  label: "Le Mannequin métaphysique", ref: "d'après G. de Chirico · 1917",             draw: Mannequin,      w: 80  },
-  { id: 'poupee',     label: "La Poupée articulée",      ref: "d'après H. Bellmer · 1934",                 draw: Poupee,         w: 90  },
-  { id: 'merz',       label: "Ticket Merz",              ref: "d'après K. Schwitters · 1923",              draw: TicketMerz,     w: 120 },
-  { id: 'spirale',    label: "Rotorelief",                ref: "d'après M. Duchamp · 1935",                 draw: Spirale,        w: 120 },
+  { id: 'oeil',     label: "L'Œil tranché",           ref: "Un Chien andalou · Buñuel & Dalí · 1929",   draw: OeilTranche,  w: 140 },
+  { id: 'pipe',     label: "Ceci n'est pas une pipe", ref: "La Trahison des images · Magritte · 1929",  draw: Pipe,         w: 140 },
+  { id: 'horloge',  label: "Les Montres molles",       ref: "Persistance de la mémoire · Dalí · 1931",  draw: HorlogeMolle, w: 130 },
+  { id: 'clef',     label: "La Clef",                 ref: "Une semaine de bonté · Max Ernst · 1934",  draw: Clef,         w: 60  },
+  { id: 'chapeau',  label: "Le Chapeau melon",        ref: "Golconde · Magritte · 1953",               draw: ChapeauMelon, w: 120 },
+  { id: 'pomme',    label: "La Pomme",                ref: "Le Fils de l'homme · Magritte · 1964",     draw: Pomme,        w: 100 },
+  { id: 'papillon', label: "Le Papillon",             ref: "d'après Brauner & Carrington",             draw: Papillon,     w: 130 },
+  { id: 'poisson',  label: "Le Poisson soluble",      ref: "d'après Breton · 1924",                    draw: Poisson,      w: 140 },
+  { id: 'lune',     label: "La Lune",                 ref: "d'après Desnos · 1923",                    draw: Lune,         w: 100 },
+  { id: 'mobile',   label: "Mobile",                  ref: "d'après Calder · 1932",                    draw: Mobile,       w: 130 },
+  { id: 'tanguy',   label: "Paysage biomorphique",    ref: "d'après Y. Tanguy · 1929",                 draw: PaysageTanguy,w: 140 },
+  { id: 'merz',     label: "Ticket Merz",             ref: "d'après K. Schwitters · 1923",             draw: TicketMerz,   w: 120 },
+  { id: 'spirale',  label: "Rotorelief",               ref: "d'après M. Duchamp · 1935",                draw: Spirale,      w: 120 },
 ]
