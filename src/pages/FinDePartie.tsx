@@ -219,7 +219,13 @@ export default function FinDePartie() {
 
       {/* Plein écran papier qui se déplie — joue après l'assemblage, juste avant le poème */}
       {revealReady && !papierTermine && (
-        <RevealPapierPleinEcran onTermine={() => setPapierTermine(true)} />
+        <RevealPapierPleinEcran
+          lignes={lignes}
+          accent={accent}
+          encre={encre}
+          btnText={btnText}
+          onTermine={() => setPapierTermine(true)}
+        />
       )}
 
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">

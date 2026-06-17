@@ -423,7 +423,13 @@ export default function FinOnline() {
 
       {/* Plein écran papier qui se déplie — mode écrit uniquement */}
       {revealReady && !papierTermine && room.mode !== 'dessin' && (
-        <RevealPapierPleinEcran onTermine={() => setPapierTermine(true)} />
+        <RevealPapierPleinEcran
+          lignes={lignes}
+          accent={accent}
+          encre={encre}
+          btnText={btnText}
+          onTermine={() => setPapierTermine(true)}
+        />
       )}
 
       <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom relative">
