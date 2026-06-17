@@ -242,33 +242,24 @@ export default function Accueil() {
           </div>
         )}
 
-        {/* ── CTA — têtes-gravures épinglées en désordre, façon planches de
-            musée arrachées et recollées : tailles inégales, hauteurs décalées,
-            légers chevauchements. Le chaos est voulu (folie surréaliste), mais
-            mesuré pour rester tapable à 360px. ── */}
-        <div style={{ position: 'relative', marginBottom: 10, marginTop: 2 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-            {/* éléphant — le plus grand, posé bas et penché à gauche */}
-            <div style={{
-              width: '50%', transformOrigin: 'center bottom',
-              transform: 'translateY(14px) rotate(-3deg)', zIndex: 2,
-            }}>
+        {/* ── CTA — têtes-gravures « collées de travers » : tailles inégales,
+            rotations et décentrage pour le caractère, MAIS chaque tête garde
+            sa propre case verticale — aucun chevauchement ne masque jamais une
+            étiquette de mode (le désordre ne doit pas coûter la lisibilité). ── */}
+        <div style={{ position: 'relative', marginBottom: 10, marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: '5%' }}>
+            {/* éléphant — un peu plus grand, penché à gauche */}
+            <div style={{ width: '47%', transform: 'rotate(-3deg)', zIndex: 2 }}>
               <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
             </div>
-            {/* papillon — plus petit, remonté, chevauche légèrement l'éléphant */}
-            <div style={{
-              width: '42%', marginLeft: '-3%', transformOrigin: 'center top',
-              transform: 'translateY(-12px) rotate(4deg)', zIndex: 3,
-            }}>
+            {/* papillon — plus petit, posé un cran plus bas, penché à droite */}
+            <div style={{ width: '40%', marginTop: 16, transform: 'rotate(3.5deg)', zIndex: 3 }}>
               <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
             </div>
           </div>
-          {/* tigre — décalé sous le creux, jamais centré, mordant la rangée du dessus */}
-          <div style={{
-            width: '52%', marginLeft: '8%', marginTop: '-9%',
-            transformOrigin: 'center top',
-            transform: 'rotate(-2.5deg)', position: 'relative', zIndex: 4,
-          }}>
+          {/* tigre — sous la rangée, décalé à gauche (jamais centré), sans la
+              recouvrir : marge POSITIVE pour laisser respirer les étiquettes */}
+          <div style={{ width: '50%', marginLeft: '9%', marginTop: 10, transform: 'rotate(-2deg)', zIndex: 4 }}>
             <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
           </div>
         </div>
