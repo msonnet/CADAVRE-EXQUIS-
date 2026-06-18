@@ -59,7 +59,9 @@ const STYLE = {
   // Ernst / Dada) ; la variété vient désormais de la composition, des fragments
   // et de l'accent, plus du médium pictural (qui rendait un effet « sticker »).
   racine: COLLAGE_ACCENT,
-  meduse: COLLAGE_ACCENT,
+  // méduse : sortie du collage-page (qui remplissait tout le cadre) pour une
+  // gravure propre sur fond vide — détourage net de la seule silhouette.
+  meduse: GRAVURE,
   'cerf-lune': COLLAGE_ACCENT,
   'dame-fleur': COLLAGE_ACCENT,
   'renard-automne': COLLAGE_ACCENT,
@@ -166,10 +168,11 @@ const ESPECES = {
   // MARGE_VIDE : le collage ne doit toucher aucun bord (sinon le détourage par
   // propagation ne peut pas découper la silhouette → fond rectangulaire).
   meduse: {
-    ouvert: COLLAGE_SUJET + 'a jellyfish-being: a domed bell cut from a halftone engraving of an old ' +
-      'hot-air balloon, long trailing tentacles made of thin torn strips of printed book text and fine ' +
-      'engraved chains, a small engraved eye pasted at the centre of the bell, ragged torn paper edges, ' +
-      'clashing line weights, one faint accent colour on the eye, ' + MARGE_VIDE + CADRAGE,
+    ouvert: 'a jellyfish-being, fine antique scientific engraving: a tall domed bell shaped like an old ' +
+      'hot-air balloon with delicate vertical ribs and fine cross-hatching, a single calm engraved eye ' +
+      'set at the centre of the bell, very many long slender trailing tentacles hanging straight down ' +
+      'below the bell, graceful and symmetric, drawn as a clean isolated specimen, pure empty background, ' +
+      MARGE_VIDE + CADRAGE,
   },
   // CRÉATURE — cerf : tête gravée, bois remplacés par bandes de texte + fragment de lune.
   'cerf-lune': {
