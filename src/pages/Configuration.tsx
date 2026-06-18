@@ -200,7 +200,7 @@ export default function Configuration() {
                   <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: papier.encre, marginBottom: 3 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 13, color: papier.encre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
+                  <div style={{ ...mono, fontSize: 13, fontWeight: 600, color: papier.encre, opacity: 0.85, marginBottom: active ? 5 : 0 }}>{s.description}</div>
                   {active && (
                     <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: papier.encre, opacity: 0.80, lineHeight: 1.55 }}>
                       {s.detail}
