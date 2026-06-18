@@ -6,7 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
-import { makePapierTexture, usePapier, DECHIRE_1, DECHIRE_2, Section } from '../components/Papier'
+import { makePapierTexture, usePapier, Section } from '../components/Papier'
 
 function genCode(): string {
   const adj = ['LOUP', 'CYGNE', 'CRABE', 'OURS', 'VACHE', 'TIGRE', 'AIGLE', 'SINGE', 'VIPÈRE', 'LAPIN', 'RENARD', 'HIBOU']
@@ -286,7 +286,7 @@ export default function Online() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
             ...makePapierTexture(papier.bg),
-            clipPath: DECHIRE_1,
+            borderRadius: 4,
             boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
             transform: 'rotate(-0.5deg)',
           }}>
@@ -382,7 +382,7 @@ export default function Online() {
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         padding: '12px 16px',
                         ...makePapierTexture(papier.bg),
-                        clipPath: i % 2 === 0 ? DECHIRE_1 : DECHIRE_2,
+                        borderRadius: 4,
                         border: 'none',
                         boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
                         transform: i % 2 === 0 ? 'rotate(-0.5deg)' : 'rotate(0.5deg)',

@@ -423,7 +423,7 @@ export default function PoemeDetail() {
           transition={{ delay: 0.35, duration: 0.7 }}
           style={{ marginBottom: 16 }}
         >
-          <PapierCard rotation={-0.5} bord="dechire1" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
+          <PapierCard rotation={-0.5} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
             <div style={{ marginBottom: 12 }}>
               <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                 LE CADAVRE

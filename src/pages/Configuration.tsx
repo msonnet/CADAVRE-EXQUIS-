@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { makePapierTexture, usePapier, DECHIRE_1, DECHIRE_2, DECHIRE_3, DECHIRE_4, bordAleatoire, Section } from '../components/Papier'
+import { makePapierTexture, usePapier, Section } from '../components/Papier'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 
 const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
@@ -172,7 +172,7 @@ export default function Configuration() {
                   textAlign: 'left',
                   transition: 'box-shadow 0.2s, transform 0.2s, opacity 0.2s',
                   ...makePapierTexture(papier.bg, i % 4),
-                  clipPath: [DECHIRE_1, DECHIRE_4, DECHIRE_2, DECHIRE_3][i % 4],
+                  borderRadius: 4,
                   border: 'none',
                   opacity: active ? 1 : 0.62,
                   transform: active ? 'rotate(-0.5deg)' : 'none',

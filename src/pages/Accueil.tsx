@@ -204,7 +204,7 @@ export default function Accueil() {
           <div style={{ position: 'relative', marginBottom: 13, marginTop: 2 }}>
             <PapierCard
               rotation={0.9}
-              bord="dechire4"
+              bord="net"
               bordure={seance.ambiance.rule}
               papierBg={papier.bg}
               textureVariant={2}

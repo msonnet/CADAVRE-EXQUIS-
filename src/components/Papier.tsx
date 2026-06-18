@@ -34,33 +34,8 @@ export function usePapier(): { bg: string; encre: string } {
   return key ? PAPIERS_AMBIANCE[key] : { bg: PAPIER, encre: ENCRE_PAPIER }
 }
 
-// Froissé du papier — texture pré-cuite (public/textures/papier-froisse.webp).
-// C'est une carte de plis TRANSPARENTE (ombres sombres dans les creux + reflets
-// blancs sur les crêtes + grain fin) posée par-dessus la couleur de l'ambiance.
-// On la cuit en raster plutôt que de la calculer en filtre SVG au runtime parce
-// que (1) WebKit iOS rend mal — voire pas du tout — les filtres SVG en
-// background-image, et (2) background-blend-mode aplatit silencieusement une
-// couche issue d'un filtre SVG sous Chromium. Un WebP transparent superposé
-// (sans blend-mode) est fiable partout.
-const FROISSE = 'url(/textures/papier-froisse.webp)'
-
-// 4 lustre-variants — chaque « variante » simule un grammage différent :
-// 0 = diagonal doux (historique), 1 = kraft (reflet horizontal marqué),
-// 2 = vélin (quasi-plat, très doux), 3 = journal (croisé, coins marqués).
-const LUSTRES = [
-  'linear-gradient(118deg, rgba(255,255,255,0.06) 0%, transparent 26%, transparent 72%, rgba(0,0,0,0.05) 100%)',
-  'linear-gradient(95deg,  rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 35%, transparent 60%, rgba(0,0,0,0.07) 100%)',
-  'linear-gradient(175deg, rgba(255,255,255,0.04) 0%, transparent 40%, rgba(0,0,0,0.03) 100%)',
-  'linear-gradient(125deg, rgba(255,255,255,0.09) 0%, transparent 30%, rgba(0,0,0,0.04) 55%, rgba(255,255,255,0.05) 80%, rgba(0,0,0,0.06) 100%)',
-]
-
-export function makePapierTexture(bg: string, variant = 0): React.CSSProperties {
-  return {
-    backgroundColor: bg,
-    backgroundImage: `${LUSTRES[variant % 4]}, ${FROISSE}`,
-    backgroundSize: 'cover, cover',
-    backgroundPosition: 'center, center',
-  }
+export function makePapierTexture(bg: string, _variant = 0): React.CSSProperties {
+  return { backgroundColor: bg }
 }
 
 export const PAPIER_TEXTURE: React.CSSProperties = makePapierTexture(PAPIER)
@@ -119,10 +94,8 @@ const BORD_STYLE: Record<Bord, React.CSSProperties> = {
   dechire6: { clipPath: DECHIRE_6 },
 }
 
-/** Tire un bord déchiré de façon déterministe à partir d'un entier (ex: seed, index). */
-export function bordAleatoire(n: number): Bord {
-  const bords: Bord[] = ['dechire1', 'dechire2', 'dechire3', 'dechire4', 'dechire5', 'dechire6']
-  return bords[Math.abs(n) % bords.length]
+export function bordAleatoire(_n: number): Bord {
+  return 'net'
 }
 
 type PapierCardProps = {

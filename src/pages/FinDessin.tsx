@@ -331,7 +331,7 @@ export default function FinDessin() {
             {/* Texte Vision */}
             {texteVision ? (
               <div>
-                <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
+                <PapierCard rotation={0.5} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
                   <div style={{ marginBottom: 10 }}>
                     <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                       LECTURE SURRÉALISTE

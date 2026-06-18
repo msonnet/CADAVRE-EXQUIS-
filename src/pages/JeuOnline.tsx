@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
-import { PapierCard, Section, makePapierTexture, usePapier, DECHIRE_1 } from '../components/Papier'
+import { PapierCard, Section, makePapierTexture, usePapier } from '../components/Papier'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -602,7 +602,7 @@ export default function JeuOnline() {
                 aria-label={caseDef.consigne}
                 autoFocus
                 rows={3}
-                style={{ fontFamily: "'Courier Prime', 'Courier New', Courier, monospace", fontStyle: 'normal', fontWeight: 400, fontSize: 17, letterSpacing: '0.02em', color: papier.encre, ...makePapierTexture(papier.bg, 3), clipPath: DECHIRE_1, border: 'none', padding: '14px 18px', outline: 'none', caretColor: accent, width: '100%', resize: 'none', boxShadow: '0 3px 11px rgba(0,0,0,0.28)' }}
+                style={{ fontFamily: "'Courier Prime', 'Courier New', Courier, monospace", fontStyle: 'normal', fontWeight: 400, fontSize: 17, letterSpacing: '0.02em', color: papier.encre, ...makePapierTexture(papier.bg, 3), borderRadius: 4, border: 'none', padding: '14px 18px', outline: 'none', caretColor: accent, width: '100%', resize: 'none', boxShadow: '0 3px 11px rgba(0,0,0,0.28)' }}
               />
               {submitError && <div style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>

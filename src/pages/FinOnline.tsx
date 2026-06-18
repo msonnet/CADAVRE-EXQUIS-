@@ -459,7 +459,7 @@ export default function FinOnline() {
                     <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />
                     {texteVision ? (
                       <div style={{ marginBottom: 16 }}>
-                        <PapierCard rotation={0.5} bord="dechire2" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
+                        <PapierCard rotation={0.5} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
                           <div style={{ marginBottom: 10 }}>
                             <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
                               LECTURE SURRÉALISTE

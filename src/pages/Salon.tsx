@@ -6,7 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
-import { makePapierTexture, usePapier, DECHIRE_1, DECHIRE_2, Section } from '../components/Papier'
+import { makePapierTexture, usePapier, Section } from '../components/Papier'
 import { STRUCTURES, getStructure, nombreCasesEffectif } from '../structures'
 
 type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null }
@@ -340,7 +340,7 @@ export default function Salon() {
           padding: '14px 18px',
           marginBottom: 16,
           ...makePapierTexture(papier.bg),
-          clipPath: DECHIRE_1,
+          borderRadius: 4,
           boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
           transform: 'rotate(-0.5deg)',
         }}
@@ -365,7 +365,7 @@ export default function Salon() {
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '10px 14px',
                   ...makePapierTexture(papier.bg),
-                  clipPath: i % 2 === 0 ? DECHIRE_1 : DECHIRE_2,
+                  borderRadius: 4,
                   boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
                   transform: i % 2 === 0 ? 'rotate(-0.5deg)' : 'rotate(0.5deg)',
                 }}
