@@ -24,7 +24,13 @@ import { Etiquette } from './Papier'
  * d'accent plein, contre-pivotée par rapport à la carte de papier).
  */
 
-export type Espece = 'elephant' | 'papillon' | 'tigre'
+// Les 3 espèces « historiques » ont une animation d'activation propre
+// (trompe / ailes / gueule, ci-dessous). Les 9 chimères supplémentaires sont
+// mono-état : leur activation est un léger salut CSS générique (SingleRaster).
+export type Espece =
+  | 'elephant' | 'papillon' | 'tigre'
+  | 'racine' | 'meduse' | 'cerf-lune' | 'poisson-oiseau' | 'escargot-maison'
+  | 'dame-fleur' | 'hibou-horloge' | 'renard-automne' | 'baleine-ciel'
 
 type Props = {
   espece: Espece
@@ -41,7 +47,12 @@ const DUREE_FERMETURE = 0.55
 // Léger angle distinct par espèce — fait « collé à la main » plutôt
 // qu'aligné au cordeau, sans jamais assez pencher pour empiéter sur le
 // voisin (vérifié à l'écran le plus étroit visé, 360px).
-const ROTATION: Record<Espece, number> = { elephant: -2.5, papillon: 2.2, tigre: -1.6 }
+const ROTATION: Record<Espece, number> = {
+  elephant: -2.5, papillon: 2.2, tigre: -1.6,
+  racine: 1.8, meduse: -2.2, 'cerf-lune': 1.4, 'poisson-oiseau': -1.9,
+  'escargot-maison': 2.4, 'dame-fleur': -1.5, 'hibou-horloge': 1.6,
+  'renard-automne': -2.3, 'baleine-ciel': 2.0,
+}
 
 let _uid = 0
 
@@ -207,8 +218,32 @@ function TrompeLevee({ uid, closing }: { uid: string; closing: boolean }) {
   )
 }
 
+/**
+ * Chimères mono-état (les 9 ajoutées) : une seule gravure, jamais de second
+ * raster ni d'inpainting. L'activation au clic est un léger « salut » CSS
+ * (bascule + petite échelle, pivot près du bas) — assez visible pour marquer
+ * le clic avant la navigation, sans jamais désaligner ni redessiner l'image.
+ */
+function SingleRaster({ espece, uid, closing }: { espece: Espece; uid: string; closing: boolean }) {
+  return (
+    <>
+      <img src={`/tetes/${espece}/ouvert.webp`} alt="" onError={masquer} draggable={false} style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain',
+        transformOrigin: '50% 78%',
+        animation: closing ? `${uid}-salut 0.5s ease-in-out forwards` : undefined,
+      }} />
+      <style>{`@keyframes ${uid}-salut {
+        0%   { transform: rotate(0deg)    scale(1);    }
+        45%  { transform: rotate(-2.5deg) scale(1.04); }
+        100% { transform: rotate(2deg)    scale(0.92) translateY(3%); }
+      }`}</style>
+    </>
+  )
+}
+
 function RasterArt({ espece, uid, closing }: { espece: Espece; uid: string; closing: boolean }) {
   if (espece === 'papillon') return <AilesPliantes uid={uid} closing={closing} />
   if (espece === 'elephant') return <TrompeLevee uid={uid} closing={closing} />
-  return <EtatsAlignes espece={espece} closing={closing} />
+  if (espece === 'tigre') return <EtatsAlignes espece={espece} closing={closing} />
+  return <SingleRaster espece={espece} uid={uid} closing={closing} />
 }

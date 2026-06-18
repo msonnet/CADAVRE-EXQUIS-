@@ -39,7 +39,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { GRAVURE, HALFTONE, SEPIA_TEXTE, ACCENT, genererImage, detourerFondClair, decouperPapier } from './_gravure.mjs'
+import { GRAVURE, HALFTONE, SEPIA_TEXTE, ACCENT, LINOGRAVURE, AQUARELLE, CYANOTYPE, PAPIER_DECOUPE, CRAYON_CONTE, RISOGRAPHIE, VITRAIL, ENCRE_LAVIS, PASTEL_SEC, genererImage, detourerFondClair, decouperPapier } from './_gravure.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
@@ -49,7 +49,19 @@ const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
 // par GRAVURE (via CADRAGE) ; on le remplace par le style voulu. detourerFondClair
 // (détourage couleur par propagation depuis le bord) convient aux trois : il
 // préserve les pixels du sujet quels qu'ils soient et n'enlève que le fond clair.
-const STYLE = { papillon: HALFTONE, elephant: SEPIA_TEXTE, tigre: ACCENT }
+const STYLE = {
+  papillon: HALFTONE, elephant: SEPIA_TEXTE, tigre: ACCENT,
+  // 9 chimères supplémentaires — un médium UNIQUE chacune (grande variété).
+  racine: AQUARELLE,
+  meduse: CYANOTYPE,
+  'cerf-lune': CRAYON_CONTE,
+  'poisson-oiseau': VITRAIL,
+  'escargot-maison': LINOGRAVURE,
+  'dame-fleur': PAPIER_DECOUPE,
+  'hibou-horloge': ENCRE_LAVIS,
+  'renard-automne': PASTEL_SEC,
+  'baleine-ciel': RISOGRAPHIE,
+}
 
 const CADRAGE =
   'a single creature head portrait, perfectly centered, frontal symmetric view, ' +
@@ -116,6 +128,69 @@ const ESPECES = {
     // de la ligne précédente (y:0.52) — non recouverts, ils ne pouvaient donc
     // jamais changer, d'où la gueule restée ouverte au premier essai.
     masque: { x: 0.13, y: 0.4, w: 0.74, h: 0.54 },
+  },
+
+  // ── 9 chimères supplémentaires ────────────────────────────────────────────
+  // Toutes mono-état (un seul ouvert.webp) : pas d'inpainting aligné, leur
+  // « activation » au clic est un léger salut CSS (cf. SingleRaster dans
+  // TeteCollage.tsx). Chaque bête mêle plusieurs règnes (humain / végétal /
+  // animal / minéral) et porte un médium qui lui est propre.
+
+  // VÉGÉTAL + HUMAIN — visage d'écorce et de racines, aquarelle de flore.
+  racine: {
+    ouvert: CHIMERE + 'a gentle human face carved from pale tree bark and twisting roots, soft leafy ' +
+      'foliage and small ferns growing as hair, a tiny bird nesting in the branches, little mushrooms ' +
+      'sprouting along the cheeks, calm closed eyes, serene dreaming expression, frontal symmetric view, ' + CADRAGE,
+  },
+  // ANIMAL + VÉGÉTAL + HUMAIN — méduse-fleur, cyanotype fantomatique.
+  meduse: {
+    ouvert: CHIMERE + 'a translucent jellyfish whose domed bell is a single blooming open flower with ' +
+      'soft petals, long trailing tentacles mixed with delicate ribbons and strings of tiny pearls, a ' +
+      'small calm human face with closed eyes resting at the center of the bell, drifting gently, ' +
+      'frontal symmetric view, ' + CADRAGE,
+  },
+  // ANIMAL + ASTRES — cerf aux bois de corail tenant un croissant de lune, conté.
+  'cerf-lune': {
+    ouvert: CHIMERE + 'a gentle deer head with large soft eyes, its branching antlers turning into ' +
+      'delicate coral and slender twigs that cradle a thin crescent moon and a few tiny stars, small ' +
+      'moths resting on the antlers, serene peaceful expression, frontal symmetric view, ' + CADRAGE,
+  },
+  // ANIMAL + ANIMAL + MINÉRAL — poisson emplumé aux écailles de vitrail.
+  'poisson-oiseau': {
+    ouvert: CHIMERE + 'a plump gentle fish head with round friendly eyes, soft layered bird feathers ' +
+      'and a single elegant peacock plume rising from the top, scales shaped like little stained-glass ' +
+      'panes, delicate fins like feathered wings, calm kind expression, frontal symmetric view, ' + CADRAGE,
+  },
+  // ANIMAL + ARCHITECTURE — escargot dont la coquille est une maisonnette, linogravure.
+  'escargot-maison': {
+    ouvert: CHIMERE + 'a gentle snail with a kind little face and two long soft antennae tipped with ' +
+      'tiny glowing paper lanterns, its spiral shell is a cosy little house with small round windows ' +
+      'and a tiny chimney with curling smoke, whimsical and sweet, frontal symmetric view, ' + CADRAGE,
+  },
+  // HUMAIN + VÉGÉTAL — femme dont la chevelure fleurit, papiers découpés.
+  'dame-fleur': {
+    ouvert: CHIMERE + "an elegant calm woman's head seen from the front, her flowing hair blossoming " +
+      'into large peonies, ferns and leaves, a gentle moth resting on her cheek, a few small bees, eyes ' +
+      'softly closed, serene dreamy expression, frontal symmetric view, ' + CADRAGE,
+  },
+  // ANIMAL + MÉCANIQUE + VÉGÉTAL — hibou-horloger, lavis d'encre sumi-e.
+  'hibou-horloge': {
+    ouvert: CHIMERE + 'a wise gentle owl head with large round calm eyes, its chest and brow set with ' +
+      'delicate brass clockwork gears and a small antique pocket-watch as a third eye on the forehead, ' +
+      'soft feathers mixed with thin curling vines, scholarly and kind, frontal symmetric view, ' + CADRAGE,
+  },
+  // ANIMAL + VÉGÉTAL — renard d'automne, pastel sec chaud.
+  'renard-automne': {
+    ouvert: CHIMERE + 'a gentle fox head with soft warm eyes, its fur flowing into drifting autumn ' +
+      'leaves, acorns and little berries tucked behind the ears, a small snail resting on top of the ' +
+      'head, cosy and tender, frontal symmetric view, ' + CADRAGE,
+  },
+  // ANIMAL + CIEL + HUMAIN — petite baleine portant un voilier, risographie.
+  'baleine-ciel': {
+    ouvert: CHIMERE + 'a small round gentle whale seen from the front with a kind calm face and tiny ' +
+      'eyes, soft little clouds drifting around it, a tiny sailboat balanced gently on top of its head, ' +
+      'a few small birds, a thin spout of water curling up into stars, dreamy and serene, frontal ' +
+      'symmetric view, ' + CADRAGE,
   },
 }
 

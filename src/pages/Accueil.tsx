@@ -267,12 +267,17 @@ export default function Accueil() {
             { a: { w: '43%', mt: -40, tx: '-2%', rot:-1.5 }, b: { w: '45%', mt: -88, rot:  5.0 }, c: { w: '48%', ml: '10%', mt: 5, rot: -1.0 } },
           ] as const
 
-          // Les 3 entrées du menu : chacune garde son espèce, son libellé et sa
-          // destination ; seule sa POSITION change d'une ambiance à l'autre.
+          // Les 3 entrées du menu : chacune garde son libellé et sa destination,
+          // mais tire SA créature dans un petit pool thématique selon le seed —
+          // l'identité du mode (« Cadavre Écrit » etc.) reste fixe, seule la
+          // chimère affichée change d'une ambiance à l'autre (4 par mode → 64
+          // ménageries possibles, en plus des arrangements et permutations).
+          // La 1re de chaque pool est l'espèce historique (avec son animation
+          // propre) ; les 3 autres sont des chimères mono-état (salut CSS).
           const ENTREES = [
-            { espece: 'elephant', label: 'Cadavre Écrit',    route: '/config' },
-            { espece: 'papillon', label: 'Cadavre Dessiné',  route: '/config-dessin' },
-            { espece: 'tigre',    label: 'Mode en ligne',    route: '/online' },
+            { especes: ['elephant', 'racine', 'hibou-horloge', 'dame-fleur'],     label: 'Cadavre Écrit',   route: '/config' },
+            { especes: ['papillon', 'meduse', 'poisson-oiseau', 'cerf-lune'],     label: 'Cadavre Dessiné', route: '/config-dessin' },
+            { especes: ['tigre', 'renard-automne', 'escargot-maison', 'baleine-ciel'], label: 'Mode en ligne', route: '/online' },
           ] as const
 
           // 6 permutations de [0,1,2] → quelle entrée va en emplacement a / b / c.
@@ -284,19 +289,22 @@ export default function Accueil() {
           const { a, b, c } = ARRANGEMENTS[seed % 4]
           const [ia, ib, ic] = PERMUTATIONS[seed % 6]
           const eA = ENTREES[ia], eB = ENTREES[ib], eC = ENTREES[ic]
+          // créature tirée dans le pool de l'entrée ; décalée par l'index de
+          // l'entrée pour décorréler du choix d'arrangement (seed % 4).
+          const espOf = (e: typeof ENTREES[number], j: number) => e.especes[(seed + j) % e.especes.length]
 
           return (
             <div style={{ position: 'relative', marginBottom: 10, marginTop: 24 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ width: a.w, marginTop: a.mt, transform: `translate(${a.tx}, 0) rotate(${a.rot}deg)`, zIndex: 2 }}>
-                  <TeteCollage espece={eA.espece} label={eA.label} onActivate={() => nav(eA.route)} />
+                  <TeteCollage espece={espOf(eA, ia)} label={eA.label} onActivate={() => nav(eA.route)} />
                 </div>
                 <div style={{ width: b.w, marginTop: b.mt, transform: `rotate(${b.rot}deg)`, zIndex: 3 }}>
-                  <TeteCollage espece={eB.espece} label={eB.label} onActivate={() => nav(eB.route)} />
+                  <TeteCollage espece={espOf(eB, ib)} label={eB.label} onActivate={() => nav(eB.route)} />
                 </div>
               </div>
               <div style={{ width: c.w, marginLeft: c.ml, marginTop: c.mt, transform: `rotate(${c.rot}deg)`, zIndex: 4 }}>
-                <TeteCollage espece={eC.espece} label={eC.label} onActivate={() => nav(eC.route)} />
+                <TeteCollage espece={espOf(eC, ic)} label={eC.label} onActivate={() => nav(eC.route)} />
               </div>
             </div>
           )

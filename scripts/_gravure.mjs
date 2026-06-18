@@ -48,6 +48,75 @@ export const ACCENT =
   'uniform pale cream paper background with absolutely no vignette and no gradient behind the subject, ' +
   'no text, no letters, no caption, no border, no frame'
 
+// ── Médiums supplémentaires (chimères du menu) ────────────────────────────────
+// Même rôle que GRAVURE : chacun décrit un MÉDIUM distinct ET impose un fond
+// uniforme (clair ou d'une couleur franche) pour le détourage par propagation
+// (detourerFondClair lit la couleur médiane du bord, quelle qu'elle soit).
+
+// LINOGRAVURE — linogravure / gravure sur bois, gros traits gougés noirs.
+export const LINOGRAVURE =
+  'bold hand-carved linocut block print, thick confident gouged black lines and chunky carved ' +
+  'textures, strong graphic shapes, pure black ink on white, visible carving marks and slightly ' +
+  'rough printed edges, perfectly flat uniform pure white paper background with absolutely no ' +
+  'vignette and no gradient behind the subject, no text, no letters, no caption, no border, no frame, no colour'
+
+// AQUARELLE — planche de flore aquarellée, lavis translucides et fins traits.
+export const AQUARELLE =
+  'delicate antique botanical watercolour illustration, soft translucent washes and fine ink ' +
+  'outlines, gentle muted natural colours, the tender airy look of a 19th-century flora plate, ' +
+  'perfectly flat uniform pale cream paper background with absolutely no vignette and no gradient ' +
+  'behind the subject, no text, no letters, no caption, no border, no frame'
+
+// CYANOTYPE — photogramme cyanotype, bleu de Prusse et blanc seulement.
+export const CYANOTYPE =
+  'antique cyanotype sun-print photogram, monochrome Prussian-blue and white only, the subject ' +
+  'rendered as a luminous pale white silhouette with fine white linework against a deep field, in ' +
+  'the dreamlike style of Anna Atkins botanical cyanotypes, soft and ethereal, perfectly flat ' +
+  'uniform deep Prussian-blue background with absolutely no vignette and no gradient behind the ' +
+  'subject, no text, no letters, no caption, no border, no frame'
+
+// PAPIER_DECOUPE — papiers découpés façon Matisse, aplats francs aux ciseaux.
+export const PAPIER_DECOUPE =
+  'bold cut-paper collage in the style of Henri Matisse paper cut-outs, flat simple shapes of ' +
+  'coloured paper with clean scissor-cut edges, a few muted warm colours, naive and joyful, slight ' +
+  'paper grain, perfectly flat uniform pale cream paper background with absolutely no vignette and ' +
+  'no gradient behind the subject, no text, no letters, no caption, no border, no frame'
+
+// CRAYON_CONTE — fusain et conté sur papier teinté, ombrages doux estompés.
+export const CRAYON_CONTE =
+  'soft charcoal and conté crayon drawing, gentle smudged graphite shading and expressive ' +
+  'hand-drawn sketch lines, muted black and warm grey with soft white chalk highlights, tender and ' +
+  'quiet, on lightly textured paper, perfectly flat uniform warm pale cream paper background with ' +
+  'absolutely no vignette and no gradient behind the subject, no text, no letters, no caption, no border, no frame, no bright colour'
+
+// RISOGRAPHIE — sérigraphie riso bichromie, deux encres à plat, repérage décalé.
+export const RISOGRAPHIE =
+  'two-colour risograph print, two flat translucent spot inks (deep blue and warm coral red) with ' +
+  'slight playful misregistration and visible grainy ink texture, bold simple shapes, retro print-zine ' +
+  'look, perfectly flat uniform pure white paper background with absolutely no vignette and no ' +
+  'gradient behind the subject, no text, no letters, no caption, no border, no frame'
+
+// VITRAIL — vitrail, segments de verre coloré cernés de plomb noir, lumineux.
+export const VITRAIL =
+  'a stained-glass window illustration, the subject built from segments of luminous coloured glass ' +
+  'held by bold black lead came lines, rich glowing jewel tones as if backlit, clear graphic ' +
+  'divisions, perfectly flat uniform pale cream paper background with absolutely no vignette and no ' +
+  'gradient behind the subject, no text, no letters, no caption, no border, no frame'
+
+// ENCRE_LAVIS — lavis d'encre sumi-e, traits de pinceau souples, gris dégradés.
+export const ENCRE_LAVIS =
+  'a minimalist East-Asian sumi-e ink-wash painting, soft flowing grey and black brush strokes with ' +
+  'gentle gradients of diluted ink, expressive economical lines, calm empty space, meditative and ' +
+  'tender, perfectly flat uniform pale rice-paper cream background with absolutely no vignette and ' +
+  'no gradient behind the subject, no text, no letters, no caption, no border, no frame, no bright colour'
+
+// PASTEL_SEC — pastel sec, touches poudreuses estompées, couleurs chaudes douces.
+export const PASTEL_SEC =
+  'a soft dry-pastel drawing, gentle powdery strokes of warm muted colours, softly blended velvety ' +
+  'chalk texture, tender and cosy, on lightly textured paper, perfectly flat uniform pale cream ' +
+  'paper background with absolutely no vignette and no gradient behind the subject, no text, no ' +
+  'letters, no caption, no border, no frame'
+
 export async function genererImage(prompt, falKey, opts = {}) {
   const r = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
     method: 'POST',
