@@ -39,7 +39,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { GRAVURE, HALFTONE, SEPIA_TEXTE, ACCENT, LINOGRAVURE, VITRAIL, ENCRE_LAVIS, COLLAGE_ACCENT, genererImage, detourerFondClair } from './_gravure.mjs'
+import { GRAVURE, HALFTONE, SEPIA_TEXTE, ACCENT, LINOGRAVURE, VITRAIL, ENCRE_LAVIS, COLLAGE_ACCENT, genererImage, detourerFondClair, decouperPapier } from './_gravure.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
@@ -278,7 +278,9 @@ async function gen(espece, def, falKey, outDir) {
   }
 
   for (const [etat, buf] of etats) {
-    const outBuf = await (await detourerFondClair(buf)).resize(480, 480).webp({ quality: 72, alphaQuality: 80, effort: 6 }).toBuffer()
+    const detourePng = await (await detourerFondClair(buf)).resize(480, 480).png().toBuffer()
+    const decoupe = await decouperPapier(detourePng)
+    const outBuf = await decoupe.webp({ quality: 72, alphaQuality: 80, effort: 6 }).toBuffer()
     await writeFile(join(outDir, `${etat}.webp`), outBuf)
     console.log(`  → ${etat}.webp (${(outBuf.length / 1024).toFixed(0)} ko)`)
   }
