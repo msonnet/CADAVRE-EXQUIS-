@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
-import { Etiquette } from '../components/Papier'
+import { PapierCard, Section, makePapierTexture, usePapier, DECHIRE_1 } from '../components/Papier'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,18 +41,6 @@ async function callClaude(consigne: string, type: string): Promise<{ texte: stri
 
 // ── JeuOnline ─────────────────────────────────────────────────────────────────
 
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
-
 export default function JeuOnline() {
   const { code } = useParams<{ code: string }>()
   const navigate = useNavigate()
@@ -62,6 +50,7 @@ export default function JeuOnline() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const bg = c?.bg ?? '#fdf8f2'
+  const papier = usePapier()
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
@@ -383,7 +372,7 @@ export default function JeuOnline() {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
-          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
+          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 2, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
             {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
           </div>
         )}
@@ -438,7 +427,7 @@ export default function JeuOnline() {
 
   // ── Connection banner (reused in multiple views) ──────────────────────────
   const connBanner = connectionStatus !== 'connected' ? (
-    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
+    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 2, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
       {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
     </div>
   ) : null
@@ -454,7 +443,7 @@ export default function JeuOnline() {
           : contributions.some(c2 => c2.player_id === p.player_id)
         return (
           <div key={p.player_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 48 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 3, overflow: 'hidden', border: `2px solid ${isTheirTurn ? accent : hasDone ? `${accent}50` : `${encre}20`}`, opacity: hasDone || isTheirTurn ? 1 : 0.5, boxShadow: isTheirTurn ? `0 0 8px ${accent}60` : 'none' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 2, overflow: 'hidden', border: `2px solid ${isTheirTurn ? accent : hasDone ? `${accent}50` : `${encre}20`}`, opacity: hasDone || isTheirTurn ? 1 : 0.5, boxShadow: isTheirTurn ? `0 0 8px ${accent}60` : 'none' }}>
               {p.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda',serif", fontWeight: 900, fontSize: 17, color: accent }}>{p.pseudo[0]?.toUpperCase()}</span></div>}
             </div>
@@ -533,8 +522,12 @@ export default function JeuOnline() {
               if (!myContrib) return null
               const displayUrl = myContrib.startsWith('data:') ? myContrib : (() => { try { return (JSON.parse(myContrib) as { imageDataUrl: string }).imageDataUrl } catch { return null } })()
               return displayUrl
-                ? <img src={displayUrl} alt="ton dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 3, border: `1px solid ${accent}30` }} />
-                : <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>« {myContrib} »</div>
+                ? <img src={displayUrl} alt="ton dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 2, border: `1px solid ${accent}30` }} />
+                : (
+                  <PapierCard rotation={-0.7} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px' }}>
+                    <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontStyle: 'italic', color: papier.encre, lineHeight: 1.5 }}>« {myContrib} »</p>
+                  </PapierCard>
+                )
             })()}
             {room.mode === 'ecrit' && currentCase < nbTotal ? (
               <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
@@ -591,7 +584,7 @@ export default function JeuOnline() {
                     <button type="button" onClick={() => setShowLastWord(false)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>masquer</button>
                   </div>
                 ) : (
-                  <button type="button" onClick={() => setShowLastWord(true)} style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.16em' }}>
+                  <button type="button" onClick={() => setShowLastWord(true)} style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', borderRadius: 2, cursor: 'pointer', letterSpacing: '0.16em' }}>
                     👁 VOIR LE DERNIER MOT
                   </button>
                 )}
@@ -609,18 +602,18 @@ export default function JeuOnline() {
                 aria-label={caseDef.consigne}
                 autoFocus
                 rows={3}
-                style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, background: 'rgba(255,253,247,0.5)', border: 'none', borderLeft: `2px solid ${encre}`, padding: '12px 16px', outline: 'none', caretColor: accent, width: '100%', resize: 'none' }}
+                style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontStyle: 'italic', color: papier.encre, ...makePapierTexture(papier.bg), clipPath: DECHIRE_1, border: 'none', padding: '14px 18px', outline: 'none', caretColor: accent, width: '100%', resize: 'none', boxShadow: '0 3px 11px rgba(0,0,0,0.28)' }}
               />
               {submitError && <div style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={handleIa} disabled={iaLoading}
-                  style={{ flex: 1, ...mono, fontSize: 13, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, borderRadius: 3, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>
+                  style={{ flex: 1, ...mono, fontSize: 13, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, borderRadius: 2, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>
                   {iaLoading ? '…' : '✦ IA'}
                 </button>
                 <button type="submit" disabled={!input.trim() || submitting}
                   style={{
                     flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`,
-                    ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.5em',
+                    ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '1.15em 1em',
                     borderRadius: 2, border: input.trim() ? 'none' : `1px solid ${encre}30`,
                     transform: input.trim() ? 'rotate(-0.6deg)' : 'none',
                     boxShadow: input.trim() ? '0 3px 10px rgba(0,0,0,0.28)' : 'none',
