@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
-import { PapierCard, Etiquette, usePapier } from '../components/Papier'
+import { Etiquette } from '../components/Papier'
 import type { ConfigDessin } from '../types'
 
 // Intitulé de section = étiquette d'accent collée (même langage que
@@ -30,12 +30,6 @@ const CONFIG_PAR_DEFAUT: ConfigDessin = {
 type SlotType = 'vide' | 'humain'
 
 // Références historiques au cadavre exquis dessiné
-const REFS = [
-  { titre: 'Le cadavre exquis boira le vin nouveau', auteurs: 'Breton, Éluard, Morise, Man Ray', annee: '1925' },
-  { titre: 'Premier cadavre dessiné collectif', auteurs: 'André Breton et ses amis', annee: '1927' },
-  { titre: 'Exquisite Corpse (Drawing)', auteurs: 'Yves Tanguy, Joan Miró, Max Morise, Man Ray', annee: '1928' },
-]
-
 export default function ConfigurationDessin() {
   const navigate = useNavigate()
   const seance = useReve()
@@ -67,7 +61,6 @@ export default function ConfigurationDessin() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const papier = usePapier()
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -83,7 +76,6 @@ export default function ConfigurationDessin() {
     cursor: 'pointer', transition: 'all 0.15s',
   })
 
-  const ref = REFS[(seance?.seed ?? 0) % REFS.length]
   const totalBandes = config.nbBandes
   const cycleNote = joueurs < totalBandes
     ? `les ${joueurs} joueurs se partagent ${totalBandes} bandes — certains dessinent deux fois`
@@ -223,46 +215,6 @@ export default function ConfigurationDessin() {
             {config.visibilite === 'aveugle'
               ? 'Chaque bande commence dans l\'obscurité totale.'
               : 'Un raccord révèle la lisière du fragment précédent.'}
-          </div>
-        </motion.div>
-
-        {/* ── CITATION HISTORIQUE — carton de papier, étiquette d'auteurs
-            agrafée au coin (même langage que la citation de l'accueil) ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
-          style={{ marginBottom: 26 }}
-        >
-          <PapierCard
-            rotation={0.9}
-            bord="dechire1"
-            bordure={`${accent}55`}
-            papierBg={papier.bg}
-            style={{ padding: '12px 14px 14px' }}
-          >
-            <div style={{
-              fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5,
-              color: papier.encre, fontStyle: 'italic',
-            }}>
-              « {ref.titre} »
-            </div>
-          </PapierCard>
-          {/* étiquette d'auteurs — la liste peut être longue (collectifs à
-              plusieurs noms), donc en flux normal et autorisée à passer à la
-              ligne plutôt qu'épinglée en absolu hors cadre comme à l'accueil */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -11, paddingRight: 14 }}>
-            <Etiquette
-              bg={accent}
-              color={btnText}
-              rotation={-2.2}
-              style={{
-                fontSize: 11.5, padding: '4px 9px',
-                whiteSpace: 'normal', textAlign: 'right', lineHeight: 1.35, maxWidth: '85%',
-              }}
-            >
-              {ref.auteurs.toUpperCase()} · {ref.annee}
-            </Etiquette>
           </div>
         </motion.div>
 
