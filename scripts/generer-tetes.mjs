@@ -89,6 +89,14 @@ const CHIMERE =
 // mi-assemblage abstrait, jamais une illustration léchée.
 const COLLAGE_SUJET = 'an exquisite-corpse paper collage, '
 
+// Force une marge de fond VIDE autour du collage : sans elle, certains collages
+// remplissent tout le cadre et le détourage par propagation (qui part du
+// pourtour) ne peut plus découper la silhouette → fond rectangulaire indésirable.
+const MARGE_VIDE =
+  'the whole collage sits alone clustered toward the centre with a wide clear empty margin of plain pale ' +
+  'cream paper on every side, no fragment touching or reaching the edges of the frame, no full background ' +
+  'page behind it, '
+
 // { x, y, w, h } en fraction du cadre [0,1] : zone anatomique repeinte par
 // l'inpainting pour passer de l'état ouvert à l'état fermé. trouCentral
 // (papillon) protège une bande verticale centrale — le corps — du masque.
@@ -155,11 +163,13 @@ const ESPECES = {
       'colour, ' + CADRAGE,
   },
   // CRÉATURE — méduse : dôme de montgolfière gravée + tentacules de bandes de texte et chaînes.
+  // MARGE_VIDE : le collage ne doit toucher aucun bord (sinon le détourage par
+  // propagation ne peut pas découper la silhouette → fond rectangulaire).
   meduse: {
     ouvert: COLLAGE_SUJET + 'a jellyfish-being: a domed bell cut from a halftone engraving of an old ' +
       'hot-air balloon, long trailing tentacles made of thin torn strips of printed book text and fine ' +
       'engraved chains, a small engraved eye pasted at the centre of the bell, ragged torn paper edges, ' +
-      'clashing line weights, one faint accent colour on the eye, ' + CADRAGE,
+      'clashing line weights, one faint accent colour on the eye, ' + MARGE_VIDE + CADRAGE,
   },
   // CRÉATURE — cerf : tête gravée, bois remplacés par bandes de texte + fragment de lune.
   'cerf-lune': {
@@ -181,11 +191,12 @@ const ESPECES = {
       'and a tiny chimney with curling smoke, whimsical and sweet, frontal symmetric view, ' + CADRAGE,
   },
   // CRÉATURE/ABSTRAIT — femme : visage gravé, un œil-fleur découpé, chevelure de colonnes de texte.
+  // MARGE_VIDE : idem méduse — le collage ne doit pas remplir le cadre.
   'dame-fleur': {
     ouvert: COLLAGE_SUJET + "a woman's head: the face cut from a fine old engraving, one eye replaced by a " +
       'pasted cut-out of an engraved flower, the hair made of torn columns of printed book text fanning ' +
       'out, ragged scissor-cut edges, deliberately clashing line weights, one faint accent colour on the ' +
-      'lips, ' + CADRAGE,
+      'lips, ' + MARGE_VIDE + CADRAGE,
   },
   // ANIMAL + MÉCANIQUE + VÉGÉTAL — hibou-horloger, lavis d'encre sumi-e.
   'hibou-horloge': {
