@@ -602,7 +602,7 @@ export default function JeuOnline() {
                 aria-label={caseDef.consigne}
                 autoFocus
                 rows={3}
-                style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontStyle: 'italic', color: papier.encre, ...makePapierTexture(papier.bg), clipPath: DECHIRE_1, border: 'none', padding: '14px 18px', outline: 'none', caretColor: accent, width: '100%', resize: 'none', boxShadow: '0 3px 11px rgba(0,0,0,0.28)' }}
+                style={{ fontFamily: "'Courier Prime', 'Courier New', Courier, monospace", fontStyle: 'normal', fontWeight: 400, fontSize: 17, letterSpacing: '0.02em', color: papier.encre, ...makePapierTexture(papier.bg, 3), clipPath: DECHIRE_1, border: 'none', padding: '14px 18px', outline: 'none', caretColor: accent, width: '100%', resize: 'none', boxShadow: '0 3px 11px rgba(0,0,0,0.28)' }}
               />
               {submitError && <div style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>

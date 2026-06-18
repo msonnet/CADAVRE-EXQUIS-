@@ -895,7 +895,16 @@ export default function Jeu() {
                 <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>ÉCRIS ICI · TOI SEUL LE VERRAS</Section>
                 <textarea
                   className="champ-carnet w-full min-h-[96px] resize-none"
-                  style={{ borderLeftColor: accent }}
+                  style={{
+                    borderLeftColor: accent,
+                    fontFamily: "'Courier Prime', 'Courier New', Courier, monospace",
+                    fontStyle: 'normal',
+                    fontWeight: 400,
+                    fontSize: '1.1rem',
+                    letterSpacing: '0.02em',
+                    backgroundImage: `repeating-linear-gradient(transparent, transparent 32px, ${encre}14 32px, ${encre}14 33px)`,
+                    backgroundPosition: '0 11px',
+                  }}
                   value={inputValue}
                   onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
                   onKeyDown={handleKeyDown}

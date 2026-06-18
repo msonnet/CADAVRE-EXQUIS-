@@ -145,9 +145,9 @@ export default function Accueil() {
         <motion.div
           className="mb-3"
           style={exquisStyle}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.0, delay: 0.3 }}
+          initial={{ opacity: 0, y: -22, rotate: -7 }}
+          animate={{ opacity: 1, y: 0, rotate: 0 }}
+          transition={{ duration: 0.65, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* carton de papier découpé, posé sous le titre — la pièce maîtresse
               du poster-collage, donc la plus grande et la plus pivotée */}
@@ -155,6 +155,7 @@ export default function Accueil() {
             rotation={-1.6}
             bordure={seance?.ambiance.rule}
             papierBg={papier.bg}
+            textureVariant={1}
             style={{
               position: 'relative', display: 'inline-block',
               boxShadow: '0 6px 18px rgba(0,0,0,0.32)',
@@ -203,9 +204,10 @@ export default function Accueil() {
           <div style={{ position: 'relative', marginBottom: 13, marginTop: 2 }}>
             <PapierCard
               rotation={0.9}
-              bord="dechire1"
+              bord="dechire4"
               bordure={seance.ambiance.rule}
               papierBg={papier.bg}
+              textureVariant={2}
               style={{ boxShadow: '0 4px 13px rgba(0,0,0,0.28)', padding: '10px 13px 12px' }}
             >
               <span style={{
@@ -316,15 +318,17 @@ export default function Accueil() {
               key={path}
               onClick={() => nav(path)}
               style={{
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                textAlign: (align as 'right') ?? 'left',
+                background: 'none', border: 'none', cursor: 'pointer',
+                padding: '6px 0', minHeight: 44,
+                display: 'flex', alignItems: 'center',
+                justifyContent: (align as 'right') ? 'flex-end' : 'flex-start',
               }}
             >
               <Etiquette
                 bg={i % 2 === 0 ? accent : accent2}
                 color={surAccent2}
                 rotation={rot}
-                style={{ fontSize: 11.5, padding: '4px 11px' }}
+                style={{ fontSize: 11.5, padding: '5px 13px' }}
               >
                 {label}
               </Etiquette>
@@ -337,7 +341,8 @@ export default function Accueil() {
             onClick={() => nav('/atelier')}
             style={{
               gridColumn: '1 / -1', background: 'none', border: 'none',
-              cursor: 'pointer', padding: '4px 0 0', textAlign: 'center',
+              cursor: 'pointer', padding: '4px 0', minHeight: 44,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <Etiquette

@@ -44,13 +44,20 @@ export function usePapier(): { bg: string; encre: string } {
 // (sans blend-mode) est fiable partout.
 const FROISSE = 'url(/textures/papier-froisse.webp)'
 
-export function makePapierTexture(bg: string): React.CSSProperties {
+// 4 lustre-variants — chaque « variante » simule un grammage différent :
+// 0 = diagonal doux (historique), 1 = kraft (reflet horizontal marqué),
+// 2 = vélin (quasi-plat, très doux), 3 = journal (croisé, coins marqués).
+const LUSTRES = [
+  'linear-gradient(118deg, rgba(255,255,255,0.06) 0%, transparent 26%, transparent 72%, rgba(0,0,0,0.05) 100%)',
+  'linear-gradient(95deg,  rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 35%, transparent 60%, rgba(0,0,0,0.07) 100%)',
+  'linear-gradient(175deg, rgba(255,255,255,0.04) 0%, transparent 40%, rgba(0,0,0,0.03) 100%)',
+  'linear-gradient(125deg, rgba(255,255,255,0.09) 0%, transparent 30%, rgba(0,0,0,0.04) 55%, rgba(255,255,255,0.05) 80%, rgba(0,0,0,0.06) 100%)',
+]
+
+export function makePapierTexture(bg: string, variant = 0): React.CSSProperties {
   return {
     backgroundColor: bg,
-    backgroundImage:
-      // léger lustre diagonal de la feuille (par-dessus, semi-transparent)
-      'linear-gradient(118deg, rgba(255,255,255,0.06) 0%, transparent 26%, transparent 72%, ' +
-      `rgba(0,0,0,0.05) 100%), ${FROISSE}`,
+    backgroundImage: `${LUSTRES[variant % 4]}, ${FROISSE}`,
     backgroundSize: 'cover, cover',
     backgroundPosition: 'center, center',
   }
@@ -75,13 +82,47 @@ export const DECHIRE_2 = 'polygon(' +
   '100% 96%, ' +
   '92% 100%, 84% 96%, 75% 100%, 66% 95%, 58% 100%, 49% 96%, 40% 100%, 31% 95%, 22% 100%, 13% 96%, 4% 100%, 0% 95%' +
   ')'
+// 3 — Déchirure sauvage : grandes dents irrégulières et très marquées
+export const DECHIRE_3 = 'polygon(' +
+  '0% 8%, 6% 0%, 15% 10%, 21% 2%, 30% 12%, 38% 1%, 48% 9%, 57% 0%, 68% 11%, 77% 3%, 86% 13%, 93% 2%, 100% 7%, ' +
+  '100% 93%, ' +
+  '94% 100%, 83% 90%, 74% 99%, 63% 92%, 52% 100%, 41% 91%, 32% 98%, 22% 90%, 11% 99%, 4% 91%, 0% 97%' +
+  ')'
+// 4 — Ondulations larges : découpe très douce, presque découpée aux ciseaux
+export const DECHIRE_4 = 'polygon(' +
+  '0% 3%, 10% 1%, 20% 4%, 30% 1%, 40% 4%, 50% 1%, 60% 4%, 70% 1%, 80% 4%, 90% 1%, 100% 3%, ' +
+  '100% 97%, ' +
+  '90% 100%, 80% 97%, 70% 100%, 60% 97%, 50% 100%, 40% 97%, 30% 100%, 20% 97%, 10% 100%, 0% 97%' +
+  ')'
+// 5 — Seul le haut est arraché, bas parfaitement droit (note collée)
+export const DECHIRE_5 = 'polygon(' +
+  '0% 5%, 9% 0%, 19% 6%, 28% 1%, 37% 7%, 46% 0%, 56% 6%, 65% 1%, 74% 8%, 83% 1%, 92% 6%, 100% 3%, ' +
+  '100% 100%, ' +
+  '0% 100%' +
+  ')'
+// 6 — Asymétrique : haut très accidenté, bas discret
+export const DECHIRE_6 = 'polygon(' +
+  '0% 6%, 7% 0%, 14% 8%, 22% 1%, 31% 9%, 40% 2%, 49% 11%, 58% 1%, 67% 7%, 76% 0%, 85% 8%, 92% 1%, 100% 5%, ' +
+  '100% 97%, ' +
+  '91% 100%, 80% 97%, 69% 100%, 58% 98%, 45% 100%, 34% 97%, 22% 100%, 11% 97%, 0% 99%' +
+  ')'
 
-export type Bord = 'net' | 'dechire1' | 'dechire2'
+export type Bord = 'net' | 'dechire1' | 'dechire2' | 'dechire3' | 'dechire4' | 'dechire5' | 'dechire6'
 
 const BORD_STYLE: Record<Bord, React.CSSProperties> = {
-  net: { borderRadius: 4 },
+  net:      { borderRadius: 4 },
   dechire1: { clipPath: DECHIRE_1 },
   dechire2: { clipPath: DECHIRE_2 },
+  dechire3: { clipPath: DECHIRE_3 },
+  dechire4: { clipPath: DECHIRE_4 },
+  dechire5: { clipPath: DECHIRE_5 },
+  dechire6: { clipPath: DECHIRE_6 },
+}
+
+/** Tire un bord déchiré de façon déterministe à partir d'un entier (ex: seed, index). */
+export function bordAleatoire(n: number): Bord {
+  const bords: Bord[] = ['dechire1', 'dechire2', 'dechire3', 'dechire4', 'dechire5', 'dechire6']
+  return bords[Math.abs(n) % bords.length]
 }
 
 type PapierCardProps = {
@@ -90,6 +131,8 @@ type PapierCardProps = {
   bordure?: string
   /** Override de la couleur de fond — utilise makePapierTexture() */
   papierBg?: string
+  /** Variante de lustre 0–3 (diagonal doux, kraft, vélin, journal) */
+  textureVariant?: number
   children?: React.ReactNode
   className?: string
   style?: React.CSSProperties
@@ -97,9 +140,9 @@ type PapierCardProps = {
 }
 
 export function PapierCard({
-  rotation = 0, bord = 'net', bordure = 'rgba(0,0,0,0.18)', papierBg, children, className, style, ...rest
+  rotation = 0, bord = 'net', bordure = 'rgba(0,0,0,0.18)', papierBg, textureVariant = 0, children, className, style, ...rest
 }: PapierCardProps) {
-  const texture = papierBg ? makePapierTexture(papierBg) : PAPIER_TEXTURE
+  const texture = papierBg ? makePapierTexture(papierBg, textureVariant) : makePapierTexture(PAPIER, textureVariant)
   return (
     <div
       className={className}
