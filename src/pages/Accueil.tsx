@@ -244,35 +244,57 @@ export default function Accueil() {
         animate={{ rotateX: 0, opacity: 1 }}
         transition={{ delay: 0.9, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* ── CTA — composition choisie par le seed de l'ambiance (4 arrangements).
-            marginTop 24 sur le conteneur garantit que l'attribution de la citation
-            ne chevauche jamais les têtes, même quand le séparateur rétrécit à zéro. ── */}
+        {/* ── CTA — têtes-collages dont la composition ET la place de chaque
+            espèce sont pilotées par le seed de l'ambiance.
+            · la GÉOMÉTRIE est positionnelle (3 emplacements : a = haut-gauche,
+              b = haut-droit, c = bas) et varie selon seed % 4 (4 arrangements) ;
+            · la PERMUTATION décide quelle tête occupe quel emplacement selon
+              seed % 6 (les 6 permutations de 3 éléments) — les têtes échangent
+              donc leur place d'une ambiance à l'autre.
+            Le label et la destination voyagent avec l'animal (l'éléphant reste
+            « Cadavre Écrit », etc.), donc les 3 entrées du menu restent toujours
+            atteignables. marginTop 24 garantit que l'attribution de la citation
+            ne chevauche jamais les têtes, même quand le séparateur rétrécit. ── */}
         {(() => {
-          // 4 compositions distinctes indexées par seed % 4.
-          // el / pa / ti : width, marginTop, rotation, décalage horizontal (tigre : marginLeft).
-          const COMPOSITIONS = [
-            // 0 — éléphant dominant haut-gauche, papillon en retrait haut-droit, tigre bas-droite
-            { el: { w: '46%', mt: -95, tx: '-3%', rot: -3 }, pa: { w: '42%', mt:  -8, rot:  4.5 }, ti: { w: '49%', ml: '36%', mt: 6, rot: -2.5 } },
-            // 1 — les deux têtes à la même hauteur, tigre ancré à gauche
-            { el: { w: '44%', mt: -55, tx:  '0%', rot: -2 }, pa: { w: '44%', mt: -50, rot:  3.5 }, ti: { w: '47%', ml: '14%', mt: 8, rot:  2.0 } },
-            // 2 — éléphant bas-gauche, papillon dominant haut-droit, tigre décalé droite
-            { el: { w: '40%', mt:   5, tx:  '0%', rot: -4 }, pa: { w: '48%', mt: -85, rot:  3.0 }, ti: { w: '50%', ml: '30%', mt: 4, rot:  3.0 } },
-            // 3 — éléphant mi-hauteur, papillon très haut, tigre ancré à gauche
-            { el: { w: '43%', mt: -40, tx: '-2%', rot:-1.5 }, pa: { w: '45%', mt: -88, rot:  5.0 }, ti: { w: '48%', ml: '10%', mt: 5, rot: -1.0 } },
+          // Emplacements (positionnels) : a (haut-gauche, translateX), b (haut-droit),
+          // c (bas, marginLeft). Chaque arrangement règle width / marginTop / rotation.
+          const ARRANGEMENTS = [
+            { a: { w: '46%', mt: -95, tx: '-3%', rot: -3 }, b: { w: '42%', mt:  -8, rot:  4.5 }, c: { w: '49%', ml: '36%', mt: 6, rot: -2.5 } },
+            { a: { w: '44%', mt: -55, tx:  '0%', rot: -2 }, b: { w: '44%', mt: -50, rot:  3.5 }, c: { w: '47%', ml: '14%', mt: 8, rot:  2.0 } },
+            { a: { w: '40%', mt:   5, tx:  '0%', rot: -4 }, b: { w: '48%', mt: -85, rot:  3.0 }, c: { w: '50%', ml: '30%', mt: 4, rot:  3.0 } },
+            { a: { w: '43%', mt: -40, tx: '-2%', rot:-1.5 }, b: { w: '45%', mt: -88, rot:  5.0 }, c: { w: '48%', ml: '10%', mt: 5, rot: -1.0 } },
           ] as const
-          const { el, pa, ti } = COMPOSITIONS[(seance?.seed ?? 0) % 4]
+
+          // Les 3 entrées du menu : chacune garde son espèce, son libellé et sa
+          // destination ; seule sa POSITION change d'une ambiance à l'autre.
+          const ENTREES = [
+            { espece: 'elephant', label: 'Cadavre Écrit',    route: '/config' },
+            { espece: 'papillon', label: 'Cadavre Dessiné',  route: '/config-dessin' },
+            { espece: 'tigre',    label: 'Mode en ligne',    route: '/online' },
+          ] as const
+
+          // 6 permutations de [0,1,2] → quelle entrée va en emplacement a / b / c.
+          const PERMUTATIONS = [
+            [0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0],
+          ] as const
+
+          const seed = seance?.seed ?? 0
+          const { a, b, c } = ARRANGEMENTS[seed % 4]
+          const [ia, ib, ic] = PERMUTATIONS[seed % 6]
+          const eA = ENTREES[ia], eB = ENTREES[ib], eC = ENTREES[ic]
+
           return (
             <div style={{ position: 'relative', marginBottom: 10, marginTop: 24 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div style={{ width: el.w, marginTop: el.mt, transform: `translate(${el.tx}, 0) rotate(${el.rot}deg)`, zIndex: 2 }}>
-                  <TeteCollage espece="elephant" label="Cadavre Écrit" onActivate={() => nav('/config')} />
+                <div style={{ width: a.w, marginTop: a.mt, transform: `translate(${a.tx}, 0) rotate(${a.rot}deg)`, zIndex: 2 }}>
+                  <TeteCollage espece={eA.espece} label={eA.label} onActivate={() => nav(eA.route)} />
                 </div>
-                <div style={{ width: pa.w, marginTop: pa.mt, transform: `rotate(${pa.rot}deg)`, zIndex: 3 }}>
-                  <TeteCollage espece="papillon" label="Cadavre Dessiné" onActivate={() => nav('/config-dessin')} />
+                <div style={{ width: b.w, marginTop: b.mt, transform: `rotate(${b.rot}deg)`, zIndex: 3 }}>
+                  <TeteCollage espece={eB.espece} label={eB.label} onActivate={() => nav(eB.route)} />
                 </div>
               </div>
-              <div style={{ width: ti.w, marginLeft: ti.ml, marginTop: ti.mt, transform: `rotate(${ti.rot}deg)`, zIndex: 4 }}>
-                <TeteCollage espece="tigre" label="Mode en ligne" onActivate={() => nav('/online')} />
+              <div style={{ width: c.w, marginLeft: c.ml, marginTop: c.mt, transform: `rotate(${c.rot}deg)`, zIndex: 4 }}>
+                <TeteCollage espece={eC.espece} label={eC.label} onActivate={() => nav(eC.route)} />
               </div>
             </div>
           )
