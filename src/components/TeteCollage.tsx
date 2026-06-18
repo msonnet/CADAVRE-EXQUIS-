@@ -26,7 +26,8 @@ import { Etiquette } from './Papier'
 
 // Les 3 espèces « historiques » ont une animation d'activation propre
 // (trompe / ailes / gueule, ci-dessous). Les 9 chimères supplémentaires sont
-// mono-état : leur activation est un léger salut CSS générique (SingleRaster).
+// mono-état : chacune a son propre mouvement anatomique (blink/gape/beat/turn/sway…)
+// via MotionRaster — jamais un second raster, tout en CSS sur l'image existante.
 export type Espece =
   | 'elephant' | 'papillon' | 'tigre'
   | 'racine' | 'meduse' | 'cerf-lune' | 'poisson-oiseau' | 'escargot-maison'
@@ -224,26 +225,37 @@ function TrompeLevee({ uid, closing }: { uid: string; closing: boolean }) {
  * (ailes), l'activation au clic est une vraie ANIMATION anatomique en CSS sur
  * cette même image (clip-path + transform), jamais redessinée — un mouvement
  * propre à chaque bête plutôt qu'un effet uniforme :
- *  · furl    — deux moitiés se replient vers le centre (ailes/nageoires/feuillage) ;
- *  · pulse   — le corps se contracte verticalement (pulsation de méduse) ;
- *  · nod     — la tête s'incline en avant (révérence) ;
- *  · retract — la partie haute se rétracte vers le bas (bois/antennes/arbre) ;
- *  · dive    — l'ensemble plonge en pivotant (baleine).
+ *  · blink   — bande-œil (y 28–63 %) repliée scaleY→0 : racine, hibou-horloge ;
+ *  · gape    — moitié basse décrochée translateY(+15 %) : dame-fleur ;
+ *  · beat    — deux moitiés battent ×2 puis se replient : poisson-oiseau ;
+ *  · turn    — scaleX 1→0→−0.85 + rotate, effet 3D : cerf-lune, renard-automne ;
+ *  · sway    — oscillation latérale depuis la base : escargot-maison ;
+ *  · pulse   — contraction verticale (méduse) ;
+ *  · dive    — plongée pivotante (baleine-ciel) ;
+ *  · furl/nod/retract — réservés (non assignés actuellement).
  */
-type Mouvement = 'furl' | 'pulse' | 'nod' | 'retract' | 'dive'
+type Mouvement = 'furl' | 'pulse' | 'nod' | 'retract' | 'dive' | 'blink' | 'gape' | 'beat' | 'turn' | 'sway'
 
 const MOUVEMENT: Partial<Record<Espece, Mouvement>> = {
-  racine: 'retract', meduse: 'pulse', 'cerf-lune': 'nod',
-  'poisson-oiseau': 'furl', 'escargot-maison': 'retract', 'dame-fleur': 'furl',
-  'hibou-horloge': 'nod', 'renard-automne': 'furl', 'baleine-ciel': 'dive',
+  racine:           'blink',
+  meduse:           'pulse',
+  'cerf-lune':      'turn',
+  'poisson-oiseau': 'beat',
+  'escargot-maison':'sway',
+  'dame-fleur':     'gape',
+  'hibou-horloge':  'blink',
+  'renard-automne': 'turn',
+  'baleine-ciel':   'dive',
 }
 
-// Mouvements « pleine image » (un seul raster transformé) : keyframes + origine.
-const ANIM_SOLO: Record<Exclude<Mouvement, 'furl'>, { dur: number; origin: string; frames: string }> = {
-  pulse:   { dur: 0.5,  origin: '50% 16%', frames: '0%{transform:scaleY(1) scaleX(1)}45%{transform:scaleY(.82) scaleX(1.06)}100%{transform:scaleY(.7) scaleX(1.1)}' },
-  nod:     { dur: 0.5,  origin: '50% 92%', frames: '0%{transform:rotate(0deg)}100%{transform:rotate(7deg) translateY(4%)}' },
+// Mouvements « pleine image » (un seul raster transformé) : keyframes + origine + timing.
+const ANIM_SOLO: Record<Exclude<Mouvement, 'furl' | 'blink' | 'gape' | 'beat'>, { dur: number; origin: string; frames: string; timing?: string }> = {
+  pulse:   { dur: 0.5,  origin: '50% 16%',  frames: '0%{transform:scaleY(1) scaleX(1)}45%{transform:scaleY(.82) scaleX(1.06)}100%{transform:scaleY(.7) scaleX(1.1)}' },
+  nod:     { dur: 0.5,  origin: '50% 92%',  frames: '0%{transform:rotate(0deg)}100%{transform:rotate(7deg) translateY(4%)}' },
   retract: { dur: 0.5,  origin: '50% 100%', frames: '0%{transform:scaleY(1)}100%{transform:scaleY(.8) translateY(-2%)}' },
-  dive:    { dur: 0.55, origin: '50% 50%', frames: '0%{transform:rotate(0deg) translateY(0) scale(1)}100%{transform:rotate(-10deg) translateY(8%) scale(.9)}' },
+  dive:    { dur: 0.55, origin: '50% 50%',  frames: '0%{transform:rotate(0deg) translateY(0) scale(1)}100%{transform:rotate(-10deg) translateY(8%) scale(.9)}' },
+  turn:    { dur: 0.5,  origin: '50% 38%',  frames: '0%{transform:scaleX(1) rotate(0deg)}45%{transform:scaleX(0.06)}100%{transform:scaleX(-0.85) rotate(-5deg)}' },
+  sway:    { dur: 0.65, origin: '50% 88%',  timing: 'linear', frames: '0%{transform:rotate(0) translateX(0)}25%{transform:rotate(-6deg) translateX(-4%)}55%{transform:rotate(5deg) translateX(3%)}78%{transform:rotate(-3deg) translateX(-2%)}100%{transform:rotate(0) translateX(0)}' },
 }
 
 const imgPlein: React.CSSProperties = {
@@ -277,14 +289,79 @@ function MotionRaster({ espece, uid, closing }: { espece: Espece; uid: string; c
     )
   }
 
+  // œil qui cligne : bande horizontale (zone yeux) isolée sur un calque,
+  // scaleY → 0 depuis son centre — la zone hors-œil reste sur le calque fixe
+  // (clip en U inversé), donc aucun pixel de fond n'est jamais redessiné.
+  if (mvt === 'blink') {
+    const EY1 = 28, EY2 = 63, midY = (EY1 + EY2) / 2
+    return (
+      <>
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein,
+          clipPath: `polygon(0 0,100% 0,100% ${EY1}%,0 ${EY1}%,0 ${EY2}%,100% ${EY2}%,100% 100%,0 100%)`,
+        }} />
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein,
+          clipPath: `inset(${EY1}% 0 ${100 - EY2}% 0)`,
+          transformOrigin: `50% ${midY}%`,
+          animation: closing ? `${uid}-blink 0.44s steps(4,end) forwards` : undefined,
+        }} />
+        <style>{`@keyframes ${uid}-blink{0%{transform:scaleY(1)}50%{transform:scaleY(0.04)}100%{transform:scaleY(0.04)}}`}</style>
+      </>
+    )
+  }
+
+  // bouche / fleur qui s'ouvre : la moitié basse se décroche vers le bas,
+  // révélant un interstice au niveau de la mâchoire (MY = ligne de partage).
+  if (mvt === 'gape') {
+    const MY = 57
+    return (
+      <>
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein,
+          clipPath: `inset(0 0 ${100 - MY}% 0)`,
+        }} />
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein,
+          clipPath: `inset(${MY}% 0 0 0)`,
+          transformOrigin: `50% ${MY}%`,
+          animation: closing ? `${uid}-gape 0.46s steps(3,end) forwards` : undefined,
+        }} />
+        <style>{`@keyframes ${uid}-gape{0%{transform:translateY(0) scaleY(1)}100%{transform:translateY(15%) scaleY(1.12)}}`}</style>
+      </>
+    )
+  }
+
+  // ailes qui battent : deux battements puis repli final — même principe que
+  // furl mais avec des keyframes intermédiaires pour l'oscillation (steps donne
+  // le saccadé de la gravure animée).
+  if (mvt === 'beat') {
+    return (
+      <>
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein, clipPath: 'polygon(0 0,50% 0,50% 100%,0 100%)', transformOrigin: '100% 42%',
+          animation: closing ? `${uid}-beatL 0.52s steps(5,end) forwards` : undefined,
+        }} />
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein, clipPath: 'polygon(50% 0,100% 0,100% 100%,50% 100%)', transformOrigin: '0% 42%',
+          animation: closing ? `${uid}-beatR 0.52s steps(5,end) forwards` : undefined,
+        }} />
+        <style>{`
+          @keyframes ${uid}-beatL{0%{transform:rotate(0) scaleX(1)}20%{transform:rotate(9deg) scaleX(0.58)}40%{transform:rotate(0) scaleX(1)}60%{transform:rotate(9deg) scaleX(0.58)}80%{transform:rotate(2deg) scaleX(0.78)}100%{transform:rotate(4deg) scaleX(0.36)}}
+          @keyframes ${uid}-beatR{0%{transform:rotate(0) scaleX(1)}20%{transform:rotate(-9deg) scaleX(0.58)}40%{transform:rotate(0) scaleX(1)}60%{transform:rotate(-9deg) scaleX(0.58)}80%{transform:rotate(-2deg) scaleX(0.78)}100%{transform:rotate(-4deg) scaleX(0.36)}}
+        `}</style>
+      </>
+    )
+  }
+
   const a = ANIM_SOLO[mvt]
   return (
     <>
       <img src={src} alt="" onError={masquer} draggable={false} style={{
         ...imgPlein, transformOrigin: a.origin,
-        animation: closing ? `${uid}-${mvt} ${a.dur}s ease-in-out forwards` : undefined,
+        animation: closing ? `${uid}-${mvt} ${a.dur}s ${a.timing ?? 'ease-in-out'} forwards` : undefined,
       }} />
-      <style>{`@keyframes ${uid}-${mvt} { ${a.frames} }`}</style>
+      <style>{`@keyframes ${uid}-${mvt}{${a.frames}}`}</style>
     </>
   )
 }
