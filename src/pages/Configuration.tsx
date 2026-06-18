@@ -4,22 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { makePapierTexture, usePapier, DECHIRE_1, DECHIRE_2, Etiquette } from '../components/Papier'
+import { makePapierTexture, usePapier, DECHIRE_1, DECHIRE_2, Section } from '../components/Papier'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
-
-// Intitulé de section = étiquette d'accent collée (même langage que les chips
-// de l'accueil), à la place de l'ancien « — TITRE — » en filet typographique.
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },

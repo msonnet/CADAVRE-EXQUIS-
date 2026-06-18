@@ -141,3 +141,20 @@ export function Etiquette({ children, bg, color, rotation = 0, style }: Etiquett
     </span>
   )
 }
+
+/**
+ * Section — intitulé de rubrique = étiquette d'accent collée (même grammaire de
+ * collage que l'accueil et la config solo), à la place des anciens « — TITRE — »
+ * en filet typographique. Partagé par toutes les pages refondues.
+ */
+export function Section({ children, accent, color, style }: {
+  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
+}) {
+  return (
+    <div style={style}>
+      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
+        {children}
+      </Etiquette>
+    </div>
+  )
+}

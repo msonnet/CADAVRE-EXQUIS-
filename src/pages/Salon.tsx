@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
+import { makePapierTexture, usePapier, DECHIRE_1, DECHIRE_2, Section } from '../components/Papier'
 import { STRUCTURES, getStructure, nombreCasesEffectif } from '../structures'
 
 type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null }
@@ -33,7 +34,22 @@ export default function Salon() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const papier = usePapier()
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
+
+  // Onglet de choix : l'option active devient une petite étiquette d'accent
+  // collée (aplat plein + ombre + léger pivot), les autres restent en mode
+  // éditorial discret — même grammaire de collage que la config solo.
+  const ongletStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: '9px 4px', minHeight: 44, borderRadius: 2,
+    border: `0.5px solid ${active ? 'transparent' : `${encre}20`}`,
+    background: active ? accent : 'transparent',
+    boxShadow: active ? '0 2px 6px rgba(0,0,0,0.22)' : 'none',
+    transform: active ? 'rotate(-0.8deg)' : 'none',
+    ...mono, fontSize: 13, fontWeight: active ? 800 : 400,
+    color: active ? btnText : `${encre}80`,
+    cursor: 'pointer', transition: 'all 0.15s',
+  })
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
@@ -293,7 +309,7 @@ export default function Salon() {
         <div style={{
           position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
           left: '50%', transform: 'translateX(-50%)',
-          padding: '8px 14px', borderRadius: 3,
+          padding: '8px 14px', borderRadius: 2,
           background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
           color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
           fontSize: 13, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
@@ -318,21 +334,28 @@ export default function Salon() {
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 4 }}>
-        — SALON D'ATTENTE —
-      </div>
-      <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 16 }}>
-        {code}
+      <Section accent={accent} color={btnText} style={{ marginTop: 28, marginBottom: 10 }}>SALON D'ATTENTE</Section>
+      <div
+        style={{
+          padding: '14px 18px',
+          marginBottom: 16,
+          ...makePapierTexture(papier.bg),
+          clipPath: DECHIRE_1,
+          boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
+          transform: 'rotate(-0.5deg)',
+        }}
+      >
+        <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: papier.encre }}>
+          {code}
+        </div>
       </div>
 
       {/* ── Joueurs ── */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-          — JOUEURS ({players.length}) —
-        </div>
+        <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>JOUEURS ({players.length})</Section>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <AnimatePresence>
-            {players.map((p) => (
+            {players.map((p, i) => (
               <motion.div
                 key={p.player_id}
                 initial={{ opacity: 0, x: -12 }}
@@ -340,29 +363,31 @@ export default function Salon() {
                 exit={{ opacity: 0, x: 12 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 12px',
-                  background: p.player_id === user?.id ? `${accent}12` : `${encre}07`,
-                  borderLeft: `2px solid ${p.is_ready ? accent : `${encre}30`}`,
+                  padding: '10px 14px',
+                  ...makePapierTexture(papier.bg),
+                  clipPath: i % 2 === 0 ? DECHIRE_1 : DECHIRE_2,
+                  boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
+                  transform: i % 2 === 0 ? 'rotate(-0.5deg)' : 'rotate(0.5deg)',
                 }}
               >
                 {p.avatar_url ? (
-                  <img src={p.avatar_url} alt={p.pseudo} style={{ width: 36, height: 36, borderRadius: 3, objectFit: 'cover' }} />
+                  <img src={p.avatar_url} alt={p.pseudo} style={{ width: 36, height: 36, borderRadius: 2, objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ width: 36, height: 36, borderRadius: 3, background: `${accent}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 2, background: `${accent}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 17, color: accent }}>
                       {p.pseudo[0]?.toUpperCase()}
                     </span>
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 20, letterSpacing: '-0.01em', color: encre }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 20, letterSpacing: '-0.01em', color: papier.encre }}>
                     {p.pseudo}
                     {room.host_id === p.player_id && (
                       <span style={{ ...mono, fontSize: 13, color: accent, marginLeft: 8 }}>HÔTE</span>
                     )}
                   </div>
                 </div>
-                <span style={{ ...mono, fontSize: 13, color: p.is_ready ? accent : `${encre}50` }}>
+                <span style={{ ...mono, fontSize: 13, color: p.is_ready ? accent : `${papier.encre}80` }}>
                   {p.is_ready ? '✓ PRÊT' : 'EN ATTENTE'}
                 </span>
               </motion.div>
@@ -404,9 +429,7 @@ export default function Salon() {
       {/* ── Spectateurs ── */}
       {spectators.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — SPECTATEURS ({spectators.length}) —
-          </div>
+          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>SPECTATEURS ({spectators.length})</Section>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {spectators.map(s => (
               <div
@@ -420,9 +443,9 @@ export default function Salon() {
                 }}
               >
                 {s.avatar_url ? (
-                  <img src={s.avatar_url} alt={s.pseudo} style={{ width: 28, height: 28, borderRadius: 3, objectFit: 'cover' }} />
+                  <img src={s.avatar_url} alt={s.pseudo} style={{ width: 28, height: 28, borderRadius: 2, objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ width: 28, height: 28, borderRadius: 3, background: `${encre}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 2, background: `${encre}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre }}>
                       {s.pseudo[0]?.toUpperCase()}
                     </span>
@@ -440,25 +463,17 @@ export default function Salon() {
 
       {/* ── Config (hôte seulement) ── */}
       {isHost && (
-        <div style={{ marginBottom: 24, padding: '16px', background: `${encre}06`, borderLeft: `2px solid ${accent}40` }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — CONFIGURATION —
-          </div>
+        <div style={{ marginBottom: 24 }}>
+          <Section accent={accent} color={btnText} style={{ marginBottom: 14 }}>CONFIGURATION</Section>
 
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>MODE</div>
+          <div style={{ marginBottom: 16 }}>
+            <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>MODE</Section>
             <div style={{ display: 'flex', gap: 8 }}>
               {(['ecrit', 'dessin'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => updateRoom({ mode: m })}
-                  style={{
-                    ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 3,
-                    background: room.mode === m ? accent : 'transparent',
-                    color: room.mode === m ? btnText : encre,
-                    border: `1px solid ${room.mode === m ? accent : `${encre}40`}`,
-                    cursor: 'pointer',
-                  }}
+                  style={ongletStyle(room.mode === m)}
                 >
                   {m === 'ecrit' ? 'ÉCRIT' : 'DESSINÉ'}
                 </button>
@@ -467,31 +482,28 @@ export default function Salon() {
           </div>
 
           {room.mode === 'ecrit' && (
-            <div>
-              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>STRUCTURE</div>
+            <div style={{ marginBottom: 16 }}>
+              <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>STRUCTURE</Section>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {Object.entries(STRUCT_LABELS).map(([id, label]) => (
-                  <button
-                    key={id}
-                    onClick={() => updateRoom({ structure_id: id })}
-                    style={{
-                      ...mono, fontSize: 13, padding: '7px 14px', textAlign: 'left', borderRadius: 3,
-                      background: room.structure_id === id ? `${accent}18` : 'transparent',
-                      color: room.structure_id === id ? accent : encre,
-                      border: `1px solid ${room.structure_id === id ? accent : `${encre}25`}`,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
+                {Object.entries(STRUCT_LABELS).map(([id, label]) => {
+                  const active = room.structure_id === id
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => updateRoom({ structure_id: id })}
+                      style={{ ...ongletStyle(active), textAlign: 'left', flex: 'unset' }}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
           {room.mode === 'dessin' && (
-            <div>
-              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>BANDES</div>
+            <div style={{ marginBottom: 16 }}>
+              <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>BANDES</Section>
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
                 Chaque joueur dessine une bande du corps à l'aveugle. Fixe le nombre de joueurs attendus.
               </p>
@@ -500,13 +512,7 @@ export default function Salon() {
                   <button
                     key={n}
                     onClick={() => updateRoom({ nb_joueurs: n })}
-                    style={{
-                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 3,
-                      background: room.nb_joueurs === n ? `${accent}18` : 'transparent',
-                      color: room.nb_joueurs === n ? accent : encre,
-                      border: `1px solid ${room.nb_joueurs === n ? accent : `${encre}25`}`,
-                      cursor: 'pointer',
-                    }}
+                    style={ongletStyle(room.nb_joueurs === n)}
                   >
                     {n}
                   </button>
@@ -516,8 +522,8 @@ export default function Salon() {
           )}
 
           {/* ── Durée par tour ── */}
-          <div style={{ marginTop: 12 }}>
-            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>DURÉE PAR TOUR</div>
+          <div style={{ marginBottom: 16 }}>
+            <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>DURÉE PAR TOUR</Section>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {TURN_OPTIONS.map(opt => {
                 const selected = (room.turn_seconds ?? null) === opt.value
@@ -525,13 +531,7 @@ export default function Salon() {
                   <button
                     key={opt.label}
                     onClick={() => updateRoom({ turn_seconds: opt.value })}
-                    style={{
-                      ...mono, fontSize: 13, padding: '6px 14px', borderRadius: 3,
-                      background: selected ? `${accent}18` : 'transparent',
-                      color: selected ? accent : encre,
-                      border: `1px solid ${selected ? accent : `${encre}25`}`,
-                      cursor: 'pointer',
-                    }}
+                    style={ongletStyle(selected)}
                   >
                     {opt.label}
                   </button>
@@ -541,8 +541,8 @@ export default function Salon() {
           </div>
 
           {/* ── Visibilité du salon ── */}
-          <div style={{ marginTop: 12 }}>
-            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>VISIBILITÉ</div>
+          <div>
+            <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>VISIBILITÉ</Section>
             <div style={{ display: 'flex', gap: 8 }}>
               {([
                 { value: true, label: 'PUBLIC' },
@@ -553,13 +553,7 @@ export default function Salon() {
                   <button
                     key={opt.label}
                     onClick={() => updateRoom({ is_public: opt.value })}
-                    style={{
-                      flex: 1, ...mono, fontSize: 13, padding: '7px 10px', borderRadius: 3,
-                      background: selected ? `${accent}18` : 'transparent',
-                      color: selected ? accent : encre,
-                      border: `1px solid ${selected ? accent : `${encre}25`}`,
-                      cursor: 'pointer',
-                    }}
+                    style={ongletStyle(selected)}
                   >
                     {opt.label}
                   </button>
@@ -596,8 +590,11 @@ export default function Salon() {
               background: mePlayer?.is_ready ? `${encre}15` : accent,
               color: mePlayer?.is_ready ? encre : btnText,
               ...mono, fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.08em',
-              padding: '0.85em 1.8em', borderRadius: 3, border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
+              padding: '1.15em 1em', border: mePlayer?.is_ready ? `1px solid ${encre}40` : 'none',
               cursor: 'pointer', width: '100%',
+              borderRadius: 2,
+              transform: mePlayer?.is_ready ? 'none' : 'rotate(-0.6deg)',
+              boxShadow: mePlayer?.is_ready ? 'none' : '0 3px 10px rgba(0,0,0,0.28)',
             }}
           >
             {mePlayer?.is_ready ? '✓ PRÊT — CLIQUER POUR ANNULER' : 'JE SUIS PRÊT'}
@@ -610,13 +607,16 @@ export default function Salon() {
             onClick={startGame}
             disabled={!allReady || starting}
             style={{
-              background: allReady ? encre : 'transparent',
-              color: allReady ? 'var(--reve-bg)' : `${encre}50`,
+              background: allReady ? accent : 'transparent',
+              color: allReady ? btnText : `${encre}50`,
               ...mono, fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.08em',
-              padding: '0.85em 1.8em', borderRadius: 3,
+              padding: '1.15em 1em',
               border: allReady ? 'none' : `1px solid ${encre}30`,
               cursor: allReady && !starting ? 'pointer' : 'not-allowed',
               width: '100%',
+              borderRadius: 2,
+              transform: allReady ? 'rotate(-0.6deg)' : 'none',
+              boxShadow: allReady ? '0 3px 10px rgba(0,0,0,0.28)' : 'none',
             }}
           >
             {starting ? 'DÉMARRAGE…' : !allReady ? `ATTENTE — ${players.filter(p => !p.is_ready).length} JOUEUR(S) PAS PRÊT(S)` : 'DÉMARRER LA PARTIE →'}
