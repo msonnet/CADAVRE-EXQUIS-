@@ -202,7 +202,7 @@ export default function Configuration() {
                   </div>
                   <div style={{ ...mono, fontSize: 13, fontWeight: 600, color: papier.encre, opacity: 0.85, marginBottom: active ? 5 : 0 }}>{s.description}</div>
                   {active && (
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: papier.encre, opacity: 0.80, lineHeight: 1.55 }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, fontSize: 17, color: papier.encre, opacity: 0.95, lineHeight: 1.55 }}>
                       {s.detail}
                     </div>
                   )}
@@ -229,7 +229,7 @@ export default function Configuration() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.95, lineHeight: 1.55 }}>
             {VISIBILITE_DESC[config.visibilite]}
           </div>
         </div>
@@ -285,7 +285,7 @@ export default function Configuration() {
             <span style={{ display: 'inline-block', width: 9, height: 9, background: encre, borderRadius: 1, verticalAlign: 'middle', marginRight: 4 }} />
             une main · <span style={{ color: accent }}>✦</span> une voix IA — toucher une case pour changer
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.95, fontStyle: 'italic', lineHeight: 1.55 }}>
             {descriptionTable(joueursHumains, voixIA)}
           </div>
         </motion.div>
@@ -328,7 +328,7 @@ export default function Configuration() {
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55, marginTop: 8 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.95, lineHeight: 1.55, marginTop: 8 }}>
             {MODE_DESC[config.mode]}
           </div>
         </div>
