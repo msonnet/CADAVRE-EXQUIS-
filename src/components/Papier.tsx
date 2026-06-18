@@ -58,20 +58,22 @@ export function makePapierTexture(bg: string): React.CSSProperties {
 
 export const PAPIER_TEXTURE: React.CSSProperties = makePapierTexture(PAPIER)
 
-// Bords arrachés à la main : amplitude forte (jusqu'à ~8%), pas irrégulier,
-// chaque côté son propre rythme — volontairement asymétrique et brutal pour
-// fuir le polygone « propre » fait à l'ordinateur.
+// Bords arrachés à la main, MAIS uniquement en haut et en bas : les côtés
+// gauche et droit restent parfaitement droits (x = 0 % et x = 100 %), comme une
+// feuille coupée net sur les flancs et déchirée seulement aux extrémités.
+// Le haut et le bas gardent une amplitude forte, chaque bord son propre rythme.
 export const DECHIRE_1 = 'polygon(' +
-  '2% 5%, 9% 1%, 14% 7%, 23% 2%, 31% 6%, 39% 0%, 48% 5%, 57% 1%, 65% 8%, 74% 2%, 83% 6%, 92% 1%, 99% 4%, ' +
-  '97% 12%, 100% 21%, 94% 29%, 99% 39%, 95% 48%, 100% 57%, 93% 66%, 98% 75%, 95% 84%, 100% 93%, ' +
-  '94% 99%, 86% 95%, 77% 100%, 68% 96%, 59% 100%, 50% 95%, 41% 100%, 32% 96%, 23% 100%, 14% 95%, 6% 99%, ' +
-  '1% 93%, 5% 84%, 0% 75%, 4% 66%, 1% 57%, 5% 48%, 0% 39%, 4% 29%, 1% 21%, 5% 12%' +
+  // haut, de gauche à droite (premier et dernier points calés sur les flancs)
+  '0% 5%, 9% 1%, 18% 7%, 27% 2%, 36% 6%, 45% 0%, 55% 5%, 64% 1%, 73% 7%, 82% 2%, 91% 6%, 100% 3%, ' +
+  // côté droit : droit
+  '100% 95%, ' +
+  // bas, de droite à gauche ; côté gauche : retour droit vers 0% 5%
+  '91% 99%, 82% 95%, 73% 100%, 64% 96%, 55% 100%, 45% 95%, 36% 100%, 27% 96%, 18% 100%, 9% 95%, 0% 98%' +
   ')'
 export const DECHIRE_2 = 'polygon(' +
-  '0% 3%, 8% 6%, 12% 0%, 21% 5%, 27% 1%, 36% 8%, 44% 2%, 53% 6%, 61% 0%, 70% 5%, 78% 1%, 88% 7%, 95% 2%, 100% 6%, ' +
-  '96% 14%, 100% 24%, 92% 33%, 98% 43%, 91% 52%, 100% 61%, 94% 71%, 97% 80%, 90% 89%, 100% 97%, ' +
-  '92% 100%, 83% 96%, 74% 100%, 64% 95%, 55% 100%, 45% 96%, 36% 100%, 27% 95%, 18% 100%, 9% 96%, 2% 100%, ' +
-  '6% 91%, 0% 81%, 5% 72%, 1% 62%, 6% 53%, 0% 43%, 5% 34%, 1% 24%, 6% 15%, 0% 6%' +
+  '0% 3%, 8% 6%, 16% 0%, 25% 5%, 33% 1%, 42% 7%, 50% 2%, 59% 6%, 67% 0%, 76% 5%, 84% 1%, 92% 7%, 100% 4%, ' +
+  '100% 96%, ' +
+  '92% 100%, 84% 96%, 75% 100%, 66% 95%, 58% 100%, 49% 96%, 40% 100%, 31% 95%, 22% 100%, 13% 96%, 4% 100%, 0% 95%' +
   ')'
 
 export type Bord = 'net' | 'dechire1' | 'dechire2'
