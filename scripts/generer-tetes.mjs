@@ -39,7 +39,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { GRAVURE, HALFTONE, SEPIA_TEXTE, ACCENT, LINOGRAVURE, AQUARELLE, CYANOTYPE, PAPIER_DECOUPE, CRAYON_CONTE, RISOGRAPHIE, VITRAIL, ENCRE_LAVIS, PASTEL_SEC, genererImage, detourerFondClair, decouperPapier } from './_gravure.mjs'
+import { GRAVURE, HALFTONE, SEPIA_TEXTE, ACCENT, LINOGRAVURE, VITRAIL, ENCRE_LAVIS, COLLAGE_ACCENT, genererImage, detourerFondClair, decouperPapier } from './_gravure.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
@@ -51,16 +51,19 @@ const TAILLE = 1024 // doit matcher exactement le masque (contrainte FLUX Fill)
 // préserve les pixels du sujet quels qu'ils soient et n'enlève que le fond clair.
 const STYLE = {
   papillon: HALFTONE, elephant: SEPIA_TEXTE, tigre: ACCENT,
-  // 9 chimères supplémentaires — un médium UNIQUE chacune (grande variété).
-  racine: AQUARELLE,
-  meduse: CYANOTYPE,
-  'cerf-lune': CRAYON_CONTE,
+  // 3 chimères conservées — médium propre chacune.
   'poisson-oiseau': VITRAIL,
   'escargot-maison': LINOGRAVURE,
-  'dame-fleur': PAPIER_DECOUPE,
   'hibou-horloge': ENCRE_LAVIS,
-  'renard-automne': PASTEL_SEC,
-  'baleine-ciel': RISOGRAPHIE,
+  // 6 chimères refondues en COLLAGE surréaliste monochrome + 1 accent (réf.
+  // Ernst / Dada) ; la variété vient désormais de la composition, des fragments
+  // et de l'accent, plus du médium pictural (qui rendait un effet « sticker »).
+  racine: COLLAGE_ACCENT,
+  meduse: COLLAGE_ACCENT,
+  'cerf-lune': COLLAGE_ACCENT,
+  'dame-fleur': COLLAGE_ACCENT,
+  'renard-automne': COLLAGE_ACCENT,
+  'baleine-ciel': COLLAGE_ACCENT,
 }
 
 const CADRAGE =
@@ -78,6 +81,13 @@ const CADRAGE =
 const CHIMERE =
   'surrealist exquisite-corpse chimera creature, dreamlike, whimsical, ' +
   'gentle and charming, kind warm expression, elegant ornamental fused details, '
+
+// Amorce COLLAGE (réf. exemples fournis : œil gravé sur fragment déchiré +
+// colonne de texte ; fragments qui en percent d'autres). Le « médium » (STYLE
+// = COLLAGE_ACCENT) porte tout le rendu collage ; cette amorce ne fait que
+// nommer le sujet comme un assemblage de morceaux découpés, mi-créature
+// mi-assemblage abstrait, jamais une illustration léchée.
+const COLLAGE_SUJET = 'an exquisite-corpse paper collage, '
 
 // { x, y, w, h } en fraction du cadre [0,1] : zone anatomique repeinte par
 // l'inpainting pour passer de l'état ouvert à l'état fermé. trouCentral
@@ -136,24 +146,27 @@ const ESPECES = {
   // TeteCollage.tsx). Chaque bête mêle plusieurs règnes (humain / végétal /
   // animal / minéral) et porte un médium qui lui est propre.
 
-  // VÉGÉTAL + HUMAIN — visage d'écorce et de racines, aquarelle de flore.
+  // ABSTRAIT — tête-arbre : fragment de gravure d'arbre + œil gravé + colonne de texte (réf. exemple).
   racine: {
-    ouvert: CHIMERE + 'a gentle human face carved from pale tree bark and twisting roots, soft leafy ' +
-      'foliage and small ferns growing as hair, a tiny bird nesting in the branches, little mushrooms ' +
-      'sprouting along the cheeks, calm closed eyes, serene dreaming expression, frontal symmetric view, ' + CADRAGE,
+    ouvert: COLLAGE_SUJET + 'a strange head-creature: a torn fragment of an engraved bare tree and roots ' +
+      'forming the skull, a single large antique engraved human eye pasted where a face would be, a long ' +
+      'narrow column of old printed book text hanging straight down like a neck or a root, a couple of tiny ' +
+      'cut-out birds, ragged torn paper edges between every piece, the eye washed with one faint accent ' +
+      'colour, ' + CADRAGE,
   },
-  // ANIMAL + VÉGÉTAL + HUMAIN — méduse-fleur, cyanotype fantomatique.
+  // CRÉATURE — méduse : dôme de montgolfière gravée + tentacules de bandes de texte et chaînes.
   meduse: {
-    ouvert: CHIMERE + 'a translucent jellyfish whose domed bell is a single blooming open flower with ' +
-      'soft petals, long trailing tentacles mixed with delicate ribbons and strings of tiny pearls, a ' +
-      'small calm human face with closed eyes resting at the center of the bell, drifting gently, ' +
-      'frontal symmetric view, ' + CADRAGE,
+    ouvert: COLLAGE_SUJET + 'a jellyfish-being: a domed bell cut from a halftone engraving of an old ' +
+      'hot-air balloon, long trailing tentacles made of thin torn strips of printed book text and fine ' +
+      'engraved chains, a small engraved eye pasted at the centre of the bell, ragged torn paper edges, ' +
+      'clashing line weights, one faint accent colour on the eye, ' + CADRAGE,
   },
-  // ANIMAL + ASTRES — cerf aux bois de corail tenant un croissant de lune, conté.
+  // CRÉATURE — cerf : tête gravée, bois remplacés par bandes de texte + fragment de lune.
   'cerf-lune': {
-    ouvert: CHIMERE + 'a gentle deer head with large soft eyes, its branching antlers turning into ' +
-      'delicate coral and slender twigs that cradle a thin crescent moon and a few tiny stars, small ' +
-      'moths resting on the antlers, serene peaceful expression, frontal symmetric view, ' + CADRAGE,
+    ouvert: COLLAGE_SUJET + 'a stag-being: a head cut from an antique animal engraving, its antlers ' +
+      'replaced by pasted strips of printed book text and a cut-out crescent-moon fragment branching ' +
+      'upward, layered torn paper pieces with little shadows, a mix of fine engraving and coarse halftone, ' +
+      'one faint accent colour on the moon, ' + CADRAGE,
   },
   // ANIMAL + ANIMAL + MINÉRAL — poisson emplumé aux écailles de vitrail.
   'poisson-oiseau': {
@@ -167,11 +180,12 @@ const ESPECES = {
       'tiny glowing paper lanterns, its spiral shell is a cosy little house with small round windows ' +
       'and a tiny chimney with curling smoke, whimsical and sweet, frontal symmetric view, ' + CADRAGE,
   },
-  // HUMAIN + VÉGÉTAL — femme dont la chevelure fleurit, papiers découpés.
+  // CRÉATURE/ABSTRAIT — femme : visage gravé, un œil-fleur découpé, chevelure de colonnes de texte.
   'dame-fleur': {
-    ouvert: CHIMERE + "an elegant calm woman's head seen from the front, her flowing hair blossoming " +
-      'into large peonies, ferns and leaves, a gentle moth resting on her cheek, a few small bees, eyes ' +
-      'softly closed, serene dreamy expression, frontal symmetric view, ' + CADRAGE,
+    ouvert: COLLAGE_SUJET + "a woman's head: the face cut from a fine old engraving, one eye replaced by a " +
+      'pasted cut-out of an engraved flower, the hair made of torn columns of printed book text fanning ' +
+      'out, ragged scissor-cut edges, deliberately clashing line weights, one faint accent colour on the ' +
+      'lips, ' + CADRAGE,
   },
   // ANIMAL + MÉCANIQUE + VÉGÉTAL — hibou-horloger, lavis d'encre sumi-e.
   'hibou-horloge': {
@@ -179,18 +193,18 @@ const ESPECES = {
       'delicate brass clockwork gears and a small antique pocket-watch as a third eye on the forehead, ' +
       'soft feathers mixed with thin curling vines, scholarly and kind, frontal symmetric view, ' + CADRAGE,
   },
-  // ANIMAL + VÉGÉTAL — renard d'automne, pastel sec chaud.
+  // CRÉATURE — renard : tête gravée, une oreille en bande de texte, feuille découpée, fragment d'engrenage.
   'renard-automne': {
-    ouvert: CHIMERE + 'a gentle fox head with soft warm eyes, its fur flowing into drifting autumn ' +
-      'leaves, acorns and little berries tucked behind the ears, a small snail resting on top of the ' +
-      'head, cosy and tender, frontal symmetric view, ' + CADRAGE,
+    ouvert: COLLAGE_SUJET + 'a fox-being: the head cut from an antique engraving, one ear replaced by a ' +
+      'torn upright strip of printed book text, a pasted cut-out of an engraved leaf, a small engraved gear ' +
+      'fragment, ragged torn paper edges, mixed clashing line weights, one faint accent colour on an eye, ' + CADRAGE,
   },
-  // ANIMAL + CIEL + HUMAIN — petite baleine portant un voilier, risographie.
+  // CRÉATURE/ABSTRAIT — baleine : corps gravé percé d'une fenêtre déchirée révélant une autre gravure.
   'baleine-ciel': {
-    ouvert: CHIMERE + 'a small round gentle whale seen from the front with a kind calm face and tiny ' +
-      'eyes, soft little clouds drifting around it, a tiny sailboat balanced gently on top of its head, ' +
-      'a few small birds, a thin spout of water curling up into stars, dreamy and serene, frontal ' +
-      'symmetric view, ' + CADRAGE,
+    ouvert: COLLAGE_SUJET + 'a whale-being: the body cut from an old engraving, a torn rectangular window ' +
+      'cut into its flank revealing a different pasted engraving of sea and sky behind it, thin strips of ' +
+      'printed book text trailing off, ragged torn edges, layered overlapping cut pieces, one faint accent ' +
+      'colour in the window, ' + CADRAGE,
   },
 }
 

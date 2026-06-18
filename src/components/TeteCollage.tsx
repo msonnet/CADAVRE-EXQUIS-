@@ -219,24 +219,72 @@ function TrompeLevee({ uid, closing }: { uid: string; closing: boolean }) {
 }
 
 /**
- * Chimères mono-état (les 9 ajoutées) : une seule gravure, jamais de second
- * raster ni d'inpainting. L'activation au clic est un léger « salut » CSS
- * (bascule + petite échelle, pivot près du bas) — assez visible pour marquer
- * le clic avant la navigation, sans jamais désaligner ni redessiner l'image.
+ * Chimères-collages mono-état (les 9 ajoutées) : une seule image, jamais de
+ * second raster ni d'inpainting. Comme l'éléphant (trompe) et le papillon
+ * (ailes), l'activation au clic est une vraie ANIMATION anatomique en CSS sur
+ * cette même image (clip-path + transform), jamais redessinée — un mouvement
+ * propre à chaque bête plutôt qu'un effet uniforme :
+ *  · furl    — deux moitiés se replient vers le centre (ailes/nageoires/feuillage) ;
+ *  · pulse   — le corps se contracte verticalement (pulsation de méduse) ;
+ *  · nod     — la tête s'incline en avant (révérence) ;
+ *  · retract — la partie haute se rétracte vers le bas (bois/antennes/arbre) ;
+ *  · dive    — l'ensemble plonge en pivotant (baleine).
  */
-function SingleRaster({ espece, uid, closing }: { espece: Espece; uid: string; closing: boolean }) {
+type Mouvement = 'furl' | 'pulse' | 'nod' | 'retract' | 'dive'
+
+const MOUVEMENT: Partial<Record<Espece, Mouvement>> = {
+  racine: 'retract', meduse: 'pulse', 'cerf-lune': 'nod',
+  'poisson-oiseau': 'furl', 'escargot-maison': 'retract', 'dame-fleur': 'furl',
+  'hibou-horloge': 'nod', 'renard-automne': 'furl', 'baleine-ciel': 'dive',
+}
+
+// Mouvements « pleine image » (un seul raster transformé) : keyframes + origine.
+const ANIM_SOLO: Record<Exclude<Mouvement, 'furl'>, { dur: number; origin: string; frames: string }> = {
+  pulse:   { dur: 0.5,  origin: '50% 16%', frames: '0%{transform:scaleY(1) scaleX(1)}45%{transform:scaleY(.82) scaleX(1.06)}100%{transform:scaleY(.7) scaleX(1.1)}' },
+  nod:     { dur: 0.5,  origin: '50% 92%', frames: '0%{transform:rotate(0deg)}100%{transform:rotate(7deg) translateY(4%)}' },
+  retract: { dur: 0.5,  origin: '50% 100%', frames: '0%{transform:scaleY(1)}100%{transform:scaleY(.8) translateY(-2%)}' },
+  dive:    { dur: 0.55, origin: '50% 50%', frames: '0%{transform:rotate(0deg) translateY(0) scale(1)}100%{transform:rotate(-10deg) translateY(8%) scale(.9)}' },
+}
+
+const imgPlein: React.CSSProperties = {
+  position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain',
+}
+
+function MotionRaster({ espece, uid, closing }: { espece: Espece; uid: string; closing: boolean }) {
+  const src = `/tetes/${espece}/ouvert.webp`
+  const mvt = MOUVEMENT[espece] ?? 'nod'
+
+  // furl : deux moitiés gauche/droite repliées vers le centre, comme les ailes
+  // du papillon — l'image n'est jamais redessinée, juste découpée en deux et
+  // pivotée/rétractée. Pas d'effet de couture car les deux moitiés partagent
+  // la même source alignée pixel à pixel.
+  if (mvt === 'furl') {
+    return (
+      <>
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein, clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)', transformOrigin: '100% 45%',
+          animation: closing ? `${uid}-furlL 0.42s steps(3,end) forwards` : undefined,
+        }} />
+        <img src={src} alt="" onError={masquer} draggable={false} style={{
+          ...imgPlein, clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)', transformOrigin: '0% 45%',
+          animation: closing ? `${uid}-furlR 0.42s steps(3,end) forwards` : undefined,
+        }} />
+        <style>{`
+          @keyframes ${uid}-furlL { 0% { transform: rotate(0deg) scaleX(1); } 100% { transform: rotate(3deg) scaleX(0.32); } }
+          @keyframes ${uid}-furlR { 0% { transform: rotate(0deg) scaleX(1); } 100% { transform: rotate(-3deg) scaleX(0.32); } }
+        `}</style>
+      </>
+    )
+  }
+
+  const a = ANIM_SOLO[mvt]
   return (
     <>
-      <img src={`/tetes/${espece}/ouvert.webp`} alt="" onError={masquer} draggable={false} style={{
-        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain',
-        transformOrigin: '50% 78%',
-        animation: closing ? `${uid}-salut 0.5s ease-in-out forwards` : undefined,
+      <img src={src} alt="" onError={masquer} draggable={false} style={{
+        ...imgPlein, transformOrigin: a.origin,
+        animation: closing ? `${uid}-${mvt} ${a.dur}s ease-in-out forwards` : undefined,
       }} />
-      <style>{`@keyframes ${uid}-salut {
-        0%   { transform: rotate(0deg)    scale(1);    }
-        45%  { transform: rotate(-2.5deg) scale(1.04); }
-        100% { transform: rotate(2deg)    scale(0.92) translateY(3%); }
-      }`}</style>
+      <style>{`@keyframes ${uid}-${mvt} { ${a.frames} }`}</style>
     </>
   )
 }
@@ -245,5 +293,5 @@ function RasterArt({ espece, uid, closing }: { espece: Espece; uid: string; clos
   if (espece === 'papillon') return <AilesPliantes uid={uid} closing={closing} />
   if (espece === 'elephant') return <TrompeLevee uid={uid} closing={closing} />
   if (espece === 'tigre') return <EtatsAlignes espece={espece} closing={closing} />
-  return <SingleRaster espece={espece} uid={uid} closing={closing} />
+  return <MotionRaster espece={espece} uid={uid} closing={closing} />
 }

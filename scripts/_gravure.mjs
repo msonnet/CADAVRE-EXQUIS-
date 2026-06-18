@@ -117,6 +117,24 @@ export const PASTEL_SEC =
   'paper background with absolutely no vignette and no gradient behind the subject, no text, no ' +
   'letters, no caption, no border, no frame'
 
+// COLLAGE_ACCENT — VRAI collage surréaliste à la Max Ernst (« Une Semaine de
+// Bonté ») / photomontage Dada : des fragments DÉCOUPÉS-DÉCHIRÉS de sources
+// DIFFÉRENTES collés ensemble (gravure fine, halftone grossier, colonnes de
+// texte de vieux livre), aux ÉPAISSEURS DE TRAITS qui s'entrechoquent, bords
+// déchirés visibles, monochrome noir-sépia + UN seul accent de couleur sourde.
+// N.B. : ce médium AUTORISE le texte (fragments imprimés = matière du collage),
+// contrairement aux autres — d'où l'absence de « no text » ici.
+export const COLLAGE_ACCENT =
+  'a surrealist hand-cut paper collage in the manner of Max Ernst "Une Semaine de Bonté" and Dada ' +
+  'photomontage, built from torn and scissor-cut fragments of DIFFERENT antique sources pasted together — ' +
+  'delicate 19th-century copperplate engraving, coarse gritty halftone, and narrow columns of small old ' +
+  'printed book text used as collage texture — the fragments deliberately CLASHING in line weight and ' +
+  'grain (fine hatching beside bold heavy type beside rough halftone dots), visible ragged torn-paper ' +
+  'edges and slightly overlapping layered cut pieces casting tiny soft shadows, mostly monochrome ' +
+  'black-and-sepia ink on aged cream paper, with a SINGLE restrained accent of one muted faded colour on ' +
+  'just one small element and nothing else coloured, perfectly flat uniform pale cream paper background ' +
+  'with absolutely no vignette and no gradient behind the subject, no large caption, no title, no border, no frame'
+
 export async function genererImage(prompt, falKey, opts = {}) {
   const r = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
     method: 'POST',
