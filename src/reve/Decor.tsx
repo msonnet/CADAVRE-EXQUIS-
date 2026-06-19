@@ -140,15 +140,17 @@ interface VariantZones {
   stripesMax: number
   citation: boolean
   signature: boolean
+  verticalTitle?: { side: 'left' | 'right' } | null
 }
 
 const ZONES: Record<Variant, VariantZones> = {
   accueil: {
-    symbol: null,
+    symbol: { top: '13%', sizeMul: 0.9 },
     etiqs: [],
     stripesMax: 0,
     citation: true,
     signature: true,
+    verticalTitle: { side: 'right' },
   },
   config: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
@@ -261,6 +263,13 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 
   return (
     <>
+      {zones.verticalTitle && (
+        <VerticalAccent
+          side={s.symbolSide === 'right' ? 'left' : 'right'}
+          rotation={s.titreRotation}
+        />
+      )}
+
       {symbolPos && (
         <SymboleAvecCartel
           symbole={s.symbole}
@@ -282,6 +291,25 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
 }
 
 // ─── Sous-composants ──
+
+function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: number }) {
+  return (
+    <div style={{
+      position: 'absolute', top: '7%',
+      [side]: 0,
+      writingMode: 'vertical-rl',
+      fontFamily: "'Fraunces', 'Bodoni Moda', serif",
+      fontWeight: 900, fontStyle: 'italic',
+      fontSize: 'clamp(3.5rem, 17vw, 6.5rem)',
+      lineHeight: 0.88, letterSpacing: '-0.03em',
+      color: 'var(--reve-ink)',
+      textTransform: 'uppercase',
+      transform: rotation ? `rotate(${rotation}deg)` : undefined,
+      zIndex: 2, pointerEvents: 'none',
+      animation: 'inkBloomQ 1.2s 0.2s both',
+    } as React.CSSProperties}>CADAVRE</div>
+  )
+}
 
 const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
 
