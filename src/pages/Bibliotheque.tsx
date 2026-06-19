@@ -6,19 +6,6 @@ import { chargerPoemes, chargerDessins } from '../db'
 import { Decor, useReve } from '../reve'
 import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
-import { Etiquette } from '../components/Papier'
-
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -84,7 +71,9 @@ export default function Bibliotheque() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <Section accent={accent} color={btnText} style={{ marginTop: 20, marginBottom: 8 }}>LE RECUEIL</Section>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+          — LE RECUEIL —
+        </div>
 
         {/* ── TITRE ── */}
         <motion.div
@@ -249,7 +238,9 @@ export default function Bibliotheque() {
             transition={{ delay: 0.3 }}
             style={{ marginTop: 16 }}
           >
-            <Section accent={accent} color={btnText} style={{ marginBottom: 12, marginTop: 8 }}>CADAVRES DESSINÉS</Section>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12, marginTop: 8 }}>
+              — CADAVRES DESSINÉS —
+            </div>
             {dessins.map((dessin, i) => (
               <motion.button
                 key={dessin.id}

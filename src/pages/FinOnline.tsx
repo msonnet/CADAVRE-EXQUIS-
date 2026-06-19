@@ -15,8 +15,6 @@ import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
-import { PapierCard, Etiquette, Section, usePapier } from '../components/Papier'
-
 import type { DessinCadavre } from '../types'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
@@ -101,7 +99,6 @@ export default function FinOnline() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const papier = usePapier()
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
@@ -132,7 +129,6 @@ export default function FinOnline() {
   const [sauvegardeDessin_, setSauvegardeDessin] = useState(false)
 
   const [revealReady, setRevealReady] = useState(false)
-
   const [revealDessinJoue, setRevealDessinJoue] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
@@ -388,7 +384,7 @@ export default function FinOnline() {
                 style={{ position: 'absolute', left: 0, right: 0, height: `${100 / Math.max(players.length, 2)}%`, top: `${(i * 100) / Math.max(players.length, 2)}%`, background: accent, opacity: 0.12, pointerEvents: 'none' }} />
             ))}
             <motion.div style={{ position: 'relative', zIndex: 1 }} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.7 }}>
-              <Section accent={accent} color={btnText} style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>{players.length} VOIX</Section>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>— {players.length} VOIX —</div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
                 Le cadavre<br />se reconstitue
                 <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>
@@ -419,7 +415,7 @@ export default function FinOnline() {
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-        <Section accent={accent} color={btnText} style={{ marginTop: 24, marginBottom: 12 }}>RÉVÉLATION</Section>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 12 }}>— RÉVÉLATION —</div>
 
         {revealReady && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -437,7 +433,7 @@ export default function FinOnline() {
                 {imageAssemblee && !loadingDessin && (
                   <div style={{ marginBottom: 20 }}>
                     <button onClick={() => setPleinEcranDessin(true)} aria-label="Agrandir en plein écran"
-                      style={{ display: 'block', width: '100%', padding: 0, border: `0.5px solid ${encre}20`, background: 'none', cursor: 'zoom-in', borderRadius: 2 }}>
+                      style={{ display: 'block', width: '100%', padding: 0, border: `0.5px solid ${encre}20`, background: 'none', cursor: 'zoom-in', borderRadius: 3 }}>
                       <motion.img
                         src={imageAssemblee} alt="Cadavre exquis dessiné"
                         initial={{ clipPath: 'inset(0 0 100% 0)', opacity: 0.5 }} animate={{ clipPath: 'inset(0 0 0% 0)', opacity: 1 }} transition={{ duration: 2, ease: [0.3, 0, 0.2, 1] }}
@@ -458,48 +454,35 @@ export default function FinOnline() {
                   <div style={{ marginBottom: 20 }}>
                     <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />
                     {texteVision ? (
-                      <div style={{ marginBottom: 16 }}>
-                        <PapierCard rotation={0.5} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '14px 16px 16px' }}>
-                          <div style={{ marginBottom: 10 }}>
-                            <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-                              LECTURE SURRÉALISTE
-                            </Etiquette>
-                          </div>
-                          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: papier.encre, whiteSpace: 'pre-line' }}>
-                            {texteVision}
-                          </div>
-                        </PapierCard>
-                      </div>
+                      <>
+                        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>— LECTURE SURRÉALISTE —</div>
+                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
+                      </>
                     ) : erreurVision ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>La lecture surréaliste n'a pas pu avoir lieu.</p>
-                        <button onClick={reessayerVision} style={{ alignSelf: 'flex-start', ...mono, fontSize: 13, background: 'transparent', color: accent, border: `1px solid ${encre}40`, borderRadius: 2, padding: '7px 14px', cursor: 'pointer' }}>↺ RÉESSAYER</button>
+                        <button onClick={reessayerVision} style={{ alignSelf: 'flex-start', ...mono, fontSize: 13, background: 'transparent', color: accent, border: `0.5px solid ${accent}50`, borderRadius: 3, padding: '7px 14px', cursor: 'pointer' }}>↺ RÉESSAYER</button>
                       </div>
                     ) : null}
 
                     {/* Actions dessin */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button onClick={sauvegarderDessinLocal} disabled={sauvegardeDessin_}
-                        style={{
-                          flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText,
-                          border: `0.5px solid ${accent}`, borderRadius: 2, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer',
-                          transform: sauvegardeDessin_ ? 'none' : 'rotate(-0.6deg)',
-                          boxShadow: sauvegardeDessin_ ? 'none' : '0 3px 10px rgba(0,0,0,0.28)',
-                        }}>
+                        style={{ flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText, border: `0.5px solid ${accent}`, borderRadius: 3, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer' }}>
                         {sauvegardeDessin_ ? '✓ SAUVEGARDÉ' : '↓ MA GALERIE'}
                       </button>
                       <button onClick={publierDansGalerieDessin} disabled={publishingGallery || publishedGallery}
-                        style={{ flex: 1, ...mono, fontSize: 17, background: publishedGallery ? `${accent}20` : 'transparent', color: publishedGallery ? accent : `${encre}70`, border: `1px solid ${publishedGallery ? accent : `${encre}40`}`, borderRadius: 2, padding: '10px 8px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                        style={{ flex: 1, ...mono, fontSize: 17, background: publishedGallery ? `${accent}20` : 'transparent', color: publishedGallery ? accent : `${encre}70`, border: `0.5px solid ${publishedGallery ? accent : encre}25`, borderRadius: 3, padding: '10px 8px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
                         {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE COMMUNE'}
                       </button>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                       <button onClick={partagerDessin} disabled={partageEnCours}
-                        style={{ ...mono, fontSize: 13, background: 'transparent', color: partageEnCours ? accent : `${encre}70`, border: `1px solid ${partageEnCours ? accent : `${encre}40`}`, borderRadius: 2, padding: '10px 12px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, background: 'transparent', color: partageEnCours ? accent : `${encre}70`, border: `0.5px solid ${partageEnCours ? accent : `${encre}25`}`, borderRadius: 3, padding: '10px 12px', cursor: partageEnCours ? 'default' : 'pointer' }}>
                         {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
                       </button>
                       <button onClick={() => setPleinEcranDessin(true)}
-                        style={{ ...mono, fontSize: 13, background: 'transparent', color: `${encre}70`, border: `1px solid ${encre}40`, borderRadius: 2, padding: '10px 12px', cursor: 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, background: 'transparent', color: `${encre}70`, border: `0.5px solid ${encre}25`, borderRadius: 3, padding: '10px 12px', cursor: 'pointer' }}>
                         ⛶ PLEIN ÉCRAN
                       </button>
                     </div>
@@ -518,11 +501,11 @@ export default function FinOnline() {
                       {contributions.sort((a, b) => a.case_index - b.case_index).map(c => {
                         const p = players.find(pl => pl.player_id === c.player_id)
                         let preview: React.ReactNode = null
-                        try { const d = JSON.parse(c.texte) as BandeData; preview = <img src={d.imageDataUrl} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 2 }} /> }
-                        catch { if (c.texte.startsWith('data:')) preview = <img src={c.texte} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 2 }} /> }
+                        try { const d = JSON.parse(c.texte) as BandeData; preview = <img src={d.imageDataUrl} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 3 }} /> }
+                        catch { if (c.texte.startsWith('data:')) preview = <img src={c.texte} alt={p?.pseudo ?? ''} style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 3 }} /> }
                         return (
                           <div key={c.case_index} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 2, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30` }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 3, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30` }}>
                               {p?.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 17, color: accent, fontWeight: 900 }}>{p?.pseudo[0]?.toUpperCase() ?? '?'}</span></div>}
                             </div>
@@ -537,35 +520,23 @@ export default function FinOnline() {
               </div>
             )}
 
-            {/* ── Mode écrit : poème — révélé après le dépli plein-écran ── */}
+            {/* ── Mode écrit : poème ── */}
             {room.mode !== 'dessin' && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, ease: 'easeOut' }}
-                style={{ marginBottom: 28 }}
-              >
-                <PapierCard rotation={0} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
-                  <div style={{ marginBottom: 12 }}>
-                    <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-                      CADAVRE EXQUIS · {code}
-                    </Etiquette>
-                  </div>
-                  {lignes.map((ligne, i) => (
-                    <motion.p key={i}
-                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
-                      style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: papier.encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
-                      {i === 0 && lettrine ? (
-                        <>
-                          <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>
-                          {resteLigne0}
-                        </>
-                      ) : (ligne || ' ')}
-                    </motion.p>
-                  ))}
-                </PapierCard>
-              </motion.div>
+              <div style={{ marginBottom: 28 }}>
+                {lignes.map((ligne, i) => (
+                  <motion.p key={i}
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
+                    style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
+                    {i === 0 && lettrine ? (
+                      <>
+                        <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>
+                        {resteLigne0}
+                      </>
+                    ) : (ligne || ' ')}
+                  </motion.p>
+                ))}
+              </div>
             )}
 
             {/* Coutures — écrit */}
@@ -582,7 +553,7 @@ export default function FinOnline() {
                       const p = players.find(pl => pl.player_id === c.player_id)
                       return (
                         <div key={c.case_index} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 2, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30`, marginTop: 2 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 3, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30`, marginTop: 2 }}>
                             {p?.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 17, color: accent, fontWeight: 900 }}>{p?.pseudo[0]?.toUpperCase() ?? '?'}</span></div>}
                           </div>
@@ -608,24 +579,24 @@ export default function FinOnline() {
             {/* Illustration — écrit */}
             {room.mode !== 'dessin' && (
               <div style={{ marginBottom: 20 }}>
-                <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>ILLUSTRATION</Section>
+                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>— ILLUSTRATION —</div>
 
                 {illustrationUrl && (
                   <div style={{ marginBottom: 12 }}>
                     <button onClick={() => setPleinEcranIllus(true)} style={{ display: 'block', width: '100%', padding: 0, border: 'none', background: 'none', cursor: 'zoom-in' }}>
-                      <img src={illustrationUrl} alt="illustration" style={{ width: '100%', borderRadius: 2, border: `0.5px solid ${accent}30`, display: 'block' }} />
+                      <img src={illustrationUrl} alt="illustration" style={{ width: '100%', borderRadius: 3, border: `0.5px solid ${accent}30`, display: 'block' }} />
                     </button>
                     <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                       <button onClick={() => setPleinEcranIllus(true)}
-                        style={{ ...mono, fontSize: 13, color: `${encre}60`, background: 'none', border: `1px solid ${encre}40`, borderRadius: 2, padding: '6px 10px', cursor: 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, color: `${encre}60`, background: 'none', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '6px 10px', cursor: 'pointer' }}>
                         ⛶ PLEIN ÉCRAN
                       </button>
                       <button onClick={partagerEcrit} disabled={partageEnCours}
-                        style={{ ...mono, fontSize: 13, color: partageEnCours ? accent : `${encre}60`, background: 'none', border: `1px solid ${partageEnCours ? accent : `${encre}40`}`, borderRadius: 2, padding: '6px 10px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, color: partageEnCours ? accent : `${encre}60`, background: 'none', border: `0.5px solid ${partageEnCours ? accent : `${encre}20`}`, borderRadius: 3, padding: '6px 10px', cursor: partageEnCours ? 'default' : 'pointer' }}>
                         {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
                       </button>
                       <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
-                        style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : `${encre}60`, background: publishedGallery ? `${accent}15` : 'none', border: `1px solid ${publishedGallery ? accent : `${encre}40`}`, borderRadius: 2, padding: '6px 10px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : `${encre}60`, background: publishedGallery ? `${accent}15` : 'none', border: `0.5px solid ${publishedGallery ? accent : encre}20`, borderRadius: 3, padding: '6px 10px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
                         {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE'}
                       </button>
                     </div>
@@ -635,11 +606,11 @@ export default function FinOnline() {
                 {!illustrationUrl && !generatingIllus && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
                     <button onClick={partagerEcrit} disabled={partageEnCours}
-                      style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `1px solid ${encre}40`, borderRadius: 2, padding: '7px 14px', cursor: partageEnCours ? 'default' : 'pointer' }}>
+                      style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, borderRadius: 3, padding: '7px 14px', cursor: partageEnCours ? 'default' : 'pointer' }}>
                       {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER LE POÈME'}
                     </button>
                     <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
-                      style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : encre, background: publishedGallery ? `${accent}15` : 'transparent', border: `1px solid ${publishedGallery ? accent : `${encre}40`}`, borderRadius: 2, padding: '7px 14px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
+                      style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : encre, background: publishedGallery ? `${accent}15` : 'transparent', border: `0.5px solid ${publishedGallery ? accent : encre}30`, borderRadius: 3, padding: '7px 14px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
                       {publishedGallery ? '✓ PUBLIÉ' : publishingGallery ? '…' : '✦ GALERIE COMMUNE'}
                     </button>
                   </div>
@@ -658,7 +629,7 @@ export default function FinOnline() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {STYLES.map(s => (
                       <button key={s.id} onClick={() => genererIllus(s.id)}
-                        style={{ ...mono, fontSize: 13, padding: '6px 12px', background: styleChoisi === s.id && illustrationUrl ? `${accent}20` : 'transparent', color: styleChoisi === s.id && illustrationUrl ? accent : encre, border: `1px solid ${styleChoisi === s.id && illustrationUrl ? accent : `${encre}40`}`, borderRadius: 2, cursor: 'pointer' }}>
+                        style={{ ...mono, fontSize: 13, padding: '6px 12px', background: styleChoisi === s.id && illustrationUrl ? `${accent}20` : 'transparent', color: styleChoisi === s.id && illustrationUrl ? accent : encre, border: `0.5px solid ${styleChoisi === s.id && illustrationUrl ? accent : `${encre}25`}`, borderRadius: 3, cursor: 'pointer' }}>
                         {s.label}
                       </button>
                     ))}
@@ -671,14 +642,14 @@ export default function FinOnline() {
             {room.host_id === user?.id && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                 <button onClick={rejouerEnsemble}
-                  style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 2, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8, transform: 'rotate(-0.6deg)' }}>
+                  style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
                   ↻ REJOUER ENSEMBLE
                 </button>
               </motion.div>
             )}
 
             <button onClick={() => navigate('/online')}
-              style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 2, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8, transform: 'rotate(-0.6deg)' }}>
+              style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
               NOUVELLE PARTIE
             </button>
           </motion.div>
@@ -693,7 +664,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={imageAssemblee} alt="Cadavre exquis — plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranDessin(false)} aria-label="Fermer"
-              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 2, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ FERMER
             </button>
           </motion.div>
@@ -708,7 +679,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={illustrationUrl} alt="Illustration — plein écran" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranIllus(false)} aria-label="Fermer"
-              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 2, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ FERMER
             </button>
           </motion.div>

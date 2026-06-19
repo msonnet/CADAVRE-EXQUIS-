@@ -8,19 +8,6 @@ import type { NiveauValidation } from '../utils/validation'
 import {
   rappelDisponible, activerRappelQuotidien, desactiverRappelQuotidien, RAPPEL_KEY,
 } from '../utils/notifications'
-import { Etiquette } from '../components/Papier'
-
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
   { id: 'stricte', label: 'Stricte', desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
@@ -41,7 +28,6 @@ export default function Reglages() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -92,7 +78,9 @@ export default function Reglages() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <Section accent={accent} color={btnText} style={{ marginTop: 24, marginBottom: 8 }}>RÉGLAGES</Section>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
+          — RÉGLAGES —
+        </div>
 
         {/* ── TITRE ── */}
         <motion.div
@@ -118,7 +106,9 @@ export default function Reglages() {
           transition={{ delay: 0.3 }}
           style={{ marginBottom: 24 }}
         >
-          <Section accent={accent} color={btnText} style={{ marginBottom: 12 }}>VALIDATION</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — VALIDATION —
+          </div>
           <div className="flex gap-2 mb-3">
             {NIVEAUX.map(n => {
               const active = validation === n.id
@@ -154,7 +144,9 @@ export default function Reglages() {
           transition={{ delay: 0.5 }}
           style={{ marginBottom: 28 }}
         >
-          <Section accent={accent} color={btnText} style={{ marginBottom: 12 }}>AMBIANCE</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — AMBIANCE —
+          </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
             Chaque jour, une ambiance est tirée au sort. Tu peux en tirer une nouvelle maintenant.
           </div>
@@ -186,7 +178,9 @@ export default function Reglages() {
             transition={{ delay: 0.6 }}
             style={{ marginBottom: 28 }}
           >
-            <Section accent={accent} color={btnText} style={{ marginBottom: 12 }}>RAPPEL QUOTIDIEN</Section>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+              — RAPPEL QUOTIDIEN —
+            </div>
             <div className="flex gap-2 mb-3">
               {[
                 { actif: true,  label: 'ACTIVÉ' },

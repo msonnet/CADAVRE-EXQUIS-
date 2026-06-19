@@ -13,8 +13,6 @@ import { Decor, useReve } from '../reve'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
-import { PapierCard, Etiquette, usePapier } from '../components/Papier'
-
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -51,7 +49,6 @@ export default function FinDePartie() {
   )
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
   const [revealReady, setRevealReady] = useState(false)
-
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [promptLibre, setPromptLibre] = useState('')
@@ -64,7 +61,7 @@ export default function FinDePartie() {
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
-  const lettrinePlayedRef = useRef(false)
+  const [lettrineChutee, setLettrineChutee] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
@@ -80,7 +77,6 @@ export default function FinDePartie() {
   const encre = sc?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const papier = usePapier()
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
@@ -217,7 +213,6 @@ export default function FinDePartie() {
           />
         )}
       </AnimatePresence>
-
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
         <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
 
@@ -300,30 +295,33 @@ export default function FinDePartie() {
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
         {/* ── POEM CARD ── */}
-        {revealReady && (
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: 'easeOut' }}
-          style={{ marginBottom: 20 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={lettrineChutee ? { opacity: 1, y: [0, -5, 3, -2, 0] } : { opacity: 1, y: 0 }}
+          transition={lettrineChutee ? { duration: 0.28, ease: 'easeOut' } : { delay: 0.7, duration: 0.8 }}
+          style={{
+            border: `1px solid ${accent}40`,
+            borderLeft: `3px solid ${accent}`,
+            borderRadius: 3,
+            padding: '16px 16px 12px',
+            background: 'rgba(240,228,204,0.25)',
+            marginBottom: 20,
+          }}
         >
-        <PapierCard rotation={0} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
-          {/* Poem title */}
-          <div style={{ marginBottom: 12 }}>
-            <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-              CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
-            </Etiquette>
+          {/* Poem title in mono */}
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
           </div>
 
           {/* Poem text — lignes dévoilées une à une après le rideau */}
           <div
             style={{
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-              color: papier.encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
+              color: encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
               overflowWrap: 'break-word', wordBreak: 'break-word',
             }}
           >
-            {lignes.map((ligne, i) => (
+            {revealReady && lignes.map((ligne, i) => (
               <motion.span
                 key={i}
                 style={{ display: 'block', minHeight: '1.65em' }}
@@ -337,8 +335,8 @@ export default function FinDePartie() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5, ease: [0.22, 1.4, 0.36, 1] }}
                     onAnimationComplete={() => {
-                      if (!lettrinePlayedRef.current) {
-                        lettrinePlayedRef.current = true
+                      if (!lettrineChutee) {
+                        setLettrineChutee(true)
                         jouer('lettrine')
                         vibrer('devoilement')
                       }
@@ -361,12 +359,10 @@ export default function FinDePartie() {
           </div>
 
           {/* Card footer */}
-          <div style={{ ...mono, fontSize: 13, color: papier.encre, opacity: 0.65, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${papier.encre}20` }}>
+          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
             {voixCount} {poeme.structureId === 'atelier' ? 'VERS' : 'VOIX'} · {structLabel.toUpperCase()} · {heureStr}
           </div>
-        </PapierCard>
         </motion.div>
-        )}
 
         {/* ── IMAGE (if already generated) ── */}
         {illustrationUrl && (
@@ -462,9 +458,7 @@ export default function FinDePartie() {
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',
               gap: 2,
-              borderRadius: 2,
-              transform: 'rotate(-0.6deg)',
-              boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
+              borderRadius: 3,
             }}
           >
             <span>Sceller au recueil</span>

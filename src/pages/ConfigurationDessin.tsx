@@ -4,22 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
-import { Etiquette } from '../components/Papier'
 import type { ConfigDessin } from '../types'
-
-// Intitulé de section = étiquette d'accent collée (même langage que
-// Configuration.tsx), à la place de l'ancien « — TITRE — » en filet typo.
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 const CONFIG_PAR_DEFAUT: ConfigDessin = {
   nbBandes: 3,
@@ -30,6 +15,12 @@ const CONFIG_PAR_DEFAUT: ConfigDessin = {
 type SlotType = 'vide' | 'humain'
 
 // Références historiques au cadavre exquis dessiné
+const REFS = [
+  { titre: 'Le cadavre exquis boira le vin nouveau', auteurs: 'Breton, Éluard, Morise, Man Ray', annee: '1925' },
+  { titre: 'Premier cadavre dessiné collectif', auteurs: 'André Breton et ses amis', annee: '1927' },
+  { titre: 'Exquisite Corpse (Drawing)', auteurs: 'Yves Tanguy, Joan Miró, Max Morise, Man Ray', annee: '1928' },
+]
+
 export default function ConfigurationDessin() {
   const navigate = useNavigate()
   const seance = useReve()
@@ -64,18 +55,7 @@ export default function ConfigurationDessin() {
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
-  // bouton-étiquette accent collé quand actif (même langage que Configuration.tsx)
-  const ongletStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1, padding: '9px 4px', minHeight: 44, borderRadius: 2,
-    border: `0.5px solid ${active ? 'transparent' : `${encre}20`}`,
-    background: active ? accent : 'transparent',
-    boxShadow: active ? '0 2px 6px rgba(0,0,0,0.22)' : 'none',
-    transform: active ? 'rotate(-0.8deg)' : 'none',
-    ...mono, fontSize: 13, fontWeight: active ? 800 : 400,
-    color: active ? btnText : `${encre}80`,
-    cursor: 'pointer', transition: 'all 0.15s',
-  })
-
+  const ref = REFS[(seance?.seed ?? 0) % REFS.length]
   const totalBandes = config.nbBandes
   const cycleNote = joueurs < totalBandes
     ? `les ${joueurs} joueurs se partagent ${totalBandes} bandes — certains dessinent deux fois`
@@ -109,7 +89,9 @@ export default function ConfigurationDessin() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <Section accent={accent} color={btnText} style={{ marginTop: 22, marginBottom: 10 }}>CADAVRE DESSINÉ</Section>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 22, marginBottom: 8 }}>
+          — CADAVRE DESSINÉ —
+        </div>
 
         {/* ── TITLE ── */}
         <motion.div
@@ -130,18 +112,30 @@ export default function ConfigurationDessin() {
 
         {/* ── BANDES ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} style={{ marginBottom: 18 }}>
-          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>FRAGMENTS</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+            — FRAGMENTS —
+          </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 8 }}>
             Nombre de bandes horizontales à dessiner
           </div>
           <div className="flex gap-2">
             {[2, 3, 4, 5].map(n => {
               const active = config.nbBandes === n
+              const labels = ['', '', 'tête · corps', 'tête · corps · jambes', 'tête · corps · taille · jambes', 'tête · buste · ventre · hanches · jambes']
               return (
                 <button
                   key={n}
                   onClick={() => setConfig(c => ({ ...c, nbBandes: n }))}
-                  style={ongletStyle(active)}
+                  style={{
+                    flex: 1, padding: '10px 4px', minHeight: 44,
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
+                    background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 13,
+                    color: active ? accent : `${encre}60`,
+                    transition: 'all 0.15s',
+                  }}
                 >
                   {n}
                 </button>
@@ -152,7 +146,9 @@ export default function ConfigurationDessin() {
 
         {/* ── AUTOUR DE LA TABLE ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.28 }} style={{ marginBottom: 18 }}>
-          <Section accent={accent} color={btnText} style={{ marginBottom: 12 }}>AUTOUR DE LA TABLE</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — AUTOUR DE LA TABLE —
+          </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             {slots.map((slot, i) => (
               <button
@@ -193,7 +189,9 @@ export default function ConfigurationDessin() {
 
         {/* ── VISIBILITÉ ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} style={{ marginBottom: 20 }}>
-          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>VISIBILITÉ</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+            — VISIBILITÉ —
+          </div>
           <div className="flex gap-2 mb-2">
             {([
               { id: 'aveugle', label: 'AVEUGLE' },
@@ -204,7 +202,16 @@ export default function ConfigurationDessin() {
                 <button
                   key={v.id}
                   onClick={() => setConfig(c => ({ ...c, visibilite: v.id }))}
-                  style={ongletStyle(active)}
+                  style={{
+                    flex: 1, padding: '8px 4px',
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
+                    background: active ? `${accent}08` : 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 13,
+                    color: active ? accent : `${encre}60`,
+                    transition: 'all 0.15s',
+                  }}
                 >
                   {v.label}
                 </button>
@@ -215,6 +222,29 @@ export default function ConfigurationDessin() {
             {config.visibilite === 'aveugle'
               ? 'Chaque bande commence dans l\'obscurité totale.'
               : 'Un raccord révèle la lisière du fragment précédent.'}
+          </div>
+        </motion.div>
+
+        {/* ── CITATION HISTORIQUE ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          style={{
+            borderLeft: `1.5px solid ${accent}`,
+            paddingLeft: 12,
+            marginBottom: 20,
+            opacity: 0.65,
+          }}
+        >
+          <div style={{
+            fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5,
+            color: encre, marginBottom: 4,
+          }}>
+            « {ref.titre} »
+          </div>
+          <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.14em' }}>
+            {ref.auteurs.toUpperCase()} · {ref.annee}
           </div>
         </motion.div>
 
@@ -233,8 +263,7 @@ export default function ConfigurationDessin() {
               background: accent, color: btnText,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               padding: '1.15em 1em', border: 'none', cursor: 'pointer', gap: 2,
-              borderRadius: 2, transform: 'rotate(-0.6deg)',
-              boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
+              borderRadius: 3,
             }}
           >
             <span>Commencer le dessin →</span>

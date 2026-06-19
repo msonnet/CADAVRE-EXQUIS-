@@ -4,19 +4,6 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
-import { Etiquette } from '../components/Papier'
-
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 const AVATAR_STYLES = [
   { id: 'surrealiste',     label: 'Surréaliste' },
@@ -110,7 +97,9 @@ export default function Profil() {
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      <Section accent={accent} color={btnText} style={{ marginTop: 28, marginBottom: 8 }}>MON PROFIL</Section>
+      <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
+        — MON PROFIL —
+      </div>
 
       <motion.form
         initial={{ opacity: 0, y: 8 }}
@@ -120,7 +109,9 @@ export default function Profil() {
       >
         {/* Avatar */}
         <div>
-          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>IMAGE DE PROFIL</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+            — IMAGE DE PROFIL —
+          </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
             Décris en quelques mots le personnage qui te représente. L'IA générera ton portrait surréaliste.
           </p>
@@ -201,7 +192,9 @@ export default function Profil() {
 
         {/* Pseudo */}
         <div>
-          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>PSEUDONYME</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+            — PSEUDONYME —
+          </div>
           <input
             type="text"
             value={pseudo}
@@ -231,10 +224,8 @@ export default function Profil() {
             background: accent, color: btnText, ...mono, fontSize: 17,
             textTransform: 'uppercase', padding: '0.9em 1.8em',
             border: 'none', cursor: saving ? 'wait' : 'pointer',
-            borderRadius: 2,
+            borderRadius: 3,
             opacity: saving || !pseudo.trim() ? 0.5 : 1,
-            transform: saving || !pseudo.trim() ? 'none' : 'rotate(-0.6deg)',
-            boxShadow: saving || !pseudo.trim() ? 'none' : '0 3px 10px rgba(0,0,0,0.28)',
             marginTop: 8,
           }}
         >

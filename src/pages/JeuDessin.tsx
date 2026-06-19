@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
-import { Etiquette } from '../components/Papier'
 import type { ConfigDessin, BandeDessin } from '../types'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
@@ -133,9 +132,6 @@ const TOOL_NAMES: Record<Tool, string> = { pencil: 'Crayon', pen: 'Stylo', marke
 
 const TOOLBAR_H = 218
 const RACCORD_H = 80
-// Encre fixe de la barre d'outils — toujours lisible sur son fond beige fixe (#f0e9df),
-// indépendamment de l'ambiance (où `encre` peut devenir clair).
-const TB_INK = '#1a1208'
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const h = hex.replace('#', '')
@@ -250,7 +246,6 @@ export default function JeuDessin() {
   const accent = c?.second ?? '#1d3a8c'
   const encre = c?.encre ?? '#0f0805'
   const bg = c?.bg ?? '#0f0805'
-  const btnText = seance?.ambiance.buttonText ?? '#fff'
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   // Prévenir swipe-back iOS — uniquement sur la zone canvas
@@ -726,7 +721,7 @@ export default function JeuDessin() {
               position: 'fixed', left: ghost.x, top: ghost.y,
               width: diam, height: diam, marginLeft: -diam / 2, marginTop: -diam / 2,
               borderRadius: '50%',
-              border: `1px solid ${tool === 'eraser' ? `${paperDef.ink}66` : `${color}aa`}`,
+              border: `1px solid ${tool === 'eraser' ? `${encre}66` : `${color}aa`}`,
               background: tool === 'eraser' ? 'transparent' : `${color}14`,
               pointerEvents: 'none', zIndex: 15,
             }} />
@@ -747,12 +742,12 @@ export default function JeuDessin() {
           </div>
         )}
 
-        {/* Badge joueur — couleurs liées au papier pour rester lisible sur tout fond */}
+        {/* Badge joueur */}
         <div style={{
           position: 'absolute', top: 10, left: 10,
-          ...mono, fontSize: 13, color: paperDef.ink,
-          background: `${paperDef.bg}ee`, padding: '4px 10px',
-          border: `0.5px solid ${paperDef.ink}30`, borderRadius: 3, pointerEvents: 'none',
+          ...mono, fontSize: 13, color: encre,
+          background: 'rgba(255,255,255,0.88)', padding: '4px 10px',
+          border: `0.5px solid ${encre}15`, pointerEvents: 'none',
         }}>
           JOUEUR {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
         </div>
@@ -761,8 +756,8 @@ export default function JeuDessin() {
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }} style={{
             position: 'absolute', top: 10, right: 10,
-            ...mono, fontSize: 13, color: paperDef.ink,
-            background: `${paperDef.bg}ee`, border: `0.5px solid ${paperDef.ink}30`,
+            ...mono, fontSize: 13, color: encre,
+            background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
             borderRadius: 3,
             padding: '4px 10px', cursor: 'pointer', zIndex: 10,
           }}>
@@ -827,7 +822,7 @@ export default function JeuDessin() {
           </div>
 
           {/* Séparateur */}
-          <div style={{ width: 1, height: 38, background: `${TB_INK}12`, flexShrink: 0 }} />
+          <div style={{ width: 1, height: 38, background: `${encre}12`, flexShrink: 0 }} />
 
           {/* Bouton couleur */}
           <button
@@ -836,7 +831,7 @@ export default function JeuDessin() {
             style={{
               width: 44, height: 44, borderRadius: '50%',
               background: tool === 'eraser' ? '#f0ede8' : color,
-              border: `2px solid ${tool === 'eraser' ? `${TB_INK}20` : (color === '#ffffff' ? `${TB_INK}30` : 'transparent')}`,
+              border: `2px solid ${tool === 'eraser' ? `${encre}20` : (color === '#ffffff' ? `${encre}30` : 'transparent')}`,
               boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
               cursor: 'pointer', flexShrink: 0,
               transition: 'background 0.15s, transform 0.1s',
@@ -846,7 +841,7 @@ export default function JeuDessin() {
 
         {/* Rangée opacité */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
           <input
             type="range" min={10} max={100} step={5}
             value={Math.round(opacity * 100)}
@@ -855,14 +850,14 @@ export default function JeuDessin() {
             disabled={tool === 'eraser'}
             style={{ flex: 1, accentColor: accent, cursor: tool === 'eraser' ? 'default' : 'pointer', opacity: tool === 'eraser' ? 0.35 : 1 }}
           />
-          <span style={{ ...mono, fontSize: 13, color: TB_INK, opacity: 0.7, width: 34, textAlign: 'right' }}>
+          <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>
             {Math.round(opacity * 100)}%
           </span>
         </div>
 
         {/* Rangée tailles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button
@@ -882,7 +877,7 @@ export default function JeuDessin() {
                   width: Math.min(sz * 0.7 + 3, 22),
                   height: Math.min(sz * 0.7 + 3, 22),
                   borderRadius: '50%',
-                  background: sizeIdx === i ? (tool === 'eraser' ? TB_INK : color) : `${TB_INK}80`,
+                  background: sizeIdx === i ? (tool === 'eraser' ? encre : color) : `${encre}55`,
                   transition: 'background 0.15s',
                 }} />
               </button>
@@ -902,7 +897,7 @@ export default function JeuDessin() {
                   style={{
                     width: 34, height: 34, borderRadius: 3, border: 'none',
                     background: canUndo ? `${accent}18` : 'transparent',
-                    color: canUndo ? accent : TB_INK,
+                    color: canUndo ? accent : encre,
                     opacity: canUndo ? 1 : 0.35,
                     fontSize: 18,
                     cursor: canUndo ? 'pointer' : 'default',
@@ -919,7 +914,7 @@ export default function JeuDessin() {
                   style={{
                     width: 34, height: 34, borderRadius: 3, border: 'none',
                     background: canRedo ? `${accent}18` : 'transparent',
-                    color: canRedo ? accent : TB_INK,
+                    color: canRedo ? accent : encre,
                     opacity: canRedo ? 1 : 0.35,
                     fontSize: 18,
                     cursor: canRedo ? 'pointer' : 'default',
@@ -1021,20 +1016,20 @@ export default function JeuDessin() {
 
               {/* Sélecteur natif + couleur custom */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 3, background: color, border: `1px solid ${TB_INK}20`, flexShrink: 0 }} />
-                <span style={{ ...mono, fontSize: 13, color: TB_INK, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
+                <div style={{ width: 32, height: 32, borderRadius: 3, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
+                <span style={{ ...mono, fontSize: 13, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
                 <input
                   type="color"
                   value={color}
                   onChange={e => { setColor(e.target.value); if (tool === 'eraser') setTool('pen') }}
-                  style={{ width: 36, height: 36, padding: 3, border: `1px solid ${TB_INK}20`, borderRadius: 3, cursor: 'pointer' }}
+                  style={{ width: 36, height: 36, padding: 3, border: `1px solid ${encre}20`, borderRadius: 3, cursor: 'pointer' }}
                 />
               </div>
 
               {/* Couleurs récentes */}
               {recentColors.length > 0 && (
                 <>
-                  <span style={{ ...mono, fontSize: 13, color: `${TB_INK}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
+                  <span style={{ ...mono, fontSize: 13, color: `${encre}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
                   <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
                     {recentColors.map(col => (
                       <button
@@ -1043,7 +1038,7 @@ export default function JeuDessin() {
                         style={{
                           width: 32, height: 32, borderRadius: 3, flex: '0 0 auto',
                           background: col,
-                          border: color.toLowerCase() === col.toLowerCase() ? `2.5px solid ${accent}` : `1px solid ${TB_INK}22`,
+                          border: color.toLowerCase() === col.toLowerCase() ? `2.5px solid ${accent}` : `1px solid ${encre}22`,
                           cursor: 'pointer',
                         }}
                       />
@@ -1064,7 +1059,7 @@ export default function JeuDessin() {
                       border: color === col
                         ? `2.5px solid ${accent}`
                         : ['#ffffff', '#e8e8e8', '#f0e4cc', '#FFF9C4', '#FCE4EC', '#F3E5F5'].includes(col)
-                          ? `1px solid ${TB_INK}22`
+                          ? `1px solid ${encre}22`
                           : '2.5px solid transparent',
                       cursor: 'pointer',
                       transition: 'transform 0.08s',
@@ -1075,7 +1070,7 @@ export default function JeuDessin() {
 
               <button onClick={() => setShowColorPanel(false)} style={{
                 width: '100%', padding: '12px',
-                ...mono, fontSize: 13, background: '#f5f0ea', color: TB_INK,
+                ...mono, fontSize: 13, background: '#f5f0ea', color: encre,
                 border: 'none', borderRadius: 3, cursor: 'pointer',
               }}>
                 FERMER
@@ -1102,10 +1097,8 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
-                <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-                  BANDE 1/{config.nbBandes}
-                </Etiquette>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
+                — BANDE 1/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur 1.
@@ -1121,9 +1114,7 @@ export default function JeuDessin() {
               onClick={(e) => e.stopPropagation()}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
             >
-              <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-                PAPIER
-              </Etiquette>
+              <span style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.24em', opacity: 0.8 }}>— PAPIER —</span>
               <div style={{ display: 'flex', gap: 10 }}>
                 {PAPERS.map(p => (
                   <button
@@ -1175,10 +1166,8 @@ export default function JeuDessin() {
               transition={{ delay: 0.3, duration: 0.6 }}
               style={{ textAlign: 'center' }}
             >
-              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
-                <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-                  BANDE {bandeIdx + 2}/{config.nbBandes}
-                </Etiquette>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
+                — BANDE {bandeIdx + 2}/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 Joueur {nextPlayerNum}.

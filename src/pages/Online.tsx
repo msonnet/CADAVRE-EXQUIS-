@@ -6,7 +6,6 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
-import { makePapierTexture, usePapier, Section } from '../components/Papier'
 
 function genCode(): string {
   const adj = ['LOUP', 'CYGNE', 'CRABE', 'OURS', 'VACHE', 'TIGRE', 'AIGLE', 'SINGE', 'VIPÈRE', 'LAPIN', 'RENARD', 'HIBOU']
@@ -36,7 +35,6 @@ export default function Online() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const papier = usePapier()
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, signInAnonymously, signOut } = useAuth()
@@ -214,7 +212,9 @@ export default function Online() {
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      <Section accent={accent} color={btnText} style={{ marginTop: 28, marginBottom: 10 }}>MODE EN LIGNE</Section>
+      <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
+        — MODE EN LIGNE —
+      </div>
 
       {/* ── NOT LOGGED IN ── */}
       {!user && (
@@ -229,7 +229,9 @@ export default function Online() {
             Chaque joueur sur son propre appareil. Tu composes un cadavre exquis à plusieurs, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.
           </p>
 
-          <Section accent={accent} color={btnText} style={{ marginBottom: 12 }}>TON NOM DE PLUME</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — TON NOM DE PLUME —
+          </div>
 
           <form onSubmit={handleAnonymousJoin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input
@@ -245,7 +247,7 @@ export default function Online() {
                 fontFamily: "'Playfair Display', serif", fontSize: 18,
                 color: encre, background: 'rgba(255,253,247,0.5)',
                 border: 'none', borderLeft: `2px solid ${encre}`, padding: '10px 14px',
-                borderRadius: '0 2px 2px 0',
+                borderRadius: '0 3px 3px 0',
                 outline: 'none', caretColor: accent, width: '100%',
               }}
             />
@@ -255,7 +257,7 @@ export default function Online() {
             <button
               type="submit"
               disabled={signingIn || !pseudo.trim()}
-              style={{ background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '1.15em 1em', border: 'none', borderRadius: 2, transform: 'rotate(-0.6deg)', boxShadow: '0 3px 10px rgba(0,0,0,0.28)', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
+              style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', borderRadius: 3, border: 'none', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
             >
               {signingIn ? 'CONNEXION…' : 'ENTRER DANS LE JEU →'}
             </button>
@@ -271,7 +273,7 @@ export default function Online() {
           </p>
           <button
             onClick={() => navigate('/profil')}
-            style={{ background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '1.15em 1em', border: 'none', borderRadius: 2, transform: 'rotate(-0.6deg)', boxShadow: '0 3px 10px rgba(0,0,0,0.28)', cursor: 'pointer' }}
+            style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: 'none', cursor: 'pointer' }}
           >
             CRÉER MON PROFIL →
           </button>
@@ -283,28 +285,22 @@ export default function Online() {
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
           {/* Profil courant */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-            ...makePapierTexture(papier.bg),
-            borderRadius: 4,
-            boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
-            transform: 'rotate(-0.5deg)',
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: `0.5px solid ${encre}20` }}>
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt={profile.pseudo}
-                style={{ width: 48, height: 48, borderRadius: 2, objectFit: 'cover', border: `1px solid ${accent}40` }}
+                style={{ width: 48, height: 48, borderRadius: 3, objectFit: 'cover', border: `1px solid ${accent}40` }}
               />
             ) : (
-              <div style={{ width: 48, height: 48, borderRadius: 2, background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 3, background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 22, color: accent }}>
                   {profile.pseudo[0]?.toUpperCase()}
                 </span>
               </div>
             )}
             <div>
-              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 21, letterSpacing: '-0.01em', color: papier.encre }}>{profile.pseudo}</div>
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 21, letterSpacing: '-0.01em', color: encre }}>{profile.pseudo}</div>
               <button
                 onClick={() => navigate('/profil')}
                 style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -323,11 +319,9 @@ export default function Online() {
               style={{
                 width: '100%',
                 background: accent, color: btnText,
-                ...mono, fontSize: 17, textTransform: 'uppercase',
-                padding: '1.15em 1em', border: 'none', cursor: joining ? 'wait' : 'pointer',
-                borderRadius: 2,
-                transform: 'rotate(-0.6deg)',
-                boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
+                ...mono, fontSize: 17, letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '1em 1.8em', border: 'none', cursor: joining ? 'wait' : 'pointer',
+                borderRadius: 3,
                 opacity: joining ? 0.6 : 1,
               }}
             >
@@ -350,7 +344,9 @@ export default function Online() {
           {/* ── PARTIES OUVERTES (liste détaillée) ── */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <Section accent={accent} color={btnText}>PARTIES OUVERTES</Section>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+                — PARTIES OUVERTES —
+              </div>
               {/* Indicateur de connexion temps réel */}
               <motion.div
                 animate={liveConnected ? { opacity: [1, 0.4, 1] } : { opacity: 0.25 }}
@@ -371,7 +367,7 @@ export default function Online() {
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {publicRooms.map((r, i) => {
+                {publicRooms.map((r) => {
                   const placesDispo = r.player_count < r.nb_joueurs
                   return (
                     <motion.button
@@ -380,18 +376,17 @@ export default function Online() {
                       whileTap={{ scale: 0.98 }}
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '12px 16px',
-                        ...makePapierTexture(papier.bg),
-                        borderRadius: 4,
-                        border: 'none',
-                        boxShadow: '0 3px 11px rgba(0,0,0,0.28)',
-                        transform: i % 2 === 0 ? 'rotate(-0.5deg)' : 'rotate(0.5deg)',
+                        padding: '12px 14px',
+                        background: placesDispo ? `${accent}08` : `${encre}06`,
+                        border: `1px solid ${placesDispo ? accent : encre}20`,
+                        borderLeft: `3px solid ${placesDispo ? accent : `${encre}30`}`,
+                        borderRadius: 3,
                         cursor: 'pointer', textAlign: 'left', width: '100%',
                         opacity: placesDispo ? 1 : 0.55,
                       }}
                     >
                       <div>
-                        <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 24, lineHeight: 1, letterSpacing: '-0.01em', color: papier.encre, marginBottom: 3 }}>
+                        <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 24, lineHeight: 1, letterSpacing: '-0.01em', color: encre, marginBottom: 3 }}>
                           {r.code}
                         </div>
                         <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em' }}>
@@ -399,10 +394,10 @@ export default function Online() {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ ...mono, fontSize: 13, color: placesDispo ? accent : papier.encre, fontWeight: 700 }}>
+                        <div style={{ ...mono, fontSize: 13, color: placesDispo ? accent : encre, fontWeight: 700 }}>
                           {r.player_count}/{r.nb_joueurs}
                         </div>
-                        <div style={{ ...mono, fontSize: 13, color: papier.encre, opacity: 0.5 }}>
+                        <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>
                           {placesDispo ? 'REJOINDRE' : 'COMPLET'}
                         </div>
                       </div>
@@ -416,14 +411,16 @@ export default function Online() {
           {/* ── NOUVELLE PARTIE — seulement quand des salons existent déjà ── */}
           {publicRooms.length > 0 && (
             <div>
-              <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>NOUVELLE PARTIE</Section>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+                — NOUVELLE PARTIE —
+              </div>
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
                 Crée un salon et partage le code, ou laisse-le public pour que d'autres rejoignent.
               </p>
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, borderRadius: 2, transform: 'rotate(-0.4deg)', cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
+                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, borderRadius: 3, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
               >
                 {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
               </button>
@@ -435,7 +432,9 @@ export default function Online() {
 
           {/* ── REJOINDRE PAR CODE ── */}
           <div>
-            <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>REJOINDRE PAR CODE</Section>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+              — REJOINDRE PAR CODE —
+            </div>
             <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input
                 type="text"
@@ -450,7 +449,7 @@ export default function Online() {
                   border: 'none',
                   borderLeft: `2px solid ${encre}`,
                   borderBottom: `1px solid ${encre}50`,
-                  borderRadius: '0 2px 2px 0',
+                  borderRadius: '0 3px 3px 0',
                   padding: '12px 14px',
                   outline: 'none', caretColor: accent, letterSpacing: '0.15em',
                   width: '100%',
@@ -462,7 +461,7 @@ export default function Online() {
               <button
                 type="submit"
                 disabled={joining || !joinCode.trim()}
-                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', border: `1px solid ${encre}40`, borderRadius: 2, transform: 'rotate(-0.4deg)', cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
+                style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', border: `1px solid ${encre}`, borderRadius: 3, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
               >
                 {joining ? 'RECHERCHE…' : 'REJOINDRE'}
               </button>

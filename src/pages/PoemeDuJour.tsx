@@ -6,8 +6,6 @@ import { Decor, useReve } from '../reve'
 import { supabase } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { PapierCard, Etiquette, usePapier } from '../components/Papier'
-import PapierDeplie from '../components/PapierDeplie'
 
 interface PoemeCase { texte: string }
 interface PoemePayload { cases: PoemeCase[]; structureId: string; titre?: string }
@@ -36,8 +34,6 @@ export default function PoemeDuJour() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const papier = usePapier()
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [item, setItem] = useState<GalleryItem | null>(null)
@@ -127,81 +123,80 @@ export default function PoemeDuJour() {
       )}
 
       {!loading && item && (
-        <PapierDeplie bordure={`${accent}55`} papierBg={papier.bg} duration={1.6} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <PapierCard rotation={0} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {/* Poem title */}
-              <div style={{ marginBottom: 12 }}>
-                <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-                  {item.titre ? item.titre.toUpperCase() : 'POÈME DU JOUR'}
-                </Etiquette>
-              </div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+        >
+          {/* Poem title */}
+          {item.titre && (
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+              — {item.titre.toUpperCase()} —
+            </div>
+          )}
 
-              {/* Poem text — lines appear after the unfold settles */}
-              <div style={{ flex: 1 }}>
-                {lignes.map((ligne, i) => (
-                  <motion.p
-                    key={i}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 + i * 0.18, duration: 0.45, ease: 'easeOut' }}
-                    style={{
-                      fontFamily: "'Playfair Display', serif",
-                      fontStyle: 'italic',
-                      fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)',
-                      lineHeight: 1.65,
-                      color: papier.encre,
-                      margin: '0 0 2px',
-                    }}
-                  >
-                    {ligne}
-                  </motion.p>
-                ))}
-              </div>
-
-              {/* Attribution */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.1 + lignes.length * 0.18, duration: 0.5 }}
-                style={{ marginTop: 28, paddingTop: 16, borderTop: `0.5px solid ${papier.encre}20` }}
+          {/* Poem text */}
+          <div style={{ flex: 1 }}>
+            {lignes.map((ligne, i) => (
+              <motion.p
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.18, duration: 0.5, ease: 'easeOut' }}
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontStyle: 'italic',
+                  fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)',
+                  lineHeight: 1.65,
+                  color: encre,
+                  margin: '0 0 2px',
+                }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                  {item.author_avatar ? (
-                    <img src={item.author_avatar} alt={item.author_pseudo} style={{ width: 32, height: 32, borderRadius: 3, objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: 3, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 17, color: accent }}>
-                        {item.author_pseudo[0]?.toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <div>
-                    <div style={{ ...mono, fontSize: 13, color: papier.encre, fontWeight: 700 }}>{item.author_pseudo}</div>
-                    <div style={{ ...mono, fontSize: 11, color: papier.encre, opacity: 0.45, marginTop: 2 }}>{date}</div>
-                  </div>
-                </div>
+                {ligne}
+              </motion.p>
+            ))}
+          </div>
 
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button
-                    onClick={partager}
-                    style={{
-                      flex: 1, ...mono, fontSize: 13, background: accent, color: btnText, border: 'none',
-                      borderRadius: 2, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em',
-                      transform: 'rotate(-0.6deg)', boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
-                    }}
-                  >
-                    {partagé ? '✓ COPIÉ' : 'PARTAGER'}
-                  </button>
-                  <button
-                    onClick={() => { jouer('clic'); navigate('/galerie') }}
-                    style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: papier.encre, border: `1px solid ${papier.encre}30`, borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
-                  >
-                    GALERIE →
-                  </button>
+          {/* Attribution */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 + lignes.length * 0.18, duration: 0.5 }}
+            style={{ marginTop: 28, paddingTop: 16, borderTop: `0.5px solid ${encre}20` }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+              {item.author_avatar ? (
+                <img src={item.author_avatar} alt={item.author_pseudo} style={{ width: 32, height: 32, borderRadius: 3, objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: 32, height: 32, borderRadius: 3, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 17, color: accent }}>
+                    {item.author_pseudo[0]?.toUpperCase()}
+                  </span>
                 </div>
-              </motion.div>
-            </PapierCard>
-        </PapierDeplie>
+              )}
+              <div>
+                <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700 }}>{item.author_pseudo}</div>
+                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.45, marginTop: 2 }}>{date}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={partager}
+                style={{ flex: 1, ...mono, fontSize: 13, background: accent, color: '#0f0805', border: 'none', borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em' }}
+              >
+                {partagé ? '✓ COPIÉ' : 'PARTAGER'}
+              </button>
+              <button
+                onClick={() => { jouer('clic'); navigate('/galerie') }}
+                style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: encre, border: `1px solid ${encre}30`, borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
+              >
+                GALERIE →
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </PageTransition>
   )

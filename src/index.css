@@ -191,6 +191,25 @@
     color: var(--reve-ink-soft);
   }
 
+  /* Bouton principal — utilisé par l'écran de jeu (Jeu.tsx) */
+  .btn-primaire {
+    font-family: 'Raleway', sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 0.95em 1.7em;
+    border: none;
+    border-radius: 3px;
+    background: var(--reve-accent);
+    color: var(--reve-button-text);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .btn-primaire:hover { background: var(--reve-accent-hover); }
+  .btn-primaire:active { transform: scale(0.98); }
+  .btn-primaire:disabled { opacity: 0.45; cursor: not-allowed; }
+
 
   /* Champ d'écriture */
   .champ-carnet {

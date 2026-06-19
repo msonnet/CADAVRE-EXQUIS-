@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { makePapierTexture, usePapier, Section } from '../components/Papier'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 
 const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
@@ -82,23 +81,8 @@ export default function Configuration() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const papier = usePapier()
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
-
-  // Onglet de choix : l'option active devient une petite étiquette d'accent
-  // collée (aplat plein + ombre + léger pivot), les autres restent en mode
-  // éditorial discret — même grammaire de collage que l'accueil.
-  const ongletStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1, padding: '9px 4px', minHeight: 44, borderRadius: 2,
-    border: `0.5px solid ${active ? 'transparent' : `${encre}20`}`,
-    background: active ? accent : 'transparent',
-    boxShadow: active ? '0 2px 6px rgba(0,0,0,0.22)' : 'none',
-    transform: active ? 'rotate(-0.8deg)' : 'none',
-    ...mono, fontSize: 13, fontWeight: active ? 800 : 400,
-    color: active ? btnText : `${encre}80`,
-    cursor: 'pointer', transition: 'all 0.15s',
-  })
 
   function demarrer() {
     jouer('demarrage')
@@ -125,7 +109,9 @@ export default function Configuration() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── SECTION LABEL ── */}
-        <Section accent={accent} color={btnText} style={{ marginTop: 24, marginBottom: 10 }}>PRÉPARATIFS</Section>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
+          — PRÉPARATIFS —
+        </div>
 
         {/* ── TITLE ── */}
         <motion.div
@@ -152,10 +138,6 @@ export default function Configuration() {
         <div className="flex flex-col gap-2 mb-8">
           {STRUCTURES.map((s, i) => {
             const active = config.structureId === s.id
-            // les trois structures sont TOUTES des fragments de papier découpés
-            // (même matière), seule l'emphase change avec la sélection — sinon
-            // le choix actif a l'air d'être le seul collage du lot, les deux
-            // autres lisant comme une simple liste éditoriale dépareillée.
             return (
               <motion.button
                 key={s.id}
@@ -167,28 +149,26 @@ export default function Configuration() {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: 14,
-                  padding: active ? '14px 16px' : '12px 14px',
+                  padding: '12px 14px',
+                  background: active ? `${accent}12` : 'transparent',
+                  border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                  borderLeft: `3px solid ${active ? accent : 'transparent'}`,
+                  borderRadius: 3,
                   cursor: 'pointer',
                   textAlign: 'left',
-                  transition: 'box-shadow 0.2s, transform 0.2s, opacity 0.2s',
-                  ...makePapierTexture(papier.bg, i % 4),
-                  borderRadius: 4,
-                  border: 'none',
-                  opacity: active ? 1 : 0.62,
-                  transform: active ? 'rotate(-0.5deg)' : 'none',
-                  boxShadow: active ? '0 3px 11px rgba(0,0,0,0.28)' : '0 1px 3px rgba(0,0,0,0.16)',
+                  transition: 'all 0.2s',
                 }}
               >
                 <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 26, paddingTop: 2 }}>
                   {s.romain}.
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: papier.encre, marginBottom: 3 }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 3 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 13, fontWeight: 600, color: papier.encre, opacity: 0.85, marginBottom: active ? 5 : 0 }}>{s.description}</div>
+                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
                   {active && (
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, fontSize: 17, color: papier.encre, opacity: 0.95, lineHeight: 1.55 }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
                       {s.detail}
                     </div>
                   )}
@@ -200,7 +180,9 @@ export default function Configuration() {
 
         {/* ── VISIBILITÉ ── */}
         <div style={{ marginBottom: 18 }}>
-          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>VISIBILITÉ</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+            — VISIBILITÉ —
+          </div>
           <div className="flex gap-2 mb-2">
             {(['aveugle', 'dernier-mot', 'derniere-case'] as Visibilite[]).map(v => {
               const active = config.visibilite === v
@@ -208,14 +190,23 @@ export default function Configuration() {
                 <button
                   key={v}
                   onClick={() => setConfig(c => ({ ...c, visibilite: v }))}
-                  style={ongletStyle(active)}
+                  style={{
+                    flex: 1, padding: '8px 4px', minHeight: 44,
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
+                    background: 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 13,
+                    color: active ? accent : `${encre}80`,
+                    transition: 'all 0.15s',
+                  }}
                 >
                   {v === 'aveugle' ? 'AVEUGLE' : v === 'dernier-mot' ? 'UN MOT' : 'UNE CASE'}
                 </button>
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.95, lineHeight: 1.55 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
             {VISIBILITE_DESC[config.visibilite]}
           </div>
         </div>
@@ -227,7 +218,9 @@ export default function Configuration() {
           transition={{ delay: 0.35 }}
           style={{ marginBottom: 18 }}
         >
-          <Section accent={accent} color={btnText} style={{ marginBottom: 12 }}>AUTOUR DE LA TABLE</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            — AUTOUR DE LA TABLE —
+          </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             {slots.map((slot, i) => (
               <button
@@ -271,7 +264,7 @@ export default function Configuration() {
             <span style={{ display: 'inline-block', width: 9, height: 9, background: encre, borderRadius: 1, verticalAlign: 'middle', marginRight: 4 }} />
             une main · <span style={{ color: accent }}>✦</span> une voix IA — toucher une case pour changer
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.95, fontStyle: 'italic', lineHeight: 1.55 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {descriptionTable(joueursHumains, voixIA)}
           </div>
         </motion.div>
@@ -279,7 +272,9 @@ export default function Configuration() {
         {/* ── PREMIER JOUEUR — uniquement solo avec IA ── */}
         {voixIA > 0 && joueursHumains === 1 && (
           <div style={{ marginBottom: 18 }}>
-            <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>OUVRE LA SÉANCE</Section>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+              — OUVRE LA SÉANCE —
+            </div>
             <div className="flex gap-2">
               {(['ia', 'humain'] as const).map(p => {
                 const active = config.premierJoueur === p
@@ -287,7 +282,16 @@ export default function Configuration() {
                   <button
                     key={p}
                     onClick={() => setConfig(c => ({ ...c, premierJoueur: p }))}
-                    style={ongletStyle(active)}
+                    style={{
+                      flex: 1, padding: '8px 4px', minHeight: 44,
+                      border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                      borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                      borderRadius: 3,
+                      background: 'transparent', cursor: 'pointer',
+                      ...mono, fontSize: 13,
+                      color: active ? accent : `${encre}80`,
+                      transition: 'all 0.15s',
+                    }}
                   >
                     {p === 'ia' ? 'VOIX IA' : 'JOUEUR'}
                   </button>
@@ -299,7 +303,9 @@ export default function Configuration() {
 
         {/* ── MODE ── */}
         <div style={{ marginBottom: 18 }}>
-          <Section accent={accent} color={btnText} style={{ marginBottom: 10 }}>MODE</Section>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+            — MODE —
+          </div>
           <div className="flex gap-2">
             {(['standard', 'hypnotique'] as const).map(m => {
               const active = config.mode === m
@@ -307,14 +313,23 @@ export default function Configuration() {
                 <button
                   key={m}
                   onClick={() => setConfig(c => ({ ...c, mode: m }))}
-                  style={ongletStyle(active)}
+                  style={{
+                    flex: 1, padding: '8px 4px', minHeight: 44,
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
+                    background: 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 13,
+                    color: active ? accent : `${encre}80`,
+                    transition: 'all 0.15s',
+                  }}
                 >
                   {m === 'standard' ? 'STANDARD' : 'HYPNOTIQUE'}
                 </button>
               )
             })}
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.95, lineHeight: 1.55, marginTop: 8 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55, marginTop: 8 }}>
             {MODE_DESC[config.mode]}
           </div>
         </div>
@@ -340,9 +355,7 @@ export default function Configuration() {
               padding: '1.15em 1em',
               border: 'none', cursor: 'pointer',
               gap: 2,
-              borderRadius: 2,
-              transform: 'rotate(-0.6deg)',
-              boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
+              borderRadius: 3,
             }}
           >
             <span>Commencer la séance</span>

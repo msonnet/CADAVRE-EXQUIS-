@@ -6,19 +6,6 @@ import { Decor, useReve } from '../reve'
 import { supabase, getReactorKey } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { useAuth } from '../hooks/useAuth'
-import { Etiquette } from '../components/Papier'
-
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 const PAGE_SIZE = 20
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
@@ -364,7 +351,9 @@ export default function Galerie() {
                 display: 'flex', flexDirection: 'column', gap: 16,
               }}
             >
-              <Section accent={accent} color={btnText}>SIGNALER CE CONTENU</Section>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+                — SIGNALER CE CONTENU —
+              </div>
 
               {reportDone ? (
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85 }}>
@@ -505,7 +494,9 @@ export default function Galerie() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <Section accent={accent} color={btnText} style={{ marginTop: 20, marginBottom: 8 }}>GALERIE</Section>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+          — GALERIE —
+        </div>
 
         {/* ── TITRE ── */}
         <motion.div

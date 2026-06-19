@@ -12,19 +12,6 @@ import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
-import { PapierCard, Etiquette, usePapier } from '../components/Papier'
-
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
@@ -61,7 +48,6 @@ export default function PoemeDetail() {
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
   const { profile } = useAuth()
-  const papier = usePapier()
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -323,7 +309,9 @@ export default function PoemeDetail() {
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
-        <Section accent={accent} color={btnText} style={{ marginTop: 20, marginBottom: 8 }}>FEUILLET</Section>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
+          — FEUILLET —
+        </div>
 
         {/* ── TITRE éditable ── */}
         <motion.div
@@ -423,35 +411,31 @@ export default function PoemeDetail() {
           transition={{ delay: 0.35, duration: 0.7 }}
           style={{ marginBottom: 16 }}
         >
-          <PapierCard rotation={-0.5} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '16px 16px 12px' }}>
-            <div style={{ marginBottom: 12 }}>
-              <Etiquette bg={accent} color={btnText} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-                LE CADAVRE
-              </Etiquette>
-            </div>
-            <div style={{ fontFamily: "'Playfair Display', serif", color: papier.encre, fontSize: 17, lineHeight: 1.7 }}>
-              {lettrine && (
-                <span style={{
-                  fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
-                  fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
-                  lineHeight: 0.85, color: accent,
-                  float: 'left', marginRight: 6, marginTop: 4,
-                }}>
-                  {lettrine}
-                </span>
-              )}
-              {resteLigne0 && <span>{resteLigne0}</span>}
-              {lignes.slice(1).map((ligne, i) => (
-                <React.Fragment key={i}>
-                  <br />
-                  {ligne || ' '}
-                </React.Fragment>
-              ))}
-            </div>
-            <div style={{ ...mono, fontSize: 13, color: papier.encre, opacity: 0.65, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${papier.encre}20` }}>
-              {dateStr} · {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
-            </div>
-          </PapierCard>
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+            — LE CADAVRE —
+          </div>
+          <div style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.7 }}>
+            {lettrine && (
+              <span style={{
+                fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
+                fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
+                lineHeight: 0.85, color: accent,
+                float: 'left', marginRight: 6, marginTop: 4,
+              }}>
+                {lettrine}
+              </span>
+            )}
+            {resteLigne0 && <span>{resteLigne0}</span>}
+            {lignes.slice(1).map((ligne, i) => (
+              <React.Fragment key={i}>
+                <br />
+                {ligne || ' '}
+              </React.Fragment>
+            ))}
+          </div>
+          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}15` }}>
+            {dateStr} · {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
+          </div>
         </motion.div>
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />

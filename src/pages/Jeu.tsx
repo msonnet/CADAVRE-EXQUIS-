@@ -13,22 +13,6 @@ import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
-import { Etiquette, PapierCard, usePapier } from '../components/Papier'
-
-// Intitulé de section = étiquette d'accent collée (même langage que
-// Configuration.tsx / ConfigurationDessin.tsx), à la place de l'ancien filet
-// typographique « — TITRE — ».
-function Section({ children, accent, color, style }: {
-  children: React.ReactNode; accent: string; color: string; style?: React.CSSProperties
-}) {
-  return (
-    <div style={style}>
-      <Etiquette bg={accent} color={color} rotation={-1.4} style={{ fontSize: 11, letterSpacing: '0.14em' }}>
-        {children}
-      </Etiquette>
-    </div>
-  )
-}
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -331,16 +315,6 @@ export default function Jeu() {
     ? getContexteVisible(cases, config.visibilite)
     : null
 
-  const sc = seance?.colorSchema
-  const accent = sc?.hex ?? '#b22c20'
-  const encre = sc?.encre ?? '#0f0805'
-  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const papier = usePapier()
-  const colorLabel = sc?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
-  const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
-  const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
-
   // ─── Fonctions utilitaires ─────────────────────────────────────────────────
 
   function choisirSansDuplique(texte: string, type: string): { texte: string; remplace: boolean } {
@@ -629,13 +603,7 @@ export default function Jeu() {
         >
           <button
             onClick={() => setAttendPassage(false)}
-            style={{
-              background: accent, color: btnText,
-              ...mono, fontSize: 17, fontWeight: 700, textTransform: 'uppercase',
-              padding: '0.95em 1.7em', border: 'none', cursor: 'pointer',
-              borderRadius: 2, transform: 'rotate(-0.6deg)',
-              boxShadow: '0 3px 10px rgba(0,0,0,0.28)',
-            }}
+            className="btn-primaire"
           >
             {multiJoueurs ? "C'est à moi →" : "C'est parti →"}
           </button>
@@ -648,6 +616,15 @@ export default function Jeu() {
     defActuelle?.type === 'proposition' &&
     inputValue.length > 0 &&
     !inputValue.includes('?')
+
+  const sc = seance?.colorSchema
+  const accent = sc?.hex ?? '#b22c20'
+  const encre = sc?.encre ?? '#0f0805'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const colorLabel = sc?.name.toUpperCase() ?? ''
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
+  const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
+  const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
 
   // ── IA screen ──────────────────────────────────────────────────────────────
   if (participantActuel?.type === 'ia' && (iaChargement || iaTexteRevele !== null)) {
@@ -755,10 +732,8 @@ export default function Jeu() {
           </div>
 
           {/* Footer */}
-          <div style={{ textAlign: 'center', paddingBottom: 8 }}>
-            <Etiquette bg={accent} color={btnText} rotation={-1.2} style={{ fontSize: 11, letterSpacing: '0.16em' }}>
-              {iaChargement ? 'NE PAS LA DÉRANGER' : 'SES MOTS RESTENT SCELLÉS'}
-            </Etiquette>
+          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
+            {iaChargement ? '— NE PAS LA DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
           </div>
         </div>
       </PageTransition>
@@ -794,31 +769,23 @@ export default function Jeu() {
             transition={{ duration: 0.35 }}
             className="flex flex-col flex-1"
           >
-            {/* Previous voice — carton de papier déchiré, étiquette agrafée
-                au coin (même langage que les citations de Configuration*) */}
+            {/* Previous voice */}
             {contexteVisible && (
               <motion.div
-                style={{ position: 'relative', marginTop: 20, marginBottom: 26 }}
+                style={{ borderLeft: `3px solid ${accent}`, paddingLeft: 12, marginTop: 20, marginBottom: 18 }}
                 initial={{ opacity: 0, x: -4 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <PapierCard rotation={-0.7} bord="net" bordure={`${accent}55`} papierBg={papier.bg} style={{ padding: '12px 14px 14px' }}>
-                  <p style={{
-                    fontFamily: "'Playfair Display', serif", fontSize: 17, fontStyle: 'italic',
-                    color: papier.encre, lineHeight: 1.5,
-                  }}>
-                    « {contexteVisible} »
-                  </p>
-                </PapierCard>
-                <Etiquette
-                  bg={accent}
-                  color={btnText}
-                  rotation={2}
-                  style={{ position: 'absolute', left: 14, bottom: -11, fontSize: 11, padding: '4px 9px' }}
-                >
-                  VOIX PRÉCÉDENTE · SCELLÉE
-                </Etiquette>
+                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                  — VOIX PRÉCÉDENTE · SCELLÉE —
+                </div>
+                <p style={{
+                  fontFamily: "'Playfair Display', serif", fontSize: 17,
+                  color: encre, lineHeight: 1.5,
+                }}>
+                  « {contexteVisible} »
+                </p>
               </motion.div>
             )}
 
@@ -829,7 +796,9 @@ export default function Jeu() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <Section accent={accent} color={btnText} style={{ marginBottom: 6 }}>CONSIGNE</Section>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                — CONSIGNE —
+              </div>
               <div
                 className="font-fraunces font-black"
                 style={{
@@ -892,19 +861,12 @@ export default function Jeu() {
                     transition: 'opacity 0.6s', userSelect: 'none',
                   }}
                 >{inputValue}</div>
-                <Section accent={accent} color={btnText} style={{ marginBottom: 8 }}>ÉCRIS ICI · TOI SEUL LE VERRAS</Section>
+                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+                  — ÉCRIS ICI · TOI SEUL LE VERRAS —
+                </div>
                 <textarea
                   className="champ-carnet w-full min-h-[96px] resize-none"
-                  style={{
-                    borderLeftColor: accent,
-                    fontFamily: "'Courier Prime', 'Courier New', Courier, monospace",
-                    fontStyle: 'normal',
-                    fontWeight: 400,
-                    fontSize: '1.1rem',
-                    letterSpacing: '0.02em',
-                    backgroundImage: `repeating-linear-gradient(transparent, transparent 32px, ${encre}14 32px, ${encre}14 33px)`,
-                    backgroundPosition: '0 11px',
-                  }}
+                  style={{ borderLeftColor: accent }}
                   value={inputValue}
                   onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
                   onKeyDown={handleKeyDown}
@@ -951,9 +913,7 @@ export default function Jeu() {
                   cursor: !inputValue.trim() ? 'not-allowed' : 'pointer',
                   transition: 'background 0.2s',
                   gap: 2,
-                  borderRadius: 2,
-                  transform: inputValue.trim() ? 'rotate(-0.6deg)' : 'none',
-                  boxShadow: inputValue.trim() ? '0 3px 10px rgba(0,0,0,0.28)' : 'none',
+                  borderRadius: 3,
                 }}
               >
                 <span>Sceller cette voix</span>
@@ -965,7 +925,9 @@ export default function Jeu() {
             <div style={{ textAlign: 'center', paddingBottom: 4 }}>
               {!confirmAbandon ? (
                 <>
-                  <Section accent={accent} color={btnText} style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}>IRRÉVERSIBLE</Section>
+                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, marginBottom: 8 }}>
+                    — IRRÉVERSIBLE —
+                  </div>
                   <button
                     onClick={() => setConfirmAbandon(true)}
                     style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
