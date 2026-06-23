@@ -286,12 +286,14 @@ export default function Jeu() {
   const [iaChargement, setIaChargement] = useState(false)
   const [iaTexteRevele, setIaTexteRevele] = useState<string | null>(null)
   const [iaFallbackRevele, setIaFallbackRevele] = useState(false)
+  const [iaAttendValidation, setIaAttendValidation] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
   const [attendPassage, setAttendPassage] = useState(false)
   const [confirmAbandon, setConfirmAbandon] = useState(false)
   const [sealing, setSealing] = useState(false)
 
   const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
+  const estDecouverte = !!sessionStorage.getItem('decouverte')
 
   const casesTraitees  = useRef(new Set<number>(b ? Array.from({ length: b.caseIndex }, (_, i) => i) : []))
   const sauvegardeFaite = useRef(false)
@@ -411,11 +413,15 @@ export default function Jeu() {
       setIaChargement(false)
       setIaTexteRevele(texte)
       setIaFallbackRevele(estFallback)
-      if (tutActif && tutEtape === T_JEU_IA) {
+      // En partie découverte OU pendant le coach tutoriel T_JEU_IA :
+      // le passage est toujours manuel — jamais de timer auto.
+      if (estDecouverte || (tutActif && tutEtape === T_JEU_IA)) {
+        setIaAttendValidation(true)
         iaAvancePendingRef.current = () => {
           avancer(idx, def, texte, slotNum, estFallback)
           setIaTexteRevele(null)
           setIaFallbackRevele(false)
+          setIaAttendValidation(false)
         }
       } else {
         revealTimerRef.current = setTimeout(() => {
@@ -766,6 +772,36 @@ export default function Jeu() {
 
             <div style={{ flex: 1 }} />
           </div>
+
+          {/* Bouton de passage manuel (découverte hors coach tutoriel) */}
+          {iaAttendValidation && !(tutActif && tutEtape === T_JEU_IA) && (
+            <motion.div
+              className="px-5 pb-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <button
+                onClick={() => {
+                  if (iaAvancePendingRef.current) {
+                    iaAvancePendingRef.current()
+                    iaAvancePendingRef.current = null
+                  }
+                }}
+                className="w-full flex flex-col items-center justify-center"
+                style={{
+                  background: accent, color: btnText,
+                  ...mono, fontSize: 17, textTransform: 'uppercase',
+                  padding: '1.1em 1em', border: 'none', cursor: 'pointer',
+                  gap: 2, borderRadius: 3,
+                }}
+              >
+                <span>Écrire la suite</span>
+                <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
+              </button>
+            </motion.div>
+          )}
 
           {/* Footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
