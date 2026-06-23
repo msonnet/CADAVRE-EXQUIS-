@@ -8,3 +8,4 @@ dist-ssr
 .DS_Store
 *.pem
 test-results/
+.claude/worktrees/
