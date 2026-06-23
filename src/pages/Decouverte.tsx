@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import type { ConfigPartie } from '../types'
+import { activerTutoriel } from '../hooks/useTutoriel'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
 
@@ -41,6 +42,7 @@ export default function Decouverte() {
     jouer('demarrage')
     sessionStorage.setItem('config-partie', JSON.stringify(CONFIG_DECOUVERTE))
     sessionStorage.setItem('decouverte', '1')
+    activerTutoriel()
     navigate('/jeu')
   }
 

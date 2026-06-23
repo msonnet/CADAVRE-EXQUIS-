@@ -12,6 +12,8 @@ import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { useTutoriel, T_DETAIL, TUTORIEL_TOTAL } from '../hooks/useTutoriel'
+import TutorielCoach from '../components/TutorielCoach'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
@@ -56,6 +58,8 @@ export default function PoemeDetail() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
+  const bg = fond  // already computed as `const fond = c?.bg ?? '#faf8f3'`
 
   useEffect(() => {
     if (!id) return
@@ -90,6 +94,10 @@ export default function PoemeDetail() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [pleinEcran])
+
+  useEffect(() => {
+    if (tutActif && tutEtape === T_DETAIL && published) tutAvancer()
+  }, [published]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function sauvegarderTitre() {
     if (!poeme || !id) return
@@ -634,6 +642,19 @@ export default function PoemeDetail() {
             )}
           </AnimatePresence>
         </div>
+
+        {tutActif && tutEtape === T_DETAIL && (
+          <TutorielCoach
+            visible
+            etape={tutEtape}
+            total={TUTORIEL_TOTAL}
+            titre="Publier dans la galerie"
+            corps="Ta galerie personnelle et la galerie communautaire s'enrichissent de chaque publication. Partage ce poème avec tous les joueurs."
+            cible="✦ PUBLIER DANS LA GALERIE"
+            onPasser={tutTerminer}
+            accent={accent} encre={encre} bg={bg}
+          />
+        )}
 
       </div>
     </PageTransition>

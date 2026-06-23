@@ -13,6 +13,8 @@ import { Decor, useReve } from '../reve'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import { vibrer } from '../utils/haptics'
+import { useTutoriel, T_FIN_REVEL, T_FIN_IMAGE, T_FIN_SHARE, T_FIN_RECUEIL, TUTORIEL_TOTAL } from '../hooks/useTutoriel'
+import TutorielCoach from '../components/TutorielCoach'
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -64,6 +66,7 @@ export default function FinDePartie() {
   const [lettrineChutee, setLettrineChutee] = useState(false)
   const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
     if (!pleinEcran) return
@@ -112,6 +115,15 @@ export default function FinDePartie() {
     return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // When illustration is generated → advance to share step
+  useEffect(() => {
+    if (tutActif && tutEtape === T_FIN_IMAGE && illustrationUrl) tutAvancer()
+  }, [illustrationUrl]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When sharing done → advance to recueil step
+  useEffect(() => {
+    if (tutActif && tutEtape === T_FIN_SHARE && partageOk) tutAvancer()
+  }, [partageOk]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function choisirStyle(style: string) {
     if (!poeme || generatingIllustration) return
@@ -258,7 +270,7 @@ export default function FinDePartie() {
         )}
       </AnimatePresence>
 
-      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+      <div style={{ position: 'relative', zIndex: 10, paddingBottom: tutActif ? 240 : 0 }} className="flex flex-col flex-1">
 
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
@@ -473,7 +485,7 @@ export default function FinDePartie() {
           whileTap={{ scale: 0.98 }}
         >
           <button
-            onClick={() => navigate('/bibliotheque')}
+            onClick={() => { if (tutActif && tutEtape === T_FIN_RECUEIL) tutAvancer(); navigate('/bibliotheque') }}
             className="w-full flex flex-col items-center justify-center"
             style={{
               background: accent, color: btnText,
@@ -707,6 +719,55 @@ export default function FinDePartie() {
             — NOUVELLE PARTIE —
           </button>
         </motion.div>
+
+        {tutActif && tutEtape === T_FIN_REVEL && revealReady && (
+          <TutorielCoach
+            visible
+            etape={tutEtape}
+            total={TUTORIEL_TOTAL}
+            titre="La révélation"
+            corps="Voilà ce que vous avez créé à l'aveugle. Chaque fragment a été écrit sans voir les autres — c'est l'assemblage qui fait la surprise."
+            onCompris={tutAvancer}
+            onPasser={tutTerminer}
+            accent={accent} encre={encre} bg={bg}
+          />
+        )}
+        {tutActif && tutEtape === T_FIN_IMAGE && (
+          <TutorielCoach
+            visible
+            etape={tutEtape}
+            total={TUTORIEL_TOTAL}
+            titre="Illustrer le poème"
+            corps="L'IA peut générer une illustration de ton poème. Choisis un style artistique — aquarelle, fusain, gravure…"
+            cible="— IMAGE —"
+            onPasser={tutTerminer}
+            accent={accent} encre={encre} bg={bg}
+          />
+        )}
+        {tutActif && tutEtape === T_FIN_SHARE && (
+          <TutorielCoach
+            visible
+            etape={tutEtape}
+            total={TUTORIEL_TOTAL}
+            titre="Partager le poème"
+            corps="Le jeu compose une vidéo animée avec ton poème et l'illustration. Partage-la sur Instagram, WhatsApp, ou par SMS."
+            cible="— PARTAGER —"
+            onPasser={tutTerminer}
+            accent={accent} encre={encre} bg={bg}
+          />
+        )}
+        {tutActif && tutEtape === T_FIN_RECUEIL && (
+          <TutorielCoach
+            visible
+            etape={tutEtape}
+            total={TUTORIEL_TOTAL}
+            titre="Sceller au recueil"
+            corps="Sauvegarde ce poème dans ta bibliothèque personnelle pour le retrouver et le relire."
+            cible="SCELLER AU RECUEIL"
+            onPasser={tutTerminer}
+            accent={accent} encre={encre} bg={bg}
+          />
+        )}
 
       </div>
     </PageTransition>

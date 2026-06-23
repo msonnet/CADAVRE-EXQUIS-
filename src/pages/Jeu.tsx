@@ -14,6 +14,8 @@ import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
+import { useTutoriel, T_JEU_1, T_JEU_IA, T_JEU_2, TUTORIEL_TOTAL } from '../hooks/useTutoriel'
+import TutorielCoach from '../components/TutorielCoach'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -316,6 +318,8 @@ export default function Jeu() {
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
   const seance = useReve()
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
 
   // ─── Dérivés ───────────────────────────────────────────────────────────────
 
@@ -455,6 +459,14 @@ export default function Jeu() {
     if (timerRef.current) clearInterval(timerRef.current)
     soumettreHypnotique()
   }, [tempsRestant]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Avancement automatique du tutoriel selon la progression des cases
+  useEffect(() => {
+    if (!tutActif) return
+    if (tutEtape === T_JEU_1 && caseIndex === 1) tutAvancer()     // human done → IA turn
+    if (tutEtape === T_JEU_IA && caseIndex === 2) tutAvancer()    // IA done → human 2
+    if (tutEtape === T_JEU_2 && caseIndex >= total) tutAvancer()  // human 2 done → fin
+  }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sauvegarde et navigation en fin de partie
   useEffect(() => {
@@ -744,6 +756,18 @@ export default function Jeu() {
             <div style={{ flex: 1 }} />
           </div>
 
+          {tutActif && tutEtape === T_JEU_IA && (
+            <TutorielCoach
+              visible
+              etape={tutEtape}
+              total={TUTORIEL_TOTAL}
+              titre="La voix mystérieuse écrit…"
+              corps="Une voix secrète complète le cadavre à l'aveugle. Tu ne vois pas ce qu'elle écrit — c'est la règle du jeu."
+              onPasser={tutTerminer}
+              accent={accent} encre={encre} bg={bg}
+            />
+          )}
+
           {/* Footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
             {iaChargement ? '— NE PAS LA DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
@@ -757,7 +781,7 @@ export default function Jeu() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="jeu" />
-      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+      <div style={{ position: 'relative', zIndex: 10, paddingBottom: tutActif ? 220 : 0 }} className="flex flex-col flex-1">
 
         {/* Header */}
         <div className="flex justify-between items-baseline">
@@ -827,7 +851,7 @@ export default function Jeu() {
                 </div>
               )}
               {example && (
-                <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.62, marginBottom: 14, lineHeight: 1.55 }}>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.92, fontWeight: 700, marginBottom: 14, lineHeight: 1.55 }}>
                   {example}
                 </div>
               )}
@@ -959,6 +983,30 @@ export default function Jeu() {
                 </div>
               )}
             </div>
+            {tutActif && tutEtape === T_JEU_1 && (
+              <TutorielCoach
+                visible
+                etape={tutEtape}
+                total={TUTORIEL_TOTAL}
+                titre="Ton premier fragment"
+                corps="Le cadavre exquis se construit à l'aveugle : chacun écrit sa partie sans voir les autres. Écris quelque chose d'inattendu dans le champ ci-dessus."
+                cible="SCELLER CETTE VOIX"
+                onPasser={tutTerminer}
+                accent={accent} encre={encre} bg={bg}
+              />
+            )}
+            {tutActif && tutEtape === T_JEU_2 && (
+              <TutorielCoach
+                visible
+                etape={tutEtape}
+                total={TUTORIEL_TOTAL}
+                titre="Ton deuxième fragment"
+                corps="Continue sans savoir ce que la voix a écrit. L'assemblage aveugle produira quelque chose d'imprévisible."
+                cible="SCELLER CETTE VOIX"
+                onPasser={tutTerminer}
+                accent={accent} encre={encre} bg={bg}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

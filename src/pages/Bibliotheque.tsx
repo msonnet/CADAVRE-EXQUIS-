@@ -6,6 +6,8 @@ import { chargerPoemes, chargerDessins } from '../db'
 import { Decor, useReve } from '../reve'
 import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
+import { useTutoriel, T_BIBLIO, TUTORIEL_TOTAL } from '../hooks/useTutoriel'
+import TutorielCoach from '../components/TutorielCoach'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -37,10 +39,12 @@ export default function Bibliotheque() {
   const [dessins, setDessins] = useState<DessinCadavre[]>([])
   const [chargement, setChargement] = useState(true)
   const [recherche, setRecherche] = useState('')
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const bg = c?.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
@@ -56,7 +60,7 @@ export default function Bibliotheque() {
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="biblio" />
 
-      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+      <div style={{ position: 'relative', zIndex: 10, paddingBottom: tutActif ? 220 : 0 }} className="flex flex-col flex-1">
 
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
@@ -196,7 +200,7 @@ export default function Bibliotheque() {
                 {poemesFiltres.map((poeme, i) => (
                   <motion.button
                     key={poeme.id}
-                    onClick={() => { jouer('clic'); navigate(`/bibliotheque/${poeme.id}`) }}
+                    onClick={() => { jouer('clic'); if (tutActif && tutEtape === T_BIBLIO) tutAvancer(); navigate(`/bibliotheque/${poeme.id}`) }}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
@@ -305,6 +309,19 @@ export default function Bibliotheque() {
               Nouvelle partie →
             </button>
           </motion.div>
+        )}
+
+        {tutActif && tutEtape === T_BIBLIO && (
+          <TutorielCoach
+            visible
+            etape={tutEtape}
+            total={TUTORIEL_TOTAL}
+            titre="Ton recueil"
+            corps="Tous tes poèmes sont sauvegardés ici. Tape sur un poème pour l'ouvrir, le modifier ou le publier dans la galerie."
+            cible="TAPE SUR TON POÈME"
+            onPasser={tutTerminer}
+            accent={accent} encre={encre} bg={bg}
+          />
         )}
 
       </div>
