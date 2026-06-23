@@ -13,13 +13,15 @@ export interface TutorielCoachProps {
   accent: string
   encre: string
   bg: string
+  position?: 'bottom' | 'top'
 }
 
 export default function TutorielCoach({
   visible, etape, total, titre, corps, cible, onCompris, onPasser,
-  accent, encre, bg,
+  accent, encre, bg, position = 'bottom',
 }: TutorielCoachProps) {
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
+  const isTop = position === 'top'
 
   return (
     <AnimatePresence>
@@ -31,17 +33,16 @@ export default function TutorielCoach({
           aria-live="polite"
           style={{
             position: 'fixed',
-            left: 0, right: 0, bottom: 0,
+            left: 0, right: 0,
+            ...(isTop
+              ? { top: 0, borderBottom: `2px solid ${accent}`, paddingTop: 'max(20px, env(safe-area-inset-top))', paddingBottom: 16, paddingLeft: 20, paddingRight: 20, boxShadow: `0 12px 48px ${encre}20` }
+              : { bottom: 0, borderTop: `2px solid ${accent}`, padding: '16px 20px', paddingBottom: 'max(20px, env(safe-area-inset-bottom))', boxShadow: `0 -12px 48px ${encre}20` }),
             zIndex: 500,
             background: bg,
-            borderTop: `2px solid ${accent}`,
-            padding: '16px 20px',
-            paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
-            boxShadow: `0 -12px 48px ${encre}20`,
           }}
-          initial={{ y: 140, opacity: 0 }}
+          initial={{ y: isTop ? -140 : 140, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 140, opacity: 0 }}
+          exit={{ y: isTop ? -140 : 140, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 340, damping: 34 }}
         >
           {/* Header */}

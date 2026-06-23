@@ -298,6 +298,7 @@ export default function Jeu() {
   const fallback        = useRef(makeFallbackPicker())
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const revealTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const iaAvancePendingRef = useRef<(() => void) | null>(null)
   const caseIndexSoumis = useRef(-1)
   const textesUtilises  = useRef(new Set<string>())
   const textesSession   = useRef(new Set<string>(safeParse<string[]>(sessionStorage.getItem('textes-session'), [])))
@@ -410,11 +411,19 @@ export default function Jeu() {
       setIaChargement(false)
       setIaTexteRevele(texte)
       setIaFallbackRevele(estFallback)
-      revealTimerRef.current = setTimeout(() => {
-        avancer(idx, def, texte, slotNum, estFallback)
-        setIaTexteRevele(null)
-        setIaFallbackRevele(false)
-      }, 2600)
+      if (tutActif && tutEtape === T_JEU_IA) {
+        iaAvancePendingRef.current = () => {
+          avancer(idx, def, texte, slotNum, estFallback)
+          setIaTexteRevele(null)
+          setIaFallbackRevele(false)
+        }
+      } else {
+        revealTimerRef.current = setTimeout(() => {
+          avancer(idx, def, texte, slotNum, estFallback)
+          setIaTexteRevele(null)
+          setIaFallbackRevele(false)
+        }, 2600)
+      }
     }
 
     const contexteIA = getContexteVisible(cases, config.visibilite) ?? undefined
@@ -768,7 +777,13 @@ export default function Jeu() {
           etape={T_JEU_IA} total={TUTORIEL_TOTAL}
           titre="La voix mystérieuse écrit…"
           corps="Un fragment secret est ajouté à l'aveugle. Tu ne vois pas ce qu'il contient — c'est la règle du cadavre exquis. Tape Compris quand tu es prêt à écrire la suite."
-          onCompris={tutAvancer}
+          onCompris={() => {
+            tutAvancer()
+            if (iaAvancePendingRef.current) {
+              iaAvancePendingRef.current()
+              iaAvancePendingRef.current = null
+            }
+          }}
           onPasser={tutTerminer}
           accent={accent} encre={encre} bg={bg}
         />

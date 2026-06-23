@@ -376,29 +376,6 @@ export default function FinDePartie() {
           </div>
         </motion.div>
 
-        {/* ── GUIDE DÉCOUVERTE ── */}
-        {estDecouverte && (
-          <motion.div
-            className="mb-5"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.0, duration: 0.5 }}
-            style={{ borderLeft: `2px solid ${accent}35`, paddingLeft: 14 }}
-          >
-            <p style={{
-              fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-              fontSize: 17, lineHeight: 1.6, color: encre, opacity: 0.85, marginBottom: 8,
-            }}>
-              Chaque fragment a été écrit sans voir les autres — c'est
-              l'assemblage aveugle qui produit la surprise.
-            </p>
-            <p style={{ ...mono, fontSize: 11, letterSpacing: '0.12em', color: encre, opacity: 0.5, lineHeight: 1.6 }}>
-              « Sceller au recueil » garde ce poème dans ta bibliothèque.
-              Depuis là, tu peux le partager ou le publier dans la galerie.
-            </p>
-          </motion.div>
-        )}
-
         {/* ── IMAGE (if already generated) ── */}
         {illustrationUrl && (
           <motion.div
@@ -500,33 +477,6 @@ export default function FinDePartie() {
             <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
           </button>
         </motion.div>
-
-        {/* ── PARTAGER (affiché en évidence pour la découverte) ── */}
-        {estDecouverte && (
-          <motion.div
-            className="mb-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.6, duration: 0.4 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <button
-              onClick={partager}
-              disabled={partageEnCours}
-              className="w-full flex items-center justify-center"
-              style={{
-                background: 'transparent', color: encre,
-                ...mono, fontSize: 17, textTransform: 'uppercase',
-                padding: '0.9em 1em',
-                border: `1px solid ${encre}30`,
-                cursor: partageEnCours ? 'default' : 'pointer',
-                borderRadius: 3,
-              }}
-            >
-              {partageEnCours ? '✦ Composition…' : partageOk ? '✓ Partagé' : 'Partager ce poème'}
-            </button>
-          </motion.div>
-        )}
 
         {/* ── FOOTER LINKS ── */}
         <motion.div
@@ -737,6 +687,7 @@ export default function FinDePartie() {
         titre="Illustrer le poème"
         corps="L'IA peut générer une illustration de ton poème — aquarelle, fusain, gravure… Ouvre le panneau IMAGE et choisis un style."
         cible="— IMAGE —"
+        position="top"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
@@ -746,6 +697,7 @@ export default function FinDePartie() {
         titre="Partager le poème"
         corps="Le jeu compose une vidéo animée avec ton poème. Tu peux la partager sur Instagram, WhatsApp ou par SMS — ou simplement copier le texte."
         cible="— PARTAGER —"
+        position="top"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
