@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
+import { AideInline } from '../components/SectionAide'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
@@ -778,7 +779,7 @@ export default function Jeu() {
                 transition={{ delay: 0.2 }}
               >
                 <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                  — VOIX PRÉCÉDENTE · SCELLÉE —
+                  — VOIX PRÉCÉDENTE —
                 </div>
                 <p style={{
                   fontFamily: "'Playfair Display', serif", fontSize: 17,
@@ -796,9 +797,6 @@ export default function Jeu() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                — CONSIGNE —
-              </div>
               <div
                 className="font-fraunces font-black"
                 style={{
@@ -806,15 +804,15 @@ export default function Jeu() {
                   lineHeight: 1.05,
                   letterSpacing: '-0.01em',
                   color: encre,
-                  marginBottom: subtitle ? 4 : 14,
+                  marginBottom: subtitle ? 6 : 14,
                 }}
               >
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
               </div>
               {subtitle && (
-                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginBottom: 14 }}>
+                <AideInline accent={accent} encre={encre} libelle="forme">
                   {subtitle}
-                </div>
+                </AideInline>
               )}
             </motion.div>
 
@@ -861,16 +859,13 @@ export default function Jeu() {
                     transition: 'opacity 0.6s', userSelect: 'none',
                   }}
                 >{inputValue}</div>
-                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-                  — ÉCRIS ICI · TOI SEUL LE VERRAS —
-                </div>
                 <textarea
                   className="champ-carnet w-full min-h-[96px] resize-none"
                   style={{ borderLeftColor: accent }}
                   value={inputValue}
                   onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
                   onKeyDown={handleKeyDown}
-                  placeholder="…"
+                  placeholder="Écris ici — toi seul le verras…"
                   aria-label="Ta contribution"
                   autoFocus
                   rows={3}
@@ -924,17 +919,12 @@ export default function Jeu() {
             {/* Footer + abandon */}
             <div style={{ textAlign: 'center', paddingBottom: 4 }}>
               {!confirmAbandon ? (
-                <>
-                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, marginBottom: 8 }}>
-                    — IRRÉVERSIBLE —
-                  </div>
-                  <button
-                    onClick={() => setConfirmAbandon(true)}
-                    style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    abandonner la partie
-                  </button>
-                </>
+                <button
+                  onClick={() => setConfirmAbandon(true)}
+                  style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  abandonner la partie
+                </button>
               ) : (
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
