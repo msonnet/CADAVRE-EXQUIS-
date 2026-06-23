@@ -24,6 +24,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 }
 import SplashScreen from './components/SplashScreen'
 const Accueil = React.lazy(() => import('./pages/Accueil'))
+const Decouverte = React.lazy(() => import('./pages/Decouverte'))
 const Configuration = React.lazy(() => import('./pages/Configuration'))
 const ConfigurationDessin = React.lazy(() => import('./pages/ConfigurationDessin'))
 const Jeu = React.lazy(() => import('./pages/Jeu'))
@@ -76,6 +77,7 @@ export default function App() {
           <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Accueil />} />
+              <Route path="/decouverte" element={<Decouverte />} />
               <Route path="/config" element={<Configuration />} />
               <Route path="/config-dessin" element={<ConfigurationDessin />} />
               <Route path="/jeu" element={<Jeu />} />

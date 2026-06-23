@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import Onboarding from '../components/Onboarding'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
 import { rearmerRappelSiActif } from '../utils/notifications'
+
+const ONBOARDING_KEY = 'cadavre-onboarding-done'
 function toRomain(n: number): string {
   const map: [number, string][] = [
     [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
@@ -21,6 +22,16 @@ export default function Accueil() {
   const { jouer } = useSound()
   // L'ouverture de l'accueil = le passage du jour : on pointe la série une fois.
   const [serie] = useState<Serie>(() => pointerSerie())
+
+  // Premier lancement : au lieu d'un onboarding lu, on emmène directement le
+  // joueur dans une partie Découverte (il vit une révélation avant qu'on lui
+  // demande quoi que ce soit). La Découverte marque l'intro comme vue → ceci
+  // ne se déclenche qu'une seule fois, jamais en boucle.
+  useEffect(() => {
+    let vu = true
+    try { vu = localStorage.getItem(ONBOARDING_KEY) === '1' } catch { /* ignore */ }
+    if (!vu) navigate('/decouverte', { replace: true })
+  }, [navigate])
 
   useEffect(() => {
     const prevHtml = document.documentElement.style.overflow
@@ -63,7 +74,6 @@ export default function Accueil() {
     <PageTransition className="page-carnet relative flex flex-col h-dvh overflow-hidden safe-top safe-bottom">
 
       <Decor variant="accueil" hideCitation hideSignature />
-      <Onboarding />
 
       {/* ── HEADER ── */}
       <div style={{
