@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { AideInline } from '../components/SectionAide'
+
 import { getStructure, nombreCasesEffectif } from '../structures'
 import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
@@ -100,6 +100,18 @@ const TYPE_SUBTITLE: Partial<Record<string, string>> = {
   'groupe-verbal':   "VERBE · COMPLÉMENT",
   'proposition':     "PHRASE COMPLÈTE · AVEC PONCTUATION",
   'libre':           "LIBRE · SANS CONTRAINTE",
+}
+
+// Exemples concrets pour chaque type grammatical — lisibles à froid,
+// sans connaître le jargon. Montrés juste sous le sous-titre.
+const TYPE_EXAMPLE: Partial<Record<string, string>> = {
+  'nom':             "ex. : « la pluie », « un silence », « l'ombre »",
+  'verbe':           "ex. : « brûle », « disparaît », « se tait »",
+  'adjectif':        "ex. : « immobile », « nocturne », « étrange »",
+  'adverbe':         "ex. : « doucement », « en silence », « à jamais »",
+  'groupe-nominal':  "ex. : « l'ombre portée », « un souffle perdu »",
+  'groupe-verbal':   "ex. : « traverse la nuit », « brûle en silence »",
+  'proposition':     "ex. : « Où vont les ombres ? »",
 }
 
 function renderConsigneTitre(consigne: string, accent: string): React.ReactNode {
@@ -626,6 +638,13 @@ export default function Jeu() {
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
+  const example  = TYPE_EXAMPLE[defActuelle?.type ?? ''] ?? null
+  const estDecouverte = !!sessionStorage.getItem('decouverte')
+  const guideDecouverte = estDecouverte
+    ? caseIndex === 0
+      ? "Ose quelque chose d'inattendu — un animal en deuil, une couleur qui parle, un objet qui rêve."
+      : "Continue librement — tu ignores ce qui précède. L'assemblage aveugle fera la surprise."
+    : null
 
   // ── IA screen ──────────────────────────────────────────────────────────────
   if (participantActuel?.type === 'ia' && (iaChargement || iaTexteRevele !== null)) {
@@ -804,15 +823,25 @@ export default function Jeu() {
                   lineHeight: 1.05,
                   letterSpacing: '-0.01em',
                   color: encre,
-                  marginBottom: subtitle ? 6 : 14,
+                  marginBottom: (subtitle || example || guideDecouverte) ? 6 : 14,
                 }}
               >
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
               </div>
               {subtitle && (
-                <AideInline accent={accent} encre={encre} libelle="forme">
+                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.42, letterSpacing: '0.18em', marginBottom: example ? 3 : (guideDecouverte ? 8 : 14) }}>
                   {subtitle}
-                </AideInline>
+                </div>
+              )}
+              {example && (
+                <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.58, marginBottom: guideDecouverte ? 10 : 14 }}>
+                  {example}
+                </div>
+              )}
+              {guideDecouverte && (
+                <div style={{ ...mono, fontSize: 11, color: accent, opacity: 0.72, letterSpacing: '0.12em', borderTop: `0.5px solid ${accent}20`, paddingTop: 8, marginBottom: 14, lineHeight: 1.6 }}>
+                  ✦ {guideDecouverte}
+                </div>
               )}
             </motion.div>
 

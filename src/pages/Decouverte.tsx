@@ -18,7 +18,7 @@ const CONFIG_DECOUVERTE: ConfigPartie = {
   premierJoueur: 'humain',
   mode: 'standard',
   joueursHumains: 1,
-  voixIA: 2,
+  voixIA: 1,
 }
 
 export default function Decouverte() {
