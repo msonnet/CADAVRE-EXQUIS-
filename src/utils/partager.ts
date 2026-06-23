@@ -861,11 +861,13 @@ export async function genererVideoStory(opts: {
     ornCanvas = document.createElement('canvas')
     ornCanvas.width = W; ornCanvas.height = H
     const ox = ornCanvas.getContext('2d')!
-    cadreDouble(ox, W, H, accent)
-    // Illustration IA (souvent sombre, sous voile d'encre) → ornements clairs ;
-    // dessin (papier clair) → ornements à l'encre
+    // Pour les poèmes illustrés : image bord à bord, sans cadre ni en-tête —
+    // juste la marque "CADAVRE EXQUIS" en bas. Pour les dessins on garde les ornements.
     const ornInk = opts.type === 'poeme' ? bg : ink
-    enTete(ox, W, accent, ornInk, opts.date, opts.seed)
+    if (opts.type !== 'poeme') {
+      cadreDouble(ox, W, H, accent)
+      enTete(ox, W, accent, ornInk, opts.date, opts.seed)
+    }
     marque(ox, W, accent, ornInk)
   } else {
     cadreDouble(bx, W, H, accent)
@@ -1159,61 +1161,57 @@ function layoutTexteOverlay(
   return { lignes, size, lineH, top: top + titreH, titre: titreLines, titreSize, titreTop: top }
 }
 
-// Poème + illustration : l'image couvre la page et apparaît petit à petit,
-// le texte vient en surimpression dans un léger fondu — rien ne glisse.
+// Poème + illustration : image bord à bord, texte en fondu simultané.
+// Pas de cadre ni d'en-tête — juste l'image, le poème et la marque.
 function dessinerPoemePleinCadre(
   ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
   L: OverlayTexte, orn: HTMLCanvasElement, t: number, duree: number, W: number, H: number, ink: string, bg: string,
 ) {
-  // Image en fondu progressif, avec une très lente respiration de zoom
-  const a = easeInOut(clamp01((t - 250) / 2150))
+  // Image : fondu rapide + très légère respiration de zoom
+  const a = easeInOut(clamp01((t - 150) / 1600))
   if (a > 0) {
-    const sc = 1.06 - 0.06 * clamp01(t / duree)
+    const sc = 1.03 - 0.03 * clamp01(t / duree)
     const w = box.w * sc, h = box.h * sc
     ctx.save()
     ctx.globalAlpha = a
     ctx.drawImage(img, W / 2 - w / 2, H / 2 - h / 2, w, h)
-    // Voile d'encre — la lisibilité du texte sur n'importe quelle image
+    // Voile d'encre léger — lisibilité sans noyer l'image
     const g = ctx.createLinearGradient(0, 0, 0, H)
-    g.addColorStop(0, withAlpha(ink, 0.50))
-    g.addColorStop(0.5, withAlpha(ink, 0.34))
-    g.addColorStop(0.82, withAlpha(ink, 0.16))
-    g.addColorStop(1, withAlpha(ink, 0.32))
+    g.addColorStop(0,    withAlpha(ink, 0.28))
+    g.addColorStop(0.45, withAlpha(ink, 0.14))
+    g.addColorStop(0.75, withAlpha(ink, 0.08))
+    g.addColorStop(1,    withAlpha(ink, 0.22))
     ctx.fillStyle = g
     ctx.fillRect(0, 0, W, H)
     ctx.restore()
   }
 
-  // Ornements (cadre, en-tête, marque) par-dessus l'image
+  // Marque "CADAVRE EXQUIS" en bas (ornCanvas contient uniquement cela)
   ctx.drawImage(orn, 0, 0)
 
-  // Titre + vers : léger fondu ligne à ligne
-  const TXT_T = 2050, FADE = 650
-  const n = L.lignes.length
-  const stagger = n > 1 ? Math.min(240, Math.max(110, (duree - TXT_T - FADE - 350) / (n - 1))) : 0
+  // Texte : toutes les lignes apparaissent ensemble en fondu lent
+  const TXT_T = 1500, FADE = 1100
+  const ta = easeInOut(clamp01((t - TXT_T) / FADE))
+  if (ta <= 0) return
+
   ctx.textAlign = 'center'
 
   if (L.titre) {
-    const ta = clamp01((t - TXT_T) / FADE)
-    if (ta > 0) {
-      ctx.save()
-      ctx.globalAlpha = ta
-      ctx.shadowColor = withAlpha(ink, 0.55); ctx.shadowBlur = 16; ctx.shadowOffsetY = 2
-      ctx.fillStyle = bg
-      ctx.font = `800 italic ${L.titreSize}px 'Bodoni Moda', Georgia, serif`
-      L.titre.forEach((line, i) => ctx.fillText(line, W / 2, L.titreTop + (i + 1) * (L.titreSize + 12)))
-      ctx.restore()
-    }
+    ctx.save()
+    ctx.globalAlpha = ta
+    ctx.shadowColor = withAlpha(ink, 0.70); ctx.shadowBlur = 24; ctx.shadowOffsetY = 3
+    ctx.fillStyle = bg
+    ctx.font = `800 italic ${L.titreSize}px 'Bodoni Moda', Georgia, serif`
+    L.titre.forEach((line, i) => ctx.fillText(line, W / 2, L.titreTop + (i + 1) * (L.titreSize + 12)))
+    ctx.restore()
   }
 
   ctx.font = `italic ${L.size}px 'Bodoni Moda', Georgia, serif`
   L.lignes.forEach((ligne, i) => {
     if (!ligne) return
-    const la = clamp01((t - (TXT_T + i * stagger)) / FADE)
-    if (la <= 0) return
     ctx.save()
-    ctx.globalAlpha = la * 0.96
-    ctx.shadowColor = withAlpha(ink, 0.55); ctx.shadowBlur = 16; ctx.shadowOffsetY = 2
+    ctx.globalAlpha = ta * 0.95
+    ctx.shadowColor = withAlpha(ink, 0.70); ctx.shadowBlur = 22; ctx.shadowOffsetY = 2
     ctx.fillStyle = bg
     ctx.fillText(ligne, W / 2, L.top + (i + 1) * L.lineH)
     ctx.restore()
