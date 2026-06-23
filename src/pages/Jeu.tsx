@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
+import TutorielCoach from '../components/TutorielCoach'
+import { useTutoriel, TUTORIEL_TOTAL, T_JEU_1, T_JEU_IA, T_JEU_2 } from '../hooks/useTutoriel'
 
 import { getStructure, nombreCasesEffectif } from '../structures'
 import type { DefinitionCase } from '../structures'
@@ -316,6 +318,7 @@ export default function Jeu() {
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
   const seance = useReve()
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   // ─── Dérivés ───────────────────────────────────────────────────────────────
 
@@ -326,6 +329,15 @@ export default function Jeu() {
   const contexteVisible = participantActuel?.type === 'humain'
     ? getContexteVisible(cases, config.visibilite)
     : null
+
+  // ─── Tutoriel ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!tutActif) return
+    if (tutEtape === T_JEU_1  && caseIndex === 1) tutAvancer()
+    if (tutEtape === T_JEU_IA && caseIndex === 2) tutAvancer()
+    if (tutEtape === T_JEU_2  && caseIndex >= total) tutAvancer()
+  }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Fonctions utilitaires ─────────────────────────────────────────────────
 
@@ -632,6 +644,7 @@ export default function Jeu() {
   const sc = seance?.colorSchema
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
@@ -749,6 +762,17 @@ export default function Jeu() {
             {iaChargement ? '— NE PAS LA DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
           </div>
         </div>
+        {tutActif && tutEtape === T_JEU_IA && !iaChargement && (
+          <TutorielCoach
+            visible
+            etape={tutEtape} total={TUTORIEL_TOTAL}
+            titre="La voix mystérieuse a écrit."
+            corps="Ce fragment reste caché jusqu'à la révélation finale. Tu vas écrire le dernier fragment sans savoir ce qu'elle a mis."
+            onCompris={tutAvancer}
+            onPasser={tutTerminer}
+            accent={accent} encre={encre} bg={bg}
+          />
+        )}
       </PageTransition>
     )
   }
@@ -757,7 +781,7 @@ export default function Jeu() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="jeu" />
-      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+      <div style={{ position: 'relative', zIndex: 10, paddingBottom: tutActif ? 230 : 0 }} className="flex flex-col flex-1">
 
         {/* Header */}
         <div className="flex justify-between items-baseline">
@@ -827,7 +851,7 @@ export default function Jeu() {
                 </div>
               )}
               {example && (
-                <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.62, marginBottom: 14, lineHeight: 1.55 }}>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: encre, opacity: 0.9, marginBottom: 14, lineHeight: 1.55 }}>
                   {example}
                 </div>
               )}
@@ -962,6 +986,24 @@ export default function Jeu() {
           </motion.div>
         </AnimatePresence>
       </div>
+      <TutorielCoach
+        visible={tutActif && tutEtape === T_JEU_1}
+        etape={T_JEU_1} total={TUTORIEL_TOTAL}
+        titre="Ton premier fragment"
+        corps="Le cadavre exquis se construit à l'aveugle : chaque joueur écrit sa partie sans voir les autres. Écris ce qui te passe par la tête — l'inattendu est bienvenu."
+        cible="SCELLER CETTE VOIX"
+        onPasser={tutTerminer}
+        accent={accent} encre={encre} bg={bg}
+      />
+      <TutorielCoach
+        visible={tutActif && tutEtape === T_JEU_2}
+        etape={T_JEU_2} total={TUTORIEL_TOTAL}
+        titre="Ton deuxième fragment"
+        corps="Continue librement — tu ne sais pas ce que la voix mystérieuse a écrit. C'est précisément cet assemblage aveugle qui produit quelque chose d'imprévisible."
+        cible="SCELLER CETTE VOIX"
+        onPasser={tutTerminer}
+        accent={accent} encre={encre} bg={bg}
+      />
     </PageTransition>
   )
 }

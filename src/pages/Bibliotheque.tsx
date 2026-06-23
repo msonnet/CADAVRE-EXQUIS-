@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { chargerPoemes, chargerDessins } from '../db'
 import { Decor, useReve } from '../reve'
+import TutorielCoach from '../components/TutorielCoach'
+import { useTutoriel, TUTORIEL_TOTAL, T_BIBLIO } from '../hooks/useTutoriel'
 import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
 
@@ -44,6 +46,8 @@ export default function Bibliotheque() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
+  const bg = c?.bg ?? '#f0e4cc'
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
     Promise.all([chargerPoemes(), chargerDessins()])
@@ -196,7 +200,7 @@ export default function Bibliotheque() {
                 {poemesFiltres.map((poeme, i) => (
                   <motion.button
                     key={poeme.id}
-                    onClick={() => { jouer('clic'); navigate(`/bibliotheque/${poeme.id}`) }}
+                    onClick={() => { jouer('clic'); if (tutActif && tutEtape === T_BIBLIO) tutAvancer(); navigate(`/bibliotheque/${poeme.id}`) }}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
@@ -308,6 +312,15 @@ export default function Bibliotheque() {
         )}
 
       </div>
+      <TutorielCoach
+        visible={tutActif && tutEtape === T_BIBLIO}
+        etape={T_BIBLIO} total={TUTORIEL_TOTAL}
+        titre="Ton recueil"
+        corps="Tous tes poèmes sont sauvegardés ici. Tape sur un poème pour l'ouvrir — tu pourras le relire, le modifier, le partager et le publier dans la galerie."
+        cible="TAPE SUR TON POÈME"
+        onPasser={tutTerminer}
+        accent={accent} encre={encre} bg={bg}
+      />
     </PageTransition>
   )
 }

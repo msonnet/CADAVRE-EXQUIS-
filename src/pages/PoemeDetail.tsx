@@ -12,6 +12,8 @@ import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import TutorielCoach from '../components/TutorielCoach'
+import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
@@ -56,6 +58,11 @@ export default function PoemeDetail() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
+
+  useEffect(() => {
+    if (tutActif && tutEtape === T_DETAIL && published) tutAvancer()
+  }, [published]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!id) return
@@ -636,6 +643,15 @@ export default function PoemeDetail() {
         </div>
 
       </div>
+      <TutorielCoach
+        visible={tutActif && tutEtape === T_DETAIL}
+        etape={T_DETAIL} total={TUTORIEL_TOTAL}
+        titre="Publier dans la galerie"
+        corps="La galerie est partagée entre tous les joueurs. En publiant, tu rejoins la communauté des cadavres exquis — ton poème devient une référence collective."
+        cible="✦ PUBLIER DANS LA GALERIE"
+        onPasser={tutTerminer}
+        accent={accent} encre={encre} bg={fond}
+      />
     </PageTransition>
   )
 }
