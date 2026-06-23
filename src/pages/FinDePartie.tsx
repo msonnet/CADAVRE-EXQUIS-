@@ -81,7 +81,6 @@ export default function FinDePartie() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
-  const estDecouverte = !!sessionStorage.getItem('decouverte')
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
@@ -269,7 +268,7 @@ export default function FinDePartie() {
         )}
       </AnimatePresence>
 
-      <div style={{ position: 'relative', zIndex: 10, paddingBottom: tutActif ? 240 : 0 }} className="flex flex-col flex-1">
+      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
@@ -685,9 +684,10 @@ export default function FinDePartie() {
         visible={tutActif && tutEtape === T_FIN_IMAGE}
         etape={T_FIN_IMAGE} total={TUTORIEL_TOTAL}
         titre="Illustrer le poème"
-        corps="L'IA peut générer une illustration de ton poème — aquarelle, fusain, gravure… Ouvre le panneau IMAGE et choisis un style."
+        corps="L'IA peut générer une illustration — aquarelle, fusain, gravure… Ouvre le panneau IMAGE et choisis un style. Tu peux aussi passer à l'étape suivante."
         cible="— IMAGE —"
         position="top"
+        onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
@@ -695,9 +695,10 @@ export default function FinDePartie() {
         visible={tutActif && tutEtape === T_FIN_SHARE}
         etape={T_FIN_SHARE} total={TUTORIEL_TOTAL}
         titre="Partager le poème"
-        corps="Le jeu compose une vidéo animée avec ton poème. Tu peux la partager sur Instagram, WhatsApp ou par SMS — ou simplement copier le texte."
+        corps="Le jeu compose une vidéo animée avec ton poème — partage-la sur Instagram, WhatsApp ou par SMS. Tu peux aussi continuer sans partager."
         cible="— PARTAGER —"
         position="top"
+        onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
@@ -705,8 +706,8 @@ export default function FinDePartie() {
         visible={tutActif && tutEtape === T_FIN_RECUEIL}
         etape={T_FIN_RECUEIL} total={TUTORIEL_TOTAL}
         titre="Sceller au recueil"
-        corps="Sauvegarde ce poème dans ta bibliothèque personnelle. Tu pourras le relire, le modifier, et le publier dans la galerie communautaire."
-        cible="SCELLER AU RECUEIL"
+        corps="Sauvegarde ce poème dans ta bibliothèque personnelle. Tu pourras le relire, le partager et le publier dans la galerie communautaire."
+        onCompris={() => { tutAvancer(); navigate('/bibliotheque') }}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />

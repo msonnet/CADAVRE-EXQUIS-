@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 const KEY_ACTIF = 'tutoriel-actif'
 const KEY_ETAPE = 'tutoriel-etape'
@@ -26,19 +26,24 @@ export function useTutoriel() {
     return v !== null ? parseInt(v) : 0
   })
 
+  // Ref toujours à jour — permet à avancer() d'écrire sessionStorage
+  // de façon SYNCHRONE avant toute navigation, sans dépendre du state updater.
+  const etapeRef = useRef(etape)
+  etapeRef.current = etape
+
   const actif = etape >= 0
 
   const avancer = useCallback(() => {
-    setEtapeState(prev => {
-      const next = prev + 1
-      if (next >= TUTORIEL_TOTAL) {
-        sessionStorage.removeItem(KEY_ACTIF)
-        sessionStorage.removeItem(KEY_ETAPE)
-        return -1
-      }
+    const next = etapeRef.current + 1
+    if (next >= TUTORIEL_TOTAL) {
+      sessionStorage.removeItem(KEY_ACTIF)
+      sessionStorage.removeItem(KEY_ETAPE)
+      setEtapeState(-1)
+    } else {
+      // Écriture immédiate : garantit que la page suivante lit la bonne valeur
       sessionStorage.setItem(KEY_ETAPE, String(next))
-      return next
-    })
+      setEtapeState(next)
+    }
   }, [])
 
   const terminer = useCallback(() => {

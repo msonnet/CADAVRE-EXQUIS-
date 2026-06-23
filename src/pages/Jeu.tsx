@@ -1024,7 +1024,7 @@ export default function Jeu() {
         etape={T_JEU_2} total={TUTORIEL_TOTAL}
         titre="Ton deuxième fragment"
         corps="Continue librement — tu ne sais pas ce que la voix mystérieuse a écrit. C'est cet assemblage aveugle qui produira quelque chose d'imprévisible."
-        cible="SCELLER CE DERNIER FRAGMENT"
+        cible="SCELLER CETTE VOIX"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />

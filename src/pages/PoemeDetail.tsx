@@ -647,8 +647,9 @@ export default function PoemeDetail() {
         visible={tutActif && tutEtape === T_DETAIL}
         etape={T_DETAIL} total={TUTORIEL_TOTAL}
         titre="Publier dans la galerie"
-        corps="La galerie est partagée entre tous les joueurs. En publiant, tu rejoins la communauté des cadavres exquis — ton poème devient une référence collective."
+        corps="La galerie est partagée entre tous les joueurs. En publiant, ton poème rejoint la collection commune — visible de toute la communauté. C'est la dernière étape du guide."
         cible="✦ PUBLIER DANS LA GALERIE"
+        onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={fond}
       />

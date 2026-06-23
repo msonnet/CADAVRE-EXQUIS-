@@ -316,8 +316,9 @@ export default function Bibliotheque() {
         visible={tutActif && tutEtape === T_BIBLIO}
         etape={T_BIBLIO} total={TUTORIEL_TOTAL}
         titre="Ton recueil"
-        corps="Tous tes poèmes sont sauvegardés ici. Tape sur un poème pour l'ouvrir — tu pourras le relire, le modifier, le partager et le publier dans la galerie."
-        cible="TAPE SUR TON POÈME"
+        corps="Tous tes poèmes sont sauvegardés ici. Tape sur un poème pour l'ouvrir — tu pourras le relire, le partager et le publier dans la galerie."
+        cible="TAPE SUR UN POÈME →"
+        onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
