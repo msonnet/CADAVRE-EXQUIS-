@@ -334,9 +334,10 @@ export default function Jeu() {
 
   useEffect(() => {
     if (!tutActif) return
-    if (tutEtape === T_JEU_1  && caseIndex === 1) tutAvancer()
-    if (tutEtape === T_JEU_IA && caseIndex === 2) tutAvancer()
-    if (tutEtape === T_JEU_2  && caseIndex >= total) tutAvancer()
+    // T_JEU_IA n'est PAS auto-avancé ici : le joueur doit taper "Compris"
+    // pour avoir le temps de lire le panneau.
+    if (tutEtape === T_JEU_1 && caseIndex === 1) tutAvancer()
+    if (tutEtape === T_JEU_2 && caseIndex >= total) tutAvancer()
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Fonctions utilitaires ─────────────────────────────────────────────────
@@ -762,17 +763,15 @@ export default function Jeu() {
             {iaChargement ? '— NE PAS LA DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
           </div>
         </div>
-        {tutActif && tutEtape === T_JEU_IA && !iaChargement && (
-          <TutorielCoach
-            visible
-            etape={tutEtape} total={TUTORIEL_TOTAL}
-            titre="La voix mystérieuse a écrit."
-            corps="Ce fragment reste caché jusqu'à la révélation finale. Tu vas écrire le dernier fragment sans savoir ce qu'elle a mis."
-            onCompris={tutAvancer}
-            onPasser={tutTerminer}
-            accent={accent} encre={encre} bg={bg}
-          />
-        )}
+        <TutorielCoach
+          visible={tutActif && tutEtape === T_JEU_IA}
+          etape={T_JEU_IA} total={TUTORIEL_TOTAL}
+          titre="La voix mystérieuse écrit…"
+          corps="Un fragment secret est ajouté à l'aveugle. Tu ne vois pas ce qu'il contient — c'est la règle du cadavre exquis. Tape Compris quand tu es prêt à écrire la suite."
+          onCompris={tutAvancer}
+          onPasser={tutTerminer}
+          accent={accent} encre={encre} bg={bg}
+        />
       </PageTransition>
     )
   }
@@ -995,12 +994,22 @@ export default function Jeu() {
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
+      {/* Coach IA affiché sur l'écran humain si le jeu a avancé avant le tap Compris */}
+      <TutorielCoach
+        visible={tutActif && tutEtape === T_JEU_IA && participantActuel?.type === 'humain'}
+        etape={T_JEU_IA} total={TUTORIEL_TOTAL}
+        titre="La voix a écrit en secret."
+        corps="Son fragment est scellé. Tu vas maintenant écrire le dernier morceau du cadavre, à l'aveugle comme elle."
+        onCompris={tutAvancer}
+        onPasser={tutTerminer}
+        accent={accent} encre={encre} bg={bg}
+      />
       <TutorielCoach
         visible={tutActif && tutEtape === T_JEU_2}
         etape={T_JEU_2} total={TUTORIEL_TOTAL}
         titre="Ton deuxième fragment"
-        corps="Continue librement — tu ne sais pas ce que la voix mystérieuse a écrit. C'est précisément cet assemblage aveugle qui produit quelque chose d'imprévisible."
-        cible="SCELLER CETTE VOIX"
+        corps="Continue librement — tu ne sais pas ce que la voix mystérieuse a écrit. C'est cet assemblage aveugle qui produira quelque chose d'imprévisible."
+        cible="SCELLER CE DERNIER FRAGMENT"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
