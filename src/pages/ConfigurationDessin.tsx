@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
+import SectionAide from '../components/SectionAide'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin } from '../types'
@@ -13,13 +14,6 @@ const CONFIG_PAR_DEFAUT: ConfigDessin = {
 }
 
 type SlotType = 'vide' | 'humain'
-
-// Références historiques au cadavre exquis dessiné
-const REFS = [
-  { titre: 'Le cadavre exquis boira le vin nouveau', auteurs: 'Breton, Éluard, Morise, Man Ray', annee: '1925' },
-  { titre: 'Premier cadavre dessiné collectif', auteurs: 'André Breton et ses amis', annee: '1927' },
-  { titre: 'Exquisite Corpse (Drawing)', auteurs: 'Yves Tanguy, Joan Miró, Max Morise, Man Ray', annee: '1928' },
-]
 
 export default function ConfigurationDessin() {
   const navigate = useNavigate()
@@ -55,7 +49,6 @@ export default function ConfigurationDessin() {
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
-  const ref = REFS[(seance?.seed ?? 0) % REFS.length]
   const totalBandes = config.nbBandes
   const cycleNote = joueurs < totalBandes
     ? `les ${joueurs} joueurs se partagent ${totalBandes} bandes — certains dessinent deux fois`
@@ -112,12 +105,10 @@ export default function ConfigurationDessin() {
 
         {/* ── BANDES ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-            — FRAGMENTS —
-          </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 8 }}>
-            Nombre de bandes horizontales à dessiner
-          </div>
+          <SectionAide
+            label="FRAGMENTS" accent={accent} encre={encre}
+            aide={<>Le dessin est découpé en bandes horizontales — tête, corps, jambes… Chacun dessine la sienne sans voir les autres, et l'assemblage final est la surprise.</>}
+          />
           <div className="flex gap-2">
             {[2, 3, 4, 5].map(n => {
               const active = config.nbBandes === n
@@ -189,9 +180,10 @@ export default function ConfigurationDessin() {
 
         {/* ── VISIBILITÉ ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} style={{ marginBottom: 20 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-            — VISIBILITÉ —
-          </div>
+          <SectionAide
+            label="VISIBILITÉ" accent={accent} encre={encre}
+            aide={<>Aveugle : chaque bande commence dans l'obscurité totale. Raccord : un mince raccord révèle la lisière du fragment précédent, pour prolonger les traits.</>}
+          />
           <div className="flex gap-2 mb-2">
             {([
               { id: 'aveugle', label: 'AVEUGLE' },
@@ -217,34 +209,6 @@ export default function ConfigurationDessin() {
                 </button>
               )
             })}
-          </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
-            {config.visibilite === 'aveugle'
-              ? 'Chaque bande commence dans l\'obscurité totale.'
-              : 'Un raccord révèle la lisière du fragment précédent.'}
-          </div>
-        </motion.div>
-
-        {/* ── CITATION HISTORIQUE ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
-          style={{
-            borderLeft: `1.5px solid ${accent}`,
-            paddingLeft: 12,
-            marginBottom: 20,
-            opacity: 0.65,
-          }}
-        >
-          <div style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5,
-            color: encre, marginBottom: 4,
-          }}>
-            « {ref.titre} »
-          </div>
-          <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.14em' }}>
-            {ref.auteurs.toUpperCase()} · {ref.annee}
           </div>
         </motion.div>
 

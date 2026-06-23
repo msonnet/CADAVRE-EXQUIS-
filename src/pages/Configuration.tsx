@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
+import SectionAide from '../components/SectionAide'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
@@ -11,17 +12,6 @@ const STRUCTURES: { id: StructureId; romain: string; label: string; description:
   { id: 'phrase-etoffee', romain: 'II',  label: 'Phrase étoffée', description: '5 cases · la canonique de Breton',  detail: 'La structure originale inventée en 1925 : « Le cadavre exquis boira le vin nouveau » — article+nom · adjectif · verbe · article+nom · adjectif.' },
   { id: 'vers-libre',     romain: 'III', label: 'Vers libre',     description: '4 à 12 vers · sans contrainte',     detail: 'Chaque joueur écrit un vers entier. Le poème s\'assemble sans règle grammaticale.' },
 ]
-
-const VISIBILITE_DESC: Record<string, string> = {
-  aveugle:        'Chaque joueur écrit sans voir ce que les autres ont produit.',
-  'dernier-mot':  'Le dernier mot de la case précédente est visible — un seul indice.',
-  'derniere-case':'La case entière précédente est révélée avant d\'écrire.',
-}
-
-const MODE_DESC: Record<string, string> = {
-  standard:   'Prends le temps qu\'il faut pour chaque fragment.',
-  hypnotique: '30 secondes par fragment. Le temps écoulé, le fragment se scelle de lui-même — l\'écriture automatique, sans retour en arrière.',
-}
 
 type SlotType = 'vide' | 'humain' | 'ia'
 
@@ -120,18 +110,12 @@ export default function Configuration() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <div
-            className="font-fraunces font-black leading-tight mb-1"
-            style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
+            className="font-fraunces font-black leading-tight"
+            style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 18 }}
           >
             Choisir la{' '}
             <span style={{ color: accent }}>structure.</span>
           </div>
-          <p style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 18,
-            color: encre, opacity: 0.75, marginBottom: 20,
-          }}>
-            La structure détermine la forme du cadavre exquis.
-          </p>
         </motion.div>
 
         {/* ── STRUCTURE CARDS ── */}
@@ -166,12 +150,7 @@ export default function Configuration() {
                   <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 3 }}>
                     {s.label}
                   </div>
-                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.60, marginBottom: active ? 5 : 0 }}>{s.description}</div>
-                  {active && (
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
-                      {s.detail}
-                    </div>
-                  )}
+                  <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.60 }}>{s.description}</div>
                 </div>
               </motion.button>
             )
@@ -180,10 +159,11 @@ export default function Configuration() {
 
         {/* ── VISIBILITÉ ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — VISIBILITÉ —
-          </div>
-          <div className="flex gap-2 mb-2">
+          <SectionAide
+            label="VISIBILITÉ" accent={accent} encre={encre}
+            aide={<>Aveugle : tu écris sans rien voir des autres. Un mot : seul le dernier mot précédent t'est montré. Une case : toute la case précédente est révélée.</>}
+          />
+          <div className="flex gap-2">
             {(['aveugle', 'dernier-mot', 'derniere-case'] as Visibilite[]).map(v => {
               const active = config.visibilite === v
               return (
@@ -205,9 +185,6 @@ export default function Configuration() {
                 </button>
               )
             })}
-          </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55 }}>
-            {VISIBILITE_DESC[config.visibilite]}
           </div>
         </div>
 
@@ -303,9 +280,10 @@ export default function Configuration() {
 
         {/* ── MODE ── */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-            — MODE —
-          </div>
+          <SectionAide
+            label="MODE" accent={accent} encre={encre}
+            aide={<>Standard : prends le temps qu'il faut pour chaque fragment. Hypnotique : 30 secondes par fragment, puis il se scelle de lui-même — l'écriture automatique, sans retour.</>}
+          />
           <div className="flex gap-2">
             {(['standard', 'hypnotique'] as const).map(m => {
               const active = config.mode === m
@@ -328,9 +306,6 @@ export default function Configuration() {
                 </button>
               )
             })}
-          </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.80, lineHeight: 1.55, marginTop: 8 }}>
-            {MODE_DESC[config.mode]}
           </div>
         </div>
 
