@@ -803,7 +803,7 @@ export default function Jeu() {
                     iaAvancePendingRef.current = null
                   }
                 }}
-                className="w-full flex flex-col items-center justify-center"
+                className="w-full flex items-center justify-center"
                 style={{
                   background: accent, color: btnText,
                   ...mono, fontSize: 17, textTransform: 'uppercase',
@@ -811,8 +811,7 @@ export default function Jeu() {
                   gap: 2, borderRadius: 3,
                 }}
               >
-                <span>Écrire la suite</span>
-                <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
+                <span>Écrire la suite&nbsp;→</span>
               </button>
             </motion.div>
           )}
@@ -1006,7 +1005,7 @@ export default function Jeu() {
                 onClick={soumettre}
                 disabled={!inputValue.trim()}
                 aria-label="Sceller cette voix et passer à la suivante"
-                className={`w-full flex flex-col items-center justify-center${tutActif && (tutEtape === T_JEU_1 || tutEtape === T_JEU_2) && inputValue.trim() ? ' tut-cible' : ''}`}
+                className={`w-full flex items-center justify-center${tutActif && (tutEtape === T_JEU_1 || tutEtape === T_JEU_2) && inputValue.trim() ? ' tut-cible' : ''}`}
                 style={{
                   ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
                   background: !inputValue.trim() ? `${encre}30` : accent,
@@ -1021,8 +1020,7 @@ export default function Jeu() {
                   borderRadius: 3,
                 }}
               >
-                <span>Sceller cette voix</span>
-                <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
+                <span>Sceller cette voix&nbsp;→</span>
               </button>
             </motion.div>
 

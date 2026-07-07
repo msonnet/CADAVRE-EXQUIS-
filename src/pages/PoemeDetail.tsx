@@ -469,7 +469,8 @@ export default function PoemeDetail() {
             onClick={() => parlant ? arreter() : parler(texteAffiche)}
             aria-label={parlant ? 'Arrêter la lecture' : 'Écouter le poème'}
             aria-pressed={parlant}
-            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
+            className="appui"
+            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
           </button>
@@ -477,6 +478,7 @@ export default function PoemeDetail() {
             onClick={partager}
             disabled={partageEnCours}
             aria-label="Partager le poème en vidéo"
+            className="appui"
             style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
@@ -484,7 +486,8 @@ export default function PoemeDetail() {
           <button
             onClick={imprimerPoeme}
             aria-label="Imprimer le poème"
-            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
+            className="appui"
+            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
             — IMPRIMER —
           </button>
@@ -492,7 +495,8 @@ export default function PoemeDetail() {
             onClick={() => setCasesVisibles(v => !v)}
             aria-label={casesVisibles ? 'Masquer les coutures' : 'Voir case par case'}
             aria-expanded={casesVisibles}
-            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
+            className="appui"
+            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             — COUTURES —
           </button>
@@ -605,7 +609,7 @@ export default function PoemeDetail() {
         >
           <button
             onClick={() => navigate('/config')}
-            className="w-full flex flex-col items-center justify-center"
+            className="w-full flex items-center justify-center"
             aria-label="Démarrer une nouvelle partie"
             style={{
               background: accent, color: btnText,
@@ -613,8 +617,7 @@ export default function PoemeDetail() {
               padding: '1.1em 1em', border: 'none', borderRadius: 3, cursor: 'pointer', gap: 2,
             }}
           >
-            <span>Nouvelle partie</span>
-            <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
+            <span>Nouvelle partie&nbsp;→</span>
           </button>
         </motion.div>
 

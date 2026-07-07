@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useReve } from '../reve'
+import { useReve, garantirContraste } from '../reve'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
@@ -140,6 +140,12 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
 }
 
+function melangerHex(a: string, b: string, t: number): string {
+  const A = hexToRgb(a), B = hexToRgb(b)
+  const c = (x: number, y: number) => Math.round(x + (y - x) * t).toString(16).padStart(2, '0')
+  return `#${c(A.r, B.r)}${c(A.g, B.g)}${c(A.b, B.b)}`
+}
+
 // Peint le fond de la bande : couleur unie + grain procédural propre au papier choisi.
 // Déterministe par bande (la graine vient de bandeIdx) pour que le raccord reste cohérent.
 function peindreFond(ctx: CanvasRenderingContext2D, w: number, h: number, p: { bg: string; grain: string }) {
@@ -210,6 +216,12 @@ export default function JeuDessin() {
   const [paper, setPaper] = useState<Paper>(() => brouillonDessin?.paper ?? 'lisse')
   const paperDef = PAPERS.find(p => p.id === paper) ?? PAPERS[0]
   const CANVAS_BG_ACTUEL = paperDef.bg
+  // Barre d'outils thémée par le papier choisi : son encre garantit la
+  // lisibilité, l'accent de la séance est ramené au contraste minimal.
+  const TB_INK = paperDef.ink
+  const TB_BG = melangerHex(paperDef.bg, paperDef.ink, 0.06)
+  const TB_ACTIVE = paperDef.id === 'ardoise' ? 'rgba(240,236,228,0.16)' : '#ffffff'
+  const TB_BTN = `${TB_INK}22`
   // Pipette : capture une fois la couleur puis revient à l'outil précédent
   const [pipetteActive, setPipetteActive] = useState(false)
   const toolAvantPipette = useRef<Tool>('pencil')
@@ -258,6 +270,8 @@ export default function JeuDessin() {
   const joueurActuel = (bandeIdx % config.joueurs) + 1
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
+  // Accent de la séance ramené au contraste minimal sur la barre papier
+  const TB_ACCENT = garantirContraste(accent, TB_BG, 3.0)
   const encre = c?.encre ?? '#0f0805'
   const bg = c?.bg ?? '#0f0805'
 
@@ -815,7 +829,7 @@ export default function JeuDessin() {
       <div style={{
         height: `calc(${TOOLBAR_H}px + max(0px, env(safe-area-inset-bottom) - 10px))`,
         flexShrink: 0, zIndex: 20,
-        background: '#f0e9df',
+        background: TB_BG,
         boxShadow: '0 -2px 20px rgba(15,8,5,0.10)',
         borderRadius: '18px 18px 0 0',
         padding: `12px 16px max(10px, env(safe-area-inset-bottom))`,
@@ -836,8 +850,7 @@ export default function JeuDessin() {
             {TOOL_ORDER.map(t => {
               const active = tool === t
               const Icon = TOOL_ICONS[t]
-              // Fixed dark ink for toolbar (always readable on the fixed beige #f0e9df background)
-              const TOOLBAR_INK = '#1a1208'
+              const TOOLBAR_INK = TB_INK
               const nib = t === 'eraser' ? '#f3a9b8' : color
               const tint = TOOLBAR_INK
               return (
@@ -850,7 +863,7 @@ export default function JeuDessin() {
                     flex: '0 0 auto', width: 52, height: 62,
                     paddingTop: 6, paddingBottom: 4,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
-                    background: active ? '#ffffff' : 'transparent',
+                    background: active ? TB_ACTIVE : 'transparent',
                     border: 'none', borderRadius: 3,
                     cursor: 'pointer',
                     transition: 'background 0.15s, opacity 0.15s',
@@ -858,7 +871,7 @@ export default function JeuDessin() {
                   }}
                 >
                   <Icon tint={tint} nib={nib} />
-                  <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 11, letterSpacing: '0.04em', color: active ? accent : TOOLBAR_INK }}>
+                  <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 11, letterSpacing: '0.04em', color: active ? TB_ACCENT : TOOLBAR_INK }}>
                     {TOOL_NAMES[t].toUpperCase()}
                   </span>
                 </button>
@@ -886,23 +899,23 @@ export default function JeuDessin() {
 
         {/* Rangée opacité */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 11, color: `${encre}55`, flexShrink: 0 }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 11, color: `${TB_INK}88`, flexShrink: 0 }}>OPACITÉ</span>
           <input
             type="range" min={10} max={100} step={5}
             value={Math.round(opacity * 100)}
             onChange={e => setOpacity(Number(e.target.value) / 100)}
             aria-label="Opacité du trait"
             disabled={tool === 'eraser'}
-            style={{ flex: 1, accentColor: accent, cursor: tool === 'eraser' ? 'default' : 'pointer', opacity: tool === 'eraser' ? 0.35 : 1 }}
+            style={{ flex: 1, accentColor: TB_ACCENT, cursor: tool === 'eraser' ? 'default' : 'pointer', opacity: tool === 'eraser' ? 0.35 : 1 }}
           />
-          <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, width: 34, textAlign: 'right' }}>
+          <span style={{ ...mono, fontSize: 13, color: TB_INK, opacity: 0.75, width: 34, textAlign: 'right' }}>
             {Math.round(opacity * 100)}%
           </span>
         </div>
 
         {/* Rangée tailles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 11, color: `${encre}55`, flexShrink: 0 }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 11, color: `${TB_INK}88`, flexShrink: 0 }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button
@@ -911,7 +924,7 @@ export default function JeuDessin() {
                 aria-pressed={sizeIdx === i}
                 style={{
                   flex: 1, height: 44,
-                  background: sizeIdx === i ? '#f5f0ea' : 'transparent',
+                  background: sizeIdx === i ? TB_ACTIVE : 'transparent',
                   border: 'none', borderRadius: 3,
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -922,7 +935,7 @@ export default function JeuDessin() {
                   width: Math.min(sz * 0.7 + 3, 22),
                   height: Math.min(sz * 0.7 + 3, 22),
                   borderRadius: '50%',
-                  background: sizeIdx === i ? (tool === 'eraser' ? encre : color) : `${encre}55`,
+                  background: sizeIdx === i ? (tool === 'eraser' ? TB_INK : color) : `${TB_INK}55`,
                   transition: 'background 0.15s',
                 }} />
               </button>
@@ -941,8 +954,8 @@ export default function JeuDessin() {
                   title="Annuler (Ctrl+Z)"
                   style={{
                     width: 44, height: 44, borderRadius: 3, border: 'none',
-                    background: canUndo ? `${accent}18` : 'transparent',
-                    color: canUndo ? accent : encre,
+                    background: canUndo ? `${TB_ACCENT}20` : 'transparent',
+                    color: canUndo ? TB_ACCENT : TB_INK,
                     opacity: canUndo ? 1 : 0.35,
                     fontSize: 18,
                     cursor: canUndo ? 'pointer' : 'default',
@@ -958,8 +971,8 @@ export default function JeuDessin() {
                   title="Rétablir (Ctrl+Shift+Z)"
                   style={{
                     width: 44, height: 44, borderRadius: 3, border: 'none',
-                    background: canRedo ? `${accent}18` : 'transparent',
-                    color: canRedo ? accent : encre,
+                    background: canRedo ? `${TB_ACCENT}20` : 'transparent',
+                    color: canRedo ? TB_ACCENT : TB_INK,
                     opacity: canRedo ? 1 : 0.35,
                     fontSize: 18,
                     cursor: canRedo ? 'pointer' : 'default',
@@ -979,9 +992,9 @@ export default function JeuDessin() {
           <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Activer le son' : 'Couper le son'}
             style={{
               width: 44, height: 44, borderRadius: 3, border: 'none',
-              background: '#c8bfb0',
+              background: TB_BTN,
               fontSize: 17, cursor: 'pointer',
-              color: muted ? '#888070' : '#1a1208',
+              color: muted ? `${TB_INK}88` : TB_INK,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
             {muted ? '♪' : '♫'}
@@ -994,8 +1007,8 @@ export default function JeuDessin() {
             title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
             style={{
               width: 44, height: 44, borderRadius: 3, border: 'none',
-              background: panMode ? accent : '#c8bfb0',
-              color: panMode ? '#fff' : '#1a1208',
+              background: panMode ? TB_ACCENT : TB_BTN,
+              color: panMode ? '#fff' : TB_INK,
               fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
             ✥
@@ -1012,8 +1025,8 @@ export default function JeuDessin() {
             title="Prélever une couleur sur le canvas"
             style={{
               width: 44, height: 44, borderRadius: 3, border: 'none',
-              background: pipetteActive ? accent : '#c8bfb0',
-              color: pipetteActive ? '#fff' : '#1a1208',
+              background: pipetteActive ? TB_ACCENT : TB_BTN,
+              color: pipetteActive ? '#fff' : TB_INK,
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
@@ -1025,7 +1038,7 @@ export default function JeuDessin() {
           <div style={{ flex: 1 }} />
           <button onClick={validerBande} style={{
             ...mono, fontSize: 17,
-            background: encre, color: bg,
+            background: TB_INK, color: TB_BG,
             border: 'none', cursor: 'pointer',
             padding: '10px 24px', borderRadius: 3,
             letterSpacing: '0.16em',

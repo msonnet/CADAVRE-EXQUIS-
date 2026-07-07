@@ -326,6 +326,12 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
   .decor-symbol-accueil { transform: scale(0.50); }
 }
 
+/* ── Liens-actions « — X — » : le tap répond visiblement ──
+   L'opacité de repos vient du style inline ; !important ne s'applique
+   qu'à l'état pressé. ── */
+.appui { transition: opacity 0.12s ease, transform 0.12s ease; }
+.appui:active { opacity: 1 !important; transform: scale(0.96); }
+
 /* ── Tutoriel : halo pulsant sur l'élément cible ──
    Anneau permanent (accent plein) + onde qui s'étend et se dissout.
    Couleurs posées inline par la page : --tut-ring et --tut-glow. ── */

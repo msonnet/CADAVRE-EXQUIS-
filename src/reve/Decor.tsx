@@ -6,6 +6,7 @@ import {
   CITATIONS, ETIQ_POOL, HEURES_NOCTURNES, MARGINALIA,
   type Citation, type MargEntry, type ColorSchema,
 } from './pools'
+import { garantirContraste } from './contraste'
 
 // ════════════════════════════════════════════════
 // SÉANCE — composition unique par seed
@@ -36,12 +37,29 @@ const ReveCtx = createContext<SeanceReve | null>(null)
 function composerSeance(seed: number): SeanceReve {
   const rng = mulberry32(seed)
   const ambianceKey = pickOne(rng, AMBIANCE_POOL) as AmbianceKey
-  const ambiance = AMBIANCES[ambianceKey]
+  const ambianceBrute = AMBIANCES[ambianceKey]
 
   // Deux accents distincts pour les boutons et variantes
-  const accentIdx = Math.floor(rng() * ambiance.accents.length)
-  const accent = ambiance.accents[accentIdx]
-  const accent2 = ambiance.accents[(accentIdx + 1) % ambiance.accents.length]
+  const accentIdx = Math.floor(rng() * ambianceBrute.accents.length)
+  const accentBrut = ambianceBrute.accents[accentIdx]
+  const accent2Brut = ambianceBrute.accents[(accentIdx + 1) % ambianceBrute.accents.length]
+
+  // Plancher de contraste : quel que soit le tirage, l'encre tient 4.5:1
+  // sur le fond (corps de texte), les accents et l'encre douce 4.5/3.2,
+  // et le texte des boutons 4.5:1 sur l'accent qui leur sert de fond.
+  const bg = ambianceBrute.bg
+  const ambiance: Ambiance = {
+    ...ambianceBrute,
+    ink: garantirContraste(ambianceBrute.ink, bg, 4.5),
+    inkSoft: garantirContraste(ambianceBrute.inkSoft, bg, 3.2),
+    buttonText: garantirContraste(ambianceBrute.buttonText, accentBrut.hex, 4.5),
+  }
+  const accent: Accent = {
+    ...accentBrut,
+    hex: garantirContraste(accentBrut.hex, bg, 4.5),
+    hover: garantirContraste(accentBrut.hover, bg, 4.5),
+  }
+  const accent2: Accent = { ...accent2Brut, hex: garantirContraste(accent2Brut.hex, bg, 4.5) }
 
   const collages = pickN(rng, COLLAGES, Math.min(6, COLLAGES.length))
   const symbole = collages[0]
@@ -230,7 +248,9 @@ const ZONES: Record<Variant, VariantZones> = {
     signature: true,
   },
   detail: {
-    symbol: { top: '14%', left: '4%', sizeMul: 0.5 },
+    // À droite, comme « fin » : à gauche il chevauchait le titre et
+    // « TAP POUR NOMMER » (texte aligné à gauche sur cette page).
+    symbol: { top: '12%', right: '5%', sizeMul: 0.45 },
     etiqs: [],
     stripesMax: 0,
     citation: false,

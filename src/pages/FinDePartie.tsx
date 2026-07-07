@@ -464,7 +464,7 @@ export default function FinDePartie() {
         >
           <button
             onClick={() => { if (tutActif && tutEtape === T_FIN_RECUEIL) tutAvancer(); navigate('/bibliotheque') }}
-            className={`w-full flex flex-col items-center justify-center${tutActif && tutEtape === T_FIN_RECUEIL ? ' tut-cible' : ''}`}
+            className={`w-full flex items-center justify-center${tutActif && tutEtape === T_FIN_RECUEIL ? ' tut-cible' : ''}`}
             style={{
               ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
               background: accent, color: btnText,
@@ -476,8 +476,7 @@ export default function FinDePartie() {
               borderRadius: 3,
             }}
           >
-            <span>Sceller au recueil</span>
-            <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
+            <span>Sceller au recueil&nbsp;→</span>
           </button>
         </motion.div>
 
@@ -491,30 +490,32 @@ export default function FinDePartie() {
           <button
             onClick={() => parlant ? arreter() : parler(texteAffiche)}
             aria-pressed={parlant}
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
+            className="appui"
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
           </button>
           <button
             onClick={partager}
             disabled={partageEnCours}
-            className={tutActif && tutEtape === T_FIN_SHARE ? 'tut-cible' : undefined}
-            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.55, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
+            className={tutActif && tutEtape === T_FIN_SHARE ? 'appui tut-cible' : 'appui'}
+            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
             aria-expanded={activeSection === 'coutures'}
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
+            className="appui"
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
             — COUTURES —
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
-            className={tutActif && tutEtape === T_FIN_IMAGE ? 'tut-cible' : undefined}
+            className={tutActif && tutEtape === T_FIN_IMAGE ? 'appui tut-cible' : 'appui'}
             aria-expanded={activeSection === 'image'}
-            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
+            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             — IMAGE —
           </button>

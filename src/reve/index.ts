@@ -11,3 +11,4 @@ export {
   type Ambiance, type AmbianceKey, type Accent,
   type Citation, type MargEntry, type ColorSchema,
 } from './pools'
+export { garantirContraste, ratioContraste } from './contraste'
