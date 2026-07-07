@@ -768,18 +768,18 @@ export default function JeuDessin() {
             background: `linear-gradient(to right, transparent, ${accent}55 15%, ${accent}55 85%, transparent)`,
             pointerEvents: 'none', zIndex: 5,
           }}>
-            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 13, color: accent, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>
+            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 13, color: TB_ACCENT, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>
               ← RACCORD
             </span>
           </div>
         )}
 
-        {/* Badge joueur */}
+        {/* Badge joueur — couleurs du papier : lisible sur ardoise comme sur lisse */}
         <div style={{
           position: 'absolute', top: 10, left: 10,
-          ...mono, fontSize: 13, color: encre,
-          background: 'rgba(255,255,255,0.88)', padding: '4px 10px',
-          border: `0.5px solid ${encre}15`, pointerEvents: 'none',
+          ...mono, fontSize: 13, color: TB_INK,
+          background: `${paperDef.bg}e0`, padding: '4px 10px',
+          border: `0.5px solid ${TB_INK}25`, borderRadius: 3, pointerEvents: 'none',
         }}>
           JOUEUR {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
         </div>
@@ -791,21 +791,21 @@ export default function JeuDessin() {
               onClick={() => setConfirmExit(true)}
               aria-label="Abandonner le dessin"
               style={{
-                ...mono, fontSize: 13, color: encre,
-                background: 'rgba(255,255,255,0.88)', border: `0.5px solid ${encre}15`,
+                ...mono, fontSize: 13, color: TB_INK,
+                background: `${paperDef.bg}e0`, border: `0.5px solid ${TB_INK}25`,
                 borderRadius: 3, padding: '10px 12px', minHeight: 40, cursor: 'pointer',
               }}
             >✕</button>
           ) : (
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(255,255,255,0.94)', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '4px 8px' }}>
-              <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.85 }}>ABANDONNER ?</span>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: `${paperDef.bg}f2`, border: `0.5px solid ${TB_INK}30`, borderRadius: 3, padding: '4px 8px' }}>
+              <span style={{ ...mono, fontSize: 12, color: TB_INK, opacity: 0.85 }}>ABANDONNER ?</span>
               <button
                 onClick={() => { sessionStorage.removeItem('dessin-brouillon'); navigate('/') }}
-                style={{ ...mono, fontSize: 13, color: '#7B0000', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
+                style={{ ...mono, fontSize: 13, color: TB_ACCENT, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
               >OUI</button>
               <button
                 onClick={() => setConfirmExit(false)}
-                style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
+                style={{ ...mono, fontSize: 13, color: TB_INK, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
               >NON</button>
             </div>
           )}
@@ -815,8 +815,8 @@ export default function JeuDessin() {
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }} style={{
             position: 'absolute', top: 10, right: 56,
-            ...mono, fontSize: 13, color: encre,
-            background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
+            ...mono, fontSize: 13, color: TB_INK,
+            background: `${paperDef.bg}e0`, border: `0.5px solid ${TB_INK}25`,
             borderRadius: 3,
             padding: '4px 10px', cursor: 'pointer', zIndex: 10,
           }}>

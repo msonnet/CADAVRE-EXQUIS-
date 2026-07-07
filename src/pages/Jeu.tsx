@@ -121,6 +121,22 @@ const TYPE_EXAMPLE: Partial<Record<string, string>> = {
   'proposition':     "« Où vont les ombres ? » · « Que reste-t-il encore ? »",
 }
 
+/**
+ * Certaines consignes embarquent leurs exemples (« adjectif seul — ex :
+ * 'exquis', 'nocturne' ») : utile pour l'IA, mais à l'écran cela doublonne
+ * avec la ligne TYPE_EXAMPLE. On sépare : le titre reste court, et les
+ * exemples inline (plus précis, propres à la case) remplacent les génériques.
+ */
+function separerConsigne(consigne: string): { titre: string; exemples: string | null } {
+  const m = consigne.match(/^(.*?)\s*—\s*ex\s*:\s*(.+)$/i)
+  if (!m) return { titre: consigne, exemples: null }
+  const exemples = m[2]
+    .split(/\s*,\s*/)
+    .map(e => `« ${e.trim().replace(/^['"«]+|['"»]+$/g, '')} »`)
+    .join(' · ')
+  return { titre: m[1], exemples }
+}
+
 function renderConsigneTitre(consigne: string, accent: string): React.ReactNode {
   const idx = consigne.indexOf(' ')
   if (idx === -1) {
@@ -680,7 +696,10 @@ export default function Jeu() {
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
-  const example  = TYPE_EXAMPLE[defActuelle?.type ?? ''] ?? null
+  // Une seule série d'exemples : ceux de la consigne (spécifiques à la case)
+  // quand elle en contient, sinon les génériques du type.
+  const { titre: consigneTitre, exemples: exemplesInline } = separerConsigne(defActuelle?.consigne ?? '')
+  const example  = exemplesInline ?? TYPE_EXAMPLE[defActuelle?.type ?? ''] ?? null
 
   // ── IA screen ──────────────────────────────────────────────────────────────
   if (participantActuel?.type === 'ia' && (iaChargement || iaTexteRevele !== null)) {
@@ -907,7 +926,7 @@ export default function Jeu() {
                   marginBottom: (subtitle || example) ? 6 : 14,
                 }}
               >
-                {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
+                {renderConsigneTitre(consigneTitre, accent)}
               </div>
               {subtitle && (
                 <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.55, letterSpacing: '0.18em', marginBottom: example ? 4 : 14 }}>
