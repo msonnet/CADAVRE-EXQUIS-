@@ -99,17 +99,6 @@ function ouvertureAleatoire(consigneBase: string): string {
   return consigneBase
 }
 
-const TYPE_SUBTITLE: Partial<Record<string, string>> = {
-  'nom':             "AVEC ARTICLE · OU SANS",
-  'verbe':           "À L'INFINITIF · OU CONJUGUÉ",
-  'adjectif':        "ÉPITHÈTE · OU ATTRIBUT",
-  'adverbe':         "DE MANIÈRE · OU DEGRÉ",
-  'groupe-nominal':  "DÉT. · NOM · ÉPITHÈTE",
-  'groupe-verbal':   "VERBE · COMPLÉMENT",
-  'proposition':     "PHRASE COMPLÈTE · AVEC PONCTUATION",
-  'libre':           "LIBRE · SANS CONTRAINTE",
-}
-
 // Exemples concrets pour chaque type — montrés toujours, en taille lisible.
 const TYPE_EXAMPLE: Partial<Record<string, string>> = {
   'nom':             "« la pluie » · « un silence » · « l'abîme »",
@@ -695,7 +684,6 @@ export default function Jeu() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
-  const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
   // Une seule série d'exemples : ceux de la consigne (spécifiques à la case)
   // quand elle en contient, sinon les génériques du type.
   const { titre: consigneTitre, exemples: exemplesInline } = separerConsigne(defActuelle?.consigne ?? '')
@@ -923,16 +911,11 @@ export default function Jeu() {
                   lineHeight: 1.05,
                   letterSpacing: '-0.01em',
                   color: encre,
-                  marginBottom: (subtitle || example) ? 6 : 14,
+                  marginBottom: example ? 8 : 14,
                 }}
               >
                 {renderConsigneTitre(consigneTitre, accent)}
               </div>
-              {subtitle && (
-                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.55, letterSpacing: '0.18em', marginBottom: example ? 4 : 14 }}>
-                  {subtitle}
-                </div>
-              )}
               {example && (
                 <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: encre, opacity: 0.9, marginBottom: 14, lineHeight: 1.55 }}>
                   {example}
