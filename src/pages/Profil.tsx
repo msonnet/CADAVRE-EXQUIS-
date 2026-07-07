@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
+import { mono } from '../lib/typo'
 
 const AVATAR_STYLES = [
   { id: 'surrealiste',     label: 'Surréaliste' },
@@ -36,7 +37,6 @@ export default function Profil() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading, saveProfile } = useAuth()
 

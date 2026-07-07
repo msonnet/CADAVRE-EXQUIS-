@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { mono } from '../lib/typo'
 
 /**
  * Aide inline (sans en-tête de section) : un petit ✦ qui révèle une précision
@@ -66,7 +67,6 @@ export default function SectionAide({
   style?: React.CSSProperties
 }) {
   const [open, setOpen] = useState(false)
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   return (
     <div style={style}>

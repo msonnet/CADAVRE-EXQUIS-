@@ -16,6 +16,7 @@ import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
+import { mono } from '../lib/typo'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -675,7 +676,6 @@ export default function Jeu() {
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   const subtitle = TYPE_SUBTITLE[defActuelle?.type ?? ''] ?? ''
   const example  = TYPE_EXAMPLE[defActuelle?.type ?? ''] ?? null

@@ -9,6 +9,7 @@ import { corrigerAccords } from '../api/corriger'
 import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
 import type { PlanAtelier } from './Atelier'
+import { mono } from '../lib/typo'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -209,7 +210,6 @@ export default function JeuAtelier() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const idx = vers.length
   const total = plan?.totalVers ?? 0

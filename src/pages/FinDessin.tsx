@@ -10,6 +10,7 @@ import { partagerStory, partagerVideoStory } from '../utils/partager'
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
+import { mono } from '../lib/typo'
 
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
@@ -100,7 +101,6 @@ export default function FinDessin() {
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     let cancelled = false

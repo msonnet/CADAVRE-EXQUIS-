@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { VOICE_IDS } from '../data/voiceIds'
+import { mono } from '../lib/typo'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -98,7 +99,6 @@ export default function Atelier() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const toutes = nbVoix === VOICE_IDS.length
 

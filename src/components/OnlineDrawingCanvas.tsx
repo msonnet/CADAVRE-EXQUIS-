@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { mono } from '../lib/typo'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
 const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
@@ -141,7 +142,6 @@ interface Props {
 }
 
 export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum, totalBandes, accent, encre, bg }: Props) {
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [tool, setTool] = useState<Tool>('pencil')
   const [sizeIdx, setSizeIdx] = useState(1)

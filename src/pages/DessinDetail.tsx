@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import type { DessinCadavre } from '../types'
+import { mono } from '../lib/typo'
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString('fr-FR', {
@@ -41,7 +42,6 @@ export default function DessinDetail() {
   const encre = c?.encre ?? '#0f0805'
   const fond = c?.bg ?? '#faf8f3'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     if (!id) return

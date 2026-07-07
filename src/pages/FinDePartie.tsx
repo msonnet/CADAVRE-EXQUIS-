@@ -15,6 +15,7 @@ import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_IMAGE, T_FIN_SHARE, T_FIN_RECUEIL } from '../hooks/useTutoriel'
 import { vibrer } from '../utils/haptics'
+import { mono } from '../lib/typo'
 
 const STYLES = [
   { id: 'aquarelle',           label: 'Aquarelle' },
@@ -80,7 +81,6 @@ export default function FinDePartie() {
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {

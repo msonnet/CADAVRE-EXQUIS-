@@ -16,6 +16,7 @@ import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import type { DessinCadavre } from '../types'
+import { mono } from '../lib/typo'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
 type RoomPlayer = { player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
@@ -99,7 +100,6 @@ export default function FinOnline() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()

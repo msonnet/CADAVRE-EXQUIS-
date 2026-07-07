@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageTransition from '../components/PageTransition'
 import { useReve } from '../reve'
+import { mono } from '../lib/typo'
 
 export default function Privacy() {
   const navigate = useNavigate()
@@ -9,7 +10,6 @@ export default function Privacy() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const serif: React.CSSProperties = { fontFamily: "'Playfair Display', serif" }
 
   return (

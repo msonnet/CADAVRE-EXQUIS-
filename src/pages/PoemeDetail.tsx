@@ -14,6 +14,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
+import { mono } from '../lib/typo'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':  'Structure courte',
@@ -57,7 +58,6 @@ export default function PoemeDetail() {
   const fond = c?.bg ?? '#faf8f3'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const { etape: tutEtape, actif: tutActif, fete: tutFete, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {

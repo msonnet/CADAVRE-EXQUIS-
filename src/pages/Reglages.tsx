@@ -8,6 +8,7 @@ import type { NiveauValidation } from '../utils/validation'
 import {
   rappelDisponible, activerRappelQuotidien, desactiverRappelQuotidien, RAPPEL_KEY,
 } from '../utils/notifications'
+import { mono } from '../lib/typo'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
   { id: 'stricte', label: 'Stricte', desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
@@ -29,7 +30,6 @@ export default function Reglages() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   function changerValidation(niveau: NiveauValidation) {
     setValidation(niveau)

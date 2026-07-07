@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
+import { mono } from '../lib/typo'
 
 const STRUCTURES = [
   { romain: 'I',   label: 'Phrase courte',  detail: '3 cases · sujet, verbe, complément', exemple: "L'ombre / glisse / dans la nuit froide" },
@@ -42,7 +43,6 @@ export default function Aide() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const second = c?.second ?? '#1d3a8c'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [ouvert, setOuvert] = useState<string[]>([])
   function toggle(id: string) {

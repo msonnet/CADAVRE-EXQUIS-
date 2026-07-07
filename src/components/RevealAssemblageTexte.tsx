@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { vibrer } from '../utils/haptics'
+import { mono } from '../lib/typo'
 
 export interface FragmentConvergent {
   texte: string
@@ -77,7 +78,6 @@ export default function RevealAssemblageTexte({
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   return (
     <motion.div

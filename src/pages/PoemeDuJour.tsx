@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { supabase } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { getStructure, reconstruirePoeme } from '../structures'
+import { mono } from '../lib/typo'
 
 interface PoemeCase { texte: string }
 interface PoemePayload { cases: PoemeCase[]; structureId: string; titre?: string }
@@ -34,7 +35,6 @@ export default function PoemeDuJour() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [item, setItem] = useState<GalleryItem | null>(null)
   const [loading, setLoading] = useState(true)

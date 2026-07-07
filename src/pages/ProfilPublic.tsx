@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { supabase, getReactorKey } from '../lib/supabase'
+import { mono } from '../lib/typo'
 
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
 type ReactionEmoji = typeof REACTION_EMOJIS[number]
@@ -78,7 +79,6 @@ export default function ProfilPublic() {
   const bg = seance?.ambiance.bg ?? '#15110d'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
 
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [items, setItems] = useState<GalleryItem[]>([])
   const [chargement, setChargement] = useState(true)

@@ -8,6 +8,7 @@ import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_BIBLIO } from '../hooks/useTutoriel'
 import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
+import { mono } from '../lib/typo'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -45,7 +46,6 @@ export default function Bibliotheque() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const bg = c?.bg ?? '#f0e4cc'
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 

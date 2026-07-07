@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { REVEAL_DESSIN, fracRevealDessin } from '../utils/partager'
+import { mono } from '../lib/typo'
 
 interface Props {
   imageUrl: string
@@ -21,7 +22,6 @@ export default function RevealDessin({ imageUrl, texte, accent, encre, bg, onTer
   const lectRef = useRef<HTMLDivElement>(null)
   const [pretAFermer, setPretAFermer] = useState(false)
   const [hint, setHint] = useState(false)
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   useEffect(() => {
     const t0 = performance.now()

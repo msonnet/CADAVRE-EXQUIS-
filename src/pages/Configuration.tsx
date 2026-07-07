@@ -6,6 +6,7 @@ import SectionAide from '../components/SectionAide'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
+import { mono } from '../lib/typo'
 
 const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },
@@ -72,7 +73,6 @@ export default function Configuration() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   function demarrer() {
     jouer('demarrage')

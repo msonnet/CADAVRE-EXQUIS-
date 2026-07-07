@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { mono } from '../lib/typo'
 
 export interface TutorielCoachProps {
   visible: boolean
@@ -49,7 +50,6 @@ export default function TutorielCoach({
   visible, etape, total, titre, corps, cible, onCompris, labelCompris, onPasser,
   accent, encre, bg, position = 'bottom',
 }: TutorielCoachProps) {
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   const isTop = position === 'top'
 
   return (
@@ -159,7 +159,6 @@ export default function TutorielCoach({
 
 /** Panneau de célébration — fin du guide. La page appelle onFin après ~2,4 s. */
 export function TutorielFete({ visible, accent, encre, bg }: { visible: boolean; accent: string; encre: string; bg: string }) {
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
   return (
     <AnimatePresence>
       {visible && (

@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { supabase, getReactorKey } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { useAuth } from '../hooks/useAuth'
+import { mono } from '../lib/typo'
 
 const PAGE_SIZE = 20
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
@@ -95,7 +96,6 @@ export default function Galerie() {
   const bg = seance?.ambiance.bg ?? '#15110d'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
 
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const [onglet, setOnglet] = useState<GalleryType>('poeme')
   const [recherche, setRecherche] = useState('')

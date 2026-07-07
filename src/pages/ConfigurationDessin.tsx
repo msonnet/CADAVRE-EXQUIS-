@@ -6,6 +6,7 @@ import SectionAide from '../components/SectionAide'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin } from '../types'
+import { mono } from '../lib/typo'
 
 const CONFIG_PAR_DEFAUT: ConfigDessin = {
   nbBandes: 3,
@@ -47,7 +48,6 @@ export default function ConfigurationDessin() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const totalBandes = config.nbBandes
   const cycleNote = joueurs < totalBandes

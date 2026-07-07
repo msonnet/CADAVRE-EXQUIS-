@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
+import { mono } from '../lib/typo'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,6 @@ export default function JeuOnline() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const bg = c?.bg ?? '#fdf8f2'
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
