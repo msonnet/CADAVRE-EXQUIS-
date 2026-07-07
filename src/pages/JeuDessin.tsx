@@ -131,7 +131,7 @@ function IconPipette({ tint, nib }: { tint: string; nib: string }) {
 const TOOL_ICONS = { pencil: IconPencil, pen: IconPen, marker: IconMarker, brush: IconBrush, crayon: IconCrayon, airbrush: IconAirbrush, eraser: IconEraser }
 const TOOL_NAMES: Record<Tool, string> = { pencil: 'Crayon', pen: 'Stylo', marker: 'Feutre', brush: 'Pinceau', crayon: 'Craie', airbrush: 'Aéro', eraser: 'Gomme' }
 
-const TOOLBAR_H = 218
+const TOOLBAR_H = 236
 const RACCORD_H = 80
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -886,7 +886,7 @@ export default function JeuDessin() {
 
         {/* Rangée opacité */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 44 }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 11, color: `${encre}55`, flexShrink: 0 }}>OPACITÉ</span>
           <input
             type="range" min={10} max={100} step={5}
             value={Math.round(opacity * 100)}
@@ -902,7 +902,7 @@ export default function JeuDessin() {
 
         {/* Rangée tailles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${encre}45`, flexShrink: 0, width: 32 }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 11, color: `${encre}55`, flexShrink: 0 }}>TAILLE</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button
@@ -910,7 +910,7 @@ export default function JeuDessin() {
                 onClick={() => setSizeIdx(i)}
                 aria-pressed={sizeIdx === i}
                 style={{
-                  flex: 1, height: 34,
+                  flex: 1, height: 44,
                   background: sizeIdx === i ? '#f5f0ea' : 'transparent',
                   border: 'none', borderRadius: 3,
                   cursor: 'pointer',
@@ -940,7 +940,7 @@ export default function JeuDessin() {
                   aria-label="Annuler"
                   title="Annuler (Ctrl+Z)"
                   style={{
-                    width: 34, height: 34, borderRadius: 3, border: 'none',
+                    width: 44, height: 44, borderRadius: 3, border: 'none',
                     background: canUndo ? `${accent}18` : 'transparent',
                     color: canUndo ? accent : encre,
                     opacity: canUndo ? 1 : 0.35,
@@ -957,7 +957,7 @@ export default function JeuDessin() {
                   aria-label="Rétablir"
                   title="Rétablir (Ctrl+Shift+Z)"
                   style={{
-                    width: 34, height: 34, borderRadius: 3, border: 'none',
+                    width: 44, height: 44, borderRadius: 3, border: 'none',
                     background: canRedo ? `${accent}18` : 'transparent',
                     color: canRedo ? accent : encre,
                     opacity: canRedo ? 1 : 0.35,
@@ -978,7 +978,7 @@ export default function JeuDessin() {
           {/* Son */}
           <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Activer le son' : 'Couper le son'}
             style={{
-              width: 36, height: 36, borderRadius: 3, border: 'none',
+              width: 44, height: 44, borderRadius: 3, border: 'none',
               background: '#c8bfb0',
               fontSize: 17, cursor: 'pointer',
               color: muted ? '#888070' : '#1a1208',
@@ -993,7 +993,7 @@ export default function JeuDessin() {
             aria-label={panMode ? 'Retour au dessin' : 'Naviguer / zoomer'}
             title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
             style={{
-              width: 36, height: 36, borderRadius: 3, border: 'none',
+              width: 44, height: 44, borderRadius: 3, border: 'none',
               background: panMode ? accent : '#c8bfb0',
               color: panMode ? '#fff' : '#1a1208',
               fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1011,7 +1011,7 @@ export default function JeuDessin() {
             aria-label="Compte-gouttes"
             title="Prélever une couleur sur le canvas"
             style={{
-              width: 36, height: 36, borderRadius: 3, border: 'none',
+              width: 44, height: 44, borderRadius: 3, border: 'none',
               background: pipetteActive ? accent : '#c8bfb0',
               color: pipetteActive ? '#fff' : '#1a1208',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',

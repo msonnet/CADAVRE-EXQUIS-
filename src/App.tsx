@@ -23,6 +23,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
 }
 import SplashScreen from './components/SplashScreen'
+import AndroidBackHandler from './components/AndroidBackHandler'
 const Accueil = React.lazy(() => import('./pages/Accueil'))
 const Decouverte = React.lazy(() => import('./pages/Decouverte'))
 const Configuration = React.lazy(() => import('./pages/Configuration'))
@@ -73,6 +74,7 @@ export default function App() {
     <ReveProvider>
       <SplashScreen />
       <BrowserRouter>
+        <AndroidBackHandler />
         <AnimatePresence mode="wait">
           <Suspense fallback={<PageFallback />}>
             <Routes>

@@ -5,7 +5,7 @@ import { mono } from '../lib/typo'
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
 const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
 const SIZES = [1.5, 4, 9, 17, 28]
-const TOOLBAR_H = 218
+const TOOLBAR_H = 228
 const RACCORD_H = 80
 // Encre fixe de la barre d'outils — toujours lisible sur son fond beige fixe (#f0e9df).
 const TB_INK = '#1a1208'
@@ -539,7 +539,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button key={i} onClick={() => setSizeIdx(i)} aria-pressed={sizeIdx === i}
-                style={{ flex: 1, height: 34, background: sizeIdx === i ? '#f5f0ea' : 'transparent', border: 'none', borderRadius: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}>
+                style={{ flex: 1, height: 44, background: sizeIdx === i ? '#f5f0ea' : 'transparent', border: 'none', borderRadius: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}>
                 <div style={{ width: Math.min(sz * 0.7 + 3, 22), height: Math.min(sz * 0.7 + 3, 22), borderRadius: '50%', background: sizeIdx === i ? (tool === 'eraser' ? TB_INK : color) : `${TB_INK}80`, transition: 'background 0.15s' }} />
               </button>
             ))}
@@ -547,7 +547,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
           <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
             {([{ fn: undo, can: canUndo, icon: '↩', label: 'Annuler' }, { fn: redo, can: canRedo, icon: '↪', label: 'Rétablir' }] as const).map(({ fn, can, icon, label }) => (
               <button key={label} onClick={fn} disabled={!can} aria-label={label}
-                style={{ width: 34, height: 34, borderRadius: 3, border: 'none', background: can ? `${accent}18` : 'transparent', color: can ? accent : TB_INK, opacity: can ? 1 : 0.35, fontSize: 18, cursor: can ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: can ? `${accent}18` : 'transparent', color: can ? accent : TB_INK, opacity: can ? 1 : 0.35, fontSize: 18, cursor: can ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {icon}
               </button>
             ))}
@@ -557,9 +557,9 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
         {/* Action row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={() => setPanMode(p => !p)} aria-pressed={panMode} aria-label={panMode ? 'Retour au dessin' : 'Naviguer / zoomer'}
-            style={{ width: 36, height: 36, borderRadius: 3, border: 'none', background: panMode ? accent : '#c8bfb0', color: panMode ? '#fff' : '#1a1208', fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✥</button>
+            style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: panMode ? accent : '#c8bfb0', color: panMode ? '#fff' : '#1a1208', fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✥</button>
           <button onClick={() => { if (pipetteActive) { setPipetteActive(false); return }; toolAvantPipette.current = tool; setPipetteActive(true) }} aria-pressed={pipetteActive} aria-label="Compte-gouttes"
-            style={{ width: 36, height: 36, borderRadius: 3, border: 'none', background: pipetteActive ? accent : '#c8bfb0', color: pipetteActive ? '#fff' : '#1a1208', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: pipetteActive ? accent : '#c8bfb0', color: pipetteActive ? '#fff' : '#1a1208', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
               <path d="M13.5 1.5 C14.5 2.5 14.5 4 13.5 5L8 10.5L5.5 11.5L6.5 9L12 3.5 C13 2.5 12.5 0.5 13.5 1.5Z" fill="currentColor" fillOpacity="0.9" />
               <circle cx="4" cy="13" r="2" fill="currentColor" fillOpacity="0.75"/>

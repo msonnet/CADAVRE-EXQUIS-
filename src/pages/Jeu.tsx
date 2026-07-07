@@ -15,6 +15,7 @@ import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
+import { useClavierOuvert } from '../hooks/useClavierOuvert'
 import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
 
@@ -329,6 +330,7 @@ export default function Jeu() {
 
   const { start: ambianceStart, stop: ambianceStop, toggleMute, muted } = useAmbiance()
   const { jouer } = useSound()
+  const clavierOuvert = useClavierOuvert()
   const seance = useReve()
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
@@ -988,7 +990,9 @@ export default function Jeu() {
               </motion.div>
             </motion.div>
 
-            <div style={{ flex: 1 }} />
+            {/* L'espaceur se replie quand le clavier iOS est ouvert : le CTA
+                remonte juste sous le champ au lieu d'être masqué. */}
+            {!clavierOuvert && <div style={{ flex: 1 }} />}
 
             {/* CTA */}
             <motion.div
