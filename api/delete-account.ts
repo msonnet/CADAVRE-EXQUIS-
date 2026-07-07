@@ -22,7 +22,8 @@ export default async function handler(req: any, res: any): Promise<void> {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
   if (!token) { res.status(401).json({ error: 'Non authentifié' }); return }
 
-  const url = process.env.SUPABASE_URL
+  // Même repli que cleanup.ts : la prod Vercel ne définit que VITE_SUPABASE_URL
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) { res.status(503).json({ error: 'Service indisponible' }); return }
 
@@ -36,6 +37,11 @@ export default async function handler(req: any, res: any): Promise<void> {
   await sb.from('gallery')
     .update({ author_id: null, author_pseudo: 'Anonyme', author_avatar: null })
     .eq('author_id', uid)
+
+  // Détacher toute référence restante avant de supprimer le compte auth :
+  // une FK vers auth.users sans ON DELETE CASCADE ferait échouer deleteUser.
+  await sb.from('gallery_reports').update({ reporter_id: null }).eq('reporter_id', uid)
+  await sb.from('rooms').update({ host_id: null }).eq('host_id', uid)
 
   // Retirer des salons en cours et effacer le profil
   await sb.from('room_players').delete().eq('player_id', uid)

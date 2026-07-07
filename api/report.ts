@@ -21,7 +21,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     res.status(400).json({ error: 'reason invalide' }); return
   }
 
-  const url = process.env.SUPABASE_URL
+  // Même repli que cleanup.ts : la prod Vercel ne définit que VITE_SUPABASE_URL
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) { res.status(503).json({ error: 'Service indisponible' }); return }
 
