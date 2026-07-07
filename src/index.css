@@ -326,6 +326,18 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
   .decor-symbol-accueil { transform: scale(0.50); }
 }
 
+/* ── Tutoriel : halo pulsant sur l'élément cible ──
+   La couleur vient de --tut-glow (accent + alpha), posée inline par la page. ── */
+@keyframes tutPulse {
+  0%   { box-shadow: 0 0 0 0 var(--tut-glow, rgba(178, 44, 32, 0.45)); }
+  70%  { box-shadow: 0 0 0 11px rgba(0, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+.tut-cible {
+  animation: tutPulse 1.5s ease-out infinite;
+  border-radius: 3px;
+}
+
 /* ── Accessibilité : réduction de mouvement ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

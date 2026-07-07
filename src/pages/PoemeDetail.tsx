@@ -12,7 +12,7 @@ import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
-import TutorielCoach from '../components/TutorielCoach'
+import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 
 const NOMS_STRUCTURES: Record<string, string> = {
@@ -58,11 +58,18 @@ export default function PoemeDetail() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
-  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
+  const { etape: tutEtape, actif: tutActif, fete: tutFete, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
     if (tutActif && tutEtape === T_DETAIL && published) tutAvancer()
   }, [published]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Célébration de fin de guide — se referme seule
+  useEffect(() => {
+    if (!tutFete) return
+    const t = setTimeout(tutTerminer, 2600)
+    return () => clearTimeout(t)
+  }, [tutFete]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!id) return
@@ -523,7 +530,9 @@ export default function PoemeDetail() {
             onClick={publierDansGalerie}
             disabled={publishing || published}
             aria-label="Publier ce poème dans la galerie"
+            className={tutActif && tutEtape === T_DETAIL ? 'tut-cible' : undefined}
             style={{
+              ['--tut-glow' as string]: `${accent}66`,
               width: '100%', padding: '0.85em',
               background: 'transparent',
               color: publishError ? accent : (published ? accent : encre),
@@ -646,13 +655,15 @@ export default function PoemeDetail() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_DETAIL}
         etape={T_DETAIL} total={TUTORIEL_TOTAL}
-        titre="Publier dans la galerie"
-        corps="La galerie est partagée entre tous les joueurs. En publiant, ton poème rejoint la collection commune — visible de toute la communauté. C'est la dernière étape du guide."
+        titre="Publie-le, si tu veux"
+        corps="La galerie rassemble les poèmes de tous les joueurs. Le tien peut en être."
         cible="✦ PUBLIER DANS LA GALERIE"
         onCompris={tutAvancer}
+        labelCompris="TERMINER LE GUIDE →"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={fond}
       />
+      <TutorielFete visible={tutFete} accent={accent} encre={encre} bg={fond} />
     </PageTransition>
   )
 }

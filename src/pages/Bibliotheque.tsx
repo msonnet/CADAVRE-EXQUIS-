@@ -201,10 +201,12 @@ export default function Bibliotheque() {
                   <motion.button
                     key={poeme.id}
                     onClick={() => { jouer('clic'); if (tutActif && tutEtape === T_BIBLIO) tutAvancer(); navigate(`/bibliotheque/${poeme.id}`) }}
+                    className={tutActif && tutEtape === T_BIBLIO && i === 0 ? 'tut-cible' : undefined}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
                     style={{
+                      ['--tut-glow' as string]: `${accent}66`,
                       display: 'block', width: '100%', textAlign: 'left',
                       padding: '13px 0 13px 12px',
                       borderBottom: `0.5px solid ${encre}12`,
@@ -316,9 +318,10 @@ export default function Bibliotheque() {
         visible={tutActif && tutEtape === T_BIBLIO}
         etape={T_BIBLIO} total={TUTORIEL_TOTAL}
         titre="Ton recueil"
-        corps="Tous tes poèmes sont sauvegardés ici. Tape sur un poème pour l'ouvrir — tu pourras le relire, le partager et le publier dans la galerie."
-        cible="TAPE SUR UN POÈME →"
+        corps="Tes poèmes vivent ici. Ouvre celui que tu viens d'écrire."
+        cible="TAPE SUR TON POÈME"
         onCompris={tutAvancer}
+        labelCompris="PLUS TARD →"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />

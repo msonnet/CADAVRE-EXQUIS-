@@ -461,8 +461,9 @@ export default function FinDePartie() {
         >
           <button
             onClick={() => { if (tutActif && tutEtape === T_FIN_RECUEIL) tutAvancer(); navigate('/bibliotheque') }}
-            className="w-full flex flex-col items-center justify-center"
+            className={`w-full flex flex-col items-center justify-center${tutActif && tutEtape === T_FIN_RECUEIL ? ' tut-cible' : ''}`}
             style={{
+              ['--tut-glow' as string]: `${accent}66`,
               background: accent, color: btnText,
               ...mono, fontSize: 17,
               textTransform: 'uppercase',
@@ -493,7 +494,8 @@ export default function FinDePartie() {
           <button
             onClick={partager}
             disabled={partageEnCours}
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.5, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '2px 0' }}
+            className={tutActif && tutEtape === T_FIN_SHARE ? 'tut-cible' : undefined}
+            style={{ ['--tut-glow' as string]: `${accent}66`, ...mono, fontSize: 13, letterSpacing: '0.12em', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.5, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '2px 0' }}
           >
             {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
           </button>
@@ -505,7 +507,8 @@ export default function FinDePartie() {
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '2px 0' }}
+            className={tutActif && tutEtape === T_FIN_IMAGE ? 'tut-cible' : undefined}
+            style={{ ['--tut-glow' as string]: `${accent}66`, ...mono, fontSize: 13, letterSpacing: '0.12em', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '2px 0' }}
           >
             — IMAGE —
           </button>
@@ -675,7 +678,7 @@ export default function FinDePartie() {
         visible={tutActif && tutEtape === T_FIN_REVEL && revealReady}
         etape={T_FIN_REVEL} total={TUTORIEL_TOTAL}
         titre="La révélation"
-        corps="Voilà ce que vous avez créé à l'aveugle. Chaque fragment a été écrit sans voir les autres — c'est l'assemblage qui produit la surprise surréaliste."
+        corps="Trois fragments écrits sans se voir — voilà le poème que personne n'a décidé."
         onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
@@ -683,31 +686,35 @@ export default function FinDePartie() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_FIN_IMAGE}
         etape={T_FIN_IMAGE} total={TUTORIEL_TOTAL}
-        titre="Illustrer le poème"
-        corps="L'IA peut générer une illustration — aquarelle, fusain, gravure… Ouvre le panneau IMAGE et choisis un style. Tu peux aussi passer à l'étape suivante."
+        titre="Donne-lui une image"
+        corps="L'IA peut peindre ton poème — aquarelle, fusain, gravure…"
         cible="— IMAGE —"
         position="top"
         onCompris={tutAvancer}
+        labelCompris="PLUS TARD →"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
       <TutorielCoach
         visible={tutActif && tutEtape === T_FIN_SHARE}
         etape={T_FIN_SHARE} total={TUTORIEL_TOTAL}
-        titre="Partager le poème"
-        corps="Le jeu compose une vidéo animée avec ton poème — partage-la sur Instagram, WhatsApp ou par SMS. Tu peux aussi continuer sans partager."
+        titre="Partage-le"
+        corps="Une vidéo animée se compose toute seule — Instagram, WhatsApp, SMS."
         cible="— PARTAGER —"
         position="top"
         onCompris={tutAvancer}
+        labelCompris="PLUS TARD →"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
       <TutorielCoach
         visible={tutActif && tutEtape === T_FIN_RECUEIL}
         etape={T_FIN_RECUEIL} total={TUTORIEL_TOTAL}
-        titre="Sceller au recueil"
-        corps="Sauvegarde ce poème dans ta bibliothèque personnelle. Tu pourras le relire, le partager et le publier dans la galerie communautaire."
+        titre="Scelle ton poème"
+        corps="Il rejoint ta bibliothèque — tu pourras le relire, le partager, le publier."
+        cible="SCELLER AU RECUEIL"
         onCompris={() => { tutAvancer(); navigate('/bibliotheque') }}
+        labelCompris="VOIR MON RECUEIL →"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />

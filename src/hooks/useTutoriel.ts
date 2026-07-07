@@ -13,6 +13,9 @@ export const T_FIN_SHARE   = 5
 export const T_FIN_RECUEIL = 6
 export const T_BIBLIO      = 7
 export const T_DETAIL      = 8
+// État transitoire après la dernière étape : panneau de célébration,
+// auto-fermé par la page qui le rend (PoemeDetail).
+export const T_FETE        = TUTORIEL_TOTAL
 
 export function activerTutoriel() {
   sessionStorage.setItem(KEY_ACTIF, '1')
@@ -31,14 +34,17 @@ export function useTutoriel() {
   const etapeRef = useRef(etape)
   etapeRef.current = etape
 
-  const actif = etape >= 0
+  const actif = etape >= 0 && etape < TUTORIEL_TOTAL
+  const fete = etape === T_FETE
 
   const avancer = useCallback(() => {
     const next = etapeRef.current + 1
     if (next >= TUTORIEL_TOTAL) {
+      // Fin du parcours : on nettoie le storage tout de suite (la fête ne
+      // survit pas à une navigation) mais on garde l'état local pour la célébration.
       sessionStorage.removeItem(KEY_ACTIF)
       sessionStorage.removeItem(KEY_ETAPE)
-      setEtapeState(-1)
+      setEtapeState(T_FETE)
     } else {
       // Écriture immédiate : garantit que la page suivante lit la bonne valeur
       sessionStorage.setItem(KEY_ETAPE, String(next))
@@ -52,5 +58,5 @@ export function useTutoriel() {
     setEtapeState(-1)
   }, [])
 
-  return { etape, actif, avancer, terminer }
+  return { etape, actif, fete, avancer, terminer }
 }

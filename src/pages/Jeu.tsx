@@ -811,8 +811,8 @@ export default function Jeu() {
         <TutorielCoach
           visible={tutActif && tutEtape === T_JEU_IA}
           etape={T_JEU_IA} total={TUTORIEL_TOTAL}
-          titre="La voix mystérieuse écrit…"
-          corps="Un fragment secret est ajouté à l'aveugle. Tu ne vois pas ce qu'il contient — c'est la règle du cadavre exquis. Tape Compris quand tu es prêt à écrire la suite."
+          titre="La voix écrit en secret"
+          corps="Son fragment restera caché jusqu'à la fin — c'est la règle du cadavre exquis."
           onCompris={() => {
             tutAvancer()
             if (iaAvancePendingRef.current) {
@@ -820,6 +820,7 @@ export default function Jeu() {
               iaAvancePendingRef.current = null
             }
           }}
+          labelCompris="Écrire la suite →"
           onPasser={tutTerminer}
           accent={accent} encre={encre} bg={bg}
         />
@@ -988,8 +989,9 @@ export default function Jeu() {
                 onClick={soumettre}
                 disabled={!inputValue.trim()}
                 aria-label="Sceller cette voix et passer à la suivante"
-                className="w-full flex flex-col items-center justify-center"
+                className={`w-full flex flex-col items-center justify-center${tutActif && (tutEtape === T_JEU_1 || tutEtape === T_JEU_2) && inputValue.trim() ? ' tut-cible' : ''}`}
                 style={{
+                  ['--tut-glow' as string]: `${accent}66`,
                   background: !inputValue.trim() ? `${encre}30` : accent,
                   color: btnText,
                   ...mono, fontSize: 17,
@@ -1039,8 +1041,8 @@ export default function Jeu() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_JEU_1}
         etape={T_JEU_1} total={TUTORIEL_TOTAL}
-        titre="Ton premier fragment"
-        corps="Le cadavre exquis se construit à l'aveugle : chaque joueur écrit sa partie sans voir les autres. Écris ce qui te passe par la tête — l'inattendu est bienvenu."
+        titre="À toi d'écrire"
+        corps="Écris ce qui te passe par la tête — personne ne le verra avant la fin."
         cible="SCELLER CETTE VOIX"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
@@ -1049,8 +1051,8 @@ export default function Jeu() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_JEU_IA && participantActuel?.type === 'humain'}
         etape={T_JEU_IA} total={TUTORIEL_TOTAL}
-        titre="La voix a écrit en secret."
-        corps="Son fragment est scellé. Tu vas maintenant écrire le dernier morceau du cadavre, à l'aveugle comme elle."
+        titre="La voix a écrit en secret"
+        corps="Son fragment est scellé. À toi d'écrire le dernier — à l'aveugle, comme elle."
         onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
@@ -1058,8 +1060,8 @@ export default function Jeu() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_JEU_2}
         etape={T_JEU_2} total={TUTORIEL_TOTAL}
-        titre="Ton deuxième fragment"
-        corps="Continue librement — tu ne sais pas ce que la voix mystérieuse a écrit. C'est cet assemblage aveugle qui produira quelque chose d'imprévisible."
+        titre="Le dernier fragment"
+        corps="Tu ignores ce que la voix a écrit — c'est l'assemblage aveugle qui fera la surprise."
         cible="SCELLER CETTE VOIX"
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
