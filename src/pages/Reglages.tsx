@@ -26,6 +26,15 @@ export default function Reglages() {
   )
   const [rappelBusy, setRappelBusy] = useState(false)
   const [rappelRefuse, setRappelRefuse] = useState(false)
+  const [nbMasques, setNbMasques] = useState<number>(() => {
+    try { return (JSON.parse(localStorage.getItem('auteurs-masques') ?? '[]') as string[]).length }
+    catch { return 0 }
+  })
+
+  function reafficherAuteurs() {
+    localStorage.removeItem('auteurs-masques')
+    setNbMasques(0)
+  }
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
@@ -169,6 +178,38 @@ export default function Reglages() {
             {seance?.ambiance.name}
           </div>
         </motion.div>
+
+        {/* ── AUTEURS MASQUÉS (galerie) ── */}
+        {nbMasques > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.55 }}
+            style={{ marginBottom: 28 }}
+          >
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+              — GALERIE —
+            </div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
+              {nbMasques === 1 ? 'Un auteur est masqué' : `${nbMasques} auteurs sont masqués`} dans la galerie.
+            </div>
+            <button
+              onClick={reafficherAuteurs}
+              style={{
+                ...mono, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.12em',
+                color: encre,
+                background: 'transparent',
+                border: `0.5px solid ${encre}40`,
+                borderRadius: 3,
+                padding: '12px 0', cursor: 'pointer',
+                width: '100%',
+                transition: 'all 0.2s',
+              }}
+            >
+              RÉAFFICHER TOUS LES AUTEURS
+            </button>
+          </motion.div>
+        )}
 
         {/* ── RAPPEL QUOTIDIEN (app installée uniquement) ── */}
         {rappelDisponible() && (

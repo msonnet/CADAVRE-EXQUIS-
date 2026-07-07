@@ -38,7 +38,7 @@ export default function Profil() {
   const encre = c?.encre ?? '#0f0805'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
 
-  const { user, profile, loading, saveProfile } = useAuth()
+  const { user, profile, loading, saveProfile, deleteAccount } = useAuth()
 
   const [pseudo, setPseudo] = useState('')
   const [avatarPrompt, setAvatarPrompt] = useState('')
@@ -47,6 +47,19 @@ export default function Profil() {
   const [generatingAvatar, setGeneratingAvatar] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  async function supprimerCompte() {
+    if (deleting) return
+    setDeleting(true)
+    setDeleteError(null)
+    const err = await deleteAccount()
+    setDeleting(false)
+    if (err) { setDeleteError(err); return }
+    navigate('/', { replace: true })
+  }
 
   useEffect(() => {
     if (profile) {
@@ -231,6 +244,48 @@ export default function Profil() {
         >
           {saving ? 'ENREGISTREMENT…' : profile ? 'SAUVEGARDER' : 'CRÉER MON PROFIL →'}
         </button>
+
+        {/* ── SUPPRESSION DE COMPTE (exigence App Store 5.1.1) ── */}
+        {profile && (
+          <div style={{ marginTop: 28, paddingTop: 16, borderTop: `0.5px solid ${encre}20`, textAlign: 'center' }}>
+            {!confirmDelete ? (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', minHeight: 44 }}
+              >
+                — SUPPRIMER MON COMPTE —
+              </button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: encre, opacity: 0.85, lineHeight: 1.5 }}>
+                  Ton profil et ton compte seront définitivement supprimés.
+                  Tes publications dans la galerie deviendront anonymes.
+                </p>
+                {deleteError && (
+                  <p role="alert" style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{deleteError}</p>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={supprimerCompte}
+                    disabled={deleting}
+                    style={{ flex: 1, padding: '0.85em', background: '#7B0000', color: '#e8d4b8', ...mono, fontSize: 15, border: 'none', cursor: deleting ? 'wait' : 'pointer', borderRadius: 3 }}
+                  >
+                    {deleting ? 'SUPPRESSION…' : 'SUPPRIMER DÉFINITIVEMENT'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setConfirmDelete(false); setDeleteError(null) }}
+                    style={{ padding: '0.85em 1em', background: 'transparent', color: encre, ...mono, fontSize: 15, border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 3 }}
+                  >
+                    ANNULER
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </motion.form>
     </PageTransition>
   )

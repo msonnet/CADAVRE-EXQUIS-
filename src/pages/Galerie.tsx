@@ -85,6 +85,19 @@ const REPORT_REASONS = [
   { id: 'other', label: 'Autre' },
 ] as const
 
+// ── Auteurs masqués (App Store guideline 1.2 : bloquer un utilisateur abusif) ──
+// Liste locale à l'appareil ; réinitialisable depuis Réglages.
+export const MASQUES_KEY = 'auteurs-masques'
+
+export function cleAuteur(item: { author_id?: string | null; author_pseudo: string }): string {
+  return item.author_id ?? `p:${item.author_pseudo}`
+}
+
+function lireMasques(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(MASQUES_KEY) ?? '[]')) }
+  catch { return new Set() }
+}
+
 export default function Galerie() {
   const navigate = useNavigate()
   const seance = useReve()
@@ -118,6 +131,17 @@ export default function Galerie() {
   const [reportDone, setReportDone] = useState(false)
   const [reportError, setReportError] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [masques, setMasques] = useState<Set<string>>(lireMasques)
+
+  const masquerAuteur = useCallback((item: GalleryItem) => {
+    setMasques(prev => {
+      const next = new Set(prev)
+      next.add(cleAuteur(item))
+      try { localStorage.setItem(MASQUES_KEY, JSON.stringify([...next])) } catch { /* plein */ }
+      return next
+    })
+    setExpanded(null)
+  }, [])
 
   const chargerReactions = useCallback(async (ids: string[]) => {
     if (ids.length === 0) return
@@ -655,12 +679,13 @@ export default function Galerie() {
         {/* ── LISTE ── */}
         {!chargement && !erreur && items.length > 0 && (() => {
           const q = recherche.trim().toLowerCase()
+          const visibles = items.filter(it => !masques.has(cleAuteur(it)))
           const itemsFiltres = q
-            ? items.filter(it =>
+            ? visibles.filter(it =>
                 (it.titre ?? '').toLowerCase().includes(q) ||
                 it.author_pseudo.toLowerCase().includes(q)
               )
-            : items
+            : visibles
           return (
           <AnimatePresence initial={false}>
             {itemsFiltres.length === 0 ? (
@@ -916,28 +941,47 @@ export default function Galerie() {
                               ...mono, fontSize: 13, color: accent, opacity: 0.85,
                               background: 'none', border: `0.5px solid ${accent}40`,
                               borderRadius: 3,
-                              cursor: 'pointer', padding: '3px 10px',
+                              cursor: 'pointer', padding: '9px 12px', minHeight: 40,
                             }}
                           >
                             {deletingId === item.id ? '…' : '✕ SUPPRIMER'}
                           </button>
                         ) : (
-                          <button
-                            onClick={e => {
-                              e.stopPropagation()
-                              setReportingId(item.id)
-                              setReportReason('')
-                              setReportDetails('')
-                            }}
-                            style={{
-                              ...mono, fontSize: 13, color: encre, opacity: 0.65,
-                              background: 'none', border: `0.5px solid ${encre}30`,
-                              borderRadius: 3,
-                              cursor: 'pointer', padding: '3px 10px',
-                            }}
-                          >
-                            ⚑ Signaler
-                          </button>
+                          <>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation()
+                                setReportingId(item.id)
+                                setReportReason('')
+                                setReportDetails('')
+                              }}
+                              style={{
+                                ...mono, fontSize: 13, color: encre, opacity: 0.65,
+                                background: 'none', border: `0.5px solid ${encre}30`,
+                                borderRadius: 3,
+                                cursor: 'pointer', padding: '9px 12px', minHeight: 40,
+                              }}
+                            >
+                              ⚑ Signaler
+                            </button>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation()
+                                if (confirm(`Masquer toutes les publications de « ${item.author_pseudo} » ? (réversible dans Réglages)`)) {
+                                  masquerAuteur(item)
+                                }
+                              }}
+                              aria-label={`Masquer les publications de ${item.author_pseudo}`}
+                              style={{
+                                ...mono, fontSize: 13, color: encre, opacity: 0.65,
+                                background: 'none', border: `0.5px solid ${encre}30`,
+                                borderRadius: 3,
+                                cursor: 'pointer', padding: '9px 12px', minHeight: 40,
+                              }}
+                            >
+                              ⊘ Masquer l'auteur
+                            </button>
+                          </>
                         )}
                       </div>}
                     </div>

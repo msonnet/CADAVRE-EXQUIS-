@@ -68,6 +68,32 @@ export function useAuth() {
     await supabase.auth.signOut()
   }
 
+  /**
+   * Suppression définitive du compte (exigence App Store 5.1.1).
+   * Le serveur vérifie le jeton : on ne peut supprimer que son propre compte.
+   * Renvoie null si OK, sinon un message d'erreur à afficher.
+   */
+  async function deleteAccount(): Promise<string | null> {
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    if (!token) return 'Non connecté'
+    try {
+      const res = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => null)
+        return d?.error ?? 'Suppression impossible — réessaie.'
+      }
+    } catch {
+      return 'Connexion impossible — vérifie ton réseau.'
+    }
+    await supabase.auth.signOut()
+    setProfile(null)
+    return null
+  }
+
   async function saveProfile(pseudo: string, avatar_url?: string, avatar_prompt?: string): Promise<string | null> {
     if (!user) return 'Non connecté'
     const payload = { id: user.id, pseudo, avatar_url: avatar_url ?? null, avatar_prompt: avatar_prompt ?? null }
@@ -77,5 +103,5 @@ export function useAuth() {
     return null
   }
 
-  return { user, session, profile, loading, signInAnonymously, signOut, saveProfile, reloadProfile: () => user && loadProfile(user.id) }
+  return { user, session, profile, loading, signInAnonymously, signOut, deleteAccount, saveProfile, reloadProfile: () => user && loadProfile(user.id) }
 }
