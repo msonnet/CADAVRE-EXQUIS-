@@ -116,6 +116,7 @@ export default function Galerie() {
   const [reportDetails, setReportDetails] = useState('')
   const [reportSending, setReportSending] = useState(false)
   const [reportDone, setReportDone] = useState(false)
+  const [reportError, setReportError] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const chargerReactions = useCallback(async (ids: string[]) => {
@@ -229,6 +230,7 @@ export default function Galerie() {
   const envoyerSignalement = useCallback(async () => {
     if (!reportingId || !reportReason) return
     setReportSending(true)
+    setReportError(false)
     try {
       const res = await fetch('/api/report', {
         method: 'POST',
@@ -248,8 +250,12 @@ export default function Galerie() {
           setReportReason('')
           setReportDetails('')
         }, 2000)
+      } else {
+        setReportError(true)
       }
-    } catch { /* ignore */ } finally {
+    } catch {
+      setReportError(true)
+    } finally {
       setReportSending(false)
     }
   }, [reportingId, reportReason, reportDetails, user])
@@ -338,6 +344,9 @@ export default function Galerie() {
             onClick={() => { if (!reportSending) { setReportingId(null); setReportReason(''); setReportDetails('') } }}
           >
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Signaler ce contenu"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -356,11 +365,16 @@ export default function Galerie() {
               </div>
 
               {reportDone ? (
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85 }}>
+                <p role="status" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85 }}>
                   Signalement envoyé. Merci.
                 </p>
               ) : (
                 <>
+                  {reportError && (
+                    <p role="alert" style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: accent }}>
+                      L'envoi a échoué — vérifie ta connexion et réessaie.
+                    </p>
+                  )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {REPORT_REASONS.map(r => (
                       <button
@@ -387,7 +401,7 @@ export default function Galerie() {
                     maxLength={500}
                     rows={3}
                     style={{
-                      ...mono, fontSize: 14, color: encre,
+                      ...mono, fontSize: 16, color: encre,
                       background: `${encre}08`,
                       border: `0.5px solid ${encre}30`,
                       borderRadius: 3,
@@ -567,16 +581,17 @@ export default function Galerie() {
             onChange={e => setRecherche(e.target.value)}
             placeholder="Rechercher par titre ou auteur…"
             aria-label="Rechercher par titre ou auteur"
+            enterKeyHint="search"
             style={{
               width: '100%',
-              ...mono, fontSize: 14,
+              ...mono, fontSize: 16,
               color: encre,
               background: `${encre}06`,
               border: `0.5px solid ${encre}25`,
               borderBottom: recherche ? `1px solid ${accent}` : `0.5px solid ${encre}25`,
               borderRadius: 3,
               outline: 'none',
-              padding: '8px 12px',
+              padding: '10px 12px',
               transition: 'border-color 0.2s',
             }}
           />

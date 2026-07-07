@@ -23,7 +23,7 @@ export function AideInline({
         aria-expanded={open}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
-          background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+          background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', minHeight: 40,
           fontFamily: "'Raleway', sans-serif", fontSize: 11, letterSpacing: '0.18em',
           textTransform: 'uppercase', color: open ? accent : `${accent}99`,
         }}
@@ -66,7 +66,7 @@ export default function SectionAide({
   style?: React.CSSProperties
 }) {
   const [open, setOpen] = useState(false)
-  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.22em' }
+  const mono: React.CSSProperties = { fontFamily: "'Raleway', sans-serif", letterSpacing: '0.18em' }
 
   return (
     <div style={style}>
@@ -81,7 +81,7 @@ export default function SectionAide({
             aria-expanded={open}
             aria-label={open ? 'Masquer l’aide' : 'En savoir plus'}
             style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: 2, lineHeight: 1,
+              background: 'none', border: 'none', cursor: 'pointer', padding: 10, margin: -8, lineHeight: 1,
               fontSize: 13, color: open ? accent : `${accent}88`,
               transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s, color 0.2s',
             }}
@@ -100,7 +100,7 @@ export default function SectionAide({
             style={{ overflow: 'hidden' }}
           >
             <div style={{
-              fontFamily: "'Playfair Display', serif", fontSize: 16, lineHeight: 1.5,
+              fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
               color: encre, opacity: 0.78, paddingBottom: 10,
             }}>
               {aide}

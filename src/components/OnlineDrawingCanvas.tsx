@@ -515,7 +515,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
                 <button key={t} onClick={() => setTool(t)} aria-pressed={active} title={TOOL_NAMES[t]}
                   style={{ flex: '0 0 auto', width: 52, height: 62, paddingTop: 6, paddingBottom: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', background: active ? '#ffffff' : 'transparent', border: 'none', borderRadius: 3, cursor: 'pointer', opacity: active ? 1 : 0.42, transition: 'background 0.15s, opacity 0.15s' }}>
                   <Icon tint={TOOLBAR_INK} nib={t === 'eraser' ? '#f3a9b8' : color} />
-                  <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 9, letterSpacing: '0.04em', color: active ? accent : TOOLBAR_INK }}>{TOOL_NAMES[t].toUpperCase()}</span>
+                  <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 11, letterSpacing: '0.04em', color: active ? accent : TOOLBAR_INK }}>{TOOL_NAMES[t].toUpperCase()}</span>
                 </button>
               )
             })}
@@ -589,7 +589,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
                 {PAPERS.map(p => (
                   <button key={p.id} onClick={() => changerPapier(p.id)}
                     style={{ flex: 1, height: 44, borderRadius: 3, background: p.bg, border: paper === p.id ? `2.5px solid ${accent}` : `1px solid ${TB_INK}22`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                    <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 10, letterSpacing: '0.12em', color: p.ink, fontWeight: paper === p.id ? 700 : 400 }}>{p.nom.toUpperCase()}</span>
+                    <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 11, letterSpacing: '0.12em', color: p.ink, fontWeight: paper === p.id ? 700 : 400 }}>{p.nom.toUpperCase()}</span>
                   </button>
                 ))}
               </div>

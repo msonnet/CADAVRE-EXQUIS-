@@ -44,6 +44,7 @@ export default function Salon() {
   const [roomError, setRoomError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [confirmQuit, setConfirmQuit] = useState(false)
   const [spectator, setSpectator] = useState(false)
   const [spectators, setSpectators] = useState<SpectatorPresence[]>([])
 
@@ -303,12 +304,27 @@ export default function Salon() {
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <button
-          onClick={quitterSalon}
-          style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          ← QUITTER
-        </button>
+        {/* Quitter retire le joueur du salon (et peut le fermer) : deux temps */}
+        {!confirmQuit ? (
+          <button
+            onClick={() => setConfirmQuit(true)}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 10px 10px 0', minHeight: 44 }}
+          >
+            ← QUITTER
+          </button>
+        ) : (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.8 }}>QUITTER ?</span>
+            <button
+              onClick={quitterSalon}
+              style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', minHeight: 44 }}
+            >OUI</button>
+            <button
+              onClick={() => setConfirmQuit(false)}
+              style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', minHeight: 44 }}
+            >NON</button>
+          </span>
+        )}
         <button
           onClick={copyCode}
           style={{ ...mono, fontSize: 13, color: copied ? accent : encre, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}

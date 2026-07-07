@@ -75,16 +75,16 @@ export default function TutorielCoach({
           transition={{ type: 'spring', stiffness: 340, damping: 34 }}
         >
           {/* Header : progression + passer */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 9 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ ...mono, fontSize: 10, color: accent, opacity: 0.85, letterSpacing: '0.24em', fontWeight: 700 }}>
+              <span style={{ ...mono, fontSize: 11, color: accent, opacity: 0.85, letterSpacing: '0.24em', fontWeight: 700 }}>
                 GUIDE
               </span>
               <ProgressDots etape={etape} total={total} accent={accent} encre={encre} />
             </div>
             <button
               onClick={onPasser}
-              style={{ ...mono, fontSize: 10, color: encre, opacity: 0.38, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 6px 12px' }}
+              style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0 12px 16px', minHeight: 44, marginTop: -12, marginBottom: -6 }}
             >
               PASSER
             </button>
@@ -100,7 +100,7 @@ export default function TutorielCoach({
 
           {/* Corps — une idée, deux lignes max */}
           <div style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 16, lineHeight: 1.5,
+            fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
             color: encre, opacity: 0.88,
             marginBottom: (cible || onCompris) ? 12 : 0,
           }}>
@@ -129,9 +129,10 @@ export default function TutorielCoach({
               <button
                 onClick={onCompris}
                 style={{
-                  ...mono, fontSize: 11, color: encre, opacity: 0.5,
+                  ...mono, fontSize: 12, color: encre, opacity: 0.55,
                   background: 'none', border: 'none', cursor: 'pointer',
-                  padding: '4px 0', textDecoration: 'underline', textUnderlineOffset: 3,
+                  padding: '10px 16px 10px 0', minHeight: 44,
+                  textDecoration: 'underline', textUnderlineOffset: 3,
                   letterSpacing: '0.14em',
                 }}
               >
@@ -192,7 +193,7 @@ export function TutorielFete({ visible, accent, encre, bg }: { visible: boolean;
           >
             Guide terminé.
           </div>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 16, color: encre, opacity: 0.8 }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.8 }}>
             Le jeu est à toi — bonne écriture.
           </p>
           <div style={{ ...mono, fontSize: 10, color: accent, opacity: 0.7, marginTop: 10, letterSpacing: '0.24em' }}>

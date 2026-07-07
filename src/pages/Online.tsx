@@ -221,7 +221,7 @@ export default function Online() {
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <div
             className="font-fraunces font-black leading-tight"
-            style={{ fontSize: 'clamp(1.8rem, 8vw, 2.8rem)', color: encre, marginBottom: 12 }}
+            style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 12 }}
           >
             Jouer à plusieurs.
           </div>
@@ -334,7 +334,7 @@ export default function Online() {
             {joinError && (
               <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{joinError}</p>
             )}
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, color: encre, opacity: 0.55, marginTop: 8, lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.55, marginTop: 8, lineHeight: 1.5 }}>
               {publicRooms.some(r => r.player_count < r.nb_joueurs)
                 ? 'Tu rejoins la première partie disponible.'
                 : "Aucune partie ouverte — un salon public est créé pour toi, d'autres pourront rejoindre."}
@@ -443,6 +443,11 @@ export default function Online() {
                 placeholder="LOUP-42"
                 aria-label="Code du salon"
                 maxLength={12}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                autoComplete="off"
+                spellCheck={false}
+                enterKeyHint="go"
                 style={{
                   ...mono, fontSize: 17, textTransform: 'uppercase',
                   color: encre, background: `${encre}14`,

@@ -571,7 +571,7 @@ export default function JeuAtelier() {
 
         {/* ── ÉTAT DE SÉANCE ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-          <span style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em' }}>
             — L'ATELIER —
           </span>
           <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6 }}>
@@ -602,7 +602,7 @@ export default function JeuAtelier() {
                   ? '✦'
                   : <span style={{ display: 'inline-block', width: 7, height: 7, background: 'currentColor', borderRadius: 1 }} />}
               </span>
-              <span style={{ fontSize: 13, color: encre, opacity: 0.35, letterSpacing: '0.02em', wordBreak: 'break-all' }}>
+              <span style={{ fontSize: 13, color: encre, opacity: 0.55, letterSpacing: '0.08em', wordBreak: 'break-all' }}>
                 {masquer(v.texte)}
               </span>
             </motion.div>
@@ -626,7 +626,7 @@ export default function JeuAtelier() {
             >
               {echoTexte ? (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                  <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 6 }}>
                     — L'ÉCHO —
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
@@ -634,7 +634,7 @@ export default function JeuAtelier() {
                   </div>
                 </div>
               ) : idx > 0 && (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginBottom: 14 }}>
+                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 14 }}>
                   — TU ÉCRIS DANS LE NOIR —
                 </div>
               )}
@@ -666,7 +666,7 @@ export default function JeuAtelier() {
               {/* Slot du médium — actif tant qu'il n'a pas soumis */}
               {fragTextes[fragSlotJoueur] === null ? (
                 <>
-                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                  <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 6 }}>
                     {fragGabarit.length === 1
                       ? <>— LE SORT TE TIRE SEUL · {fragGabarit[fragSlotJoueur].role} —</>
                       : <>— FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —</>}
@@ -706,7 +706,7 @@ export default function JeuAtelier() {
                   </button>
                 </>
               ) : (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginTop: 8 }}>
+                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginTop: 8 }}>
                   — LES VOIX TERMINENT —
                 </div>
               )}
@@ -724,7 +724,7 @@ export default function JeuAtelier() {
             >
               {echoTexte ? (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+                  <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 6 }}>
                     — L'ÉCHO —
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
@@ -732,7 +732,7 @@ export default function JeuAtelier() {
                   </div>
                 </div>
               ) : idx > 0 && (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.45, marginBottom: 16 }}>
+                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 16 }}>
                   — TU ÉCRIS DANS LE NOIR —
                 </div>
               )}
@@ -786,7 +786,7 @@ export default function JeuAtelier() {
               transition={{ duration: 0.4 }}
               style={{ paddingBottom: 24, textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, letterSpacing: '0.26em', marginBottom: 14 }}>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 14 }}>
                 — LES VOIX ÉCRIVENT —
               </div>
               {voixEnCours.map((v, k) => (

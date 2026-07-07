@@ -187,7 +187,7 @@ export default function Atelier() {
             style={{ width: '100%', accentColor: accent }}
             aria-label="Nombre de voix"
           />
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: encre, opacity: 0.7, marginTop: 8 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.7, marginTop: 8 }}>
             {nbVoix === 0
               ? 'Aucune voix ne parlera — la dernière main se passe le papier à elle-même.'
               : 'Les voix sont tirées au sort — tu ne sauras jamais lesquelles parlent.'}

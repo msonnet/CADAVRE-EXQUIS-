@@ -20,7 +20,7 @@ import { Decor, useReve } from '../reve'
 // ─── Types internes ──────────────────────────────────────────────────────────
 
 type Participant = { type: 'humain'; num: number } | { type: 'ia' }
-type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number; voixParSlot?: Record<number, string> }
+type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number; voixParSlot?: Record<number, string>; total?: number }
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
@@ -62,13 +62,17 @@ function buildSequence(
     if (i < second.length) seq.push(second[i])
   }
 
-  // Rotation : garantir que le bon type ouvre la séquence
-  if (premierJoueur === 'humain' && seq[0].type !== 'humain') {
-    const idx = seq.findIndex(p => p.type === 'humain')
-    if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
-  } else if (premierJoueur === 'ia' && seq[0].type !== 'ia') {
-    const idx = seq.findIndex(p => p.type === 'ia')
-    if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
+  // Rotation : garantir que le bon type ouvre la séquence.
+  // Uniquement en solo — en multijoueur elle inverserait l'ordre des joueurs
+  // (Joueur 2 avant Joueur 1) et casserait l'entrelacement.
+  if (nb === 1) {
+    if (premierJoueur === 'humain' && seq[0].type !== 'humain') {
+      const idx = seq.findIndex(p => p.type === 'humain')
+      if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
+    } else if (premierJoueur === 'ia' && seq[0].type !== 'ia') {
+      const idx = seq.findIndex(p => p.type === 'ia')
+      if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
+    }
   }
 
   return seq
@@ -238,7 +242,9 @@ export default function Jeu() {
   })
 
   const [structure]  = useState(() => getStructure(config.structureId))
-  const [total]      = useState(() => nombreCasesEffectif(structure))
+  // total est aléatoire pour vers-libre : on le fige dans le brouillon, sinon
+  // un rechargement re-tire un nombre de vers différent (partie tronquée ou allongée)
+  const [total]      = useState(() => b?.total ?? nombreCasesEffectif(structure))
   const [caseDefs]   = useState<DefinitionCase[]>(() => structure.cases.slice(0, total))
   const [seq]        = useState(() => buildSequence(config.joueursHumains, config.voixIA, config.premierJoueur))
   const [participants] = useState<Participant[]>(() =>
@@ -302,7 +308,9 @@ export default function Jeu() {
   const revealTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const iaAvancePendingRef = useRef<(() => void) | null>(null)
   const caseIndexSoumis = useRef(-1)
-  const textesUtilises  = useRef(new Set<string>())
+  // Réensemencé depuis le brouillon : sans cela, après une reprise l'IA
+  // pourrait reproduire mot pour mot un fragment déjà présent dans le poème.
+  const textesUtilises  = useRef(new Set<string>(b?.cases.map(c => normaliserCle(c.texte)) ?? []))
   const textesSession   = useRef(new Set<string>(safeParse<string[]>(sessionStorage.getItem('textes-session'), [])))
   // Mots produits par l'IA lors des parties récentes (persistés), pour éviter que
   // la même imagerie (« boue », « pierre », « chaux »…) ne revienne d'une partie à l'autre.
@@ -367,7 +375,7 @@ export default function Jeu() {
   }
 
   function sauvegarderBrouillon(newCases: Case[], newIndex: number) {
-    localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: newCases, caseIndex: newIndex, voixParSlot }))
+    localStorage.setItem('brouillon-actuel', JSON.stringify({ poemeId, config, cases: newCases, caseIndex: newIndex, voixParSlot, total }))
   }
 
   // ─── Effects ───────────────────────────────────────────────────────────────
@@ -505,6 +513,9 @@ export default function Jeu() {
       .catch(console.error)
       .finally(() => {
         localStorage.removeItem('brouillon-actuel')
+        // La partie découverte est finie : les parties suivantes retrouvent
+        // l'auto-avance normale des tours IA.
+        sessionStorage.removeItem('decouverte')
         navigate('/fin', { state: { poeme } })
       })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -579,6 +590,7 @@ export default function Jeu() {
   function abandonner() {
     jouer('abandon')
     localStorage.removeItem('brouillon-actuel')
+    sessionStorage.removeItem('decouverte')
     ambianceStop()
     navigate('/')
   }
@@ -897,7 +909,7 @@ export default function Jeu() {
                 {renderConsigneTitre(defActuelle?.consigne ?? '', accent)}
               </div>
               {subtitle && (
-                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.42, letterSpacing: '0.18em', marginBottom: example ? 4 : 14 }}>
+                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.55, letterSpacing: '0.18em', marginBottom: example ? 4 : 14 }}>
                   {subtitle}
                 </div>
               )}
@@ -959,6 +971,7 @@ export default function Jeu() {
                   onKeyDown={handleKeyDown}
                   placeholder="Écris ici — toi seul le verras…"
                   aria-label="Ta contribution"
+                  enterKeyHint="send"
                   autoFocus
                   rows={3}
                 />
@@ -968,7 +981,7 @@ export default function Jeu() {
                   </p>
                 )}
                 {erreur && (
-                  <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, marginTop: 6 }}>
+                  <p role="alert" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, marginTop: 6 }}>
                     {erreur}
                   </p>
                 )}
@@ -991,7 +1004,7 @@ export default function Jeu() {
                 aria-label="Sceller cette voix et passer à la suivante"
                 className={`w-full flex flex-col items-center justify-center${tutActif && (tutEtape === T_JEU_1 || tutEtape === T_JEU_2) && inputValue.trim() ? ' tut-cible' : ''}`}
                 style={{
-                  ['--tut-glow' as string]: `${accent}66`,
+                  ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
                   background: !inputValue.trim() ? `${encre}30` : accent,
                   color: btnText,
                   ...mono, fontSize: 17,

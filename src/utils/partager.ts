@@ -12,7 +12,10 @@ export async function partagerImage(
       await navigator.share(shareData)
       return
     }
-  } catch { /* fall through to download */ }
+  } catch (e) {
+    if ((e as Error).name === 'AbortError') return // annulé par l'utilisateur
+    /* fall through to download */
+  }
   // Fallback : téléchargement + copie du texte si disponible
   const a = document.createElement('a')
   a.href = dataUrl
@@ -29,7 +32,10 @@ export async function partagerTexte(texte: string, titre: string): Promise<void>
       await navigator.share({ title: titre, text: texte })
       return
     }
-  } catch { /* fall through */ }
+  } catch (e) {
+    if ((e as Error).name === 'AbortError') return // annulé par l'utilisateur
+    /* fall through */
+  }
   try {
     await navigator.clipboard.writeText(texte)
   } catch { /* ignore */ }
@@ -390,7 +396,11 @@ function chargerImage(src: string): Promise<HTMLImageElement> {
     img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
     img.onerror = () => {
-      // Retry without CORS for data URLs / same-origin
+      // Retry sans CORS uniquement pour les data: URL et le same-origin :
+      // une image cross-origin chargée sans CORS « tainte » le canvas et
+      // fait échouer toDataURL() plus loin (SecurityError silencieuse).
+      const crossOriginHttp = /^https?:/i.test(src) && !src.startsWith(location.origin)
+      if (crossOriginHttp) { reject(new Error(`image CORS inaccessible : ${src.slice(0, 80)}`)); return }
       const img2 = new Image()
       img2.onload = () => resolve(img2)
       img2.onerror = reject
@@ -1321,7 +1331,7 @@ export async function partagerVideoStory(opts: {
   date?: number
   invitation?: string
   seed?: string
-}, nomFichier = 'cadavre-exquis'): Promise<boolean> {
+}, nomFichier = 'cadavre-exquis'): Promise<boolean | 'annule'> {
   let blob: Blob | null = null
   try { blob = await genererVideoStory(opts) } catch { blob = null }
   if (!blob || blob.size < 2000) return false
@@ -1332,7 +1342,12 @@ export async function partagerVideoStory(opts: {
       await navigator.share({ files: [file], title: 'Cadavre Exquis' })
       return true
     }
-  } catch { /* fall through to download */ }
+  } catch (e) {
+    // L'utilisateur a fermé la feuille de partage : ce n'est ni un échec
+    // ni un partage — pas de téléchargement forcé, pas de « ✓ Partagé ».
+    if ((e as Error).name === 'AbortError') return 'annule'
+    /* autre erreur : repli téléchargement */
+  }
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url; a.download = file.name

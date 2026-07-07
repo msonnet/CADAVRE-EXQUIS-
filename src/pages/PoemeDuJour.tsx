@@ -177,7 +177,7 @@ export default function PoemeDuJour() {
               )}
               <div>
                 <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700 }}>{item.author_pseudo}</div>
-                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.45, marginTop: 2 }}>{date}</div>
+                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.55, marginTop: 2 }}>{date}</div>
               </div>
             </div>
 

@@ -41,6 +41,8 @@ export default function Decouverte() {
   function commencer() {
     jouer('demarrage')
     activerTutoriel()
+    // Un brouillon d'une ancienne partie écraserait cette config au montage de /jeu
+    localStorage.removeItem('brouillon-actuel')
     sessionStorage.setItem('config-partie', JSON.stringify(CONFIG_DECOUVERTE))
     sessionStorage.setItem('decouverte', '1')
     navigate('/jeu')

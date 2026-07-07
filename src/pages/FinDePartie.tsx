@@ -196,9 +196,12 @@ export default function FinDePartie() {
     try {
       // Vidéo animée (le format viral) ; repli automatique sur l'affiche fixe si l'encodage est indisponible
       const ok = await partagerVideoStory(opts)
+      if (ok === 'annule') return // feuille fermée par l'utilisateur : ni repli ni « ✓ »
       if (!ok) await partagerStory(opts)
       setPartageOk(true)
       setTimeout(() => setPartageOk(false), 2000)
+    } catch (e) {
+      console.error('partage échoué', e)
     } finally {
       setPartageEnCours(false)
     }
@@ -463,7 +466,7 @@ export default function FinDePartie() {
             onClick={() => { if (tutActif && tutEtape === T_FIN_RECUEIL) tutAvancer(); navigate('/bibliotheque') }}
             className={`w-full flex flex-col items-center justify-center${tutActif && tutEtape === T_FIN_RECUEIL ? ' tut-cible' : ''}`}
             style={{
-              ['--tut-glow' as string]: `${accent}66`,
+              ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
               background: accent, color: btnText,
               ...mono, fontSize: 17,
               textTransform: 'uppercase',
@@ -487,7 +490,8 @@ export default function FinDePartie() {
         >
           <button
             onClick={() => parlant ? arreter() : parler(texteAffiche)}
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0' }}
+            aria-pressed={parlant}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
           </button>
@@ -495,20 +499,22 @@ export default function FinDePartie() {
             onClick={partager}
             disabled={partageEnCours}
             className={tutActif && tutEtape === T_FIN_SHARE ? 'tut-cible' : undefined}
-            style={{ ['--tut-glow' as string]: `${accent}66`, ...mono, fontSize: 13, letterSpacing: '0.12em', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.5, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '2px 0' }}
+            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.55, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0' }}
+            aria-expanded={activeSection === 'coutures'}
+            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
             — COUTURES —
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
             className={tutActif && tutEtape === T_FIN_IMAGE ? 'tut-cible' : undefined}
-            style={{ ['--tut-glow' as string]: `${accent}66`, ...mono, fontSize: 13, letterSpacing: '0.12em', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '2px 0' }}
+            aria-expanded={activeSection === 'image'}
+            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             — IMAGE —
           </button>
@@ -584,7 +590,7 @@ export default function FinDePartie() {
                   onChange={e => setPromptLibre(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && promptLibre.trim()) choisirStyle(styleChoisi || 'libre') }}
                   placeholder="Direction artistique libre… (ex. : sombre et organique)"
-                  className="champ-carnet w-full text-sm"
+                  className="champ-carnet w-full"
                   style={{ borderLeftColor: accent }}
                 />
                 {promptLibre.trim() && (

@@ -189,14 +189,24 @@ export default function JeuDessin() {
     catch { return { nbBandes: 3, joueurs: 2, visibilite: 'raccord' } }
   })
 
+  // Reprise après refresh/kill : les bandes déjà validées sont rechargées et
+  // la partie redémarre sur l'écran de passage du joueur suivant.
+  const [brouillonDessin] = useState<{ bandes: BandeDessin[]; paper: Paper } | null>(() => {
+    try {
+      const raw = sessionStorage.getItem('dessin-brouillon')
+      const b = raw ? JSON.parse(raw) : null
+      return b?.bandes?.length ? b : null
+    } catch { return null }
+  })
+
   const [bandes, setBandes] = useState<BandeDessin[]>([])
-  const [bandeIdx, setBandeIdx] = useState(0)
+  const [bandeIdx, setBandeIdx] = useState(() => brouillonDessin ? brouillonDessin.bandes.length - 1 : 0)
   const [tool, setTool] = useState<Tool>('pencil')
   const [sizeIdx, setSizeIdx] = useState(1)
   const [color, setColor] = useState('#1a1410')
   const [opacity, setOpacity] = useState(1) // 0.1 → 1, réglable
   // Papier choisi pour toute la partie (fixé à la première bande pour garder l'unité visuelle)
-  const [paper, setPaper] = useState<Paper>('lisse')
+  const [paper, setPaper] = useState<Paper>(() => brouillonDessin?.paper ?? 'lisse')
   const paperDef = PAPERS.find(p => p.id === paper) ?? PAPERS[0]
   const CANVAS_BG_ACTUEL = paperDef.bg
   // Pipette : capture une fois la couleur puis revient à l'outil précédent
@@ -211,10 +221,13 @@ export default function JeuDessin() {
   const [, setHistoryTick] = useState(0)
   const bumpHistory = useCallback(() => setHistoryTick(t => t + 1), [])
   const [panMode, setPanMode] = useState(false)
-  const [showTransition, setShowTransition] = useState(false)
-  const [showIntro, setShowIntro] = useState(true)
-  const [nextPlayerNum, setNextPlayerNum] = useState(2)
-  const [pendingBandes, setPendingBandes] = useState<BandeDessin[]>([])
+  const [showTransition, setShowTransition] = useState(() => !!brouillonDessin)
+  const [showIntro, setShowIntro] = useState(() => !brouillonDessin)
+  const [nextPlayerNum, setNextPlayerNum] = useState(() =>
+    brouillonDessin ? (brouillonDessin.bandes.length % config.joueurs) + 1 : 2
+  )
+  const [pendingBandes, setPendingBandes] = useState<BandeDessin[]>(() => brouillonDessin?.bandes ?? [])
+  const [confirmExit, setConfirmExit] = useState(false)
   const [showColorPanel, setShowColorPanel] = useState(false)
 
   // Zoom/pan
@@ -658,8 +671,13 @@ export default function JeuDessin() {
     jouer('soumettre')
     if (bandeIdx + 1 >= config.nbBandes) {
       sessionStorage.setItem('dessin-bandes', JSON.stringify(nouvellesBandes))
+      sessionStorage.removeItem('dessin-brouillon')
       navigate('/fin-dessin')
     } else {
+      // Sauvegarde de reprise : un refresh ou un kill de l'app en pleine
+      // partie ne coûte plus que la bande en cours, pas tout le dessin.
+      try { sessionStorage.setItem('dessin-brouillon', JSON.stringify({ bandes: nouvellesBandes, paper })) }
+      catch { /* quota dépassé : la reprise sera partielle, la partie continue */ }
       setNextPlayerNum(((bandeIdx + 1) % config.joueurs) + 1)
       setPendingBandes(nouvellesBandes)
       setShowTransition(true)
@@ -752,10 +770,37 @@ export default function JeuDessin() {
           JOUEUR {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
         </div>
 
+        {/* Quitter la partie — seule sortie sans passer par le geste OS */}
+        <div style={{ position: 'absolute', top: 6, right: 6, zIndex: 10, display: 'flex', gap: 6, alignItems: 'center' }}>
+          {!confirmExit ? (
+            <button
+              onClick={() => setConfirmExit(true)}
+              aria-label="Abandonner le dessin"
+              style={{
+                ...mono, fontSize: 13, color: encre,
+                background: 'rgba(255,255,255,0.88)', border: `0.5px solid ${encre}15`,
+                borderRadius: 3, padding: '10px 12px', minHeight: 40, cursor: 'pointer',
+              }}
+            >✕</button>
+          ) : (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(255,255,255,0.94)', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '4px 8px' }}>
+              <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.85 }}>ABANDONNER ?</span>
+              <button
+                onClick={() => { sessionStorage.removeItem('dessin-brouillon'); navigate('/') }}
+                style={{ ...mono, fontSize: 13, color: '#7B0000', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
+              >OUI</button>
+              <button
+                onClick={() => setConfirmExit(false)}
+                style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
+              >NON</button>
+            </div>
+          )}
+        </div>
+
         {/* Reset zoom */}
         {zoom > 1.05 && (
           <button onClick={() => { setZoom(1); setPanX(0); setPanY(0); zoomRef.current = 1; panXRef.current = 0; panYRef.current = 0 }} style={{
-            position: 'absolute', top: 10, right: 10,
+            position: 'absolute', top: 10, right: 56,
             ...mono, fontSize: 13, color: encre,
             background: 'rgba(255,255,255,0.9)', border: `0.5px solid ${encre}20`,
             borderRadius: 3,
@@ -813,7 +858,7 @@ export default function JeuDessin() {
                   }}
                 >
                   <Icon tint={tint} nib={nib} />
-                  <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 9, letterSpacing: '0.04em', color: active ? accent : TOOLBAR_INK }}>
+                  <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 11, letterSpacing: '0.04em', color: active ? accent : TOOLBAR_INK }}>
                     {TOOL_NAMES[t].toUpperCase()}
                   </span>
                 </button>

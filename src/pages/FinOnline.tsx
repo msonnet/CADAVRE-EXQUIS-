@@ -303,7 +303,8 @@ export default function FinOnline() {
       texte: textePartage,
       accent, bg, ink: encre, date: Date.now(), seed: code ?? texteAssemble,
     }
-    try { const ok = await partagerVideoStory(opts); if (!ok) await partagerStory(opts) }
+    try { const ok = await partagerVideoStory(opts); if (ok !== 'annule' && !ok) await partagerStory(opts) }
+    catch (e) { console.error('partage échoué', e) }
     finally { setPartageEnCours(false) }
   }
 
@@ -456,7 +457,7 @@ export default function FinOnline() {
                     {texteVision ? (
                       <>
                         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>— LECTURE SURRÉALISTE —</div>
-                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
+                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.7, color: encre, whiteSpace: 'pre-line', marginBottom: 16 }}>{texteVision}</div>
                       </>
                     ) : erreurVision ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>

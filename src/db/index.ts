@@ -35,8 +35,10 @@ export async function supprimerPoeme(id: string): Promise<void> {
   await db.poemes.delete(id)
 }
 
-export async function mettreAJourTitre(id: string, titre: string): Promise<void> {
-  await db.poemes.update(id, { titre, dateModification: Date.now() })
+export async function mettreAJourTitre(id: string, titre: string | null): Promise<void> {
+  // null (et non '') : les affichages testent `titre ?? extrait` — une chaîne
+  // vide passerait le ?? et rendrait une ligne blanche dans la bibliothèque.
+  await db.poemes.update(id, { titre: titre || null, dateModification: Date.now() })
 }
 
 export async function sauvegarderIllustration(id: string, illustration: import('../types').Illustration): Promise<void> {

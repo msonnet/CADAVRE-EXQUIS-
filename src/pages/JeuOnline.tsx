@@ -543,7 +543,7 @@ export default function JeuOnline() {
             <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
               — CASE {currentCase + 1} SUR {nbTotal} —
             </div>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.8rem,8vw,2.6rem)', color: encre, lineHeight: 1.3 }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, lineHeight: 1.3 }}>
               À toi<br />d'écrire
             </div>
             <motion.div style={{ ...mono, fontSize: 13, color: `${encre}45`, letterSpacing: '0.2em', marginTop: 8 }}
@@ -594,11 +594,12 @@ export default function JeuOnline() {
                 onKeyDown={handleKeyDown}
                 placeholder="…"
                 aria-label={caseDef.consigne}
+                enterKeyHint="send"
                 autoFocus
                 rows={3}
                 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, background: 'rgba(255,253,247,0.5)', border: 'none', borderLeft: `2px solid ${encre}`, padding: '12px 16px', outline: 'none', caretColor: accent, width: '100%', resize: 'none' }}
               />
-              {submitError && <div style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{submitError}</div>}
+              {submitError && <div role="alert" style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{submitError}</div>}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={handleIa} disabled={iaLoading}
                   style={{ flex: 1, ...mono, fontSize: 13, padding: '0.85em', background: 'transparent', color: encre, border: `0.5px solid ${encre}30`, borderRadius: 3, cursor: iaLoading ? 'wait' : 'pointer', opacity: iaLoading ? 0.5 : 0.8 }}>

@@ -108,7 +108,7 @@ export default function PoemeDetail() {
   async function sauvegarderTitre() {
     if (!poeme || !id) return
     const titre = titreDraft.trim() || null
-    await mettreAJourTitre(id, titre ?? '')
+    await mettreAJourTitre(id, titre)
     setPoeme(p => p ? { ...p, titre } : p)
     setEditionTitre(false)
   }
@@ -167,9 +167,12 @@ export default function PoemeDetail() {
     }
     try {
       const ok = await partagerVideoStory(opts)
+      if (ok === 'annule') return // feuille fermée par l'utilisateur : ni repli ni « ✓ »
       if (!ok) await partagerStory(opts)
       setPartageOk(true)
       setTimeout(() => setPartageOk(false), 2200)
+    } catch (e) {
+      console.error('partage échoué', e)
     } finally {
       setPartageEnCours(false)
     }
@@ -454,9 +457,10 @@ export default function PoemeDetail() {
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />
 
-        {/* ── ACTIONS PRINCIPALES ── */}
+        {/* ── ACTIONS PRINCIPALES — grille 2×2, libellés insécables ── */}
         <motion.div
-          className="flex justify-between items-center mb-4"
+          className="mb-4"
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 0' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -465,7 +469,7 @@ export default function PoemeDetail() {
             onClick={() => parlant ? arreter() : parler(texteAffiche)}
             aria-label={parlant ? 'Arrêter la lecture' : 'Écouter le poème'}
             aria-pressed={parlant}
-            style={{ ...mono, fontSize: 13, color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
             {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
           </button>
@@ -473,22 +477,22 @@ export default function PoemeDetail() {
             onClick={partager}
             disabled={partageEnCours}
             aria-label="Partager le poème en vidéo"
-            style={{ ...mono, fontSize: 13, color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer' }}
+            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
           </button>
           <button
             onClick={imprimerPoeme}
-            aria-label="Télécharger le poème en PDF"
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
+            aria-label="Imprimer le poème"
+            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
-            — PDF —
+            — IMPRIMER —
           </button>
           <button
             onClick={() => setCasesVisibles(v => !v)}
             aria-label={casesVisibles ? 'Masquer les coutures' : 'Voir case par case'}
             aria-expanded={casesVisibles}
-            style={{ ...mono, fontSize: 13, color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.55, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
             — COUTURES —
           </button>
@@ -532,7 +536,7 @@ export default function PoemeDetail() {
             aria-label="Publier ce poème dans la galerie"
             className={tutActif && tutEtape === T_DETAIL ? 'tut-cible' : undefined}
             style={{
-              ['--tut-glow' as string]: `${accent}66`,
+              ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
               width: '100%', padding: '0.85em',
               background: 'transparent',
               color: publishError ? accent : (published ? accent : encre),

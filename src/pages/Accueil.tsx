@@ -90,9 +90,11 @@ export default function Accueil() {
           <button
             onClick={() => seance?.retirer()}
             title="Re-tirer un rêve"
+            aria-label="Tirer une nouvelle ambiance"
             style={{
-              ...ui, fontSize: 13, color: accent, opacity: 0.9,
-              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              ...ui, fontSize: 15, color: accent, opacity: 0.9,
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '12px 10px', margin: '-12px -4px',
             }}
           >✦</button>
           <span style={{

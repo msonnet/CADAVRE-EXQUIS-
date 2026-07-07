@@ -194,11 +194,10 @@ export function validerCase(
     }
 
     case 'nom': {
+      // L'écran affiche « AVEC ARTICLE · OU SANS » et des exemples comme
+      // « la pluie » : l'article est donc accepté, même en mode strict.
       const ms = mots(texte)
-      if (ms.length > 1 && contientArticle(texte)) {
-        return { valide: false, message: "Écris le nom seul, sans article (ex : 'mousse', 'vent', 'cendre')." }
-      }
-      if (contientVerbe(texte) && ms.length > 1) {
+      if (contientVerbe(texte) && ms.length > 2) {
         return { valide: false, message: 'Es-tu sûr ? La consigne demande un nom, pas une phrase.' }
       }
       return { valide: true }

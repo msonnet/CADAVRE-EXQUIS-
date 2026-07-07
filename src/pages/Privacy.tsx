@@ -29,7 +29,7 @@ export default function Privacy() {
           — POLITIQUE DE CONFIDENTIALITÉ —
         </div>
 
-        <h1 style={{ ...serif, fontSize: 'clamp(1.6rem, 7vw, 2.2rem)', color: encre, fontWeight: 700, marginBottom: 4, lineHeight: 1.2 }}>
+        <h1 style={{ ...serif, fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, fontWeight: 700, marginBottom: 4, lineHeight: 1.2 }}>
           Vos données, clairement.
         </h1>
         <p style={{ ...mono, fontSize: 13, color: `${encre}66`, marginBottom: 28 }}>

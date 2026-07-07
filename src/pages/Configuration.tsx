@@ -76,6 +76,10 @@ export default function Configuration() {
 
   function demarrer() {
     jouer('demarrage')
+    // Purge : un brouillon périmé écraserait cette config, et le drapeau
+    // découverte forcerait le passage manuel des tours IA.
+    localStorage.removeItem('brouillon-actuel')
+    sessionStorage.removeItem('decouverte')
     sessionStorage.setItem('config-partie', JSON.stringify(config))
     navigate('/jeu')
   }

@@ -206,7 +206,7 @@ export default function Bibliotheque() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
                     style={{
-                      ['--tut-glow' as string]: `${accent}66`,
+                      ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
                       display: 'block', width: '100%', textAlign: 'left',
                       padding: '13px 0 13px 12px',
                       borderBottom: `0.5px solid ${encre}12`,
@@ -222,7 +222,7 @@ export default function Bibliotheque() {
                       lineHeight: 1.3, marginBottom: 3,
                       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     }}>
-                      {poeme.titre ?? extraitPoeme(poeme) ?? 'Sans titre'}
+                      {poeme.titre || extraitPoeme(poeme) || 'Sans titre'}
                     </p>
                     <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
                       {(NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}

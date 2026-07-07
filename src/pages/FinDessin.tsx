@@ -323,7 +323,7 @@ export default function FinDessin() {
                   — LECTURE SURRÉALISTE —
                 </div>
                 <div style={{
-                  fontFamily: "'Playfair Display', serif", fontSize: 18.5, lineHeight: 1.7,
+                  fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.7,
                   color: encre,
                   whiteSpace: 'pre-line',
                 }}>
