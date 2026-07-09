@@ -363,15 +363,21 @@ export default function Jeu() {
 
   function choisirSansDuplique(texte: string, type: string): { texte: string; remplace: boolean } {
     const key = normaliserCle(texte)
-    const totalUsed = new Set([...textesUtilises.current, ...textesSession.current])
+    // Le remplacement ne s'applique qu'aux doublons de la PARTIE EN COURS.
+    // Vérifier aussi les parties précédentes (textesSession) rejetait des
+    // réponses authentiques de l'IA et affichait RÉSERVE à tort — la
+    // diversité entre parties est déjà assurée en amont par la liste
+    // « eviter » (mots-ia-recents) envoyée à l'API.
     let final: string
     // remplace = true quand on a dû puiser dans la réserve (FALLBACKS) car le texte
     // était vide (échec API) ou déjà employé dans la partie.
     let remplace: boolean
-    if (texte && !totalUsed.has(key)) {
+    if (texte && !textesUtilises.current.has(key)) {
       final = texte
       remplace = false
     } else {
+      // La réserve, elle, évite aussi les mots des parties précédentes
+      const totalUsed = new Set([...textesUtilises.current, ...textesSession.current])
       final = pickUnused(type, totalUsed)
       remplace = true
     }
