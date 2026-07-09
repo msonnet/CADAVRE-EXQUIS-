@@ -11,6 +11,7 @@ import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
+import { api } from '../lib/apiBase'
 
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
@@ -64,7 +65,7 @@ async function interpreterDessin(imageDataUrl: string): Promise<string> {
   const base64 = imageDataUrl.split(',')[1]
   if (!base64) return ''
   try {
-    const res = await fetchAvecTimeout('/api/interpreter-dessin', {
+    const res = await fetchAvecTimeout(api('/api/interpreter-dessin'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64: base64 }),

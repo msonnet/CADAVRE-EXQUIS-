@@ -17,6 +17,7 @@ import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
+import { api } from '../lib/apiBase'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
 type RoomPlayer = { player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
@@ -70,7 +71,7 @@ async function interpreterDessin(imageDataUrl: string): Promise<string> {
   const base64 = imageDataUrl.split(',')[1]
   if (!base64) return ''
   try {
-    const res = await fetchAvecTimeout('/api/interpreter-dessin', {
+    const res = await fetchAvecTimeout(api('/api/interpreter-dessin'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64: base64 }),

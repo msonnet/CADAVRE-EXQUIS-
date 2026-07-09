@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { mono } from '../lib/typo'
+import { api } from '../lib/apiBase'
 
 const AVATAR_STYLES = [
   { id: 'surrealiste',     label: 'Surréaliste' },
@@ -17,7 +18,7 @@ const AVATAR_STYLES = [
 
 async function genererAvatar(prompt: string, style: string): Promise<string | null> {
   try {
-    const r = await fetch('/api/avatar', {
+    const r = await fetch(api('/api/avatar'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, style }),

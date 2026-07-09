@@ -1,5 +1,6 @@
 export const config = { maxDuration: 55 }
 
+import { cors } from './_cors.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
 
 const STYLE_PROMPTS: Record<string, string> = {
@@ -74,6 +75,7 @@ async function traduireDirection(direction: string, anthropicKey: string): Promi
 }
 
 export default async function handler(req: any, res: any): Promise<void> {
+  if (cors(req, res)) return
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const ip = getClientIp(req)

@@ -7,6 +7,7 @@ import { supabase, getReactorKey } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { useAuth } from '../hooks/useAuth'
 import { mono } from '../lib/typo'
+import { api } from '../lib/apiBase'
 
 const PAGE_SIZE = 20
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
@@ -256,7 +257,7 @@ export default function Galerie() {
     setReportSending(true)
     setReportError(false)
     try {
-      const res = await fetch('/api/report', {
+      const res = await fetch(api('/api/report'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

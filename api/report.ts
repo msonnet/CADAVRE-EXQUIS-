@@ -1,5 +1,7 @@
 export const config = { maxDuration: 10 }
 
+import { cors } from './_cors.js'
+
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
 import { clientAdmin, diagnosticEnv, urlProjet } from './_supabase.js'
 
@@ -75,6 +77,7 @@ async function notifierModerateur(
 }
 
 export default async function handler(req: any, res: any): Promise<void> {
+  if (cors(req, res)) return
   try {
     if (req.method !== 'POST') { res.status(405).end(); return }
 

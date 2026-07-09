@@ -1,4 +1,5 @@
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
+import { api } from '../lib/apiBase'
 
 export async function genererIllustration(
   texte: string,
@@ -9,7 +10,7 @@ export async function genererIllustration(
     // 60 s : juste au-dessus du plafond serveur (maxDuration 55 s), pour que
     // la réponse ou l'erreur du serveur l'emporte, tout en coupant net si la
     // connexion se perd au lieu de laisser le spinner « EN COURS… » à vie.
-    const response = await fetchAvecTimeout('/api/illustration', {
+    const response = await fetchAvecTimeout(api('/api/illustration'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ texte, style, promptLibre }),

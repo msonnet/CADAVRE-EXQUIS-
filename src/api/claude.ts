@@ -1,6 +1,7 @@
 // Wrapper client vers /api/claude (Vercel Function)
 
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
+import { api } from '../lib/apiBase'
 
 export interface RequeteIA {
   consigne: string
@@ -22,7 +23,7 @@ export interface ReponseIA {
 const TIMEOUT_MS = 12_000
 
 export async function demanderFragmentIA(requete: RequeteIA): Promise<ReponseIA> {
-  const response = await fetchAvecTimeout('/api/claude', {
+  const response = await fetchAvecTimeout(api('/api/claude'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requete),

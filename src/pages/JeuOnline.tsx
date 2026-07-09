@@ -9,6 +9,7 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
+import { api } from '../lib/apiBase'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 async function callClaude(consigne: string, type: string): Promise<{ texte: string; voixNom: string | null }> {
   try {
-    const r = await fetch('/api/claude', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consigne, type }) })
+    const r = await fetch(api('/api/claude'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consigne, type }) })
     if (!r.ok) return { texte: '', voixNom: null }
     const { texte, voixNom } = await r.json()
     return { texte: texte ?? '', voixNom: voixNom ?? null }

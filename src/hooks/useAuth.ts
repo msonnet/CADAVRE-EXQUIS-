@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { api } from '../lib/apiBase'
 
 export type Profile = {
   id: string
@@ -78,7 +79,7 @@ export function useAuth() {
     const token = session?.access_token
     if (!token) return 'Non connecté'
     try {
-      const res = await fetch('/api/delete-account', {
+      const res = await fetch(api('/api/delete-account'), {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })

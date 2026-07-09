@@ -1,9 +1,12 @@
 export const config = { maxDuration: 45 }
 
+import { cors } from './_cors.js'
+
 // ~5 Mo de base64 (≈ 3.7 Mo binaire) — assez pour un dessin assemblé en PNG
 const MAX_BASE64_BYTES = 5 * 1024 * 1024
 
 export default async function handler(req: any, res: any): Promise<void> {
+  if (cors(req, res)) return
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const { imageBase64 } = req.body ?? {}
