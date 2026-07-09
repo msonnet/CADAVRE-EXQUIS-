@@ -112,7 +112,7 @@ export default function Atelier() {
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
-      <Decor variant="config" />
+      <Decor variant="atelier" />
 
       <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 

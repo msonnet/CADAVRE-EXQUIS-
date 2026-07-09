@@ -18,7 +18,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  let supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  if (supabaseUrl && !supabaseUrl.startsWith('http')) supabaseUrl = 'https://' + supabaseUrl
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {

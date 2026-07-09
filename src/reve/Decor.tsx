@@ -149,6 +149,7 @@ export type Variant =
   | 'biblio'
   | 'detail'
   | 'aide'
+  | 'atelier'
   | 'config-dessin'
   | 'fin-dessin'
 
@@ -172,6 +173,15 @@ const ZONES: Record<Variant, VariantZones> = {
   },
   config: {
     symbol: { top: '12%', right: '4%', sizeMul: 0.6 },
+    etiqs: [],
+    stripesMax: 0,
+    citation: false,
+    signature: true,
+  },
+  atelier: {
+    // En bas à droite : le haut de la page Atelier est un paragraphe
+    // pleine largeur, le symbole en haut chevauchait le texte.
+    symbol: { bottom: '17%', right: '5%', sizeMul: 0.5 },
     etiqs: [],
     stripesMax: 0,
     citation: false,

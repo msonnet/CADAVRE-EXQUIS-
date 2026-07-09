@@ -1,7 +1,7 @@
 export const config = { maxDuration: 10 }
 
-import { createClient } from '@supabase/supabase-js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
+import { clientAdmin } from './_supabase.js'
 
 /**
  * Suppression de compte (App Store guideline 5.1.1(v)).
@@ -11,6 +11,7 @@ import { checkRateLimit, getClientIp } from './_rateLimit.js'
  * (profil, présences salon, compte auth) est supprimé.
  */
 export default async function handler(req: any, res: any): Promise<void> {
+  try {
   if (req.method !== 'POST') { res.status(405).end(); return }
 
   const ip = getClientIp(req)
@@ -22,12 +23,8 @@ export default async function handler(req: any, res: any): Promise<void> {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
   if (!token) { res.status(401).json({ error: 'Non authentifié' }); return }
 
-  // Même repli que cleanup.ts : la prod Vercel ne définit que VITE_SUPABASE_URL
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) { res.status(503).json({ error: 'Service indisponible' }); return }
-
-  const sb = createClient(url, key, { auth: { persistSession: false } })
+  const sb = clientAdmin()
+  if (!sb) { res.status(503).json({ error: 'Service indisponible' }); return }
 
   const { data: { user }, error: userErr } = await sb.auth.getUser(token)
   if (userErr || !user) { res.status(401).json({ error: 'Session invalide' }); return }
@@ -53,4 +50,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   }
 
   res.status(200).json({ ok: true })
+  } catch (e) {
+    res.status(500).json({ error: 'Erreur interne', detail: String(e).slice(0, 200) })
+  }
 }
