@@ -10,6 +10,7 @@ type TypeCase =
   | 'adjectif'
   | 'adverbe'
   | 'groupe-nominal'
+  | 'groupe-nominal-riche'
   | 'groupe-verbal'
   | 'proposition'
   | 'libre'
@@ -28,6 +29,7 @@ const MAX_TOKENS: Record<TypeCase, number> = {
   'adjectif': 8,
   'adverbe': 10,
   'groupe-nominal': 10,
+  'groupe-nominal-riche': 14,
   'groupe-verbal': 16,
   'proposition': 24,
   'libre': 24,
@@ -46,6 +48,7 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
   'adverbe': '1 SEUL ADVERBE INVARIABLE (en -ment : "doucement", "obliquement") ou une locution adverbiale de 2 mots ("sans bruit", "à rebours"). INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
   'groupe-nominal': '2 MOTS EXACTEMENT : article + nom — ex : "le silence", "une ombre", "la pluie", "un couteau". JAMAIS d\'adjectif après le nom.',
+  'groupe-nominal-riche': '2 à 4 mots — un GROUPE NOMINAL COMPLET commençant TOUJOURS par un déterminant. VARIE la forme d\'une fois à l\'autre : article + nom ("la pluie"), article + adjectif + nom ("une vieille clef"), article + nom + adjectif ("un souffle perdu"), article + nom + complément du nom ("le bruit du vent", "la nuit sans fond"). INTERDIT ABSOLU : verbe conjugué, pronom relatif (qui, que), groupe sans déterminant.',
   'groupe-verbal': '3 à 4 mots — verbe conjugué à la 3e personne du singulier + complément AVEC son article ou sa préposition (ex : "traverse la nuit", "pèse sur le monde"). JAMAIS de complément sans article ("cède terrain" est INTERDIT, "cède du terrain" est correct).',
   'proposition': '4 à 6 mots (phrase courte)',
   'libre': '3 à 6 mots (un vers)',
@@ -71,6 +74,13 @@ const FALLBACKS: Record<TypeCase, string[]> = {
                'muet', 'dense', 'sombre', 'fragile'],
   'adverbe': ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs',
               'en vain', 'presque', 'toujours', 'parfois', 'nulle part', 'jadis', 'désormais'],
+  'groupe-nominal-riche': [
+    "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
+    'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
+    'la pluie fine', 'un mur de brume', 'la main tendue', 'un silence épais',
+    'le bord du gouffre', 'une voix creuse', "l'eau noire", 'le corps absent',
+    'une ombre familière', 'la porte close', 'un feu mourant', 'une vieille clef',
+  ],
   'groupe-nominal': [
     "l'ombre", 'la nuit', 'un souffle', 'la cendre',
     'le bruit', 'une lumière', 'la terre', 'un regard',
@@ -166,6 +176,20 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       if (mots.length === 2 && TETES_LOCUTION_ADV.has(mots[0].toLowerCase())) return t
       return ''
     }
+    case 'groupe-nominal-riche': {
+      // Déterminant obligatoire (syntaxe du vers cousu), 4 mots max, et
+      // jamais de coupe qui laisserait un mot-outil pendu en fin de groupe.
+      const propre = t.replace(/[.,;:!?…]+$/g, '')
+      let gm = propre.split(/\s+/)
+      const commenceBien = ARTICLES_FR.has(gm[0]?.toLowerCase()) || /^[lLdD][''\u2019]\S+/.test(gm[0] ?? '')
+      if (!commenceBien) return ''
+      if (gm.length > 4) gm = gm.slice(0, 4)
+      const OUTILS_FIN = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux',
+        'sans', 'sous', 'sur', 'dans', 'en', 'à', 'et', 'ou', 'qui', 'que', "d'", "l'"])
+      while (gm.length > 1 && OUTILS_FIN.has(gm[gm.length - 1].toLowerCase())) gm.pop()
+      if (gm.length === 1 && !/^[lLdD][''\u2019]\S+/.test(gm[0])) return ''
+      return gm.join(' ')
+    }
     case 'groupe-nominal': {
       // Strictement article + nom — un GN sans article (« racines », « chair opposée »)
       // casse la syntaxe du vers cousu : on rejette → fallback avec article garanti
@@ -210,7 +234,7 @@ function pickFallback(type: TypeCase, eviter: string[] = []): string {
 
 const TYPES_VALIDES: Set<string> = new Set([
   'nom', 'verbe', 'verbe-transitif', 'adjectif', 'adverbe',
-  'groupe-nominal', 'groupe-verbal',
+  'groupe-nominal', 'groupe-nominal-riche', 'groupe-verbal',
   'proposition', 'libre', 'article-adj',
   'conjonction-coord', 'conjonction-subord', 'infinitif', 'gérondif',
 ])

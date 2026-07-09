@@ -129,7 +129,7 @@ const MOTS_INTERROGATIFS = new Set([
   'quel','quelle','quels','quelles','lequel','laquelle','lesquels','lesquelles',
 ])
 
-export type TypeCase = 'nom' | 'verbe' | 'verbe-transitif' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj' | 'conjonction-coord' | 'conjonction-subord' | 'infinitif' | 'gérondif'
+export type TypeCase = 'nom' | 'verbe' | 'verbe-transitif' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-nominal-riche' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj' | 'conjonction-coord' | 'conjonction-subord' | 'infinitif' | 'gérondif'
 export type NiveauValidation = 'stricte' | 'souple' | 'desactivee'
 
 export interface ResultatValidation {
@@ -211,7 +211,8 @@ export function validerCase(
       return { valide: true }
     }
 
-    case 'groupe-nominal': {
+    case 'groupe-nominal':
+    case 'groupe-nominal-riche': {
       if (contientVerbe(texte) && mots(texte).length > 3) {
         return {
           valide: false,

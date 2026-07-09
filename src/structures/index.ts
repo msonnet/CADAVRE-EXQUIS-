@@ -3,7 +3,7 @@ import type { StructureId, Case } from '../types'
 export interface DefinitionCase {
   fonction: string
   consigne: string
-  type: 'nom' | 'verbe' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj'
+  type: 'nom' | 'verbe' | 'adjectif' | 'adverbe' | 'groupe-nominal' | 'groupe-nominal-riche' | 'groupe-verbal' | 'proposition' | 'libre' | 'article-adj'
 }
 
 export interface Structure {
@@ -23,9 +23,9 @@ export const STRUCTURES: Structure[] = [
     nom: 'Phrase courte',
     description: '3 cases — sujet, verbe, complément',
     cases: [
-      { fonction: 'sujet', consigne: 'un groupe nominal sujet', type: 'groupe-nominal' },
+      { fonction: 'sujet', consigne: 'un groupe nominal sujet', type: 'groupe-nominal-riche' },
       { fonction: 'verbe', consigne: 'un verbe conjugué', type: 'verbe' },
-      { fonction: 'complément', consigne: 'un groupe nominal complément', type: 'groupe-nominal' },
+      { fonction: 'complément', consigne: 'un groupe nominal complément', type: 'groupe-nominal-riche' },
     ],
   },
 

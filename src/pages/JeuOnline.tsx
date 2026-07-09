@@ -22,6 +22,7 @@ const TYPE_LABEL: Record<string, string> = {
   'adjectif': 'ÉPITHÈTE · OU ATTRIBUT',
   'adverbe': 'DE MANIÈRE · OU DEGRÉ',
   'groupe-nominal': 'DÉT. · NOM · ÉPITHÈTE',
+  'groupe-nominal-riche': 'GROUPE NOMINAL COMPLET',
   'groupe-verbal': 'VERBE · COMPLÉMENT',
   'proposition': 'PHRASE COMPLÈTE · AVEC PONCTUATION',
   'libre': 'LIBRE · SANS CONTRAINTE',

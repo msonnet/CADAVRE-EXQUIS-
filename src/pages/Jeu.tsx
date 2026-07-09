@@ -105,7 +105,8 @@ const TYPE_EXAMPLE: Partial<Record<string, string>> = {
   'verbe':           "« brûle » · « disparaît » · « se tait »",
   'adjectif':        "« immobile » · « nocturne » · « étrange »",
   'adverbe':         "« doucement » · « en silence » · « à jamais »",
-  'groupe-nominal':  "« l'ombre portée » · « un souffle perdu » · « la nuit sans fond »",
+  'groupe-nominal':  "« le cadavre » · « une ombre » · « la pluie »",
+  'groupe-nominal-riche': "« l'ombre portée » · « un souffle perdu » · « la nuit sans fond »",
   'groupe-verbal':   "« traverse la nuit » · « brûle en silence » · « efface les traces »",
   'proposition':     "« Où vont les ombres ? » · « Que reste-t-il encore ? »",
 }
@@ -177,9 +178,14 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
   adverbe: ['doucement', 'lentement', 'en silence', 'sans bruit', 'à jamais', 'encore', 'ailleurs',
             'en vain', 'presque', 'toujours', 'parfois', 'nulle part', 'jadis', 'désormais'],
   'groupe-nominal': [
+    "l'ombre", 'la nuit', 'un souffle', 'la cendre', 'le bruit', 'une lumière',
+    'la terre', 'un regard', 'la pluie', 'un mur', 'la main', 'le silence',
+    'le bord', 'une voix', "l'eau", 'le corps', 'une porte', 'un feu',
+  ],
+  'groupe-nominal-riche': [
     "l'ombre portée", 'la nuit sans fond', 'un souffle perdu', 'la cendre froide',
     'le bruit du vent', 'une lumière voilée', 'la terre durcie', 'un regard vide',
-    'la pluie fine', 'le temps qui passe', 'un mur de brume', 'la main tendue',
+    'la pluie fine', 'un mur de brume', 'la main tendue',
     'un silence épais', 'le bord du gouffre', 'une voix creuse', "l'eau noire",
     'le corps absent', 'une ombre familière', 'la porte close', 'un feu mourant',
   ],
