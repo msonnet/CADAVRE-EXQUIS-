@@ -18,3 +18,13 @@ export function clientAdmin(): SupabaseClient | null {
     return null
   }
 }
+
+/** Dit ce qui manque à la config serveur — pour diagnostiquer un 503 à distance. */
+export function diagnosticEnv(): string {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url && !key) return 'url et clé absentes'
+  if (!url) return 'url absente'
+  if (!key) return 'SUPABASE_SERVICE_ROLE_KEY absente'
+  return 'config présente'
+}

@@ -1,7 +1,7 @@
 export const config = { maxDuration: 10 }
 
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
-import { clientAdmin } from './_supabase.js'
+import { clientAdmin, diagnosticEnv } from './_supabase.js'
 
 /**
  * Suppression de compte (App Store guideline 5.1.1(v)).
@@ -24,7 +24,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (!token) { res.status(401).json({ error: 'Non authentifié' }); return }
 
   const sb = clientAdmin()
-  if (!sb) { res.status(503).json({ error: 'Service indisponible' }); return }
+  if (!sb) { res.status(503).json({ error: 'Service indisponible', diagnostic: diagnosticEnv() }); return }
 
   const { data: { user }, error: userErr } = await sb.auth.getUser(token)
   if (userErr || !user) { res.status(401).json({ error: 'Session invalide' }); return }
