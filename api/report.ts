@@ -37,7 +37,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       if (error.code === '23505') {
         res.status(200).json({ ok: true, already: true }); return
       }
-      res.status(500).json({ error: 'Erreur lors du signalement', code: error.code ?? null }); return
+      res.status(500).json({ error: 'Erreur lors du signalement', code: error.code ?? null, message: (error.message ?? '').slice(0, 160) }); return
     }
 
     res.status(200).json({ ok: true })
