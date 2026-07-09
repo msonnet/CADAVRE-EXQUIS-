@@ -37,6 +37,11 @@ export function clientAdmin(): SupabaseClient | null {
   }
 }
 
+/** URL validée du projet (pour construire des liens dashboard). */
+export function urlProjet(): string | null {
+  return urlCandidate(process.env.SUPABASE_URL) ?? urlCandidate(process.env.VITE_SUPABASE_URL)
+}
+
 /** État précis de la config serveur — pour diagnostiquer un 503 à distance. */
 export function diagnosticEnv(): string {
   const brutA = process.env.SUPABASE_URL
