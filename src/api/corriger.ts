@@ -1,11 +1,14 @@
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { api } from '../lib/apiBase'
+import { langueActuelle } from '../i18n'
 
 export async function corrigerAccords(
   texte: string,
   structureId: string,
   blocs?: { texte: string; type: string }[],
 ): Promise<string> {
+  // L'anglais n'a ni genre ni accord d'adjectif : rien à corriger
+  if (langueActuelle() === 'en') return texte
   try {
     // La correction est awaitée au moment du partage : sans plafond, une API
     // muette gèlerait le bouton « Partager ». Au-delà, on partage le texte brut.

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { api } from '../lib/apiBase'
+import { langueActuelle } from '../i18n'
 
 // ── Lecture premium (ElevenLabs via /api/tts) avec repli voix système ────────
 //
@@ -21,6 +22,16 @@ const VOICE_PRIORITY = [
 ]
 
 function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  if (langueActuelle() === 'en') {
+    return (
+      voices.find(v => v.name.includes('Samantha')) ||
+      voices.find(v => v.name.includes('Daniel')) ||
+      voices.find(v => v.lang === 'en-GB') ||
+      voices.find(v => v.lang === 'en-US') ||
+      voices.find(v => v.lang.startsWith('en')) ||
+      null
+    )
+  }
   for (const name of VOICE_PRIORITY) {
     const v = voices.find(v => v.name.includes(name))
     if (v) return v
@@ -35,7 +46,7 @@ function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null 
 
 function parlerAvecVoix(texte: string, voices: SpeechSynthesisVoice[], onStart: () => void, onEnd: () => void): SpeechSynthesisUtterance {
   const u = new SpeechSynthesisUtterance(texte)
-  u.lang = 'fr-FR'
+  u.lang = langueActuelle() === 'en' ? 'en-GB' : 'fr-FR'
   const voix = pickVoice(voices)
   if (voix) {
     u.voice = voix

@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 export interface TutorielCoachProps {
   visible: boolean
@@ -58,7 +59,7 @@ export default function TutorielCoach({
         <motion.div
           key={etape}
           role="dialog"
-          aria-label={`Guide tutoriel étape ${etape + 1} sur ${total}`}
+          aria-label={`${tr('Guide tutoriel étape', 'Tutorial step')} ${etape + 1} / ${total}`}
           aria-live="polite"
           style={{
             position: 'fixed',
@@ -78,7 +79,7 @@ export default function TutorielCoach({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ ...mono, fontSize: 11, color: accent, opacity: 0.85, letterSpacing: '0.24em', fontWeight: 700 }}>
-                GUIDE
+                {tr('GUIDE', 'GUIDE')}
               </span>
               <ProgressDots etape={etape} total={total} accent={accent} encre={encre} />
             </div>
@@ -86,7 +87,7 @@ export default function TutorielCoach({
               onClick={onPasser}
               style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0 12px 16px', minHeight: 44, marginTop: -12, marginBottom: -6 }}
             >
-              PASSER
+              {tr('PASSER', 'SKIP')}
             </button>
           </div>
 
@@ -136,7 +137,7 @@ export default function TutorielCoach({
                   letterSpacing: '0.14em',
                 }}
               >
-                {labelCompris ?? 'PLUS TARD →'}
+                {labelCompris ?? tr('PLUS TARD →', 'LATER →')}
               </button>
             ) : (
               <button
@@ -147,7 +148,7 @@ export default function TutorielCoach({
                   padding: '0.85em 1.2em', border: 'none', cursor: 'pointer', borderRadius: 3,
                 }}
               >
-                {labelCompris ?? 'Compris →'}
+                {labelCompris ?? tr('Compris →', 'Got it →')}
               </button>
             )
           )}
@@ -190,10 +191,10 @@ export function TutorielFete({ visible, accent, encre, bg }: { visible: boolean;
             className="font-fraunces font-black"
             style={{ fontSize: 'clamp(1.3rem, 6vw, 1.7rem)', color: encre, lineHeight: 1.1, marginBottom: 5 }}
           >
-            Guide terminé.
+            {tr('Guide terminé.', 'Guide complete.')}
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.8 }}>
-            Le jeu est à toi — bonne écriture.
+            {tr('Le jeu est à toi — bonne écriture.', 'The game is yours — happy writing.')}
           </p>
           <div style={{ ...mono, fontSize: 10, color: accent, opacity: 0.7, marginTop: 10, letterSpacing: '0.24em' }}>
             ✦ ✦ ✦

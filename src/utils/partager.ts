@@ -1,4 +1,5 @@
 import { garantirContraste } from '../reve/contraste'
+import { langueActuelle } from '../i18n'
 export async function partagerImage(
   dataUrl: string,
   nomFichier: string,
@@ -1403,7 +1404,7 @@ function dessinerDessinPleinCadre(
     ctx.fillStyle = garantirContraste(accent, scrimLect, 3)
     ctx.textAlign = 'center'
     ctx.font = "22px 'Raleway', sans-serif"
-    texteEspace(ctx, '— LECTURE —', W / 2, lectTop, 22 * 0.3)
+    texteEspace(ctx, langueActuelle() === 'en' ? '— READING —' : '— LECTURE —', W / 2, lectTop, 22 * 0.3)
     ctx.font = "italic 36px 'Playfair Display', Georgia, serif"
     const lignes = wrapText(ctx, texte.replace(/\n+/g, ' ').trim(), ZONE_W - 60).slice(0, 4)
     ctx.fillStyle = withAlpha(encreLect, 0.92)

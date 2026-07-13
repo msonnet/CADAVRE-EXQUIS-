@@ -1,4 +1,5 @@
 import type { StructureId, Case } from '../types'
+import { langueActuelle } from '../i18n'
 
 export interface DefinitionCase {
   fonction: string
@@ -59,6 +60,51 @@ export const STRUCTURES: Structure[] = [
   },
 ]
 
+// ─── Structures anglaises — la grammaire EST le gameplay, elle se traduit ─────
+
+export const STRUCTURES_EN: Structure[] = [
+
+  // 1. Short sentence (3 cases)
+  {
+    id: 'phrase-simple',
+    nom: 'Short sentence',
+    description: '3 parts — subject, verb, object',
+    cases: [
+      { fonction: 'subject', consigne: 'a subject noun phrase', type: 'groupe-nominal-riche' },
+      { fonction: 'verb', consigne: 'a conjugated verb', type: 'verbe' },
+      { fonction: 'object', consigne: 'an object noun phrase', type: 'groupe-nominal-riche' },
+    ],
+  },
+
+  // 2. Full sentence — Breton's canonical form (5 cases)
+  //    « The exquisite corpse shall drink the new wine »
+  {
+    id: 'phrase-etoffee',
+    nom: 'Full sentence',
+    description: "5 parts — Breton's canonical form",
+    cases: [
+      { fonction: 'subject', consigne: 'article + noun — ex: "the corpse", "a shadow", "a knife"', type: 'groupe-nominal' },
+      { fonction: 'subject adjective', consigne: "a single adjective — ex: 'exquisite', 'nocturnal', 'broken'", type: 'adjectif' },
+      { fonction: 'verb', consigne: "a conjugated verb — ex: 'drinks', 'devours', 'haunts'", type: 'verbe' },
+      { fonction: 'object', consigne: 'article + noun — ex: "the wine", "the flame", "a mirror"', type: 'groupe-nominal' },
+      { fonction: 'object adjective', consigne: "a single adjective — ex: 'new', 'opaque', 'hollow'", type: 'adjectif' },
+    ],
+  },
+
+  // 3. Free verse (4 to 12 turns)
+  {
+    id: 'vers-libre',
+    nom: 'Free verse',
+    description: '4 to 12 lines — no constraint',
+    cases: Array.from({ length: 12 }, (_, i) => ({
+      fonction: `line ${i + 1}`,
+      consigne: 'a line of 3 to 6 words — one physical, unexpected image',
+      type: 'libre' as const,
+    })),
+    nombreCasesVariable: { min: 4, max: 12 },
+  },
+]
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // L'Atelier — mode spécial hors liste (entrée discrète, non proposé dans /config).
@@ -70,11 +116,17 @@ export const STRUCTURE_ATELIER: Structure = {
   cases: [],
 }
 
+/** Liste des structures dans la langue active (l'anglais adapte les consignes). */
+export function getStructuresActives(): Structure[] {
+  return langueActuelle() === 'en' ? STRUCTURES_EN : STRUCTURES
+}
+
 export function getStructure(id: string): Structure {
   if (id === 'atelier') return STRUCTURE_ATELIER
-  const s = STRUCTURES.find(s => s.id === id)
+  const pool = getStructuresActives()
+  const s = pool.find(s => s.id === id)
   // Fallback gracieux pour les anciens poèmes avec des structures supprimées
-  return s ?? STRUCTURES.find(s => s.id === 'vers-libre')!
+  return s ?? pool.find(s => s.id === 'vers-libre')!
 }
 
 export function nombreCasesEffectif(structure: Structure): number {

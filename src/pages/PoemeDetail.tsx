@@ -15,8 +15,14 @@ import { supabase } from '../lib/supabase'
 import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle } from '../i18n'
 
-const NOMS_STRUCTURES: Record<string, string> = {
+const NOMS_STRUCTURES: Record<string, string> = langueActuelle() === 'en' ? {
+  'phrase-simple':  'Short form',
+  'phrase-etoffee': 'Full form',
+  'vers-libre':     'Free verse',
+  'atelier':        'The Workshop',
+} : {
   'phrase-simple':  'Structure courte',
   'phrase-etoffee': 'Structure étoffée',
   'vers-libre':     'Vers libre',
@@ -240,13 +246,13 @@ export default function PoemeDetail() {
     return (
       <PageTransition className="page-carnet relative flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
-          Poème introuvable.
+          {tr('Poème introuvable.', 'Poem not found.')}
         </p>
         <button
           onClick={() => navigate('/bibliotheque')}
           style={{ marginTop: 28, background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', borderRadius: 3, cursor: 'pointer' }}
         >
-          Mes poèmes
+          {tr('Mes poèmes', 'My poems')}
         </button>
       </PageTransition>
     )
@@ -260,8 +266,8 @@ export default function PoemeDetail() {
   const resteLigne0 = lignes[0]?.trim().slice(1) ?? ''
   const voixCount = poeme.cases.length
   const structLabel = NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId
-  const dateStr = new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
-  const heureStr = new Date(poeme.dateCreation).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const dateStr = new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  const heureStr = new Date(poeme.dateCreation).toLocaleTimeString(tr('fr-FR', 'en-GB'), { hour: '2-digit', minute: '2-digit' })
   const illustrationLabel = poeme.illustration ? (MEDIUMS[poeme.illustration.style] ?? poeme.illustration.style) : null
 
   return (
@@ -319,7 +325,7 @@ export default function PoemeDetail() {
             aria-label="Retour à mes poèmes"
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← MES POÈMES
+            ← {tr('MES POÈMES', 'MY POEMS')}
           </button>
           <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -327,7 +333,7 @@ export default function PoemeDetail() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — FEUILLET —
+          {tr('— FEUILLET —', '— FOLIO —')}
         </div>
 
         {/* ── TITRE éditable ── */}
@@ -349,12 +355,12 @@ export default function PoemeDetail() {
                   if (e.key === 'Enter') sauvegarderTitre()
                   if (e.key === 'Escape') setEditionTitre(false)
                 }}
-                placeholder="Titre du poème…"
-                aria-label="Titre du poème"
+                placeholder={tr('Titre du poème…', 'Poem title…')}
+                aria-label={tr('Titre du poème', 'Poem title')}
               />
               <button
                 onClick={sauvegarderTitre}
-                aria-label="Valider le titre"
+                aria-label={tr('Valider le titre', 'Confirm title')}
                 style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
               >✓</button>
               <button
@@ -373,11 +379,11 @@ export default function PoemeDetail() {
                 className="font-fraunces font-black leading-tight"
                 style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: poeme.titre ? encre : `${encre}40` }}
               >
-                {poeme.titre ?? 'Sans titre'}
+                {poeme.titre ?? tr('Sans titre', 'Untitled')}
               </div>
               {!poeme.titre && (
                 <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 2 }}>
-                  TAP POUR NOMMER
+                  {tr('TAP POUR NOMMER', 'TAP TO NAME')}
                 </div>
               )}
             </button>
@@ -429,7 +435,7 @@ export default function PoemeDetail() {
           style={{ marginBottom: 16 }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — LE CADAVRE —
+            {tr('— LE CADAVRE —', '— THE CORPSE —')}
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.7 }}>
             {lettrine && (
@@ -451,7 +457,7 @@ export default function PoemeDetail() {
             ))}
           </div>
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}15` }}>
-            {dateStr} · {voixCount} VOIX · {structLabel.toUpperCase()} · {heureStr}
+            {dateStr} · {voixCount} {tr('VOIX', 'VOICES')} · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </motion.div>
 
@@ -472,7 +478,7 @@ export default function PoemeDetail() {
             className="appui"
             style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
-            {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
+            {parlant ? tr('◾ RÉCITER', '◾ RECITE') : tr('— RÉCITER —', '— RECITE —')}
           </button>
           <button
             onClick={partager}
@@ -481,7 +487,7 @@ export default function PoemeDetail() {
             className="appui"
             style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
-            {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
+            {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('— PARTAGER —', '— SHARE —')}
           </button>
           <button
             onClick={imprimerPoeme}
@@ -489,7 +495,7 @@ export default function PoemeDetail() {
             className="appui"
             style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
-            — IMPRIMER —
+            {tr('— IMPRIMER —', '— PRINT —')}
           </button>
           <button
             onClick={() => setCasesVisibles(v => !v)}
@@ -498,7 +504,7 @@ export default function PoemeDetail() {
             className="appui"
             style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
-            — COUTURES —
+            {tr('— COUTURES —', '— SEAMS —')}
           </button>
         </motion.div>
 
@@ -523,7 +529,7 @@ export default function PoemeDetail() {
               opacity: pdfBusy ? 0.55 : 0.75,
             }}
           >
-            {pdfBusy ? '↓ Export…' : '↓ Exporter PDF'}
+            {pdfBusy ? tr('↓ Export…', '↓ Exporting…') : tr('↓ Exporter PDF', '↓ Export PDF')}
           </button>
         </motion.div>
 
@@ -552,12 +558,12 @@ export default function PoemeDetail() {
             }}
           >
             {publishError
-              ? 'ERREUR'
+              ? tr('ERREUR', 'ERROR')
               : published
-                ? '✓ PUBLIÉ'
+                ? tr('✓ PUBLIÉ', '✓ PUBLISHED')
                 : publishing
-                  ? '✦ Publication…'
-                  : '✦ Publier dans la galerie'}
+                  ? tr('✦ Publication…', '✦ Publishing…')
+                  : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
           </button>
         </motion.div>
 
@@ -617,7 +623,7 @@ export default function PoemeDetail() {
               padding: '1.1em 1em', border: 'none', borderRadius: 3, cursor: 'pointer', gap: 2,
             }}
           >
-            <span>Nouvelle partie&nbsp;→</span>
+            <span>{tr('Nouvelle partie', 'New game')}&nbsp;→</span>
           </button>
         </motion.div>
 
@@ -633,7 +639,7 @@ export default function PoemeDetail() {
                 initial={{ opacity: 0.3 }}
                 exit={{ opacity: 0 }}
               >
-                — SUPPRIMER —
+                {tr('— SUPPRIMER —', '— DELETE —')}
               </motion.button>
             ) : (
               <motion.div
@@ -642,17 +648,17 @@ export default function PoemeDetail() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8 }}>SUPPRIMER DÉFINITIVEMENT ?</span>
+                <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8 }}>{tr('SUPPRIMER DÉFINITIVEMENT ?', 'DELETE FOREVER?')}</span>
                 <button
                   onClick={supprimer}
                   aria-label="Confirmer la suppression"
                   style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}
-                >OUI</button>
+                >{tr('OUI', 'YES')}</button>
                 <button
                   onClick={() => setConfirmSuppression(false)}
                   aria-label="Annuler la suppression"
                   style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}
-                >NON</button>
+                >{tr('NON', 'NO')}</button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -662,11 +668,11 @@ export default function PoemeDetail() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_DETAIL}
         etape={T_DETAIL} total={TUTORIEL_TOTAL}
-        titre="Publie-le, si tu veux"
-        corps="La galerie rassemble les poèmes de tous les joueurs. Le tien peut en être."
-        cible="✦ PUBLIER DANS LA GALERIE"
+        titre={tr('Publie-le, si tu veux', 'Publish it, if you like')}
+        corps={tr('La galerie rassemble les poèmes de tous les joueurs. Le tien peut en être.', 'The gallery gathers poems from every player. Yours can join them.')}
+        cible={tr('✦ PUBLIER DANS LA GALERIE', '✦ PUBLISH TO THE GALLERY')}
         onCompris={tutAvancer}
-        labelCompris="TERMINER LE GUIDE →"
+        labelCompris={tr('TERMINER LE GUIDE →', 'FINISH THE GUIDE →')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={fond}
       />

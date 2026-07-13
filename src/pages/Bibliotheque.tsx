@@ -9,6 +9,7 @@ import { useTutoriel, TUTORIEL_TOTAL, T_BIBLIO } from '../hooks/useTutoriel'
 import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -18,7 +19,7 @@ const NOMS_STRUCTURES: Record<string, string> = {
 }
 
 function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('fr-FR', {
+  return new Date(ts).toLocaleDateString(tr('fr-FR', 'en-GB'), {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 }
@@ -68,7 +69,7 @@ export default function Bibliotheque() {
             onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← ACCUEIL
+            ← {tr('ACCUEIL', 'HOME')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -76,7 +77,7 @@ export default function Bibliotheque() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — LE RECUEIL —
+          {tr('— LE RECUEIL —', '— THE COLLECTION —')}
         </div>
 
         {/* ── TITRE ── */}
@@ -89,16 +90,16 @@ export default function Bibliotheque() {
             className="font-fraunces font-black leading-tight mb-1"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            Mes <span style={{ color: accent }}>poèmes.</span>
+            {tr('Mes', 'My')} <span style={{ color: accent }}>{tr('poèmes.', 'poems.')}</span>
           </div>
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 10,
           }}>
-            Ta bibliothèque personnelle
+            {tr('Ta bibliothèque personnelle', 'Your personal library')}
           </p>
           {!chargement && (poemes.length > 0 || dessins.length > 0) && (
             <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em', opacity: 0.75, marginBottom: 14 }}>
-              {poemes.length > 0 && `${poemes.length} POÈME${poemes.length > 1 ? 'S' : ''} · ${poemes.reduce((s, p) => s + p.cases.length, 0)} VOIX`}
+              {poemes.length > 0 && `${poemes.length} ${tr('POÈME', 'POEM')}${poemes.length > 1 ? 'S' : ''} · ${poemes.reduce((s, p) => s + p.cases.length, 0)} ${tr('VOIX', 'VOICES')}`}
               {poemes.length > 0 && dessins.length > 0 && '  ·  '}
               {dessins.length > 0 && `${dessins.length} DESSIN${dessins.length > 1 ? 'S' : ''}`}
             </div>
@@ -112,8 +113,8 @@ export default function Bibliotheque() {
               type="search"
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
-              placeholder="Rechercher…"
-              aria-label="Rechercher dans le recueil"
+              placeholder={tr('Rechercher…', 'Search…')}
+              aria-label={tr('Rechercher dans le recueil', 'Search the collection')}
               className="champ-carnet w-full"
               style={{ borderLeftColor: accent, fontSize: 17 }}
             />
@@ -144,7 +145,7 @@ export default function Bibliotheque() {
             <p style={{
               fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
-              Aucun poème pour l'instant.
+              {tr("Aucun poème pour l'instant.", 'No poems yet.')}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
               <button
@@ -155,7 +156,7 @@ export default function Bibliotheque() {
                   padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 3,
                 }}
               >
-                Cadavre Écrit →
+                {tr('Cadavre Écrit', 'Written Corpse')} →
               </button>
               <button
                 onClick={() => navigate('/config-dessin')}
@@ -165,7 +166,7 @@ export default function Bibliotheque() {
                   padding: '0.9em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 3,
                 }}
               >
-                Cadavre Dessiné →
+                {tr('Cadavre Dessiné', 'Drawn Corpse')} →
               </button>
             </div>
           </motion.div>
@@ -194,7 +195,7 @@ export default function Bibliotheque() {
                     fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75,
                     textAlign: 'center', padding: '40px 0',
                   }}>
-                    Aucun poème trouvé.
+                    {tr('Aucun poème trouvé.', 'No poem found.')}
                   </p>
                 )}
                 {poemesFiltres.map((poeme, i) => (
@@ -317,11 +318,11 @@ export default function Bibliotheque() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_BIBLIO}
         etape={T_BIBLIO} total={TUTORIEL_TOTAL}
-        titre="Ton recueil"
-        corps="Tes poèmes vivent ici. Ouvre celui que tu viens d'écrire."
-        cible="TAPE SUR TON POÈME"
+        titre={tr('Ton recueil', 'Your collection')}
+        corps={tr("Tes poèmes vivent ici. Ouvre celui que tu viens d'écrire.", 'Your poems live here. Open the one you just wrote.')}
+        cible={tr('TAPE SUR TON POÈME', 'TAP YOUR POEM')}
         onCompris={tutAvancer}
-        labelCompris="PLUS TARD →"
+        labelCompris={tr('PLUS TARD →', 'LATER →')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />

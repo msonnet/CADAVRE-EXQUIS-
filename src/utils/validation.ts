@@ -1,4 +1,5 @@
 // Validation grammaticale legere — heuristiques, pas de NLP lourd
+import { langueActuelle } from '../i18n'
 
 // ─── 500 verbes courants (formes conjuguees frequentes) ──────────────────────
 const VERBES: Set<string> = new Set([
@@ -174,6 +175,21 @@ export function validerCase(
   type: TypeCase,
   niveau: NiveauValidation
 ): ResultatValidation {
+  // Anglais : validation allégée — pas d'accords ni de conjugaison à vérifier.
+  // On garde les garde-fous de forme (vide, question, longueurs).
+  if (langueActuelle() === 'en') {
+    const t = texte.trim()
+    if (!t) return { valide: false, message: 'Write something first.' }
+    if (niveau !== 'stricte') return { valide: true }
+    const n = t.split(/\s+/).length
+    if (type === 'proposition' && !t.includes('?')) {
+      return { valide: false, message: 'The prompt asks for a question — end with a “?”.' }
+    }
+    if ((type === 'nom' || type === 'adjectif' || type === 'verbe' || type === 'infinitif') && n > 3) {
+      return { valide: false, message: 'One or two words at most for this fragment.' }
+    }
+    return { valide: true }
+  }
   if (niveau === 'desactivee') return { valide: true }
   if (!texte.trim()) return { valide: false, message: 'Écris quelque chose.' }
 

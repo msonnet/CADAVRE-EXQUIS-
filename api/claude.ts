@@ -124,6 +124,55 @@ const ARTICLES_FR = new Set([
   'mes', 'tes', 'ses', 'nos', 'vos', 'leurs', 'notre', 'votre', 'leur',
 ])
 
+// ─── Anglais : la grammaire est le gameplay, elle se traduit intégralement ───
+
+const ARTICLES_EN = new Set([
+  'the', 'a', 'an', 'this', 'that', 'these', 'those',
+  'my', 'your', 'his', 'her', 'its', 'our', 'their',
+  'one', 'some', 'no', 'every', 'each', 'another',
+])
+
+const CONTRAINTES_EN: Record<TypeCase, string> = {
+  'nom': 'ONE WORD ONLY — never an article, never 2 words (ex: "heart", "cloud", "ash", "bone")',
+  'verbe': 'ONE WORD — a CONJUGATED verb, third person singular, any tense ("devours", "haunted", "will drink", "grazes" — one word only, so prefer simple present or past). ABSOLUTELY FORBIDDEN: adjectives, nouns, bare infinitives, adverbs. If the word could read as a noun ("waves", "marches"), pick an unambiguous verb.',
+  'verbe-transitif': 'ONE WORD — a TRANSITIVE conjugated verb, third person singular, that calls for an object ("devours", "carves", "lifts", "gnaws"). ABSOLUTELY FORBIDDEN: intransitive verbs, adjectives, nouns, adverbs.',
+  'adjectif': 'ONE WORD ONLY (a qualifying adjective — ex: "nocturnal", "broken", "hollow", "deep")',
+  'adverbe': 'ONE INVARIABLE ADVERB ("softly", "sideways", "forever") or a 2-word adverbial phrase ("without sound", "at dusk"). ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs.',
+  'groupe-nominal': 'EXACTLY 2 WORDS: article + noun — ex: "the silence", "a shadow", "the rain", "a knife". NEVER an adjective after the noun.',
+  'groupe-nominal-riche': '2 to 4 words — a COMPLETE NOUN PHRASE that ALWAYS starts with a determiner. VARY the form: article + noun ("the rain"), article + adjective + noun ("an old key"), article + noun + complement ("the sound of wind", "a wall of fog"). ABSOLUTELY FORBIDDEN: conjugated verbs, relative pronouns (who, which), phrases without a determiner.',
+  'groupe-verbal': '3 to 4 words — a conjugated verb (third person singular) + its complement WITH its article or preposition (ex: "crosses the night", "weighs on the world"). NEVER a bare complement.',
+  'proposition': '4 to 6 words (a short question)',
+  'libre': '3 to 6 words (one line of verse)',
+  'article-adj': 'EXACTLY 2 WORDS: article + qualifying adjective. Valid: "a dark", "the old", "a pale", "the heavy". FORBIDDEN: nouns, pronouns, set phrases.',
+  'conjonction-coord': "ONE WORD ONLY — a coordinating conjunction or linking adverb ('but', 'for', 'yet', 'however', 'therefore'). NEVER a sentence, never 2 words.",
+  'conjonction-subord': "1 or 2 words — a subordinating conjunction ('when', 'if', 'as', 'while', 'as soon as'). NEVER a full clause.",
+  'infinitif': "ONE WORD ONLY — a bare infinitive verb (ex: 'burn', 'wait', 'cross', 'descend'). NEVER an article or pronoun.",
+  'gérondif': "1 or 2 words — a gerund phrase starting with an -ing verb (ex: 'falling', 'slipping away', 'burning slowly'). NEVER a subject.",
+}
+
+const FALLBACKS_EN: Record<TypeCase, string[]> = {
+  'nom': ['shadow', 'silence', 'night', 'ash', 'void', 'stone', 'mist', 'cold', 'dust', 'wind', 'rain', 'echo', 'flame', 'threshold', 'marrow', 'frost'],
+  'verbe': ['slips', 'burns', 'falls', 'trembles', 'remains', 'vanishes', 'weighs', 'drifts', 'haunts', 'grazes', 'resists', 'murmurs', 'wavers', 'sinks', 'prowls'],
+  'verbe-transitif': ['devours', 'grazes', 'swallows', 'cracks', 'crosses', 'gnaws', 'lifts', 'mends', 'cradles', 'digs', 'tames', 'engulfs', 'tears', 'erases'],
+  'adjectif': ['motionless', 'pale', 'deep', 'strange', 'broken', 'nocturnal', 'hollow', 'heavy', 'cold', 'muffled', 'bitter', 'veiled', 'opaque', 'slow', 'bare', 'mute', 'dense', 'fragile'],
+  'adverbe': ['softly', 'slowly', 'in silence', 'without sound', 'forever', 'still', 'elsewhere', 'in vain', 'almost', 'always', 'sometimes', 'nowhere'],
+  'groupe-nominal': ['the shadow', 'the night', 'a breath', 'the ash', 'the sound', 'a light', 'the earth', 'a gaze', 'the rain', 'a wall', 'the hand', 'the silence', 'the edge', 'a voice', 'the water', 'the body', 'a door', 'a fire'],
+  'groupe-nominal-riche': ['the cast shadow', 'a bottomless night', 'a lost breath', 'the cold ash', 'the sound of wind', 'a veiled light', 'the hardened earth', 'an empty gaze', 'the thin rain', 'a wall of fog', 'the open hand', 'a thick silence', "the gulf's edge", 'a hollow voice', 'the black water', 'an old key'],
+  'groupe-verbal': ['crosses the night', 'burns in silence', 'slips into shadow', 'falls without sound', 'stays motionless', 'erases the traces', 'waits without hope', 'weighs on the world', 'haunts the hallways', 'grazes the walls'],
+  'proposition': ['What remains of us?', 'Where do shadows go?', 'Who put out the light?', 'When will the cold return?', 'Why this silence?', 'Who still keeps watch?', 'Where does the night end?'],
+  'libre': ['something remains here', 'the night keeps everything', 'silence answers back', 'nothing truly disappears', 'it all begins elsewhere', 'the words erase themselves', 'time hesitates at the door', 'absence has a shape'],
+  'article-adj': ['a dark', 'an old', 'the cold', 'a pale', 'the heavy', 'a slow', 'the black', 'a strange', 'the hollow', 'a broken', 'the mute', 'a deep'],
+  'conjonction-coord': ['but', 'yet', 'for', 'however', 'therefore', 'still'],
+  'conjonction-subord': ['when', 'if', 'as', 'while', 'as soon as', 'wherever'],
+  'infinitif': ['burn', 'wait', 'cross', 'descend', 'erase', 'hold', 'feel', 'slip'],
+  'gérondif': ['falling', 'slipping', 'burning slowly', 'drifting', 'dissolving'],
+}
+
+const ADVERBES_INVARIABLES_EN = new Set(['forever', 'still', 'elsewhere', 'almost', 'always', 'sometimes', 'nowhere', 'sideways', 'twice', 'today', 'tonight', 'yesterday'])
+const TETES_LOCUTION_ADV_EN = new Set(['in', 'at', 'with', 'without', 'for', 'by'])
+const OUTILS_FIN_EN = new Set(['the', 'a', 'an', 'of', 'in', 'on', 'at', 'with', 'without', 'and', 'or', 'to', 'that', 'which', 'who'])
+
+
 const ADVERBES_INVARIABLES = new Set([
   'encore', 'toujours', 'jamais', 'ailleurs', 'presque', 'parfois', 'souvent', 'déjà',
   'demain', 'hier', 'ici', 'là', 'loin', 'partout', 'jadis', 'désormais', 'soudain',
@@ -138,21 +187,24 @@ const TETES_LOCUTION_ADV = new Set([
 
 // Valide et normalise la sortie du modèle selon le type attendu.
 // Retourne '' si invalide (déclenchera le fallback).
-function normaliserSortie(texte: string, type: TypeCase): string {
+function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = 'fr'): string {
   const t = texte.trim()
   const mots = t.split(/\s+/)
+  const ARTICLES = langue === 'en' ? ARTICLES_EN : ARTICLES_FR
+  // L'élision (l'ombre, d'encre) n'existe qu'en français
+  const elision = (w: string) => langue === 'fr' && /^[lLdD][''\u2019]\S+/.test(w)
 
   switch (type) {
     case 'article-adj': {
       if (mots.length !== 2) return ''
-      if (!ARTICLES_FR.has(mots[0].toLowerCase())) return ''
+      if (!ARTICLES.has(mots[0].toLowerCase())) return ''
       return t
     }
     case 'nom': {
       // Cas "l'ombre" ou "d'encre" — élision sans espace → strip l' / d'
-      if (mots.length === 1) return t.replace(/^[lLdD][''’]/, '')
-      // Cas "le silence" ou "la nuit" — article séparé → strip l'article
-      if (ARTICLES_FR.has(mots[0].toLowerCase())) return mots.slice(1).join(' ')
+      if (mots.length === 1) return langue === 'fr' ? t.replace(/^[lLdD][''’]/, '') : t
+      // Cas "le silence" / "the silence" — article séparé → strip l'article
+      if (ARTICLES.has(mots[0].toLowerCase())) return mots.slice(1).join(' ')
       if (mots.length > 2) return mots[0]
       return t
     }
@@ -172,9 +224,10 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       // n'accepte qu'un -ment, un invariable connu ou une locution adverbiale.
       if (mots.length === 1) {
         const w = mots[0].toLowerCase()
+        if (langue === 'en') return /ly$/.test(w) || ADVERBES_INVARIABLES_EN.has(w) ? t : ''
         return /ment$/.test(w) || ADVERBES_INVARIABLES.has(w) ? t : ''
       }
-      if (mots.length === 2 && TETES_LOCUTION_ADV.has(mots[0].toLowerCase())) return t
+      if (mots.length === 2 && (langue === 'en' ? TETES_LOCUTION_ADV_EN : TETES_LOCUTION_ADV).has(mots[0].toLowerCase())) return t
       return ''
     }
     case 'groupe-nominal-riche': {
@@ -182,13 +235,13 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       // jamais de coupe qui laisserait un mot-outil pendu en fin de groupe.
       const propre = t.replace(/[.,;:!?…]+$/g, '')
       let gm = propre.split(/\s+/)
-      const commenceBien = ARTICLES_FR.has(gm[0]?.toLowerCase()) || /^[lLdD][''\u2019]\S+/.test(gm[0] ?? '')
+      const commenceBien = ARTICLES.has(gm[0]?.toLowerCase()) || elision(gm[0] ?? '')
       if (!commenceBien) return ''
       if (gm.length > 4) gm = gm.slice(0, 4)
-      const OUTILS_FIN = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux',
+      const OUTILS_FIN = langue === 'en' ? OUTILS_FIN_EN : new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux',
         'sans', 'sous', 'sur', 'dans', 'en', 'à', 'et', 'ou', 'qui', 'que', "d'", "l'"])
       while (gm.length > 1 && OUTILS_FIN.has(gm[gm.length - 1].toLowerCase())) gm.pop()
-      if (gm.length === 1 && !/^[lLdD][''\u2019]\S+/.test(gm[0])) return ''
+      if (gm.length === 1 && !elision(gm[0])) return ''
       return gm.join(' ')
     }
     case 'groupe-nominal': {
@@ -196,8 +249,8 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       // casse la syntaxe du vers cousu : on rejette → fallback avec article garanti
       const gn = mots.length > 2 ? mots.slice(0, 2).join(' ') : t
       const gm = gn.split(/\s+/)
-      if (gm.length === 1) return /^[lLdD][''’]\S+/.test(gm[0]) ? gn : ''
-      return ARTICLES_FR.has(gm[0].toLowerCase()) ? gn : ''
+      if (gm.length === 1) return elision(gm[0]) ? gn : ''
+      return ARTICLES.has(gm[0].toLowerCase()) ? gn : ''
     }
     case 'conjonction-coord': {
       // Strip anything past the first word — the model sometimes adds context
@@ -214,8 +267,9 @@ function normaliserSortie(texte: string, type: TypeCase): string {
       return t
     }
     case 'gérondif': {
-      // Must start with "en" — if not, the fallback is safer than a bad output
-      if (mots[0].toLowerCase() !== 'en') return ''
+      // FR : doit commencer par « en » ; EN : par un verbe en -ing
+      if (langue === 'en') { if (!/ing$/.test(mots[0].toLowerCase())) return '' }
+      else if (mots[0].toLowerCase() !== 'en') return ''
       if (mots.length > 3) return mots.slice(0, 3).join(' ')
       return t
     }
@@ -224,8 +278,9 @@ function normaliserSortie(texte: string, type: TypeCase): string {
   }
 }
 
-function pickFallback(type: TypeCase, eviter: string[] = []): string {
-  const arr = FALLBACKS[type] ?? FALLBACKS['libre']
+function pickFallback(type: TypeCase, eviter: string[] = [], langue: 'fr' | 'en' = 'fr'): string {
+  const table = langue === 'en' ? FALLBACKS_EN : FALLBACKS
+  const arr = table[type] ?? table['libre']
   // Prefer fallback words that haven't already been used in the game
   const used = new Set(eviter.map(m => m.toLowerCase()))
   const dispo = arr.filter(m => !used.has(m.toLowerCase()))
@@ -253,7 +308,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type, voiceId, contexte, eviter, mots } = req.body ?? {}
+  const { consigne, type, voiceId, contexte, eviter, mots, langue: langueBrute } = req.body ?? {}
+  const langue: 'fr' | 'en' = langueBrute === 'en' ? 'en' : 'fr'
 
   if (typeof consigne !== 'string' || typeof type !== 'string' || !consigne || !type) {
     res.status(400).json({ error: 'Champs manquants : consigne et type requis.' })
@@ -271,7 +327,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY
 
   if (!apiKey) {
-    res.status(200).json({ texte: pickFallback(type as TypeCase), source: 'fallback' })
+    res.status(200).json({ texte: pickFallback(type as TypeCase, [], langue), source: 'fallback' })
     return
   }
 
@@ -290,12 +346,14 @@ export default async function handler(req: any, res: any): Promise<void> {
     ? (type === 'libre'
       ? `environ ${motsCible} mots — un vers COMPLET et grammatical : un sujet avec son article et un verbe conjugué, ou une image nominale complète. JAMAIS de style télégraphique : chaque nom garde son article. Sans ponctuation finale.`
       : `${motsCible} MOT${motsCible > 1 ? 'S' : ''} EXACTEMENT — un fragment de vers, pas une phrase complète, sans ponctuation`)
-    : (CONTRAINTES[type as TypeCase] ?? '2 à 4 mots')
+    : ((langue === 'en' ? CONTRAINTES_EN : CONTRAINTES)[type as TypeCase] ?? '2 à 4 mots')
   // Strip the « — ex : … » part so examples never influence the AI (they're only for human players)
   const consigneIA = consigne.replace(/\s*[—–-]\s*ex\s*:.*$/i, '').trim()
 
   const echoLine = contexte
-    ? `\nTu entends en écho : "${contexte}". Libre à toi d'y rebondir ou de l'ignorer — reste dans ton propre monde.`
+    ? (langue === 'en'
+      ? `\nYou hear an echo: "${contexte}". Bounce off it or ignore it — stay in your own world.`
+      : `\nTu entends en écho : "${contexte}". Libre à toi d'y rebondir ou de l'ignorer — reste dans ton propre monde.`)
     : ''
 
   // Anti-répétition : liste des mots déjà employés dans la partie, à ne jamais réutiliser.
@@ -305,12 +363,16 @@ export default async function handler(req: any, res: any): Promise<void> {
         .map((m: string) => m.trim().toLowerCase()))].slice(0, 60)
     : []
   const eviterLine = motsEviter.length
-    ? `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés (trouve autre chose) : ${motsEviter.join(', ')}.`
+    ? (langue === 'en'
+      ? `\nABSOLUTELY FORBIDDEN to reuse these already-used words (find something else): ${motsEviter.join(', ')}.`
+      : `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés (trouve autre chose) : ${motsEviter.join(', ')}.`)
     : ''
 
   // Pour un vers entier, la persona doit s'exprimer pleinement — pas d'image générique
   const personaLine = type === 'libre'
-    ? "\nCe vers entier doit porter ton empreinte : une image concrète et singulière depuis ton univers propre. Évite les métaphores surréalistes attendues — choisis l'image que toi seul verrais."
+    ? (langue === 'en'
+      ? "\nThis full line must carry your signature: one concrete, singular image from your own world. Avoid expected surrealist metaphors — choose the image only you would see."
+      : "\nCe vers entier doit porter ton empreinte : une image concrète et singulière depuis ton univers propre. Évite les métaphores surréalistes attendues — choisis l'image que toi seul verrais.")
     : ''
 
   const ctrl = new AbortController()
@@ -330,11 +392,15 @@ export default async function handler(req: any, res: any): Promise<void> {
         model: type === 'libre' ? 'claude-opus-4-8' : 'claude-sonnet-4-6',
         max_tokens: maxTokens,
         stop_sequences: ['.', '!', '?'],
-        system: voix.systemPrompt,
+        system: langue === 'en'
+          ? voix.systemPrompt + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre."
+          : voix.systemPrompt,
         messages: [
           {
             role: 'user',
-            content: `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}${personaLine}\nRéponds avec le fragment seul.`,
+            content: langue === 'en'
+              ? `Write ONLY the requested fragment, no final punctuation, no explanation.\nType: ${consigneIA}.\nAbsolute constraint: ${contrainte}.\nStay true to your way of seeing. Avoid the most expected word and clichés.${echoLine}${eviterLine}${personaLine}\nAnswer with the fragment alone.`
+              : `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}${personaLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),
@@ -367,9 +433,10 @@ export default async function handler(req: any, res: any): Promise<void> {
       /^bien s[uû]r\b/i.test(propre) ||
       /^pour\s+(répondre|compléter|créer|générer)\b/i.test(propre) ||
       /\bétapes?\b/i.test(propre) ||
+      /^(here is|here's|sure|of course|i will|i'll|to (answer|complete|create|generate))\b/i.test(propre) ||
       propre.endsWith(':')
 
-    let texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase)
+    let texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase, langue)
     // Si un nombre de mots est imposé, tronquer doucement les débordements.
     // Pour un vers entier ('libre'), couper en plein vers recréerait le
     // télégramme : on tolère le dépassement, garde-fou à 9 mots seulement.
@@ -379,13 +446,13 @@ export default async function handler(req: any, res: any): Promise<void> {
       if (m.length > plafond) texte = m.slice(0, type === 'libre' ? plafond : motsCible).join(' ')
     }
     res.status(200).json({
-      texte: texte || pickFallback(type as TypeCase, motsEviter),
+      texte: texte || pickFallback(type as TypeCase, motsEviter, langue),
       source: texte ? 'ia' : 'fallback',
       voixNom: voix.id,
     })
   } catch (err) {
     console.error('Erreur Claude API:', err)
-    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter), source: 'fallback' })
+    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter, langue), source: 'fallback' })
   } finally {
     clearTimeout(timer)
   }

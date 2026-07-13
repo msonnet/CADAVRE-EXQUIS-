@@ -2,6 +2,7 @@
 
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { api } from '../lib/apiBase'
+import { langueActuelle } from '../i18n'
 
 export interface RequeteIA {
   consigne: string
@@ -26,7 +27,7 @@ export async function demanderFragmentIA(requete: RequeteIA): Promise<ReponseIA>
   const response = await fetchAvecTimeout(api('/api/claude'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requete),
+    body: JSON.stringify({ ...requete, langue: langueActuelle() }),
   }, TIMEOUT_MS)
 
   if (!response.ok) {

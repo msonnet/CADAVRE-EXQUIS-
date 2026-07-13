@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { pointerSerie, type Serie } from '../utils/streak'
 import { rearmerRappelSiActif } from '../utils/notifications'
+import { tr } from '../i18n'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
 function toRomain(n: number): string {
@@ -89,8 +90,8 @@ export default function Accueil() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
           <button
             onClick={() => seance?.retirer()}
-            title="Re-tirer un rêve"
-            aria-label="Tirer une nouvelle ambiance"
+            title={tr('Re-tirer un rêve', 'Draw a new dream')}
+            aria-label={tr('Tirer une nouvelle ambiance', 'Draw a new ambiance')}
             style={{
               ...ui, fontSize: 15, color: accent, opacity: 0.9,
               background: 'none', border: 'none', cursor: 'pointer',
@@ -120,7 +121,7 @@ export default function Accueil() {
           <span>
             {serie.compte >= 2 ? `✦ ${toRomain(serie.compte)}ᵉ nuit de suite` : ''}
           </span>
-          {seance?.heure && <span>rêvé à {seance.heure}</span>}
+          {seance?.heure && <span>{tr('rêvé à', 'dreamt at')} {seance.heure}</span>}
         </div>
       )}
 
@@ -231,7 +232,7 @@ export default function Accueil() {
                 borderRadius: 3, whiteSpace: 'nowrap',
               }}
             >
-              Cadavre Écrit
+              {tr('Cadavre Écrit', 'Written Corpse')}
             </button>
             <button
               onClick={() => nav('/config-dessin')}
@@ -244,7 +245,7 @@ export default function Accueil() {
                 borderRadius: 3, whiteSpace: 'nowrap',
               }}
             >
-              Cadavre Dessiné
+              {tr('Cadavre Dessiné', 'Drawn Corpse')}
             </button>
           </div>
           <button
@@ -258,7 +259,7 @@ export default function Accueil() {
               borderRadius: 3,
             }}
           >
-            <span>Mode en ligne</span>
+            <span>{tr('Mode en ligne', 'Online mode')}</span>
           </button>
         </div>
 
@@ -268,10 +269,10 @@ export default function Accueil() {
           gap: '4px 0', paddingBottom: 4,
         }}>
           {[
-            { label: 'Recueil', path: '/bibliotheque' },
-            { label: 'Galerie',  path: '/galerie',       align: 'right' },
-            { label: 'Règles',   path: '/aide' },
-            { label: 'Réglages', path: '/reglages',      align: 'right' },
+            { label: tr('Recueil', 'Collection'), path: '/bibliotheque' },
+            { label: tr('Galerie', 'Gallery'),  path: '/galerie',       align: 'right' },
+            { label: tr('Règles', 'Rules'),   path: '/aide' },
+            { label: tr('Réglages', 'Settings'), path: '/reglages',      align: 'right' },
           ].map(({ label, path, align }) => (
             <button
               key={path}

@@ -9,6 +9,7 @@ import {
   rappelDisponible, activerRappelQuotidien, desactiverRappelQuotidien, RAPPEL_KEY,
 } from '../utils/notifications'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle, changerLangue } from '../i18n'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
   { id: 'stricte', label: 'Stricte', desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
@@ -115,6 +116,33 @@ export default function Reglages() {
           transition={{ delay: 0.3 }}
           style={{ marginBottom: 24 }}
         >
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            {tr('— LANGUE —', '— LANGUAGE —')}
+          </div>
+          <div className="flex gap-2" style={{ marginBottom: 28 }}>
+            {([['fr', 'Français'], ['en', 'English']] as const).map(([code, nom]) => {
+              const active = langueActuelle() === code
+              return (
+                <button
+                  key={code}
+                  onClick={() => { if (!active) changerLangue(code) }}
+                  style={{
+                    flex: 1, padding: '10px 4px', minHeight: 44,
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
+                    background: 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 13,
+                    color: active ? accent : `${encre}80`,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {nom.toUpperCase()}
+                </button>
+              )
+            })}
+          </div>
+
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — VALIDATION —
           </div>

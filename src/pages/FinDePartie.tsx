@@ -16,8 +16,18 @@ import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_IMAGE, T_FIN_SHARE, T_FIN_RECUEIL } from '../hooks/useTutoriel'
 import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle } from '../i18n'
 
-const STYLES = [
+const STYLES = langueActuelle() === 'en' ? [
+  { id: 'aquarelle',           label: 'Watercolor' },
+  { id: 'fusain',              label: 'Charcoal' },
+  { id: 'huile',               label: 'Oil painting' },
+  { id: 'encre',               label: 'India ink' },
+  { id: 'gravure',             label: 'Engraving' },
+  { id: 'hyperrealisme',       label: 'Hyperrealism' },
+  { id: 'collage_surrealiste', label: 'Surrealist collage' },
+  { id: 'libre',               label: 'Free' },
+] : [
   { id: 'aquarelle',           label: 'Aquarelle' },
   { id: 'fusain',              label: 'Fusain' },
   { id: 'huile',               label: "Peinture à l'huile" },
@@ -36,7 +46,12 @@ function toRomain(n: number): string {
   return map.reduce((r, [v, s]) => { while (n >= v) { r += s; n -= v } return r }, '')
 }
 
-const STRUCT_LABELS: Record<string, string> = {
+const STRUCT_LABELS: Record<string, string> = langueActuelle() === 'en' ? {
+  'phrase-simple': 'Short form',
+  'phrase-etoffee': 'Full form',
+  'vers-libre': 'Free verse',
+  'atelier': 'The Workshop',
+} : {
   'phrase-simple': 'Structure courte',
   'phrase-etoffee': 'Structure étoffée',
   'vers-libre': 'Vers libre',
@@ -140,10 +155,10 @@ export default function FinDePartie() {
           sauvegarderIllustration(poeme.id, illustration).catch(console.error)
         } else {
           const msg = reason === 'not_configured'
-            ? 'Génération d\'images non configurée (clé FAL_KEY manquante)'
+            ? tr("Génération d'images non configurée (clé FAL_KEY manquante)", 'Image generation not configured (missing FAL_KEY)')
             : reason === 'timeout'
-            ? 'La génération a pris trop de temps — réessaie'
-            : 'Illustration indisponible — réessaie dans un instant'
+            ? tr('La génération a pris trop de temps — réessaie', 'Generation took too long — try again')
+            : tr('Illustration indisponible — réessaie dans un instant', 'Illustration unavailable — try again in a moment')
           setErreurIllustration(msg)
           setStyleChoisi(null)
         }
@@ -159,13 +174,13 @@ export default function FinDePartie() {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, textAlign: 'center' }}>
-          Aucun poème en cours.
+          {tr('Aucun poème en cours.', 'No poem in progress.')}
         </p>
         <button
           onClick={() => navigate('/config')}
           style={{ marginTop: 32, background: accent, color: btnText, ...mono, fontSize: 17, textTransform: 'uppercase', padding: '0.9em 1.8em', border: 'none', cursor: 'pointer', borderRadius: 3 }}
         >
-          Nouvelle partie
+          {tr('Nouvelle partie', 'New game')}
         </button>
       </PageTransition>
     )
@@ -207,8 +222,8 @@ export default function FinDePartie() {
     }
   }
   const structLabel = STRUCT_LABELS[poeme.structureId] ?? poeme.structureId
-  const heureStr = new Date(poeme.dateCreation).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  const feuilletLabel = `FEUILLET ${toRomain(voixCount)} · FIN`
+  const heureStr = new Date(poeme.dateCreation).toLocaleTimeString(tr('fr-FR', 'en-GB'), { hour: '2-digit', minute: '2-digit' })
+  const feuilletLabel = `${tr('FEUILLET', 'FOLIO')} ${toRomain(voixCount)} · ${tr('FIN', 'END')}`
   const labelStyle = STYLES.find(s => s.id === styleChoisi)?.label
 
   return (
@@ -265,7 +280,7 @@ export default function FinDePartie() {
               onClick={e => { e.stopPropagation(); setPleinEcran(false) }}
               style={{ position: 'absolute', top: 'max(20px, env(safe-area-inset-top))', right: 'max(20px, env(safe-area-inset-right))', fontFamily: "'Raleway', sans-serif", fontSize: 13, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
             >
-              ✕ FERMER
+              ✕ {tr('FERMER', 'CLOSE')}
             </button>
           </motion.div>
         )}
@@ -301,8 +316,8 @@ export default function FinDePartie() {
               color: encre,
             }}
           >
-            <span style={{ display: 'block' }}>Le cadavre</span>
-            <span style={{ display: 'block', color: accent }}>est exquis.</span>
+            <span style={{ display: 'block' }}>{tr('Le cadavre', 'The corpse')}</span>
+            <span style={{ display: 'block', color: accent }}>{tr('est exquis.', 'is exquisite.')}</span>
           </div>
         </motion.div>
 
@@ -324,7 +339,7 @@ export default function FinDePartie() {
         >
           {/* Poem title in mono */}
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
+            CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
           </div>
 
           {/* Poem text — lignes dévoilées une à une après le rideau */}
@@ -374,7 +389,7 @@ export default function FinDePartie() {
 
           {/* Card footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
-            {voixCount} {poeme.structureId === 'atelier' ? 'VERS' : 'VOIX'} · {structLabel.toUpperCase()} · {heureStr}
+            {voixCount} {poeme.structureId === 'atelier' ? tr('VERS', 'LINES') : tr('VOIX', 'VOICES')} · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </motion.div>
 
@@ -388,12 +403,12 @@ export default function FinDePartie() {
           >
             <button
               onClick={() => !generatingIllustration && setPleinEcran(true)}
-              aria-label="Voir l'illustration en plein écran"
+              aria-label={tr("Voir l'illustration en plein écran", 'View the illustration full screen')}
               style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: generatingIllustration ? 'default' : 'zoom-in', width: '100%' }}
             >
               <img
                 src={illustrationUrl}
-                alt="Illustration du poème"
+                alt={tr('Illustration du poème', 'Poem illustration')}
                 className="w-full border"
                 style={{ borderColor: `${accent}30`, filter: 'contrast(0.97)', opacity: generatingIllustration ? 0.4 : 1, transition: 'opacity 0.5s' }}
               />
@@ -407,7 +422,7 @@ export default function FinDePartie() {
                   onClick={() => setPleinEcran(true)}
                   aria-label="Agrandir l'illustration"
                   style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
-                >↗ AGRANDIR</button>
+                >↗ {tr('AGRANDIR', 'ENLARGE')}</button>
               )}
             </div>
             {/* Prompt reveal — always visible after generation */}
@@ -417,7 +432,7 @@ export default function FinDePartie() {
                   onClick={() => setPromptVisible(v => !v)}
                   style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                 >
-                  {promptVisible ? '↑ masquer le prompt' : '→ voir le prompt IA'}
+                  {promptVisible ? tr('↑ masquer le prompt', '↑ hide the prompt') : tr('→ voir le prompt IA', '→ see the AI prompt')}
                 </button>
                 {promptVisible && (
                   <p style={{
@@ -449,7 +464,7 @@ export default function FinDePartie() {
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1.8, repeat: Infinity }}
               >✦</motion.span>
-              <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8 }}>{labelStyle?.toUpperCase()} EN COURS…</p>
+              <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8 }}>{labelStyle?.toUpperCase()} {tr('EN COURS…', 'IN PROGRESS…')}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -476,7 +491,7 @@ export default function FinDePartie() {
               borderRadius: 3,
             }}
           >
-            <span>Sceller au recueil&nbsp;→</span>
+            <span>{tr('Sceller au recueil', 'Seal into the collection')}&nbsp;→</span>
           </button>
         </motion.div>
 
@@ -493,7 +508,7 @@ export default function FinDePartie() {
             className="appui"
             style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
-            {parlant ? '◾ RÉCITER' : '— RÉCITER —'}
+            {parlant ? tr('◾ RÉCITER', '◾ RECITE') : tr('— RÉCITER —', '— RECITE —')}
           </button>
           <button
             onClick={partager}
@@ -501,7 +516,7 @@ export default function FinDePartie() {
             className={tutActif && tutEtape === T_FIN_SHARE ? 'appui tut-cible' : 'appui'}
             style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
-            {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '— PARTAGER —'}
+            {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('— PARTAGER —', '— SHARE —')}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
@@ -509,7 +524,7 @@ export default function FinDePartie() {
             className="appui"
             style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
           >
-            — COUTURES —
+            {tr('— COUTURES —', '— SEAMS —')}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
@@ -517,7 +532,7 @@ export default function FinDePartie() {
             aria-expanded={activeSection === 'image'}
             style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
           >
-            — IMAGE —
+            {tr('— IMAGE —', '— IMAGE —')}
           </button>
         </motion.div>
 
@@ -541,7 +556,7 @@ export default function FinDePartie() {
                       {c.fonction.toUpperCase()}
                       <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
                       <span style={{ fontFamily: "'Playfair Display', serif" }}>
-                        {c.auteur === 'ia' ? `voix ${iaNum}` : c.joueurNumero ? `joueur ${c.joueurNumero}` : 'toi'}
+                        {c.auteur === 'ia' ? `${tr('voix', 'voice')} ${iaNum}` : c.joueurNumero ? `${tr('joueur', 'player')} ${c.joueurNumero}` : tr('toi', 'you')}
                       </span>
                       {c.fallback && (
                         <span style={{
@@ -556,7 +571,7 @@ export default function FinDePartie() {
                           fontFamily: "'Raleway', sans-serif",
                           verticalAlign: 'middle',
                         }}>
-                          RÉSERVE
+                          {tr('RÉSERVE', 'RESERVE')}
                         </span>
                       )}
                     </p>
@@ -590,7 +605,7 @@ export default function FinDePartie() {
                   value={promptLibre}
                   onChange={e => setPromptLibre(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && promptLibre.trim()) choisirStyle(styleChoisi || 'libre') }}
-                  placeholder="Direction artistique libre… (ex. : sombre et organique)"
+                  placeholder={tr('Direction artistique libre… (ex. : sombre et organique)', 'Free art direction… (e.g.: dark and organic)')}
                   className="champ-carnet w-full"
                   style={{ borderLeftColor: accent }}
                 />
@@ -599,7 +614,7 @@ export default function FinDePartie() {
                     onClick={() => choisirStyle(styleChoisi || 'libre')}
                     style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: `0.5px solid ${accent}50`, borderRadius: 3, padding: '8px 12px', cursor: 'pointer', marginTop: 8, width: '100%' }}
                   >
-                    ✦ GÉNÉRER AVEC CETTE DIRECTION
+                    ✦ {tr('GÉNÉRER AVEC CETTE DIRECTION', 'GENERATE WITH THIS DIRECTION')}
                   </button>
                 )}
               </div>
@@ -619,7 +634,7 @@ export default function FinDePartie() {
                       onClick={() => styleChoisi && choisirStyle(styleChoisi)}
                       style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '8px', cursor: 'pointer' }}
                     >
-                      ↺ RELANCER
+                      ↺ {tr('RELANCER', 'RETRY')}
                     </button>
                   )}
                   {STYLES.map(s => (
@@ -650,7 +665,7 @@ export default function FinDePartie() {
                     onClick={() => setPromptVisible(v => !v)}
                     style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    {promptVisible ? '↑ MASQUER LE PROMPT' : '→ VOIR LE PROMPT IA'}
+                    {promptVisible ? tr('↑ MASQUER LE PROMPT', '↑ HIDE THE PROMPT') : tr('→ VOIR LE PROMPT IA', '→ SEE THE AI PROMPT')}
                   </button>
                   {promptVisible && (
                     <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginTop: 6, textAlign: 'center', lineHeight: 1.5, maxWidth: 280 }}>
@@ -674,7 +689,7 @@ export default function FinDePartie() {
             onClick={() => navigate('/config')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            — NOUVELLE PARTIE —
+            {tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
           </button>
         </motion.div>
 
@@ -684,8 +699,8 @@ export default function FinDePartie() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_FIN_REVEL && revealReady}
         etape={T_FIN_REVEL} total={TUTORIEL_TOTAL}
-        titre="La révélation"
-        corps="Trois fragments écrits sans se voir — voilà le poème que personne n'a décidé."
+        titre={tr('La révélation', 'The revelation')}
+        corps={tr("Trois fragments écrits sans se voir — voilà le poème que personne n'a décidé.", 'Fragments written blind to each other — a poem no one decided.')}
         onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
@@ -693,35 +708,35 @@ export default function FinDePartie() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_FIN_IMAGE}
         etape={T_FIN_IMAGE} total={TUTORIEL_TOTAL}
-        titre="Donne-lui une image"
-        corps="L'IA peut peindre ton poème — aquarelle, fusain, gravure…"
-        cible="— IMAGE —"
+        titre={tr('Donne-lui une image', 'Give it an image')}
+        corps={tr("L'IA peut peindre ton poème — aquarelle, fusain, gravure…", 'The AI can paint your poem — watercolor, charcoal, engraving…')}
+        cible={tr('— IMAGE —', '— IMAGE —')}
         position="top"
         onCompris={tutAvancer}
-        labelCompris="PLUS TARD →"
+        labelCompris={tr('PLUS TARD →', 'LATER →')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
       <TutorielCoach
         visible={tutActif && tutEtape === T_FIN_SHARE}
         etape={T_FIN_SHARE} total={TUTORIEL_TOTAL}
-        titre="Partage-le"
-        corps="Une vidéo animée se compose toute seule — Instagram, WhatsApp, SMS."
-        cible="— PARTAGER —"
+        titre={tr('Partage-le', 'Share it')}
+        corps={tr('Une vidéo animée se compose toute seule — Instagram, WhatsApp, SMS.', 'An animated video composes itself — Instagram, WhatsApp, texts.')}
+        cible={tr('— PARTAGER —', '— SHARE —')}
         position="top"
         onCompris={tutAvancer}
-        labelCompris="PLUS TARD →"
+        labelCompris={tr('PLUS TARD →', 'LATER →')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
       <TutorielCoach
         visible={tutActif && tutEtape === T_FIN_RECUEIL}
         etape={T_FIN_RECUEIL} total={TUTORIEL_TOTAL}
-        titre="Scelle ton poème"
-        corps="Il rejoint ta bibliothèque — tu pourras le relire, le partager, le publier."
-        cible="SCELLER AU RECUEIL"
+        titre={tr('Scelle ton poème', 'Seal your poem')}
+        corps={tr('Il rejoint ta bibliothèque — tu pourras le relire, le partager, le publier.', 'It joins your library — reread it, share it, publish it.')}
+        cible={tr('SCELLER AU RECUEIL', 'SEAL INTO THE COLLECTION')}
         onCompris={() => { tutAvancer(); navigate('/bibliotheque') }}
-        labelCompris="VOIR MON RECUEIL →"
+        labelCompris={tr('VOIR MON RECUEIL →', 'SEE MY COLLECTION →')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />

@@ -18,6 +18,7 @@ import { useSound } from '../hooks/useSound'
 import { useClavierOuvert } from '../hooks/useClavierOuvert'
 import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle } from '../i18n'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -92,6 +93,13 @@ function toRomain(n: number): string {
 // infinitif, gérondif — pour briser la succession « le… la… un… ».
 function ouvertureAleatoire(consigneBase: string): string {
   const r = Math.random()
+  if (langueActuelle() === 'en') {
+    if (r < 0.13) return 'a line of 3 to 6 words — start with a coordinating conjunction (but, yet, for, however) followed by a physical, unexpected image'
+    if (r < 0.23) return 'a line of 3 to 6 words — start with a subordinating conjunction (when, if, as, while) followed by a physical, unexpected image'
+    if (r < 0.30) return 'a line of 3 to 6 words — start with a bare infinitive (to burn, to wait, to cross) followed by a physical, unexpected image'
+    if (r < 0.36) return 'a line of 3 to 6 words — start with a gerund (falling, slipping, burning) followed by a physical, unexpected image'
+    return consigneBase
+  }
   if (r < 0.13) return 'un vers de 3 à 6 mots — commence par une conjonction de coordination (mais, car, or, pourtant, cependant) suivie d\'une image physique et inattendue'
   if (r < 0.23) return 'un vers de 3 à 6 mots — commence par une conjonction de subordination (quand, si, comme, lorsque) suivie d\'une image physique et inattendue'
   if (r < 0.30) return "un vers de 3 à 6 mots — commence par un verbe à l'infinitif (brûler, attendre, traverser, descendre) suivi d'une image physique et inattendue"
@@ -100,7 +108,7 @@ function ouvertureAleatoire(consigneBase: string): string {
 }
 
 // Exemples concrets pour chaque type — montrés toujours, en taille lisible.
-const TYPE_EXAMPLE: Partial<Record<string, string>> = {
+const TYPE_EXAMPLE_FR: Partial<Record<string, string>> = {
   'nom':             "« la pluie » · « un silence » · « l'abîme »",
   'verbe':           "« brûle » · « disparaît » · « se tait »",
   'adjectif':        "« immobile » · « nocturne » · « étrange »",
@@ -110,6 +118,18 @@ const TYPE_EXAMPLE: Partial<Record<string, string>> = {
   'groupe-verbal':   "« traverse la nuit » · « brûle en silence » · « efface les traces »",
   'proposition':     "« Où vont les ombres ? » · « Que reste-t-il encore ? »",
 }
+const TYPE_EXAMPLE_EN: Partial<Record<string, string>> = {
+  'nom':             '"the rain" · "a silence" · "the abyss"',
+  'verbe':           '"burns" · "vanishes" · "falls silent"',
+  'adjectif':        '"motionless" · "nocturnal" · "strange"',
+  'adverbe':         '"softly" · "in silence" · "forever"',
+  'groupe-nominal':  '"the corpse" · "a shadow" · "the rain"',
+  'groupe-nominal-riche': '"the cast shadow" · "a lost breath" · "a bottomless night"',
+  'groupe-verbal':   '"crosses the night" · "burns in silence" · "erases the traces"',
+  'proposition':     '"Where do shadows go?" · "What remains of us?"',
+}
+const TYPE_EXAMPLE: Partial<Record<string, string>> =
+  langueActuelle() === 'en' ? TYPE_EXAMPLE_EN : TYPE_EXAMPLE_FR
 
 /**
  * Certaines consignes embarquent leurs exemples (« adjectif seul — ex :
@@ -120,9 +140,13 @@ const TYPE_EXAMPLE: Partial<Record<string, string>> = {
 function separerConsigne(consigne: string): { titre: string; exemples: string | null } {
   const m = consigne.match(/^(.*?)\s*—\s*ex\s*:\s*(.+)$/i)
   if (!m) return { titre: consigne, exemples: null }
+  const fr = langueActuelle() === 'fr'
   const exemples = m[2]
     .split(/\s*,\s*/)
-    .map(e => `« ${e.trim().replace(/^['"«]+|['"»]+$/g, '')} »`)
+    .map(e => {
+      const nu = e.trim().replace(/^['"«]+|['"»]+$/g, '')
+      return fr ? `« ${nu} »` : `"${nu}"`
+    })
     .join(' · ')
   return { titre: m[1], exemples }
 }
@@ -165,7 +189,19 @@ function normaliserCle(t: string): string {
 
 // ─── Fallbacks client ────────────────────────────────────────────────────────
 
-const FALLBACKS_CLIENT: Record<string, string[]> = {
+const FALLBACKS_CLIENT_EN: Record<string, string[]> = {
+  nom: ['shadow', 'silence', 'night', 'ash', 'void', 'stone', 'mist', 'cold', 'dust', 'wind', 'rain', 'echo', 'flame', 'threshold'],
+  verbe: ['slips', 'burns', 'falls', 'trembles', 'remains', 'vanishes', 'weighs', 'drifts', 'haunts', 'grazes', 'resists', 'murmurs', 'wavers', 'sinks'],
+  adjectif: ['motionless', 'pale', 'deep', 'strange', 'broken', 'nocturnal', 'hollow', 'heavy', 'cold', 'bitter', 'veiled', 'opaque', 'slow', 'mute'],
+  adverbe: ['softly', 'slowly', 'in silence', 'without sound', 'forever', 'still', 'elsewhere', 'in vain', 'almost', 'always'],
+  'groupe-nominal': ['the shadow', 'the night', 'a breath', 'the ash', 'the sound', 'a light', 'the earth', 'a gaze', 'the rain', 'a wall', 'the hand', 'the silence', 'the edge', 'a voice', 'the water', 'a door'],
+  'groupe-nominal-riche': ['the cast shadow', 'a bottomless night', 'a lost breath', 'the cold ash', 'the sound of wind', 'a veiled light', 'an empty gaze', 'the thin rain', 'a wall of fog', 'the open hand', 'a thick silence', 'a hollow voice', 'the black water', 'an old key'],
+  'groupe-verbal': ['crosses the night', 'burns in silence', 'slips into shadow', 'falls without sound', 'stays motionless', 'erases the traces', 'waits without hope', 'weighs on the world'],
+  proposition: ['What remains of us?', 'Where do shadows go?', 'Who put out the light?', 'When will the cold return?', 'Why this silence?', 'Who still keeps watch?'],
+  libre: ['something remains here', 'the night keeps everything', 'silence answers back', 'nothing truly disappears', 'it all begins elsewhere', 'the words erase themselves', 'time hesitates at the door', 'absence has a shape'],
+}
+
+const FALLBACKS_CLIENT_FR: Record<string, string[]> = {
   nom: ["l'ombre", 'le silence', 'la nuit', 'la cendre', 'le vide', 'la pierre', 'la brume',
         'le froid', 'la poussière', 'le vent', 'la pluie', "l'écho", 'la flamme', 'le seuil',
         "l'abîme", 'le vertige', 'la mousse', 'le givre', "l'encre", 'la boue'],
@@ -208,10 +244,13 @@ const FALLBACKS_CLIENT: Record<string, string[]> = {
   ],
 }
 
+const FALLBACKS_CLIENT: Record<string, string[]> =
+  langueActuelle() === 'en' ? FALLBACKS_CLIENT_EN : FALLBACKS_CLIENT_FR
+
 function makeFallbackPicker() {
   const derniers: Record<string, string> = {}
   return function pick(type: string): string {
-    const arr = FALLBACKS_CLIENT[type] ?? ['quelque chose']
+    const arr = FALLBACKS_CLIENT[type] ?? [tr('quelque chose', 'something')]
     const dernier = derniers[type]
     const candidats = arr.length > 1 ? arr.filter(v => v !== dernier) : arr
     const choix = candidats[Math.floor(Math.random() * candidats.length)]
@@ -221,7 +260,7 @@ function makeFallbackPicker() {
 }
 
 function pickUnused(type: string, used: Set<string>): string {
-  const pool = FALLBACKS_CLIENT[type] ?? ['quelque chose']
+  const pool = FALLBACKS_CLIENT[type] ?? [tr('quelque chose', 'something')]
   const unused = pool.filter(v => !used.has(normaliserCle(v)))
   const source = unused.length > 0 ? unused : pool
   return source[Math.floor(Math.random() * source.length)]
@@ -633,7 +672,7 @@ export default function Jeu() {
           ✦
         </motion.span>
         <p className="text-encre mt-4" style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 19 }}>
-          Le poème se referme…
+          {tr('Le poème se referme…', 'The poem is closing…')}
         </p>
       </PageTransition>
     )
@@ -650,7 +689,7 @@ export default function Jeu() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            Passe le téléphone à
+            {tr('Passe le téléphone à', 'Pass the phone to')}
           </motion.p>
         )}
         <motion.p
@@ -664,7 +703,7 @@ export default function Jeu() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
         >
-          Joueur {participantActuel.num}.
+          {tr('Joueur', 'Player')} {participantActuel.num}.
         </motion.p>
         <motion.div
           className="mt-16"
@@ -677,7 +716,7 @@ export default function Jeu() {
             onClick={() => setAttendPassage(false)}
             className="btn-primaire"
           >
-            {multiJoueurs ? "C'est à moi →" : "C'est parti →"}
+            {multiJoueurs ? tr("C'est à moi →", 'My turn →') : tr("C'est parti →", "Let's go →")}
           </button>
         </motion.div>
       </PageTransition>
@@ -695,7 +734,7 @@ export default function Jeu() {
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const acteLabel = `ACTE ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
+  const acteLabel = `${tr('ACTE', 'ACT')} ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   // Une seule série d'exemples : ceux de la consigne (spécifiques à la case)
   // quand elle en contient, sinon les génériques du type.
   const { titre: consigneTitre, exemples: exemplesInline } = separerConsigne(defActuelle?.consigne ?? '')
@@ -732,7 +771,7 @@ export default function Jeu() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
             >
-              La voix parle<motion.span
+              {tr('La voix parle', 'The voice speaks')}<motion.span
                 animate={{ opacity: [1, 0, 1] }}
                 transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
               >…</motion.span>
@@ -766,7 +805,7 @@ export default function Jeu() {
                       animate={{ opacity: 0.7 }}
                       transition={{ delay: 0.3, duration: 0.5 }}
                     >
-                      elle dépose son fragment<br />à l'abri des regards
+                      {tr('elle dépose son fragment', 'it lays down its fragment')}<br />{tr("à l'abri des regards", 'hidden from every eye')}
                     </motion.div>
 
                     <motion.div
@@ -795,7 +834,7 @@ export default function Jeu() {
                           borderRadius: 3,
                         }}
                       >
-                        RÉSERVE
+                        {tr('RÉSERVE', 'RESERVE')}
                       </motion.div>
                     )}
                   </>
@@ -830,21 +869,21 @@ export default function Jeu() {
                   gap: 2, borderRadius: 3,
                 }}
               >
-                <span>Écrire la suite&nbsp;→</span>
+                <span>{tr('Écrire la suite', 'Write what follows')}&nbsp;→</span>
               </button>
             </motion.div>
           )}
 
           {/* Footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
-            {iaChargement ? '— NE PAS LA DÉRANGER —' : '— SES MOTS RESTENT SCELLÉS —'}
+            {iaChargement ? tr('— NE PAS LA DÉRANGER —', '— DO NOT DISTURB —') : tr('— SES MOTS RESTENT SCELLÉS —', '— ITS WORDS REMAIN SEALED —')}
           </div>
         </div>
         <TutorielCoach
           visible={tutActif && tutEtape === T_JEU_IA}
           etape={T_JEU_IA} total={TUTORIEL_TOTAL}
-          titre="La voix écrit en secret"
-          corps="Son fragment restera caché jusqu'à la fin — c'est la règle du cadavre exquis."
+          titre={tr('La voix écrit en secret', 'The voice writes in secret')}
+          corps={tr("Son fragment restera caché jusqu'à la fin — c'est la règle du cadavre exquis.", 'Its fragment stays hidden until the end — that is the rule of the exquisite corpse.')}
           onCompris={() => {
             tutAvancer()
             if (iaAvancePendingRef.current) {
@@ -852,7 +891,7 @@ export default function Jeu() {
               iaAvancePendingRef.current = null
             }
           }}
-          labelCompris="Écrire la suite →"
+          labelCompris={tr('Écrire la suite →', 'Write what follows →')}
           onPasser={tutTerminer}
           accent={accent} encre={encre} bg={bg}
         />
@@ -898,7 +937,7 @@ export default function Jeu() {
                 transition={{ delay: 0.2 }}
               >
                 <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                  — VOIX PRÉCÉDENTE —
+                  {tr('— VOIX PRÉCÉDENTE —', '— PREVIOUS VOICE —')}
                 </div>
                 <p style={{
                   fontFamily: "'Playfair Display', serif", fontSize: 17,
@@ -984,15 +1023,15 @@ export default function Jeu() {
                   value={inputValue}
                   onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
                   onKeyDown={handleKeyDown}
-                  placeholder="Écris ici — toi seul le verras…"
-                  aria-label="Ta contribution"
+                  placeholder={tr('Écris ici — toi seul le verras…', 'Write here — only you will see it…')}
+                  aria-label={tr('Ta contribution', 'Your contribution')}
                   enterKeyHint="send"
                   autoFocus
                   rows={3}
                 />
                 {hintQuestion && (
                   <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginTop: 4 }}>
-                    LES QUESTIONS SE TERMINENT PAR UN ?
+                    {tr('LES QUESTIONS SE TERMINENT PAR UN ?', 'QUESTIONS END WITH A ?')}
                   </p>
                 )}
                 {erreur && (
@@ -1018,7 +1057,7 @@ export default function Jeu() {
               <button
                 onClick={soumettre}
                 disabled={!inputValue.trim()}
-                aria-label="Sceller cette voix et passer à la suivante"
+                aria-label={tr('Sceller cette voix et passer à la suivante', 'Seal this voice and move on')}
                 className={`w-full flex items-center justify-center${tutActif && (tutEtape === T_JEU_1 || tutEtape === T_JEU_2) && inputValue.trim() ? ' tut-cible' : ''}`}
                 style={{
                   ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
@@ -1034,7 +1073,7 @@ export default function Jeu() {
                   borderRadius: 3,
                 }}
               >
-                <span>Sceller cette voix&nbsp;→</span>
+                <span>{tr('Sceller cette voix', 'Seal this voice')}&nbsp;→</span>
               </button>
             </motion.div>
 
@@ -1045,7 +1084,7 @@ export default function Jeu() {
                   onClick={() => setConfirmAbandon(true)}
                   style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer' }}
                 >
-                  abandonner la partie
+                  {tr('abandonner la partie', 'abandon the game')}
                 </button>
               ) : (
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -1053,13 +1092,13 @@ export default function Jeu() {
                     onClick={abandonner}
                     style={{ flex: 1, padding: '0.75em', background: '#7B0000', color: '#e8d4b8', ...mono, fontSize: 17, border: 'none', cursor: 'pointer', borderRadius: 3 }}
                   >
-                    Confirmer l'abandon
+                    {tr("Confirmer l'abandon", 'Confirm abandon')}
                   </button>
                   <button
                     onClick={() => setConfirmAbandon(false)}
                     style={{ padding: '0.75em 1em', background: 'transparent', color: encre, ...mono, fontSize: 17, border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 3 }}
                   >
-                    Annuler
+                    {tr('Annuler', 'Cancel')}
                   </button>
                 </div>
               )}
@@ -1074,9 +1113,9 @@ export default function Jeu() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_JEU_1}
         etape={T_JEU_1} total={TUTORIEL_TOTAL}
-        titre="À toi d'écrire"
-        corps="Écris ce qui te passe par la tête — personne ne le verra avant la fin."
-        cible="SCELLER CETTE VOIX"
+        titre={tr("À toi d'écrire", 'Your turn to write')}
+        corps={tr('Écris ce qui te passe par la tête — personne ne le verra avant la fin.', 'Write whatever crosses your mind — no one will see it before the end.')}
+        cible={tr('SCELLER CETTE VOIX', 'SEAL THIS VOICE')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
@@ -1084,8 +1123,8 @@ export default function Jeu() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_JEU_IA && participantActuel?.type === 'humain'}
         etape={T_JEU_IA} total={TUTORIEL_TOTAL}
-        titre="La voix a écrit en secret"
-        corps="Son fragment est scellé. À toi d'écrire le dernier — à l'aveugle, comme elle."
+        titre={tr('La voix a écrit en secret', 'The voice wrote in secret')}
+        corps={tr("Son fragment est scellé. À toi d'écrire le dernier — à l'aveugle, comme elle.", 'Its fragment is sealed. Now write the last one — blind, just like the voice.')}
         onCompris={tutAvancer}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
@@ -1093,9 +1132,9 @@ export default function Jeu() {
       <TutorielCoach
         visible={tutActif && tutEtape === T_JEU_2}
         etape={T_JEU_2} total={TUTORIEL_TOTAL}
-        titre="Le dernier fragment"
-        corps="Tu ignores ce que la voix a écrit — c'est l'assemblage aveugle qui fera la surprise."
-        cible="SCELLER CETTE VOIX"
+        titre={tr('Le dernier fragment', 'The last fragment')}
+        corps={tr("Tu ignores ce que la voix a écrit — c'est l'assemblage aveugle qui fera la surprise.", 'You do not know what the voice wrote — the blind assembly will spring the surprise.')}
+        cible={tr('SCELLER CETTE VOIX', 'SEAL THIS VOICE')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />

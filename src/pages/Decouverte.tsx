@@ -6,6 +6,7 @@ import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import { activerTutoriel } from '../hooks/useTutoriel'
 import type { ConfigPartie } from '../types'
+import { tr } from '../i18n'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
 
@@ -64,29 +65,28 @@ export default function Decouverte() {
           transition={{ duration: 0.7, delay: 0.2 }}
         >
           <div style={{ ...ui, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 14 }}>
-            — BIENVENUE —
+            {tr('— BIENVENUE —', '— WELCOME —')}
           </div>
 
           <div
             className="font-fraunces font-black"
             style={{ fontSize: 'clamp(2.6rem, 11vw, 3.6rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 20 }}
           >
-            Le cadavre<br /><span style={{ color: accent }}>exquis.</span>
+            {tr('Le cadavre', 'The exquisite')}<br /><span style={{ color: accent }}>{tr('exquis.', 'corpse.')}</span>
           </div>
 
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 20, lineHeight: 1.55,
             color: encre, opacity: 0.9, marginBottom: 10,
           }}>
-            Écris un fragment sans voir les autres. À la fin, vous découvrez
-            ensemble la phrase que vous avez faite à plusieurs.
+            {tr('Écris un fragment sans voir les autres. À la fin, vous découvrez ensemble la phrase que vous avez faite à plusieurs.', 'Write a fragment without seeing the others. At the end, you discover together the sentence you made as one.')}
           </p>
 
           <p style={{
             fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, lineHeight: 1.5,
             color: encre, opacity: 0.55,
           }}>
-            Par exemple : « Le chat invisible… »
+            {tr('Par exemple : « Le chat invisible… »', 'For instance: "The invisible cat…"')}
           </p>
         </motion.div>
 
@@ -97,7 +97,7 @@ export default function Decouverte() {
           transition={{ delay: 0.7, duration: 0.6 }}
         >
           <button onClick={commencer} className="btn-primaire" style={{ width: '100%' }}>
-            Écrire le premier mot →
+            {tr('Écrire le premier mot', 'Write the first word')} →
           </button>
           <button
             onClick={passer}
@@ -107,7 +107,7 @@ export default function Decouverte() {
               background: 'none', border: 'none', cursor: 'pointer',
             }}
           >
-            Explorer d'abord
+            {tr("Explorer d'abord", 'Explore first')}
           </button>
         </motion.div>
 

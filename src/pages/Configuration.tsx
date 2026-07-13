@@ -7,12 +7,19 @@ import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle } from '../i18n'
 
-const STRUCTURES: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
+const STRUCTURES_UI_FR: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },
   { id: 'phrase-etoffee', romain: 'II',  label: 'Phrase étoffée', description: '5 cases · la canonique de Breton',  detail: 'La structure originale inventée en 1925 : « Le cadavre exquis boira le vin nouveau » — article+nom · adjectif · verbe · article+nom · adjectif.' },
   { id: 'vers-libre',     romain: 'III', label: 'Vers libre',     description: '4 à 12 vers · sans contrainte',     detail: 'Chaque joueur écrit un vers entier. Le poème s\'assemble sans règle grammaticale.' },
 ]
+const STRUCTURES_UI_EN: typeof STRUCTURES_UI_FR = [
+  { id: 'phrase-simple',  romain: 'I',   label: 'Short sentence', description: '3 parts · subject, verb, object', detail: 'The most direct form — one surrealist sentence in three fragments.' },
+  { id: 'phrase-etoffee', romain: 'II',  label: 'Full sentence',  description: "5 parts · Breton's canonical form", detail: 'The original 1925 structure: "The exquisite corpse shall drink the new wine" — article+noun · adjective · verb · article+noun · adjective.' },
+  { id: 'vers-libre',     romain: 'III', label: 'Free verse',     description: '4 to 12 lines · no constraint',   detail: 'Each player writes a whole line. The poem assembles with no grammatical rule.' },
+]
+const STRUCTURES = langueActuelle() === 'en' ? STRUCTURES_UI_EN : STRUCTURES_UI_FR
 
 type SlotType = 'vide' | 'humain' | 'ia'
 
@@ -26,6 +33,12 @@ const CONFIG_PAR_DEFAUT: ConfigPartie = {
 }
 
 function descriptionTable(humains: number, ia: number): string {
+  if (langueActuelle() === 'en') {
+    const mains = humains === 1 ? '1 hand' : `${humains} hands`
+    if (ia === 0) return `${mains} — the séance can begin.`
+    const voix = ia === 1 ? '1 voice' : `${ia} voices`
+    return `${mains}, ${voix} — the séance can begin.`
+  }
   const mains = humains === 1 ? '1 main' : `${humains} mains`
   if (ia === 0) return `${mains} — la séance peut commencer.`
   const voix = ia === 1 ? '1 voix' : `${ia} voix`
@@ -96,7 +109,7 @@ export default function Configuration() {
             onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← SORTIR
+            ← {tr('SORTIR', 'EXIT')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -104,7 +117,7 @@ export default function Configuration() {
 
         {/* ── SECTION LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
-          — PRÉPARATIFS —
+          {tr('— PRÉPARATIFS —', '— PREPARATIONS —')}
         </div>
 
         {/* ── TITLE ── */}
@@ -117,8 +130,8 @@ export default function Configuration() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 18 }}
           >
-            Choisir la{' '}
-            <span style={{ color: accent }}>structure.</span>
+            {tr('Choisir la', 'Choose the')}{' '}
+            <span style={{ color: accent }}>{tr('structure.', 'structure.')}</span>
           </div>
         </motion.div>
 
@@ -164,8 +177,8 @@ export default function Configuration() {
         {/* ── VISIBILITÉ ── */}
         <div style={{ marginBottom: 18 }}>
           <SectionAide
-            label="VISIBILITÉ" accent={accent} encre={encre}
-            aide={<>Aveugle : tu écris sans rien voir des autres. Un mot : seul le dernier mot précédent t'est montré. Une case : toute la case précédente est révélée.</>}
+            label={tr('VISIBILITÉ', 'VISIBILITY')} accent={accent} encre={encre}
+            aide={<>{tr("Aveugle : tu écris sans rien voir des autres. Un mot : seul le dernier mot précédent t'est montré. Une case : toute la case précédente est révélée.", 'Blind: you write without seeing anything. One word: only the previous last word is shown. One part: the whole previous part is revealed.')}</>}
           />
           <div className="flex gap-2">
             {(['aveugle', 'dernier-mot', 'derniere-case'] as Visibilite[]).map(v => {
@@ -185,7 +198,7 @@ export default function Configuration() {
                     transition: 'all 0.15s',
                   }}
                 >
-                  {v === 'aveugle' ? 'AVEUGLE' : v === 'dernier-mot' ? 'UN MOT' : 'UNE CASE'}
+                  {v === 'aveugle' ? tr('AVEUGLE', 'BLIND') : v === 'dernier-mot' ? tr('UN MOT', 'ONE WORD') : tr('UNE CASE', 'ONE PART')}
                 </button>
               )
             })}
@@ -200,14 +213,14 @@ export default function Configuration() {
           style={{ marginBottom: 18 }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — AUTOUR DE LA TABLE —
+            {tr('— AUTOUR DE LA TABLE —', '— AROUND THE TABLE —')}
           </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             {slots.map((slot, i) => (
               <button
                 key={i}
                 onClick={() => cyclerSlot(i)}
-                aria-label={slot === 'vide' ? 'Ajouter un joueur' : slot === 'humain' ? 'Joueur humain — changer' : 'Voix IA — changer'}
+                aria-label={slot === 'vide' ? tr('Ajouter un joueur', 'Add a player') : slot === 'humain' ? tr('Joueur humain — changer', 'Human player — change') : tr('Voix IA — changer', 'AI voice — change')}
                 style={{
                   width: 44, height: 44, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -243,7 +256,7 @@ export default function Configuration() {
           </div>
           <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 8, letterSpacing: '0.08em' }}>
             <span style={{ display: 'inline-block', width: 9, height: 9, background: encre, borderRadius: 1, verticalAlign: 'middle', marginRight: 4 }} />
-            une main · <span style={{ color: accent }}>✦</span> une voix IA — toucher une case pour changer
+            {tr('une main', 'one hand')} · <span style={{ color: accent }}>✦</span> {tr('une voix IA — toucher une case pour changer', 'one AI voice — tap a seat to change')}
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {descriptionTable(joueursHumains, voixIA)}
@@ -254,7 +267,7 @@ export default function Configuration() {
         {voixIA > 0 && joueursHumains === 1 && (
           <div style={{ marginBottom: 18 }}>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-              — OUVRE LA SÉANCE —
+              {tr('— OUVRE LA SÉANCE —', '— OPENS THE SÉANCE —')}
             </div>
             <div className="flex gap-2">
               {(['ia', 'humain'] as const).map(p => {
@@ -274,7 +287,7 @@ export default function Configuration() {
                       transition: 'all 0.15s',
                     }}
                   >
-                    {p === 'ia' ? 'VOIX IA' : 'JOUEUR'}
+                    {p === 'ia' ? tr('VOIX IA', 'AI VOICE') : tr('JOUEUR', 'PLAYER')}
                   </button>
                 )
               })}
@@ -285,8 +298,8 @@ export default function Configuration() {
         {/* ── MODE ── */}
         <div style={{ marginBottom: 18 }}>
           <SectionAide
-            label="MODE" accent={accent} encre={encre}
-            aide={<>Standard : prends le temps qu'il faut pour chaque fragment. Hypnotique : 30 secondes par fragment, puis il se scelle de lui-même — l'écriture automatique, sans retour.</>}
+            label={tr('MODE', 'MODE')} accent={accent} encre={encre}
+            aide={<>{tr("Standard : prends le temps qu'il faut pour chaque fragment. Hypnotique : 30 secondes par fragment, puis il se scelle de lui-même — l'écriture automatique, sans retour.", 'Standard: take all the time you need. Hypnotic: 30 seconds per fragment, then it seals itself — automatic writing, no going back.')}</>}
           />
           <div className="flex gap-2">
             {(['standard', 'hypnotique'] as const).map(m => {
@@ -306,7 +319,7 @@ export default function Configuration() {
                     transition: 'all 0.15s',
                   }}
                 >
-                  {m === 'standard' ? 'STANDARD' : 'HYPNOTIQUE'}
+                  {m === 'standard' ? tr('STANDARD', 'STANDARD') : tr('HYPNOTIQUE', 'HYPNOTIC')}
                 </button>
               )
             })}
@@ -337,7 +350,7 @@ export default function Configuration() {
               borderRadius: 3,
             }}
           >
-            <span>Commencer la séance</span>
+            <span>{tr('Commencer la séance', 'Begin the séance')}</span>
             <span aria-hidden style={{ fontSize: 17, opacity: 0.85 }}>→</span>
           </button>
         </motion.div>
