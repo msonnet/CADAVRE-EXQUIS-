@@ -255,6 +255,20 @@
     overflow: hidden;
   }
 
+  /* Grain du papier — la matérialité que la métaphore du carnet promettait.
+     Bruit SVG statique, multiplié à 5 % : perceptible au toucher de l'œil,
+     jamais lisible comme un effet. Sous le contenu (z-index 10 des pages). */
+  .page-carnet::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+  }
+
   /* Lettrine — Bodoni Moda (cohérent avec les lettrines inline du poème) */
   .lettrine {
     font-family: 'Bodoni Moda', serif;

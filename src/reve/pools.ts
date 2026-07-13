@@ -25,7 +25,7 @@ export interface Accent {
   hover: string
 }
 
-export type AmbianceKey = 'minuit' | 'encre' | 'argile' | 'lin' | 'aube'
+export type AmbianceKey = 'minuit' | 'encre' | 'argile' | 'lin' | 'aube' | 'rose' | 'celadon'
 
 export const AMBIANCES: Record<AmbianceKey, Ambiance> = {
 
@@ -127,9 +127,47 @@ export const AMBIANCES: Record<AmbianceKey, Ambiance> = {
       { name: 'vert encre',  hex: '#144830', hover: '#1c6040' },
     ],
   },
+
+  // Papier rosé passé — chaleur mélancolique, accents carmin et prune
+  rose: {
+    id: 'rose',
+    name: 'Rose fané',
+    bg: '#f2e2dc',
+    ink: '#301820',
+    inkSoft: '#5c3a46',
+    inkFaint: '#8a6470',
+    rule: 'rgba(48, 24, 32, 0.14)',
+    halo: 'radial-gradient(ellipse at 24% 22%, rgba(160, 24, 40, 0.07), transparent 52%), radial-gradient(ellipse at 78% 80%, rgba(102, 20, 78, 0.05), transparent 50%)',
+    buttonText: '#f8ece8',
+    accents: [
+      { name: 'carmin',         hex: '#a01828', hover: '#b82838' },
+      { name: 'prune',          hex: '#66144e', hover: '#7e1c62' },
+      { name: 'vert bouteille', hex: '#14523a', hover: '#1c684c' },
+      { name: 'bleu ardoise',   hex: '#2a3a78', hover: '#364a92' },
+    ],
+  },
+
+  // Vert d'eau de porcelaine — froideur végétale, le cinabre claque dessus
+  celadon: {
+    id: 'celadon',
+    name: 'Céladon',
+    bg: '#e3ead8',
+    ink: '#1a281c',
+    inkSoft: '#40523f',
+    inkFaint: '#6c7c64',
+    rule: 'rgba(26, 40, 28, 0.13)',
+    halo: 'radial-gradient(ellipse at 76% 24%, rgba(176, 40, 24, 0.06), transparent 52%), radial-gradient(ellipse at 22% 78%, rgba(14, 74, 82, 0.06), transparent 50%)',
+    buttonText: '#eef4e4',
+    accents: [
+      { name: 'cinabre',        hex: '#b02818', hover: '#c83a26' },
+      { name: 'paon',           hex: '#0e4a52', hover: '#166070' },
+      { name: 'terre brûlée',   hex: '#6e3a14', hover: '#864a1e' },
+      { name: 'encre violette', hex: '#46285e', hover: '#583676' },
+    ],
+  },
 }
 
-export const AMBIANCE_POOL: AmbianceKey[] = ['minuit', 'encre', 'argile', 'lin', 'aube']
+export const AMBIANCE_POOL: AmbianceKey[] = ['minuit', 'encre', 'argile', 'lin', 'aube', 'rose', 'celadon']
 
 // ─── Citations · domaine public uniquement (FR) ─────
 export interface Citation { t: string; a: string }
