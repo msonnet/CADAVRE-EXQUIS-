@@ -311,8 +311,8 @@ export default function FinDePartie() {
         {/* ── POEM CARD ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
-          animate={lettrineChutee ? { opacity: 1, y: [0, -5, 3, -2, 0] } : { opacity: 1, y: 0 }}
-          transition={lettrineChutee ? { duration: 0.28, ease: 'easeOut' } : { delay: 0.7, duration: 0.8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.8 }}
           style={{
             border: `1px solid ${accent}40`,
             borderLeft: `3px solid ${accent}`,

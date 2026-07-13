@@ -1098,19 +1098,11 @@ function flash(ctx: CanvasRenderingContext2D, W: number, t: number, t0: number, 
   ctx.restore()
 }
 
-// Tremblé d'encre « boiling » — sous-échantillonné à 10 fps pour l'effet dessin animé à la main
-const TREMOR = [[0.5, -0.4, 0.12], [-0.6, 0.3, -0.1], [0.2, 0.5, 0.08]]
-function tremor(t: number, actif: boolean): [number, number, number] {
-  if (!actif) return [0, 0, 0]
-  const seed = Math.floor(Math.floor(t / 33.33) / 3) % 3
-  return TREMOR[seed] as [number, number, number]
-}
-
 function dessinerPoemeAnime(
   ctx: CanvasRenderingContext2D, L: LayoutPoeme, t: number, duree: number, W: number, accent: string, ink: string, bg: string,
 ) {
   const CONV_FIN = 3300, SUSP_FIN = 3640, FLASH_DUR = 320
-  const LIGNE_DUR = 260, TREMOR_FIN = 5700
+  const LIGNE_DUR = 260
   const convergeY = L.centreY
 
   // Convergence + suspension des fragments (les voix éparses se rassemblent)
@@ -1149,7 +1141,7 @@ function dessinerPoemeAnime(
 
   flash(ctx, W, t, ANIM_FLASH_T, FLASH_DUR, bg, accent)
 
-  // Vers qui s'inscrivent — révélés par masque horizontal, avec tremblé d'encre
+  // Vers qui s'inscrivent — révélés par masque horizontal, encre stable
   ctx.textAlign = 'center'
   ctx.font = `italic ${L.bodySize}px 'Bodoni Moda', Georgia, serif`
   const visibles = L.lignes.filter(l => l.texte)
@@ -1161,14 +1153,13 @@ function dessinerPoemeAnime(
     const p = clamp01((t - lt) / LIGNE_DUR)
     const e = easeOutCubic(p)
     const w = ctx.measureText(ligne.texte).width
-    const [tx, ty] = tremor(t, t < TREMOR_FIN)
     ctx.save()
     ctx.beginPath()
     ctx.rect(W / 2 - w / 2 - 4, ligne.y - L.bodySize, (w + 8) * e, L.bodySize * 1.6)
     ctx.clip()
     ctx.globalAlpha = 0.88
     ctx.fillStyle = ink
-    ctx.fillText(ligne.texte, W / 2 + tx, ligne.y + ty)
+    ctx.fillText(ligne.texte, W / 2, ligne.y)
     ctx.restore()
   })
 
