@@ -4,33 +4,34 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 const STRUCTURES = [
-  { romain: 'I',   label: 'Phrase courte',  detail: '3 cases · sujet, verbe, complément', exemple: "L'ombre / glisse / dans la nuit froide" },
-  { romain: 'II',  label: 'Phrase étoffée', detail: '5 cases · la canonique de Breton', exemple: 'Le cadavre exquis boira le vin nouveau' },
-  { romain: 'III', label: 'Vers libre',     detail: '4 à 12 vers · sans contrainte fixe' },
+  { romain: 'I',   label: tr('Phrase courte', 'Short sentence'),  detail: tr('3 cases · sujet, verbe, complément', '3 slots · subject, verb, complement'), exemple: tr("L'ombre / glisse / dans la nuit froide", 'The shadow / slides / through the cold night') },
+  { romain: 'II',  label: tr('Phrase étoffée', 'Full sentence'), detail: tr('5 cases · la canonique de Breton', "5 slots · Breton's canonical form"), exemple: tr('Le cadavre exquis boira le vin nouveau', 'The exquisite corpse will drink the new wine') },
+  { romain: 'III', label: tr('Vers libre', 'Free verse'),     detail: tr('4 à 12 vers · sans contrainte fixe', '4 to 12 lines · no fixed constraint') },
 ]
 
 const VISIBILITE = [
-  { label: 'AVEUGLE',        detail: 'Aucun contexte — tu écris dans le vide total. La forme la plus surréaliste.' },
-  { label: 'DERNIER MOT',    detail: 'Un seul mot de la case précédente est visible. Un fil ténu, juste assez pour raccrocher quelque chose.' },
-  { label: 'DERNIÈRE CASE',  detail: 'La case précédente entière est visible. Le poème sera plus cohérent, mais moins surprenant.' },
+  { label: tr('AVEUGLE', 'BLIND'),        detail: tr('Aucun contexte — tu écris dans le vide total. La forme la plus surréaliste.', 'No context — you write into the void. The most surrealist form.') },
+  { label: tr('DERNIER MOT', 'LAST WORD'),    detail: tr('Un seul mot de la case précédente est visible. Un fil ténu, juste assez pour raccrocher quelque chose.', 'A single word from the previous slot is visible. A thin thread, just enough to latch onto something.') },
+  { label: tr('DERNIÈRE CASE', 'LAST SLOT'),  detail: tr('La case précédente entière est visible. Le poème sera plus cohérent, mais moins surprenant.', 'The whole previous slot is visible. The poem will be more coherent, but less surprising.') },
 ]
 
 const MODES = [
-  { label: 'STANDARD',   detail: "Aucune contrainte de temps. Tu prends le temps qu'il faut." },
-  { label: 'HYPNOTIQUE', detail: "30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place." },
+  { label: tr('STANDARD', 'STANDARD'),   detail: tr("Aucune contrainte de temps. Tu prends le temps qu'il faut.", 'No time constraint. You take as long as you need.') },
+  { label: tr('HYPNOTIQUE', 'HYPNOTIC'), detail: tr('30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place.', '30 seconds per slot. At zero, the fragment is submitted automatically — or an inner voice completes it in your place.') },
 ]
 
 const RACCORD_DESSIN = [
-  { label: 'AVEUGLE', detail: "Chaque bande commence dans l'obscurité totale. Le monstre prend forme par hasard." },
-  { label: 'RACCORD', detail: "Un liseret du fragment précédent reste visible jusqu'au premier trait. Assez pour raccorder les corps, pas assez pour tout voir." },
+  { label: tr('AVEUGLE', 'BLIND'), detail: tr("Chaque bande commence dans l'obscurité totale. Le monstre prend forme par hasard.", 'Each band begins in total darkness. The monster takes shape by chance.') },
+  { label: tr('RACCORD', 'JOINED'), detail: tr("Un liseret du fragment précédent reste visible jusqu'au premier trait. Assez pour raccorder les corps, pas assez pour tout voir.", 'A sliver of the previous fragment stays visible until your first stroke. Enough to join the bodies, not enough to see everything.') },
 ]
 
 const SECTIONS = [
-  { id: 'ecrit',    label: 'CADAVRE ÉCRIT' },
-  { id: 'dessine',  label: 'CADAVRE DESSINÉ' },
-  { id: 'atelier',  label: "L'ATELIER" },
+  { id: 'ecrit',    label: tr('CADAVRE ÉCRIT', 'WRITTEN CADAVRE') },
+  { id: 'dessine',  label: tr('CADAVRE DESSINÉ', 'DRAWN CADAVRE') },
+  { id: 'atelier',  label: tr("L'ATELIER", 'THE WORKSHOP') },
 ]
 
 export default function Aide() {
@@ -61,7 +62,7 @@ export default function Aide() {
             onClick={() => navigate(-1)}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← RETOUR
+            ← {tr('RETOUR', 'BACK')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -69,7 +70,7 @@ export default function Aide() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — RÈGLES —
+          {tr('— RÈGLES —', '— RULES —')}
         </div>
 
         {/* ── INTRO ── */}
@@ -83,10 +84,10 @@ export default function Aide() {
             className="font-fraunces font-black leading-tight mb-3"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            Comment <span style={{ color: accent }}>jouer.</span>
+            {tr('Comment', 'How to')} <span style={{ color: accent }}>{tr('jouer.', 'play.')}</span>
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65 }}>
-            Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.
+            {tr("Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.", 'The exquisite corpse is a surrealist game invented in Paris in the 1920s. Each participant contributes to the work without seeing what the others have produced. The revealed result is always a surprise.')}
           </p>
         </motion.div>
 
@@ -120,7 +121,7 @@ export default function Aide() {
                     className="font-fraunces font-black"
                     style={{ fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)', color: col, lineHeight: 1 }}
                   >
-                    {isEcrit ? 'Cadavre Écrit.' : isAtelier ? "L'Atelier." : 'Cadavre Dessiné.'}
+                    {isEcrit ? tr('Cadavre Écrit.', 'Written Cadavre.') : isAtelier ? tr("L'Atelier.", 'The Workshop.') : tr('Cadavre Dessiné.', 'Drawn Cadavre.')}
                   </div>
                 </div>
                 <span style={{
@@ -148,11 +149,11 @@ export default function Aide() {
                       {isEcrit && (
                         <>
                           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
-                            Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.
+                            {tr("Chaque joueur écrit un fragment de phrase ou de vers, sans voir ce que l'autre a écrit. Le poème révélé à la fin est toujours une surprise.", 'Each player writes a fragment of a sentence or a line, without seeing what the other wrote. The poem revealed at the end is always a surprise.')}
                           </p>
 
                           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-                            — STRUCTURES —
+                            {tr('— STRUCTURES —', '— STRUCTURES —')}
                           </div>
                           {STRUCTURES.map(s => (
                             <div key={s.romain} style={{ display: 'flex', gap: 14, paddingBottom: 12, borderBottom: `0.5px solid ${encre}10`, marginBottom: 12 }}>
@@ -168,7 +169,7 @@ export default function Aide() {
                           ))}
 
                           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
-                            — VISIBILITÉ —
+                            {tr('— VISIBILITÉ —', '— VISIBILITY —')}
                           </div>
                           {VISIBILITE.map(v => (
                             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
@@ -178,7 +179,7 @@ export default function Aide() {
                           ))}
 
                           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
-                            — MODES —
+                            {tr('— MODES —', '— MODES —')}
                           </div>
                           {MODES.map(m => (
                             <div key={m.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
@@ -192,13 +193,13 @@ export default function Aide() {
                       {isAtelier && (
                         <>
                           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
-                            Un mode solo et expérimental. Tu convoques des voix IA et tu co-écris avec elles un poème dont tu ne vois jamais l'ensemble — ni le leur, ni le tien passé.
+                            {tr("Un mode solo et expérimental. Tu convoques des voix IA et tu co-écris avec elles un poème dont tu ne vois jamais l'ensemble — ni le leur, ni le tien passé.", 'A solo, experimental mode. You summon AI voices and co-write a poem with them — one you never see in full: neither their lines, nor your own past ones.')}
                           </p>
 
                           {[
-                            { label: 'LE MÉDIUM', detail: "Tu ouvres le poème et tu le refermes. Entre ces deux moments, la main te revient à intervalles irréguliers — tous les deux à trois vers environ. Plus tu convoques de voix, plus tes retours se font fragments (un mot ou deux parmi une voix IA)." },
-                            { label: 'LES VOIX', detail: "Les voix IA complètent les vers entre tes tours. Tu choisis combien en convoquer — de 0 à 46. Plus elles sont nombreuses, plus ta présence dans le poème devient rare et fragmentaire." },
-                            { label: 'SEUL (0 VOIX)', detail: "Sans voix convoquées, tu écris tous les vers toi-même, mais sans jamais relire ce que tu as produit. Le cadavre exquis se joue alors contre ta propre mémoire." },
+                            { label: tr('LE MÉDIUM', 'THE MEDIUM'), detail: tr('Tu ouvres le poème et tu le refermes. Entre ces deux moments, la main te revient à intervalles irréguliers — tous les deux à trois vers environ. Plus tu convoques de voix, plus tes retours se font fragments (un mot ou deux parmi une voix IA).', 'You open the poem and you close it. Between those two moments, the pen returns to you at irregular intervals — every two or three lines or so. The more voices you summon, the more your turns shrink to fragments (a word or two within an AI voice).') },
+                            { label: tr('LES VOIX', 'THE VOICES'), detail: tr('Les voix IA complètent les vers entre tes tours. Tu choisis combien en convoquer — de 0 à 46. Plus elles sont nombreuses, plus ta présence dans le poème devient rare et fragmentaire.', 'The AI voices complete the lines between your turns. You choose how many to summon — from 0 to 46. The more numerous they are, the rarer and more fragmentary your presence in the poem becomes.') },
+                            { label: tr('SEUL (0 VOIX)', 'ALONE (0 VOICES)'), detail: tr('Sans voix convoquées, tu écris tous les vers toi-même, mais sans jamais relire ce que tu as produit. Le cadavre exquis se joue alors contre ta propre mémoire.', 'With no voices summoned, you write every line yourself, but without ever rereading what you have produced. The exquisite corpse is then played against your own memory.') },
                           ].map(item => (
                             <div key={item.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
                               <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, marginBottom: 3 }}>{item.label}</div>
@@ -207,11 +208,11 @@ export default function Aide() {
                           ))}
 
                           <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10, marginTop: 16 }}>
-                            — VISIBILITÉ —
+                            {tr('— VISIBILITÉ —', '— VISIBILITY —')}
                           </div>
                           {[
-                            { label: "L'ÉCHO", detail: "Le dernier mot du vers précédent est audible. Un fil ténu pour raccrocher la plume." },
-                            { label: 'OBSCURITÉ', detail: "Tu écris dans le silence total. Aucun contexte — ni le tien, ni celui des voix." },
+                            { label: tr("L'ÉCHO", 'THE ECHO'), detail: tr('Le dernier mot du vers précédent est audible. Un fil ténu pour raccrocher la plume.', 'The last word of the previous line is audible. A thin thread to catch your pen on.') },
+                            { label: tr('OBSCURITÉ', 'DARKNESS'), detail: tr('Tu écris dans le silence total. Aucun contexte — ni le tien, ni celui des voix.', 'You write in total silence. No context — neither yours, nor that of the voices.') },
                           ].map(v => (
                             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
                               <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
@@ -224,11 +225,11 @@ export default function Aide() {
                       {!isEcrit && !isAtelier && (
                         <>
                           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
-                            La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.
+                            {tr('La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.', 'The graphic variant. Each player draws a portion of the body on a horizontal band, without seeing the neighbouring fragments. The monster revealed at the end is interpreted by an artificial intelligence in surrealist verse.')}
                           </p>
 
                           <div style={{ ...mono, fontSize: 13, color: second, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-                            — RACCORD —
+                            {tr('— RACCORD —', '— JOIN —')}
                           </div>
                           {RACCORD_DESSIN.map(v => (
                             <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
@@ -239,7 +240,7 @@ export default function Aide() {
 
                           <div style={{ borderLeft: `1.5px solid ${encre}40`, paddingLeft: 12, marginTop: 20, marginBottom: 8 }}>
                             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.5, color: encre, opacity: 0.82, marginBottom: 4 }}>
-                              « Le cadavre exquis boira le vin nouveau »
+                              {tr('« Le cadavre exquis boira le vin nouveau »', '“The exquisite corpse will drink the new wine”')}
                             </div>
                             <div style={{ ...mono, fontSize: 13, color: second, opacity: 0.7, letterSpacing: '0.14em' }}>
                               BRETON, ÉLUARD, MORISE, MAN RAY · 1925
@@ -272,7 +273,7 @@ export default function Aide() {
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer',
               }}
             >
-              Cadavre Écrit →
+              {tr('Cadavre Écrit', 'Written Cadavre')} →
             </button>
             <button
               onClick={() => navigate('/config-dessin')}
@@ -282,7 +283,7 @@ export default function Aide() {
                 padding: '1em 0.5em', border: 'none', cursor: 'pointer',
               }}
             >
-              Cadavre Dessiné →
+              {tr('Cadavre Dessiné', 'Drawn Cadavre')} →
             </button>
           </div>
         </motion.div>

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
+import { tr } from '../i18n'
 
-const LINE1 = 'Chaque fragment ignore les autres.'
+const LINE1 = tr('Chaque fragment ignore les autres.', 'Each fragment is blind to the others.')
 
 const reduced =
   typeof window !== 'undefined' &&
@@ -110,7 +111,7 @@ export default function SplashScreen() {
                 marginTop: 2,
               }}
             >
-              Ensemble, ils rêvent.
+              {tr('Ensemble, ils rêvent.', 'Together, they dream.')}
             </motion.div>
           </div>
 
@@ -127,7 +128,7 @@ export default function SplashScreen() {
               color: encre,
             }}
           >
-            Toucher pour entrer
+            {tr('Toucher pour entrer', 'Tap to enter')}
           </motion.div>
         </motion.div>
       )}

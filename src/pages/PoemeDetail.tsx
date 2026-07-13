@@ -134,6 +134,7 @@ export default function PoemeDetail() {
         cases: poeme.cases,
         structureId: poeme.structureId,
         titre: poeme.titre,
+        langue: langueActuelle(),
       })
       const { error } = await supabase.from('gallery').insert({
         type: 'poeme',

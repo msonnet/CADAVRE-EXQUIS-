@@ -10,6 +10,7 @@ import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
 import type { PlanAtelier } from './Atelier'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle } from '../i18n'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -45,45 +46,45 @@ interface RoleFragment {
 }
 
 const GN_SUJET: RoleFragment = {
-  type: 'groupe-nominal', consigne: 'un groupe nominal sujet', role: 'SUJET',
+  type: 'groupe-nominal', consigne: tr('un groupe nominal sujet', 'a subject noun phrase'), role: tr('SUJET', 'SUBJECT'),
 }
 const GN_COMPLEMENT: RoleFragment = {
-  type: 'groupe-nominal', consigne: 'un groupe nominal complément', role: 'COMPLÉMENT',
+  type: 'groupe-nominal', consigne: tr('un groupe nominal complément', 'an object noun phrase'), role: tr('COMPLÉMENT', 'OBJECT'),
 }
 const VERBE: RoleFragment = {
-  type: 'verbe', consigne: 'un verbe conjugué', role: 'VERBE',
+  type: 'verbe', consigne: tr('un verbe conjugué', 'a conjugated verb'), role: tr('VERBE', 'VERB'),
 }
 // Devant un complément, le gabarit exige un verbe transitif — la voix ne sait pas
 // qu'un complément suit (principe du cadavre), mais le gabarit, lui, le sait
 const VERBE_TRANSITIF: RoleFragment = {
-  type: 'verbe-transitif', consigne: 'un verbe transitif conjugué', role: 'VERBE',
+  type: 'verbe-transitif', consigne: tr('un verbe transitif conjugué', 'a conjugated transitive verb'), role: tr('VERBE', 'VERB'),
 }
 const GROUPE_VERBAL: RoleFragment = {
-  type: 'groupe-verbal', consigne: "un verbe conjugué suivi d'un complément court", role: 'VERBE + COMPL.',
+  type: 'groupe-verbal', consigne: tr("un verbe conjugué suivi d'un complément court", 'a conjugated verb followed by a short complement'), role: tr('VERBE + COMPL.', 'VERB + COMPL.'),
 }
 const ADJECTIF: RoleFragment = {
-  type: 'adjectif', consigne: 'un adjectif qualificatif seul', role: 'ADJECTIF',
+  type: 'adjectif', consigne: tr('un adjectif qualificatif seul', 'a single descriptive adjective'), role: tr('ADJECTIF', 'ADJECTIVE'),
 }
 const ADVERBE_TETE: RoleFragment = {
-  type: 'adverbe', consigne: 'un adverbe ou une locution adverbiale', role: 'ADVERBE', apres: ',',
+  type: 'adverbe', consigne: tr('un adverbe ou une locution adverbiale', 'an adverb or adverbial phrase'), role: tr('ADVERBE', 'ADVERB'), apres: ',',
 }
 const ADVERBE_FIN: RoleFragment = {
-  type: 'adverbe', consigne: 'un adverbe ou une locution adverbiale', role: 'ADVERBE',
+  type: 'adverbe', consigne: tr('un adverbe ou une locution adverbiale', 'an adverb or adverbial phrase'), role: tr('ADVERBE', 'ADVERB'),
 }
 const CONJ_COORD: RoleFragment = {
-  type: 'conjonction-coord', consigne: 'une conjonction de coordination ou un adverbe de liaison', role: 'CONJONCTION',
+  type: 'conjonction-coord', consigne: tr('une conjonction de coordination ou un adverbe de liaison', 'a coordinating conjunction or linking adverb'), role: tr('CONJONCTION', 'CONJUNCTION'),
 }
 const CONJ_SUBORD: RoleFragment = {
-  type: 'conjonction-subord', consigne: 'une conjonction de subordination', role: 'CONJONCTION',
+  type: 'conjonction-subord', consigne: tr('une conjonction de subordination', 'a subordinating conjunction'), role: tr('CONJONCTION', 'CONJUNCTION'),
 }
 const INFINITIF: RoleFragment = {
-  type: 'infinitif', consigne: "un verbe à l'infinitif", role: 'INFINITIF',
+  type: 'infinitif', consigne: tr("un verbe à l'infinitif", 'a verb in the infinitive'), role: tr('INFINITIF', 'INFINITIVE'),
 }
 const GERONDIF: RoleFragment = {
-  type: 'gérondif', consigne: 'un gérondif (en + participe présent)', role: 'GÉRONDIF', apres: ',',
+  type: 'gérondif', consigne: tr('un gérondif (en + participe présent)', 'a gerund clause (an -ing form)'), role: tr('GÉRONDIF', 'GERUND'), apres: ',',
 }
 const QUESTION: RoleFragment = {
-  type: 'proposition', consigne: 'une question courte et étrange', role: 'QUESTION',
+  type: 'proposition', consigne: tr('une question courte et étrange', 'a short, strange question'), role: 'QUESTION',
 }
 
 function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
@@ -93,7 +94,7 @@ function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
     // un vers libre de longueur tirée au sort (3 à 6 mots)
     if (questionPermise && Math.random() < 0.12) return [QUESTION]
     const mots = 3 + Math.floor(Math.random() * 4)
-    return [{ type: 'libre', consigne: 'un vers — une image physique et inattendue', role: 'VERS ENTIER', mots }]
+    return [{ type: 'libre', consigne: tr('un vers — une image physique et inattendue', 'one line of verse — a physical, unexpected image'), role: tr('VERS ENTIER', 'FULL LINE'), mots }]
   }
   if (nVoix === 2) {
     const variantes: RoleFragment[][] = [
@@ -131,7 +132,7 @@ function dernierMot(texte: string): string | undefined {
 }
 
 // Réserve locale par rôle si l'API est injoignable — le poème ne s'arrête jamais
-const RESERVE: Record<string, string[]> = {
+const RESERVE_FR: Record<string, string[]> = {
   'groupe-nominal': ['le silence', "l'ombre", 'une cendre', 'la nuit', 'un souffle', 'la pierre', 'le givre', 'une porte',
                      'la rouille', 'un seuil', "l'écume", 'le lierre', 'une aiguille', 'le limon'],
   'verbe': ['tremble', 'dévore', 'veille', 'chavire', 'demeure', 'glisse', 'rôde', 'vacille',
@@ -150,6 +151,26 @@ const RESERVE: Record<string, string[]> = {
   'infinitif': ['brûler', 'attendre', 'traverser', 'descendre', 'effacer', 'tenir', 'sentir', 'glisser'],
   'gérondif': ['en tombant', 'en glissant', 'en brûlant', 'en tremblant', 'en dormant', 'en cherchant'],
 }
+const RESERVE_EN: Record<string, string[]> = {
+  'groupe-nominal': ['the silence', 'the shadow', 'an ember', 'the night', 'a breath', 'the stone', 'the frost', 'a door',
+                     'the rust', 'a threshold', 'the foam', 'the ivy', 'a needle', 'the silt'],
+  'verbe': ['trembles', 'devours', 'keeps watch', 'capsizes', 'remains', 'glides', 'prowls', 'wavers',
+            'surfaces', 'leans over', 'consents', 'recoils'],
+  'verbe-transitif': ['devours', 'grazes', 'swallows', 'cracks', 'crosses', 'gnaws',
+                      'lifts', 'mends', 'cradles', 'hollows', 'tames', 'engulfs'],
+  'groupe-verbal': ['crosses the night', 'burns in silence', 'falls without a sound', 'weighs on the world', 'slips into the shadow',
+                    'counts the hours', 'holds its breath', 'erases the thresholds'],
+  'adjectif': ['pale', 'muffled', 'hollow', 'nocturnal', 'bitter', 'cold', 'opaque', 'mute', 'cracked', 'lukewarm'],
+  'adverbe': ['without a sound', 'gently', 'forever', 'elsewhere', 'in silence', 'backwards', 'sideways'],
+  'proposition': ['What still remains?', 'Where do the shadows go?', 'Who keeps watch?', 'How far does the void go?'],
+  'libre': ['the shadow remembers', 'the night keeps everything', 'the salt of the hours', 'a door breathes', 'the north wind remains',
+            'something consents', 'the black water waits'],
+  'conjonction-coord': ['but', 'for', 'yet', 'however', 'and yet', 'so'],
+  'conjonction-subord': ['when', 'if', 'as', 'while', 'as soon as', 'whereas'],
+  'infinitif': ['to burn', 'to wait', 'to cross', 'to descend', 'to erase', 'to hold', 'to feel', 'to glide'],
+  'gérondif': ['falling', 'gliding', 'burning', 'trembling', 'sleeping', 'searching'],
+}
+const RESERVE: Record<string, string[]> = langueActuelle() === 'en' ? RESERVE_EN : RESERVE_FR
 
 const CLE_BROUILLON = 'atelier-en-cours'
 
@@ -270,7 +291,7 @@ export default function JeuAtelier() {
       // Conjonctions courtes (≤2 lettres) : "en" (gérondif), "or", "si", "et", "ni"
       // échappent au filtre > 2 chars. Calculé avant la boucle : versRef est stable
       // entre itérations, inutile de refaire le scan à chaque fragment.
-      const CONJ_COURTES = new Set(['or', 'si', 'en', 'et', 'ni'])
+      const CONJ_COURTES = langueActuelle() === 'en' ? new Set(['or', 'if', 'as', 'so']) : new Set(['or', 'si', 'en', 'et', 'ni'])
       const conjCourtesUsees = versRef.current.flatMap(v => {
         const m = v.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
         return m && CONJ_COURTES.has(m[0]) ? [m[0]] : []
@@ -380,7 +401,7 @@ export default function JeuAtelier() {
       )
 
       // Eviter — calculé une fois, partagé par tous les fetches parallèles
-      const CONJ_COURTES_F = new Set(['or', 'si', 'en', 'et', 'ni'])
+      const CONJ_COURTES_F = langueActuelle() === 'en' ? new Set(['or', 'if', 'as', 'so']) : new Set(['or', 'si', 'en', 'et', 'ni'])
       const conjCourtesUsees = versRef.current.flatMap(v => {
         const m = v.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
         return m && CONJ_COURTES_F.has(m[0]) ? [m[0]] : []
@@ -477,12 +498,12 @@ export default function JeuAtelier() {
 
       const cases: Case[] = versRef.current.map((v, i) => ({
         numero: i + 1,
-        fonction: `vers ${i + 1}`,
+        fonction: tr(`vers ${i + 1}`, `line ${i + 1}`),
         consigne: v.auteur === 'humain'
-          ? 'vers du médium'
+          ? tr('vers du médium', 'line by the medium')
           : v.auteur === 'mixte'
-            ? `vers du médium et des voix ${v.voixNums.map(toRomain).join(' · ')}`
-            : `vers des voix ${v.voixNums.map(toRomain).join(' · ')}`,
+            ? tr(`vers du médium et des voix ${v.voixNums.map(toRomain).join(' · ')}`, `line by the medium and voices ${v.voixNums.map(toRomain).join(' · ')}`)
+            : tr(`vers des voix ${v.voixNums.map(toRomain).join(' · ')}`, `line by voices ${v.voixNums.map(toRomain).join(' · ')}`),
         auteur: v.auteur,
         texte: textes[i],
         ts: Date.now(),
@@ -531,7 +552,7 @@ export default function JeuAtelier() {
   }
 
   function quitter() {
-    if (vers.length > 0 && !window.confirm('Refermer l\'atelier ? La séance en cours sera perdue.')) return
+    if (vers.length > 0 && !window.confirm(tr("Refermer l'atelier ? La séance en cours sera perdue.", 'Close the workshop? The current séance will be lost.'))) return
     localStorage.removeItem(CLE_BROUILLON)
     navigate('/')
   }
@@ -543,15 +564,15 @@ export default function JeuAtelier() {
   const seul = plan.voixPool.length === 0
   const consigneJoueur = idx === 0
     ? seul
-      ? 'Ouvre la séance — tu joues contre ta propre mémoire.'
-      : 'Ouvre la séance — le premier vers t\'appartient.'
+      ? tr('Ouvre la séance — tu joues contre ta propre mémoire.', 'Open the séance — you play against your own memory.')
+      : tr("Ouvre la séance — le premier vers t'appartient.", 'Open the séance — the first line is yours.')
     : idx === total - 1
       ? seul
-        ? 'Referme le poème — sans te relire.'
-        : 'Referme le poème — le dernier vers t\'appartient.'
+        ? tr('Referme le poème — sans te relire.', 'Close the poem — without rereading yourself.')
+        : tr("Referme le poème — le dernier vers t'appartient.", 'Close the poem — the last line is yours.')
       : seul
-        ? 'Continue à l\'aveugle — ta mémoire seule guide la main.'
-        : 'La main te revient.'
+        ? tr("Continue à l'aveugle — ta mémoire seule guide la main.", 'Carry on blind — memory alone guides your hand.')
+        : tr('La main te revient.', 'The pen returns to you.')
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -565,7 +586,7 @@ export default function JeuAtelier() {
             onClick={quitter}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← QUITTER
+            ← {tr('QUITTER', 'LEAVE')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -574,14 +595,14 @@ export default function JeuAtelier() {
         {/* ── ÉTAT DE SÉANCE ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
           <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em' }}>
-            — L'ATELIER —
+            {tr("— L'ATELIER —", '— THE WORKSHOP —')}
           </span>
           <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6 }}>
-            VERS {toRomain(Math.min(idx + 1, total))} / {toRomain(total)}
+            {tr('VERS', 'LINE')} {toRomain(Math.min(idx + 1, total))} / {toRomain(total)}
           </span>
         </div>
         <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.45, marginTop: 3 }}>
-          {plan.voixPool.length === 0 ? 'SEUL' : `${toRomain(plan.voixPool.length)} VOIX`} · {plan.echo ? "L'ÉCHO" : 'OBSCURITÉ TOTALE'}
+          {plan.voixPool.length === 0 ? tr('SEUL', 'ALONE') : tr(`${toRomain(plan.voixPool.length)} VOIX`, `${toRomain(plan.voixPool.length)} VOICES`)} · {plan.echo ? tr("L'ÉCHO", 'THE ECHO') : tr('OBSCURITÉ TOTALE', 'TOTAL DARKNESS')}
         </div>
 
         {/* ── FEUILLET MASQUÉ : la forme du poème, jamais le texte ── */}
@@ -629,7 +650,7 @@ export default function JeuAtelier() {
               {echoTexte ? (
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 6 }}>
-                    — L'ÉCHO —
+                    {tr("— L'ÉCHO —", '— THE ECHO —')}
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
                     « … {echoTexte} »
@@ -637,7 +658,7 @@ export default function JeuAtelier() {
                 </div>
               ) : idx > 0 && (
                 <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 14 }}>
-                  — TU ÉCRIS DANS LE NOIR —
+                  {tr('— TU ÉCRIS DANS LE NOIR —', '— YOU WRITE IN THE DARK —')}
                 </div>
               )}
 
@@ -652,7 +673,7 @@ export default function JeuAtelier() {
                       transition={{ duration: 0.3 }}
                       style={{ ...mono, fontSize: 12, color: encre, marginBottom: 5 }}
                     >
-                      VOIX {toRomain(v.num)} · {v.role}{' '}
+                      {tr('VOIX', 'VOICE')} {toRomain(v.num)} · {v.role}{' '}
                       {v.fait
                         ? <span style={{ color: accent }}>✦</span>
                         : <motion.span
@@ -670,8 +691,8 @@ export default function JeuAtelier() {
                 <>
                   <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 6 }}>
                     {fragGabarit.length === 1
-                      ? <>— LE SORT TE TIRE SEUL · {fragGabarit[fragSlotJoueur].role} —</>
-                      : <>— FRAGMENT {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —</>}
+                      ? <>{tr('— LE SORT TE TIRE SEUL ·', '— FATE DRAWS YOU ALONE ·')} {fragGabarit[fragSlotJoueur].role} —</>
+                      : <>{tr('— FRAGMENT', '— FRAGMENT')} {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —</>}
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontStyle: 'italic', color: encre, opacity: 0.7, marginBottom: 10 }}>
                     {fragGabarit[fragSlotJoueur].consigne}
@@ -680,7 +701,7 @@ export default function JeuAtelier() {
                     value={saisie}
                     onChange={e => setSaisie(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); deposerFragment() } }}
-                    placeholder="ton fragment…"
+                    placeholder={tr('ton fragment…', 'your fragment…')}
                     autoFocus
                     style={{
                       width: '100%',
@@ -704,12 +725,12 @@ export default function JeuAtelier() {
                       transition: 'background 0.2s',
                     }}
                   >
-                    Glisser le fragment →
+                    {tr('Glisser le fragment', 'Slip in the fragment')} →
                   </button>
                 </>
               ) : (
                 <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginTop: 8 }}>
-                  — LES VOIX TERMINENT —
+                  {tr('— LES VOIX TERMINENT —', '— THE VOICES ARE FINISHING —')}
                 </div>
               )}
             </motion.div>
@@ -727,7 +748,7 @@ export default function JeuAtelier() {
               {echoTexte ? (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 6 }}>
-                    — L'ÉCHO —
+                    {tr("— L'ÉCHO —", '— THE ECHO —')}
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontStyle: 'italic', color: encre, opacity: 0.85, lineHeight: 1.4 }}>
                     « … {echoTexte} »
@@ -735,7 +756,7 @@ export default function JeuAtelier() {
                 </div>
               ) : idx > 0 && (
                 <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginBottom: 16 }}>
-                  — TU ÉCRIS DANS LE NOIR —
+                  {tr('— TU ÉCRIS DANS LE NOIR —', '— YOU WRITE IN THE DARK —')}
                 </div>
               )}
 
@@ -749,7 +770,7 @@ export default function JeuAtelier() {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); deposerVers() }
                 }}
-                placeholder="ton vers…"
+                placeholder={tr('ton vers…', 'your line…')}
                 rows={2}
                 autoFocus
                 style={{
@@ -774,7 +795,7 @@ export default function JeuAtelier() {
                   transition: 'background 0.2s',
                 }}
               >
-                {idx === total - 1 ? 'Refermer le poème →' : 'Déposer le vers →'}
+                {idx === total - 1 ? tr('Refermer le poème →', 'Close the poem →') : tr('Déposer le vers →', 'Lay down the line →')}
               </button>
             </motion.div>
 
@@ -789,7 +810,7 @@ export default function JeuAtelier() {
               style={{ paddingBottom: 24, textAlign: 'center' }}
             >
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 14 }}>
-                — LES VOIX ÉCRIVENT —
+                {tr('— LES VOIX ÉCRIVENT —', '— THE VOICES ARE WRITING —')}
               </div>
               {voixEnCours.map((v, k) => (
                 <motion.div
@@ -799,7 +820,7 @@ export default function JeuAtelier() {
                   transition={{ duration: 0.3 }}
                   style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginBottom: 7 }}
                 >
-                  VOIX {toRomain(v.num)} · {v.role}{' '}
+                  {tr('VOIX', 'VOICE')} {toRomain(v.num)} · {v.role}{' '}
                   {v.fait
                     ? <span style={{ color: accent }}>✦</span>
                     : <motion.span
@@ -817,7 +838,7 @@ export default function JeuAtelier() {
               animate={{ opacity: 1 }}
               style={{ paddingBottom: 24, textAlign: 'center', ...mono, fontSize: 13, color: accent, letterSpacing: '0.22em' }}
             >
-              — LE POÈME SE REFERME —
+              {tr('— LE POÈME SE REFERME —', '— THE POEM CLOSES —')}
             </motion.div>
           )}
         </AnimatePresence>

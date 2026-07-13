@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle } from '../i18n'
 
 interface PoemeCase { texte: string }
 interface PoemePayload { cases: PoemeCase[]; structureId: string; titre?: string }
@@ -52,7 +53,12 @@ export default function PoemeDuJour() {
         .order('created_at', { ascending: false })
         .limit(90)
 
-      const items = (data ?? []) as GalleryItem[]
+      const tous = (data ?? []) as GalleryItem[]
+      // Le poème du jour se tire parmi les publications de la langue active
+      const items = tous.filter(it => {
+        try { return (((JSON.parse(it.payload) as { langue?: string }).langue === 'en') ? 'en' : 'fr') === langueActuelle() }
+        catch { return langueActuelle() === 'fr' }
+      })
       if (!items.length) { setLoading(false); return }
 
       // Stable daily pick — same poem for everyone on the same day
@@ -79,7 +85,7 @@ export default function PoemeDuJour() {
   async function partager() {
     if (!item || !poeme) return
     jouer('clic')
-    const titre = item.titre ? `« ${item.titre} »` : 'Cadavre exquis'
+    const titre = item.titre ? tr(`« ${item.titre} »`, `“${item.titre}”`) : tr('Cadavre exquis', 'Exquisite corpse')
     const texte = `${titre}\n\n${poeme}\n\n— ${item.author_pseudo}`
     try {
       if (navigator.share) {
@@ -92,7 +98,7 @@ export default function PoemeDuJour() {
     } catch { /* user cancelled */ }
   }
 
-  const date = item ? new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  const date = item ? new Date(item.created_at).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }) : ''
   const lignes = poeme.split('\n').filter(Boolean)
 
   return (
@@ -102,9 +108,9 @@ export default function PoemeDuJour() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.65, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          ← RETOUR
+          ← {tr('RETOUR', 'BACK')}
         </button>
-        <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>POÈME DU JOUR</span>
+        <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{tr('POÈME DU JOUR', 'POEM OF THE DAY')}</span>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45, marginBottom: 28 }} />
 
@@ -117,7 +123,7 @@ export default function PoemeDuJour() {
       {!loading && !item && (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 20, color: encre, opacity: 0.6 }}>
-            La galerie est encore vide.<br />Sois le premier à composer.
+            {tr('La galerie est encore vide.', 'The gallery is still empty.')}<br />{tr('Sois le premier à composer.', 'Be the first to compose.')}
           </p>
         </div>
       )}
@@ -186,13 +192,13 @@ export default function PoemeDuJour() {
                 onClick={partager}
                 style={{ flex: 1, ...mono, fontSize: 13, background: accent, color: '#0f0805', border: 'none', borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em' }}
               >
-                {partagé ? '✓ COPIÉ' : 'PARTAGER'}
+                {partagé ? tr('✓ COPIÉ', '✓ COPIED') : tr('PARTAGER', 'SHARE')}
               </button>
               <button
                 onClick={() => { jouer('clic'); navigate('/galerie') }}
                 style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: encre, border: `1px solid ${encre}30`, borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
               >
-                GALERIE →
+                {tr('GALERIE', 'GALLERY')} →
               </button>
             </div>
           </motion.div>

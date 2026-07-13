@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, createContext, useContext, useEffect } from 'react'
+import { tr } from '../i18n'
 import { mulberry32, pickOne, pickN } from './prng'
 import { COLLAGES, type CollageDef, Hatches } from './collages'
 import {
@@ -452,7 +453,7 @@ function SignatureReve() {
       fontSize: 17, opacity: 0.75,
       pointerEvents: 'none', zIndex: 6,
       animation: 'fadeInQ 0.8s 1.8s both',
-    }}>rêvé à {s.heure}</div>
+    }}>{tr('rêvé à', 'dreamt at')} {s.heure}</div>
   )
 }
 

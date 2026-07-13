@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { tr } from '../i18n'
 import { motion } from 'framer-motion'
 import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
@@ -144,19 +145,19 @@ export default function RevealAssemblageTexte({
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 18, opacity: 0.8 }}>
-          — {voixCount} VOIX —
+          — {voixCount} {tr('VOIX', 'VOICES')} —
         </div>
         <div style={{
           fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',
           fontSize: 'clamp(2rem, 9vw, 3.4rem)', color: encre, lineHeight: 1.0, letterSpacing: '-0.01em',
         }}>
-          Le cadavre
+          {tr('Le cadavre', 'The cadavre')}
         </div>
         <div style={{
           fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',
           fontSize: 'clamp(2rem, 9vw, 3.4rem)', color: accent, lineHeight: 1.0, letterSpacing: '-0.01em',
         }}>
-          se reconstitue
+          {tr('se reconstitue', 'is taking shape')}
           <motion.span
             animate={{ opacity: phase === 'convergence' ? [1, 0, 1] : 1 }}
             transition={{ duration: 1.1, repeat: phase === 'convergence' ? Infinity : 0, ease: 'easeInOut' }}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
 const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
@@ -129,7 +130,7 @@ function IconEraser({ tint }: { tint: string; nib: string }) {
 }
 
 const TOOL_ICONS = { pencil: IconPencil, pen: IconPen, marker: IconMarker, brush: IconBrush, crayon: IconCrayon, airbrush: IconAirbrush, eraser: IconEraser }
-const TOOL_NAMES: Record<Tool, string> = { pencil: 'Crayon', pen: 'Stylo', marker: 'Feutre', brush: 'Pinceau', crayon: 'Craie', airbrush: 'Aéro', eraser: 'Gomme' }
+const TOOL_NAMES: Record<Tool, string> = { pencil: tr('Crayon', 'Pencil'), pen: tr('Stylo', 'Pen'), marker: tr('Feutre', 'Marker'), brush: tr('Pinceau', 'Brush'), crayon: tr('Craie', 'Chalk'), airbrush: tr('Aéro', 'Spray'), eraser: tr('Gomme', 'Eraser') }
 
 interface Props {
   onSubmit: (dataUrl: string) => Promise<void>
@@ -481,13 +482,13 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
         {/* Raccord guide line */}
         {raccordDataUrl && canvasReady && (
           <div style={{ position: 'absolute', top: RACCORD_H, left: 0, right: 0, height: 1, background: `linear-gradient(to right,transparent,${accent}55 15%,${accent}55 85%,transparent)`, pointerEvents: 'none', zIndex: 5 }}>
-            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 13, color: accent, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>← RACCORD</span>
+            <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 13, color: accent, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>← {tr('RACCORD', 'JOIN')}</span>
           </div>
         )}
 
         {/* Band badge — couleurs liées au papier pour rester lisible sur tout fond */}
         <div style={{ position: 'absolute', top: 10, left: 10, ...mono, fontSize: 13, color: paperDef.ink, background: `${paperDef.bg}ee`, padding: '4px 10px', border: `0.5px solid ${paperDef.ink}30`, borderRadius: 3, pointerEvents: 'none' }}>
-          BANDE {bandeNum}/{totalBandes}
+          {tr('BANDE', 'BAND')} {bandeNum}/{totalBandes}
         </div>
 
         {zoom > 1.05 && (
@@ -521,13 +522,13 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
             })}
           </div>
           <div style={{ width: 1, height: 38, background: `${TB_INK}12`, flexShrink: 0 }} />
-          <button onClick={() => setShowColorPanel(true)} aria-label="Choisir une couleur"
+          <button onClick={() => setShowColorPanel(true)} aria-label={tr('Choisir une couleur', 'Choose a color')}
             style={{ width: 44, height: 44, borderRadius: '50%', background: tool === 'eraser' ? '#f0ede8' : color, border: `2px solid ${tool === 'eraser' ? `${TB_INK}20` : color === '#ffffff' ? `${TB_INK}30` : 'transparent'}`, boxShadow: '0 1px 6px rgba(0,0,0,0.18)', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }} />
         </div>
 
         {/* Opacity row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>{tr('OPACITÉ', 'OPACITY')}</span>
           <input type="range" min={10} max={100} step={5} value={Math.round(opacity * 100)} onChange={e => setOpacity(Number(e.target.value) / 100)} disabled={tool === 'eraser'}
             style={{ flex: 1, accentColor: accent, opacity: tool === 'eraser' ? 0.35 : 1 }} />
           <span style={{ ...mono, fontSize: 13, color: TB_INK, opacity: 0.7, width: 34, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
@@ -535,7 +536,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
 
         {/* Sizes + undo row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 13, color: `${TB_INK}80`, flexShrink: 0, width: 76, whiteSpace: 'nowrap' }}>{tr('TAILLE', 'SIZE')}</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button key={i} onClick={() => setSizeIdx(i)} aria-pressed={sizeIdx === i}
@@ -545,7 +546,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
             ))}
           </div>
           <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-            {([{ fn: undo, can: canUndo, icon: '↩', label: 'Annuler' }, { fn: redo, can: canRedo, icon: '↪', label: 'Rétablir' }] as const).map(({ fn, can, icon, label }) => (
+            {([{ fn: undo, can: canUndo, icon: '↩', label: tr('Annuler', 'Undo') }, { fn: redo, can: canRedo, icon: '↪', label: tr('Rétablir', 'Redo') }] as const).map(({ fn, can, icon, label }) => (
               <button key={label} onClick={fn} disabled={!can} aria-label={label}
                 style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: can ? `${accent}18` : 'transparent', color: can ? accent : TB_INK, opacity: can ? 1 : 0.35, fontSize: 18, cursor: can ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {icon}
@@ -556,9 +557,9 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
 
         {/* Action row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={() => setPanMode(p => !p)} aria-pressed={panMode} aria-label={panMode ? 'Retour au dessin' : 'Naviguer / zoomer'}
+          <button onClick={() => setPanMode(p => !p)} aria-pressed={panMode} aria-label={panMode ? tr('Retour au dessin', 'Back to drawing') : tr('Naviguer / zoomer', 'Pan / zoom')}
             style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: panMode ? accent : '#c8bfb0', color: panMode ? '#fff' : '#1a1208', fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✥</button>
-          <button onClick={() => { if (pipetteActive) { setPipetteActive(false); return }; toolAvantPipette.current = tool; setPipetteActive(true) }} aria-pressed={pipetteActive} aria-label="Compte-gouttes"
+          <button onClick={() => { if (pipetteActive) { setPipetteActive(false); return }; toolAvantPipette.current = tool; setPipetteActive(true) }} aria-pressed={pipetteActive} aria-label={tr('Compte-gouttes', 'Eyedropper')}
             style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: pipetteActive ? accent : '#c8bfb0', color: pipetteActive ? '#fff' : '#1a1208', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
               <path d="M13.5 1.5 C14.5 2.5 14.5 4 13.5 5L8 10.5L5.5 11.5L6.5 9L12 3.5 C13 2.5 12.5 0.5 13.5 1.5Z" fill="currentColor" fillOpacity="0.9" />
@@ -568,7 +569,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
           <div style={{ flex: 1 }} />
           <button onClick={handleSubmit} disabled={busy}
             style={{ ...mono, fontSize: 17, background: encre, color: bg, border: 'none', cursor: busy ? 'wait' : 'pointer', padding: '10px 24px', borderRadius: 3, letterSpacing: '0.16em', opacity: busy ? 0.6 : 1 }}>
-            {busy ? 'ENVOI…' : 'VALIDER →'}
+            {busy ? tr('ENVOI…', 'SENDING…') : tr('VALIDER →', 'DONE →')}
           </button>
         </div>
       </div>
@@ -597,7 +598,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
               {/* Custom color */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 3, background: color, border: `1px solid ${TB_INK}20`, flexShrink: 0 }} />
-                <span style={{ ...mono, fontSize: 13, color: TB_INK, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
+                <span style={{ ...mono, fontSize: 13, color: TB_INK, flex: 1, opacity: 0.85 }}>{tr('COULEUR PERSONNALISÉE', 'CUSTOM COLOR')}</span>
                 <input type="color" value={color} onChange={e => { setColor(e.target.value); if (tool === 'eraser') setTool('pen') }}
                   style={{ width: 36, height: 36, padding: 3, border: `1px solid ${TB_INK}20`, borderRadius: 3, cursor: 'pointer' }} />
               </div>
@@ -605,7 +606,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
               {/* Recent colors */}
               {recentColors.length > 0 && (
                 <>
-                  <span style={{ ...mono, fontSize: 13, color: `${TB_INK}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
+                  <span style={{ ...mono, fontSize: 13, color: `${TB_INK}55`, display: 'block', marginBottom: 6 }}>{tr('RÉCENTES', 'RECENT')}</span>
                   <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
                     {recentColors.map(col => (
                       <button key={col} onClick={() => { setColor(col); if (tool === 'eraser') setTool('pen'); setShowColorPanel(false) }}
@@ -622,7 +623,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
                     style={{ height: 32, borderRadius: 3, background: col, border: color === col ? `2.5px solid ${accent}` : ['#ffffff','#e8e8e8','#f0e4cc','#FFF9C4','#FCE4EC','#F3E5F5'].includes(col) ? `1px solid ${TB_INK}22` : '2.5px solid transparent', cursor: 'pointer' }} />
                 ))}
               </div>
-              <button onClick={() => setShowColorPanel(false)} style={{ width: '100%', padding: '12px', ...mono, fontSize: 13, background: '#f5f0ea', color: TB_INK, border: 'none', borderRadius: 3, cursor: 'pointer' }}>FERMER</button>
+              <button onClick={() => setShowColorPanel(false)} style={{ width: '100%', padding: '12px', ...mono, fontSize: 13, background: '#f5f0ea', color: TB_INK, border: 'none', borderRadius: 3, cursor: 'pointer' }}>{tr('FERMER', 'CLOSE')}</button>
             </motion.div>
           </>
         )}

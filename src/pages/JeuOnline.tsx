@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
+import { tr, langueActuelle } from '../i18n'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ type Room = { code: string; host_id: string | null; mode: string; structure_id: 
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; joined_at: string | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
-const TYPE_LABEL: Record<string, string> = {
+const TYPE_LABEL_FR: Record<string, string> = {
   'nom': 'NOM · AVEC OU SANS ARTICLE',
   'verbe': "À L'INFINITIF · OU CONJUGUÉ",
   'adjectif': 'ÉPITHÈTE · OU ATTRIBUT',
@@ -29,12 +30,25 @@ const TYPE_LABEL: Record<string, string> = {
   'libre': 'LIBRE · SANS CONTRAINTE',
   'article-adj': 'ARTICLE + ADJECTIF · 2 MOTS',
 }
+const TYPE_LABEL_EN: Record<string, string> = {
+  'nom': 'NOUN · WITH OR WITHOUT DETERMINER',
+  'verbe': 'INFINITIVE · OR CONJUGATED',
+  'adjectif': 'ATTRIBUTIVE · OR PREDICATIVE',
+  'adverbe': 'MANNER · OR DEGREE',
+  'groupe-nominal': 'DET. · NOUN · ADJECTIVE',
+  'groupe-nominal-riche': 'FULL NOUN PHRASE',
+  'groupe-verbal': 'VERB · COMPLEMENT',
+  'proposition': 'COMPLETE SENTENCE · WITH PUNCTUATION',
+  'libre': 'FREE · NO CONSTRAINT',
+  'article-adj': 'ARTICLE + ADJECTIVE · 2 WORDS',
+}
+const TYPE_LABEL: Record<string, string> = langueActuelle() === 'en' ? TYPE_LABEL_EN : TYPE_LABEL_FR
 
 // ── Claude IA helper ──────────────────────────────────────────────────────────
 
 async function callClaude(consigne: string, type: string): Promise<{ texte: string; voixNom: string | null }> {
   try {
-    const r = await fetch(api('/api/claude'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consigne, type }) })
+    const r = await fetch(api('/api/claude'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consigne, type, langue: langueActuelle() }) })
     if (!r.ok) return { texte: '', voixNom: null }
     const { texte, voixNom } = await r.json()
     return { texte: texte ?? '', voixNom: voixNom ?? null }
@@ -314,11 +328,11 @@ export default function JeuOnline() {
         } else {
           // Real failure (network, RLS, …): reset so the timer effect can retry
           autoSubmittedRef.current = false
-          setSubmitError('Soumission automatique échouée — vérifie ta connexion.')
+          setSubmitError(tr('Soumission automatique échouée — vérifie ta connexion.', 'Auto-submit failed — check your connection.'))
         }
       } catch {
         autoSubmittedRef.current = false
-        setSubmitError('Soumission automatique échouée — vérifie ta connexion.')
+        setSubmitError(tr('Soumission automatique échouée — vérifie ta connexion.', 'Auto-submit failed — check your connection.'))
       }
     })()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -342,10 +356,10 @@ export default function JeuOnline() {
       mergeContribution({ case_index: currentCase, texte: input.trim(), player_id: user.id }); setMyContrib(input.trim()); setSubmitted(true); jouer('soumettre')
     } else if (error.code === '23505') {
       // Unique constraint: this case was already sealed (race condition)
-      setSubmitError('Ce fragment a déjà été scellé. Attends ton prochain tour.')
+      setSubmitError(tr('Ce fragment a déjà été scellé. Attends ton prochain tour.', 'This fragment has already been sealed. Wait for your next turn.'))
       setSubmitted(true)
     } else {
-      setSubmitError('Erreur lors de l\'envoi. Réessaie.')
+      setSubmitError(tr("Erreur lors de l'envoi. Réessaie.", 'Sending failed. Try again.'))
     }
     setSubmitting(false)
   }
@@ -373,10 +387,10 @@ export default function JeuOnline() {
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
           <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
-            {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+            {connectionStatus === 'disconnected' ? tr('⚠ HORS LIGNE — RECONNEXION…', '⚠ OFFLINE — RECONNECTING…') : tr('⟳ RECONNEXION…', '⟳ RECONNECTING…')}
           </div>
         )}
-        <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>CHARGEMENT…</span>
+        <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>{tr('CHARGEMENT…', 'LOADING…')}</span>
       </PageTransition>
     )
   }
@@ -392,19 +406,19 @@ export default function JeuOnline() {
           style={{ position: 'fixed', inset: 0, zIndex: 50, background: encre, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, cursor: 'pointer', textAlign: 'center', padding: '0 28px' }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
-            — BANDE {(myEffectiveIndex ?? 0) + 1} SUR {nbTotal} —
+            {tr('— BANDE', '— BAND')} {(myEffectiveIndex ?? 0) + 1} {tr('SUR', 'OF')} {nbTotal} —
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
-            À toi<br />de dessiner
+            {tr('À toi', 'Your turn')}<br />{tr('de dessiner', 'to draw')}
           </div>
           {raccordDataUrl && (
             <div style={{ ...mono, fontSize: 13, color: `${bg}60`, letterSpacing: '0.16em' }}>
-              ← RACCORD DU JOUEUR PRÉCÉDENT VISIBLE
+              ← {tr('RACCORD DU JOUEUR PRÉCÉDENT VISIBLE', "PREVIOUS PLAYER'S JOIN VISIBLE")}
             </div>
           )}
           <motion.div style={{ ...mono, fontSize: 13, color: `${bg}50`, letterSpacing: '0.2em', marginTop: 12 }}
             animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.8 }}>
-            TOUCHER POUR COMMENCER
+            {tr('TOUCHER POUR COMMENCER', 'TAP TO BEGIN')}
           </motion.div>
           <motion.span style={{ fontSize: 20, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
         </motion.div>
@@ -428,7 +442,7 @@ export default function JeuOnline() {
   // ── Connection banner (reused in multiple views) ──────────────────────────
   const connBanner = connectionStatus !== 'connected' ? (
     <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
-      {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+      {connectionStatus === 'disconnected' ? tr('⚠ HORS LIGNE — RECONNEXION…', '⚠ OFFLINE — RECONNECTING…') : tr('⟳ RECONNEXION…', '⟳ RECONNECTING…')}
     </div>
   ) : null
 
@@ -448,7 +462,7 @@ export default function JeuOnline() {
                 : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda',serif", fontWeight: 900, fontSize: 17, color: accent }}>{p.pseudo[0]?.toUpperCase()}</span></div>}
             </div>
             <span style={{ ...mono, fontSize: 13, color: isTheirTurn ? accent : `${encre}50` }}>
-              {isMe ? (isTheirTurn ? 'À TOI' : submitted ? '✓' : '…') : isTheirTurn ? '▸' : hasDone ? '✓' : '…'}
+              {isMe ? (isTheirTurn ? tr('À TOI', 'YOU') : submitted ? '✓' : '…') : isTheirTurn ? '▸' : hasDone ? '✓' : '…'}
             </span>
           </div>
         )
@@ -464,15 +478,15 @@ export default function JeuOnline() {
         {connBanner}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>{code}</span>
-          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{submitted_count}/{nbTotal} SOUMIS</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{submitted_count}/{nbTotal} {tr('SOUMIS', 'SUBMITTED')}</span>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 4 }}>👁 SPECTATEUR</div>
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 16, marginBottom: 4 }}>👁 {tr('SPECTATEUR', 'SPECTATOR')}</div>
         {avatarsRow}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           {currentTurnPlayer && currentCase < nbTotal && (
             <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.8, textAlign: 'center' }}>
-              En attente de <strong>{currentTurnPlayer.pseudo}</strong>…
+              {tr('En attente de', 'Waiting for')} <strong>{currentTurnPlayer.pseudo}</strong>…
             </p>
           )}
           <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
@@ -517,21 +531,21 @@ export default function JeuOnline() {
         {submitted ? (
           <motion.div key="waiting" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 16 }}>
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>✓ CONTRIBUTION REÇUE</div>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>{tr('✓ CONTRIBUTION REÇUE', '✓ CONTRIBUTION RECEIVED')}</div>
             {(() => {
               if (!myContrib) return null
               const displayUrl = myContrib.startsWith('data:') ? myContrib : (() => { try { return (JSON.parse(myContrib) as { imageDataUrl: string }).imageDataUrl } catch { return null } })()
               return displayUrl
-                ? <img src={displayUrl} alt="ton dessin" style={{ width: '100%', maxWidth: 280, borderRadius: 3, border: `1px solid ${accent}30` }} />
+                ? <img src={displayUrl} alt={tr('ton dessin', 'your drawing')} style={{ width: '100%', maxWidth: 280, borderRadius: 3, border: `1px solid ${accent}30` }} />
                 : <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, padding: '16px 0', borderTop: `0.5px solid ${encre}20`, borderBottom: `0.5px solid ${encre}20` }}>« {myContrib} »</div>
             })()}
             {room.mode === 'ecrit' && currentCase < nbTotal ? (
               <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
-                C'est au tour de <strong>{currentTurnPlayer?.pseudo ?? '…'}</strong>. Ton tour reviendra ensuite.
+                {tr("C'est au tour de", "It's now the turn of")} <strong>{currentTurnPlayer?.pseudo ?? '…'}</strong>{tr('. Ton tour reviendra ensuite.', '. Your turn will come again.')}
               </p>
             ) : (
               <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.6 }}>
-                En attente des autres joueurs… La révélation aura lieu lorsque tout le monde aura soumis.
+                {tr('En attente des autres joueurs… La révélation aura lieu lorsque tout le monde aura soumis.', 'Waiting for the other players… The reveal happens once everyone has submitted.')}
               </p>
             )}
             <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
@@ -543,14 +557,14 @@ export default function JeuOnline() {
             onClick={() => setShowIntro(false)}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, cursor: 'pointer', textAlign: 'center' }}>
             <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
-              — CASE {currentCase + 1} SUR {nbTotal} —
+              {tr('— CASE', '— SLOT')} {currentCase + 1} {tr('SUR', 'OF')} {nbTotal} —
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, lineHeight: 1.3 }}>
-              À toi<br />d'écrire
+              {tr('À toi', 'Your turn')}<br />{tr("d'écrire", 'to write')}
             </div>
             <motion.div style={{ ...mono, fontSize: 13, color: `${encre}45`, letterSpacing: '0.2em', marginTop: 8 }}
               animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.8 }}>
-              TOUCHER POUR COMMENCER
+              {tr('TOUCHER POUR COMMENCER', 'TAP TO BEGIN')}
             </motion.div>
             <motion.span style={{ fontSize: 20, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
           </motion.div>
@@ -561,7 +575,7 @@ export default function JeuOnline() {
 
             {/* Consigne */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>— CONSIGNE —</div>
+              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>{tr('— CONSIGNE —', '— PROMPT —')}</div>
               <div className="font-fraunces font-black" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.01em', color: encre, marginBottom: 4 }}>
                 {caseDef.consigne.charAt(0).toUpperCase() + caseDef.consigne.slice(1)}.
               </div>
@@ -575,20 +589,20 @@ export default function JeuOnline() {
               <div style={{ marginBottom: 18 }}>
                 {showLastWord ? (
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55 }}>DERNIER MOT&nbsp;:</span>
+                    <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55 }}>{tr('DERNIER MOT', 'LAST WORD')}&nbsp;:</span>
                     <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: accent, fontStyle: 'italic' }}>…{prevLastWord}</span>
-                    <button type="button" onClick={() => setShowLastWord(false)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>masquer</button>
+                    <button type="button" onClick={() => setShowLastWord(false)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>{tr('masquer', 'hide')}</button>
                   </div>
                 ) : (
                   <button type="button" onClick={() => setShowLastWord(true)} style={{ ...mono, fontSize: 13, color: accent, background: 'transparent', border: `0.5px solid ${accent}50`, padding: '7px 14px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.16em' }}>
-                    👁 VOIR LE DERNIER MOT
+                    👁 {tr('VOIR LE DERNIER MOT', 'SEE THE LAST WORD')}
                   </button>
                 )}
               </div>
             )}
 
             {/* Input */}
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>— ÉCRIS ICI · TOI SEUL LE VERRAS —</div>
+            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>{tr('— ÉCRIS ICI · TOI SEUL LE VERRAS —', '— WRITE HERE · ONLY YOU WILL SEE IT —')}</div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
               <textarea
                 value={input}
@@ -609,7 +623,7 @@ export default function JeuOnline() {
                 </button>
                 <button type="submit" disabled={!input.trim() || submitting}
                   style={{ flex: 3, background: input.trim() ? accent : 'transparent', color: input.trim() ? btnText : `${encre}40`, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.5em', borderRadius: 3, border: input.trim() ? 'none' : `1px solid ${encre}30`, cursor: input.trim() && !submitting ? 'pointer' : 'not-allowed' }}>
-                  {submitting ? 'ENVOI…' : 'SCELLER CETTE VOIX →'}
+                  {submitting ? tr('ENVOI…', 'SENDING…') : tr('SCELLER CETTE VOIX →', 'SEAL THIS VOICE →')}
                 </button>
               </div>
             </form>
@@ -621,16 +635,16 @@ export default function JeuOnline() {
             style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center' }}>
             {currentTurnPlayer && currentCase < nbTotal ? (
               <>
-                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55, letterSpacing: '0.22em' }}>— EN ATTENTE —</div>
+                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55, letterSpacing: '0.22em' }}>{tr('— EN ATTENTE —', '— WAITING —')}</div>
                 <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: encre, lineHeight: 1.6 }}>
-                  C'est le tour de <strong>{currentTurnPlayer.pseudo}</strong>…
+                  {tr("C'est le tour de", "It's the turn of")} <strong>{currentTurnPlayer.pseudo}</strong>…
                 </p>
                 <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.55 }}>
-                  {room.mode === 'dessin' ? `Bande ${currentCase + 1} sur ${nbTotal}` : `Case ${currentCase + 1} sur ${nbTotal}`}
+                  {room.mode === 'dessin' ? tr(`Bande ${currentCase + 1} sur ${nbTotal}`, `Band ${currentCase + 1} of ${nbTotal}`) : tr(`Case ${currentCase + 1} sur ${nbTotal}`, `Slot ${currentCase + 1} of ${nbTotal}`)}
                 </p>
               </>
             ) : (
-              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75 }}>En attente de la partie…</p>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75 }}>{tr('En attente de la partie…', 'Waiting for the game…')}</p>
             )}
             <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
           </motion.div>

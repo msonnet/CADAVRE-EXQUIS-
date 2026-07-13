@@ -12,6 +12,7 @@ import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
+import { tr, langueActuelle } from '../i18n'
 
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
@@ -68,7 +69,7 @@ async function interpreterDessin(imageDataUrl: string): Promise<string> {
     const res = await fetchAvecTimeout(api('/api/interpreter-dessin'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64: base64 }),
+      body: JSON.stringify({ imageBase64: base64, langue: langueActuelle() }),
     }, 20_000)
     if (!res.ok) return ''
     const data = await res.json()
@@ -201,10 +202,10 @@ export default function FinDessin() {
   }
 
   const phaseLabel = {
-    assemblage: 'Assemblage du dessin…',
-    vision: 'Le cadavre se reconstitue…',
+    assemblage: tr('Assemblage du dessin…', 'Assembling the drawing…'),
+    vision: tr('Le cadavre se reconstitue…', 'The cadavre is taking shape…'),
     revele: '',
-    sauvegarde: 'Sauvegardé.',
+    sauvegarde: tr('Sauvegardé.', 'Saved.'),
   }[phase]
 
   return (
@@ -233,7 +234,7 @@ export default function FinDessin() {
             onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← ACCUEIL
+            ← {tr('ACCUEIL', 'HOME')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -241,12 +242,12 @@ export default function FinDessin() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — RÉVÉLATION —
+          {tr('— RÉVÉLATION —', '— THE REVEAL —')}
         </div>
 
         {/* ── TITRE ── */}
         <div className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
-          Le cadavre <span style={{ color: accent }}>dessiné.</span>
+          {tr('Le cadavre', 'The cadavre,')} <span style={{ color: accent }}>{tr('dessiné.', 'drawn.')}</span>
         </div>
 
         {/* ── PHASES DE CHARGEMENT ── */}
@@ -259,13 +260,13 @@ export default function FinDessin() {
           >
             <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>
-                — {nbBandes} BANDE{nbBandes > 1 ? 'S' : ''} —
+                — {nbBandes} {tr(nbBandes > 1 ? 'BANDES' : 'BANDE', nbBandes > 1 ? 'BANDS' : 'BAND')} —
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
-                Le cadavre
+                {tr('Le cadavre', 'The cadavre')}
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3, marginBottom: 20 }}>
-                se reconstitue<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>
+                {tr('se reconstitue', 'is taking shape')}<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>
               </div>
               <motion.div
                 style={{ fontSize: 18, color: accent }}
@@ -291,7 +292,7 @@ export default function FinDessin() {
               <div>
                 <button
                   onClick={() => setPleinEcran(true)}
-                  aria-label="Agrandir le dessin en plein écran"
+                  aria-label={tr('Agrandir le dessin en plein écran', 'Enlarge the drawing to full screen')}
                   style={{
                     display: 'block', width: '100%',
                     padding: 0, border: `0.5px solid ${encre}20`,
@@ -300,7 +301,7 @@ export default function FinDessin() {
                 >
                   <motion.img
                     src={imageAssemblee}
-                    alt="Cadavre exquis dessiné"
+                    alt={tr('Cadavre exquis dessiné', 'Drawn exquisite corpse')}
                     initial={{ clipPath: 'inset(0 0 100% 0)', opacity: 0.5 }}
                     animate={{ clipPath: 'inset(0 0 0% 0)', opacity: 1 }}
                     transition={{ duration: 2, ease: [0.3, 0, 0.2, 1] }}
@@ -312,7 +313,7 @@ export default function FinDessin() {
                     onClick={() => setPleinEcran(true)}
                     style={{ ...mono, fontSize: 13, color: `${encre}50`, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    ↗ AGRANDIR
+                    ↗ {tr('AGRANDIR', 'ENLARGE')}
                   </button>
                 </div>
               </div>
@@ -324,7 +325,7 @@ export default function FinDessin() {
             {texteVision ? (
               <div>
                 <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-                  — LECTURE SURRÉALISTE —
+                  {tr('— LECTURE SURRÉALISTE —', '— SURREALIST READING —')}
                 </div>
                 <div style={{
                   fontFamily: "'Playfair Display', serif", fontSize: 18, lineHeight: 1.7,
@@ -337,7 +338,7 @@ export default function FinDessin() {
             ) : erreurVision ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
-                  La lecture surréaliste n'a pas pu avoir lieu.
+                  {tr("La lecture surréaliste n'a pas pu avoir lieu.", 'The surrealist reading could not take place.')}
                 </div>
                 <button
                   onClick={reessayerVision}
@@ -350,12 +351,12 @@ export default function FinDessin() {
                     padding: '7px 14px', cursor: 'pointer',
                   }}
                 >
-                  ↺ RÉESSAYER
+                  ↺ {tr('RÉESSAYER', 'RETRY')}
                 </button>
               </div>
             ) : (
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>
-                (lecture indisponible)
+                {tr('(lecture indisponible)', '(reading unavailable)')}
               </div>
             )}
 
@@ -378,7 +379,7 @@ export default function FinDessin() {
                   transition: 'all 0.2s',
                 }}
               >
-                {sauvegarde ? '✓ SAUVEGARDÉ' : '↓ SAUVEGARDER'}
+                {sauvegarde ? tr('✓ SAUVEGARDÉ', '✓ SAVED') : tr('↓ SAUVEGARDER', '↓ SAVE')}
               </button>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
@@ -395,7 +396,7 @@ export default function FinDessin() {
                     cursor: partageEnCours ? 'default' : 'pointer',
                   }}
                 >
-                  {partageEnCours ? '✦ COMPOSITION…' : '↗ PARTAGER'}
+                  {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : tr('↗ PARTAGER', '↗ SHARE')}
                 </button>
                 <button
                   onClick={() => navigate('/')}
@@ -410,7 +411,7 @@ export default function FinDessin() {
                     cursor: 'pointer',
                   }}
                 >
-                  ← ACCUEIL
+                  ← {tr('ACCUEIL', 'HOME')}
                 </button>
               </div>
             </div>
@@ -431,7 +432,7 @@ export default function FinDessin() {
             onClick={() => setPleinEcran(false)}
             role="dialog"
             aria-modal="true"
-            aria-label="Dessin en plein écran"
+            aria-label={tr('Dessin en plein écran', 'Drawing in full screen')}
             style={{
               position: 'fixed', inset: 0, zIndex: 200,
               background: 'rgba(15,8,5,0.94)',
@@ -441,13 +442,13 @@ export default function FinDessin() {
           >
             <img
               src={imageAssemblee}
-              alt="Cadavre exquis dessiné — plein écran"
+              alt={tr('Cadavre exquis dessiné — plein écran', 'Drawn exquisite corpse — full screen')}
               style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
               onClick={e => e.stopPropagation()}
             />
             <button
               onClick={() => setPleinEcran(false)}
-              aria-label="Fermer le plein écran"
+              aria-label={tr('Fermer le plein écran', 'Close full screen')}
               style={{
                 position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))',
                 background: 'none', border: `0.5px solid rgba(232,212,184,0.4)`,
@@ -457,7 +458,7 @@ export default function FinDessin() {
                 cursor: 'pointer',
               }}
             >
-              ✕ FERMER
+              ✕ {tr('FERMER', 'CLOSE')}
             </button>
           </motion.div>
         )}

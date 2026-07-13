@@ -8,15 +8,16 @@ import { useSound } from '../hooks/useSound'
 import { useAuth } from '../hooks/useAuth'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
+import { tr, langueActuelle } from '../i18n'
 
 const PAGE_SIZE = 20
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
 type ReactionEmoji = typeof REACTION_EMOJIS[number]
 const REACTION_LABELS: Record<ReactionEmoji, string> = {
-  '🌙': 'Onirique',
-  '✦': 'Sublime',
-  '❀': 'Délicat',
-  '🜔': 'Troublant',
+  '🌙': tr('Onirique', 'Dreamlike'),
+  '✦': tr('Sublime', 'Sublime'),
+  '❀': tr('Délicat', 'Delicate'),
+  '🜔': tr('Troublant', 'Unsettling'),
 }
 
 type GalleryType = 'poeme' | 'dessin'
@@ -61,7 +62,7 @@ interface DessinPayload {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
+  return new Date(iso).toLocaleDateString(tr('fr-FR', 'en-GB'), {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 }
@@ -74,16 +75,24 @@ function parseDessin(payload: string): DessinPayload | null {
   try { return JSON.parse(payload) as DessinPayload } catch { return null }
 }
 
+/** Langue d'une publication — portée par le payload ; l'historique est français. */
+function langueItem(it: GalleryItem): 'fr' | 'en' {
+  try {
+    const l = (JSON.parse(it.payload) as { langue?: string }).langue
+    return l === 'en' ? 'en' : 'fr'
+  } catch { return 'fr' }
+}
+
 function extraitPoeme(payload: PoemePayload): string {
   const texte = payload.cases.map(c => c.texte).join(' · ')
   return texte.slice(0, 120)
 }
 
 const REPORT_REASONS = [
-  { id: 'inappropriate', label: 'Contenu inapproprié' },
-  { id: 'spam', label: 'Spam' },
-  { id: 'offensive', label: 'Contenu offensant' },
-  { id: 'other', label: 'Autre' },
+  { id: 'inappropriate', label: tr('Contenu inapproprié', 'Inappropriate content') },
+  { id: 'spam', label: tr('Spam', 'Spam') },
+  { id: 'offensive', label: tr('Contenu offensant', 'Offensive content') },
+  { id: 'other', label: tr('Autre', 'Other') },
 ] as const
 
 // ── Auteurs masqués (App Store guideline 1.2 : bloquer un utilisateur abusif) ──
@@ -306,25 +315,37 @@ export default function Galerie() {
     setErreur(null)
 
     try {
-      const { data, error } = await supabase
-        .from('gallery')
-        .select('id, type, titre, payload, image_url, author_pseudo, author_avatar, author_id, created_at, views_count')
-        .eq('type', type)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1)
+      // Le filtre de langue est côté client (langue portée par le payload) :
+      // on avance dans les pages jusqu'à trouver des publications dans la
+      // langue active, ou épuiser la table.
+      let curseur = offset
+      let fini = false
+      let nouveaux: GalleryItem[] = []
+      for (let tour = 0; tour < 5 && nouveaux.length === 0 && !fini; tour++) {
+        const { data, error } = await supabase
+          .from('gallery')
+          .select('id, type, titre, payload, image_url, author_pseudo, author_avatar, author_id, created_at, views_count')
+          .eq('type', type)
+          .order('created_at', { ascending: false })
+          .range(curseur, curseur + PAGE_SIZE * 2 - 1)
 
-      if (error) {
-        console.error('[Galerie] Erreur de chargement', error)
-        setErreur('Impossible de charger la galerie.')
-        setChargement(false)
-        setChargementPlus(false)
-        return
+        if (error) {
+          console.error('[Galerie] Erreur de chargement', error)
+          setErreur(tr('Impossible de charger la galerie.', 'Could not load the gallery.'))
+          setChargement(false)
+          setChargementPlus(false)
+          return
+        }
+
+        const bruts = (data ?? []) as GalleryItem[]
+        curseur += bruts.length
+        fini = bruts.length < PAGE_SIZE * 2
+        nouveaux = bruts.filter(it => langueItem(it) === langueActuelle())
       }
 
-      const nouveaux = (data ?? []) as GalleryItem[]
       setItems(prev => reset ? nouveaux : [...prev, ...nouveaux])
-      setEncore(nouveaux.length === PAGE_SIZE)
-      setPageOffset(offset + nouveaux.length)
+      setEncore(!fini)
+      setPageOffset(curseur)
       setChargement(false)
       setChargementPlus(false)
 
@@ -333,7 +354,7 @@ export default function Galerie() {
       }
     } catch (e) {
       console.error('[Galerie] Exception chargement', e)
-      setErreur('Impossible de charger la galerie.')
+      setErreur(tr('Impossible de charger la galerie.', 'Could not load the gallery.'))
       setChargement(false)
       setChargementPlus(false)
     }
@@ -371,7 +392,7 @@ export default function Galerie() {
             <motion.div
               role="dialog"
               aria-modal="true"
-              aria-label="Signaler ce contenu"
+              aria-label={tr('Signaler ce contenu', 'Report this content')}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -386,18 +407,18 @@ export default function Galerie() {
               }}
             >
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
-                — SIGNALER CE CONTENU —
+                {tr('— SIGNALER CE CONTENU —', '— REPORT THIS CONTENT —')}
               </div>
 
               {reportDone ? (
                 <p role="status" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85 }}>
-                  Signalement envoyé. Merci.
+                  {tr('Signalement envoyé. Merci.', 'Report sent. Thank you.')}
                 </p>
               ) : (
                 <>
                   {reportError && (
                     <p role="alert" style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: accent }}>
-                      L'envoi a échoué — vérifie ta connexion et réessaie.
+                      {tr("L'envoi a échoué — vérifie ta connexion et réessaie.", "Sending failed — check your connection and try again.")}
                     </p>
                   )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -422,7 +443,7 @@ export default function Galerie() {
                   <textarea
                     value={reportDetails}
                     onChange={e => setReportDetails(e.target.value)}
-                    placeholder="Détails (facultatif)…"
+                    placeholder={tr('Détails (facultatif)…', 'Details (optional)…')}
                     maxLength={500}
                     rows={3}
                     style={{
@@ -448,7 +469,7 @@ export default function Galerie() {
                         cursor: 'pointer',
                       }}
                     >
-                      ANNULER
+                      {tr('ANNULER', 'CANCEL')}
                     </button>
                     <button
                       onClick={envoyerSignalement}
@@ -463,7 +484,7 @@ export default function Galerie() {
                         cursor: reportReason && !reportSending ? 'pointer' : 'default',
                       }}
                     >
-                      {reportSending ? '…' : 'SIGNALER'}
+                      {reportSending ? '…' : tr('SIGNALER', 'REPORT')}
                     </button>
                   </div>
                 </>
@@ -507,7 +528,7 @@ export default function Galerie() {
                 background: 'none', border: 'none', cursor: 'pointer', padding: '8px',
               }}
             >
-              ✕ FERMER
+              ✕ {tr('FERMER', 'CLOSE')}
             </button>
           </motion.div>
         )}
@@ -521,20 +542,20 @@ export default function Galerie() {
             onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← ACCUEIL
+            ← {tr('ACCUEIL', 'HOME')}
           </button>
           <button
             onClick={() => { jouer('clic'); navigate('/poeme-du-jour') }}
             style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
-            POÈME DU JOUR →
+            {tr('POÈME DU JOUR', 'POEM OF THE DAY')} →
           </button>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — GALERIE —
+          {tr('— GALERIE —', '— GALLERY —')}
         </div>
 
         {/* ── TITRE ── */}
@@ -547,12 +568,12 @@ export default function Galerie() {
             className="font-fraunces font-black leading-tight mb-1"
             style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            Créations <span style={{ color: accent }}>partagées.</span>
+            {tr('Créations', 'Shared')} <span style={{ color: accent }}>{tr('partagées.', 'creations.')}</span>
           </div>
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
-            Les œuvres de la communauté
+            {tr('Les œuvres de la communauté', 'Works from the community')}
           </p>
         </motion.div>
 
@@ -579,7 +600,7 @@ export default function Galerie() {
                   letterSpacing: '0.22em',
                 }}
               >
-                {t === 'poeme' ? 'POÈMES' : 'DESSINS'}
+                {t === 'poeme' ? tr('POÈMES', 'POEMS') : tr('DESSINS', 'DRAWINGS')}
               </button>
             )
           })}
@@ -604,8 +625,8 @@ export default function Galerie() {
             type="search"
             value={recherche}
             onChange={e => setRecherche(e.target.value)}
-            placeholder="Rechercher par titre ou auteur…"
-            aria-label="Rechercher par titre ou auteur"
+            placeholder={tr('Rechercher par titre ou auteur…', 'Search by title or author…')}
+            aria-label={tr('Rechercher par titre ou auteur', 'Search by title or author')}
             enterKeyHint="search"
             style={{
               width: '100%',
@@ -655,14 +676,14 @@ export default function Galerie() {
             <p style={{
               fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
-              Aucune création partagée pour l'instant.
+              {tr("Aucune création partagée pour l'instant.", "No shared creations yet.")}
             </p>
             <p style={{
               ...mono, fontSize: 13, color: encre, opacity: 0.55, textAlign: 'center', lineHeight: 1.6,
             }}>
               {onglet === 'poeme'
-                ? 'Compose un poème, puis publie-le ici depuis le recueil.'
-                : 'Dessine un cadavre, puis publie-le ici depuis le recueil.'}
+                ? tr('Compose un poème, puis publie-le ici depuis le recueil.', 'Compose a poem, then publish it here from your library.')
+                : tr('Dessine un cadavre, puis publie-le ici depuis le recueil.', 'Draw a cadavre, then publish it here from your library.')}
             </p>
             <button
               onClick={() => { jouer('clic'); navigate(onglet === 'poeme' ? '/config' : '/config-dessin') }}
@@ -672,7 +693,7 @@ export default function Galerie() {
                 padding: '0.85em 1.6em', border: 'none', cursor: 'pointer', borderRadius: 3,
               }}
             >
-              {onglet === 'poeme' ? 'Cadavre Écrit →' : 'Cadavre Dessiné →'}
+              {onglet === 'poeme' ? tr('Cadavre Écrit →', 'Written Cadavre →') : tr('Cadavre Dessiné →', 'Drawn Cadavre →')}
             </button>
           </motion.div>
         )}
@@ -691,7 +712,7 @@ export default function Galerie() {
           <AnimatePresence initial={false}>
             {itemsFiltres.length === 0 ? (
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.6, textAlign: 'center', padding: '28px 0' }}>
-                Aucun résultat pour « {recherche} ».
+                {tr(`Aucun résultat pour « ${recherche} ».`, `No results for “${recherche}”.`)}
               </p>
             ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -703,7 +724,7 @@ export default function Galerie() {
                   ?? (poemePayload?.titre)
                   ?? (item.type === 'poeme' && poemePayload ? extraitPoeme(poemePayload).slice(0, 48) : null)
                   ?? (item.type === 'dessin' && dessinPayload?.texteVision ? dessinPayload.texteVision.split('\n')[0].slice(0, 48) : null)
-                  ?? 'Sans titre'
+                  ?? tr('Sans titre', 'Untitled')
 
                 return (
                   <motion.div
@@ -829,7 +850,7 @@ export default function Galerie() {
                                 fontSize: 17, color: '#fff',
                                 background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                 pointerEvents: 'none',
-                              }}>⤢ AGRANDIR</span>
+                              }}>⤢ {tr('AGRANDIR', 'ENLARGE')}</span>
                             )}
                           </div>
                         )}
@@ -866,7 +887,7 @@ export default function Galerie() {
                                   fontSize: 17, color: '#fff',
                                   background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
                                   pointerEvents: 'none',
-                                }}>⤢ AGRANDIR</span>
+                                }}>⤢ {tr('AGRANDIR', 'ENLARGE')}</span>
                               )}
                             </div>
                           )
@@ -912,7 +933,7 @@ export default function Galerie() {
                               }}
                               onMouseEnter={e => { if (!reacted) e.currentTarget.style.opacity = '0.95' }}
                               onMouseLeave={e => { if (!reacted) e.currentTarget.style.opacity = '0.6' }}
-                              aria-label={`Réagir : ${REACTION_LABELS[em]}`}
+                              aria-label={`${tr('Réagir :', 'React:')} ${REACTION_LABELS[em]}`}
                               title={REACTION_LABELS[em]}
                             >
                               <span style={{ fontSize: 17 }}>{em}</span>
@@ -936,7 +957,7 @@ export default function Galerie() {
                             onClick={e => {
                               e.stopPropagation()
                               if (deletingId === item.id) return
-                              if (confirm('Supprimer cette publication ?')) supprimerItem(item.id)
+                              if (confirm(tr('Supprimer cette publication ?', 'Delete this publication?'))) supprimerItem(item.id)
                             }}
                             style={{
                               ...mono, fontSize: 13, color: accent, opacity: 0.85,
@@ -945,7 +966,7 @@ export default function Galerie() {
                               cursor: 'pointer', padding: '9px 12px', minHeight: 40,
                             }}
                           >
-                            {deletingId === item.id ? '…' : '✕ SUPPRIMER'}
+                            {deletingId === item.id ? '…' : tr('✕ SUPPRIMER', '✕ DELETE')}
                           </button>
                         ) : (
                           <>
@@ -963,16 +984,16 @@ export default function Galerie() {
                                 cursor: 'pointer', padding: '9px 12px', minHeight: 40,
                               }}
                             >
-                              ⚑ Signaler
+                              ⚑ {tr('Signaler', 'Report')}
                             </button>
                             <button
                               onClick={e => {
                                 e.stopPropagation()
-                                if (confirm(`Masquer toutes les publications de « ${item.author_pseudo} » ? (réversible dans Réglages)`)) {
+                                if (confirm(tr(`Masquer toutes les publications de « ${item.author_pseudo} » ? (réversible dans Réglages)`, `Hide all publications from “${item.author_pseudo}”? (reversible in Settings)`))) {
                                   masquerAuteur(item)
                                 }
                               }}
-                              aria-label={`Masquer les publications de ${item.author_pseudo}`}
+                              aria-label={tr(`Masquer les publications de ${item.author_pseudo}`, `Hide publications from ${item.author_pseudo}`)}
                               style={{
                                 ...mono, fontSize: 13, color: encre, opacity: 0.65,
                                 background: 'none', border: `0.5px solid ${encre}30`,
@@ -980,7 +1001,7 @@ export default function Galerie() {
                                 cursor: 'pointer', padding: '9px 12px', minHeight: 40,
                               }}
                             >
-                              ⊘ Masquer l'auteur
+                              ⊘ {tr("Masquer l'auteur", "Hide author")}
                             </button>
                           </>
                         )}
@@ -1022,7 +1043,7 @@ export default function Galerie() {
                   animate={{ opacity: [0.4, 1, 0.4] }}
                   transition={{ duration: 1.2, repeat: Infinity }}
                 >✦</motion.span>
-              ) : 'Charger plus →'}
+              ) : tr('Charger plus →', 'Load more →')}
             </button>
           </motion.div>
         )}
@@ -1032,7 +1053,7 @@ export default function Galerie() {
             ...mono, fontSize: 13, color: encre, opacity: 0.55,
             textAlign: 'center', marginTop: 18, marginBottom: 4,
           }}>
-            — FIN —
+            {tr('— FIN —', '— END —')}
           </p>
         )}
 

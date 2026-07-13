@@ -9,7 +9,8 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (cors(req, res)) return
   if (req.method !== 'POST') { res.status(405).end(); return }
 
-  const { imageBase64 } = req.body ?? {}
+  const { imageBase64, langue } = req.body ?? {}
+  const enAnglais = langue === 'en'
   if (typeof imageBase64 !== 'string' || !imageBase64) { res.status(400).json({ error: 'imageBase64 requis' }); return }
   if (imageBase64.length > MAX_BASE64_BYTES) { res.status(413).json({ error: 'image trop volumineuse' }); return }
   if (!/^[A-Za-z0-9+/=]+$/.test(imageBase64)) { res.status(400).json({ error: 'base64 invalide' }); return }
@@ -28,7 +29,13 @@ export default async function handler(req: any, res: any): Promise<void> {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 200,
-        system: `Tu es un poète surréaliste. Tu reçois un dessin cadavre exquis — plusieurs joueurs ont chacun dessiné une bande sans voir le reste.
+        system: enAnglais
+          ? `You are a surrealist poet. You receive an exquisite corpse drawing — several players each drew one band without seeing the rest.
+
+You produce 1 to 3 lines of verse, no more. Never a title. Never explanatory punctuation. Never a literal description.
+
+The shapes and their junctions trigger a flow of automatic language. You may rhyme if the drawing demands it, or leave the verse free. What matters: brevity, mystery, the surrealist surge. Write in English.`
+          : `Tu es un poète surréaliste. Tu reçois un dessin cadavre exquis — plusieurs joueurs ont chacun dessiné une bande sans voir le reste.
 
 Tu génères 1 à 3 vers, pas plus. Jamais de titre. Jamais de ponctuation explicative. Jamais de description littérale.
 
@@ -46,7 +53,9 @@ Les formes et les jonctions déclenchent un flux de langage automatique. Tu peux
             },
             {
               type: 'text',
-              text: 'Génère les vers que ce cadavre dessiné t\'impose.',
+              text: enAnglais
+                ? 'Generate the lines this drawn cadavre imposes on you.'
+                : 'Génère les vers que ce cadavre dessiné t\'impose.',
             },
           ],
         }],

@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { VOICE_IDS } from '../data/voiceIds'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -122,7 +123,7 @@ export default function Atelier() {
             onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← ACCUEIL
+            ← {tr('ACCUEIL', 'HOME')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -130,7 +131,7 @@ export default function Atelier() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
-          — L'ATELIER —
+          {tr("— L'ATELIER —", '— THE WORKSHOP —')}
         </div>
 
         {/* ── TITRE ── */}
@@ -144,16 +145,13 @@ export default function Atelier() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 6 }}
           >
-            Écrire avec <span style={{ color: accent }}>les voix.</span>
+            {tr('Écrire avec', 'Writing with')} <span style={{ color: accent }}>{tr('les voix.', 'the voices.')}</span>
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, fontStyle: 'italic', lineHeight: 1.5 }}>
             {nbVoix === 0
-              ? <>Le sort fixera la longueur du poème — de V à XXVII vers. Tu les écriras
-                tous, seul, sans jamais relire : le cadavre exquis se joue contre ta
-                propre mémoire.</>
-              : <>Le sort fixera la longueur du poème — de V à XXVII vers. Tu l'ouvriras,
-                tu le refermeras, et la main te reviendra tous les {toRomain(cadenceRetour(nbVoix)[0])} à {toRomain(cadenceRetour(nbVoix)[1])} vers
-                — plus les voix sont nombreuses, plus tes retours se font fragments.</>
+              ? <>{tr('Le sort fixera la longueur du poème — de V à XXVII vers. Tu les écriras tous, seul, sans jamais relire : le cadavre exquis se joue contre ta propre mémoire.',
+                  'Fate will set the length of the poem — from V to XXVII lines. You will write them all, alone, without ever rereading: the exquisite corpse is played against your own memory.')}</>
+              : <>{tr("Le sort fixera la longueur du poème — de V à XXVII vers. Tu l'ouvriras, tu le refermeras, et la main te reviendra tous les", 'Fate will set the length of the poem — from V to XXVII lines. You will open it, you will close it, and the pen will return to you every')} {toRomain(cadenceRetour(nbVoix)[0])} {tr('à', 'to')} {toRomain(cadenceRetour(nbVoix)[1])} {tr('vers — plus les voix sont nombreuses, plus tes retours se font fragments.', 'lines — the more voices there are, the more your turns shrink to fragments.')}</>
             }
           </div>
         </motion.div>
@@ -168,14 +166,14 @@ export default function Atelier() {
           style={{ marginBottom: 26 }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — VOIX CONVOQUÉES —
+            {tr('— VOIX CONVOQUÉES —', '— SUMMONED VOICES —')}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 10 }}>
             <span className="font-fraunces font-black" style={{ fontSize: 44, color: accent, lineHeight: 1 }}>
-              {nbVoix === 0 ? 'Seul' : toRomain(nbVoix)}
+              {nbVoix === 0 ? tr('Seul', 'Alone') : toRomain(nbVoix)}
             </span>
             <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, textTransform: 'uppercase' }}>
-              {nbVoix === 0 ? 'ta main uniquement' : toutes ? 'Toutes les voix' : nbVoix === 1 ? 'une seule voix' : `${nbVoix} voix`}
+              {nbVoix === 0 ? tr('ta main uniquement', 'your hand only') : toutes ? tr('Toutes les voix', 'All the voices') : nbVoix === 1 ? tr('une seule voix', 'a single voice') : tr(`${nbVoix} voix`, `${nbVoix} voices`)}
             </span>
           </div>
           <input
@@ -185,12 +183,12 @@ export default function Atelier() {
             value={nbVoix}
             onChange={e => setNbVoix(Number(e.target.value))}
             style={{ width: '100%', accentColor: accent }}
-            aria-label="Nombre de voix"
+            aria-label={tr('Nombre de voix', 'Number of voices')}
           />
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.7, marginTop: 8 }}>
             {nbVoix === 0
-              ? 'Aucune voix ne parlera — la dernière main se passe le papier à elle-même.'
-              : 'Les voix sont tirées au sort — tu ne sauras jamais lesquelles parlent.'}
+              ? tr('Aucune voix ne parlera — la dernière main se passe le papier à elle-même.', 'No voice will speak — the last hand passes the paper to itself.')
+              : tr('Les voix sont tirées au sort — tu ne sauras jamais lesquelles parlent.', 'The voices are drawn at random — you will never know which ones speak.')}
           </div>
         </motion.div>
 
@@ -202,12 +200,12 @@ export default function Atelier() {
           style={{ marginBottom: 28 }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — VISIBILITÉ —
+            {tr('— VISIBILITÉ —', '— VISIBILITY —')}
           </div>
           <div className="flex gap-2 mb-3">
             {[
-              { id: true,  label: "L'ÉCHO" },
-              { id: false, label: 'OBSCURITÉ' },
+              { id: true,  label: tr("L'ÉCHO", 'THE ECHO') },
+              { id: false, label: tr('OBSCURITÉ', 'DARKNESS') },
             ].map(opt => {
               const active = echo === opt.id
               return (
@@ -233,11 +231,11 @@ export default function Atelier() {
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>
             {echo
               ? (nbVoix === 0
-                ? 'Tu n’entendras que le dernier mot de ton propre vers précédent.'
-                : 'Chaque main — la tienne comme celles des voix — n’entend que le dernier mot du vers précédent.')
+                ? tr('Tu n’entendras que le dernier mot de ton propre vers précédent.', 'You will hear only the last word of your own previous line.')
+                : tr('Chaque main — la tienne comme celles des voix — n’entend que le dernier mot du vers précédent.', 'Each hand — yours like those of the voices — hears only the last word of the previous line.'))
               : (nbVoix === 0
-                ? 'Tu ne reliras rien. Le poème se coud dans le noir, vers après vers.'
-                : 'Personne ne voit rien. Le poème se coud dans le noir absolu.')}
+                ? tr('Tu ne reliras rien. Le poème se coud dans le noir, vers après vers.', 'You will reread nothing. The poem is stitched in the dark, line after line.')
+                : tr('Personne ne voit rien. Le poème se coud dans le noir absolu.', 'No one sees anything. The poem is stitched in absolute darkness.'))}
           </div>
         </motion.div>
 
@@ -258,7 +256,7 @@ export default function Atelier() {
             marginBottom: 10,
           }}
         >
-          Ouvrir la séance ✧
+          {tr('Ouvrir la séance', 'Open the séance')} ✧
         </motion.button>
 
       </div>

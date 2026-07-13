@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { tr } from '../i18n'
 import { motion } from 'framer-motion'
 import { REVEAL_DESSIN, fracRevealDessin } from '../utils/partager'
 import { mono } from '../lib/typo'
@@ -104,7 +105,7 @@ export default function RevealDessin({ imageUrl, texte, accent, encre, bg, onTer
           }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 14 }}>
-            — LECTURE —
+            {tr('— LECTURE —', '— READING —')}
           </div>
           <div style={{
             fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
@@ -112,7 +113,7 @@ export default function RevealDessin({ imageUrl, texte, accent, encre, bg, onTer
             color: encre, opacity: 0.92,
             display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden',
           } as React.CSSProperties}>
-            « {texte.replace(/\n+/g, ' ').trim()} »
+            {tr('«', '“')} {texte.replace(/\n+/g, ' ').trim()} {tr('»', '”')}
           </div>
         </div>
       )}
@@ -129,7 +130,7 @@ export default function RevealDessin({ imageUrl, texte, accent, encre, bg, onTer
             letterSpacing: '0.3em', color: encre, pointerEvents: 'none',
           }}
         >
-          TOUCHER POUR CONTINUER
+          {tr('TOUCHER POUR CONTINUER', 'TAP TO CONTINUE')}
         </motion.div>
       )}
     </motion.div>

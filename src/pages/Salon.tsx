@@ -8,22 +8,23 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { STRUCTURES, getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; is_ready: boolean }
 type SpectatorPresence = { player_id: string; pseudo: string; avatar_url: string | null; is_spectator: true }
 
 const TURN_OPTIONS: { value: number | null; label: string }[] = [
-  { value: null, label: 'SANS LIMITE' },
+  { value: null, label: tr('SANS LIMITE', 'NO LIMIT') },
   { value: 120, label: '2 MIN' },
   { value: 300, label: '5 MIN' },
   { value: 600, label: '10 MIN' },
 ]
 
 const STRUCT_LABELS: Record<string, string> = {
-  'phrase-simple': 'Phrase simple (3 fragments)',
-  'phrase-etoffee': 'Phrase étoffée (5 fragments)',
-  'vers-libre': 'Vers libre (variable)',
+  'phrase-simple': tr('Phrase simple (3 fragments)', 'Short sentence (3 fragments)'),
+  'phrase-etoffee': tr('Phrase étoffée (5 fragments)', 'Full sentence (5 fragments)'),
+  'vers-libre': tr('Vers libre (variable)', 'Free verse (variable)'),
 }
 
 export default function Salon() {
@@ -78,7 +79,7 @@ export default function Salon() {
   const loadRoom = useCallback(async () => {
     if (!code) return
     const { data: r, error } = await supabase.from('rooms').select('*').eq('code', code).single()
-    if (error || !r) { setRoomError('Salon introuvable.'); return }
+    if (error || !r) { setRoomError(tr('Salon introuvable.', 'Room not found.')); return }
     setRoom(r)
     if (r.status === 'playing') navigate(`/jeu-online/${code}`)
     if (r.status === 'finished') navigate(`/fin-online/${code}`)
@@ -269,18 +270,18 @@ export default function Salon() {
             color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
             fontSize: 13, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           }}>
-            {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+            {connectionStatus === 'disconnected' ? tr('⚠ HORS LIGNE — RECONNEXION…', '⚠ OFFLINE — RECONNECTING…') : tr('⟳ RECONNEXION…', '⟳ RECONNECTING…')}
           </div>
         )}
         {roomError ? (
           <div style={{ textAlign: 'center' }}>
             <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85 }}>{roomError}</p>
             <button onClick={() => navigate('/online')} style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: 'none', cursor: 'pointer', marginTop: 16 }}>
-              ← RETOUR
+              ← {tr('RETOUR', 'BACK')}
             </button>
           </div>
         ) : (
-          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>CHARGEMENT…</span>
+          <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>{tr('CHARGEMENT…', 'LOADING…')}</span>
         )}
       </PageTransition>
     )
@@ -299,7 +300,7 @@ export default function Salon() {
           color: '#fff', fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
           fontSize: 13, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
         }}>
-          {connectionStatus === 'disconnected' ? '⚠ HORS LIGNE — RECONNEXION…' : '⟳ RECONNEXION…'}
+          {connectionStatus === 'disconnected' ? tr('⚠ HORS LIGNE — RECONNEXION…', '⚠ OFFLINE — RECONNECTING…') : tr('⟳ RECONNEXION…', '⟳ RECONNECTING…')}
         </div>
       )}
 
@@ -310,32 +311,32 @@ export default function Salon() {
             onClick={() => setConfirmQuit(true)}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 10px 10px 0', minHeight: 44 }}
           >
-            ← QUITTER
+            ← {tr('QUITTER', 'LEAVE')}
           </button>
         ) : (
           <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.8 }}>QUITTER ?</span>
+            <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.8 }}>{tr('QUITTER ?', 'LEAVE?')}</span>
             <button
               onClick={quitterSalon}
               style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', minHeight: 44 }}
-            >OUI</button>
+            >{tr('OUI', 'YES')}</button>
             <button
               onClick={() => setConfirmQuit(false)}
               style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', minHeight: 44 }}
-            >NON</button>
+            >{tr('NON', 'NO')}</button>
           </span>
         )}
         <button
           onClick={copyCode}
           style={{ ...mono, fontSize: 13, color: copied ? accent : encre, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          {copied ? '✓ COPIÉ' : `CODE : ${code}`}
+          {copied ? tr('✓ COPIÉ', '✓ COPIED') : tr(`CODE : ${code}`, `CODE: ${code}`)}
         </button>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
       <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 4 }}>
-        — SALON D'ATTENTE —
+        {tr("— SALON D'ATTENTE —", '— WAITING ROOM —')}
       </div>
       <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 16 }}>
         {code}
@@ -344,7 +345,7 @@ export default function Salon() {
       {/* ── Joueurs ── */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-          — JOUEURS ({players.length}) —
+          {tr('— JOUEURS', '— PLAYERS')} ({players.length}) —
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <AnimatePresence>
@@ -374,19 +375,19 @@ export default function Salon() {
                   <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 20, letterSpacing: '-0.01em', color: encre }}>
                     {p.pseudo}
                     {room.host_id === p.player_id && (
-                      <span style={{ ...mono, fontSize: 13, color: accent, marginLeft: 8 }}>HÔTE</span>
+                      <span style={{ ...mono, fontSize: 13, color: accent, marginLeft: 8 }}>{tr('HÔTE', 'HOST')}</span>
                     )}
                   </div>
                 </div>
                 <span style={{ ...mono, fontSize: 13, color: p.is_ready ? accent : `${encre}50` }}>
-                  {p.is_ready ? '✓ PRÊT' : 'EN ATTENTE'}
+                  {p.is_ready ? tr('✓ PRÊT', '✓ READY') : tr('EN ATTENTE', 'WAITING')}
                 </span>
               </motion.div>
             ))}
           </AnimatePresence>
           {players.length < 2 && (
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.75, marginTop: 8 }}>
-              En attente d'autres joueurs… Partage le code <strong>{code}</strong>.
+              {tr("En attente d'autres joueurs… Partage le code", 'Waiting for more players… Share the code')} <strong>{code}</strong>.
             </p>
           )}
         </div>
@@ -398,7 +399,7 @@ export default function Salon() {
             padding: '8px 12px', background: `${encre}08`,
             borderLeft: `2px solid ${encre}40`, marginTop: 12,
           }}>
-            👁 MODE SPECTATEUR
+            👁 {tr('MODE SPECTATEUR', 'SPECTATOR MODE')}
           </div>
         )}
 
@@ -412,7 +413,7 @@ export default function Salon() {
               marginTop: 10, padding: 0, textAlign: 'left',
             }}
           >
-            👁 REJOINDRE COMME SPECTATEUR
+            👁 {tr('REJOINDRE COMME SPECTATEUR', 'JOIN AS SPECTATOR')}
           </button>
         )}
       </div>
@@ -421,7 +422,7 @@ export default function Salon() {
       {spectators.length > 0 && (
         <div style={{ marginBottom: 24 }}>
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — SPECTATEURS ({spectators.length}) —
+            {tr('— SPECTATEURS', '— SPECTATORS')} ({spectators.length}) —
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {spectators.map(s => (
@@ -447,7 +448,7 @@ export default function Salon() {
                 <div style={{ flex: 1, fontFamily: "'Bodoni Moda', serif", fontSize: 17, color: encre }}>
                   {s.pseudo}
                 </div>
-                <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55 }}>👁 SPECT</span>
+                <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.55 }}>👁 {tr('SPECT', 'SPECT')}</span>
               </div>
             ))}
           </div>
@@ -458,11 +459,11 @@ export default function Salon() {
       {isHost && (
         <div style={{ marginBottom: 24, padding: '16px', background: `${encre}06`, borderLeft: `2px solid ${accent}40` }}>
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — CONFIGURATION —
+            {tr('— CONFIGURATION —', '— SETUP —')}
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>MODE</div>
+            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>{tr('MODE', 'MODE')}</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {(['ecrit', 'dessin'] as const).map(m => (
                 <button
@@ -476,7 +477,7 @@ export default function Salon() {
                     cursor: 'pointer',
                   }}
                 >
-                  {m === 'ecrit' ? 'ÉCRIT' : 'DESSINÉ'}
+                  {m === 'ecrit' ? tr('ÉCRIT', 'WRITTEN') : tr('DESSINÉ', 'DRAWN')}
                 </button>
               ))}
             </div>
@@ -484,7 +485,7 @@ export default function Salon() {
 
           {room.mode === 'ecrit' && (
             <div>
-              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>STRUCTURE</div>
+              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>{tr('STRUCTURE', 'STRUCTURE')}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {Object.entries(STRUCT_LABELS).map(([id, label]) => (
                   <button
@@ -507,9 +508,9 @@ export default function Salon() {
 
           {room.mode === 'dessin' && (
             <div>
-              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>BANDES</div>
+              <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>{tr('BANDES', 'BANDS')}</div>
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, lineHeight: 1.5, marginBottom: 10 }}>
-                Chaque joueur dessine une bande du corps à l'aveugle. Fixe le nombre de joueurs attendus.
+                {tr("Chaque joueur dessine une bande du corps à l'aveugle. Fixe le nombre de joueurs attendus.", 'Each player draws one band of the body blind. Set the expected number of players.')}
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 {[2, 3, 4, 5, 6, 7].map(n => (
@@ -533,7 +534,7 @@ export default function Salon() {
 
           {/* ── Durée par tour ── */}
           <div style={{ marginTop: 12 }}>
-            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>DURÉE PAR TOUR</div>
+            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>{tr('DURÉE PAR TOUR', 'TIME PER TURN')}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {TURN_OPTIONS.map(opt => {
                 const selected = (room.turn_seconds ?? null) === opt.value
@@ -558,11 +559,11 @@ export default function Salon() {
 
           {/* ── Visibilité du salon ── */}
           <div style={{ marginTop: 12 }}>
-            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>VISIBILITÉ</div>
+            <div style={{ ...mono, fontSize: 13, color: encre, marginBottom: 6 }}>{tr('VISIBILITÉ', 'VISIBILITY')}</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {([
-                { value: true, label: 'PUBLIC' },
-                { value: false, label: 'PRIVÉ' },
+                { value: true, label: tr('PUBLIC', 'PUBLIC') },
+                { value: false, label: tr('PRIVÉ', 'PRIVATE') },
               ] as const).map(opt => {
                 const selected = (room.is_public ?? true) === opt.value
                 return (
@@ -584,8 +585,8 @@ export default function Salon() {
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.65, marginTop: 6 }}>
               {(room.is_public ?? true)
-                ? 'Visible dans la liste des parties ouvertes.'
-                : 'Accessible uniquement par code — salon privé.'}
+                ? tr('Visible dans la liste des parties ouvertes.', 'Visible in the list of open games.')
+                : tr('Accessible uniquement par code — salon privé.', 'Accessible by code only — private room.')}
             </div>
           </div>
         </div>
@@ -600,7 +601,7 @@ export default function Salon() {
             padding: '10px 12px', background: `${encre}08`,
             borderLeft: `2px solid ${encre}40`, textAlign: 'center',
           }}>
-            👁 TU SUIS LA PARTIE EN SPECTATEUR
+            👁 {tr('TU SUIS LA PARTIE EN SPECTATEUR', 'YOU ARE WATCHING AS A SPECTATOR')}
           </div>
         )}
 
@@ -616,7 +617,7 @@ export default function Salon() {
               cursor: 'pointer', width: '100%',
             }}
           >
-            {mePlayer?.is_ready ? '✓ PRÊT — CLIQUER POUR ANNULER' : 'JE SUIS PRÊT'}
+            {mePlayer?.is_ready ? tr('✓ PRÊT — CLIQUER POUR ANNULER', '✓ READY — TAP TO CANCEL') : tr('JE SUIS PRÊT', "I'M READY")}
           </button>
         )}
 
@@ -635,7 +636,7 @@ export default function Salon() {
               width: '100%',
             }}
           >
-            {starting ? 'DÉMARRAGE…' : !allReady ? `ATTENTE — ${players.filter(p => !p.is_ready).length} JOUEUR(S) PAS PRÊT(S)` : 'DÉMARRER LA PARTIE →'}
+            {starting ? tr('DÉMARRAGE…', 'STARTING…') : !allReady ? tr(`ATTENTE — ${players.filter(p => !p.is_ready).length} JOUEUR(S) PAS PRÊT(S)`, `WAITING — ${players.filter(p => !p.is_ready).length} PLAYER(S) NOT READY`) : tr('DÉMARRER LA PARTIE →', 'START THE GAME →')}
           </button>
         )}
       </div>

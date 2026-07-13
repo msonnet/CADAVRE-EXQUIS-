@@ -10,9 +10,10 @@ import { useSound } from '../hooks/useSound'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
+import { tr, langueActuelle } from '../i18n'
 
 function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('fr-FR', {
+  return new Date(ts).toLocaleDateString(tr('fr-FR', 'en-GB'), {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 }
@@ -88,6 +89,7 @@ export default function DessinDetail() {
       const payload = JSON.stringify({
         texteVision: dessin.texteVision,
         nbBandes: dessin.nbBandes,
+        langue: langueActuelle(),
       })
       const { error } = await supabase.from('gallery').insert({
         type: 'dessin',
@@ -136,7 +138,7 @@ export default function DessinDetail() {
     if (!dessin || pdfBusy) return
     setPdfBusy(true)
     try {
-      const titreDessin = dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')
+      const titreDessin = dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : tr('Sans titre', 'Untitled'))
       await exporterPDF({
         type: 'dessin',
         titre: titreDessin,
@@ -166,16 +168,16 @@ export default function DessinDetail() {
     return (
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
         <div style={{ position: 'relative', zIndex: 10 }}>
-          <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}>← RETOUR</button>
+          <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}>← {tr('RETOUR', 'BACK')}</button>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, marginTop: 40, textAlign: 'center' }}>
-            Dessin introuvable.
+            {tr('Dessin introuvable.', 'Drawing not found.')}
           </p>
         </div>
       </PageTransition>
     )
   }
 
-  const titre = dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : 'Sans titre')
+  const titre = dessin.titre ?? (dessin.texteVision ? dessin.texteVision.split('\n')[0].slice(0, 40) : tr('Sans titre', 'Untitled'))
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
@@ -189,7 +191,7 @@ export default function DessinDetail() {
             onClick={() => navigate('/bibliotheque')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← RECUEIL
+            ← {tr('RECUEIL', 'LIBRARY')}
           </button>
           <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -197,7 +199,7 @@ export default function DessinDetail() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — CADAVRE DESSINÉ —
+          {tr('— CADAVRE DESSINÉ —', '— DRAWN CADAVRE —')}
         </div>
 
         {/* ── TITRE ── */}
@@ -209,10 +211,10 @@ export default function DessinDetail() {
                 value={titreDraft}
                 onChange={e => setTitreDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') sauvegarderTitre(); if (e.key === 'Escape') setEditTitre(false) }}
-                aria-label="Titre du dessin"
+                aria-label={tr('Titre du dessin', 'Title of the drawing')}
                 className="champ-carnet flex-1"
                 style={{ borderLeftColor: accent, fontSize: 17 }}
-                placeholder="Titre du dessin…"
+                placeholder={tr('Titre du dessin…', 'Title of the drawing…')}
               />
               <button onClick={sauvegarderTitre} style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}>OK</button>
               <button onClick={() => setEditTitre(false)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
@@ -228,7 +230,7 @@ export default function DessinDetail() {
             </button>
           )}
           <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 6 }}>
-            {dessin.nbBandes} BANDES · {formatDate(dessin.dateCreation).toUpperCase()}
+            {dessin.nbBandes} {tr('BANDES', 'BANDS')} · {formatDate(dessin.dateCreation).toUpperCase()}
           </p>
         </motion.div>
 
@@ -252,7 +254,7 @@ export default function DessinDetail() {
             />
           </button>
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginTop: 6, textAlign: 'right' }}>
-            TOUCHER POUR AGRANDIR
+            {tr('TOUCHER POUR AGRANDIR', 'TAP TO ENLARGE')}
           </div>
         </motion.div>
 
@@ -265,7 +267,7 @@ export default function DessinDetail() {
             style={{ marginBottom: 24 }}
           >
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-              — VISION —
+              {tr('— VISION —', '— VISION —')}
             </div>
             <div style={{
               borderLeft: `1.5px solid ${accent}`,
@@ -306,7 +308,7 @@ export default function DessinDetail() {
               opacity: partageEnCours ? 0.9 : 0.75,
             }}
           >
-            {partageEnCours ? '✦ COMPOSITION…' : partageOk ? '✓ PARTAGÉ' : '↗ PARTAGER CE DESSIN'}
+            {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('↗ PARTAGER CE DESSIN', '↗ SHARE THIS DRAWING')}
           </button>
         </motion.div>
 
@@ -320,7 +322,7 @@ export default function DessinDetail() {
           <button
             onClick={exporterDessinPDF}
             disabled={pdfBusy}
-            aria-label="Exporter ce dessin en PDF"
+            aria-label={tr('Exporter ce dessin en PDF', 'Export this drawing as PDF')}
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent', color: encre,
@@ -331,7 +333,7 @@ export default function DessinDetail() {
               opacity: pdfBusy ? 0.55 : 0.7,
             }}
           >
-            {pdfBusy ? '↓ Export…' : '↓ Exporter PDF'}
+            {pdfBusy ? tr('↓ Export…', '↓ Exporting…') : tr('↓ Exporter PDF', '↓ Export PDF')}
           </button>
         </motion.div>
 
@@ -345,7 +347,7 @@ export default function DessinDetail() {
           <button
             onClick={publierDansGalerie}
             disabled={publishing || published}
-            aria-label="Publier ce dessin dans la galerie"
+            aria-label={tr('Publier ce dessin dans la galerie', 'Publish this drawing to the gallery')}
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent',
@@ -358,12 +360,12 @@ export default function DessinDetail() {
             }}
           >
             {publishError
-              ? 'ERREUR'
+              ? tr('ERREUR', 'ERROR')
               : published
-                ? '✓ PUBLIÉ'
+                ? tr('✓ PUBLIÉ', '✓ PUBLISHED')
                 : publishing
-                  ? '✦ Publication…'
-                  : '✦ Publier dans la galerie'}
+                  ? tr('✦ Publication…', '✦ Publishing…')
+                  : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
           </button>
         </motion.div>
 
@@ -385,7 +387,7 @@ export default function DessinDetail() {
                   border: 'none', borderRadius: 3, cursor: 'pointer',
                 }}
               >
-                Confirmer la suppression
+                {tr('Confirmer la suppression', 'Confirm deletion')}
               </button>
               <button
                 onClick={() => setConfirmSuppr(false)}
@@ -396,7 +398,7 @@ export default function DessinDetail() {
                   border: `0.5px solid ${encre}30`, borderRadius: 3, cursor: 'pointer',
                 }}
               >
-                Annuler
+                {tr('Annuler', 'Cancel')}
               </button>
             </div>
           ) : (
@@ -409,7 +411,7 @@ export default function DessinDetail() {
                 border: `0.5px solid ${encre}20`, borderRadius: 3, cursor: 'pointer',
               }}
             >
-              Supprimer ce dessin
+              {tr('Supprimer ce dessin', 'Delete this drawing')}
             </button>
           )}
         </motion.div>
@@ -422,7 +424,7 @@ export default function DessinDetail() {
           <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label="Fermer en touchant"
+            aria-label={tr('Fermer en touchant', 'Tap to close')}
             tabIndex={0}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

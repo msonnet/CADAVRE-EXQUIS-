@@ -7,6 +7,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin } from '../types'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 const CONFIG_PAR_DEFAUT: ConfigDessin = {
   nbBandes: 3,
@@ -51,10 +52,10 @@ export default function ConfigurationDessin() {
 
   const totalBandes = config.nbBandes
   const cycleNote = joueurs < totalBandes
-    ? `les ${joueurs} joueurs se partagent ${totalBandes} bandes — certains dessinent deux fois`
+    ? tr(`les ${joueurs} joueurs se partagent ${totalBandes} bandes — certains dessinent deux fois`, `the ${joueurs} players share ${totalBandes} bands — some draw twice`)
     : joueurs === totalBandes
-      ? `${joueurs} joueur${joueurs > 1 ? 's' : ''} · ${totalBandes} bande${totalBandes > 1 ? 's' : ''}`
-      : `${joueurs} joueurs se partagent ${totalBandes} bandes`
+      ? tr(`${joueurs} joueur${joueurs > 1 ? 's' : ''} · ${totalBandes} bande${totalBandes > 1 ? 's' : ''}`, `${joueurs} player${joueurs > 1 ? 's' : ''} · ${totalBandes} band${totalBandes > 1 ? 's' : ''}`)
+      : tr(`${joueurs} joueurs se partagent ${totalBandes} bandes`, `${joueurs} players share ${totalBandes} bands`)
 
   function demarrer() {
     jouer('demarrage')
@@ -75,7 +76,7 @@ export default function ConfigurationDessin() {
             onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← ACCUEIL
+            ← {tr('ACCUEIL', 'HOME')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -83,7 +84,7 @@ export default function ConfigurationDessin() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 22, marginBottom: 8 }}>
-          — CADAVRE DESSINÉ —
+          {tr('— CADAVRE DESSINÉ —', '— DRAWN CADAVRE —')}
         </div>
 
         {/* ── TITLE ── */}
@@ -97,7 +98,7 @@ export default function ConfigurationDessin() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 6 }}
           >
-            Préparer le <span style={{ color: accent }}>rituel.</span>
+            {tr('Préparer le', 'Prepare the')} <span style={{ color: accent }}>{tr('rituel.', 'ritual.')}</span>
           </div>
         </motion.div>
 
@@ -106,8 +107,8 @@ export default function ConfigurationDessin() {
         {/* ── BANDES ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} style={{ marginBottom: 18 }}>
           <SectionAide
-            label="FRAGMENTS" accent={accent} encre={encre}
-            aide={<>Le dessin est découpé en bandes horizontales — tête, corps, jambes… Chacun dessine la sienne sans voir les autres, et l'assemblage final est la surprise.</>}
+            label={tr('FRAGMENTS', 'FRAGMENTS')} accent={accent} encre={encre}
+            aide={<>{tr("Le dessin est découpé en bandes horizontales — tête, corps, jambes… Chacun dessine la sienne sans voir les autres, et l'assemblage final est la surprise.", 'The drawing is split into horizontal bands — head, body, legs… Each player draws their own without seeing the others, and the final assembly is the surprise.')}</>}
           />
           <div className="flex gap-2">
             {[2, 3, 4, 5].map(n => {
@@ -138,14 +139,14 @@ export default function ConfigurationDessin() {
         {/* ── AUTOUR DE LA TABLE ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.28 }} style={{ marginBottom: 18 }}>
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — AUTOUR DE LA TABLE —
+            {tr('— AUTOUR DE LA TABLE —', '— AROUND THE TABLE —')}
           </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             {slots.map((slot, i) => (
               <button
                 key={i}
                 onClick={() => cyclerSlot(i)}
-                aria-label={slot === 'vide' ? 'Ajouter un dessinateur' : 'Retirer ce dessinateur'}
+                aria-label={slot === 'vide' ? tr('Ajouter un dessinateur', 'Add an artist') : tr('Retirer ce dessinateur', 'Remove this artist')}
                 style={{
                   width: 44, height: 44, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -173,7 +174,7 @@ export default function ConfigurationDessin() {
           </div>
           {joueurs > 1 && (
             <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.5, marginTop: 7, lineHeight: 1.55 }}>
-              Passe l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.
+              {tr("Passe l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.", 'Pass the device from hand to hand — each artist folds the screen before passing it on.')}
             </div>
           )}
         </motion.div>
@@ -181,13 +182,13 @@ export default function ConfigurationDessin() {
         {/* ── VISIBILITÉ ── */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} style={{ marginBottom: 20 }}>
           <SectionAide
-            label="VISIBILITÉ" accent={accent} encre={encre}
-            aide={<>Aveugle : chaque bande commence dans l'obscurité totale. Raccord : un mince raccord révèle la lisière du fragment précédent, pour prolonger les traits.</>}
+            label={tr('VISIBILITÉ', 'VISIBILITY')} accent={accent} encre={encre}
+            aide={<>{tr("Aveugle : chaque bande commence dans l'obscurité totale. Raccord : un mince raccord révèle la lisière du fragment précédent, pour prolonger les traits.", 'Blind: each band begins in total darkness. Joined: a thin strip reveals the edge of the previous fragment, so you can extend its strokes.')}</>}
           />
           <div className="flex gap-2 mb-2">
             {([
-              { id: 'aveugle', label: 'AVEUGLE' },
-              { id: 'raccord', label: 'RACCORD' },
+              { id: 'aveugle', label: tr('AVEUGLE', 'BLIND') },
+              { id: 'raccord', label: tr('RACCORD', 'JOINED') },
             ] as const).map(v => {
               const active = config.visibilite === v.id
               return (
@@ -230,7 +231,7 @@ export default function ConfigurationDessin() {
               borderRadius: 3,
             }}
           >
-            <span>Commencer le dessin →</span>
+            <span>{tr('Commencer le dessin', 'Start drawing')} →</span>
           </button>
         </motion.div>
 

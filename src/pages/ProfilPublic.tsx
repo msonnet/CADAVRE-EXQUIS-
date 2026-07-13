@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { supabase, getReactorKey } from '../lib/supabase'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
 type ReactionEmoji = typeof REACTION_EMOJIS[number]
@@ -50,7 +51,7 @@ interface DessinPayload {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
+  return new Date(iso).toLocaleDateString(tr('fr-FR', 'en-GB'), {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 }
@@ -211,7 +212,7 @@ export default function ProfilPublic() {
 
         if (error) {
           console.error('[ProfilPublic] Erreur de chargement', error)
-          setErreur('Impossible de charger ce profil.')
+          setErreur(tr('Impossible de charger ce profil.', 'Could not load this profile.'))
           setChargement(false)
           return
         }
@@ -226,7 +227,7 @@ export default function ProfilPublic() {
       } catch (e) {
         if (annule) return
         console.error('[ProfilPublic] Exception chargement', e)
-        setErreur('Impossible de charger ce profil.')
+        setErreur(tr('Impossible de charger ce profil.', 'Could not load this profile.'))
         setChargement(false)
       }
     }
@@ -248,14 +249,14 @@ export default function ProfilPublic() {
             onClick={() => navigate('/galerie')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← GALERIE
+            ← {tr('GALERIE', 'GALLERY')}
           </button>
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 20, marginBottom: 8 }}>
-          — PROFIL —
+          {tr('— PROFIL —', '— PROFILE —')}
         </div>
 
         {/* ── TITRE (pseudo) ── */}
@@ -273,7 +274,7 @@ export default function ProfilPublic() {
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 18,
           }}>
-            Œuvres publiées
+            {tr('Œuvres publiées', 'Published works')}
           </p>
         </motion.div>
 
@@ -309,7 +310,7 @@ export default function ProfilPublic() {
             <p style={{
               fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, textAlign: 'center',
             }}>
-              Aucune œuvre publiée sous ce nom.
+              {tr('Aucune œuvre publiée sous ce nom.', 'No works published under this name.')}
             </p>
             <button
               onClick={() => navigate('/galerie')}
@@ -322,7 +323,7 @@ export default function ProfilPublic() {
                 cursor: 'pointer',
               }}
             >
-              Retour à la galerie
+              {tr('Retour à la galerie', 'Back to the gallery')}
             </button>
           </motion.div>
         )}
@@ -339,7 +340,7 @@ export default function ProfilPublic() {
                   ?? (poemePayload?.titre)
                   ?? (item.type === 'poeme' && poemePayload ? extraitPoeme(poemePayload).slice(0, 48) : null)
                   ?? (item.type === 'dessin' && dessinPayload?.texteVision ? dessinPayload.texteVision.split('\n')[0].slice(0, 48) : null)
-                  ?? 'Sans titre'
+                  ?? tr('Sans titre', 'Untitled')
 
                 return (
                   <motion.div
@@ -384,7 +385,7 @@ export default function ProfilPublic() {
                         </div>
 
                         <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
-                          {(item.type === 'poeme' ? 'POÈME' : 'DESSIN')}
+                          {(item.type === 'poeme' ? tr('POÈME', 'POEM') : tr('DESSIN', 'DRAWING'))}
                           {' · '}
                           {formatDate(item.created_at).toUpperCase()}
                         </p>
@@ -486,7 +487,7 @@ export default function ProfilPublic() {
                               }}
                               onMouseEnter={e => { if (!reacted) e.currentTarget.style.opacity = '0.95' }}
                               onMouseLeave={e => { if (!reacted) e.currentTarget.style.opacity = '0.6' }}
-                              aria-label={`Réagir ${em}`}
+                              aria-label={tr(`Réagir ${em}`, `React ${em}`)}
                             >
                               <span style={{ fontSize: 17 }}>{em}</span>
                               {count > 0 && <span>{count}</span>}

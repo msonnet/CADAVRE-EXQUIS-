@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 /**
  * Aide inline (sans en-tête de section) : un petit ✦ qui révèle une précision
@@ -8,7 +9,7 @@ import { mono } from '../lib/typo'
  * sans l'imposer — l'écran reste lisible, le détail est là pour qui le veut.
  */
 export function AideInline({
-  children, accent, encre, libelle = 'préciser',
+  children, accent, encre, libelle = tr('préciser', 'more'),
 }: {
   children: React.ReactNode
   accent: string
@@ -79,7 +80,7 @@ export default function SectionAide({
             type="button"
             onClick={() => setOpen(o => !o)}
             aria-expanded={open}
-            aria-label={open ? 'Masquer l’aide' : 'En savoir plus'}
+            aria-label={open ? tr('Masquer l’aide', 'Hide help') : tr('En savoir plus', 'Learn more')}
             style={{
               background: 'none', border: 'none', cursor: 'pointer', padding: 10, margin: -8, lineHeight: 1,
               fontSize: 13, color: open ? accent : `${accent}88`,

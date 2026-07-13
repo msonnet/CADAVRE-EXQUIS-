@@ -6,14 +6,15 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
+import { tr } from '../i18n'
 
 const AVATAR_STYLES = [
-  { id: 'surrealiste',     label: 'Surréaliste' },
-  { id: 'aquarelle',       label: 'Aquarelle' },
-  { id: 'fusain',          label: 'Fusain' },
+  { id: 'surrealiste',     label: tr('Surréaliste', 'Surrealist') },
+  { id: 'aquarelle',       label: tr('Aquarelle', 'Watercolor') },
+  { id: 'fusain',          label: tr('Fusain', 'Charcoal') },
   { id: 'art_nouveau',     label: 'Art Nouveau' },
-  { id: 'encre',           label: 'Encre' },
-  { id: 'expressionniste', label: 'Expression.' },
+  { id: 'encre',           label: tr('Encre', 'Ink') },
+  { id: 'expressionniste', label: tr('Expression.', 'Expression.') },
 ]
 
 async function genererAvatar(prompt: string, style: string): Promise<string | null> {
@@ -80,7 +81,7 @@ export default function Profil() {
     setError(null)
     const url = await genererAvatar(avatarPrompt.trim(), avatarStyle)
     setAvatarUrl(url)
-    if (!url) setError('Génération d\'avatar indisponible pour l\'instant.')
+    if (!url) setError(tr("Génération d'avatar indisponible pour l'instant.", 'Avatar generation is unavailable right now.'))
     setGeneratingAvatar(false)
   }
 
@@ -106,13 +107,13 @@ export default function Profil() {
           onClick={() => navigate('/online')}
           style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          ← RETOUR
+          ← {tr('RETOUR', 'BACK')}
         </button>
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
       <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
-        — MON PROFIL —
+        {tr('— MON PROFIL —', '— MY PROFILE —')}
       </div>
 
       <motion.form
@@ -124,10 +125,10 @@ export default function Profil() {
         {/* Avatar */}
         <div>
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — IMAGE DE PROFIL —
+            {tr('— IMAGE DE PROFIL —', '— PROFILE PICTURE —')}
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, lineHeight: 1.55, marginBottom: 14 }}>
-            Décris en quelques mots le personnage qui te représente. L'IA générera ton portrait surréaliste.
+            {tr("Décris en quelques mots le personnage qui te représente. L'IA générera ton portrait surréaliste.", 'Describe in a few words the character who represents you. The AI will generate your surrealist portrait.')}
           </p>
 
           <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 12 }}>
@@ -158,8 +159,8 @@ export default function Profil() {
               <textarea
                 value={avatarPrompt}
                 onChange={e => setAvatarPrompt(e.target.value)}
-                placeholder="ex: un alchimiste aux yeux verts avec une barbe de brume…"
-                aria-label="Description de ton avatar"
+                placeholder={tr('ex: un alchimiste aux yeux verts avec une barbe de brume…', 'e.g. an alchemist with green eyes and a beard of mist…')}
+                aria-label={tr('Description de ton avatar', 'Description of your avatar')}
                 rows={2}
                 style={{
                   fontFamily: "'Playfair Display', serif", fontSize: 17,
@@ -198,7 +199,7 @@ export default function Profil() {
                   opacity: generatingAvatar || !avatarPrompt.trim() ? 0.5 : 1,
                 }}
               >
-                {generatingAvatar ? 'GÉNÉRATION…' : '✦ GÉNÉRER'}
+                {generatingAvatar ? tr('GÉNÉRATION…', 'GENERATING…') : tr('✦ GÉNÉRER', '✦ GENERATE')}
               </button>
             </div>
           </div>
@@ -207,14 +208,14 @@ export default function Profil() {
         {/* Pseudo */}
         <div>
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            — PSEUDONYME —
+            {tr('— PSEUDONYME —', '— PEN NAME —')}
           </div>
           <input
             type="text"
             value={pseudo}
             onChange={e => setPseudo(e.target.value)}
-            placeholder="Ton nom de plume…"
-            aria-label="Pseudonyme"
+            placeholder={tr('Ton nom de plume…', 'Your pen name…')}
+            aria-label={tr('Pseudonyme', 'Pen name')}
             maxLength={30}
             required
             style={{
@@ -243,7 +244,7 @@ export default function Profil() {
             marginTop: 8,
           }}
         >
-          {saving ? 'ENREGISTREMENT…' : profile ? 'SAUVEGARDER' : 'CRÉER MON PROFIL →'}
+          {saving ? tr('ENREGISTREMENT…', 'SAVING…') : profile ? tr('SAUVEGARDER', 'SAVE') : tr('CRÉER MON PROFIL →', 'CREATE MY PROFILE →')}
         </button>
 
         {/* ── SUPPRESSION DE COMPTE (exigence App Store 5.1.1) ── */}
@@ -255,13 +256,12 @@ export default function Profil() {
                 onClick={() => setConfirmDelete(true)}
                 style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', minHeight: 44 }}
               >
-                — SUPPRIMER MON COMPTE —
+                {tr('— SUPPRIMER MON COMPTE —', '— DELETE MY ACCOUNT —')}
               </button>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: encre, opacity: 0.85, lineHeight: 1.5 }}>
-                  Ton profil et ton compte seront définitivement supprimés.
-                  Tes publications dans la galerie deviendront anonymes.
+                  {tr('Ton profil et ton compte seront définitivement supprimés. Tes publications dans la galerie deviendront anonymes.', 'Your profile and your account will be permanently deleted. Your gallery publications will become anonymous.')}
                 </p>
                 {deleteError && (
                   <p role="alert" style={{ ...mono, fontSize: 13, color: '#b22c20' }}>{deleteError}</p>
@@ -273,14 +273,14 @@ export default function Profil() {
                     disabled={deleting}
                     style={{ flex: 1, padding: '0.85em', background: '#7B0000', color: '#e8d4b8', ...mono, fontSize: 15, border: 'none', cursor: deleting ? 'wait' : 'pointer', borderRadius: 3 }}
                   >
-                    {deleting ? 'SUPPRESSION…' : 'SUPPRIMER DÉFINITIVEMENT'}
+                    {deleting ? tr('SUPPRESSION…', 'DELETING…') : tr('SUPPRIMER DÉFINITIVEMENT', 'DELETE PERMANENTLY')}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setConfirmDelete(false); setDeleteError(null) }}
                     style={{ padding: '0.85em 1em', background: 'transparent', color: encre, ...mono, fontSize: 15, border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 3 }}
                   >
-                    ANNULER
+                    {tr('ANNULER', 'CANCEL')}
                   </button>
                 </div>
               </div>

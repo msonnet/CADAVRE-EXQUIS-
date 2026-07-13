@@ -12,8 +12,8 @@ import { mono } from '../lib/typo'
 import { tr, langueActuelle, changerLangue } from '../i18n'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
-  { id: 'stricte', label: 'Stricte', desc: 'Avertit si le fragment ne correspond pas à la consigne.' },
-  { id: 'souple',  label: 'Souple',  desc: 'Accepte tout texte non vide.' },
+  { id: 'stricte', label: tr('Stricte', 'Strict'), desc: tr('Avertit si le fragment ne correspond pas à la consigne.', 'Warns when the fragment does not match the prompt.') },
+  { id: 'souple',  label: tr('Souple', 'Relaxed'), desc: tr('Accepte tout texte non vide.', 'Accepts any non-empty text.') },
 ]
 
 export default function Reglages() {
@@ -81,7 +81,7 @@ export default function Reglages() {
             onClick={() => navigate('/')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← ACCUEIL
+            ← {tr('ACCUEIL', 'HOME')}
           </button>
           <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>
@@ -89,7 +89,7 @@ export default function Reglages() {
 
         {/* ── LABEL ── */}
         <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 8 }}>
-          — RÉGLAGES —
+          {tr('— RÉGLAGES —', '— SETTINGS —')}
         </div>
 
         {/* ── TITRE ── */}
@@ -103,7 +103,7 @@ export default function Reglages() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 4 }}
           >
-            Préférences <span style={{ color: accent }}>de séance.</span>
+            {tr('Préférences', 'Session')} <span style={{ color: accent }}>{tr('de séance.', 'preferences.')}</span>
           </div>
         </motion.div>
 
@@ -182,10 +182,10 @@ export default function Reglages() {
           style={{ marginBottom: 28 }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — AMBIANCE —
+            {tr('— AMBIANCE —', '— AMBIENCE —')}
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
-            Chaque jour, une ambiance est tirée au sort. Tu peux en tirer une nouvelle maintenant.
+            {tr('Chaque jour, une ambiance est tirée au sort. Tu peux en tirer une nouvelle maintenant.', 'Each day, an ambience is drawn at random. You can draw a new one now.')}
           </div>
           <button
             onClick={() => seance?.retirer()}
@@ -200,7 +200,7 @@ export default function Reglages() {
               transition: 'all 0.2s',
             }}
           >
-            NOUVELLE AMBIANCE
+            {tr('NOUVELLE AMBIANCE', 'NEW AMBIENCE')}
           </button>
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.6, marginTop: 8, textTransform: 'uppercase' }}>
             {seance?.ambiance.name}
@@ -216,10 +216,10 @@ export default function Reglages() {
             style={{ marginBottom: 28 }}
           >
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-              — GALERIE —
+              {tr('— GALERIE —', '— GALLERY —')}
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
-              {nbMasques === 1 ? 'Un auteur est masqué' : `${nbMasques} auteurs sont masqués`} dans la galerie.
+              {tr(nbMasques === 1 ? 'Un auteur est masqué dans la galerie.' : `${nbMasques} auteurs sont masqués dans la galerie.`, nbMasques === 1 ? 'One author is hidden in the gallery.' : `${nbMasques} authors are hidden in the gallery.`)}
             </div>
             <button
               onClick={reafficherAuteurs}
@@ -234,7 +234,7 @@ export default function Reglages() {
                 transition: 'all 0.2s',
               }}
             >
-              RÉAFFICHER TOUS LES AUTEURS
+              {tr('RÉAFFICHER TOUS LES AUTEURS', 'SHOW ALL AUTHORS AGAIN')}
             </button>
           </motion.div>
         )}
@@ -248,12 +248,12 @@ export default function Reglages() {
             style={{ marginBottom: 28 }}
           >
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-              — RAPPEL QUOTIDIEN —
+              {tr('— RAPPEL QUOTIDIEN —', '— DAILY REMINDER —')}
             </div>
             <div className="flex gap-2 mb-3">
               {[
-                { actif: true,  label: 'ACTIVÉ' },
-                { actif: false, label: 'AUCUN' },
+                { actif: true,  label: tr('ACTIVÉ', 'ON') },
+                { actif: false, label: tr('AUCUN', 'OFF') },
               ].map(opt => {
                 const active = rappelActif === opt.actif
                 return (
@@ -280,8 +280,8 @@ export default function Reglages() {
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
               {rappelRefuse
-                ? 'Autorisation refusée — active les notifications dans les réglages du téléphone.'
-                : 'Un rappel discret chaque soir, à 20 h : le poème du jour t’attend. Rien ne quitte l’appareil.'}
+                ? tr('Autorisation refusée — active les notifications dans les réglages du téléphone.', 'Permission denied — enable notifications in your phone settings.')
+                : tr('Un rappel discret chaque soir, à 20 h : le poème du jour t’attend. Rien ne quitte l’appareil.', 'A discreet reminder every evening at 8 pm: the poem of the day awaits. Nothing leaves the device.')}
             </div>
           </motion.div>
         )}
@@ -291,14 +291,14 @@ export default function Reglages() {
         {/* ── VERSION ── */}
         <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, textAlign: 'center', paddingBottom: 4, lineHeight: 1.6 }}>
           CADAVRE EXQUIS · v1.0<br />
-          AUCUN TRACKING · AUCUN COMPTE · TOUT RESTE LOCAL
+          {tr('AUCUN TRACKING · AUCUN COMPTE · TOUT RESTE LOCAL', 'NO TRACKING · NO ACCOUNT · EVERYTHING STAYS LOCAL')}
         </div>
         <div style={{ textAlign: 'center', paddingBottom: 8 }}>
           <Link
             to="/privacy"
             style={{ ...mono, fontSize: 13, color: accent, opacity: 0.75, textDecoration: 'underline', textUnderlineOffset: 3 }}
           >
-            Politique de confidentialité →
+            {tr('Politique de confidentialité', 'Privacy policy')} →
           </Link>
         </div>
 

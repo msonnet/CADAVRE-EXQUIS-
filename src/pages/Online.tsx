@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 function genCode(): string {
   const adj = ['LOUP', 'CYGNE', 'CRABE', 'OURS', 'VACHE', 'TIGRE', 'AIGLE', 'SINGE', 'VIPÈRE', 'LAPIN', 'RENARD', 'HIBOU']
@@ -22,11 +23,11 @@ type PublicRoom = {
   player_count: number
 }
 
-const MODE_LABEL: Record<string, string> = { ecrit: 'ÉCRIT', dessin: 'DESSINÉ' }
+const MODE_LABEL: Record<string, string> = { ecrit: tr('ÉCRIT', 'WRITTEN'), dessin: tr('DESSINÉ', 'DRAWN') }
 const STRUCT_SHORT: Record<string, string> = {
   'phrase-simple': '3 fragments',
   'phrase-etoffee': '5 fragments',
-  'vers-libre': 'libre',
+  'vers-libre': tr('libre', 'free'),
 }
 
 export default function Online() {
@@ -135,7 +136,7 @@ export default function Online() {
       if (error) throw error
       navigate(`/salon/${code}`)
     } catch (err: any) {
-      setJoinError(err?.message ?? 'Impossible de rejoindre — réessaie.')
+      setJoinError(err?.message ?? tr('Impossible de rejoindre — réessaie.', 'Could not join — try again.'))
     } finally {
       setJoining(false)
     }
@@ -157,7 +158,7 @@ export default function Online() {
       navigate(`/salon/${code}`)
     } catch (err: any) {
       console.error('Erreur création salon:', err)
-      setCreateError(err?.message ?? 'Erreur lors de la création du salon.')
+      setCreateError(err?.message ?? tr('Erreur lors de la création du salon.', 'Error while creating the room.'))
     } finally {
       setCreating(false)
     }
@@ -172,11 +173,11 @@ export default function Online() {
     setJoinError(null)
     try {
       const { data: room } = await supabase.from('rooms').select('*').eq('code', code).single()
-      if (!room) { setJoinError('Salon introuvable — vérifie le code.'); setJoining(false); return }
-      if (room.status !== 'waiting') { setJoinError('Cette partie a déjà commencé.'); setJoining(false); return }
+      if (!room) { setJoinError(tr('Salon introuvable — vérifie le code.', 'Room not found — check the code.')); setJoining(false); return }
+      if (room.status !== 'waiting') { setJoinError(tr('Cette partie a déjà commencé.', 'This game has already started.')); setJoining(false); return }
       navigate(`/salon/${code}`)
     } catch {
-      setJoinError('Impossible de rejoindre — réessaie.')
+      setJoinError(tr('Impossible de rejoindre — réessaie.', 'Could not join — try again.'))
       setJoining(false)
     }
   }
@@ -184,7 +185,7 @@ export default function Online() {
   if (loading) {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
-        <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>CHARGEMENT…</span>
+        <span style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8 }}>{tr('CHARGEMENT…', 'LOADING…')}</span>
       </PageTransition>
     )
   }
@@ -199,21 +200,21 @@ export default function Online() {
           onClick={() => navigate('/')}
           style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          ← RETOUR
+          ← {tr('RETOUR', 'BACK')}
         </button>
         {user && (
           <button
             onClick={signOut}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            DÉCONNEXION
+            {tr('DÉCONNEXION', 'SIGN OUT')}
           </button>
         )}
       </div>
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
       <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 8 }}>
-        — MODE EN LIGNE —
+        {tr('— MODE EN LIGNE —', '— ONLINE MODE —')}
       </div>
 
       {/* ── NOT LOGGED IN ── */}
@@ -223,14 +224,14 @@ export default function Online() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 12 }}
           >
-            Jouer à plusieurs.
+            {tr('Jouer à plusieurs.', 'Play together.')}
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, lineHeight: 1.65, marginBottom: 28 }}>
-            Chaque joueur sur son propre appareil. Tu composes un cadavre exquis à plusieurs, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.
+            {tr("Chaque joueur sur son propre appareil. Tu composes un cadavre exquis à plusieurs, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.", 'Each player on their own device. You compose an exquisite corpse together, each unaware of what the others have written. The reveal is collective.')}
           </p>
 
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            — TON NOM DE PLUME —
+            {tr('— TON NOM DE PLUME —', '— YOUR PEN NAME —')}
           </div>
 
           <form onSubmit={handleAnonymousJoin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -238,8 +239,8 @@ export default function Online() {
               type="text"
               value={pseudo}
               onChange={e => setPseudo(e.target.value)}
-              placeholder="ex : L'Étranger, Séraphine, le Muet…"
-              aria-label="Pseudonyme"
+              placeholder={tr("ex : L'Étranger, Séraphine, le Muet…", 'e.g. The Stranger, Seraphine, the Mute…')}
+              aria-label={tr('Pseudonyme', 'Pen name')}
               maxLength={30}
               required
               autoFocus
@@ -259,7 +260,7 @@ export default function Online() {
               disabled={signingIn || !pseudo.trim()}
               style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', borderRadius: 3, border: 'none', cursor: signingIn ? 'wait' : 'pointer', opacity: signingIn || !pseudo.trim() ? 0.5 : 1 }}
             >
-              {signingIn ? 'CONNEXION…' : 'ENTRER DANS LE JEU →'}
+              {signingIn ? tr('CONNEXION…', 'SIGNING IN…') : tr('ENTRER DANS LE JEU →', 'ENTER THE GAME →')}
             </button>
           </form>
         </motion.div>
@@ -269,13 +270,13 @@ export default function Online() {
       {user && !profile && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 20 }}>
-            Connecté. Crée ton profil pour continuer.
+            {tr('Connecté. Crée ton profil pour continuer.', 'Signed in. Create your profile to continue.')}
           </p>
           <button
             onClick={() => navigate('/profil')}
             style={{ background: accent, color: btnText, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: 'none', cursor: 'pointer' }}
           >
-            CRÉER MON PROFIL →
+            {tr('CRÉER MON PROFIL', 'CREATE MY PROFILE')} →
           </button>
         </motion.div>
       )}
@@ -305,7 +306,7 @@ export default function Online() {
                 onClick={() => navigate('/profil')}
                 style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                MODIFIER LE PROFIL
+                {tr('MODIFIER LE PROFIL', 'EDIT PROFILE')}
               </button>
             </div>
           </div>
@@ -326,18 +327,21 @@ export default function Online() {
               }}
             >
               {joining
-                ? 'RECHERCHE…'
+                ? tr('RECHERCHE…', 'SEARCHING…')
                 : publicRooms.some(r => r.player_count < r.nb_joueurs)
-                  ? `REJOINDRE — ${publicRooms.filter(r => r.player_count < r.nb_joueurs).length} place${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''} libre${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''}`
-                  : 'CRÉER UNE PARTIE'}
+                  ? tr(
+                      `REJOINDRE — ${publicRooms.filter(r => r.player_count < r.nb_joueurs).length} place${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''} libre${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''}`,
+                      `JOIN — ${publicRooms.filter(r => r.player_count < r.nb_joueurs).length} open seat${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''}`
+                    )
+                  : tr('CRÉER UNE PARTIE', 'CREATE A GAME')}
             </motion.button>
             {joinError && (
               <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{joinError}</p>
             )}
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.55, marginTop: 8, lineHeight: 1.5 }}>
               {publicRooms.some(r => r.player_count < r.nb_joueurs)
-                ? 'Tu rejoins la première partie disponible.'
-                : "Aucune partie ouverte — un salon public est créé pour toi, d'autres pourront rejoindre."}
+                ? tr('Tu rejoins la première partie disponible.', 'You join the first available game.')
+                : tr("Aucune partie ouverte — un salon public est créé pour toi, d'autres pourront rejoindre.", 'No open game — a public room is created for you; others can join.')}
             </p>
           </div>
 
@@ -345,7 +349,7 @@ export default function Online() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
-                — PARTIES OUVERTES —
+                {tr('— PARTIES OUVERTES —', '— OPEN GAMES —')}
               </div>
               {/* Indicateur de connexion temps réel */}
               <motion.div
@@ -356,14 +360,14 @@ export default function Online() {
                   background: liveConnected ? '#4caf50' : encre,
                   flexShrink: 0,
                 }}
-                title={liveConnected ? 'Mise à jour en direct' : 'Connexion…'}
+                title={liveConnected ? tr('Mise à jour en direct', 'Live updates') : tr('Connexion…', 'Connecting…')}
               />
             </div>
             {loadingRooms && publicRooms.length === 0 ? (
-              <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>Recherche…</p>
+              <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>{tr('Recherche…', 'Searching…')}</p>
             ) : publicRooms.length === 0 ? (
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.65, lineHeight: 1.5 }}>
-                Aucune partie ouverte pour l'instant.
+                {tr("Aucune partie ouverte pour l'instant.", 'No open games at the moment.')}
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -398,7 +402,7 @@ export default function Online() {
                           {r.player_count}/{r.nb_joueurs}
                         </div>
                         <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.5 }}>
-                          {placesDispo ? 'REJOINDRE' : 'COMPLET'}
+                          {placesDispo ? tr('REJOINDRE', 'JOIN') : tr('COMPLET', 'FULL')}
                         </div>
                       </div>
                     </motion.button>
@@ -412,17 +416,17 @@ export default function Online() {
           {publicRooms.length > 0 && (
             <div>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-                — NOUVELLE PARTIE —
+                {tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
               </div>
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
-                Crée un salon et partage le code, ou laisse-le public pour que d'autres rejoignent.
+                {tr("Crée un salon et partage le code, ou laisse-le public pour que d'autres rejoignent.", 'Create a room and share the code, or leave it public so others can join.')}
               </p>
               <button
                 onClick={handleCreate}
                 disabled={creating}
                 style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, borderRadius: 3, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
               >
-                {creating ? 'CRÉATION…' : 'CRÉER UN SALON'}
+                {creating ? tr('CRÉATION…', 'CREATING…') : tr('CRÉER UN SALON', 'CREATE A ROOM')}
               </button>
               {createError && (
                 <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{createError}</p>
@@ -433,7 +437,7 @@ export default function Online() {
           {/* ── REJOINDRE PAR CODE ── */}
           <div>
             <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-              — REJOINDRE PAR CODE —
+              {tr('— REJOINDRE PAR CODE —', '— JOIN BY CODE —')}
             </div>
             <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input
@@ -441,7 +445,7 @@ export default function Online() {
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value)}
                 placeholder="LOUP-42"
-                aria-label="Code du salon"
+                aria-label={tr('Code du salon', 'Room code')}
                 maxLength={12}
                 autoCapitalize="characters"
                 autoCorrect="off"
@@ -468,7 +472,7 @@ export default function Online() {
                 disabled={joining || !joinCode.trim()}
                 style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.8em 1.8em', border: `1px solid ${encre}`, borderRadius: 3, cursor: 'pointer', opacity: joining || !joinCode.trim() ? 0.4 : 1 }}
               >
-                {joining ? 'RECHERCHE…' : 'REJOINDRE'}
+                {joining ? tr('RECHERCHE…', 'SEARCHING…') : tr('REJOINDRE', 'JOIN')}
               </button>
             </form>
           </div>

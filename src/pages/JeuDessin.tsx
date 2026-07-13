@@ -6,6 +6,7 @@ import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
 import { mono } from '../lib/typo'
+import { tr } from '../i18n'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
 const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
@@ -14,10 +15,10 @@ const SIZES = [1.5, 4, 9, 17, 28]
 // Fonds de papier — texture procédurale dessinée au démarrage de chaque bande
 type Paper = 'lisse' | 'kraft' | 'parchemin' | 'ardoise'
 const PAPERS: { id: Paper; nom: string; bg: string; grain: string; ink: string }[] = [
-  { id: 'lisse',      nom: 'Lisse',      bg: '#fdf8f2', grain: '#00000000', ink: '#1a1410' },
-  { id: 'kraft',      nom: 'Kraft',      bg: '#cdb48c', grain: '#5a4326',   ink: '#2c1d0e' },
-  { id: 'parchemin',  nom: 'Parchemin',  bg: '#f3e7cb', grain: '#b89a63',   ink: '#3a2a14' },
-  { id: 'ardoise',    nom: 'Ardoise',    bg: '#2f3438', grain: '#0d0f11',   ink: '#e8e4dc' },
+  { id: 'lisse',      nom: tr('Lisse', 'Smooth'),        bg: '#fdf8f2', grain: '#00000000', ink: '#1a1410' },
+  { id: 'kraft',      nom: tr('Kraft', 'Kraft'),         bg: '#cdb48c', grain: '#5a4326',   ink: '#2c1d0e' },
+  { id: 'parchemin',  nom: tr('Parchemin', 'Parchment'), bg: '#f3e7cb', grain: '#b89a63',   ink: '#3a2a14' },
+  { id: 'ardoise',    nom: tr('Ardoise', 'Slate'),       bg: '#2f3438', grain: '#0d0f11',   ink: '#e8e4dc' },
 ]
 
 const PALETTE = [
@@ -129,7 +130,7 @@ function IconPipette({ tint, nib }: { tint: string; nib: string }) {
 }
 
 const TOOL_ICONS = { pencil: IconPencil, pen: IconPen, marker: IconMarker, brush: IconBrush, crayon: IconCrayon, airbrush: IconAirbrush, eraser: IconEraser }
-const TOOL_NAMES: Record<Tool, string> = { pencil: 'Crayon', pen: 'Stylo', marker: 'Feutre', brush: 'Pinceau', crayon: 'Craie', airbrush: 'Aéro', eraser: 'Gomme' }
+const TOOL_NAMES: Record<Tool, string> = { pencil: tr('Crayon', 'Pencil'), pen: tr('Stylo', 'Pen'), marker: tr('Feutre', 'Marker'), brush: tr('Pinceau', 'Brush'), crayon: tr('Craie', 'Chalk'), airbrush: tr('Aéro', 'Spray'), eraser: tr('Gomme', 'Eraser') }
 
 const TOOLBAR_H = 236
 const RACCORD_H = 80
@@ -769,7 +770,7 @@ export default function JeuDessin() {
             pointerEvents: 'none', zIndex: 5,
           }}>
             <span style={{ position: 'absolute', right: 8, top: -12, ...mono, fontSize: 13, color: TB_ACCENT, background: `${CANVAS_BG_ACTUEL}ee`, padding: '1px 6px' }}>
-              ← RACCORD
+              ← {tr('RACCORD', 'JOIN')}
             </span>
           </div>
         )}
@@ -781,7 +782,7 @@ export default function JeuDessin() {
           background: `${paperDef.bg}e0`, padding: '4px 10px',
           border: `0.5px solid ${TB_INK}25`, borderRadius: 3, pointerEvents: 'none',
         }}>
-          JOUEUR {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
+          {tr('JOUEUR', 'PLAYER')} {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
         </div>
 
         {/* Quitter la partie — seule sortie sans passer par le geste OS */}
@@ -789,7 +790,7 @@ export default function JeuDessin() {
           {!confirmExit ? (
             <button
               onClick={() => setConfirmExit(true)}
-              aria-label="Abandonner le dessin"
+              aria-label={tr('Abandonner le dessin', 'Abandon the drawing')}
               style={{
                 ...mono, fontSize: 13, color: TB_INK,
                 background: `${paperDef.bg}e0`, border: `0.5px solid ${TB_INK}25`,
@@ -798,15 +799,15 @@ export default function JeuDessin() {
             >✕</button>
           ) : (
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: `${paperDef.bg}f2`, border: `0.5px solid ${TB_INK}30`, borderRadius: 3, padding: '4px 8px' }}>
-              <span style={{ ...mono, fontSize: 12, color: TB_INK, opacity: 0.85 }}>ABANDONNER ?</span>
+              <span style={{ ...mono, fontSize: 12, color: TB_INK, opacity: 0.85 }}>{tr('ABANDONNER ?', 'ABANDON?')}</span>
               <button
                 onClick={() => { sessionStorage.removeItem('dessin-brouillon'); navigate('/') }}
                 style={{ ...mono, fontSize: 13, color: TB_ACCENT, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
-              >OUI</button>
+              >{tr('OUI', 'YES')}</button>
               <button
                 onClick={() => setConfirmExit(false)}
                 style={{ ...mono, fontSize: 13, color: TB_INK, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 6px' }}
-              >NON</button>
+              >{tr('NON', 'NO')}</button>
             </div>
           )}
         </div>
@@ -885,7 +886,7 @@ export default function JeuDessin() {
           {/* Bouton couleur */}
           <button
             onClick={() => setShowColorPanel(true)}
-            aria-label="Choisir une couleur"
+            aria-label={tr('Choisir une couleur', 'Choose a color')}
             style={{
               width: 44, height: 44, borderRadius: '50%',
               background: tool === 'eraser' ? '#f0ede8' : color,
@@ -899,12 +900,12 @@ export default function JeuDessin() {
 
         {/* Rangée opacité */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ ...mono, fontSize: 11, color: `${TB_INK}88`, flexShrink: 0 }}>OPACITÉ</span>
+          <span style={{ ...mono, fontSize: 11, color: `${TB_INK}88`, flexShrink: 0 }}>{tr('OPACITÉ', 'OPACITY')}</span>
           <input
             type="range" min={10} max={100} step={5}
             value={Math.round(opacity * 100)}
             onChange={e => setOpacity(Number(e.target.value) / 100)}
-            aria-label="Opacité du trait"
+            aria-label={tr('Opacité du trait', 'Stroke opacity')}
             disabled={tool === 'eraser'}
             style={{ flex: 1, accentColor: TB_ACCENT, cursor: tool === 'eraser' ? 'default' : 'pointer', opacity: tool === 'eraser' ? 0.35 : 1 }}
           />
@@ -915,7 +916,7 @@ export default function JeuDessin() {
 
         {/* Rangée tailles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ ...mono, fontSize: 11, color: `${TB_INK}88`, flexShrink: 0 }}>TAILLE</span>
+          <span style={{ ...mono, fontSize: 11, color: `${TB_INK}88`, flexShrink: 0 }}>{tr('TAILLE', 'SIZE')}</span>
           <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
             {SIZES.map((sz, i) => (
               <button
@@ -950,8 +951,8 @@ export default function JeuDessin() {
                 <button
                   onClick={undo}
                   disabled={!canUndo}
-                  aria-label="Annuler"
-                  title="Annuler (Ctrl+Z)"
+                  aria-label={tr('Annuler', 'Undo')}
+                  title={tr('Annuler (Ctrl+Z)', 'Undo (Ctrl+Z)')}
                   style={{
                     width: 44, height: 44, borderRadius: 3, border: 'none',
                     background: canUndo ? `${TB_ACCENT}20` : 'transparent',
@@ -967,8 +968,8 @@ export default function JeuDessin() {
                 <button
                   onClick={redo}
                   disabled={!canRedo}
-                  aria-label="Rétablir"
-                  title="Rétablir (Ctrl+Shift+Z)"
+                  aria-label={tr('Rétablir', 'Redo')}
+                  title={tr('Rétablir (Ctrl+Shift+Z)', 'Redo (Ctrl+Shift+Z)')}
                   style={{
                     width: 44, height: 44, borderRadius: 3, border: 'none',
                     background: canRedo ? `${TB_ACCENT}20` : 'transparent',
@@ -989,7 +990,7 @@ export default function JeuDessin() {
         {/* Rangée action */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* Son */}
-          <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Activer le son' : 'Couper le son'}
+          <button onClick={toggleMute} aria-pressed={muted} aria-label={muted ? tr('Activer le son', 'Unmute sound') : tr('Couper le son', 'Mute sound')}
             style={{
               width: 44, height: 44, borderRadius: 3, border: 'none',
               background: TB_BTN,
@@ -1003,8 +1004,8 @@ export default function JeuDessin() {
           <button
             onClick={() => setPanMode(p => !p)}
             aria-pressed={panMode}
-            aria-label={panMode ? 'Retour au dessin' : 'Naviguer / zoomer'}
-            title={panMode ? 'Retour au dessin' : 'Naviguer / Zoomer'}
+            aria-label={panMode ? tr('Retour au dessin', 'Back to drawing') : tr('Naviguer / zoomer', 'Pan / zoom')}
+            title={panMode ? tr('Retour au dessin', 'Back to drawing') : tr('Naviguer / Zoomer', 'Pan / Zoom')}
             style={{
               width: 44, height: 44, borderRadius: 3, border: 'none',
               background: panMode ? TB_ACCENT : TB_BTN,
@@ -1021,8 +1022,8 @@ export default function JeuDessin() {
               setPipetteActive(true)
             }}
             aria-pressed={pipetteActive}
-            aria-label="Compte-gouttes"
-            title="Prélever une couleur sur le canvas"
+            aria-label={tr('Compte-gouttes', 'Eyedropper')}
+            title={tr('Prélever une couleur sur le canvas', 'Pick a color from the canvas')}
             style={{
               width: 44, height: 44, borderRadius: 3, border: 'none',
               background: pipetteActive ? TB_ACCENT : TB_BTN,
@@ -1043,7 +1044,7 @@ export default function JeuDessin() {
             padding: '10px 24px', borderRadius: 3,
             letterSpacing: '0.16em',
           }}>
-            {bandeIdx + 1 < config.nbBandes ? 'VALIDER →' : 'RÉVÉLER →'}
+            {bandeIdx + 1 < config.nbBandes ? tr('VALIDER →', 'DONE →') : tr('RÉVÉLER →', 'REVEAL →')}
           </button>
         </div>
       </div>
@@ -1075,7 +1076,7 @@ export default function JeuDessin() {
               {/* Sélecteur natif + couleur custom */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 3, background: color, border: `1px solid ${encre}20`, flexShrink: 0 }} />
-                <span style={{ ...mono, fontSize: 13, color: encre, flex: 1, opacity: 0.85 }}>COULEUR PERSONNALISÉE</span>
+                <span style={{ ...mono, fontSize: 13, color: encre, flex: 1, opacity: 0.85 }}>{tr('COULEUR PERSONNALISÉE', 'CUSTOM COLOR')}</span>
                 <input
                   type="color"
                   value={color}
@@ -1087,7 +1088,7 @@ export default function JeuDessin() {
               {/* Couleurs récentes */}
               {recentColors.length > 0 && (
                 <>
-                  <span style={{ ...mono, fontSize: 13, color: `${encre}55`, display: 'block', marginBottom: 6 }}>RÉCENTES</span>
+                  <span style={{ ...mono, fontSize: 13, color: `${encre}55`, display: 'block', marginBottom: 6 }}>{tr('RÉCENTES', 'RECENT')}</span>
                   <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
                     {recentColors.map(col => (
                       <button
@@ -1131,7 +1132,7 @@ export default function JeuDessin() {
                 ...mono, fontSize: 13, background: '#f5f0ea', color: encre,
                 border: 'none', borderRadius: 3, cursor: 'pointer',
               }}>
-                FERMER
+                {tr('FERMER', 'CLOSE')}
               </button>
             </motion.div>
           </>
@@ -1156,13 +1157,13 @@ export default function JeuDessin() {
               style={{ textAlign: 'center' }}
             >
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
-                — BANDE 1/{config.nbBandes} —
+                {tr('— BANDE', '— BAND')} 1/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
-                Joueur 1.
+                {tr('Joueur', 'Player')} 1.
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
-                Dessine la première bande.
+                {tr('Dessine la première bande.', 'Draw the first band.')}
               </div>
             </motion.div>
 
@@ -1172,7 +1173,7 @@ export default function JeuDessin() {
               onClick={(e) => e.stopPropagation()}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
             >
-              <span style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.24em', opacity: 0.8 }}>— PAPIER —</span>
+              <span style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.24em', opacity: 0.8 }}>{tr('— PAPIER —', '— PAPER —')}</span>
               <div style={{ display: 'flex', gap: 10 }}>
                 {PAPERS.map(p => (
                   <button
@@ -1201,7 +1202,7 @@ export default function JeuDessin() {
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
               style={{ ...mono, fontSize: 13, color: bg, opacity: 0.75, letterSpacing: '0.2em' }}>
-              TOUCHER POUR COMMENCER
+              {tr('TOUCHER POUR COMMENCER', 'TAP TO BEGIN')}
             </motion.div>
           </motion.div>
         )}
@@ -1225,18 +1226,18 @@ export default function JeuDessin() {
               style={{ textAlign: 'center' }}
             >
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
-                — BANDE {bandeIdx + 2}/{config.nbBandes} —
+                {tr('— BANDE', '— BAND')} {bandeIdx + 2}/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
-                Joueur {nextPlayerNum}.
+                {tr('Joueur', 'Player')} {nextPlayerNum}.
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
-                Passe l'écran. Ne regarde pas.
+                {tr("Passe l'écran. Ne regarde pas.", "Pass the screen. Don't look.")}
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
               style={{ ...mono, fontSize: 13, color: bg, opacity: 0.75, letterSpacing: '0.2em' }}>
-              TOUCHER POUR COMMENCER
+              {tr('TOUCHER POUR COMMENCER', 'TAP TO BEGIN')}
             </motion.div>
           </motion.div>
         )}
