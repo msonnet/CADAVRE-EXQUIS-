@@ -880,7 +880,7 @@ export async function genererVideoStory(opts: {
     if (opts.type !== 'poeme') {
       cadreDouble(ox, W, H, accent)
       enTete(ox, W, accent, ink, opts.date, opts.seed)
-      marque(ox, W, accent, ink)
+      // la marque est dessinée par frame, en couleurs adaptatives, sur le voile
     }
   } else {
     cadreDouble(bx, W, H, accent)
@@ -971,6 +971,22 @@ export async function genererVideoStory(opts: {
       const ratio = Math.max(W / img.width, H / img.height)
       const w = img.width * ratio, h = img.height * ratio
       imgBox = { x: (W - w) / 2, y: (H - h) / 2, w, h }
+      // Couleurs de lecture décidées par le BAS du dessin (papier choisi) —
+      // même logique adaptative que le poème illustré
+      try {
+        const pw = 108, ph = 192
+        const probe = document.createElement('canvas')
+        probe.width = pw; probe.height = ph
+        const px = probe.getContext('2d')!
+        const pr = Math.max(pw / img.width, ph / img.height)
+        px.drawImage(img, (pw - img.width * pr) / 2, (ph - img.height * pr) / 2, img.width * pr, img.height * pr)
+        const d = px.getImageData(0, Math.floor(ph * 0.55), pw, ph - Math.floor(ph * 0.55)).data
+        let lum = 0
+        for (let i = 0; i < d.length; i += 4) lum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]
+        lum /= (d.length / 4) * 255
+        if (lum < 0.52) { encreTexte = '#f4eddc'; scrimTexte = '#100b06' }
+        else { encreTexte = '#17100a'; scrimTexte = '#f4eddc' }
+      } catch { /* canvas teinté : héritage ambiance */ }
     } catch { /* ignore */ }
   }
 
@@ -1042,7 +1058,7 @@ export async function genererVideoStory(opts: {
           dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeEff, W, H, encreTexte, scrimTexte)
         } else if (opts.type === 'poeme' && poemeLayout) {
           dessinerPoemeAnime(ctx, poemeLayout, t, dureeEff, W, accent, ink, bg)
-        } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, ink, bg)
+        } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, encreTexte, scrimTexte)
         // Voile de boucle — un cillement masque le raccord début/fin sur les réseaux.
         // Sur image plein cadre : couleur du scrim adaptatif (le voile d'ambiance
         // teintait la miniature d'un aplat étranger à l'image).
@@ -1335,9 +1351,16 @@ export function fracRevealDessin(t: number): { frac: number; scanActif: boolean 
 function dessinerDessinPleinCadre(
   ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
   texte: string, orn: HTMLCanvasElement, t: number, W: number, H: number, ZONE_W: number,
-  accent: string, ink: string, bg: string,
+  accent: string, encreLect: string, scrimLect: string,
 ) {
   const { frac, scanActif } = fracRevealDessin(t)
+
+  // Fantôme du dessin dès la frame 0 : il affleure sous le papier (miniature
+  // composée, hook immédiat) — la révélation bande par bande garde sa surprise
+  ctx.save()
+  ctx.globalAlpha = 0.13
+  ctx.drawImage(img, box.x, box.y, box.w, box.h)
+  ctx.restore()
 
   if (frac > 0) {
     ctx.save()
@@ -1357,9 +1380,10 @@ function dessinerDessinPleinCadre(
     }
   }
 
-  flash(ctx, W, t, REVEAL_DESSIN.flashT, REVEAL_DESSIN.flashDur, bg, accent)
+  flash(ctx, W, t, REVEAL_DESSIN.flashT, REVEAL_DESSIN.flashDur, scrimLect, accent)
 
-  // Voile papier de la lecture — sous les ornements pour que la marque reste lisible
+  // Voile de lecture — couleur du scrim ADAPTATIF (mesuré sur le dessin),
+  // plus jamais un aplat d'ambiance étranger à l'œuvre
   const lectOp = texte.trim() && t >= REVEAL_DESSIN.lectT
     ? clamp01((t - REVEAL_DESSIN.lectT) / REVEAL_DESSIN.lectDur)
     : 0
@@ -1367,29 +1391,31 @@ function dessinerDessinPleinCadre(
     ctx.save()
     ctx.globalAlpha = lectOp
     const g = ctx.createLinearGradient(0, H * 0.55, 0, H)
-    g.addColorStop(0, withAlpha(bg, 0))
-    g.addColorStop(0.4, withAlpha(bg, 0.72))
-    g.addColorStop(1, withAlpha(bg, 0.95))
+    g.addColorStop(0, withAlpha(scrimLect, 0))
+    g.addColorStop(0.4, withAlpha(scrimLect, 0.62))
+    g.addColorStop(1, withAlpha(scrimLect, 0.92))
     ctx.fillStyle = g
     ctx.fillRect(0, H * 0.55, W, H * 0.45)
     ctx.restore()
   }
 
-  // Ornements par-dessus le dessin et le voile
+  // Ornements (cadre + en-tête) par-dessus le dessin et le voile
   ctx.drawImage(orn, 0, 0)
+  // Marque en couleurs adaptatives — lisible sur tout papier
+  marque(ctx, W, garantirContraste(accent, scrimLect, 3), encreLect)
 
   // Lecture surréaliste — léger fondu en surimpression
   if (lectOp > 0) {
     ctx.save()
     ctx.globalAlpha = lectOp
     const lectTop = 1380
-    ctx.fillStyle = withAlpha(accent, 0.8)
+    ctx.fillStyle = garantirContraste(accent, scrimLect, 3)
     ctx.textAlign = 'center'
     ctx.font = "22px 'Raleway', sans-serif"
     texteEspace(ctx, '— LECTURE —', W / 2, lectTop, 22 * 0.3)
     ctx.font = "italic 36px 'Playfair Display', Georgia, serif"
     const lignes = wrapText(ctx, texte.replace(/\n+/g, ' ').trim(), ZONE_W - 60).slice(0, 4)
-    ctx.fillStyle = withAlpha(ink, 0.88)
+    ctx.fillStyle = withAlpha(encreLect, 0.92)
     lignes.forEach((line, i) => {
       const txt = (i === 0 ? '« ' : '') + line + (i === lignes.length - 1 ? ' »' : '')
       ctx.fillText(txt, W / 2, lectTop + 56 + i * 56)
