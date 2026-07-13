@@ -871,14 +871,20 @@ export async function genererVideoStory(opts: {
     ornCanvas = document.createElement('canvas')
     ornCanvas.width = W; ornCanvas.height = H
     const ox = ornCanvas.getContext('2d')!
-    // Pour les poèmes illustrés : image bord à bord, sans cadre ni en-tête —
-    // juste la marque "CADAVRE EXQUIS" en bas. Pour les dessins on garde les ornements.
-    const ornInk = opts.type === 'poeme' ? bg : ink
+    // Pour les poèmes illustrés : image bord à bord, sans cadre ni en-tête.
+    // La marque repose sur un SOCLE plein du papier de la séance — l'encre
+    // posée directement sur l'image était une loterie de contraste.
     if (opts.type !== 'poeme') {
       cadreDouble(ox, W, H, accent)
-      enTete(ox, W, accent, ornInk, opts.date, opts.seed)
+      enTete(ox, W, accent, ink, opts.date, opts.seed)
+      marque(ox, W, accent, ink)
+    } else {
+      ox.fillStyle = bg
+      ox.fillRect(0, 1744, W, H - 1744)
+      ox.fillStyle = withAlpha(accent, 0.6)
+      ox.fillRect(0, 1744, W, 2)
+      marque(ox, W, accent, ink)
     }
-    marque(ox, W, accent, ornInk)
   } else {
     cadreDouble(bx, W, H, accent)
     enTete(bx, W, accent, ink, opts.date, opts.seed)
@@ -892,6 +898,9 @@ export async function genererVideoStory(opts: {
   let poemeIllustImg: HTMLImageElement | null = null
   let illustBox = { x: 0, y: 0, w: 0, h: 0 }
   let overlay: OverlayTexte | null = null
+  // Couleurs du texte en surimpression — décidées par l'IMAGE, pas par l'ambiance
+  let encreTexte = bg
+  let scrimTexte = ink
   if (opts.type === 'poeme') {
     if (opts.imageDataUrl) {
       try { poemeIllustImg = await chargerImage(opts.imageDataUrl) }
@@ -903,6 +912,24 @@ export async function genererVideoStory(opts: {
       const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
       illustBox = { x: (W - dW) / 2, y: (H - dH) / 2, w: dW, h: dH }
       overlay = layoutTexteOverlay(ctx, opts.titre, opts.texte, W, H, ZONE_W)
+      // Luminance moyenne de la zone où le texte se posera : encre crème sur
+      // image sombre, encre brune sur image claire — plus de loterie d'ambiance.
+      try {
+        const pw = 108, ph = 192
+        const probe = document.createElement('canvas')
+        probe.width = pw; probe.height = ph
+        const px = probe.getContext('2d')!
+        const pr = Math.max(pw / poemeIllustImg.width, ph / poemeIllustImg.height)
+        px.drawImage(poemeIllustImg, (pw - poemeIllustImg.width * pr) / 2, (ph - poemeIllustImg.height * pr) / 2, poemeIllustImg.width * pr, poemeIllustImg.height * pr)
+        const y0 = Math.max(0, Math.floor(((overlay.titre ? overlay.titreTop : overlay.top) - 60) / H * ph))
+        const y1 = Math.min(ph, Math.ceil((overlay.top + overlay.lignes.length * overlay.lineH + 30) / H * ph))
+        const d = px.getImageData(0, y0, pw, Math.max(1, y1 - y0)).data
+        let lum = 0
+        for (let i = 0; i < d.length; i += 4) lum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]
+        lum /= (d.length / 4) * 255
+        if (lum < 0.52) { encreTexte = '#f4eddc'; scrimTexte = '#100b06' }
+        else { encreTexte = '#17100a'; scrimTexte = '#f4eddc' }
+      } catch { /* canvas teinté (image sans CORS) : héritage ambiance */ }
     } else {
       // ── Texte seul : mise en page et animation existantes ──
       if (opts.titre?.trim()) {
@@ -992,7 +1019,7 @@ export async function genererVideoStory(opts: {
       try {
         ctx.drawImage(bgCanvas, 0, 0)
         if (opts.type === 'poeme' && poemeIllustImg && overlay) {
-          dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeMs, W, H, ink, bg)
+          dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeMs, W, H, encreTexte, scrimTexte)
         } else if (opts.type === 'poeme' && poemeLayout) {
           dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
         } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, ink, bg)
@@ -1022,10 +1049,10 @@ function flash(ctx: CanvasRenderingContext2D, W: number, t: number, t0: number, 
   const a = Math.sin(p * Math.PI) // 0→1→0
   const r = (0.2 + p * 2.8) * Math.max(W, 1920) * 0.3
   ctx.save()
-  ctx.globalAlpha = a * 0.9
+  ctx.globalAlpha = a * 0.5
   const grad = ctx.createRadialGradient(W / 2, 960, 0, W / 2, 960, r)
-  grad.addColorStop(0, bg)
-  grad.addColorStop(0.4, withAlpha(accent, 0.35))
+  grad.addColorStop(0, withAlpha(bg, 0.85))
+  grad.addColorStop(0.4, withAlpha(accent, 0.16))
   grad.addColorStop(1, withAlpha(bg, 0))
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, W, 1920)
@@ -1050,15 +1077,25 @@ function dessinerPoemeAnime(
   // Convergence + suspension des fragments (les voix éparses se rassemblent)
   if (t < ANIM_FLASH_T) {
     ctx.textAlign = 'center'
-    ctx.font = `italic 36px 'Bodoni Moda', Georgia, serif`
+    // 46 px et départ à 120 ms : les fragments sont lisibles dès la première
+    // seconde (le hook des stories) et sur la miniature de partage
+    ctx.font = `italic 46px 'Bodoni Moda', Georgia, serif`
+    const nf = L.fragments.length
     L.fragments.forEach((f, i) => {
-      const dep = 360 + i * 160
+      const dep = i * 130
       const local = clamp01((t - dep) / (CONV_FIN - dep))
       const e = easeInOut(local)
-      const x = f.x0 + (W / 2 - f.x0) * e
+      // Positions de départ RAMENÉES dans le cadre : les fragments sont
+      // lisibles dès la première frame (miniature + hook), puis convergent
+      const x0v = Math.min(W - 200, Math.max(200, f.x0))
+      const y0v = Math.min(1460, Math.max(380, f.y0))
+      const x = x0v + (W / 2 - x0v) * e
       const flot = t < CONV_FIN ? Math.sin(t / 1000 * 0.8 * Math.PI * 2 + i * 1.7) * 4 * (1 - e * 0.5) : 0
-      const y = f.y0 + (convergeY - f.y0) * e + flot
-      const op = (t < CONV_FIN ? Math.min(0.82, local * 1.2) : 0.92) * (t > SUSP_FIN - 60 ? Math.max(0, (ANIM_FLASH_T - t) / 60) : 1)
+      // Convergence ÉTAGÉE : chaque fragment rejoint sa propre ligne — ils se
+      // rassemblent sans jamais s'imprimer l'un sur l'autre
+      const cy = convergeY + (i - (nf - 1) / 2) * 58
+      const y = y0v + (cy - y0v) * e + flot
+      const op = (t < CONV_FIN ? Math.min(0.95, 0.30 + local * 1.5) : 0.95) * (t > SUSP_FIN - 60 ? Math.max(0, (ANIM_FLASH_T - t) / 60) : 1)
       if (op <= 0) return
       ctx.save()
       ctx.translate(x, y)
@@ -1172,45 +1209,59 @@ function layoutTexteOverlay(
 }
 
 // Poème + illustration : image bord à bord, texte en fondu simultané.
-// Pas de cadre ni d'en-tête — juste l'image, le poème et la marque.
+// L'encre et le voile viennent de la luminance mesurée de l'image (encreTexte /
+// scrim), la lisibilité est assurée par une BANDE locale derrière le bloc de
+// texte — l'image reste intacte partout ailleurs.
 function dessinerPoemePleinCadre(
   ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
-  L: OverlayTexte, orn: HTMLCanvasElement, t: number, duree: number, W: number, H: number, ink: string, bg: string,
+  L: OverlayTexte, orn: HTMLCanvasElement, t: number, duree: number, W: number, H: number, encreTexte: string, scrim: string,
 ) {
-  // Image : fondu rapide + très légère respiration de zoom
-  const a = easeInOut(clamp01((t - 150) / 1600))
-  if (a > 0) {
-    const sc = 1.03 - 0.03 * clamp01(t / duree)
-    const w = box.w * sc, h = box.h * sc
-    ctx.save()
-    ctx.globalAlpha = a
-    ctx.drawImage(img, W / 2 - w / 2, H / 2 - h / 2, w, h)
-    // Voile d'encre léger — lisibilité sans noyer l'image
-    const g = ctx.createLinearGradient(0, 0, 0, H)
-    g.addColorStop(0,    withAlpha(ink, 0.28))
-    g.addColorStop(0.45, withAlpha(ink, 0.14))
-    g.addColorStop(0.75, withAlpha(ink, 0.08))
-    g.addColorStop(1,    withAlpha(ink, 0.22))
-    ctx.fillStyle = g
-    ctx.fillRect(0, 0, W, H)
-    ctx.restore()
-  }
+  // Image : présente dès la frame 0 (miniature de story = première image),
+  // pleine à 800 ms, avec une respiration de zoom continue jusqu'au bout
+  const a = 0.35 + 0.65 * easeInOut(clamp01(t / 800))
+  const sc = 1.035 - 0.035 * clamp01(t / duree)
+  const w = box.w * sc, h = box.h * sc
+  ctx.save()
+  ctx.globalAlpha = a
+  ctx.drawImage(img, W / 2 - w / 2, H / 2 - h / 2, w, h)
+  // Voile global très léger (le socle et la bande locale font la lisibilité)
+  const g = ctx.createLinearGradient(0, 0, 0, H)
+  g.addColorStop(0,    withAlpha(scrim, 0.16))
+  g.addColorStop(0.45, withAlpha(scrim, 0.06))
+  g.addColorStop(1,    withAlpha(scrim, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, W, H)
+  ctx.restore()
 
-  // Marque "CADAVRE EXQUIS" en bas (ornCanvas contient uniquement cela)
+  // Socle + marque "CADAVRE EXQUIS" (ornCanvas)
   ctx.drawImage(orn, 0, 0)
 
-  // Texte : toutes les lignes apparaissent ensemble en fondu lent
-  const TXT_T = 1500, FADE = 1100
+  // Texte : fondu dès 800 ms — le spectateur a le vers avant la 2e seconde
+  const TXT_T = 800, FADE = 900
   const ta = easeInOut(clamp01((t - TXT_T) / FADE))
   if (ta <= 0) return
+
+  // Bande de lisibilité locale — dégradé doux aux bords, jamais un aplat
+  const hautBande = (L.titre ? L.titreTop : L.top) - 40
+  const basBande = L.top + L.lignes.length * L.lineH + 28
+  ctx.save()
+  ctx.globalAlpha = ta
+  const gb = ctx.createLinearGradient(0, hautBande - 70, 0, basBande + 70)
+  gb.addColorStop(0,    withAlpha(scrim, 0))
+  gb.addColorStop(0.25, withAlpha(scrim, 0.44))
+  gb.addColorStop(0.75, withAlpha(scrim, 0.44))
+  gb.addColorStop(1,    withAlpha(scrim, 0))
+  ctx.fillStyle = gb
+  ctx.fillRect(0, hautBande - 70, W, basBande - hautBande + 140)
+  ctx.restore()
 
   ctx.textAlign = 'center'
 
   if (L.titre) {
     ctx.save()
     ctx.globalAlpha = ta
-    ctx.shadowColor = withAlpha(ink, 0.70); ctx.shadowBlur = 24; ctx.shadowOffsetY = 3
-    ctx.fillStyle = bg
+    ctx.shadowColor = withAlpha(scrim, 0.85); ctx.shadowBlur = 26; ctx.shadowOffsetY = 3
+    ctx.fillStyle = encreTexte
     ctx.font = `800 italic ${L.titreSize}px 'Bodoni Moda', Georgia, serif`
     L.titre.forEach((line, i) => ctx.fillText(line, W / 2, L.titreTop + (i + 1) * (L.titreSize + 12)))
     ctx.restore()
@@ -1220,9 +1271,9 @@ function dessinerPoemePleinCadre(
   L.lignes.forEach((ligne, i) => {
     if (!ligne) return
     ctx.save()
-    ctx.globalAlpha = ta * 0.95
-    ctx.shadowColor = withAlpha(ink, 0.70); ctx.shadowBlur = 22; ctx.shadowOffsetY = 2
-    ctx.fillStyle = bg
+    ctx.globalAlpha = ta * 0.97
+    ctx.shadowColor = withAlpha(scrim, 0.85); ctx.shadowBlur = 24; ctx.shadowOffsetY = 2
+    ctx.fillStyle = encreTexte
     ctx.fillText(ligne, W / 2, L.top + (i + 1) * L.lineH)
     ctx.restore()
   })
