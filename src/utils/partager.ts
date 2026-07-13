@@ -1,3 +1,4 @@
+import { garantirContraste } from '../reve/contraste'
 export async function partagerImage(
   dataUrl: string,
   nomFichier: string,
@@ -725,7 +726,9 @@ function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; text
     bodySize = 40; bodyLineH = 62
     wrapped = doWrap(bodySize)
   }
-  if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
+  if (wrapped.length > 17) { bodySize = 33; bodyLineH = 50; wrapped = doWrap(bodySize) }
+  if (wrapped.length > 24) { bodySize = 28; bodyLineH = 42; wrapped = doWrap(bodySize) }
+  if (wrapped.length > 28) { wrapped = wrapped.slice(0, 27); wrapped.push('[…]') }
 
   // Positions de fin de chaque fragment source dans le tableau wrapped[]
   const fragEndIndices: number[] = []
@@ -872,17 +875,11 @@ export async function genererVideoStory(opts: {
     ornCanvas.width = W; ornCanvas.height = H
     const ox = ornCanvas.getContext('2d')!
     // Pour les poèmes illustrés : image bord à bord, sans cadre ni en-tête.
-    // La marque repose sur un SOCLE plein du papier de la séance — l'encre
-    // posée directement sur l'image était une loterie de contraste.
+    // La marque est dessinée APRÈS l'échantillonnage de l'image (plus bas),
+    // sur un dégradé aux couleurs adaptatives — jamais un bandeau étranger.
     if (opts.type !== 'poeme') {
       cadreDouble(ox, W, H, accent)
       enTete(ox, W, accent, ink, opts.date, opts.seed)
-      marque(ox, W, accent, ink)
-    } else {
-      ox.fillStyle = bg
-      ox.fillRect(0, 1744, W, H - 1744)
-      ox.fillStyle = withAlpha(accent, 0.6)
-      ox.fillRect(0, 1744, W, 2)
       marque(ox, W, accent, ink)
     }
   } else {
@@ -930,6 +927,19 @@ export async function genererVideoStory(opts: {
         if (lum < 0.52) { encreTexte = '#f4eddc'; scrimTexte = '#100b06' }
         else { encreTexte = '#17100a'; scrimTexte = '#f4eddc' }
       } catch { /* canvas teinté (image sans CORS) : héritage ambiance */ }
+      // Marque en bas : dégradé fondu dans l'image (couleur du scrim adaptatif),
+      // encre adaptative, accent ramené au contraste — se marie avec toute image
+      {
+        const ox = ornCanvas!.getContext('2d')!
+        ox.clearRect(0, 0, W, H)
+        const gs = ox.createLinearGradient(0, H - 540, 0, H)
+        gs.addColorStop(0, withAlpha(scrimTexte, 0))
+        gs.addColorStop(0.55, withAlpha(scrimTexte, 0.52))
+        gs.addColorStop(1, withAlpha(scrimTexte, 0.92))
+        ox.fillStyle = gs
+        ox.fillRect(0, H - 540, W, 540)
+        marque(ox, W, garantirContraste(accent, scrimTexte, 3), encreTexte)
+      }
     } else {
       // ── Texte seul : mise en page et animation existantes ──
       if (opts.titre?.trim()) {
@@ -941,6 +951,12 @@ export async function genererVideoStory(opts: {
         const tlh = ts + 12
         tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
         filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
+      }
+      if (pleinCadre) {
+        // L'image annoncée n'a pas chargé : on rend au fond ses ornements
+        cadreDouble(bx, W, H, accent)
+        enTete(bx, W, accent, ink, opts.date, opts.seed)
+        marque(bx, W, accent, ink)
       }
       poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, false, false)
       // Lignes de pli entre fragments — sur le fond fixe, révélées dès le début
@@ -957,6 +973,10 @@ export async function genererVideoStory(opts: {
       imgBox = { x: (W - w) / 2, y: (H - h) / 2, w, h }
     } catch { /* ignore */ }
   }
+
+  // Longs poèmes : la vidéo s'étire à 8 s pour laisser chaque vers s'écrire
+  const nbLignesContenu = overlay?.lignes.length ?? poemeLayout?.lignes.filter(l => l.texte).length ?? 0
+  const dureeEff = nbLignesContenu > 12 ? Math.max(dureeMs, 8000) : dureeMs
 
   // Audio embarqué dans la vidéo — seulement si la session audio démarre vraiment.
   // Sur iOS, une session interrompue peut laisser resume() en suspens pour toujours :
@@ -1012,23 +1032,26 @@ export async function genererVideoStory(opts: {
     const terminer = () => { if (!fini) { fini = true; clearInterval(garde); resolve() } }
     // Garde-fou : si requestAnimationFrame se fige (onglet masqué, throttling iOS)
     // ou qu'une frame lève, on conclut quand même — la composition ne doit jamais tourner en rond
-    const garde = setInterval(() => { if (performance.now() - start >= dureeMs + 1500) terminer() }, 400)
+    const garde = setInterval(() => { if (performance.now() - start >= dureeEff + 1500) terminer() }, 400)
     const frame = () => {
       if (fini) return
       const t = performance.now() - start
       try {
         ctx.drawImage(bgCanvas, 0, 0)
         if (opts.type === 'poeme' && poemeIllustImg && overlay) {
-          dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeMs, W, H, encreTexte, scrimTexte)
+          dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeEff, W, H, encreTexte, scrimTexte)
         } else if (opts.type === 'poeme' && poemeLayout) {
-          dessinerPoemeAnime(ctx, poemeLayout, t, W, accent, ink, bg)
+          dessinerPoemeAnime(ctx, poemeLayout, t, dureeEff, W, accent, ink, bg)
         } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, ink, bg)
-        // Voile de boucle — un cillement crème masque le raccord début/fin sur les réseaux
+        // Voile de boucle — un cillement masque le raccord début/fin sur les réseaux.
+        // Sur image plein cadre : couleur du scrim adaptatif (le voile d'ambiance
+        // teintait la miniature d'un aplat étranger à l'image).
         if (t < 130) {
-          ctx.save(); ctx.globalAlpha = 0.6 * (1 - t / 130); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.restore()
+          const vc = (opts.type === 'poeme' && poemeIllustImg) ? scrimTexte : bg
+          ctx.save(); ctx.globalAlpha = 0.45 * (1 - t / 130); ctx.fillStyle = vc; ctx.fillRect(0, 0, W, H); ctx.restore()
         }
       } catch { terminer(); return }
-      if (t < dureeMs) requestAnimationFrame(frame)
+      if (t < dureeEff) requestAnimationFrame(frame)
       else terminer()
     }
     requestAnimationFrame(frame)
@@ -1068,7 +1091,7 @@ function tremor(t: number, actif: boolean): [number, number, number] {
 }
 
 function dessinerPoemeAnime(
-  ctx: CanvasRenderingContext2D, L: LayoutPoeme, t: number, W: number, accent: string, ink: string, bg: string,
+  ctx: CanvasRenderingContext2D, L: LayoutPoeme, t: number, duree: number, W: number, accent: string, ink: string, bg: string,
 ) {
   const CONV_FIN = 3300, SUSP_FIN = 3640, FLASH_DUR = 320
   const LIGNE_DUR = 260, TREMOR_FIN = 5700
@@ -1079,10 +1102,11 @@ function dessinerPoemeAnime(
     ctx.textAlign = 'center'
     // 46 px et départ à 120 ms : les fragments sont lisibles dès la première
     // seconde (le hook des stories) et sur la miniature de partage
-    ctx.font = `italic 46px 'Bodoni Moda', Georgia, serif`
     const nf = L.fragments.length
+    // Beaucoup de voix (Atelier) : fragments plus petits, cadence resserrée
+    ctx.font = `italic ${nf > 8 ? 32 : 46}px 'Bodoni Moda', Georgia, serif`
     L.fragments.forEach((f, i) => {
-      const dep = i * 130
+      const dep = i * Math.min(130, 2200 / Math.max(1, nf))
       const local = clamp01((t - dep) / (CONV_FIN - dep))
       const e = easeInOut(local)
       // Positions de départ RAMENÉES dans le cadre : les fragments sont
@@ -1093,7 +1117,7 @@ function dessinerPoemeAnime(
       const flot = t < CONV_FIN ? Math.sin(t / 1000 * 0.8 * Math.PI * 2 + i * 1.7) * 4 * (1 - e * 0.5) : 0
       // Convergence ÉTAGÉE : chaque fragment rejoint sa propre ligne — ils se
       // rassemblent sans jamais s'imprimer l'un sur l'autre
-      const cy = convergeY + (i - (nf - 1) / 2) * 58
+      const cy = convergeY + (i - (nf - 1) / 2) * Math.min(58, 1150 / Math.max(1, nf))
       const y = y0v + (cy - y0v) * e + flot
       const op = (t < CONV_FIN ? Math.min(0.95, 0.30 + local * 1.5) : 0.95) * (t > SUSP_FIN - 60 ? Math.max(0, (ANIM_FLASH_T - t) / 60) : 1)
       if (op <= 0) return
@@ -1113,8 +1137,10 @@ function dessinerPoemeAnime(
   ctx.textAlign = 'center'
   ctx.font = `italic ${L.bodySize}px 'Bodoni Moda', Georgia, serif`
   const visibles = L.lignes.filter(l => l.texte)
+  // Cadence adaptative : tous les vers doivent être écrits 600 ms avant la fin
+  const pas = Math.min(ANIM_LIGNE_PAS, Math.max(70, (duree - 600 - ANIM_LIGNE_T) / Math.max(1, visibles.length)))
   visibles.forEach((ligne, i) => {
-    const lt = ANIM_LIGNE_T + i * ANIM_LIGNE_PAS
+    const lt = ANIM_LIGNE_T + i * pas
     if (t < lt) return
     const p = clamp01((t - lt) / LIGNE_DUR)
     const e = easeOutCubic(p)
@@ -1192,8 +1218,10 @@ function layoutTexteOverlay(
     return r
   }
   let lignes = doWrap(size)
-  if (lignes.length > 12) { size = 42; lineH = 64; lignes = doWrap(size) }
-  if (lignes.length > 16) { lignes = lignes.slice(0, 15); lignes.push('[…]') }
+  if (lignes.length > 12) { size = 42; lineH = 62; lignes = doWrap(size) }
+  if (lignes.length > 16) { size = 34; lineH = 50; lignes = doWrap(size) }
+  if (lignes.length > 24) { size = 28; lineH = 42; lignes = doWrap(size) }
+  if (lignes.length > 28) { lignes = lignes.slice(0, 27); lignes.push('[…]') }
 
   let titreLines: string[] | null = null
   let titreSize = 64
@@ -1204,7 +1232,7 @@ function layoutTexteOverlay(
   const titreH = titreLines ? titreLines.length * (titreSize + 12) + 44 : 0
   const blockH = lignes.length * lineH
   let top = H * 0.44 - (blockH + titreH) / 2
-  top = Math.max(420, Math.min(top, 1640 - blockH))
+  top = Math.max(380, Math.min(top, 1600 - blockH))
   return { lignes, size, lineH, top: top + titreH, titre: titreLines, titreSize, titreTop: top }
 }
 
