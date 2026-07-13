@@ -302,6 +302,7 @@ export default function FinOnline() {
     const opts = {
       type: 'poeme' as const, titre: '',
       texte: textePartage,
+      imageDataUrl: illustrationUrl || undefined,
       accent, bg, ink: encre, date: Date.now(), seed: code ?? texteAssemble,
     }
     try { const ok = await partagerVideoStory(opts); if (ok !== 'annule' && !ok) await partagerStory(opts) }
@@ -317,7 +318,8 @@ export default function FinOnline() {
       imageDataUrl: imageAssemblee,
       accent, bg, ink: encre, date: Date.now(), seed: code ?? 'dessin',
     }
-    try { const ok = await partagerVideoStory(opts, 'cadavre-dessiné'); if (!ok) await partagerStory(opts, 'cadavre-dessiné') }
+    try { const ok = await partagerVideoStory(opts, 'cadavre-dessiné'); if (ok !== 'annule' && !ok) await partagerStory(opts, 'cadavre-dessiné') }
+    catch (e) { console.error('partage échoué', e) }
     finally { setPartageEnCours(false) }
   }
 

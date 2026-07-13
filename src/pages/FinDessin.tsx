@@ -173,7 +173,10 @@ export default function FinDessin() {
     }
     try {
       const ok = await partagerVideoStory(opts, 'cadavre-dessiné')
+      if (ok === 'annule') return // feuille fermée par l'utilisateur
       if (!ok) await partagerStory(opts, 'cadavre-dessiné')
+    } catch (e) {
+      console.error('partage échoué', e)
     } finally {
       setPartageEnCours(false)
     }
