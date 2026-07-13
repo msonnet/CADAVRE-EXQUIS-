@@ -1063,6 +1063,10 @@ export default function Jeu() {
                   </button>
                 </div>
               )}
+              {/* Folio — mobilier de page : le vide devient une mise en page */}
+              <div aria-hidden style={{ ...mono, fontSize: 11, letterSpacing: '0.3em', color: encre, opacity: 0.35, marginTop: 10 }}>
+                · {toRomain(caseIndex + 1)} ·
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>

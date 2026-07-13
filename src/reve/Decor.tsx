@@ -115,6 +115,7 @@ export function ReveProvider({ children }: { children: React.ReactNode }) {
     r.style.setProperty('--reve-rule', a.rule)
     r.style.setProperty('--reve-accent', acc.hex)
     r.style.setProperty('--reve-accent-hover', acc.hover)
+    r.style.setProperty('--reve-accent-2', seance.accent2.hex)
     r.style.setProperty('--reve-button-text', a.buttonText)
     r.style.setProperty('--reve-halo', a.halo ?? 'none')
     r.style.setProperty('--reve-papier', a.bg)
@@ -434,7 +435,7 @@ function CitationManifeste() {
         fontSize: 17, fontWeight: 600,
         letterSpacing: '0.16em', textTransform: 'uppercase',
         fontFamily: "'Raleway', sans-serif",
-        color: 'var(--reve-accent)', marginTop: 8,
+        color: 'var(--reve-accent-2)', marginTop: 8,
       }}>{s.citation.a}</div>
     </div>
   )
@@ -447,8 +448,8 @@ function SignatureReve() {
       position: 'absolute', bottom: 6, right: 12,
       fontFamily: "'Raleway', sans-serif",
       fontWeight: 500,
-      color: 'var(--reve-accent)',
-      fontSize: 17, opacity: 0.7,
+      color: 'var(--reve-accent-2)',
+      fontSize: 17, opacity: 0.75,
       pointerEvents: 'none', zIndex: 6,
       animation: 'fadeInQ 0.8s 1.8s both',
     }}>rêvé à {s.heure}</div>

@@ -445,7 +445,7 @@ export default function FinDePartie() {
             >
               <motion.span
                 aria-hidden
-                style={{ fontSize: 22, color: accent }}
+                style={{ fontSize: 22, color: sc?.second ?? accent }}
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1.8, repeat: Infinity }}
               >✦</motion.span>

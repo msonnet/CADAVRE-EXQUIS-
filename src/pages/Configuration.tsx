@@ -137,7 +137,7 @@ export default function Configuration() {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: 14,
-                  padding: '12px 14px',
+                  padding: '16px 16px',
                   background: active ? `${accent}12` : 'transparent',
                   border: `0.5px solid ${active ? accent : `${encre}20`}`,
                   borderLeft: `3px solid ${active ? accent : 'transparent'}`,
@@ -147,11 +147,11 @@ export default function Configuration() {
                   transition: 'all 0.2s',
                 }}
               >
-                <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, minWidth: 26, paddingTop: 2 }}>
+                <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic', fontSize: 24, lineHeight: 1, color: accent, minWidth: 40, paddingTop: 1 }}>
                   {s.romain}.
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 17, color: encre, marginBottom: 3 }}>
+                  <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 19, color: encre, marginBottom: 4 }}>
                     {s.label}
                   </div>
                   <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.60 }}>{s.description}</div>
