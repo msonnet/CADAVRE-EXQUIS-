@@ -343,10 +343,12 @@ export default function JeuAtelier() {
 
     async function initFragment() {
       const p = plan!
-      // Le médium est une voix parmi d'autres : même tirage que le tour IA
-      // (1 à 3 plumes par vers, médium compris). Tiré seul — 1 chance sur 3,
-      // comme une voix IA — il écrit le vers entier.
-      const nAI = Math.min(Math.floor(Math.random() * 3), p.voixPool.length)
+      // Le médium écrit surtout des FRAGMENTS cousus avec les voix : le vers
+      // entier en solitaire devient l'exception (12 %) — c'est la couture
+      // aveugle qui fait l'atelier, pas l'écriture en solo.
+      const r = Math.random()
+      const nAIVoulu = r < 0.12 ? 0 : r < 0.56 ? 1 : 2
+      const nAI = Math.min(nAIVoulu, p.voixPool.length)
       const nTotal = nAI + 1
       // Le budget interrogatif s'applique aussi à la plume du médium
       const questionsOk = versRef.current.filter(v => v.texte.includes('?')).length
