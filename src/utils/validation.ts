@@ -168,6 +168,201 @@ function ressembleAdjectif(texte: string): boolean {
     || (ms.length === 1 && !contientVerbe(texte) && !contientArticle(texte))
 }
 
+// ─── Ressources anglaises ─────────────────────────────────────────────────────
+// Même philosophie que le français : des heuristiques franches, pas de NLP.
+// L'anglais n'a ni genre ni accord — la validation porte sur la catégorie.
+
+const ARTICLES_EN = new Set([
+  'the','a','an','this','that','these','those','some','any','no','every','each',
+  'my','your','his','her','its','our','their','one',
+])
+
+// Formes verbales fréquentes (présent 3e pers., prétérits irréguliers, modaux)
+const VERBES_EN = new Set([
+  'is','are','was','were','has','have','had','does','did','do',
+  'will','would','can','could','may','might','must','shall','should',
+  'goes','went','comes','came','falls','fell','burns','burned','burnt',
+  'glides','glided','trembles','trembled','devours','devoured','crosses','crossed',
+  'weighs','weighed','holds','held','keeps','kept','sleeps','slept',
+  'dreams','dreamt','dreamed','breathes','breathed','drinks','drank',
+  'eats','ate','sings','sang','cries','cried','whispers','whispered',
+  'waits','waited','watches','watched','opens','opened','closes','closed',
+  'breaks','broke','carries','carried','becomes','became','remains','remained',
+  'rises','rose','sinks','sank','swallows','swallowed','knows','knew',
+  'sees','saw','hears','heard','feels','felt','takes','took','gives','gave',
+  'makes','made','says','said','tells','told','finds','found','loses','lost',
+  'leaves','left','turns','turned','runs','ran','walks','walked','flies','flew',
+  'dies','died','lives','lived','grows','grew','begins','began','ends','ended',
+  'forgets','forgot','remembers','remembered','counts','counted','erases','erased',
+  'lifts','lifted','gnaws','gnawed','wavers','wavered','prowls','prowled',
+  'consents','consented','recoils','recoiled','capsizes','capsized',
+  'mends','mended','cradles','cradled','hollows','hollowed','tames','tamed',
+  'engulfs','engulfed','grazes','grazed','cracks','cracked','slips','slipped',
+  'melts','melted','shivers','shivered','bleeds','bled','waits','stands','stood',
+])
+
+const MOTS_INTERROGATIFS_EN = new Set([
+  'who','what','where','when','why','how','which','whose','whom',
+])
+
+const CONJ_COORD_EN = new Set([
+  'but','and','or','so','yet','for','nor','however','though','still','thus',
+])
+
+const CONJ_SUBORD_EN = new Set([
+  'when','if','while','as','although','because','before','after','until',
+  'since','unless','whereas','once','whenever','though','lest',
+])
+
+// Locutions adverbiales : tête de groupe prépositionnel court
+const TETES_LOCUTION_ADV_EN = new Set([
+  'without','in','at','by','for','on','under','beyond','against','through',
+])
+
+const ADVERBES_INVARIABLES_EN = new Set([
+  'forever','elsewhere','backwards','sideways','gently','softly','slowly',
+  'silently','quietly','again','away','beneath','everywhere','nowhere',
+  'always','never','almost','already','still','twice',
+])
+
+function motsEN(texte: string): string[] {
+  return texte.trim().split(/\s+/).filter(Boolean)
+}
+
+function normEN(mot: string): string {
+  return mot.toLowerCase().replace(/[.,;:!?…»«"“”'']+$/g, '').replace(/^[«"“”'']+/g, '')
+}
+
+function contientVerbeEN(texte: string): boolean {
+  return motsEN(texte).some(m => VERBES_EN.has(normEN(m)))
+}
+
+function contientArticleEN(texte: string): boolean {
+  return motsEN(texte).some(m => ARTICLES_EN.has(normEN(m)))
+}
+
+function ressembleAdverbeEN(texte: string): boolean {
+  const ms = motsEN(texte).map(normEN)
+  if (ms.length === 1) {
+    return ms[0].endsWith('ly') || ADVERBES_INVARIABLES_EN.has(ms[0])
+  }
+  // Locution courte : « without a sound », « in silence », « at dusk »
+  return ms.length <= 3 && TETES_LOCUTION_ADV_EN.has(ms[0])
+}
+
+// Validation stricte anglaise — miroir du système français, catégorie par catégorie.
+function validerCaseEN(texte: string, type: TypeCase): ResultatValidation {
+  const ms = motsEN(texte)
+  const n = ms.length
+
+  switch (type) {
+    case 'verbe':
+    case 'verbe-transitif': {
+      if (contientVerbeEN(texte)) return { valide: true }
+      // Tolérance : mot unique sans article (forme non répertoriée)
+      if (n === 1 && !contientArticleEN(texte)) return { valide: true }
+      return { valide: false, message: 'Are you sure? The prompt asks for a conjugated verb.' }
+    }
+
+    case 'nom': {
+      if (contientVerbeEN(texte) && n > 2) {
+        return { valide: false, message: 'Are you sure? The prompt asks for a noun, not a sentence.' }
+      }
+      return { valide: true }
+    }
+
+    case 'adjectif': {
+      if (contientVerbeEN(texte)) {
+        return { valide: false, message: 'Are you sure? The prompt asks for an adjective.' }
+      }
+      if (n > 3) {
+        return { valide: false, message: 'One or two words at most for this fragment.' }
+      }
+      return { valide: true }
+    }
+
+    case 'groupe-nominal':
+    case 'groupe-nominal-riche': {
+      if (contientVerbeEN(texte) && n > 3) {
+        return { valide: false, message: 'Are you sure? The prompt asks for a noun phrase, not a full sentence.' }
+      }
+      return { valide: true }
+    }
+
+    case 'proposition': {
+      if (!texte.includes('?') && !MOTS_INTERROGATIFS_EN.has(normEN(ms[0] ?? ''))) {
+        return { valide: false, message: 'The prompt asks for a question — end with a “?”.' }
+      }
+      return { valide: true }
+    }
+
+    case 'article-adj': {
+      if (n === 2 && contientArticleEN(texte)) return { valide: true }
+      if (n === 1 && contientArticleEN(texte)) {
+        return { valide: false, message: "Write the article AND the adjective (e.g. 'a dark', 'the old')." }
+      }
+      return { valide: true }
+    }
+
+    case 'gérondif': {
+      // Gérondif anglais : forme en -ing en tête (« falling », « burning slowly »)
+      if (n >= 1 && normEN(ms[0]).endsWith('ing')) return { valide: true }
+      return { valide: false, message: "The prompt asks for an -ing form (e.g. 'falling', 'burning slowly')." }
+    }
+
+    case 'adverbe': {
+      if (ressembleAdverbeEN(texte)) return { valide: true }
+      if (contientVerbeEN(texte) && n > 2) {
+        return { valide: false, message: "The prompt asks for an adverb or adverbial phrase (e.g. 'gently', 'without a sound', 'forever')." }
+      }
+      return { valide: true }
+    }
+
+    case 'groupe-verbal': {
+      if (!contientVerbeEN(texte) && n > 2) {
+        return { valide: false, message: "A verb phrase needs a conjugated verb (e.g. 'crosses the night', 'burns in silence')." }
+      }
+      return { valide: true }
+    }
+
+    case 'conjonction-coord': {
+      if (n > 2) {
+        return { valide: false, message: "The prompt asks for a conjunction, a single word (e.g. 'but', 'yet', 'however')." }
+      }
+      if (contientVerbeEN(texte)) {
+        return { valide: false, message: 'The prompt asks for a conjunction, not a full sentence.' }
+      }
+      if (n === 1 && CONJ_COORD_EN.has(normEN(ms[0]))) return { valide: true }
+      return { valide: true }
+    }
+
+    case 'conjonction-subord': {
+      if (n > 3) {
+        return { valide: false, message: "The prompt asks for a subordinating conjunction (e.g. 'when', 'while', 'as soon as')." }
+      }
+      if (contientVerbeEN(texte) && n > 2) {
+        return { valide: false, message: 'The prompt asks for a conjunction, not a full clause.' }
+      }
+      if (n === 1 && CONJ_SUBORD_EN.has(normEN(ms[0]))) return { valide: true }
+      return { valide: true }
+    }
+
+    case 'infinitif': {
+      // Infinitif anglais : « to burn » — ou verbe nu toléré
+      if (n === 2 && normEN(ms[0]) === 'to') return { valide: true }
+      if (n === 1 && !contientArticleEN(texte)) return { valide: true }
+      if (contientArticleEN(texte)) {
+        return { valide: false, message: 'An infinitive is a bare verb, no article (e.g. «to burn», «to wait»).' }
+      }
+      return { valide: false, message: "The prompt asks for an infinitive: one verb (e.g. 'to burn', 'to wait')." }
+    }
+
+    case 'libre':
+    default:
+      return { valide: true }
+  }
+}
+
 // ─── Validateur principal ─────────────────────────────────────────────────────
 
 export function validerCase(
@@ -175,20 +370,13 @@ export function validerCase(
   type: TypeCase,
   niveau: NiveauValidation
 ): ResultatValidation {
-  // Anglais : validation allégée — pas d'accords ni de conjugaison à vérifier.
-  // On garde les garde-fous de forme (vide, question, longueurs).
+  // Anglais : validation par catégorie — pas d'accords ni de genre, mais les
+  // mêmes garde-fous de forme que le français (verbe présent, longueurs, têtes).
   if (langueActuelle() === 'en') {
-    const t = texte.trim()
-    if (!t) return { valide: false, message: 'Write something first.' }
-    if (niveau !== 'stricte') return { valide: true }
-    const n = t.split(/\s+/).length
-    if (type === 'proposition' && !t.includes('?')) {
-      return { valide: false, message: 'The prompt asks for a question — end with a “?”.' }
-    }
-    if ((type === 'nom' || type === 'adjectif' || type === 'verbe' || type === 'infinitif') && n > 3) {
-      return { valide: false, message: 'One or two words at most for this fragment.' }
-    }
-    return { valide: true }
+    if (niveau === 'desactivee') return { valide: true }
+    if (!texte.trim()) return { valide: false, message: 'Write something first.' }
+    if (niveau === 'souple') return { valide: true }
+    return validerCaseEN(texte, type)
   }
   if (niveau === 'desactivee') return { valide: true }
   if (!texte.trim()) return { valide: false, message: 'Écris quelque chose.' }
