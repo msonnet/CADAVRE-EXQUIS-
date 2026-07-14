@@ -11,7 +11,7 @@ import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
-import { supabase } from '../lib/supabase'
+import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
@@ -136,11 +136,17 @@ export default function PoemeDetail() {
         titre: poeme.titre,
         langue: langueActuelle(),
       })
+      // L'illustration locale est un dataURL (1080×1440) : on l'héberge sur
+      // Storage plutôt que d'insérer des mégaoctets de base64 en base.
+      let imageUrl = poeme.illustration?.url ?? null
+      if (imageUrl?.startsWith('data:')) {
+        imageUrl = await uploaderImageGalerie(imageUrl, 'illustration')
+      }
       const { error } = await supabase.from('gallery').insert({
         type: 'poeme',
         titre: poeme.titre,
         payload,
-        image_url: poeme.illustration?.url ?? null,
+        image_url: imageUrl,
         author_pseudo: profile?.pseudo ?? 'Anonyme',
         author_avatar: profile?.avatar_url ?? null,
         author_id: profile?.id ?? null,

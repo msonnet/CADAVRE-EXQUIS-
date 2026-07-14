@@ -237,9 +237,13 @@ export default function FinOnline() {
       const cases = sortedContribs.map(c => ({ texte: c.texte }))
       const payload = JSON.stringify({ cases, structureId: room.structure_id, titre: null, langue: langueActuelle() })
       const pseudo = profile?.pseudo ?? players.find(p => p.player_id === user.id)?.pseudo ?? 'Anonyme'
+      let imageUrl = illustrationUrl ?? null
+      if (imageUrl?.startsWith('data:')) {
+        imageUrl = await uploaderImageGalerie(imageUrl, 'illustration')
+      }
       const { error } = await supabase.from('gallery').insert({
         type: 'poeme', titre: null, payload,
-        image_url: illustrationUrl ?? null,
+        image_url: imageUrl,
         author_pseudo: pseudo, author_avatar: null,
       })
       if (!error) { setPublishedGallery(true); jouer('soumettre') }

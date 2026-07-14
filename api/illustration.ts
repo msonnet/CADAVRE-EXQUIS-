@@ -130,7 +130,9 @@ export default async function handler(req: any, res: any): Promise<void> {
       },
       body: JSON.stringify({
         prompt,
-        image_size: 'portrait_4_3',
+        // 3:4 vertical exact — fal impose des multiples de 32 (1080 serait
+        // arrondi à 1056×1440, ratio faussé). Le client remet à 1080×1440.
+        image_size: { width: 1056, height: 1408 },
         num_inference_steps: 28,
         guidance_scale,
         safety_tolerance: 5,
