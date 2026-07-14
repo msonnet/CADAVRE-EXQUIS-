@@ -34,7 +34,7 @@ test.describe('Accueil', () => {
     await expect(page.locator('button', { hasText: 'Recueil' })).toBeVisible()
     await expect(page.locator('button', { hasText: 'Galerie' })).toBeVisible()
     await expect(page.locator('button', { hasText: 'Règles' })).toBeVisible()
-    await expect(page.locator('button', { hasText: 'Du jour' })).toBeVisible()
+    await expect(page.locator('button', { hasText: 'Réglages' })).toBeVisible()
   })
 
   test('clicking Cadavre Écrit navigates to /config', async ({ page }) => {
@@ -49,14 +49,14 @@ test.describe('Accueil', () => {
     await expect(page).toHaveURL(/\/config$/, { timeout: 5000 })
   })
 
-  test('footer Du jour link navigates to /poeme-du-jour', async ({ page }) => {
+  test('le poème du jour est accessible depuis la galerie', async ({ page }) => {
     await skipOnboarding(page)
     await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
 
-    await page.goto('/')
+    await page.goto('/galerie')
     await page.waitForLoadState('networkidle')
 
-    await page.locator('button', { hasText: 'Du jour' }).dispatchEvent('click')
+    await page.locator('button', { hasText: 'POÈME DU JOUR' }).dispatchEvent('click')
     await expect(page).toHaveURL(/\/poeme-du-jour$/, { timeout: 5000 })
   })
 

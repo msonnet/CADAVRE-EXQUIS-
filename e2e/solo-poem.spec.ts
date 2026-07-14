@@ -22,7 +22,7 @@ async function joueurContribue(page: import('@playwright/test').Page, texte: str
   await passerBtn.waitFor({ timeout: 8000 })
   await passerBtn.dispatchEvent('click')
 
-  const textarea = page.locator('textarea[aria-label="Votre contribution"]')
+  const textarea = page.locator('textarea[aria-label="Ta contribution"]')
   await textarea.waitFor({ timeout: 6000 })
   await textarea.fill(texte)
 
@@ -71,7 +71,7 @@ test.describe('Solo poem flow with AI voice (phrase-simple)', () => {
     await passerBtn.waitFor({ timeout: 15000 })
     await passerBtn.dispatchEvent('click')
 
-    const textarea = page.locator('textarea[aria-label="Votre contribution"]')
+    const textarea = page.locator('textarea[aria-label="Ta contribution"]')
     await textarea.waitFor({ timeout: 6000 })
     await textarea.fill('embrasse')
     await page.locator('button[aria-label="Sceller cette voix et passer à la suivante"]').dispatchEvent('click')
