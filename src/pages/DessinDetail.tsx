@@ -191,7 +191,7 @@ export default function DessinDetail() {
             onClick={() => navigate('/bibliotheque')}
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            ← {tr('RECUEIL', 'LIBRARY')}
+            ← {tr('RECUEIL', 'COLLECTION')}
           </button>
           <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{colorLabel}</span>
         </div>

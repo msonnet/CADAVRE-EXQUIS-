@@ -682,8 +682,8 @@ export default function Galerie() {
               ...mono, fontSize: 13, color: encre, opacity: 0.55, textAlign: 'center', lineHeight: 1.6,
             }}>
               {onglet === 'poeme'
-                ? tr('Compose un poème, puis publie-le ici depuis le recueil.', 'Compose a poem, then publish it here from your library.')
-                : tr('Dessine un cadavre, puis publie-le ici depuis le recueil.', 'Draw a cadavre, then publish it here from your library.')}
+                ? tr('Compose un poème, puis publie-le ici depuis le recueil.', 'Compose a poem, then publish it here from your collection.')
+                : tr('Dessine un cadavre, puis publie-le ici depuis le recueil.', 'Draw a cadavre, then publish it here from your collection.')}
             </p>
             <button
               onClick={() => { jouer('clic'); navigate(onglet === 'poeme' ? '/config' : '/config-dessin') }}

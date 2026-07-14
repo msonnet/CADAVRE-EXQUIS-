@@ -883,7 +883,7 @@ export default function Jeu() {
           visible={tutActif && tutEtape === T_JEU_IA}
           etape={T_JEU_IA} total={TUTORIEL_TOTAL}
           titre={tr('La voix écrit en secret', 'The voice writes in secret')}
-          corps={tr("Son fragment restera caché jusqu'à la fin — c'est la règle du cadavre exquis.", 'Its fragment stays hidden until the end — that is the rule of the exquisite corpse.')}
+          corps={tr("Son fragment restera caché jusqu'à la fin — c'est la règle du cadavre exquis.", 'Its fragment stays hidden until the end — that’s the rule of the exquisite corpse.')}
           onCompris={() => {
             tutAvancer()
             if (iaAvancePendingRef.current) {
@@ -1133,7 +1133,7 @@ export default function Jeu() {
         visible={tutActif && tutEtape === T_JEU_2}
         etape={T_JEU_2} total={TUTORIEL_TOTAL}
         titre={tr('Le dernier fragment', 'The last fragment')}
-        corps={tr("Tu ignores ce que la voix a écrit — c'est l'assemblage aveugle qui fera la surprise.", 'You do not know what the voice wrote — the blind assembly will spring the surprise.')}
+        corps={tr("Tu ignores ce que la voix a écrit — c'est l'assemblage aveugle qui fera la surprise.", 'You don’t know what the voice wrote — the blind assembly holds the surprise.')}
         cible={tr('SCELLER CETTE VOIX', 'SEAL THIS VOICE')}
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}

@@ -174,7 +174,7 @@ export default function ConfigurationDessin() {
           </div>
           {joueurs > 1 && (
             <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.5, marginTop: 7, lineHeight: 1.55 }}>
-              {tr("Passe l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.", 'Pass the device from hand to hand — each artist folds the screen before passing it on.')}
+              {tr("Passe l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.", 'Pass the device from hand to hand — each artist hides the screen before passing it on.')}
             </div>
           )}
         </motion.div>

@@ -489,7 +489,7 @@ export default function FinOnline() {
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button onClick={sauvegarderDessinLocal} disabled={sauvegardeDessin_}
                         style={{ flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText, border: `0.5px solid ${accent}`, borderRadius: 3, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer' }}>
-                        {sauvegardeDessin_ ? tr('✓ SAUVEGARDÉ', '✓ SAVED') : tr('↓ MA GALERIE', '↓ MY LIBRARY')}
+                        {sauvegardeDessin_ ? tr('✓ SAUVEGARDÉ', '✓ SAVED') : tr('↓ MA GALERIE', '↓ MY COLLECTION')}
                       </button>
                       <button onClick={publierDansGalerieDessin} disabled={publishingGallery || publishedGallery}
                         style={{ flex: 1, ...mono, fontSize: 17, background: publishedGallery ? `${accent}20` : 'transparent', color: publishedGallery ? accent : `${encre}70`, border: `0.5px solid ${publishedGallery ? accent : encre}25`, borderRadius: 3, padding: '10px 8px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>

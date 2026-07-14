@@ -79,7 +79,7 @@ export default function Decouverte() {
             fontFamily: "'Playfair Display', serif", fontSize: 20, lineHeight: 1.55,
             color: encre, opacity: 0.9, marginBottom: 10,
           }}>
-            {tr('Écris un fragment sans voir les autres. À la fin, vous découvrez ensemble la phrase que vous avez faite à plusieurs.', 'Write a fragment without seeing the others. At the end, you discover together the sentence you made as one.')}
+            {tr('Écris un fragment sans voir les autres. À la fin, vous découvrez ensemble la phrase que vous avez faite à plusieurs.', 'Write a fragment without seeing the others. At the end, you discover together the sentence you wrote as one.')}
           </p>
 
           <p style={{

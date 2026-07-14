@@ -733,7 +733,7 @@ export default function FinDePartie() {
         visible={tutActif && tutEtape === T_FIN_RECUEIL}
         etape={T_FIN_RECUEIL} total={TUTORIEL_TOTAL}
         titre={tr('Scelle ton poème', 'Seal your poem')}
-        corps={tr('Il rejoint ta bibliothèque — tu pourras le relire, le partager, le publier.', 'It joins your library — reread it, share it, publish it.')}
+        corps={tr('Il rejoint ta bibliothèque — tu pourras le relire, le partager, le publier.', 'It joins your collection — reread it, share it, publish it.')}
         cible={tr('SCELLER AU RECUEIL', 'SEAL INTO THE COLLECTION')}
         onCompris={() => { tutAvancer(); navigate('/bibliotheque') }}
         labelCompris={tr('VOIR MON RECUEIL →', 'SEE MY COLLECTION →')}

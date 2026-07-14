@@ -232,7 +232,7 @@ export default function Atelier() {
             {echo
               ? (nbVoix === 0
                 ? tr('Tu n’entendras que le dernier mot de ton propre vers précédent.', 'You will hear only the last word of your own previous line.')
-                : tr('Chaque main — la tienne comme celles des voix — n’entend que le dernier mot du vers précédent.', 'Each hand — yours like those of the voices — hears only the last word of the previous line.'))
+                : tr('Chaque main — la tienne comme celles des voix — n’entend que le dernier mot du vers précédent.', 'Each hand — yours and the voices’ alike — hears only the last word of the previous line.'))
               : (nbVoix === 0
                 ? tr('Tu ne reliras rien. Le poème se coud dans le noir, vers après vers.', 'You will reread nothing. The poem is stitched in the dark, line after line.')
                 : tr('Personne ne voit rien. Le poème se coud dans le noir absolu.', 'No one sees anything. The poem is stitched in absolute darkness.'))}

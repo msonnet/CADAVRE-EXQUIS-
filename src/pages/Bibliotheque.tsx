@@ -95,7 +95,7 @@ export default function Bibliotheque() {
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 10,
           }}>
-            {tr('Ta bibliothèque personnelle', 'Your personal library')}
+            {tr('Ta bibliothèque personnelle', 'Your personal collection')}
           </p>
           {!chargement && (poemes.length > 0 || dessins.length > 0) && (
             <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em', opacity: 0.75, marginBottom: 14 }}>
@@ -156,7 +156,7 @@ export default function Bibliotheque() {
                   padding: '0.9em 1em', border: 'none', cursor: 'pointer', borderRadius: 3,
                 }}
               >
-                {tr('Cadavre Écrit', 'Written Corpse')} →
+                {tr('Cadavre Écrit', 'Written Cadavre')} →
               </button>
               <button
                 onClick={() => navigate('/config-dessin')}
@@ -166,7 +166,7 @@ export default function Bibliotheque() {
                   padding: '0.9em 1em', border: `0.5px solid ${encre}30`, cursor: 'pointer', borderRadius: 3,
                 }}
               >
-                {tr('Cadavre Dessiné', 'Drawn Corpse')} →
+                {tr('Cadavre Dessiné', 'Drawn Cadavre')} →
               </button>
             </div>
           </motion.div>

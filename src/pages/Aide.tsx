@@ -20,7 +20,7 @@ const VISIBILITE = [
 
 const MODES = [
   { label: tr('STANDARD', 'STANDARD'),   detail: tr("Aucune contrainte de temps. Tu prends le temps qu'il faut.", 'No time constraint. You take as long as you need.') },
-  { label: tr('HYPNOTIQUE', 'HYPNOTIC'), detail: tr('30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place.', '30 seconds per slot. At zero, the fragment is submitted automatically — or an inner voice completes it in your place.') },
+  { label: tr('HYPNOTIQUE', 'HYPNOTIC'), detail: tr('30 secondes par case. À 0, le fragment est soumis automatiquement — ou une voix intérieure complète à ta place.', '30 seconds per slot. At zero, the fragment is submitted automatically — or an inner voice completes it for you.') },
 ]
 
 const RACCORD_DESSIN = [
@@ -198,7 +198,7 @@ export default function Aide() {
 
                           {[
                             { label: tr('LE MÉDIUM', 'THE MEDIUM'), detail: tr('Tu ouvres le poème et tu le refermes. Entre ces deux moments, la main te revient à intervalles irréguliers — tous les deux à trois vers environ. Plus tu convoques de voix, plus tes retours se font fragments (un mot ou deux parmi une voix IA).', 'You open the poem and you close it. Between those two moments, the pen returns to you at irregular intervals — every two or three lines or so. The more voices you summon, the more your turns shrink to fragments (a word or two within an AI voice).') },
-                            { label: tr('LES VOIX', 'THE VOICES'), detail: tr('Les voix IA complètent les vers entre tes tours. Tu choisis combien en convoquer — de 0 à 46. Plus elles sont nombreuses, plus ta présence dans le poème devient rare et fragmentaire.', 'The AI voices complete the lines between your turns. You choose how many to summon — from 0 to 46. The more numerous they are, the rarer and more fragmentary your presence in the poem becomes.') },
+                            { label: tr('LES VOIX', 'THE VOICES'), detail: tr('Les voix IA complètent les vers entre tes tours. Tu choisis combien en convoquer — de 0 à 46. Plus elles sont nombreuses, plus ta présence dans le poème devient rare et fragmentaire.', 'The AI voices complete the lines between your turns. You choose how many to summon — from 0 to 46. The more of them there are, the rarer and more fragmentary your presence in the poem becomes.') },
                             { label: tr('SEUL (0 VOIX)', 'ALONE (0 VOICES)'), detail: tr('Sans voix convoquées, tu écris tous les vers toi-même, mais sans jamais relire ce que tu as produit. Le cadavre exquis se joue alors contre ta propre mémoire.', 'With no voices summoned, you write every line yourself, but without ever rereading what you have produced. The exquisite corpse is then played against your own memory.') },
                           ].map(item => (
                             <div key={item.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>

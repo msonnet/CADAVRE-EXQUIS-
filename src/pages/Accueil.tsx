@@ -91,7 +91,7 @@ export default function Accueil() {
           <button
             onClick={() => seance?.retirer()}
             title={tr('Re-tirer un rêve', 'Draw a new dream')}
-            aria-label={tr('Tirer une nouvelle ambiance', 'Draw a new ambiance')}
+            aria-label={tr('Tirer une nouvelle ambiance', 'Draw a new ambience')}
             style={{
               ...ui, fontSize: 15, color: accent, opacity: 0.9,
               background: 'none', border: 'none', cursor: 'pointer',
@@ -232,7 +232,7 @@ export default function Accueil() {
                 borderRadius: 3, whiteSpace: 'nowrap',
               }}
             >
-              {tr('Cadavre Écrit', 'Written Corpse')}
+              {tr('Cadavre Écrit', 'Written Cadavre')}
             </button>
             <button
               onClick={() => nav('/config-dessin')}
@@ -245,7 +245,7 @@ export default function Accueil() {
                 borderRadius: 3, whiteSpace: 'nowrap',
               }}
             >
-              {tr('Cadavre Dessiné', 'Drawn Corpse')}
+              {tr('Cadavre Dessiné', 'Drawn Cadavre')}
             </button>
           </div>
           <button
