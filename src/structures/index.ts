@@ -121,9 +121,10 @@ export function getStructuresActives(): Structure[] {
   return langueActuelle() === 'en' ? STRUCTURES_EN : STRUCTURES
 }
 
-export function getStructure(id: string): Structure {
+export function getStructure(id: string, langue?: 'fr' | 'en'): Structure {
   if (id === 'atelier') return STRUCTURE_ATELIER
-  const pool = getStructuresActives()
+  // En ligne, les consignes suivent la langue du salon, pas celle du client
+  const pool = langue ? (langue === 'en' ? STRUCTURES_EN : STRUCTURES) : getStructuresActives()
   const s = pool.find(s => s.id === id)
   // Fallback gracieux pour les anciens poèmes avec des structures supprimées
   return s ?? pool.find(s => s.id === 'vers-libre')!

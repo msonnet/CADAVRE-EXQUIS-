@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { mono } from '../lib/typo'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
 
 function genCode(): string {
   const adj = ['LOUP', 'CYGNE', 'CRABE', 'OURS', 'VACHE', 'TIGRE', 'AIGLE', 'SINGE', 'VIPÈRE', 'LAPIN', 'RENARD', 'HIBOU']
@@ -21,6 +21,22 @@ type PublicRoom = {
   structure_id: string
   nb_joueurs: number
   player_count: number
+  langue?: string | null
+}
+
+/** Langue d'un salon — l'historique (colonne absente ou NULL) est français. */
+function langueSalon(r: { langue?: string | null }): 'fr' | 'en' {
+  return r.langue === 'en' ? 'en' : 'fr'
+}
+
+/** Insertion d'un salon avec langue — retombe sans la colonne si la
+ *  migration n'est pas encore appliquée (le salon vaut alors 'fr'). */
+async function insererRoom(row: Record<string, unknown>): Promise<{ error: unknown }> {
+  const { error } = await supabase.from('rooms').insert({ ...row, langue: langueActuelle() })
+  if (!error) return { error: null }
+  const code = (error as { code?: string }).code
+  if (code === 'PGRST204') return supabase.from('rooms').insert(row)
+  return { error }
 }
 
 const MODE_LABEL: Record<string, string> = { ecrit: tr('ÉCRIT', 'WRITTEN'), dessin: tr('DESSINÉ', 'DRAWN') }
@@ -60,13 +76,15 @@ export default function Online() {
     try {
       const { data: rooms } = await supabase
         .from('rooms')
-        .select('code, mode, structure_id, nb_joueurs')
+        .select('*')
         .eq('status', 'waiting')
         .eq('is_public', true)
         .order('created_at', { ascending: false })
         .limit(10)
       if (!rooms) { setPublicRooms([]); return }
-      const withCounts = await Promise.all(rooms.map(async (r) => {
+      // Un salon ne mélange pas deux langues : la liste montre ceux de la langue active
+      const memesLangue = (rooms as PublicRoom[]).filter(r => langueSalon(r) === langueActuelle())
+      const withCounts = await Promise.all(memesLangue.map(async (r) => {
         const { count } = await supabase
           .from('room_players')
           .select('*', { count: 'exact', head: true })
@@ -128,7 +146,7 @@ export default function Online() {
       }
       // Aucune place disponible : créer un salon public et attendre des joueurs.
       const code = genCode()
-      const { error } = await supabase.from('rooms').insert({
+      const { error } = await insererRoom({
         code, host_id: user.id, mode: 'ecrit',
         structure_id: 'phrase-simple', nb_joueurs: 3,
         status: 'waiting', is_public: true,
@@ -149,7 +167,7 @@ export default function Online() {
     setCreateError(null)
     try {
       const code = genCode()
-      const { error } = await supabase.from('rooms').insert({
+      const { error } = await insererRoom({
         code, host_id: user.id, mode: 'ecrit',
         structure_id: 'phrase-simple', nb_joueurs: 3,
         status: 'waiting', is_public: true,

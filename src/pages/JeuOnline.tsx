@@ -10,11 +10,11 @@ import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
-import { tr, langueActuelle } from '../i18n'
+import { tr } from '../i18n'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; nb_cases: number | null }
+type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; nb_cases: number | null; langue?: string | null }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; joined_at: string | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
@@ -42,13 +42,13 @@ const TYPE_LABEL_EN: Record<string, string> = {
   'libre': 'FREE · NO CONSTRAINT',
   'article-adj': 'ARTICLE + ADJECTIVE · 2 WORDS',
 }
-const TYPE_LABEL: Record<string, string> = langueActuelle() === 'en' ? TYPE_LABEL_EN : TYPE_LABEL_FR
+
 
 // ── Claude IA helper ──────────────────────────────────────────────────────────
 
-async function callClaude(consigne: string, type: string): Promise<{ texte: string; voixNom: string | null }> {
+async function callClaude(consigne: string, type: string, langue: 'fr' | 'en'): Promise<{ texte: string; voixNom: string | null }> {
   try {
-    const r = await fetch(api('/api/claude'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consigne, type, langue: langueActuelle() }) })
+    const r = await fetch(api('/api/claude'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consigne, type, langue }) })
     if (!r.ok) return { texte: '', voixNom: null }
     const { texte, voixNom } = await r.json()
     return { texte: texte ?? '', voixNom: voixNom ?? null }
@@ -107,8 +107,13 @@ export default function JeuOnline() {
   const myIndex = user ? orderedPlayers.findIndex(p => p.player_id === user.id) : -1
   const myEffectiveIndex = myIndex >= 0 ? myIndex : null
 
+  // La partie se joue dans la langue du salon (fixée par son créateur),
+  // pas dans celle de chaque client — consignes, libellés et IA la suivent.
+  const langueRoom: 'fr' | 'en' = room?.langue === 'en' ? 'en' : 'fr'
+  const TYPE_LABEL = langueRoom === 'en' ? TYPE_LABEL_EN : TYPE_LABEL_FR
+
   // Turn state
-  const structure = room ? getStructure(room.structure_id) : null
+  const structure = room ? getStructure(room.structure_id, langueRoom) : null
   const nbTotal = !room ? 0
     : room.mode === 'dessin' ? (room.nb_cases ?? room.nb_joueurs ?? players.length)
     : (room.nb_cases ?? (structure ? nombreCasesEffectif(structure) : 0))
@@ -342,7 +347,7 @@ export default function JeuOnline() {
     if (!caseDef) return
     setIaLoading(true)
     setIaVoixNom(null)
-    const { texte, voixNom } = await callClaude(caseDef.consigne, caseDef.type)
+    const { texte, voixNom } = await callClaude(caseDef.consigne, caseDef.type, langueRoom)
     if (texte) { setInput(texte); setIaVoixNom(voixNom) }
     setIaLoading(false); jouer('ia')
   }

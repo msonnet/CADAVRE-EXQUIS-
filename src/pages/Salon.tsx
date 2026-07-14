@@ -8,9 +8,14 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { STRUCTURES, getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
 
-type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null }
+type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null; langue?: string | null }
+
+/** Langue d'un salon — l'historique (colonne absente ou NULL) est français. */
+function langueSalon(r: { langue?: string | null }): 'fr' | 'en' {
+  return r.langue === 'en' ? 'en' : 'fr'
+}
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; is_ready: boolean }
 type SpectatorPresence = { player_id: string; pseudo: string; avatar_url: string | null; is_spectator: true }
 
@@ -336,8 +341,19 @@ export default function Salon() {
       <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
       <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 28, marginBottom: 4 }}>
-        {tr("— SALON D'ATTENTE —", '— WAITING ROOM —')}
+        {tr("— SALON D'ATTENTE —", '— WAITING ROOM —')} · {langueSalon(room) === 'en' ? 'EN' : 'FR'}
       </div>
+      {langueSalon(room) !== langueActuelle() && (
+        <div style={{
+          ...mono, fontSize: 13, color: encre,
+          padding: '8px 12px', background: `${accent}12`,
+          borderLeft: `2px solid ${accent}`, marginBottom: 10,
+        }}>
+          {langueSalon(room) === 'en'
+            ? tr('Cette partie se joue en anglais.', 'This game is played in English.')
+            : tr('Cette partie se joue en français.', 'This game is played in French.')}
+        </div>
+      )}
       <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 16 }}>
         {code}
       </div>

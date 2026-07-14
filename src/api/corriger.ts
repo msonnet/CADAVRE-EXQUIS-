@@ -6,9 +6,10 @@ export async function corrigerAccords(
   texte: string,
   structureId: string,
   blocs?: { texte: string; type: string }[],
+  langue?: 'fr' | 'en',
 ): Promise<string> {
   // L'anglais n'a ni genre ni accord d'adjectif : rien à corriger
-  if (langueActuelle() === 'en') return texte
+  if ((langue ?? langueActuelle()) === 'en') return texte
   try {
     // La correction est awaitée au moment du partage : sans plafond, une API
     // muette gèlerait le bouton « Partager ». Au-delà, on partage le texte brut.

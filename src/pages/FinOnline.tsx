@@ -20,7 +20,12 @@ import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
 import { tr, langueActuelle } from '../i18n'
 
-type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null }
+type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; langue?: string | null }
+
+/** Langue d'un salon — l'historique (colonne absente ou NULL) est français. */
+function langueSalon(r: { langue?: string | null }): 'fr' | 'en' {
+  return r.langue === 'en' ? 'en' : 'fr'
+}
 type RoomPlayer = { player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null }
 type Contribution = { case_index: number; texte: string; player_id: string; voice_name?: string | null }
 type BandeData = { imageDataUrl: string; lowestDrawnFraction: number; width: number; height: number; dpr: number }
@@ -150,7 +155,7 @@ export default function FinOnline() {
     setContributions(cList)
 
     if (r.mode === 'ecrit' && cList.length > 0) {
-      const structure = getStructure(r.structure_id)
+      const structure = getStructure(r.structure_id, langueSalon(r))
       const caseMap = new Map(cList.map(c => [c.case_index, c.texte]))
       const fakeCases = structure.cases.map((def, i) => ({
         numero: i + 1, fonction: def.fonction, consigne: def.consigne,
@@ -163,7 +168,7 @@ export default function FinOnline() {
         texte: caseMap.get(i) ?? '',
         type: def.type,
       }))
-      const p = corrigerAccords(brut, r.structure_id, blocs)
+      const p = corrigerAccords(brut, r.structure_id, blocs, langueSalon(r))
       correctionPromise.current = p
       p.then(t => { if (!cancelled) setTexteCorrige(t) })
       return () => { cancelled = true }
@@ -235,7 +240,7 @@ export default function FinOnline() {
     try {
       const sortedContribs = [...contributions].sort((a, b) => a.case_index - b.case_index)
       const cases = sortedContribs.map(c => ({ texte: c.texte }))
-      const payload = JSON.stringify({ cases, structureId: room.structure_id, titre: null, langue: langueActuelle() })
+      const payload = JSON.stringify({ cases, structureId: room.structure_id, titre: null, langue: langueSalon(room) })
       const pseudo = profile?.pseudo ?? players.find(p => p.player_id === user.id)?.pseudo ?? 'Anonyme'
       let imageUrl = illustrationUrl ?? null
       if (imageUrl?.startsWith('data:')) {
@@ -271,10 +276,16 @@ export default function FinOnline() {
   async function rejouerEnsemble() {
     if (!room || !user || !code) return
     const newCode = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 23)]).join('')
-    const { error } = await supabase.from('rooms').insert({
+    // La revanche garde la langue de la partie ; repli sans la colonne si la
+    // migration n'est pas encore appliquée.
+    const ligne = {
       code: newCode, host_id: user.id, mode: room.mode, structure_id: room.structure_id,
       nb_joueurs: room.nb_joueurs, turn_seconds: room.turn_seconds, status: 'waiting',
-    })
+    }
+    let { error } = await supabase.from('rooms').insert({ ...ligne, langue: langueSalon(room) })
+    if (error && (error as { code?: string }).code === 'PGRST204') {
+      ({ error } = await supabase.from('rooms').insert(ligne))
+    }
     if (error) { console.error('Erreur rejouer:', error); return }
     for (const p of players) {
       await supabase.from('room_players').insert({
