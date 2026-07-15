@@ -55,8 +55,9 @@ ${blocLines ? `\nBlocks:\n${blocLines}\n` : ''}
 Assembled sentence: «${texte}»
 
 STRICT RULES:
-1. Fix ONLY subject-verb agreement (third-person -s) and the article a/an before vowel sounds.
-2. Never change any lexical word (nouns and verbs stay the same words — only their inflection may change), never reorder words, never add or remove words.
+1. Fix subject-verb agreement (third-person -s) and the article a/an before vowel sounds.
+2. English adjective order: if a lone adjective stands right AFTER the noun it qualifies (French order, e.g. "a threshold worn"), move it BEFORE the noun ("a worn threshold"). This is the only reordering allowed.
+3. Never change any lexical word (nouns and verbs stay the same words — only their inflection may change), never add or remove words.
 
 Reply with THE CORRECTED SENTENCE ONLY, on a single line, no quotes, no explanation.`
     }
