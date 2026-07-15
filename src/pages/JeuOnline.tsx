@@ -11,6 +11,7 @@ import { getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
 import { tr } from '../i18n'
+import MiniCoach from '../components/MiniCoach'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -505,6 +506,19 @@ export default function JeuOnline() {
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="jeu" />
       {connBanner}
+
+      {/* ── MINI-GUIDE (première partie en ligne uniquement) ── */}
+      <MiniCoach
+        cle="coach-jeu-online"
+        actif={!showIntro}
+        accent={accent} encre={encre} bg={bg}
+        etapes={[
+          { titre: tr('Chacun son tour.', 'One hand at a time.'),
+            corps: tr('Les visages en haut montrent à qui la main. Ton fragment restera scellé jusqu’à la révélation.', 'The faces up top show whose turn it is. Your fragment stays sealed until the reveal.') },
+          { titre: tr('La révélation est collective.', 'The reveal is collective.'),
+            corps: tr('Quand la dernière case est remplie, le poème s’assemble en même temps chez tout le monde.', 'When the last part is filled, the poem assembles on everyone’s screen at once.') },
+        ]}
+      />
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>

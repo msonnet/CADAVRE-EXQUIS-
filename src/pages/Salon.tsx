@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 import { STRUCTURES, getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import MiniCoach from '../components/MiniCoach'
 
 type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null; langue?: string | null }
 
@@ -295,6 +296,18 @@ export default function Salon() {
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="aide" />
+
+      {/* ── MINI-GUIDE (premier salon uniquement) ── */}
+      <MiniCoach
+        cle="coach-salon"
+        accent={accent} encre={encre} bg={seance?.ambiance.bg ?? '#f0e4cc'}
+        etapes={[
+          { titre: tr('Le salon d’attente.', 'The waiting room.'),
+            corps: tr('Partage le code en haut pour inviter — ou laisse le salon public, et des inconnus pourront s’asseoir.', 'Share the code at the top to invite — or leave the room public, and strangers may take a seat.') },
+          { titre: tr('Prêt ?', 'Ready?'),
+            corps: tr('Quand chaque joueur s’est déclaré prêt, l’hôte lance la partie.', 'Once every player says they’re ready, the host starts the game.') },
+        ]}
+      />
 
       {connectionStatus !== 'connected' && (
         <div style={{

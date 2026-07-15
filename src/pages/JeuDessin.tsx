@@ -7,6 +7,7 @@ import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
+import MiniCoach from '../components/MiniCoach'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
 const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
@@ -726,6 +727,21 @@ export default function JeuDessin() {
       transition={{ duration: 0.4 }}
       style={{ position: 'fixed', inset: 0, background: CANVAS_BG_ACTUEL, display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}
     >
+      {/* ── MINI-GUIDE (première partie dessinée uniquement) ── */}
+      <MiniCoach
+        cle="coach-dessin"
+        actif={!showIntro && !showTransition && bandeIdx === 0 && canvasReady}
+        accent={TB_ACCENT} encre={TB_INK} bg={CANVAS_BG_ACTUEL}
+        etapes={[
+          { titre: tr('Une bande à la fois.', 'One band at a time.'),
+            corps: tr('Tu dessines ta portion du corps — les autres bandes resteront invisibles jusqu’à la fin. Les outils vivent en bas.', 'You draw your slice of the body — the other bands stay hidden until the end. The tools live at the bottom.') },
+          { titre: tr('Le raccord.', 'The join.'),
+            corps: tr('À la bande suivante, un fin liseré prolongera tes derniers traits — juste assez pour coudre les corps.', 'On the next band, a thin strip will carry your last strokes over — just enough to stitch the bodies together.') },
+          { titre: tr('Valider, c’est sceller.', 'Done means sealed.'),
+            corps: tr('Une bande validée ne se rouvre pas. À la dernière, le monstre entier se révèle.', 'A finished band can’t be reopened. On the last one, the whole monster is revealed.') },
+        ]}
+      />
+
       {/* ── CANVAS ── */}
       <div
         ref={containerRef}

@@ -11,6 +11,7 @@ import type { Poeme, Case } from '../types'
 import type { PlanAtelier } from './Atelier'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import MiniCoach from '../components/MiniCoach'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -577,6 +578,24 @@ export default function JeuAtelier() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="jeu" />
+
+      {/* ── MINI-GUIDE (première séance uniquement) ── */}
+      <MiniCoach
+        cle="coach-atelier"
+        actif={!termine}
+        accent={accent} encre={encre} bg={bg}
+        etapes={[
+          { titre: tr('Tu es le médium.', 'You are the medium.'),
+            corps: tr('Tu ouvres le poème, tu le refermeras. Entre les deux, les voix écrivent — et la main te revient quand le sort le décide.', 'You open the poem, and you will close it. In between, the voices write — and the pen returns to you when fate decides.') },
+          { titre: tr('Le feuillet reste voilé.', 'The page stays veiled.'),
+            corps: tr('Les traits que tu vois sont la forme des vers, jamais leur texte. Personne ne relit — c’est la règle.', 'The dashes you see are the shape of the lines, never their words. No one rereads — that’s the rule.') },
+          plan.echo
+            ? { titre: tr('L’écho.', 'The echo.'),
+                corps: tr('À chaque tour, tu n’entendras que le dernier mot du vers précédent. Raccroche-toi à lui — ou ignore-le.', 'Each turn, you’ll hear only the last word of the previous line. Catch hold of it — or ignore it.') }
+            : { titre: tr('L’obscurité.', 'The darkness.'),
+                corps: tr('Tu écris dans le noir total — aucun contexte, ni le tien, ni celui des voix.', 'You write in total darkness — no context, neither yours nor the voices’.') },
+        ]}
+      />
 
       <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
