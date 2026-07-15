@@ -138,15 +138,15 @@ const CONTRAINTES_EN: Record<TypeCase, string> = {
   'verbe-transitif': 'ONE WORD — a TRANSITIVE conjugated verb, third person singular, that calls for an object ("devours", "carves", "lifts", "gnaws"). ABSOLUTELY FORBIDDEN: intransitive verbs, adjectives, nouns, adverbs.',
   'adjectif': 'ONE WORD ONLY (a qualifying adjective — ex: "nocturnal", "broken", "hollow", "deep")',
   'adverbe': 'ONE INVARIABLE ADVERB ("softly", "sideways", "forever") or a 2-word adverbial phrase ("without sound", "at dusk"). ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs.',
-  'groupe-nominal': 'EXACTLY 2 WORDS: article + noun — ex: "the silence", "a shadow", "the rain", "a knife". NEVER an adjective after the noun.',
-  'groupe-nominal-riche': '2 to 4 words — a COMPLETE NOUN PHRASE that ALWAYS starts with a determiner. VARY the form: article + noun ("the rain"), article + adjective + noun ("an old key"), article + noun + complement ("the sound of wind", "a wall of fog"). ABSOLUTELY FORBIDDEN: conjugated verbs, relative pronouns (who, which), phrases without a determiner.',
+  'groupe-nominal': 'EXACTLY 2 WORDS: article + SINGULAR noun — ex: "the silence", "a shadow", "the rain", "a knife". The noun MUST be singular (a third-person-singular verb follows). NEVER an adjective after the noun.',
+  'groupe-nominal-riche': '2 to 4 words — a COMPLETE NOUN PHRASE that ALWAYS starts with a determiner, with a SINGULAR head noun (a third-person-singular verb may follow). VARY the form: article + noun ("the rain"), article + adjective + noun ("an old key"), article + noun + complement ("the sound of wind", "a wall of fog"). ABSOLUTELY FORBIDDEN: plural head nouns, conjugated verbs, relative pronouns (who, which), phrases without a determiner.',
   'groupe-verbal': '3 to 4 words — a conjugated verb (third person singular) + its complement WITH its article or preposition (ex: "crosses the night", "weighs on the world"). NEVER a bare complement.',
   'proposition': '4 to 6 words (a short question)',
   'libre': '3 to 6 words (one line of verse)',
   'article-adj': 'EXACTLY 2 WORDS: article + qualifying adjective. Valid: "a dark", "the old", "a pale", "the heavy". FORBIDDEN: nouns, pronouns, set phrases.',
   'conjonction-coord': "ONE WORD ONLY — a coordinating conjunction or linking adverb ('but', 'for', 'yet', 'however', 'therefore'). NEVER a sentence, never 2 words.",
-  'conjonction-subord': "1 or 2 words — a subordinating conjunction ('when', 'if', 'as', 'while', 'as soon as'). NEVER a full clause.",
-  'infinitif': "ONE WORD ONLY — a bare infinitive verb (ex: 'burn', 'wait', 'cross', 'descend'). NEVER an article or pronoun.",
+  'conjonction-subord': "1 to 3 words — a subordinating conjunction ('when', 'if', 'while', 'as soon as', 'as long as'). NEVER a full clause.",
+  'infinitif': "TWO WORDS: 'to' + verb (ex: 'to burn', 'to wait', 'to cross'). NEVER an article or pronoun.",
   'gérondif': "1 or 2 words — a gerund phrase starting with an -ing verb (ex: 'falling', 'slipping away', 'burning slowly'). NEVER a subject.",
 }
 
@@ -164,7 +164,7 @@ const FALLBACKS_EN: Record<TypeCase, string[]> = {
   'article-adj': ['a dark', 'an old', 'the cold', 'a pale', 'the heavy', 'a slow', 'the black', 'a strange', 'the hollow', 'a broken', 'the mute', 'a deep'],
   'conjonction-coord': ['but', 'yet', 'for', 'however', 'therefore', 'still'],
   'conjonction-subord': ['when', 'if', 'as', 'while', 'as soon as', 'wherever'],
-  'infinitif': ['burn', 'wait', 'cross', 'descend', 'erase', 'hold', 'feel', 'slip'],
+  'infinitif': ['to burn', 'to wait', 'to cross', 'to descend', 'to erase', 'to hold', 'to feel', 'to slip'],
   'gérondif': ['falling', 'slipping', 'burning slowly', 'drifting', 'dissolving'],
 }
 
@@ -257,14 +257,35 @@ function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = '
       return mots[0]
     }
     case 'conjonction-subord': {
-      // Accept "dès que", "tandis que" etc. (2 words), truncate beyond
-      if (mots.length > 2) return mots.slice(0, 2).join(' ')
-      return t
+      // FR : « dès que », « tandis que » (2 mots). EN : locutions à 3 mots
+      // (« as soon as », « as long as ») — la coupe à 2 les mutilait.
+      const max = langue === 'en' ? 3 : 2
+      let cs = mots.length > max ? mots.slice(0, max).join(' ') : t
+      if (langue === 'en') {
+        const REPARATIONS: Record<string, string> = {
+          'as long': 'as long as', 'as soon': 'as soon as', 'even': 'even if',
+        }
+        cs = REPARATIONS[cs.toLowerCase()] ?? cs
+      }
+      return cs
     }
     case 'infinitif': {
+      if (langue === 'en') {
+        // L'infinitif anglais du vers cousu porte son « to » — nu, il se lirait
+        // comme un impératif une fois cousu au complément.
+        if (mots[0].toLowerCase() === 'to' && mots.length >= 2) return mots.slice(0, 2).join(' ')
+        return `to ${mots[0]}`
+      }
       // Single verb at infinitive — trim any extras the model appended
       if (mots.length > 1) return mots[0]
       return t
+    }
+    case 'proposition': {
+      // Le nettoyage générique coupe la ponctuation finale : une question la
+      // retrouve ici — « ? » collé en anglais, espacé à la française en français.
+      const sans = t.replace(/[\s?!.…]+$/g, '')
+      if (!sans) return ''
+      return langue === 'en' ? `${sans}?` : `${sans} ?`
     }
     case 'gérondif': {
       // FR : doit commencer par « en » ; EN : par un verbe en -ing

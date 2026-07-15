@@ -8,15 +8,14 @@ export async function corrigerAccords(
   blocs?: { texte: string; type: string }[],
   langue?: 'fr' | 'en',
 ): Promise<string> {
-  // L'anglais n'a ni genre ni accord d'adjectif : rien à corriger
-  if ((langue ?? langueActuelle()) === 'en') return texte
+  const l = langue ?? langueActuelle()
   try {
     // La correction est awaitée au moment du partage : sans plafond, une API
     // muette gèlerait le bouton « Partager ». Au-delà, on partage le texte brut.
     const res = await fetchAvecTimeout(api('/api/corriger'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ texte, structureId, blocs }),
+      body: JSON.stringify({ texte, structureId, blocs, langue: l }),
     }, 15_000)
     if (!res.ok) return texte
     const data = await res.json()

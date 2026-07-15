@@ -12,7 +12,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     res.status(429).json({ error: 'Trop de requêtes. Attendez une minute.' }); return
   }
 
-  const { texte, structureId, blocs } = req.body ?? {}
+  const { texte, structureId, blocs, langue } = req.body ?? {}
+  const enAnglais = langue === 'en'
   if (typeof texte !== 'string' || !texte) { res.status(400).json({ error: 'texte requis' }); return }
   if (texte.length > 1500) { res.status(400).json({ error: 'texte trop long' }); return }
 
@@ -28,7 +29,38 @@ export default async function handler(req: any, res: any): Promise<void> {
   // Atelier : poème multiligne — chaque vers est corrigé indépendamment, la réponse garde une ligne par vers
   const multiligne = structureId === 'atelier' && Array.isArray(blocs) && blocs.length > 0
 
-  if (multiligne) {
+  if (enAnglais) {
+    // L'anglais n'a ni genre ni accord d'adjectif — mais il a l'accord
+    // sujet-verbe (-s de troisième personne) et le choix a/an. Les fragments
+    // cousus à l'aveugle peuvent les briser : « the bundles seeps ».
+    if (multiligne) {
+      const versLines = (blocs as { texte: string }[]).map((b, i) => `${i + 1}. «${b.texte.trim()}»`).join('\n')
+      prompt = `You are a grammar fixer for a surrealist poem in English. Each line was stitched blind from fragments written by several hands.
+
+Lines:
+${versLines}
+
+STRICT RULES:
+1. Within each line only: fix subject-verb agreement (third-person -s) and the article a/an before vowel sounds.
+2. Never create agreement across different lines — each line is a closed world.
+3. Never change any lexical word (nouns, verbs stay the same words — only their inflection may change), never reorder words.
+
+Reply with EXACTLY ${(blocs as unknown[]).length} lines — the corrected lines in order, one per line, no numbering, no quotes, no comment.`
+    } else {
+      const blocLines = Array.isArray(blocs) && blocs.length > 0
+        ? (blocs as { texte: string }[]).map((b, i) => `  Block ${i + 1}: «${b.texte.trim()}»`).join('\n')
+        : ''
+      prompt = `You are a grammar fixer for an exquisite-corpse sentence in English. Each block was written blind by a different player.
+${blocLines ? `\nBlocks:\n${blocLines}\n` : ''}
+Assembled sentence: «${texte}»
+
+STRICT RULES:
+1. Fix ONLY subject-verb agreement (third-person -s) and the article a/an before vowel sounds.
+2. Never change any lexical word (nouns and verbs stay the same words — only their inflection may change), never reorder words, never add or remove words.
+
+Reply with THE CORRECTED SENTENCE ONLY, on a single line, no quotes, no explanation.`
+    }
+  } else if (multiligne) {
     const versLines = (blocs as { texte: string }[]).map((b, i) => `${i + 1}. «${b.texte.trim()}»`).join('\n')
     prompt = `Tu es un correcteur de grammaire française pour un poème surréaliste en vers libres. Chaque vers a été cousu à partir de fragments écrits à l'aveugle par plusieurs mains — les accords internes peuvent être brisés.
 

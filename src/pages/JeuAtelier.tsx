@@ -328,7 +328,7 @@ export default function JeuAtelier() {
           texte = pool[Math.floor(Math.random() * pool.length)]
         }
         // Les questions retrouvent leur point d'interrogation (le serveur coupe la ponctuation finale)
-        if (caseRole.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += ' ?'
+        if (caseRole.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += langueActuelle() === 'en' ? '?' : ' ?'
 
         // Les fragments suivants se cousent en minuscule — un seul fil
         const cousu = k === 0 ? texte : texte.charAt(0).toLowerCase() + texte.slice(1)
@@ -445,7 +445,7 @@ export default function JeuAtelier() {
           const pool = RESERVE[role.type] ?? RESERVE['libre']
           texte = pool[Math.floor(Math.random() * pool.length)]
         }
-        if (role.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += ' ?'
+        if (role.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += langueActuelle() === 'en' ? '?' : ' ?'
         if (annule) return
         setFragTextes(prev => { const next = [...prev]; if (next.length > k) next[k] = texte; return next })
         setVoixEnCours(prev => prev.map((v, i) => i === localIdx ? { ...v, fait: true } : v))
@@ -541,7 +541,7 @@ export default function JeuAtelier() {
     let t = saisie.trim()
     if (!t || !fragGabarit || fragTextes[fragSlotJoueur] !== null) return
     // La question du médium retrouve son point d'interrogation, comme celle des voix
-    if (fragGabarit[fragSlotJoueur].type === 'proposition' && !/[?!.]\s*$/.test(t)) t += ' ?'
+    if (fragGabarit[fragSlotJoueur].type === 'proposition' && !/[?!.]\s*$/.test(t)) t += langueActuelle() === 'en' ? '?' : ' ?'
     jouer('soumettre')
     setSaisie('')
     setFragTextes(prev => {
