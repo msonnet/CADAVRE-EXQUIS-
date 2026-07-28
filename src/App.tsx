@@ -2,19 +2,52 @@ import React, { Component, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { ReveProvider } from './reve'
+import { tr } from './i18n'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
   static getDerivedStateFromError(error: Error) { return { error } }
+
+  // La trace part en console : retirer le détail technique de l'écran ne doit
+  // pas le faire disparaître du débogage (TestFlight, Xcode, console web).
+  componentDidCatch(error: Error, info: unknown) {
+    console.error('[Cadavre Exquis] erreur non rattrapée', error, info)
+  }
+
   render() {
     if (this.state.error) {
-      const e = this.state.error as Error
       return (
-        <div style={{ padding: 32, fontFamily: "'Raleway', sans-serif", fontSize: 17, color: '#b22c20' }}>
-          <div style={{ marginBottom: 12, fontWeight: 700 }}>ERREUR APPLICATION</div>
-          <pre style={{ whiteSpace: 'pre-wrap', opacity: 0.8 }}>{e.message}</pre>
-          <button onClick={() => window.location.reload()} style={{ marginTop: 16, padding: '8px 16px', cursor: 'pointer' }}>
-            RECHARGER
+        <div style={{
+          minHeight: '100dvh',
+          background: 'var(--reve-bg, #15110d)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: 18, padding: '32px 28px', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 24, color: 'var(--reve-accent, #b22c20)' }} aria-hidden>✦</div>
+          <div style={{
+            fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
+            fontSize: 'clamp(1.5rem, 7vw, 2rem)', lineHeight: 1.15,
+            color: 'var(--reve-ink, #e8d4b8)',
+          }}>
+            {tr("Le carnet s'est déchiré.", 'The notebook tore.')}
+          </div>
+          <p style={{
+            fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17,
+            color: 'var(--reve-ink, #e8d4b8)', opacity: 0.8, maxWidth: 320, lineHeight: 1.5,
+          }}>
+            {tr('Une page a manqué. Tes poèmes sont intacts.', 'A page went missing. Your poems are safe.')}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: 6, padding: '0.9em 2em', cursor: 'pointer', border: 'none', borderRadius: 3,
+              background: 'var(--reve-accent, #b22c20)', color: 'var(--reve-bg, #15110d)',
+              fontFamily: "'Raleway', sans-serif", fontSize: 13,
+              letterSpacing: '0.18em', textTransform: 'uppercase',
+            }}
+          >
+            {tr('Rouvrir le carnet', 'Reopen the notebook')}
           </button>
         </div>
       )

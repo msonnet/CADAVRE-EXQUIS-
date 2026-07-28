@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
 import { tr } from '../i18n'
@@ -9,9 +9,20 @@ const reduced =
   typeof window !== 'undefined' &&
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
+// La séquence d'ouverture se referme d'elle-même : le tap ne fait qu'abréger.
+// Sans minuteur, un joueur qui attend — le réflexe normal devant un écran de
+// démarrage — restait bloqué sur un rideau opaque dont l'invite n'apparaissait
+// qu'au bout de 3,2 s, en 12 px à 30 % d'opacité.
+const DUREE_VOILE = 4200
+
 export default function SplashScreen() {
   const seance = useReve()
   const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(false), DUREE_VOILE)
+    return () => clearTimeout(t)
+  }, [])
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -27,6 +38,12 @@ export default function SplashScreen() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.65, ease: 'easeInOut' }}
           onClick={() => setVisible(false)}
+          role="button"
+          tabIndex={0}
+          aria-label={tr('Entrer dans le jeu', 'Enter the game')}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setVisible(false) }
+          }}
           style={{
             position: 'fixed', inset: 0, zIndex: 10000,
             background: bg,
@@ -118,8 +135,8 @@ export default function SplashScreen() {
           {/* Invite discrète */}
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.30 }}
-            transition={{ delay: 3.2, duration: 0.8 }}
+            animate={{ opacity: 0.55 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
             style={{
               position: 'absolute',
               bottom: 'max(48px, env(safe-area-inset-bottom, 48px))',

@@ -5,7 +5,7 @@ import PageTransition from '../components/PageTransition'
 import RevealDessin from '../components/RevealDessin'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
-import { sauvegarderDessin } from '../db'
+import { sauvegarderDessin, chargerBandesDessin } from '../db'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { vibrer } from '../utils/haptics'
@@ -107,16 +107,16 @@ export default function FinDessin() {
   useEffect(() => {
     let cancelled = false
     async function run() {
-      const raw = sessionStorage.getItem('dessin-bandes')
-      if (!raw) { navigate('/config-dessin'); return }
       let bandes: BandeDessin[]
       try {
-        bandes = JSON.parse(raw)
+        const enregistre = await chargerBandesDessin()
+        bandes = enregistre?.bandes ?? []
         if (!Array.isArray(bandes) || bandes.length === 0) throw new Error('bandes vides')
       } catch {
         navigate('/config-dessin')
         return
       }
+      if (cancelled) return
       setNbBandes(bandes.length)
 
       setPhase('assemblage')

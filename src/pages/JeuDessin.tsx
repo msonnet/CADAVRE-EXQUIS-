@@ -8,6 +8,7 @@ import type { ConfigDessin, BandeDessin } from '../types'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
+import { sauvegarderBandesDessin } from '../db'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
 const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
@@ -244,6 +245,7 @@ export default function JeuDessin() {
   const [pendingBandes, setPendingBandes] = useState<BandeDessin[]>(() => brouillonDessin?.bandes ?? [])
   const [confirmExit, setConfirmExit] = useState(false)
   const [showColorPanel, setShowColorPanel] = useState(false)
+  const [erreurEnregistrement, setErreurEnregistrement] = useState(false)
 
   // Zoom/pan
   const [zoom, setZoom] = useState(1)
@@ -671,7 +673,7 @@ export default function JeuDessin() {
     }
   }
 
-  function validerBande() {
+  async function validerBande() {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')!
     const lowestDrawnFraction = findLowestDrawnFraction(ctx, canvas.width, canvas.height, hexToRgb(paperDef.bg))
@@ -686,7 +688,17 @@ export default function JeuDessin() {
     setBandes(nouvellesBandes)
     jouer('soumettre')
     if (bandeIdx + 1 >= config.nbBandes) {
-      sessionStorage.setItem('dessin-bandes', JSON.stringify(nouvellesBandes))
+      // Le dessin complet part en base locale : sessionStorage ne tenait pas
+      // quelques bandes plein écran à la résolution de l'appareil, et un quota
+      // dépassé ici coûtait toute la partie. Le brouillon de reprise n'est
+      // effacé qu'une fois l'écriture confirmée.
+      try {
+        await sauvegarderBandesDessin(nouvellesBandes, paper)
+      } catch (e) {
+        console.error('[dessin] enregistrement du dessin impossible', e)
+        setErreurEnregistrement(true)
+        return
+      }
       sessionStorage.removeItem('dessin-brouillon')
       navigate('/fin-dessin')
     } else {
@@ -741,6 +753,18 @@ export default function JeuDessin() {
             corps: tr('Une bande validée ne se rouvre pas. À la dernière, le monstre entier se révèle.', 'A finished band can’t be reopened. On the last one, the whole monster is revealed.') },
         ]}
       />
+
+      {/* ── ÉCHEC D'ENREGISTREMENT — la partie reste ouverte, on peut réessayer ── */}
+      {erreurEnregistrement && (
+        <div role="alert" style={{
+          position: 'fixed', top: 'max(10px, env(safe-area-inset-top))', left: 12, right: 12, zIndex: 60,
+          background: TB_BG, border: `1px solid ${TB_ACCENT}`, borderRadius: 3,
+          padding: '10px 14px', ...mono, fontSize: 13, color: TB_INK,
+        }}>
+          {tr("Le dessin n'a pas pu être enregistré. Touche VALIDER à nouveau.",
+              'The drawing could not be saved. Tap DONE again.')}
+        </div>
+      )}
 
       {/* ── CANVAS ── */}
       <div
@@ -1053,7 +1077,7 @@ export default function JeuDessin() {
             </svg>
           </button>
           <div style={{ flex: 1 }} />
-          <button onClick={validerBande} style={{
+          <button onClick={() => { setErreurEnregistrement(false); void validerBande() }} style={{
             ...mono, fontSize: 17,
             background: TB_INK, color: TB_BG,
             border: 'none', cursor: 'pointer',

@@ -32,8 +32,10 @@
           }
         });
       }
+      // Les erreurs non rattrapées restent tracées en console — jamais affichées
+      // au joueur : l'écran de secours du carnet (ErrorBoundary) s'en charge.
       window.addEventListener('error', function(e) {
-        document.body.innerHTML = '<pre style="padding:24px;font-family:monospace;font-size:13px;color:#b22c20;white-space:pre-wrap;background:#f5ede0">ERREUR:\n' + e.message + '\n' + (e.filename || '') + ':' + e.lineno + '\n\n' + (e.error && e.error.stack ? e.error.stack : '') + '</pre>';
+        console.error('[Cadavre Exquis]', e.message, e.filename + ':' + e.lineno, e.error && e.error.stack);
       });
     </script>
     <script type="module" src="/src/main.tsx"></script>

@@ -1,9 +1,20 @@
 import Dexie, { type Table } from 'dexie'
-import type { Poeme, DessinCadavre } from '../types'
+import type { Poeme, DessinCadavre, BandeDessin } from '../types'
+
+/** Bandes d'une partie dessinée en cours — trop lourdes pour sessionStorage
+ *  (quelques PNG plein écran suffisaient à dépasser le quota, et l'écriture
+ *  finale, la seule qui décide de la révélation, n'était pas protégée). */
+export interface BandesDessin {
+  id: string            // toujours 'courant' : une seule partie dessinée à la fois
+  bandes: BandeDessin[]
+  paper: string
+  ts: number
+}
 
 class CadavreExquisDB extends Dexie {
   poemes!: Table<Poeme>
   dessins!: Table<DessinCadavre>
+  bandesDessin!: Table<BandesDessin>
 
   constructor() {
     super('cadavre-exquis')
@@ -14,10 +25,31 @@ class CadavreExquisDB extends Dexie {
       poemes: 'id, dateCreation, dateModification',
       dessins: 'id, dateCreation, dateModification',
     })
+    this.version(3).stores({
+      poemes: 'id, dateCreation, dateModification',
+      dessins: 'id, dateCreation, dateModification',
+      bandesDessin: 'id',
+    })
   }
 }
 
 export const db = new CadavreExquisDB()
+
+const CLE_BANDES = 'courant'
+
+/** Écrit les bandes de la partie dessinée en cours. Lève si l'écriture échoue :
+ *  l'appelant doit le savoir avant d'effacer quoi que ce soit. */
+export async function sauvegarderBandesDessin(bandes: BandeDessin[], paper: string): Promise<void> {
+  await db.bandesDessin.put({ id: CLE_BANDES, bandes, paper, ts: Date.now() })
+}
+
+export async function chargerBandesDessin(): Promise<BandesDessin | undefined> {
+  return db.bandesDessin.get(CLE_BANDES)
+}
+
+export async function effacerBandesDessin(): Promise<void> {
+  await db.bandesDessin.delete(CLE_BANDES)
+}
 
 export async function sauvegarderPoeme(poeme: Poeme): Promise<void> {
   await db.poemes.put(poeme)

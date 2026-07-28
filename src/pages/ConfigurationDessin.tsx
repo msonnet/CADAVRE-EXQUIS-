@@ -8,6 +8,7 @@ import { useSound } from '../hooks/useSound'
 import type { ConfigDessin } from '../types'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
+import { effacerBandesDessin } from '../db'
 
 const CONFIG_PAR_DEFAUT: ConfigDessin = {
   nbBandes: 3,
@@ -60,7 +61,11 @@ export default function ConfigurationDessin() {
   function demarrer() {
     jouer('demarrage')
     sessionStorage.setItem('config-dessin', JSON.stringify(config))
+    // Le brouillon de reprise était laissé en place : la nouvelle partie
+    // repartait au milieu de l'ancienne.
+    sessionStorage.removeItem('dessin-brouillon')
     sessionStorage.removeItem('dessin-bandes')
+    void effacerBandesDessin()
     navigate('/jeu-dessin')
   }
 
