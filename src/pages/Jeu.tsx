@@ -491,12 +491,27 @@ export default function Jeu() {
           setIaAttendValidation(false)
         }
       } else {
-        revealTimerRef.current = setTimeout(() => {
+        // Partie normale : la pause de révélation reste, mais elle n'est plus
+        // subie — un tap l'abrège. Le tap ne dévoile rien de plus (le fragment
+        // de la voix reste scellé), il ne fait que passer à la suite.
+        const poursuivre = () => {
           avancer(idx, def, texte, slotNum, estFallback)
           setIaTexteRevele(null)
           setIaFallbackRevele(false)
+        }
+        iaAvancePendingRef.current = poursuivre
+        revealTimerRef.current = setTimeout(() => {
+          iaAvancePendingRef.current = null
+          poursuivre()
         }, 2600)
       }
+    }
+
+    // Hors ligne : la réserve locale est instantanée — inutile d'imposer les
+    // 12 s d'expiration de l'appel réseau pour arriver au même fragment.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      finaliser('', 'fallback')
+      return
     }
 
     const contexteIA = getContexteVisible(cases, config.visibilite) ?? undefined
@@ -742,10 +757,24 @@ export default function Jeu() {
 
   // ── IA screen ──────────────────────────────────────────────────────────────
   if (participantActuel?.type === 'ia' && (iaChargement || iaTexteRevele !== null)) {
+    // Abrège la pause de révélation (jamais l'attente réseau, ni le passage
+    // manuel de la découverte, qui a son propre bouton).
+    const tapAbrege = !iaAttendValidation && iaTexteRevele !== null && !!iaAvancePendingRef.current
+    const abreger = () => {
+      if (!iaAvancePendingRef.current) return
+      if (revealTimerRef.current) { clearTimeout(revealTimerRef.current); revealTimerRef.current = null }
+      const poursuivre = iaAvancePendingRef.current
+      iaAvancePendingRef.current = null
+      poursuivre()
+    }
     return (
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
         <Decor variant="jeu-ia" />
-        <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+        <div
+          style={{ position: 'relative', zIndex: 10, cursor: tapAbrege ? 'pointer' : 'default' }}
+          className="flex flex-col flex-1"
+          onClick={tapAbrege ? abreger : undefined}
+        >
           {/* Header */}
           <div className="flex justify-between items-baseline">
             <span style={{ ...mono, fontSize: 13, letterSpacing: '0.1em', color: encre, opacity: 0.7 }}>{acteLabel}</span>
@@ -871,6 +900,18 @@ export default function Jeu() {
               >
                 <span>{tr('Écrire la suite', 'Write what follows')}&nbsp;→</span>
               </button>
+            </motion.div>
+          )}
+
+          {/* Invite d'abrègement — discrète, seulement quand le tap sert */}
+          {tapAbrege && (
+            <motion.div
+              style={{ ...mono, fontSize: 13, color: accent, textAlign: 'center', paddingBottom: 6, letterSpacing: '0.18em' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {tr('TOUCHER POUR CONTINUER', 'TAP TO CONTINUE')}
             </motion.div>
           )}
 

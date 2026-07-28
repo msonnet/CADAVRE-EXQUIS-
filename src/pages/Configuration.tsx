@@ -26,7 +26,9 @@ type SlotType = 'vide' | 'humain' | 'ia'
 const CONFIG_PAR_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
   visibilite: 'aveugle',
-  premierJoueur: 'ia',
+  // Le joueur ouvre : sa deuxième partie commençait par « La voix parle… »,
+  // écran sans bouton, et il n'écrivait plus que 2 fragments sur 5.
+  premierJoueur: 'humain',
   mode: 'standard',
   joueursHumains: 1,
   voixIA: 1,
@@ -266,9 +268,10 @@ export default function Configuration() {
         {/* ── PREMIER JOUEUR — uniquement solo avec IA ── */}
         {voixIA > 0 && joueursHumains === 1 && (
           <div style={{ marginBottom: 18 }}>
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
-              {tr('— OUVRE LA SÉANCE —', '— OPENS THE SÉANCE —')}
-            </div>
+            <SectionAide
+              label={tr('OUVRE LA SÉANCE', 'OPENS THE SÉANCE')} accent={accent} encre={encre}
+              aide={<>{tr("Qui écrit le premier fragment — et donc un fragment sur deux. Si la voix ouvre, tu la regardes écrire avant ton tour ; si tu ouvres, elle répond à ce que tu as posé.", 'Who writes the first fragment — and therefore every other one. If the voice opens, you watch it write before your turn; if you open, it answers what you laid down.')}</>}
+            />
             <div className="flex gap-2">
               {(['ia', 'humain'] as const).map(p => {
                 const active = config.premierJoueur === p
