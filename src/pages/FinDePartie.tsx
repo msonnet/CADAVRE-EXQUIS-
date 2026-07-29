@@ -17,6 +17,8 @@ import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_IMAGE, T_FIN_SHARE, T_F
 import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import { useCredits } from '../hooks/useCredits'
+import MurCredits from '../components/MurCredits'
 
 const STYLES = langueActuelle() === 'en' ? [
   { id: 'aquarelle',           label: 'Watercolor' },
@@ -72,6 +74,12 @@ export default function FinDePartie() {
   const [promptLibre, setPromptLibre] = useState('')
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
+  const credits = useCredits()
+  const [murVisible, setMurVisible] = useState(false)
+  const [murCout, setMurCout] = useState(8)
+  const [murQualite, setMurQualite] = useState<'standard' | 'pro'>('pro')
+  // Dernier style demandé — le mur propose de le rejouer en qualité standard
+  const styleChoisiRef = useRef<string | null>(null)
   const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
   const [promptVisible, setPromptVisible] = useState(false)
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
@@ -138,16 +146,28 @@ export default function FinDePartie() {
     if (tutActif && tutEtape === T_FIN_SHARE && partageOk) tutAvancer()
   }, [partageOk]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function choisirStyle(style: string) {
+  function choisirStyle(style: string, qualite: 'standard' | 'pro' = 'pro') {
     if (!poeme || generatingIllustration) return
+    styleChoisiRef.current = style
     setStyleChoisi(style)
     setErreurIllustration(null)
     setGeneratingIllustration(true)
     const structure = getStructure(poeme.structureId)
     const texte = reconstruirePoeme(poeme.cases, structure)
     const pl = promptLibre.trim() || undefined
-    genererIllustration(texte, style, pl)
-      .then(({ url, promptVisuel: pv, reason }) => {
+    genererIllustration(texte, style, pl, qualite)
+      .then(({ url, promptVisuel: pv, reason, credits: solde }) => {
+        if (typeof solde === 'number') credits.poser(solde)
+        // Encrier sec : on ouvre le mur (deux chemins) au lieu d'une erreur sèche
+        if (reason === 'credits_insuffisants' || reason === 'auth_requise') {
+          setMurQualite(qualite)
+          setMurCout(qualite === 'pro' ? 8 : 1)
+          setMurVisible(true)
+          setStyleChoisi(null)
+          setGeneratingIllustration(false)
+          credits.rafraichir()
+          return
+        }
         if (url) {
           setIllustrationUrl(url)
           if (pv) setPromptVisuel(pv)
@@ -244,6 +264,19 @@ export default function FinDePartie() {
       </AnimatePresence>
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
         <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
+
+      {/* ── MUR DE CRÉDITS ── */}
+      <MurCredits
+        visible={murVisible}
+        solde={credits.solde ?? 0}
+        cout={murCout}
+        qualite={murQualite}
+        onFermer={() => setMurVisible(false)}
+        onStandard={murQualite === 'pro' && styleChoisiRef.current
+          ? () => { setMurVisible(false); choisirStyle(styleChoisiRef.current!, 'standard') }
+          : undefined}
+        accent={accent} encre={encre} bg={bg}
+      />
 
       {/* ── PLEIN ÉCRAN ILLUSTRATION ── */}
       <AnimatePresence>

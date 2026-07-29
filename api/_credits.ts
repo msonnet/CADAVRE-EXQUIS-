@@ -12,10 +12,16 @@ import { clientAdmin } from './_supabase.js'
 /** Crédits offerts à chaque mois civil entamé. */
 export const ALLOCATION_MENSUELLE = 3
 
-/** Coût en crédits d'une illustration, par niveau de qualité. */
+/**
+ * Coût en crédits, calibré pour qu'aucun chemin ne soit déficitaire :
+ * une publicité non personnalisée rapporte ~0,005 $, une image standard
+ * (FLUX schnell) coûte ~0,003 $ et une grand format (FLUX pro 1.1) ~0,040 $.
+ * Une publicité = 1 crédit → le grand format à 8 crédits est au pire à
+ * l'équilibre, et largement bénéficiaire quand il vient d'un forfait.
+ */
 export const COUT_ILLUSTRATION: Record<string, number> = {
   standard: 1,
-  pro: 1,
+  pro: 8,
 }
 
 /** Identité derrière un jeton de session Supabase, ou null s'il est invalide. */
