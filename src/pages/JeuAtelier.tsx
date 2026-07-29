@@ -25,6 +25,7 @@ interface VersAtelier {
   texte: string
   auteur: 'humain' | 'ia' | 'mixte'  // 'mixte' = médium + voix(es) sur le même vers
   voixNums: number[]   // numéros (1-based) des voix IA qui ont participé — vide pour 'humain' pur
+  voixNoms?: string[]  // personas correspondantes, révélées après la séance
 }
 
 interface VoixEnCours {
@@ -220,6 +221,7 @@ export default function JeuAtelier() {
   const traiteFragment = useRef<Set<number>>(new Set())
   const sauvegardeFaite = useRef(false)
   const dernierGabarit = useRef('')
+  const fragNomsRef = useRef<string[]>([])
 
   // État pour les tours fragment du médium (verse co-écrit avec des voix IA)
   const [fragGabarit, setFragGabarit] = useState<RoleFragment[] | null>(null)
@@ -289,6 +291,7 @@ export default function JeuAtelier() {
       const contexte = p.echo && echo ? echo : undefined
 
       const fragments: string[] = []
+      const nomsVoix: string[] = []
       // Conjonctions courtes (≤2 lettres) : "en" (gérondif), "or", "si", "et", "ni"
       // échappent au filtre > 2 chars. Calculé avant la boucle : versRef est stable
       // entre itérations, inutile de refaire le scan à chaque fragment.
@@ -323,6 +326,7 @@ export default function JeuAtelier() {
             attendre(650 + Math.random() * 450),   // respiration théâtrale minimale par voix
           ])
           texte = reponse.texte.trim()
+          if (texte && reponse.voixNom) nomsVoix.push(reponse.voixNom)
         } catch { /* réserve locale */ }
         if (!texte) {
           const pool = RESERVE[caseRole.type] ?? RESERVE['libre']
@@ -345,6 +349,7 @@ export default function JeuAtelier() {
         texte: fragments.join(' ').replace(/\s+/g, ' ').trim(),
         auteur: 'ia',
         voixNums: indices.map(i => i + 1),
+        voixNoms: nomsVoix,
       })
     }
 
@@ -412,6 +417,7 @@ export default function JeuAtelier() {
         ...conjCourtesUsees,
       ]
 
+      const nomsFragment: string[] = []
       const echoVers = versRef.current[idx - 1]?.texte
       const echoMot = echoVers ? dernierMot(echoVers) : undefined
       const contexte = p.echo && echoMot ? echoMot : undefined
@@ -441,6 +447,7 @@ export default function JeuAtelier() {
             attendre(400 + Math.random() * 400),
           ])
           texte = reponse.texte.trim()
+          if (texte && reponse.voixNom) nomsFragment.push(reponse.voixNom)
         } catch { /* réserve locale */ }
         if (!texte) {
           const pool = RESERVE[role.type] ?? RESERVE['libre']
@@ -451,6 +458,7 @@ export default function JeuAtelier() {
         setFragTextes(prev => { const next = [...prev]; if (next.length > k) next[k] = texte; return next })
         setVoixEnCours(prev => prev.map((v, i) => i === localIdx ? { ...v, fait: true } : v))
       }))
+      fragNomsRef.current = nomsFragment
     }
 
     initFragment()
@@ -472,7 +480,7 @@ export default function JeuAtelier() {
 
     setVoixEnCours([])
     // Tiré seul sur le vers, le médium signe seul — pas de couture mixte
-    ajouterVers({ texte, auteur: voixNums.length === 0 ? 'humain' : 'mixte', voixNums })
+    ajouterVers({ texte, auteur: voixNums.length === 0 ? 'humain' : 'mixte', voixNums, voixNoms: fragNomsRef.current })
     setFragGabarit(null)
     setFragTextes([])
   }, [fragTextes, fragGabarit]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -500,11 +508,17 @@ export default function JeuAtelier() {
       const cases: Case[] = versRef.current.map((v, i) => ({
         numero: i + 1,
         fonction: tr(`vers ${i + 1}`, `line ${i + 1}`),
-        consigne: v.auteur === 'humain'
-          ? tr('vers du médium', 'line by the medium')
-          : v.auteur === 'mixte'
-            ? tr(`vers du médium et des voix ${v.voixNums.map(toRomain).join(' · ')}`, `line by the medium and voices ${v.voixNums.map(toRomain).join(' · ')}`)
-            : tr(`vers des voix ${v.voixNums.map(toRomain).join(' · ')}`, `line by voices ${v.voixNums.map(toRomain).join(' · ')}`),
+        consigne: (() => {
+          // Les personas sont révélées ici, jamais pendant la séance.
+          const noms = (v.voixNoms ?? []).filter(Boolean)
+          const signature = noms.length
+            ? noms.join(' · ')
+            : v.voixNums.map(toRomain).join(' · ')
+          if (v.auteur === 'humain') return tr('vers du médium', 'line by the medium')
+          return v.auteur === 'mixte'
+            ? tr(`vers du médium et de ${signature}`, `line by the medium and ${signature}`)
+            : tr(`vers de ${signature}`, `line by ${signature}`)
+        })(),
         auteur: v.auteur,
         texte: textes[i],
         ts: Date.now(),

@@ -16,6 +16,9 @@ export interface RequeteIA {
 export interface ReponseIA {
   texte: string
   source: 'ia' | 'fallback'
+  /** Nom de la persona qui a écrit (« l'apiculteur », « le fossoyeur »…) —
+   *  le serveur l'envoie depuis toujours, il était jeté ici. */
+  voixNom?: string
 }
 
 // Au-delà de ce délai, on abandonne la requête pour ne jamais laisser l'écran
@@ -38,5 +41,6 @@ export async function demanderFragmentIA(requete: RequeteIA): Promise<ReponseIA>
   return {
     texte: data.texte ?? '',
     source: data.source === 'fallback' ? 'fallback' : 'ia',
+    voixNom: typeof data.voixNom === 'string' ? data.voixNom : undefined,
   }
 }

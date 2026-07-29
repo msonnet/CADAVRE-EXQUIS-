@@ -32,6 +32,14 @@ export default function Reglages() {
     catch { return 0 }
   })
 
+  // Réarme l'introduction ET le guide en 9 étapes : celui-ci n'est activé
+  // qu'au bouton « Commencer » de la Découverte — manquée une fois, il était
+  // perdu pour de bon.
+  function rejouerIntroduction() {
+    try { localStorage.removeItem('cadavre-onboarding-done') } catch { /* ignore */ }
+    navigate('/decouverte')
+  }
+
   function reafficherAuteurs() {
     localStorage.removeItem('auteurs-masques')
     setNbMasques(0)
@@ -172,6 +180,36 @@ export default function Reglages() {
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
             {NIVEAUX.find(n => n.id === validation)?.desc}
           </div>
+        </motion.div>
+
+        {/* ── DÉCOUVERTE ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          style={{ marginBottom: 28 }}
+        >
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            {tr('— DÉCOUVERTE —', '— DISCOVERY —')}
+          </div>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
+            {tr("Revoir l'introduction et rejouer le guide pas à pas.", 'See the introduction again and replay the step-by-step guide.')}
+          </div>
+          <button
+            onClick={rejouerIntroduction}
+            style={{
+              ...mono, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.12em',
+              color: encre,
+              background: 'transparent',
+              border: `0.5px solid ${encre}40`,
+              borderRadius: 3,
+              padding: '12px 0', cursor: 'pointer',
+              width: '100%',
+              transition: 'all 0.2s',
+            }}
+          >
+            {tr("REJOUER L'INTRODUCTION", 'REPLAY THE INTRODUCTION')}
+          </button>
         </motion.div>
 
         {/* ── AMBIANCE ── */}

@@ -598,7 +598,9 @@ export default function PoemeDetail() {
                     {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
                     <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
                     <span style={{ fontFamily: "'Playfair Display', serif", textTransform: 'none', letterSpacing: 0 }}>
-                      {cas.auteur === 'ia' ? 'voix IA' : cas.joueurNumero ? `joueur ${cas.joueurNumero}` : 'toi'}
+                      {cas.auteur === 'ia'
+                        ? (cas.voixNom ? `${tr('voix', 'voice')} · ${cas.voixNom}` : tr('voix IA', 'AI voice'))
+                        : cas.joueurNumero ? `${tr('joueur', 'player')} ${cas.joueurNumero}` : tr('toi', 'you')}
                     </span>
                   </div>
                   <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>

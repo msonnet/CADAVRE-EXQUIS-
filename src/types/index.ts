@@ -28,6 +28,7 @@ export interface Case {
   auteur: 'humain' | 'ia' | 'mixte'
   joueurNumero?: number   // numéro du joueur humain en mode multijoueur
   voixSlot?: number       // slot IA stable dans la séquence (1-based) — pour affichage cohérent
+  voixNom?: string        // persona qui a écrit le fragment — révélée dans les coutures, jamais pendant la partie
   texte: string
   ts: number
   fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)

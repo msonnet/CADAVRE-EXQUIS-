@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -28,11 +28,13 @@ export default function Decouverte() {
   const seance = useReve()
   const { jouer } = useSound()
 
-  // On marque l'introduction comme vue DÈS l'arrivée : la Découverte ne se
-  // relance jamais d'elle-même, même si le joueur l'abandonne en route.
-  useEffect(() => {
+  // Le marqueur se pose au CHOIX du joueur, jamais au simple affichage : un
+  // appel entrant pendant ces vingt secondes lui coûtait l'introduction — et
+  // avec elle le guide en 9 étapes, qui n'est armé que depuis cet écran.
+  // Toute sortie doit passer par ici, sinon l'accueil y renvoie en boucle.
+  function marquerVue() {
     try { localStorage.setItem(ONBOARDING_KEY, '1') } catch { /* ignore */ }
-  }, [])
+  }
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -40,6 +42,7 @@ export default function Decouverte() {
   const ui: React.CSSProperties = { fontFamily: "'Raleway', sans-serif" }
 
   function commencer() {
+    marquerVue()
     jouer('demarrage')
     activerTutoriel()
     // Un brouillon d'une ancienne partie écraserait cette config au montage de /jeu
@@ -50,6 +53,7 @@ export default function Decouverte() {
   }
 
   function passer() {
+    marquerVue()
     navigate('/', { replace: true })
   }
 

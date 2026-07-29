@@ -472,7 +472,7 @@ export default function Jeu() {
     const voiceId = voixParSlot[seqPos]
     const slotNum = iaSlotNums[seqPos]
 
-    const finaliser = (brut: string, sourceServeur: 'ia' | 'fallback') => {
+    const finaliser = (brut: string, sourceServeur: 'ia' | 'fallback', voixNom?: string) => {
       const { texte, remplace } = choisirSansDuplique(brut, def.type)
       // Fallback si le serveur a renvoyé un mot de réserve OU si on a remplacé un doublon localement
       const estFallback = sourceServeur === 'fallback' || remplace
@@ -485,7 +485,7 @@ export default function Jeu() {
       if (estDecouverte || (tutActif && tutEtape === T_JEU_IA)) {
         setIaAttendValidation(true)
         iaAvancePendingRef.current = () => {
-          avancer(idx, def, texte, slotNum, estFallback)
+          avancer(idx, def, texte, slotNum, estFallback, voixNom)
           setIaTexteRevele(null)
           setIaFallbackRevele(false)
           setIaAttendValidation(false)
@@ -495,7 +495,7 @@ export default function Jeu() {
         // subie — un tap l'abrège. Le tap ne dévoile rien de plus (le fragment
         // de la voix reste scellé), il ne fait que passer à la suite.
         const poursuivre = () => {
-          avancer(idx, def, texte, slotNum, estFallback)
+          avancer(idx, def, texte, slotNum, estFallback, voixNom)
           setIaTexteRevele(null)
           setIaFallbackRevele(false)
         }
@@ -539,7 +539,7 @@ export default function Jeu() {
     const eviterIA = [...motsPartie, ...[...motsIaRecents.current].reverse()]
     const consigneIA = def.type === 'libre' ? ouvertureAleatoire(def.consigne) : def.consigne
     demanderFragmentIA({ consigne: consigneIA, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA })
-      .then(({ texte, source }) => finaliser(texte.trim(), source))
+      .then(({ texte, source, voixNom }) => finaliser(texte.trim(), source, voixNom))
       .catch(()  => finaliser('', 'fallback'))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -596,13 +596,16 @@ export default function Jeu() {
 
   // ─── Fonctions de jeu ─────────────────────────────────────────────────────
 
-  function avancer(idx: number, def: DefinitionCase, texte: string, slotNum?: number, isFallback?: boolean) {
+  function avancer(idx: number, def: DefinitionCase, texte: string, slotNum?: number, isFallback?: boolean, voixNom?: string) {
     const c: Case = {
       numero: idx + 1,
       fonction: def.fonction,
       consigne: def.consigne,
       auteur: 'ia',
       voixSlot: slotNum,
+      // Attribuée seulement si le fragment vient bien de la voix : un texte de
+      // réserve signé « l'apiculteur » serait un mensonge.
+      voixNom: isFallback ? undefined : voixNom,
       texte,
       ts: Date.now(),
       fallback: isFallback || undefined,

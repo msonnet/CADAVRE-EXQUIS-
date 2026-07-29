@@ -556,7 +556,9 @@ export default function FinDePartie() {
                       {c.fonction.toUpperCase()}
                       <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
                       <span style={{ fontFamily: "'Playfair Display', serif" }}>
-                        {c.auteur === 'ia' ? `${tr('voix', 'voice')} ${iaNum}` : c.joueurNumero ? `${tr('joueur', 'player')} ${c.joueurNumero}` : tr('toi', 'you')}
+                        {c.auteur === 'ia'
+                          ? `${tr('voix', 'voice')} ${iaNum}${c.voixNom ? ` · ${c.voixNom}` : ''}`
+                          : c.joueurNumero ? `${tr('joueur', 'player')} ${c.joueurNumero}` : tr('toi', 'you')}
                       </span>
                       {c.fallback && (
                         <span style={{
