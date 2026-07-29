@@ -1,5 +1,6 @@
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { api } from '../lib/apiBase'
+import { supabase } from '../lib/supabase'
 
 // Format Instagram : 3:4 vertical, 1080 × 1440 px — publiable sans recadrage.
 const INSTA_W = 1080
@@ -42,21 +43,33 @@ async function normaliserFormatInstagram(url: string): Promise<string> {
 export async function genererIllustration(
   texte: string,
   style: string,
-  promptLibre?: string
-): Promise<{ url: string | null; promptVisuel?: string; reason?: string }> {
+  promptLibre?: string,
+  qualite: 'standard' | 'pro' = 'pro',
+): Promise<{ url: string | null; promptVisuel?: string; reason?: string; credits?: number }> {
   try {
+    // Le serveur débite un crédit avant de générer : il lui faut l'identité.
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return { url: null, reason: 'auth_requise' }
     // 60 s : juste au-dessus du plafond serveur (maxDuration 55 s), pour que
     // la réponse ou l'erreur du serveur l'emporte, tout en coupant net si la
     // connexion se perd au lieu de laisser le spinner « EN COURS… » à vie.
     const response = await fetchAvecTimeout(api('/api/illustration'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ texte, style, promptLibre }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ texte, style, promptLibre, qualite }),
     }, 60_000)
+    if (response.status === 402) {
+      const { cout } = await response.json().catch(() => ({ cout: 1 }))
+      return { url: null, reason: 'credits_insuffisants', credits: 0, promptVisuel: undefined, ...(cout ? {} : {}) }
+    }
+    if (response.status === 401) return { url: null, reason: 'auth_requise' }
     if (!response.ok) return { url: null, reason: `http_${response.status}` }
-    const { url, promptVisuel, reason } = await response.json()
-    if (!url) return { url: null, promptVisuel, reason }
-    return { url: await normaliserFormatInstagram(url), promptVisuel, reason }
+    const { url, promptVisuel, reason, credits } = await response.json()
+    if (!url) return { url: null, promptVisuel, reason, credits }
+    return { url: await normaliserFormatInstagram(url), promptVisuel, reason, credits }
   } catch (err) {
     return { url: null, reason: (err as Error)?.name === 'AbortError' ? 'timeout' : 'network_error' }
   }

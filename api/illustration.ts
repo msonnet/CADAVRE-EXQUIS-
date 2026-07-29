@@ -2,6 +2,7 @@ export const config = { maxDuration: 55 }
 
 import { cors } from './_cors.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
+import { utilisateurDuJeton, debiter, crediter, COUT_ILLUSTRATION } from './_credits.js'
 
 const STYLE_PROMPTS: Record<string, string> = {
   aquarelle:     'traditional watercolor painting on cold press paper, wet-on-wet color blooms and granulation, cauliflower bleeds at edges, translucent glazed layers, crisp dry-brush detail in shadows, visible paper grain and texture, colors merging naturally, professional fine art watercolor technique',
@@ -84,7 +85,8 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { texte, style, promptLibre } = req.body ?? {}
+  const { texte, style, promptLibre, qualite: qualiteBrute } = req.body ?? {}
+  const qualite = qualiteBrute === 'standard' ? 'standard' : 'pro'
   if (typeof texte !== 'string' || !texte) { res.status(400).json({ error: 'texte requis' }); return }
   if (texte.length > 1500) { res.status(400).json({ error: 'texte trop long' }); return }
   if (promptLibre !== undefined && (typeof promptLibre !== 'string' || promptLibre.length > 500)) {
@@ -96,6 +98,23 @@ export default async function handler(req: any, res: any): Promise<void> {
 
   const falKey = process.env.FAL_KEY
   if (!falKey) { res.status(200).json({ url: null, reason: 'not_configured' }); return }
+
+  // ── Crédits ─────────────────────────────────────────────────────────────
+  // Une image coûte de l'argent réel : on débite AVANT de générer, et on
+  // rembourse si la génération échoue. Le solde ne vient jamais du client.
+  const userId = await utilisateurDuJeton(req)
+  if (!userId) { res.status(401).json({ url: null, reason: 'auth_requise' }); return }
+
+  const cout = COUT_ILLUSTRATION[qualite] ?? 1
+  const soldeApres = await debiter(userId, cout, { style, qualite })
+  if (soldeApres === null) {
+    res.status(402).json({ url: null, reason: 'credits_insuffisants', cout })
+    return
+  }
+
+  const rembourser = async (motif: string) => {
+    await crediter(userId, cout, 'remboursement', undefined, { motif, style, qualite })
+  }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
   const stylePrompt = style !== 'libre' ? (STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle) : ''
@@ -122,7 +141,11 @@ export default async function handler(req: any, res: any): Promise<void> {
   }
 
   try {
-    const response = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
+    // La voie publicitaire finance mal une image à 0,04 $ : le niveau
+    // « standard » passe par un modèle bien moins cher, le niveau « pro »
+    // reste réservé aux crédits achetés.
+    const modele = qualite === 'standard' ? 'fal-ai/flux/schnell' : 'fal-ai/flux-pro/v1.1'
+    const response = await fetch(`https://fal.run/${modele}`, {
       method: 'POST',
       headers: {
         'Authorization': `Key ${falKey}`,
@@ -142,16 +165,23 @@ export default async function handler(req: any, res: any): Promise<void> {
 
     if (!response.ok) {
       console.error(`fal.ai ${response.status}`)
-      res.status(200).json({ url: null, reason: `fal_error_${response.status}` })
+      await rembourser(`fal_${response.status}`)
+      res.status(200).json({ url: null, reason: `fal_error_${response.status}`, credits: soldeApres + cout })
       return
     }
 
     const data = await response.json()
     const url = data.images?.[0]?.url ?? null
-    res.status(200).json({ url, promptVisuel: textePrompt })
+    if (!url) {
+      await rembourser('sans_image')
+      res.status(200).json({ url: null, reason: 'no_image', credits: soldeApres + cout })
+      return
+    }
+    res.status(200).json({ url, promptVisuel: textePrompt, credits: soldeApres })
   } catch (err) {
     console.error('Erreur fal.ai:', err)
-    res.status(200).json({ url: null, reason: 'network_error' })
+    await rembourser('exception')
+    res.status(200).json({ url: null, reason: 'network_error', credits: soldeApres + cout })
   }
 }
 
