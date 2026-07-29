@@ -6,7 +6,6 @@ import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import { corrigerAccords } from '../api/corriger'
 import type { Poeme } from '../types'
-import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
@@ -54,7 +53,6 @@ export default function PoemeDetail() {
   const [publishError, setPublishError] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
   const { profile } = useAuth()
 
@@ -478,15 +476,6 @@ export default function PoemeDetail() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <button
-            onClick={() => parlant ? arreter() : parler(texteAffiche)}
-            aria-label={parlant ? 'Arrêter la lecture' : 'Écouter le poème'}
-            aria-pressed={parlant}
-            className="appui"
-            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
-          >
-            {parlant ? tr('◾ RÉCITER', '◾ RECITE') : tr('— RÉCITER —', '— RECITE —')}
-          </button>
           <button
             onClick={partager}
             disabled={partageEnCours}

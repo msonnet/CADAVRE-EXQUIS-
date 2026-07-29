@@ -67,7 +67,6 @@ npm run cap:android    # ouvre Android Studio → Generate Signed Bundle
 | `ANTHROPIC_API_KEY` | Voix IA Claude |
 | `FAL_KEY` | Illustrations FLUX |
 | `CRON_SECRET` | Protège `/api/cleanup` (générer avec `openssl rand -hex 32`) |
-| `ELEVENLABS_API_KEY` | Voix de lecture directe (optionnel — sinon la lecture passe par FAL_KEY, déjà configurée) |
 | `RESEND_API_KEY` + `REPORT_EMAIL` | E-mail au modérateur à chaque signalement (optionnel) |
 
 ### App Store Connect

@@ -107,10 +107,9 @@ sur `https://cadavre-exquis-beta.vercel.app`.
 | `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` | base, auth, galerie | oui |
 | `SUPABASE_SERVICE_ROLE_KEY` | cron de nettoyage, suppression de compte | oui |
 | `ANTHROPIC_API_KEY` | voix IA, correction, lecture des dessins | oui |
-| `FAL_KEY` | illustrations et voix de lecture | oui |
+| `FAL_KEY` | illustrations (FLUX) | oui |
 | `CRON_SECRET` | protège `/api/cleanup` | oui |
 | `RESEND_API_KEY` + `REPORT_EMAIL` | e-mail au modérateur à chaque signalement | recommandé (modération 1.2) |
-| `ELEVENLABS_API_KEY` | voix de lecture en direct (sinon passe par `FAL_KEY`) | optionnel |
 
 ### d. Compte de démonstration pour la revue
 

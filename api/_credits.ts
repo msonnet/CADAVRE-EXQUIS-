@@ -10,11 +10,14 @@ import { clientAdmin } from './_supabase.js'
  */
 
 /**
- * Crédits offerts à chaque mois civil entamé — c'est LE cadran économique
- * du jeu : chaque crédit offert coûte ~0,04 $ de génération. À 1 000 joueurs
- * actifs, 2 crédits/mois = ~80 $/mois de gratuit à couvrir.
+ * Crédits offerts à chaque mois civil entamé — c'est LE cadran économique du
+ * jeu : un crédit offert = un grand format = ~0,04 $ de génération réelle.
+ * À 1 000 joueurs actifs, 5 crédits/mois ≈ 200 $/mois de gratuit à couvrir,
+ * soit ~4 % de conversion en forfaits pour atteindre l'équilibre. Baisser ce
+ * nombre, ou basculer le grand format sur un modèle moins cher, sont les
+ * deux seuls leviers pour alléger la facture.
  */
-export const ALLOCATION_MENSUELLE = 2
+export const ALLOCATION_MENSUELLE = 5
 
 /**
  * Le crédit EST le grand format — une seule chose, aucun calcul mental :

@@ -5,7 +5,6 @@ import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoemes, sauvegarderIllustration } from '../db'
 import type { Poeme } from '../types'
-import { useTTS } from '../hooks/useTTS'
 import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 import { corrigerAccords } from '../api/corriger'
@@ -88,7 +87,6 @@ export default function FinDePartie() {
   const [partageOk, setPartageOk] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
   const [lettrineChutee, setLettrineChutee] = useState(false)
-  const { parler, arreter, parlant } = useTTS()
   const { jouer } = useSound()
 
   useEffect(() => {
@@ -535,14 +533,6 @@ export default function FinDePartie() {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5, duration: 0.4 }}
         >
-          <button
-            onClick={() => parlant ? arreter() : parler(texteAffiche)}
-            aria-pressed={parlant}
-            className="appui"
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: parlant ? accent : encre, opacity: parlant ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
-          >
-            {parlant ? tr('◾ RÉCITER', '◾ RECITE') : tr('— RÉCITER —', '— RECITE —')}
-          </button>
           <button
             onClick={partager}
             disabled={partageEnCours}
