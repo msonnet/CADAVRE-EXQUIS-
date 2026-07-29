@@ -9,20 +9,34 @@ import { clientAdmin } from './_supabase.js'
  * réellement obtenu.
  */
 
-/** Crédits offerts à chaque mois civil entamé. */
-export const ALLOCATION_MENSUELLE = 3
+/**
+ * Crédits offerts à chaque mois civil entamé — c'est LE cadran économique
+ * du jeu : chaque crédit offert coûte ~0,04 $ de génération. À 1 000 joueurs
+ * actifs, 2 crédits/mois = ~80 $/mois de gratuit à couvrir.
+ */
+export const ALLOCATION_MENSUELLE = 2
 
 /**
- * Coût en crédits, calibré pour qu'aucun chemin ne soit déficitaire :
- * une publicité non personnalisée rapporte ~0,005 $, une image standard
- * (FLUX schnell) coûte ~0,003 $ et une grand format (FLUX pro 1.1) ~0,040 $.
- * Une publicité = 1 crédit → le grand format à 8 crédits est au pire à
- * l'équilibre, et largement bénéficiaire quand il vient d'un forfait.
+ * Le crédit EST le grand format — une seule chose, aucun calcul mental :
+ *   · payer   → grand format (FLUX pro 1.1, ~0,040 $), sans annonce
+ *   · gratuit → standard (FLUX schnell, ~0,003 $), une annonce à chaque fois
+ *
+ * La version standard ne consomme donc aucun crédit : elle se paie en
+ * attention. Une annonce non personnalisée rapporte ~0,005 $ pour ~0,003 $
+ * de génération — la voie gratuite s'autofinance.
  */
 export const COUT_ILLUSTRATION: Record<string, number> = {
-  standard: 1,
-  pro: 8,
+  standard: 0,
+  pro: 1,
 }
+
+/**
+ * Générations standard offertes par jour et par identité, tant que la régie
+ * publicitaire n'est pas branchée. Sans ce plafond, la voie gratuite serait
+ * illimitée et non financée — c'est exactement la fuite qui coule un
+ * modèle freemium.
+ */
+export const PLAFOND_STANDARD_QUOTIDIEN = 5
 
 /** Identité derrière un jeton de session Supabase, ou null s'il est invalide. */
 export async function utilisateurDuJeton(req: any): Promise<string | null> {
@@ -58,6 +72,33 @@ export async function etatCredits(userId: string): Promise<EtatCredits | null> {
     return null
   }
   return { solde: typeof data === 'number' ? data : 0, allocationMensuelle: ALLOCATION_MENSUELLE }
+}
+
+/**
+ * Nombre de générations standard consommées aujourd'hui par cette identité.
+ * S'appuie sur le journal : aucune table supplémentaire.
+ */
+export async function standardAujourdhui(userId: string): Promise<number> {
+  const admin = clientAdmin()
+  if (!admin) return 0
+  const debut = new Date(); debut.setUTCHours(0, 0, 0, 0)
+  const { count, error } = await admin
+    .from('credit_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('type', 'generation_standard')
+    .gte('created_at', debut.toISOString())
+  if (error) return 0
+  return count ?? 0
+}
+
+/** Journalise une génération standard (coût nul, mais elle compte pour le plafond). */
+export async function noterStandard(userId: string, detail?: unknown): Promise<void> {
+  const admin = clientAdmin()
+  if (!admin) return
+  await admin.from('credit_events').insert({
+    user_id: userId, type: 'generation_standard', montant: 0, detail: detail ?? null,
+  })
 }
 
 /** Débite. Renvoie le nouveau solde, ou null si les crédits sont insuffisants. */

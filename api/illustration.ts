@@ -2,7 +2,10 @@ export const config = { maxDuration: 55 }
 
 import { cors } from './_cors.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
-import { utilisateurDuJeton, debiter, crediter, COUT_ILLUSTRATION } from './_credits.js'
+import {
+  utilisateurDuJeton, debiter, crediter, COUT_ILLUSTRATION,
+  standardAujourdhui, noterStandard, PLAFOND_STANDARD_QUOTIDIEN,
+} from './_credits.js'
 
 const STYLE_PROMPTS: Record<string, string> = {
   aquarelle:     'traditional watercolor painting on cold press paper, wet-on-wet color blooms and granulation, cauliflower bleeds at edges, translucent glazed layers, crisp dry-brush detail in shadows, visible paper grain and texture, colors merging naturally, professional fine art watercolor technique',
@@ -105,15 +108,31 @@ export default async function handler(req: any, res: any): Promise<void> {
   const userId = await utilisateurDuJeton(req)
   if (!userId) { res.status(401).json({ url: null, reason: 'auth_requise' }); return }
 
+  // Le crédit EST le grand format. La version standard ne coûte aucun crédit :
+  // elle se paie en attention (une annonce), plafonnée en attendant la régie.
   const cout = COUT_ILLUSTRATION[qualite] ?? 1
-  const soldeApres = await debiter(userId, cout, { style, qualite })
-  if (soldeApres === null) {
-    res.status(402).json({ url: null, reason: 'credits_insuffisants', cout })
-    return
+  let soldeApres: number | null = null
+
+  if (cout > 0) {
+    soldeApres = await debiter(userId, cout, { style, qualite })
+    if (soldeApres === null) {
+      res.status(402).json({ url: null, reason: 'credits_insuffisants', cout, qualite })
+      return
+    }
+  } else {
+    const dejaFaites = await standardAujourdhui(userId)
+    if (dejaFaites >= PLAFOND_STANDARD_QUOTIDIEN) {
+      res.status(402).json({
+        url: null, reason: 'plafond_quotidien', qualite,
+        plafond: PLAFOND_STANDARD_QUOTIDIEN,
+      })
+      return
+    }
+    await noterStandard(userId, { style })
   }
 
   const rembourser = async (motif: string) => {
-    await crediter(userId, cout, 'remboursement', undefined, { motif, style, qualite })
+    if (cout > 0) await crediter(userId, cout, 'remboursement', undefined, { motif, style, qualite })
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
@@ -166,7 +185,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     if (!response.ok) {
       console.error(`fal.ai ${response.status}`)
       await rembourser(`fal_${response.status}`)
-      res.status(200).json({ url: null, reason: `fal_error_${response.status}`, credits: soldeApres + cout })
+      res.status(200).json({ url: null, reason: `fal_error_${response.status}` })
       return
     }
 
@@ -174,14 +193,14 @@ export default async function handler(req: any, res: any): Promise<void> {
     const url = data.images?.[0]?.url ?? null
     if (!url) {
       await rembourser('sans_image')
-      res.status(200).json({ url: null, reason: 'no_image', credits: soldeApres + cout })
+      res.status(200).json({ url: null, reason: 'no_image' })
       return
     }
-    res.status(200).json({ url, promptVisuel: textePrompt, credits: soldeApres })
+    res.status(200).json({ url, promptVisuel: textePrompt, credits: soldeApres ?? undefined, qualite })
   } catch (err) {
     console.error('Erreur fal.ai:', err)
     await rembourser('exception')
-    res.status(200).json({ url: null, reason: 'network_error', credits: soldeApres + cout })
+    res.status(200).json({ url: null, reason: 'network_error' })
   }
 }
 

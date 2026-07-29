@@ -76,7 +76,7 @@ export default function FinDePartie() {
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
   const credits = useCredits()
   const [murVisible, setMurVisible] = useState(false)
-  const [murCout, setMurCout] = useState(8)
+  const [murCout, setMurCout] = useState(1)
   const [murQualite, setMurQualite] = useState<'standard' | 'pro'>('pro')
   // Dernier style demandé — le mur propose de le rejouer en qualité standard
   const styleChoisiRef = useRef<string | null>(null)
@@ -159,9 +159,9 @@ export default function FinDePartie() {
       .then(({ url, promptVisuel: pv, reason, credits: solde }) => {
         if (typeof solde === 'number') credits.poser(solde)
         // Encrier sec : on ouvre le mur (deux chemins) au lieu d'une erreur sèche
-        if (reason === 'credits_insuffisants' || reason === 'auth_requise') {
+        if (reason === 'credits_insuffisants' || reason === 'plafond_quotidien' || reason === 'auth_requise') {
           setMurQualite(qualite)
-          setMurCout(qualite === 'pro' ? 8 : 1)
+          setMurCout(qualite === 'pro' ? 1 : 0)
           setMurVisible(true)
           setStyleChoisi(null)
           setGeneratingIllustration(false)

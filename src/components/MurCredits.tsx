@@ -79,10 +79,15 @@ export default function MurCredits({
             </div>
 
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, lineHeight: 1.5 }}>
-              {tr(
-                `Elle coûte ${cout} crédit${cout > 1 ? 's' : ''}. Il t’en reste ${solde} — il en manque ${manque}.`,
-                `It costs ${cout} credit${cout > 1 ? 's' : ''}. You have ${solde} — ${manque} short.`,
-              )}
+              {qualite === 'pro'
+                ? tr(
+                    'Le grand format coûte 1 crédit — il ne t’en reste aucun. La version standard, elle, reste offerte contre une annonce.',
+                    'The large format costs 1 credit — you have none left. The standard version stays free in exchange for an ad.',
+                  )
+                : tr(
+                    'Tu as atteint le nombre d’illustrations offertes pour aujourd’hui. Elles reviennent demain.',
+                    'You’ve used today’s free illustrations. They come back tomorrow.',
+                  )}
             </p>
 
             {/* Chemin gratuit — toujours en premier : la publicité est un choix, pas une contrainte */}
@@ -99,8 +104,8 @@ export default function MurCredits({
               </button>
             )}
 
-            {/* Repli sur la qualité standard quand elle est à portée */}
-            {onStandard && qualite === 'pro' && solde >= 1 && (
+            {/* Repli sur la version standard — offerte, pas de crédit à avoir */}
+            {onStandard && qualite === 'pro' && (
               <button
                 onClick={onStandard}
                 style={{
@@ -109,7 +114,7 @@ export default function MurCredits({
                   padding: '0.9em', border: `0.5px solid ${encre}40`, borderRadius: 3, cursor: 'pointer',
                 }}
               >
-                {tr('Version standard · 1 crédit', 'Standard version · 1 credit')}
+                {tr('Version standard · offerte', 'Standard version · free')}
               </button>
             )}
 
