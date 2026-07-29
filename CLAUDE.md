@@ -3,7 +3,11 @@
 ## Objectif final
 **Mise sur l'App Store (iOS) et le Play Store (Android).**
 
-## ✅ Application prête pour soumission
+## ✅ Application stabilisée pour soumission
+
+**Dossier complet : [`docs/soumission-app-store.md`](docs/soumission-app-store.md)**
+(état vérifié, conformité Apple, étapes Mac, points connus assumés).
+Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 
 ### Critères App Store — tous résolus
 
@@ -18,8 +22,20 @@
 - [x] **Nettoyage rooms** — cron Vercel toutes les heures (`/api/cleanup`, `vercel.json`)
 - [x] **Analytics** — Vercel Analytics (`@vercel/analytics`) intégré dans `main.tsx`
 - [x] **Dessins Supabase Storage** — `gallery-images` bucket, upload via `uploaderImageGalerie()`
+- [x] **Bilingue FR / EN** — interface, moteur grammatical, galerie et salons filtrés par langue
+- [x] **Identité visuelle** — l'Œil cousu : icône, favicon, splash, photo de profil Instagram
+- [x] **Pas de contenu de debug livré** — gestionnaire d'erreurs retiré d'`index.html`, écran de secours au registre du carnet
+- [x] **Illustrations au format Instagram** — 3:4 vertical, 1080 × 1440 px
 
-#### Non bloquants (v2)
+#### Non bloquants (v1.1)
+- [ ] React Router v7 (2 vulnérabilités modérées non atteignables — voir le dossier de soumission)
+- [ ] Haptique iOS : brancher `@capacitor/haptics` (`navigator.vibrate` est ignoré par le WKWebView)
+- [ ] `useAmbiance` est un moignon : le bouton son du mode dessin ne coupe rien
+- [ ] Minuteur de tour en ligne côté serveur (une partie attend si le joueur ferme l'app)
+- [ ] Mode spectateur codé mais sans point d'entrée
+- [ ] La série (streak) compte les ouvertures, pas les poèmes écrits
+- [ ] Réactions et vues de la galerie invisibles pour l'auteur
+- [ ] `prefers-reduced-motion` ne neutralise pas les animations framer-motion
 - [ ] Monitoring erreurs Sentry (optionnel — Vercel Analytics couvre les Web Vitals)
 - [ ] Nettoyage galerie ancienne (images orphelines dans Storage)
 
@@ -34,7 +50,8 @@ npm run cap:add:ios
 npm run cap:add:android
 
 # 3. Générer les assets natifs (icônes + splash à toutes les tailles)
-npx @capacitor/assets generate --iconBackgroundColor '#0f0805' --splashBackgroundColor '#0f0805'
+# fond NOIR PUR : l'Œil cousu est composé sur noir, #0f0805 laisserait un liseré
+npx @capacitor/assets generate --iconBackgroundColor '#000000' --splashBackgroundColor '#000000'
 
 # 4. Sync et ouvrir
 npm run cap:ios        # ouvre Xcode → Archive → App Store Connect
@@ -67,7 +84,8 @@ npm run cap:android    # ouvre Android Studio → Generate Signed Bundle
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
-- Tests : Vitest (29 tests unitaires) + Playwright (11 tests E2E)
+- i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
+- Tests : Vitest (74 tests unitaires) + Playwright (16 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
