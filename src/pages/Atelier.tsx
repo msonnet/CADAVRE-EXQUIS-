@@ -7,6 +7,8 @@ import { useSound } from '../hooks/useSound'
 import { VOICE_IDS } from '../data/voiceIds'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
+import MurAbonnement from '../components/MurAbonnement'
+import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -95,6 +97,9 @@ export default function Atelier() {
     () => (localStorage.getItem('atelier-visibilite') ?? 'echo') === 'echo'
   )
 
+  const [refus, setRefus] = useState<Refus | null>(null)
+  const [ouverture, setOuverture] = useState(false)
+
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
@@ -103,10 +108,22 @@ export default function Atelier() {
 
   const toutes = nbVoix === VOICE_IDS.length
 
-  function ouvrirSeance() {
+  async function ouvrirSeance() {
     jouer('clic')
     localStorage.setItem('atelier-nb-voix', String(nbVoix))
     localStorage.setItem('atelier-visibilite', echo ? 'echo' : 'obscurite')
+
+    // « Seul » (aucune voix) n'appelle rien : la séance reste gratuite.
+    if (nbVoix > 0) {
+      if (ouverture) return
+      setOuverture(true)
+      const partieId = nouvellePartieId()
+      const refuse = await ouvrirPartieIA(partieId, 'atelier')
+      setOuverture(false)
+      if (refuse) { setRefus(refuse); return }
+      deposerRecu(partieId)
+    }
+
     const plan = tirerPlan(nbVoix, echo)
     navigate('/jeu-atelier', { state: { plan } })
   }
@@ -247,19 +264,32 @@ export default function Atelier() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.55 }}
           onClick={ouvrirSeance}
+          disabled={ouverture}
           style={{
             width: '100%',
             background: encre, color: bg,
             ...mono, fontSize: 16, letterSpacing: '0.12em', textTransform: 'uppercase',
-            padding: '0.9em 1em', border: 'none', cursor: 'pointer',
+            padding: '0.9em 1em', border: 'none',
+            cursor: ouverture ? 'default' : 'pointer',
             borderRadius: 3,
             marginBottom: 10,
+            opacity: ouverture ? 0.7 : 1,
           }}
         >
           {tr('Ouvrir la séance', 'Open the séance')} ✧
         </motion.button>
 
       </div>
+
+      <MurAbonnement
+        visible={refus !== null}
+        acte={refus?.acte ?? 'partie_ia'}
+        motif={refus?.motif ?? 'essai_epuise'}
+        plafond={refus?.plafond}
+        onFermer={() => setRefus(null)}
+        onAbonne={() => { setRefus(null); ouvrirSeance() }}
+        accent={accent} encre={encre} bg={bg}
+      />
     </PageTransition>
   )
 }

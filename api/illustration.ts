@@ -2,10 +2,7 @@ export const config = { maxDuration: 55 }
 
 import { cors } from './_cors.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
-import {
-  utilisateurDuJeton, debiter, crediter, COUT_ILLUSTRATION,
-  standardAujourdhui, noterStandard, PLAFOND_STANDARD_SANS_PUB,
-} from './_credits.js'
+import { utilisateurDuJeton, consommer, rendre, PLAFOND_JOUR } from './_acces.js'
 
 const STYLE_PROMPTS: Record<string, string> = {
   aquarelle:     'traditional watercolor painting on cold press paper, wet-on-wet color blooms and granulation, cauliflower bleeds at edges, translucent glazed layers, crisp dry-brush detail in shadows, visible paper grain and texture, colors merging naturally, professional fine art watercolor technique',
@@ -88,8 +85,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { texte, style, promptLibre, qualite: qualiteBrute } = req.body ?? {}
-  const qualite = qualiteBrute === 'standard' ? 'standard' : 'pro'
+  const { texte, style, promptLibre } = req.body ?? {}
   if (typeof texte !== 'string' || !texte) { res.status(400).json({ error: 'texte requis' }); return }
   if (texte.length > 1500) { res.status(400).json({ error: 'texte trop long' }); return }
   if (promptLibre !== undefined && (typeof promptLibre !== 'string' || promptLibre.length > 500)) {
@@ -102,37 +98,26 @@ export default async function handler(req: any, res: any): Promise<void> {
   const falKey = process.env.FAL_KEY
   if (!falKey) { res.status(200).json({ url: null, reason: 'not_configured' }); return }
 
-  // ── Crédits ─────────────────────────────────────────────────────────────
-  // Une image coûte de l'argent réel : on débite AVANT de générer, et on
-  // rembourse si la génération échoue. Le solde ne vient jamais du client.
+  // ── Accès ───────────────────────────────────────────────────────────────
+  // Une illustration coûte de l'argent réel : on décompte AVANT de générer,
+  // et on rend si la génération échoue. Le droit ne vient jamais du client.
   const userId = await utilisateurDuJeton(req)
   if (!userId) { res.status(401).json({ url: null, reason: 'auth_requise' }); return }
 
-  // Le crédit EST le grand format. La version standard ne coûte aucun crédit :
-  // elle se paie en attention (une annonce), plafonnée en attendant la régie.
-  const cout = COUT_ILLUSTRATION[qualite] ?? 1
-  let soldeApres: number | null = null
-
-  if (cout > 0) {
-    soldeApres = await debiter(userId, cout, { style, qualite })
-    if (soldeApres === null) {
-      res.status(402).json({ url: null, reason: 'credits_insuffisants', cout, qualite })
-      return
-    }
-  } else {
-    const dejaFaites = await standardAujourdhui(userId)
-    if (dejaFaites >= PLAFOND_STANDARD_SANS_PUB) {
-      res.status(402).json({
-        url: null, reason: 'plafond_quotidien', qualite,
-        plafond: PLAFOND_STANDARD_SANS_PUB,
-      })
-      return
-    }
-    await noterStandard(userId, { style })
+  const verdict = await consommer(userId, 'image_pro', undefined, { style })
+  if (!verdict.autorise) {
+    res.status(402).json({
+      url: null,
+      reason: verdict.motif ?? 'essai_epuise',
+      abonne: verdict.abonne,
+      plafond: PLAFOND_JOUR.image_pro,
+    })
+    return
   }
 
   const rembourser = async (motif: string) => {
-    if (cout > 0) await crediter(userId, cout, 'remboursement', undefined, { motif, style, qualite })
+    console.warn(`[illustration] rendu (${motif})`)
+    await rendre(userId, verdict.event)
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
@@ -160,11 +145,10 @@ export default async function handler(req: any, res: any): Promise<void> {
   }
 
   try {
-    // La voie publicitaire finance mal une image à 0,04 $ : le niveau
-    // « standard » passe par un modèle bien moins cher, le niveau « pro »
-    // reste réservé aux crédits achetés.
-    const modele = qualite === 'standard' ? 'fal-ai/flux/schnell' : 'fal-ai/flux-pro/v1.1'
-    const response = await fetch(`https://fal.run/${modele}`, {
+    // Un seul niveau, le grand format : c'est ce que l'abonnement promet, et
+    // le comparatif avec un modèle bon marché ne laissait pas de doute
+    // (faux texte incrusté, composition à plat).
+    const response = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
       method: 'POST',
       headers: {
         'Authorization': `Key ${falKey}`,
@@ -196,7 +180,10 @@ export default async function handler(req: any, res: any): Promise<void> {
       res.status(200).json({ url: null, reason: 'no_image' })
       return
     }
-    res.status(200).json({ url, promptVisuel: textePrompt, credits: soldeApres ?? undefined, qualite })
+    res.status(200).json({
+      url, promptVisuel: textePrompt,
+      abonne: verdict.abonne, essaiRestant: verdict.essaiRestant,
+    })
   } catch (err) {
     console.error('Erreur fal.ai:', err)
     await rembourser('exception')

@@ -1,6 +1,6 @@
 # Soumission App Store — état et marche à suivre
 
-Dernière vérification : 27 juillet 2026, sur le commit courant de `main`.
+Dernière vérification : 30 juillet 2026, sur le commit courant de `main`.
 
 ---
 
@@ -41,13 +41,17 @@ Deux modérées restent, dans `react-router` : elles exigent un passage en
 | **5.1.1 — politique de confidentialité** | page `/privacy`, bilingue FR/EN, RGPD |
 | **2.3 — pas de contenu de debug** | gestionnaire retiré, écran d'erreur au registre du jeu |
 | **4.0 — design** | icône et splash cohérents, interface bilingue complète |
+| **3.1.1 — achats intégrés** | l'abonnement passe par StoreKit via RevenueCat ; « Restaurer mes achats » présent dans le mur et dans Réglages |
+| **3.1.2 — abonnements reconductibles** | le mur affiche le titre, la durée, le prix du magasin, la mention de reconduction, un lien vers l'EULA standard d'Apple et vers `/privacy` |
 
 ### App Privacy (à remplir dans App Store Connect)
 
 Données **liées à l'utilisateur** : adresse e-mail et pseudonyme (compte
-Supabase), contenu créé et publié en galerie, avatar généré.
+Supabase), contenu créé et publié en galerie, avatar généré, **historique
+d'achat** (date d'expiration de l'abonnement et identifiant du produit).
 Données **non liées** : adresse IP conservée ≤ 60 s pour le rate limiting.
-**Aucun tracking**, aucune donnée vendue, aucun identifiant publicitaire.
+**Aucun tracking**, aucune donnée vendue, aucun identifiant publicitaire,
+**aucune publicité diffusée**.
 
 ---
 
@@ -110,8 +114,31 @@ sur `https://cadavre-exquis-beta.vercel.app`.
 | `FAL_KEY` | illustrations (FLUX) | oui |
 | `CRON_SECRET` | protège `/api/cleanup` | oui |
 | `RESEND_API_KEY` + `REPORT_EMAIL` | e-mail au modérateur à chaque signalement | recommandé (modération 1.2) |
+| `REVENUECAT_WEBHOOK_SECRET` | authentifie le webhook du magasin | oui (abonnement) |
+| `REVENUECAT_SECRET_KEY` | relit l'abonnement lors d'une restauration | oui (abonnement) |
+| `VITE_REVENUECAT_IOS_KEY` · `VITE_REVENUECAT_ANDROID_KEY` | clés publiques embarquées dans l'app native | oui (abonnement) |
 
-### d. Compte de démonstration pour la revue
+### d. Abonnement — à créer avant la soumission
+
+**Dans App Store Connect** (Fonctionnalités → Abonnements) : un groupe
+d'abonnement nommé *L'Encrier*, contenant deux produits.
+
+| Identifiant | Durée | Prix |
+|---|---|---|
+| `fr.nathansonnet.cadavreexquis.encrier.mensuel` | 1 mois | 4,99 € |
+| `fr.nathansonnet.cadavreexquis.encrier.annuel` | 1 an | 39,99 € |
+
+Les mêmes identifiants dans Google Play Console.
+
+**Dans RevenueCat** : un entitlement nommé **`encrier`** (le code le cherche
+sous ce nom exact), un offering `default` contenant les deux produits, puis
+le webhook pointé sur `https://cadavre-exquis-beta.vercel.app/api/revenuecat`
+avec l'en-tête `Authorization` égal à `REVENUECAT_WEBHOOK_SECRET`.
+
+**S'inscrire au Small Business Program** d'Apple : 15 % de commission au lieu
+de 30 %. Tous les calculs de marge du dossier partent de ce taux.
+
+### e. Compte de démonstration pour la revue
 
 Apple teste le mode en ligne. Dans « App Review Information », fournir un
 pseudo de test et cette note :
@@ -119,6 +146,12 @@ pseudo de test et cette note :
 > Online play requires only a pen name — no password, no e-mail. Tap "Online
 > mode", enter any pen name, then "Create a game". Solo play (Written Cadavre,
 > Drawn Cadavre, The Workshop) needs no account at all.
+>
+> The game is free. A one-time trial (5 illustrations, 5 games with the AI
+> voices, 3 drawing readings) is granted automatically on first use — no
+> account, no purchase needed, so the reviewer can exercise every paid
+> feature without subscribing. The "Inkwell" subscription only unlocks
+> unlimited use afterwards.
 
 ---
 

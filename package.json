@@ -23,6 +23,7 @@
     "@capacitor/core": "^8.4.0",
     "@capacitor/ios": "^8.4.0",
     "@capacitor/local-notifications": "^8.2.0",
+    "@revenuecat/purchases-capacitor": "^13.2.4",
     "@supabase/supabase-js": "^2.106.2",
     "@vercel/analytics": "^2.0.1",
     "dexie": "^4.0.11",

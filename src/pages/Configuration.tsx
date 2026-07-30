@@ -8,6 +8,8 @@ import { Decor, useReve } from '../reve'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import MurAbonnement from '../components/MurAbonnement'
+import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
 
 const STRUCTURES_UI_FR: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },
@@ -62,6 +64,8 @@ export default function Configuration() {
   })
 
   const [config, setConfig] = useState<ConfigPartie>(CONFIG_PAR_DEFAUT)
+  const [refus, setRefus] = useState<Refus | null>(null)
+  const [ouverture, setOuverture] = useState(false)
 
   const joueursHumains = Math.max(1, slots.filter(s => s === 'humain').length)
   const voixIA = slots.filter(s => s === 'ia').length
@@ -89,8 +93,21 @@ export default function Configuration() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
 
-  function demarrer() {
+  async function demarrer() {
     jouer('demarrage')
+
+    // Une partie où l'IA écrit se règle ici, avant de commencer — jamais en
+    // cours de route. Une table entièrement humaine ne coûte rien et passe.
+    if (voixIA > 0) {
+      if (ouverture) return
+      setOuverture(true)
+      const partieId = nouvellePartieId()
+      const refuse = await ouvrirPartieIA(partieId, 'ecrit')
+      setOuverture(false)
+      if (refuse) { setRefus(refuse); return }
+      deposerRecu(partieId)
+    }
+
     // Purge : un brouillon périmé écraserait cette config, et le drapeau
     // découverte forcerait le passage manuel des tours IA.
     localStorage.removeItem('brouillon-actuel')
@@ -342,15 +359,17 @@ export default function Configuration() {
         >
           <button
             onClick={demarrer}
+            disabled={ouverture}
             className="w-full flex flex-col items-center justify-center"
             style={{
               background: accent, color: btnText,
               ...mono, fontSize: 17,
               textTransform: 'uppercase',
               padding: '1.15em 1em',
-              border: 'none', cursor: 'pointer',
+              border: 'none', cursor: ouverture ? 'default' : 'pointer',
               gap: 2,
               borderRadius: 3,
+              opacity: ouverture ? 0.7 : 1,
             }}
           >
             <span>{tr('Commencer la séance', 'Begin the séance')}</span>
@@ -359,6 +378,16 @@ export default function Configuration() {
         </motion.div>
 
       </div>
+
+      <MurAbonnement
+        visible={refus !== null}
+        acte={refus?.acte ?? 'partie_ia'}
+        motif={refus?.motif ?? 'essai_epuise'}
+        plafond={refus?.plafond}
+        onFermer={() => setRefus(null)}
+        onAbonne={() => { setRefus(null); demarrer() }}
+        accent={accent} encre={encre} bg={seance?.ambiance.bg ?? '#f0e4cc'}
+      />
     </PageTransition>
   )
 }

@@ -1,6 +1,7 @@
 export const config = { maxDuration: 45 }
 
 import { cors } from './_cors.js'
+import { utilisateurDuJeton, consommer, rendre, PLAFOND_JOUR } from './_acces.js'
 
 // ~5 Mo de base64 (≈ 3.7 Mo binaire) — assez pour un dessin assemblé en PNG
 const MAX_BASE64_BYTES = 5 * 1024 * 1024
@@ -15,8 +16,27 @@ export default async function handler(req: any, res: any): Promise<void> {
   if (imageBase64.length > MAX_BASE64_BYTES) { res.status(413).json({ error: 'image trop volumineuse' }); return }
   if (!/^[A-Za-z0-9+/=]+$/.test(imageBase64)) { res.status(400).json({ error: 'base64 invalide' }); return }
 
+  // Dessiner reste illimité ; seule la lecture surréaliste appelle un
+  // serveur facturé. On décompte avant, on rend si elle échoue.
+  const userId = await utilisateurDuJeton(req)
+  if (!userId) { res.status(401).json({ error: 'auth_requise' }); return }
+
+  const verdict = await consommer(userId, 'lecture_dessin')
+  if (!verdict.autorise) {
+    res.status(402).json({
+      error: verdict.motif ?? 'essai_epuise',
+      abonne: verdict.abonne,
+      plafond: PLAFOND_JOUR.lecture_dessin,
+    })
+    return
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) { res.status(200).json({ texte: '' }); return }
+  if (!apiKey) {
+    await rendre(userId, verdict.event)
+    res.status(200).json({ texte: '' })
+    return
+  }
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -64,14 +84,17 @@ Les formes et les jonctions déclenchent un flux de langage automatique. Tu peux
 
     if (!response.ok) {
       console.error('Anthropic Vision error:', response.status)
+      await rendre(userId, verdict.event)
       res.status(200).json({ texte: '' }); return
     }
 
     const data = await response.json()
     const texte = (data.content?.[0]?.text ?? '').trim()
-    res.status(200).json({ texte })
+    if (!texte) await rendre(userId, verdict.event)
+    res.status(200).json({ texte, abonne: verdict.abonne, essaiRestant: verdict.essaiRestant })
   } catch (err) {
     console.error('Erreur interpreter-dessin:', err)
+    await rendre(userId, verdict.event)
     res.status(200).json({ texte: '' })
   }
 }

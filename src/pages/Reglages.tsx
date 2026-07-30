@@ -10,6 +10,8 @@ import {
 } from '../utils/notifications'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle, changerLangue } from '../i18n'
+import { useAcces } from '../hooks/useAcces'
+import { achatsDisponibles, restaurer } from '../lib/achats'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
   { id: 'stricte', label: tr('Stricte', 'Strict'), desc: tr('Avertit si le fragment ne correspond pas à la consigne.', 'Warns when the fragment does not match the prompt.') },
@@ -26,6 +28,8 @@ export default function Reglages() {
     () => localStorage.getItem(RAPPEL_KEY) === '1'
   )
   const [rappelBusy, setRappelBusy] = useState(false)
+  const { etat: acces, chargement: accesEnCours, rafraichir: relireAcces } = useAcces()
+  const [restauration, setRestauration] = useState<'idle' | 'cours' | 'vide'>('idle')
   const [rappelRefuse, setRappelRefuse] = useState(false)
   const [nbMasques, setNbMasques] = useState<number>(() => {
     try { return (JSON.parse(localStorage.getItem('auteurs-masques') ?? '[]') as string[]).length }
@@ -182,6 +186,59 @@ export default function Reglages() {
           </div>
         </motion.div>
 
+        {/* ── L'ENCRIER ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.42 }}
+          style={{ marginBottom: 28 }}
+        >
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            {tr('— L’ENCRIER —', '— THE INKWELL —')}
+          </div>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12 }}>
+            {accesEnCours
+              ? tr('Lecture en cours…', 'Reading…')
+              : acces?.abonne
+                ? tr(
+                    'Abonnement en cours : voix de l’IA et lectures de dessins illimitées, deux illustrations grand format par jour.',
+                    'Subscription active: unlimited AI voices and drawing readings, two large-format illustrations a day.',
+                  )
+                : acces
+                  ? tr(
+                      `Il te reste ${acces.essai.images} illustration${acces.essai.images > 1 ? 's' : ''}, ${acces.essai.parties} partie${acces.essai.parties > 1 ? 's' : ''} avec les voix de l’IA et ${acces.essai.lectures} lecture${acces.essai.lectures > 1 ? 's' : ''} de dessin. Écrire à plusieurs, dessiner et publier restent sans limite.`,
+                      `You have ${acces.essai.images} illustration${acces.essai.images > 1 ? 's' : ''}, ${acces.essai.parties} game${acces.essai.parties > 1 ? 's' : ''} with the AI voices and ${acces.essai.lectures} drawing reading${acces.essai.lectures > 1 ? 's' : ''} left. Writing together, drawing and publishing stay unlimited.`,
+                    )
+                  : tr(
+                      'Ton essai est intact : 5 illustrations, 5 parties avec les voix de l’IA, 3 lectures de dessin. Écrire à plusieurs, dessiner et publier en galerie restent sans limite.',
+                      'Your trial is untouched: 5 illustrations, 5 games with the AI voices, 3 drawing readings. Writing together, drawing and publishing to the gallery stay unlimited.',
+                    )}
+          </div>
+          {achatsDisponibles() && (
+            <button
+              onClick={async () => {
+                setRestauration('cours')
+                const ok = await restaurer()
+                await relireAcces()
+                setRestauration(ok ? 'idle' : 'vide')
+              }}
+              disabled={restauration === 'cours'}
+              style={{
+                ...mono, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.12em',
+                color: encre, background: 'transparent',
+                border: `0.5px solid ${encre}40`, borderRadius: 3,
+                padding: '12px 0', cursor: 'pointer', width: '100%',
+              }}
+            >
+              {restauration === 'cours'
+                ? tr('EN COURS…', 'IN PROGRESS…')
+                : restauration === 'vide'
+                  ? tr('AUCUN ABONNEMENT TROUVÉ', 'NO SUBSCRIPTION FOUND')
+                  : tr('RESTAURER MES ACHATS', 'RESTORE PURCHASES')}
+            </button>
+          )}
+        </motion.div>
+
         {/* ── DÉCOUVERTE ── */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -329,7 +386,7 @@ export default function Reglages() {
         {/* ── VERSION ── */}
         <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, textAlign: 'center', paddingBottom: 4, lineHeight: 1.6 }}>
           CADAVRE EXQUIS · v1.0<br />
-          {tr('AUCUN TRACKING · AUCUN COMPTE · TOUT RESTE LOCAL', 'NO TRACKING · NO ACCOUNT · EVERYTHING STAYS LOCAL')}
+          {tr('AUCUN TRACKING · AUCUNE DONNÉE VENDUE', 'NO TRACKING · NO DATA SOLD')}
         </div>
         <div style={{ textAlign: 'center', paddingBottom: 8 }}>
           <Link

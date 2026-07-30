@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
+import { jetonOuIdentite } from '../lib/acces'
 import { tr } from '../i18n'
 
 const AVATAR_STYLES = [
@@ -19,9 +20,14 @@ const AVATAR_STYLES = [
 
 async function genererAvatar(prompt: string, style: string): Promise<string | null> {
   try {
+    const jeton = await jetonOuIdentite()
+    if (!jeton) return null
     const r = await fetch(api('/api/avatar'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jeton}`,
+      },
       body: JSON.stringify({ prompt, style }),
     })
     if (!r.ok) return null

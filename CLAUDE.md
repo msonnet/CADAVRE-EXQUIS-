@@ -27,6 +27,13 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [x] **Pas de contenu de debug livré** — gestionnaire d'erreurs retiré d'`index.html`, écran de secours au registre du carnet
 - [x] **Illustrations au format Instagram** — 3:4 vertical, 1080 × 1440 px
 
+#### Abonnement — reste à faire hors du code
+- [ ] Appliquer `supabase/migrations/20260730000010_abonnement.sql`
+- [ ] Créer le compte RevenueCat, l'entitlement `encrier`, l'offering par défaut
+- [ ] Créer les abonnements dans App Store Connect et Google Play Console
+- [ ] Renseigner les 4 variables `REVENUECAT_*` (voir `.env.example`)
+- [ ] S'inscrire au Small Business Program d'Apple (15 % au lieu de 30 %)
+
 #### Non bloquants (v1.1)
 - [ ] React Router v7 (2 vulnérabilités modérées non atteignables — voir le dossier de soumission)
 - [ ] Haptique iOS : brancher `@capacitor/haptics` (`navigator.vibrate` est ignoré par le WKWebView)
@@ -68,6 +75,9 @@ npm run cap:android    # ouvre Android Studio → Generate Signed Bundle
 | `FAL_KEY` | Illustrations FLUX |
 | `CRON_SECRET` | Protège `/api/cleanup` (générer avec `openssl rand -hex 32`) |
 | `RESEND_API_KEY` + `REPORT_EMAIL` | E-mail au modérateur à chaque signalement (optionnel) |
+| `VITE_REVENUECAT_IOS_KEY` + `VITE_REVENUECAT_ANDROID_KEY` | Clés publiques RevenueCat (app native) |
+| `REVENUECAT_SECRET_KEY` | Lecture de l'abonnement à la restauration |
+| `REVENUECAT_WEBHOOK_SECRET` | Authentifie le webhook `/api/revenuecat` |
 
 ### App Store Connect
 - **Bundle ID** : `fr.nathansonnet.cadavreexquis`
@@ -77,6 +87,64 @@ npm run cap:android    # ouvre Android Studio → Generate Signed Bundle
 - **Âge** : 4+
 - **Politique de confidentialité** : `https://cadavre-exquis-beta.vercel.app/privacy`
 - **Support URL** : `https://cadavre-exquis-beta.vercel.app`
+
+## Modèle économique — l'abonnement « L'Encrier »
+
+Le jeu est **gratuit et entier**. Écrire à plusieurs, dessiner, publier en
+galerie, consulter ses créations : rien de tout cela n'appelle un serveur
+facturé, rien n'est compté.
+
+**Trois actes coûtent de l'argent réel** et sont donc les seuls limités :
+
+| Acte | Moteur | Coût réel |
+|---|---|---|
+| Illustration grand format | FLUX pro 1.1 | 0,040 $ |
+| Partie entière où l'IA écrit | Sonnet 4.6 + Opus 4.8 | ~0,020 $ |
+| Lecture surréaliste d'un dessin | Sonnet 4.6 + vision | ~0,008 $ |
+| *(photo de profil)* | FLUX schnell | 0,003 $ |
+
+**Essai offert une fois**, à la création de l'identité : 5 illustrations,
+5 parties avec les voix, 3 lectures de dessin — soit 0,32 $ au maximum par
+joueur. C'est la dépense d'acquisition, et elle montre exactement ce que
+l'abonnement ouvre.
+
+**Abonnement** : 4,99 €/mois ou 39,99 €/an. Voix de l'IA et lectures de
+dessins illimitées, 2 illustrations grand format par jour.
+
+| | |
+|---|---|
+| Revenu net mensuel | 4,58 $ (après les 15 % Apple) |
+| Coût d'un abonné moyen | ~0,80 $/mois → marge 83 % |
+| Coût de l'abonné qui sature tous les plafonds | ~2,70 $/mois → marge 41 % |
+| Point mort | ~3,5 % des installations abonnées un mois |
+
+Aucune publicité, aucun identifiant publicitaire, aucun bandeau de
+consentement : le 4+ est conservé sans discussion.
+
+### Où ça vit
+
+- `supabase/migrations/20260730000010_abonnement.sql` — tables `acces` et
+  `usage_events`, RPC `etat_acces` / `consommer_acces` / `rendre_acces` /
+  `poser_abonnement`. **Migration à appliquer.**
+- `api/_acces.ts` — les plafonds journaliers (`PLAFOND_JOUR`) et le point de
+  passage unique. C'est là que se règlent tous les cadrans économiques.
+- `api/acces.ts` — état du joueur (GET) et ouverture d'une partie IA (POST).
+- `api/revenuecat.ts` — webhook du magasin, **seul** endroit où le statut
+  d'abonné s'écrit.
+- `api/_revenuecat.ts` — lecture directe chez RevenueCat, pour « Restaurer
+  mes achats » après une réinstallation.
+- `src/lib/acces.ts` · `src/lib/achats.ts` · `src/hooks/useAcces.ts` ·
+  `src/components/MurAbonnement.tsx` — le côté joueur.
+
+### Principes tenus
+
+- Le statut d'abonné ne vient **jamais** du client : il est écrit par le
+  webhook, lu par le serveur, seulement reflété par l'app.
+- Une partie se règle **à son ouverture**, jamais en cours de route — un
+  poème ne s'interrompt pas au huitième vers.
+- Toute génération ratée **rend** ce qu'elle a pris.
+- Réseau injoignable : on laisse passer. Mieux vaut une partie de trop qu'un
+  joueur bloqué par une coupure.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)

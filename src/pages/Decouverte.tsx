@@ -7,6 +7,7 @@ import { Decor, useReve } from '../reve'
 import { activerTutoriel } from '../hooks/useTutoriel'
 import type { ConfigPartie } from '../types'
 import { tr } from '../i18n'
+import { ouvrirPartieIA, nouvellePartieId, deposerRecu } from '../lib/acces'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
 
@@ -41,10 +42,20 @@ export default function Decouverte() {
   const encre = c?.encre ?? '#0f0805'
   const ui: React.CSSProperties = { fontFamily: "'Raleway', sans-serif" }
 
-  function commencer() {
+  async function commencer() {
     marquerVue()
     jouer('demarrage')
     activerTutoriel()
+
+    // L'introduction compte une voix IA : on ouvre la partie comme les
+    // autres, mais on ne barre JAMAIS la route ici. Un joueur tout neuf a sa
+    // réserve d'essai intacte ; celui qui rejoue l'introduction après l'avoir
+    // épuisée traverse quand même, avec la réserve locale de fragments — le
+    // serveur, lui, refusera de générer. Aucune faille : pas de reçu, pas d'IA.
+    const partieId = nouvellePartieId()
+    const refuse = await ouvrirPartieIA(partieId, 'decouverte')
+    if (!refuse) deposerRecu(partieId)
+
     // Un brouillon d'une ancienne partie écraserait cette config au montage de /jeu
     localStorage.removeItem('brouillon-actuel')
     sessionStorage.setItem('config-partie', JSON.stringify(CONFIG_DECOUVERTE))

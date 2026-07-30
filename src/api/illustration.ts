@@ -1,6 +1,6 @@
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { api } from '../lib/apiBase'
-import { supabase } from '../lib/supabase'
+import { jetonOuIdentite, type Refus } from '../lib/acces'
 
 // Format Instagram : 3:4 vertical, 1080 × 1440 px — publiable sans recadrage.
 const INSTA_W = 1080
@@ -40,16 +40,23 @@ async function normaliserFormatInstagram(url: string): Promise<string> {
   }
 }
 
+export interface ResultatIllustration {
+  url: string | null
+  promptVisuel?: string
+  reason?: string
+  /** Renseigné quand le serveur a fermé la porte — de quoi ouvrir le mur. */
+  refus?: Refus
+}
+
 export async function genererIllustration(
   texte: string,
   style: string,
   promptLibre?: string,
-  qualite: 'standard' | 'pro' = 'pro',
-): Promise<{ url: string | null; promptVisuel?: string; reason?: string; credits?: number }> {
+): Promise<ResultatIllustration> {
   try {
-    // Le serveur débite un crédit avant de générer : il lui faut l'identité.
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return { url: null, reason: 'auth_requise' }
+    // Le serveur décompte avant de générer : il lui faut l'identité.
+    const jeton = await jetonOuIdentite()
+    if (!jeton) return { url: null, reason: 'auth_requise' }
     // 60 s : juste au-dessus du plafond serveur (maxDuration 55 s), pour que
     // la réponse ou l'erreur du serveur l'emporte, tout en coupant net si la
     // connexion se perd au lieu de laisser le spinner « EN COURS… » à vie.
@@ -57,19 +64,26 @@ export async function genererIllustration(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${jeton}`,
       },
-      body: JSON.stringify({ texte, style, promptLibre, qualite }),
+      body: JSON.stringify({ texte, style, promptLibre }),
     }, 60_000)
     if (response.status === 402) {
-      const { cout } = await response.json().catch(() => ({ cout: 1 }))
-      return { url: null, reason: 'credits_insuffisants', credits: 0, promptVisuel: undefined, ...(cout ? {} : {}) }
+      const d = await response.json().catch(() => ({}))
+      return {
+        url: null, reason: 'refus',
+        refus: {
+          acte: 'image_pro',
+          motif: d.reason === 'plafond_jour' ? 'plafond_jour' : 'essai_epuise',
+          plafond: d.plafond,
+        },
+      }
     }
     if (response.status === 401) return { url: null, reason: 'auth_requise' }
     if (!response.ok) return { url: null, reason: `http_${response.status}` }
-    const { url, promptVisuel, reason, credits } = await response.json()
-    if (!url) return { url: null, promptVisuel, reason, credits }
-    return { url: await normaliserFormatInstagram(url), promptVisuel, reason, credits }
+    const { url, promptVisuel, reason } = await response.json()
+    if (!url) return { url: null, promptVisuel, reason }
+    return { url: await normaliserFormatInstagram(url), promptVisuel, reason }
   } catch (err) {
     return { url: null, reason: (err as Error)?.name === 'AbortError' ? 'timeout' : 'network_error' }
   }

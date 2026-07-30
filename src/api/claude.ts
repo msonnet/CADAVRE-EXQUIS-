@@ -3,6 +3,7 @@
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { api } from '../lib/apiBase'
 import { langueActuelle } from '../i18n'
+import { jetonOuIdentite, recuCourant } from '../lib/acces'
 
 export interface RequeteIA {
   consigne: string
@@ -27,10 +28,19 @@ export interface ReponseIA {
 const TIMEOUT_MS = 12_000
 
 export async function demanderFragmentIA(requete: RequeteIA): Promise<ReponseIA> {
+  // La partie a été réglée à son ouverture ; on ne fait que présenter le reçu.
+  const jeton = await jetonOuIdentite()
   const response = await fetchAvecTimeout(api('/api/claude'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...requete, langue: langueActuelle() }),
+    headers: {
+      'Content-Type': 'application/json',
+      ...(jeton ? { Authorization: `Bearer ${jeton}` } : {}),
+    },
+    body: JSON.stringify({
+      ...requete,
+      partieId: recuCourant(),
+      langue: langueActuelle(),
+    }),
   }, TIMEOUT_MS)
 
   if (!response.ok) {

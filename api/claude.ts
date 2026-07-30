@@ -3,6 +3,7 @@ export const config = { maxDuration: 30 }
 import { cors } from './_cors.js'
 import { choisirVoixAleatoire, VOIX } from './_voices.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
+import { utilisateurDuJeton, partieReglee } from './_acces.js'
 
 type TypeCase =
   | 'nom'
@@ -329,8 +330,19 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type, voiceId, contexte, eviter, mots, langue: langueBrute } = req.body ?? {}
+  const { consigne, type, voiceId, contexte, eviter, mots, partieId, langue: langueBrute } = req.body ?? {}
   const langue: 'fr' | 'en' = langueBrute === 'en' ? 'en' : 'fr'
+
+  // ── Accès ───────────────────────────────────────────────────────────────
+  // La partie a été réglée une fois pour toutes à son ouverture, sur
+  // /api/acces. Ici on ne fait que vérifier qu'elle l'a bien été : un poème
+  // ne doit jamais s'interrompre en cours de route.
+  const userId = await utilisateurDuJeton(req)
+  if (!userId) { res.status(401).json({ error: 'auth_requise' }); return }
+  if (typeof partieId !== 'string' || !(await partieReglee(userId, partieId))) {
+    res.status(402).json({ error: 'partie_non_reglee' })
+    return
+  }
 
   if (typeof consigne !== 'string' || typeof type !== 'string' || !consigne || !type) {
     res.status(400).json({ error: 'Champs manquants : consigne et type requis.' })

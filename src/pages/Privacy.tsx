@@ -14,10 +14,13 @@ const SECTIONS_FR = [
     titre: '2. Données collectées',
     texte: `Nous collectons uniquement ce qui est nécessaire au fonctionnement du service :
 
+• Identité de jeu : le mode solo n'exige aucun compte. Une identité anonyme (un simple identifiant, sans e-mail ni mot de passe) est créée sur votre appareil au premier usage d'une fonction d'intelligence artificielle, afin de tenir le décompte de votre essai offert et de votre abonnement.
 • Compte : adresse e-mail et pseudonyme, fournis lors de l'inscription via Supabase Auth.
 • Contenu créé : poèmes et dessins produits dans les modes en ligne, stockés sur nos serveurs (Supabase) pour permettre le jeu multijoueur et la galerie publique.
 • Contenu local : poèmes et dessins en mode hors-ligne restent exclusivement sur votre appareil (IndexedDB) et ne nous sont jamais transmis.
 • Avatar : image générée par IA à partir d'un texte que vous fournissez, stockée sur Supabase Storage.
+• Abonnement : la date d'expiration de votre abonnement et l'identifiant du produit acheté, transmis par le magasin d'applications. Nous ne recevons ni votre moyen de paiement, ni votre identité de facturation.
+• Consommation : la date et la nature des actes payants effectués (illustration, partie avec les voix de l'IA, lecture d'un dessin), pour appliquer les limites annoncées.
 • Adresse IP : enregistrée temporairement (maximum 60 secondes) pour limiter les abus d'API. Non conservée dans nos bases de données.`,
   },
   {
@@ -36,8 +39,10 @@ const SECTIONS_FR = [
 • Anthropic Claude API (anthropic.com) — génération de fragments de texte par intelligence artificielle. Seul le fragment demandé est transmis, sans identifiant. Politique : anthropic.com/privacy
 • fal.ai — génération d'illustrations par IA. Seul le texte du poème est transmis. Politique : fal.ai/privacy
 • Vercel (vercel.com) — hébergement de l'application. Politique : vercel.com/legal/privacy-policy
+• RevenueCat (revenuecat.com) — gestion des abonnements. Reçoit votre identifiant de jeu anonyme et l'état de votre abonnement. Politique : revenuecat.com/privacy
+• Apple App Store / Google Play — traitement du paiement. Nous n'avons accès à aucune donnée bancaire. Politiques : apple.com/legal/privacy et policies.google.com/privacy
 
-Aucune donnée n'est vendue à des tiers.`,
+Aucune donnée n'est vendue à des tiers. Aucune publicité n'est diffusée dans l'application, et aucun identifiant publicitaire n'est collecté.`,
   },
   {
     titre: '5. Galerie publique et modération',
@@ -71,11 +76,21 @@ Nous répondons dans un délai de 30 jours.`,
 • Aucun cookie de tracking ou publicitaire n'est utilisé.`,
   },
   {
-    titre: '9. Mineurs',
+    titre: '9. Abonnement et achats',
+    texte: `Le jeu est gratuit. Écrire à plusieurs, dessiner, publier en galerie et consulter vos créations ne demandent aucun paiement.
+
+Trois fonctions font appel à des services facturés et sont limitées : les illustrations, les parties où l'intelligence artificielle écrit, et la lecture surréaliste d'un dessin. Une réserve d'essai vous est offerte une fois ; au-delà, un abonnement reconductible les rend illimitées, sous un plafond quotidien annoncé dans l'application.
+
+L'abonnement est facturé par l'App Store ou Google Play, se renouvelle automatiquement sauf résiliation au moins 24 heures avant la fin de la période en cours, et se gère depuis les réglages de votre compte Apple ou Google. Nous n'avons accès à aucune donnée de paiement.
+
+La suppression de votre compte efface l'état de votre abonnement chez nous, mais n'annule pas l'abonnement lui-même : celui-ci doit être résilié depuis votre compte Apple ou Google.`,
+  },
+  {
+    titre: '10. Mineurs',
     texte: `L'application est destinée aux personnes de 13 ans ou plus. Nous ne collectons pas sciemment de données personnelles d'enfants de moins de 13 ans. Si vous êtes parent et pensez que votre enfant nous a fourni des données, contactez-nous à nathansonnet@yahoo.fr.`,
   },
   {
-    titre: '10. Contact',
+    titre: '11. Contact',
     texte: `Pour toute question relative à cette politique de confidentialité :\n\nNathan Sonnet\nE-mail : nathansonnet@yahoo.fr`,
   },
 ]
@@ -89,10 +104,13 @@ const SECTIONS_EN = [
     titre: '2. Data we collect',
     texte: `We collect only what is necessary for the service to work:
 
+• Game identity: solo play requires no account. An anonymous identity (a plain identifier, with no e-mail and no password) is created on your device the first time you use an AI feature, so that your free trial and your subscription can be counted.
 • Account: e-mail address and pen name, provided at sign-up via Supabase Auth.
 • Created content: poems and drawings produced in the online modes, stored on our servers (Supabase) to enable multiplayer play and the public gallery.
 • Local content: offline poems and drawings stay exclusively on your device (IndexedDB) and are never transmitted to us.
 • Avatar: an AI-generated image based on text you provide, stored on Supabase Storage.
+• Subscription: the expiry date of your subscription and the identifier of the product purchased, sent to us by the app store. We receive neither your payment method nor your billing identity.
+• Usage: the date and nature of the paid acts performed (illustration, game with the AI voices, drawing reading), in order to apply the stated limits.
 • IP address: recorded temporarily (60 seconds at most) to limit API abuse. Not kept in our databases.`,
   },
   {
@@ -111,8 +129,10 @@ const SECTIONS_EN = [
 • Anthropic Claude API (anthropic.com) — AI generation of text fragments. Only the requested fragment is transmitted, with no identifier. Policy: anthropic.com/privacy
 • fal.ai — AI generation of illustrations. Only the text of the poem is transmitted. Policy: fal.ai/privacy
 • Vercel (vercel.com) — application hosting. Policy: vercel.com/legal/privacy-policy
+• RevenueCat (revenuecat.com) — subscription management. Receives your anonymous game identifier and the state of your subscription. Policy: revenuecat.com/privacy
+• Apple App Store / Google Play — payment processing. We have no access to any banking data. Policies: apple.com/legal/privacy and policies.google.com/privacy
 
-No data is sold to third parties.`,
+No data is sold to third parties. No advertising is shown in the application, and no advertising identifier is collected.`,
   },
   {
     titre: '5. Public gallery and moderation',
@@ -146,11 +166,21 @@ We reply within 30 days.`,
 • No tracking or advertising cookies are used.`,
   },
   {
-    titre: '9. Minors',
+    titre: '9. Subscription and purchases',
+    texte: `The game is free. Writing together, drawing, publishing to the gallery and browsing your own creations require no payment.
+
+Three features call on billed services and are therefore limited: illustrations, games in which the artificial intelligence writes, and the surrealist reading of a drawing. You are given a trial allowance once; beyond it, an auto-renewing subscription makes them unlimited, under a daily ceiling stated in the app.
+
+The subscription is billed by the App Store or Google Play, renews automatically unless cancelled at least 24 hours before the end of the current period, and is managed from your Apple or Google account settings. We have no access to any payment data.
+
+Deleting your account erases the record of your subscription on our side, but does not cancel the subscription itself: that must be cancelled from your Apple or Google account.`,
+  },
+  {
+    titre: '10. Minors',
     texte: `The application is intended for people aged 13 and over. We do not knowingly collect personal data from children under 13. If you are a parent and believe your child has provided us with data, contact us at nathansonnet@yahoo.fr.`,
   },
   {
-    titre: '10. Contact',
+    titre: '11. Contact',
     texte: `For any question about this privacy policy:\n\nNathan Sonnet\nE-mail: nathansonnet@yahoo.fr`,
   },
 ]

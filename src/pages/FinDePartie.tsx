@@ -16,8 +16,8 @@ import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_IMAGE, T_FIN_SHARE, T_F
 import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
-import { useCredits } from '../hooks/useCredits'
-import MurCredits from '../components/MurCredits'
+import MurAbonnement from '../components/MurAbonnement'
+import type { Refus } from '../lib/acces'
 
 const STYLES = langueActuelle() === 'en' ? [
   { id: 'aquarelle',           label: 'Watercolor' },
@@ -73,11 +73,8 @@ export default function FinDePartie() {
   const [promptLibre, setPromptLibre] = useState('')
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
-  const credits = useCredits()
-  const [murVisible, setMurVisible] = useState(false)
-  const [murCout, setMurCout] = useState(1)
-  const [murQualite, setMurQualite] = useState<'standard' | 'pro'>('pro')
-  // Dernier style demandé — le mur propose de le rejouer en qualité standard
+  const [refus, setRefus] = useState<Refus | null>(null)
+  // Dernier style demandé — le mur le rejoue une fois l'abonnement ouvert
   const styleChoisiRef = useRef<string | null>(null)
   const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
   const [promptVisible, setPromptVisible] = useState(false)
@@ -144,7 +141,7 @@ export default function FinDePartie() {
     if (tutActif && tutEtape === T_FIN_SHARE && partageOk) tutAvancer()
   }, [partageOk]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function choisirStyle(style: string, qualite: 'standard' | 'pro' = 'pro') {
+  function choisirStyle(style: string) {
     if (!poeme || generatingIllustration) return
     styleChoisiRef.current = style
     setStyleChoisi(style)
@@ -153,17 +150,13 @@ export default function FinDePartie() {
     const structure = getStructure(poeme.structureId)
     const texte = reconstruirePoeme(poeme.cases, structure)
     const pl = promptLibre.trim() || undefined
-    genererIllustration(texte, style, pl, qualite)
-      .then(({ url, promptVisuel: pv, reason, credits: solde }) => {
-        if (typeof solde === 'number') credits.poser(solde)
-        // Encrier sec : on ouvre le mur (deux chemins) au lieu d'une erreur sèche
-        if (reason === 'credits_insuffisants' || reason === 'plafond_quotidien' || reason === 'auth_requise') {
-          setMurQualite(qualite)
-          setMurCout(qualite === 'pro' ? 1 : 0)
-          setMurVisible(true)
+    genererIllustration(texte, style, pl)
+      .then(({ url, promptVisuel: pv, reason, refus: refuse }) => {
+        // Encrier sec : on ouvre le mur au lieu d'une erreur sèche
+        if (refuse) {
+          setRefus(refuse)
           setStyleChoisi(null)
           setGeneratingIllustration(false)
-          credits.rafraichir()
           return
         }
         if (url) {
@@ -263,16 +256,17 @@ export default function FinDePartie() {
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
         <Decor variant={illustrationUrl ? 'fin-image' : 'fin'} />
 
-      {/* ── MUR DE CRÉDITS ── */}
-      <MurCredits
-        visible={murVisible}
-        solde={credits.solde ?? 0}
-        cout={murCout}
-        qualite={murQualite}
-        onFermer={() => setMurVisible(false)}
-        onStandard={murQualite === 'pro' && styleChoisiRef.current
-          ? () => { setMurVisible(false); choisirStyle(styleChoisiRef.current!, 'standard') }
-          : undefined}
+      {/* ── LE MUR ── */}
+      <MurAbonnement
+        visible={refus !== null}
+        acte={refus?.acte ?? 'image_pro'}
+        motif={refus?.motif ?? 'essai_epuise'}
+        plafond={refus?.plafond}
+        onFermer={() => setRefus(null)}
+        onAbonne={() => {
+          setRefus(null)
+          if (styleChoisiRef.current) choisirStyle(styleChoisiRef.current)
+        }}
         accent={accent} encre={encre} bg={bg}
       />
 

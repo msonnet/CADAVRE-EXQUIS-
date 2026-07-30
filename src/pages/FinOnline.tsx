@@ -9,6 +9,9 @@ import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
+import { lireLeDessin } from '../api/lectureDessin'
+import MurAbonnement from '../components/MurAbonnement'
+import type { Refus } from '../lib/acces'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
@@ -73,21 +76,6 @@ async function assemblerDessin(bandes: BandeData[]): Promise<string> {
   return canvas.toDataURL('image/png')
 }
 
-async function interpreterDessin(imageDataUrl: string): Promise<string> {
-  const base64 = imageDataUrl.split(',')[1]
-  if (!base64) return ''
-  try {
-    const res = await fetchAvecTimeout(api('/api/interpreter-dessin'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64: base64, langue: langueActuelle() }),
-    }, 20_000)
-    if (!res.ok) return ''
-    const data = await res.json()
-    return data.texte ?? ''
-  } catch { return '' }
-}
-
 const STYLES = [
   { id: 'aquarelle', label: tr('Aquarelle', 'Watercolor') },
   { id: 'fusain', label: tr('Fusain', 'Charcoal') },
@@ -132,6 +120,7 @@ export default function FinOnline() {
   const [texteVision, setTexteVision] = useState<string>('')
   const [loadingDessin, setLoadingDessin] = useState(false)
   const [erreurVision, setErreurVision] = useState(false)
+  const [refus, setRefus] = useState<Refus | null>(null)
   const [pleinEcranDessin, setPleinEcranDessin] = useState(false)
   const [sauvegardeDessin_, setSauvegardeDessin] = useState(false)
 
@@ -184,8 +173,9 @@ export default function FinOnline() {
         })
       const img = await assemblerDessin(bandes)
       setImageAssemblee(img)
-      const texte = await interpreterDessin(img)
-      if (!texte) setErreurVision(true)
+      const { texte, refus: refuse } = await lireLeDessin(img)
+      if (refuse) setRefus(refuse)
+      else if (!texte) setErreurVision(true)
       setTexteVision(texte)
       setLoadingDessin(false)
     }
@@ -305,8 +295,9 @@ export default function FinOnline() {
     setStyleChoisi(style)
     setGeneratingIllus(true)
     setErreurIllus(null)
-    const { url } = await genererIllustration(texteAssemble, style)
-    if (url) { setIllustrationUrl(url) }
+    const { url, refus: refuse } = await genererIllustration(texteAssemble, style)
+    if (refuse) { setRefus(refuse); setStyleChoisi(null) }
+    else if (url) { setIllustrationUrl(url) }
     else { setErreurIllus(tr('Génération indisponible — réessaie dans un instant', 'Generation unavailable — try again in a moment')); setStyleChoisi(null) }
     setGeneratingIllus(false)
   }
@@ -354,7 +345,8 @@ export default function FinOnline() {
   async function reessayerVision() {
     if (!imageAssemblee) return
     setErreurVision(false)
-    const texte = await interpreterDessin(imageAssemblee)
+    const { texte, refus: refuse } = await lireLeDessin(imageAssemblee)
+    if (refuse) { setRefus(refuse); return }
     if (texte) setTexteVision(texte)
     else setErreurVision(true)
   }
@@ -675,6 +667,20 @@ export default function FinOnline() {
           </motion.div>
         )}
       </PageTransition>
+
+      <MurAbonnement
+        visible={refus !== null}
+        acte={refus?.acte ?? 'lecture_dessin'}
+        motif={refus?.motif ?? 'essai_epuise'}
+        plafond={refus?.plafond}
+        onFermer={() => setRefus(null)}
+        onAbonne={() => {
+          setRefus(null)
+          if (refus?.acte === 'image_pro' && styleChoisi) genererIllus(styleChoisi)
+          else reessayerVision()
+        }}
+        accent={accent} encre={encre} bg={bg}
+      />
 
       {/* ── PLEIN ÉCRAN DESSIN ── */}
       <AnimatePresence>

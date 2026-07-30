@@ -7,12 +7,13 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin, chargerBandesDessin } from '../db'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
-import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
-import { api } from '../lib/apiBase'
-import { tr, langueActuelle } from '../i18n'
+import { tr } from '../i18n'
+import MurAbonnement from '../components/MurAbonnement'
+import { lireLeDessin } from '../api/lectureDessin'
+import type { Refus } from '../lib/acces'
 
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
@@ -62,23 +63,6 @@ async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
   return canvas.toDataURL('image/png')
 }
 
-async function interpreterDessin(imageDataUrl: string): Promise<string> {
-  const base64 = imageDataUrl.split(',')[1]
-  if (!base64) return ''
-  try {
-    const res = await fetchAvecTimeout(api('/api/interpreter-dessin'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64: base64, langue: langueActuelle() }),
-    }, 20_000)
-    if (!res.ok) return ''
-    const data = await res.json()
-    return data.texte ?? ''
-  } catch {
-    return ''
-  }
-}
-
 type Phase = 'assemblage' | 'vision' | 'revele' | 'sauvegarde'
 
 export default function FinDessin() {
@@ -92,6 +76,7 @@ export default function FinDessin() {
   const [partageEnCours, setPartageEnCours] = useState(false)
   const [nbBandes, setNbBandes] = useState(0)
   const [erreurVision, setErreurVision] = useState(false)
+  const [refus, setRefus] = useState<Refus | null>(null)
   const [revealJoue, setRevealJoue] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
   const { jouer } = useSound()
@@ -125,9 +110,10 @@ export default function FinDessin() {
       setImageAssemblee(img)
 
       setPhase('vision')
-      const texte = await interpreterDessin(img)
+      const { texte, refus: refuse } = await lireLeDessin(img)
       if (cancelled) return
-      if (!texte) setErreurVision(true)
+      if (refuse) setRefus(refuse)
+      else if (!texte) setErreurVision(true)
       setTexteVision(texte)
       setPhase('revele')
     }
@@ -155,7 +141,8 @@ export default function FinDessin() {
   async function reessayerVision() {
     if (!imageAssemblee) return
     setErreurVision(false)
-    const texte = await interpreterDessin(imageAssemblee)
+    const { texte, refus: refuse } = await lireLeDessin(imageAssemblee)
+    if (refuse) { setRefus(refuse); return }
     if (texte) setTexteVision(texte)
     else setErreurVision(true)
   }
@@ -463,6 +450,16 @@ export default function FinDessin() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MurAbonnement
+        visible={refus !== null}
+        acte={refus?.acte ?? 'lecture_dessin'}
+        motif={refus?.motif ?? 'essai_epuise'}
+        plafond={refus?.plafond}
+        onFermer={() => setRefus(null)}
+        onAbonne={() => { setRefus(null); reessayerVision() }}
+        accent={accent} encre={encre} bg={bg}
+      />
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
