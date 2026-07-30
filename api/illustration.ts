@@ -4,7 +4,7 @@ import { cors } from './_cors.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
 import {
   utilisateurDuJeton, debiter, crediter, COUT_ILLUSTRATION,
-  standardAujourdhui, noterStandard, PLAFOND_STANDARD_QUOTIDIEN,
+  standardAujourdhui, noterStandard, PLAFOND_STANDARD_SANS_PUB,
 } from './_credits.js'
 
 const STYLE_PROMPTS: Record<string, string> = {
@@ -121,10 +121,10 @@ export default async function handler(req: any, res: any): Promise<void> {
     }
   } else {
     const dejaFaites = await standardAujourdhui(userId)
-    if (dejaFaites >= PLAFOND_STANDARD_QUOTIDIEN) {
+    if (dejaFaites >= PLAFOND_STANDARD_SANS_PUB) {
       res.status(402).json({
         url: null, reason: 'plafond_quotidien', qualite,
-        plafond: PLAFOND_STANDARD_QUOTIDIEN,
+        plafond: PLAFOND_STANDARD_SANS_PUB,
       })
       return
     }

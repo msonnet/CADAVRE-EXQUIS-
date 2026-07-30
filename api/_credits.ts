@@ -34,12 +34,18 @@ export const COUT_ILLUSTRATION: Record<string, number> = {
 }
 
 /**
- * Générations standard offertes par jour et par identité, tant que la régie
- * publicitaire n'est pas branchée. Sans ce plafond, la voie gratuite serait
- * illimitée et non financée — c'est exactement la fuite qui coule un
- * modèle freemium.
+ * ÉCHAFAUDAGE PROVISOIRE — à retirer le jour où AdMob est branché.
+ *
+ * Le modèle définitif n'a qu'une règle par voie :
+ *   · grand format → 1 crédit (5 offerts par mois, puis forfait)
+ *   · standard     → 1 annonce regardée = 1 image, sans limite
+ *
+ * Mais tant qu'aucune annonce n'existe, la voie standard n'a aucun frein et
+ * chaque image coûte de l'argent réel. Ce plafond quotidien tient la place de
+ * l'annonce en attendant ; il n'est PAS une règle de jeu et ne doit pas être
+ * présenté comme telle au joueur.
  */
-export const PLAFOND_STANDARD_QUOTIDIEN = 5
+export const PLAFOND_STANDARD_SANS_PUB = 5
 
 /** Identité derrière un jeton de session Supabase, ou null s'il est invalide. */
 export async function utilisateurDuJeton(req: any): Promise<string | null> {
