@@ -145,6 +145,11 @@ consentement : le 4+ est conservé sans discussion.
 - Toute génération ratée **rend** ce qu'elle a pris.
 - Réseau injoignable : on laisse passer. Mieux vaut une partie de trop qu'un
   joueur bloqué par une coupure.
+- **Registre injoignable = passage libre**, côté serveur aussi. Un refus n'a
+  de sens que si la comptabilité a répondu ; si elle manque (base en panne,
+  migration pas encore appliquée), refuser fermerait le jeu pour tout le
+  monde sans rapporter un centime. Tant que la migration n'est pas passée,
+  l'app fonctionne donc exactement comme avant, en gratuit intégral.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)

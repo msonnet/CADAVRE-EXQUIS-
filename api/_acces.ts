@@ -71,6 +71,19 @@ export async function utilisateurDuJeton(req: any): Promise<string | null> {
   }
 }
 
+/**
+ * Comptabilité indisponible : on laisse passer.
+ *
+ * Un refus n'a de sens que si le registre a répondu. S'il est injoignable —
+ * base en panne, migration pas encore appliquée — refuser fermerait le jeu
+ * pour tout le monde sans rapporter un centime. On passe, et on crie dans
+ * les journaux. Ce chemin n'est pas exploitable : il faudrait mettre notre
+ * propre base à terre, auquel cas plus rien ne fonctionne de toute façon.
+ */
+function degrade(ou: string, message?: string): void {
+  console.error(`[acces] registre injoignable (${ou}) — passage libre. ${message ?? ''}`)
+}
+
 /** État courant. Le premier appel crée la ligne et attribue la réserve d'essai. */
 export async function etatAcces(userId: string): Promise<EtatAcces | null> {
   const admin = clientAdmin()
@@ -95,7 +108,7 @@ export async function consommer(
   detail?: unknown,
 ): Promise<Verdict> {
   const admin = clientAdmin()
-  if (!admin) return { autorise: false, abonne: false, motif: 'essai_epuise' }
+  if (!admin) { degrade('consommer', 'client admin absent'); return { autorise: true, abonne: false } }
   const { data, error } = await admin.rpc('consommer_acces', {
     p_user: userId,
     p_type: type,
@@ -104,8 +117,8 @@ export async function consommer(
     p_detail: detail ?? null,
   })
   if (error || !data) {
-    console.error('[acces] consommation impossible', error?.message)
-    return { autorise: false, abonne: false }
+    degrade('consommer', error?.message)
+    return { autorise: true, abonne: false }
   }
   const d = data as any
   return {
@@ -152,7 +165,7 @@ export async function partieReglee(userId: string, partieId: string): Promise<bo
   if (vu !== undefined && Date.now() - vu < MEMOIRE_MS) return true
 
   const admin = clientAdmin()
-  if (!admin) return false
+  if (!admin) { degrade('partieReglee', 'client admin absent'); return true }
   const { data, error } = await admin
     .from('usage_events')
     .select('id')
@@ -160,7 +173,12 @@ export async function partieReglee(userId: string, partieId: string): Promise<bo
     .eq('type', 'partie_ia')
     .eq('reference', partieId)
     .limit(1)
-  if (error || !data?.length) return false
+  // Une erreur, c'est le registre qui manque — on passe. Une réponse vide,
+  // c'est une partie qui n'a pas été réglée — on refuse. Les deux cas
+  // renvoyaient « false » et fermaient le jeu tant que la migration
+  // n'était pas appliquée.
+  if (error) { degrade('partieReglee', error.message); return true }
+  if (!data?.length) return false
 
   if (partiesVues.size > 5000) {
     const limite = Date.now() - MEMOIRE_MS
