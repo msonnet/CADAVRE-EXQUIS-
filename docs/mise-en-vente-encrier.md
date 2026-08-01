@@ -4,6 +4,11 @@ Le code est écrit, la comptabilité tourne en production. Ce qui reste se passe
 entièrement dans les consoles d'Apple, de RevenueCat et de Vercel — et une
 seule fois dans Xcode, tout à la fin.
 
+> **Compte une semaine d'attente administrative** avant de pouvoir tester le
+> moindre achat : 24 à 48 h pour l'adhésion au Developer Program (phase 0),
+> puis quelques jours pour la validation bancaire (phase A). Lance ces deux
+> démarches en premier, le reste s'enchaîne pendant l'attente.
+
 ---
 
 ## À recopier au caractère près
@@ -37,6 +42,33 @@ Parcours complet joué en production sur une vraie identité anonyme :
 > **Conséquence en cours.** Sur le web, un joueur qui épuise son essai voit
 > désormais un mur sans issue — l'abonnement n'existe que dans l'app native.
 > C'est le prix de l'activation, et c'est réversible en deux minutes.
+
+---
+
+## Phase 0 — L'inscription au Developer Program
+
+**Où :** developer.apple.com · **Délai : 24 à 48 h**
+
+Préalable à absolument tout. Posséder un identifiant Apple ne donne **pas**
+accès à App Store Connect : sans adhésion au Developer Program, la console
+répond « Compte de développeur requis » (erreur 2002), et il n'y a ni fiche
+d'app, ni Bundle ID, ni TestFlight, ni soumission possible.
+
+- [ ] Vérifier l'état sur **developer.apple.com/account**, dans un navigateur
+      (pas l'app iOS, qui affiche parfois 2002 à tort)
+- [ ] Activer la **double authentification** sur l'identifiant Apple — sans
+      elle l'inscription refuse d'aller au bout
+- [ ] S'inscrire au **Apple Developer Program** — 99 €/an
+
+**Individu ou organisation ?** Pour ce projet, **individu** : validation sous
+24 à 48 h, aucune paperasse, ton nom apparaît comme éditeur. L'inscription en
+organisation exige un numéro **D-U-N-S** et prend une à deux semaines — à ne
+choisir que si tu veux qu'une société figure comme éditeur. Le passage de
+l'un à l'autre reste possible plus tard.
+
+**Passe à la suite quand :** developer.apple.com/account affiche une section
+*Membership* avec un **Team ID**, et qu'appstoreconnect.apple.com s'ouvre
+sans erreur.
 
 ---
 
