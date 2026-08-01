@@ -121,6 +121,10 @@ dessins illimitées, 2 illustrations grand format par jour.
 Aucune publicité, aucun identifiant publicitaire, aucun bandeau de
 consentement : le 4+ est conservé sans discussion.
 
+**Marche à suivre pour la mise en vente :**
+[`docs/mise-en-vente-encrier.md`](docs/mise-en-vente-encrier.md) — les six
+phases restantes, les valeurs exactes à recopier, les points de contrôle.
+
 ### Où ça vit
 
 - `supabase/migrations/20260730000010_abonnement.sql` — tables `acces` et
