@@ -520,9 +520,12 @@ export default function FinDePartie() {
           </button>
         </motion.div>
 
-        {/* ── FOOTER LINKS ── */}
+        {/* ── FOOTER LINKS ──
+            Trois pairs, trois colonnes égales séparées par un filet : en
+            deux colonnes, les tirets de deux libellés voisins se touchaient
+            et le troisième restait orphelin. Voir PoemeDetail, même remède. */}
         <motion.div
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 0', paddingBottom: 4, marginBottom: 8 }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', paddingBottom: 4, marginBottom: 8 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5, duration: 0.4 }}
@@ -531,25 +534,25 @@ export default function FinDePartie() {
             onClick={partager}
             disabled={partageEnCours}
             className={tutActif && tutEtape === T_FIN_SHARE ? 'appui tut-cible' : 'appui'}
-            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
+            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44 }}
           >
-            {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('— PARTAGER —', '— SHARE —')}
+            {partageEnCours ? tr('✦ EN COURS…', '✦ WORKING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('PARTAGER', 'SHARE')}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
             aria-expanded={activeSection === 'coutures'}
             className="appui"
-            style={{ ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
+            style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
-            {tr('— COUTURES —', '— SEAMS —')}
+            {tr('COUTURES', 'SEAMS')}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
             className={tutActif && tutEtape === T_FIN_IMAGE ? 'appui tut-cible' : 'appui'}
             aria-expanded={activeSection === 'image'}
-            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 13, letterSpacing: '0.12em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
+            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
-            {tr('— IMAGE —', '— IMAGE —')}
+            {tr('IMAGE', 'IMAGE')}
           </button>
         </motion.div>
 
@@ -741,7 +744,7 @@ export default function FinDePartie() {
         etape={T_FIN_SHARE} total={TUTORIEL_TOTAL}
         titre={tr('Partage-le', 'Share it')}
         corps={tr('Une vidéo animée se compose toute seule — Instagram, WhatsApp, SMS.', 'An animated video composes itself — Instagram, WhatsApp, texts.')}
-        cible={tr('— PARTAGER —', '— SHARE —')}
+        cible={tr('PARTAGER', 'SHARE')}
         position="top"
         onCompris={tutAvancer}
         labelCompris={tr('PLUS TARD →', 'LATER →')}

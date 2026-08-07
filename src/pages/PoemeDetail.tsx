@@ -468,10 +468,15 @@ export default function PoemeDetail() {
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />
 
-        {/* ── ACTIONS PRINCIPALES — grille 2×2, libellés insécables ── */}
+        {/* ── ACTIONS PRINCIPALES ──
+            Trois pairs, donc trois colonnes égales séparées par un filet.
+            En deux colonnes, les tirets de deux libellés voisins se
+            touchaient (« — PARTAGER —— IMPRIMER — ») et le troisième
+            restait orphelin sur une ligne à lui. Le tiret encadrant est
+            rendu aux titres de section, à qui il appartient. */}
         <motion.div
           className="mb-4"
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 0' }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -481,26 +486,26 @@ export default function PoemeDetail() {
             disabled={partageEnCours}
             aria-label="Partager le poème en vidéo"
             className="appui"
-            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
+            style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.8, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44 }}
           >
-            {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('— PARTAGER —', '— SHARE —')}
+            {partageEnCours ? tr('✦ EN COURS…', '✦ WORKING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('PARTAGER', 'SHARE')}
           </button>
           <button
             onClick={imprimerPoeme}
             aria-label="Imprimer le poème"
             className="appui"
-            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 0', minHeight: 44 }}
+            style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
-            {tr('— IMPRIMER —', '— PRINT —')}
+            {tr('IMPRIMER', 'PRINT')}
           </button>
           <button
             onClick={() => setCasesVisibles(v => !v)}
             aria-label={casesVisibles ? 'Masquer les coutures' : 'Voir case par case'}
             aria-expanded={casesVisibles}
             className="appui"
-            style={{ ...mono, fontSize: 13, whiteSpace: 'nowrap', color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', padding: '12px 0', minHeight: 44 }}
+            style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
-            {tr('— COUTURES —', '— SEAMS —')}
+            {tr('COUTURES', 'SEAMS')}
           </button>
         </motion.div>
 

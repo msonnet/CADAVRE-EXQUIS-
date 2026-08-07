@@ -14,11 +14,7 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "noFallthroughCasesInSwitch": true
   },
   "include": ["src", "node_modules/vite-plugin-pwa/vanillajs.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
