@@ -1,7 +1,7 @@
 export const config = { maxDuration: 30 }
 
 import { cors } from './_cors.js'
-import { choisirVoixAleatoire, VOIX } from './_voices.js'
+import { choisirVoixAleatoire, promptSysteme, VOIX } from './_voices.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
 import { utilisateurDuJeton, partieReglee } from './_acces.js'
 
@@ -435,8 +435,8 @@ export default async function handler(req: any, res: any): Promise<void> {
         max_tokens: maxTokens,
         stop_sequences: ['.', '!', '?'],
         system: langue === 'en'
-          ? voix.systemPrompt + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre."
-          : voix.systemPrompt,
+          ? promptSysteme(voix) + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre — ton lexique se traduit, il ne se remplace pas."
+          : promptSysteme(voix),
         messages: [
           {
             role: 'user',
