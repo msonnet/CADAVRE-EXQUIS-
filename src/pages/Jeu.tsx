@@ -10,7 +10,7 @@ import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
 import type { NiveauValidation } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
-import { VOICE_IDS } from '../data/voiceIds'
+import { VOICE_IDS, nomDeVoix } from '../data/voiceIds'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
@@ -786,24 +786,48 @@ export default function Jeu() {
           <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
           <div className="flex flex-col items-center flex-1 text-center justify-center">
-            {/* Espaceur souple — centre "La voix parle…" verticalement,
+            {/* Espaceur souple — centre le nom de la voix verticalement,
                 équilibré par le <div flex:1 /> en bas */}
             <div style={{ flex: 1 }} />
 
+            {/* La voix se nomme pendant qu'elle écrit.
+                L'écran disait « La voix parle… » : anonyme, alors que le nom
+                est connu du client depuis le tirage des voix, et n'apparaissait
+                qu'après la partie dans les coutures. C'est ici que le joueur
+                apprend à reconnaître le fossoyeur ou l'apiculteur — d'autant
+                plus en mode aveugle, où le nom est la seule chose qu'il voit
+                du tour de l'IA. */}
             <motion.div
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontStyle: 'italic',
-                fontSize: 'clamp(2.2rem, 9vw, 3rem)',
+                fontSize: 'clamp(1.8rem, 7vw, 2.5rem)',
                 color: encre,
-                lineHeight: 1.2,
+                lineHeight: 1.15,
                 letterSpacing: '-0.01em',
+                textWrap: 'balance',
               }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
             >
-              {tr('La voix parle', 'The voice speaks')}<motion.span
+              {nomDeVoix(voixParSlot[caseIndex % seq.length], langueActuelle())}
+            </motion.div>
+
+            <motion.div
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontStyle: 'italic',
+                fontSize: 'clamp(1rem, 4vw, 1.15rem)',
+                color: encre,
+                opacity: 0.6,
+                marginTop: 6,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
+            >
+              {tr('écrit', 'writes')}<motion.span
                 animate={{ opacity: [1, 0, 1] }}
                 transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
               >…</motion.span>

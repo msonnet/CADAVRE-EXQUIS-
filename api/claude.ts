@@ -401,12 +401,21 @@ export default async function handler(req: any, res: any): Promise<void> {
       : `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés (trouve autre chose) : ${motsEviter.join(', ')}.`)
     : ''
 
-  // Pour un vers entier, la persona doit s'exprimer pleinement — pas d'image générique
+  // L'empreinte de la voix, à toutes les tailles de fragment.
+  //
+  // Elle n'était donnée qu'aux vers entiers, et le résultat se mesurait : sur
+  // un vers, les six voix testées étaient toutes reconnaissables ; sur un
+  // groupe nominal de deux mots, quatre sur douze seulement. Le boucher
+  // rendait « la nacre », l'horloger « le souffle » — des mots que n'importe
+  // qui aurait pu poser. Or les fragments courts sont l'immense majorité du
+  // jeu : c'est là que la distinction entre les 46 voix se gagne ou se perd.
   const personaLine = type === 'libre'
     ? (langue === 'en'
       ? "\nThis full line must carry your signature: one concrete, singular image from your own world. Avoid expected surrealist metaphors — choose the image only you would see."
       : "\nCe vers entier doit porter ton empreinte : une image concrète et singulière depuis ton univers propre. Évite les métaphores surréalistes attendues — choisis l'image que toi seul verrais.")
-    : ''
+    : (langue === 'en'
+      ? "\nEven this short, the fragment must be yours: take the word from the world you work in — what you handle, weigh, watch, fear. The word only you would put here, not an all-purpose poetic one."
+      : "\nMême aussi court, le fragment doit être le tien : prends le mot dans le monde où tu travailles — ce que tu manipules, pèses, observes, redoutes. Le mot que toi seul mettrais là, pas un mot poétique passe-partout.")
 
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 25_000)

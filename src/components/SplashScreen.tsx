@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
 import { tr } from '../i18n'
@@ -102,18 +102,38 @@ export default function SplashScreen() {
                   {LINE1}
                 </motion.span>
               ) : (
-                [...LINE1].map((char, i) => (
-                  <motion.span
-                    key={i}
-                    aria-hidden
-                    initial={{ opacity: 0, filter: 'blur(7px)', y: 4 }}
-                    animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-                    transition={{ delay: 0.9 + i * 0.032, duration: 0.45, ease: 'easeOut' }}
-                    style={{ display: 'inline-block', color: encre, whiteSpace: 'pre' }}
-                  >
-                    {char}
-                  </motion.span>
-                ))
+                // Les lettres sont groupées par mot, et le mot est insécable.
+                // Chaque lettre étant un inline-block autonome, le navigateur
+                // ne voyait plus de mots du tout et coupait où il voulait :
+                // « Chaque fragment ignore les autr / es. » sur un écran de
+                // 320 px. L'espace entre deux mots reste un nœud de texte
+                // ordinaire — c'est lui qui rend le retour à la ligne possible.
+                (() => {
+                  let n = 0
+                  const mots = LINE1.split(' ')
+                  return mots.map((mot, wi) => (
+                    <Fragment key={wi}>
+                      {wi > 0 ? ' ' : null}
+                      <span style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+                        {[...mot].map(char => {
+                          const i = n++
+                          return (
+                            <motion.span
+                              key={i}
+                              aria-hidden
+                              initial={{ opacity: 0, filter: 'blur(7px)', y: 4 }}
+                              animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+                              transition={{ delay: 0.9 + i * 0.032, duration: 0.45, ease: 'easeOut' }}
+                              style={{ display: 'inline-block', color: encre }}
+                            >
+                              {char}
+                            </motion.span>
+                          )
+                        })}
+                      </span>
+                    </Fragment>
+                  ))
+                })()
               )}
             </span>
 
