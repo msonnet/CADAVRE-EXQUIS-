@@ -172,6 +172,66 @@ function construirePlan(nbVoix: number, echo: boolean, plancher: number): PlanAt
   return { totalVers, toursJoueur: tours, toursFragmentJoueur, voixPool: pool, echo, voixParVers }
 }
 
+/**
+ * Les cases qui n'admettent qu'un mot-outil.
+ *
+ * Une conjonction se choisit dans une classe fermée — mais, car, or, pourtant,
+ * quand, lorsque. Mesuré sur six voix très différentes, cinq ont rendu le même
+ * mot : « or ». Aucune personnalité ne peut se loger là, c'est une
+ * impossibilité de la langue et non un défaut de réglage.
+ *
+ * Tant que le tirage était aveugle, c'était un gâchis discret. Depuis que
+ * toutes les voix convoquées parlent, c'en est un visible : une voix dont
+ * l'unique prise de parole du poème est « or » est une voix absente.
+ */
+const CASES_OUTILS = new Set(['conjonction-coord', 'conjonction-subord'])
+
+/** Combien de fois chaque voix prend la parole dans l'ensemble du plan. */
+export function multiplicitesVoix(plan: PlanAtelier): Record<number, number> {
+  const n: Record<number, number> = {}
+  for (const ligne of Object.values(plan.voixParVers)) {
+    for (const v of ligne) n[v] = (n[v] ?? 0) + 1
+  }
+  return n
+}
+
+/**
+ * Aligne les voix d'un vers sur les cases du gabarit.
+ *
+ * Les mots-outils reviennent en priorité aux voix qui parlent ailleurs dans
+ * le poème : celles qui n'ont qu'une seule apparition la dépensent sur une
+ * case qui porte quelque chose. Si toutes sont uniques, on ne peut rien
+ * sauver — on rend l'ordre tel quel plutôt que de prétendre choisir.
+ */
+export function placerVoix(
+  indices: number[],
+  typesDesCases: string[],
+  multiplicite: Record<number, number>,
+): number[] {
+  if (indices.length < 2) return indices
+
+  const outils: number[] = []
+  const contenu: number[] = []
+  typesDesCases.forEach((t, i) => (CASES_OUTILS.has(t) ? outils : contenu).push(i))
+  if (!outils.length || outils.length >= indices.length) return indices
+
+  const bavardes = indices.filter(v => (multiplicite[v] ?? 0) > 1)
+  const uniques = indices.filter(v => (multiplicite[v] ?? 0) <= 1)
+  if (!bavardes.length) return indices
+
+  // Les bavardes prennent les outils, les uniques passent devant sur le
+  // contenu. Le reste comble dans l'ordre, sans préférence.
+  const pourOutils = [...bavardes]
+  const pourContenu = [...uniques]
+  while (pourOutils.length > outils.length) pourContenu.push(pourOutils.pop() as number)
+  while (pourOutils.length < outils.length) pourOutils.push(pourContenu.shift() as number)
+
+  const place: number[] = new Array(indices.length)
+  outils.forEach((slot, k) => { place[slot] = pourOutils[k] })
+  contenu.forEach((slot, k) => { place[slot] = pourContenu[k] })
+  return place
+}
+
 /** Combien de voix distinctes prennent réellement la parole dans ce plan. */
 export function voixEntendues(plan: PlanAtelier): number {
   const vues = new Set<number>()

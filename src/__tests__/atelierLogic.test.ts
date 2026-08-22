@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cadenceRetour, tirerPlan, voixEntendues } from '../pages/Atelier'
+import { cadenceRetour, tirerPlan, voixEntendues, placerVoix, multiplicitesVoix } from '../pages/Atelier'
 
 // Ces tests importaient une COPIE des fonctions d'Atelier.tsx, « pour ne pas
 // dépendre du DOM ni de React ». La copie avait déjà divergé : elle tirait
@@ -198,6 +198,76 @@ describe('repartirVoix — la table ronde a vraiment lieu', () => {
         .flatMap(v => plan.voixParVers[v])
       // Le premier tour de file couvre exactement les 12 voix, sans doublon.
       expect(new Set(ordre.slice(0, 12)).size).toBe(12)
+    }
+  })
+})
+
+describe('placerVoix — les mots-outils ne mangent pas une voix unique', () => {
+  const OUTIL = 'conjonction-coord'
+  const PLEIN = 'groupe-nominal'
+
+  it('la case outil revient à la voix qui parle ailleurs', () => {
+    // 7 parle deux fois dans le poème, 3 une seule.
+    const place = placerVoix([3, 7], [OUTIL, PLEIN], { 3: 1, 7: 2 })
+    expect(place[0]).toBe(7)
+    expect(place[1]).toBe(3)
+  })
+
+  it('quel que soit l\'ordre de départ', () => {
+    const place = placerVoix([7, 3], [OUTIL, PLEIN], { 3: 1, 7: 2 })
+    expect(place[0]).toBe(7)
+    expect(place[1]).toBe(3)
+  })
+
+  it('la case outil peut être ailleurs qu\'en tête', () => {
+    const place = placerVoix([3, 7, 9], [PLEIN, PLEIN, OUTIL], { 3: 1, 7: 1, 9: 4 })
+    expect(place[2]).toBe(9)
+    expect(new Set(place)).toEqual(new Set([3, 7, 9]))
+  })
+
+  it('deux cases outils vont aux deux voix les plus présentes', () => {
+    const place = placerVoix([1, 2, 3], [OUTIL, OUTIL, PLEIN], { 1: 1, 2: 3, 3: 2 })
+    expect(place[2]).toBe(1)                       // l'unique garde la case pleine
+    expect(new Set([place[0], place[1]])).toEqual(new Set([2, 3]))
+  })
+
+  it('toutes uniques : on ne prétend pas choisir, l\'ordre est rendu tel quel', () => {
+    const depart = [4, 5, 6]
+    expect(placerVoix(depart, [OUTIL, PLEIN, PLEIN], { 4: 1, 5: 1, 6: 1 })).toEqual(depart)
+  })
+
+  it('aucune case outil : rien ne bouge', () => {
+    const depart = [4, 5]
+    expect(placerVoix(depart, [PLEIN, PLEIN], { 4: 1, 5: 9 })).toEqual(depart)
+  })
+
+  it('rend toujours une permutation complète, sans trou ni doublon', () => {
+    const types = [OUTIL, PLEIN, 'conjonction-subord', PLEIN, PLEIN]
+    for (let i = 0; i < 300; i++) {
+      const voix = [10, 11, 12, 13, 14]
+      const mult: Record<number, number> = {}
+      voix.forEach(v => { mult[v] = 1 + Math.floor(Math.random() * 3) })
+      const place = placerVoix(voix, types, mult)
+      expect(place).toHaveLength(voix.length)
+      expect(place.every(v => typeof v === 'number')).toBe(true)
+      expect(new Set(place)).toEqual(new Set(voix))
+    }
+  })
+
+  it('sur un plan réel, une voix unique ne tombe jamais sur un mot-outil', () => {
+    const types = [OUTIL, PLEIN, PLEIN, PLEIN, PLEIN]
+    for (let i = 0; i < 300; i++) {
+      const plan = tirerPlan(46, true)
+      const mult = multiplicitesVoix(plan)
+      for (const ligne of Object.values(plan.voixParVers)) {
+        if (ligne.length < 2) continue
+        const place = placerVoix(ligne, types.slice(0, ligne.length), mult)
+        const surOutil = place[0]
+        // Sauf si TOUTES les voix du vers sont uniques — là, rien à sauver.
+        if (ligne.some(v => (mult[v] ?? 0) > 1)) {
+          expect(mult[surOutil]).toBeGreaterThan(1)
+        }
+      }
     }
   })
 })

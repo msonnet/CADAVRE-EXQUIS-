@@ -8,7 +8,7 @@ import { demanderFragmentIA } from '../api/claude'
 import { corrigerAccords } from '../api/corriger'
 import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
-import type { PlanAtelier } from './Atelier'
+import { placerVoix, multiplicitesVoix, type PlanAtelier } from './Atelier'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
@@ -86,17 +86,34 @@ const GERONDIF: RoleFragment = {
   type: 'gérondif', consigne: tr('un gérondif (en + participe présent)', 'a gerund clause (an -ing form)'), role: tr('GÉRONDIF', 'GERUND'), apres: ',',
 }
 const QUESTION: RoleFragment = {
-  type: 'proposition', consigne: tr('une question courte — celle que ton travail te ferait poser', 'a short question — the one your work would make you ask'), role: 'QUESTION',
+  type: 'proposition', consigne: tr('une question', 'a question'), role: 'QUESTION',
 }
 
-function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
+const EST_OUTIL = (f: RoleFragment) =>
+  f.type === 'conjonction-coord' || f.type === 'conjonction-subord'
+
+/**
+ * `outilsPermis` : le vers a-t-il une voix qui parle ailleurs dans le poème ?
+ *
+ * Sinon on n'ouvre pas de case-outil du tout. Réserver les mots de liaison aux
+ * voix qui reviennent ne suffisait pas : sur une table de 46 voix, trente-sept
+ * ne prennent la parole qu'une fois, et sur près d'un vers sur deux toutes les
+ * voix présentes sont dans ce cas — il n'y avait personne à qui confier le
+ * « or ». Le gabarit lui-même s'efface donc.
+ */
+export function tirerGabarit(nVoix: number, questionPermise = true, outilsPermis = true): RoleFragment[] {
+  const filtrer = (v: RoleFragment[][]) => {
+    if (outilsPermis) return v
+    const sansOutil = v.filter(g => !g.some(EST_OUTIL))
+    return sansOutil.length ? sansOutil : v
+  }
   if (nVoix === 1) {
     // Une seule plume écrit le vers entier — rarement une question (l'interrogatif
     // épuisé devient un tic sur un poème long : budget géré par l'appelant), sinon
     // un vers libre de longueur tirée au sort (3 à 6 mots)
     if (questionPermise && Math.random() < 0.12) return [QUESTION]
     const mots = 3 + Math.floor(Math.random() * 4)
-    return [{ type: 'libre', consigne: tr('un vers — une chose vue, concrète', 'one line of verse — a concrete thing seen'), role: tr('VERS ENTIER', 'FULL LINE'), mots }]
+    return [{ type: 'libre', consigne: tr('un vers', 'one line of verse'), role: tr('VERS ENTIER', 'FULL LINE'), mots }]
   }
   if (nVoix === 2) {
     const variantes: RoleFragment[][] = [
@@ -106,7 +123,8 @@ function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
       [INFINITIF, GN_COMPLEMENT],  // « brûler » + « la cendre »
       [CONJ_COORD, GROUPE_VERBAL], // « mais » + « traverse la nuit » — ellipse sans sujet
     ]
-    return variantes[Math.floor(Math.random() * variantes.length)]
+    const dispo = filtrer(variantes)
+    return dispo[Math.floor(Math.random() * dispo.length)]
   }
   if (nVoix === 4) {
     const variantes: RoleFragment[][] = [
@@ -117,7 +135,8 @@ function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
       [GERONDIF, GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT],      // « en tombant, » « la pluie » « creuse » « la pierre »
       [CONJ_COORD, GN_SUJET, ADJECTIF, GROUPE_VERBAL],           // « mais » « la lumière » « froide » « pèse sur le monde »
     ]
-    return variantes[Math.floor(Math.random() * variantes.length)]
+    const dispo = filtrer(variantes)
+    return dispo[Math.floor(Math.random() * dispo.length)]
   }
   if (nVoix >= 5) {
     // Cinq voix sur un seul vers : la densité maximale de la table ronde.
@@ -130,9 +149,10 @@ function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
       [GERONDIF, GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],
       [CONJ_COORD, GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],
     ]
-    return variantes[Math.floor(Math.random() * variantes.length)]
+    const dispo = filtrer(variantes)
+    return dispo[Math.floor(Math.random() * dispo.length)]
   }
-  const variantes: RoleFragment[][] = [
+  const variantesTrois: RoleFragment[][] = [
     [GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT], // la phrase courte de Breton
     [GN_SUJET, ADJECTIF, GROUPE_VERBAL],    // « la lumière » + « froide » + « traverse la nuit »
     [ADVERBE_TETE, GN_SUJET, GROUPE_VERBAL], // « doucement, » + « la cendre » + « pèse sur le monde »
@@ -144,7 +164,8 @@ function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
     [CONJ_SUBORD, GN_SUJET, GROUPE_VERBAL],  // « lorsque » + « la cendre » + « pèse sur le monde »
     [GERONDIF, GN_SUJET, VERBE],             // « en tombant, » + « la lumière » + « tremble »
   ]
-  return variantes[Math.floor(Math.random() * variantes.length)]
+  const dispoTrois = filtrer(variantesTrois)
+  return dispoTrois[Math.floor(Math.random() * dispoTrois.length)]
 }
 
 // Signature d'un gabarit — pour ne jamais tirer deux fois de suite la même forme
@@ -305,13 +326,21 @@ export default function JeuAtelier() {
       // — sans budget, les « Qui pleure sous la craie ? » s'accumulent en tic
       const questionsOk = versRef.current.filter(v => v.texte.includes('?')).length
         < Math.max(1, Math.floor(p.totalVers / 10))
+      // Une case-outil ne s'ouvre que si une voix du vers parle ailleurs dans
+      // le poème : personne ne dépense son unique prise de parole sur « or ».
+      const mult = multiplicitesVoix(p)
+      const outilsOk = indices.some(v => (mult[v] ?? 0) > 1)
+
       // Jamais deux fois de suite la même forme — la métrique respire
-      let gabarit = tirerGabarit(nVoix, questionsOk)
+      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nVoix, questionsOk)
+        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
-      setVoixEnCours(indices.map((vi, k) => ({ num: vi + 1, role: gabarit[k].role, fait: false })))
+
+      // Et quand elle s'ouvre, elle revient à l'une de ces voix-là.
+      const ordre = placerVoix(indices, gabarit.map(g => g.type), mult)
+      setVoixEnCours(ordre.map((vi, k) => ({ num: vi + 1, role: gabarit[k].role, fait: false })))
 
       // L'écho au dernier mot : seule la dernière trace du vers précédent est
       // transmise — assez pour un raccord, pas assez pour imposer un thème.
@@ -330,7 +359,7 @@ export default function JeuAtelier() {
         const m = v.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
         return m && CONJ_COURTES.has(m[0]) ? [m[0]] : []
       })
-      for (let k = 0; k < indices.length; k++) {
+      for (let k = 0; k < ordre.length; k++) {
         if (annule) return
         const caseRole = gabarit[k]
         const enCours = fragments.join(' ')
@@ -343,7 +372,7 @@ export default function JeuAtelier() {
         const requete = {
           consigne: caseRole.consigne,
           type: caseRole.type,
-          voiceId: p.voixPool[indices[k]],
+          voiceId: p.voixPool[ordre[k]],
           contexte,
           eviter,
           ...(caseRole.mots ? { mots: caseRole.mots } : {}),
@@ -378,7 +407,7 @@ export default function JeuAtelier() {
       ajouterVers({
         texte: fragments.join(' ').replace(/\s+/g, ' ').trim(),
         auteur: 'ia',
-        voixNums: indices.map(i => i + 1),
+        voixNums: ordre.map(i => i + 1),
         voixNoms: nomsVoix,
       })
     }
@@ -416,14 +445,18 @@ export default function JeuAtelier() {
       // Le budget interrogatif s'applique aussi à la plume du médium
       const questionsOk = versRef.current.filter(v => v.texte.includes('?')).length
         < Math.max(1, Math.floor(p.totalVers / 10))
-      let gabarit = tirerGabarit(nTotal, questionsOk)
+      const mult = multiplicitesVoix(p)
+      const outilsOk = aiDuPlan.some(v => (mult[v] ?? 0) > 1)
+      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nTotal, questionsOk)
+        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
       const slotJoueur = Math.floor(Math.random() * gabarit.length)
-      const aiIndices = aiDuPlan
+      // Même règle que sur les vers de voix, en sautant la case du médium.
+      const casesIA = gabarit.map((g, i) => ({ type: g.type, i })).filter(c => c.i !== slotJoueur)
+      const aiIndices = placerVoix(aiDuPlan, casesIA.map(c => c.type), mult)
 
       setFragGabarit(gabarit)
       setFragSlotJoueur(slotJoueur)
