@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cadenceRetour, tirerPlan, voixEntendues, placerVoix, multiplicitesVoix } from '../pages/Atelier'
+import { cadenceRetour, tirerPlan, voixEntendues, placerVoix, multiplicitesVoix, fourchetteVers } from '../pages/Atelier'
 
 // Ces tests importaient une COPIE des fonctions d'Atelier.tsx, « pour ne pas
 // dépendre du DOM ni de React ». La copie avait déjà divergé : elle tirait
@@ -199,6 +199,29 @@ describe('repartirVoix — la table ronde a vraiment lieu', () => {
       // Le premier tour de file couvre exactement les 12 voix, sans doublon.
       expect(new Set(ordre.slice(0, 12)).size).toBe(12)
     }
+  })
+})
+
+describe('fourchetteVers — ce qui est annoncé est ce qui est tiré', () => {
+  it('correspond toujours aux longueurs réellement tirées', () => {
+    for (const nb of [0, 1, 12, 30, 46]) {
+      const [bas, haut] = fourchetteVers(nb)
+      for (let i = 0; i < 200; i++) {
+        const t = tirerPlan(nb, true).totalVers
+        expect(t).toBeGreaterThanOrEqual(bas)
+        expect(t).toBeLessThanOrEqual(haut)
+      }
+    }
+  })
+
+  it('le plancher monte avec le nombre de voix', () => {
+    expect(fourchetteVers(1)[0]).toBe(5)
+    expect(fourchetteVers(46)[0]).toBe(16)
+    expect(fourchetteVers(46)[0]).toBeGreaterThan(fourchetteVers(12)[0])
+  })
+
+  it('le plafond est toujours 37', () => {
+    for (const nb of [0, 1, 12, 46]) expect(fourchetteVers(nb)[1]).toBe(37)
   })
 })
 

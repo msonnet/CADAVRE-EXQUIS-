@@ -232,6 +232,17 @@ export function placerVoix(
   return place
 }
 
+/**
+ * La fourchette de longueur annoncée au joueur, pour un nombre de voix donné.
+ *
+ * Le plancher monte avec le nombre de convives — une table de quarante-six ne
+ * tient pas dans cinq vers. L'écran l'annonçait en dur (« de V à XXVII »)
+ * et disait donc deux fois faux : ni le maximum ni le minimum.
+ */
+export function fourchetteVers(nbVoix: number): [number, number] {
+  return [Math.min(MAX_VERS, Math.max(MIN_VERS, Math.ceil(nbVoix / 3))), MAX_VERS]
+}
+
 /** Combien de voix distinctes prennent réellement la parole dans ce plan. */
 export function voixEntendues(plan: PlanAtelier): number {
   const vues = new Set<number>()
@@ -341,9 +352,9 @@ export default function Atelier() {
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, fontStyle: 'italic', lineHeight: 1.5 }}>
             {nbVoix === 0
-              ? <>{tr('Le sort fixera la longueur du poème — de V à XXVII vers. Tu les écriras tous, seul, sans jamais relire : le cadavre exquis se joue contre ta propre mémoire.',
-                  'Fate will set the length of the poem — from V to XXVII lines. You will write them all, alone, without ever rereading: the exquisite corpse is played against your own memory.')}</>
-              : <>{tr("Le sort fixera la longueur du poème — de V à XXVII vers. Tu l'ouvriras, tu le refermeras, et la main te reviendra tous les", 'Fate will set the length of the poem — from V to XXVII lines. You will open it, you will close it, and the pen will return to you every')} {toRomain(cadenceRetour(nbVoix)[0])} {tr('à', 'to')} {toRomain(cadenceRetour(nbVoix)[1])} {tr('vers — plus les voix sont nombreuses, plus tes retours se font fragments.', 'lines — the more voices there are, the more your turns shrink to fragments.')}</>
+              ? <>{tr(`Le sort fixera la longueur du poème — de ${toRomain(fourchetteVers(nbVoix)[0])} à ${toRomain(fourchetteVers(nbVoix)[1])} vers. Tu les écriras tous, seul, sans jamais relire : le cadavre exquis se joue contre ta propre mémoire.`,
+                  `Fate will set the length of the poem — from ${toRomain(fourchetteVers(nbVoix)[0])} to ${toRomain(fourchetteVers(nbVoix)[1])} lines. You will write them all, alone, without ever rereading: the exquisite corpse is played against your own memory.`)}</>
+              : <>{tr(`Le sort fixera la longueur du poème — de ${toRomain(fourchetteVers(nbVoix)[0])} à ${toRomain(fourchetteVers(nbVoix)[1])} vers.${nbVoix > 1 ? ' Toutes les voix convoquées y parleront.' : ''} Tu l'ouvriras, tu le refermeras, et la main te reviendra tous les`, `Fate will set the length of the poem — from ${toRomain(fourchetteVers(nbVoix)[0])} to ${toRomain(fourchetteVers(nbVoix)[1])} lines.${nbVoix > 1 ? ' Every voice you summon will speak.' : ''} You will open it, you will close it, and the pen will return to you every`)} {toRomain(cadenceRetour(nbVoix)[0])} {tr('à', 'to')} {toRomain(cadenceRetour(nbVoix)[1])} {tr('vers — plus les voix sont nombreuses, plus tes retours se font fragments.', 'lines — the more voices there are, the more your turns shrink to fragments.')}</>
             }
           </div>
         </motion.div>
