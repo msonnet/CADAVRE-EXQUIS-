@@ -19,13 +19,93 @@ function toRomain(n: number): string {
 }
 
 export interface PlanAtelier {
-  totalVers: number          // 5–27, tiré au sort
+  totalVers: number          // 5–37, tiré au sort (plancher relevé par le nombre de voix)
   toursJoueur: number[]      // indices des vers écrits par le médium (toujours 0 et totalVers-1)
   toursFragmentJoueur: number[] // sous-ensemble de toursJoueur (hors 0 et totalVers-1) où le médium
                              // remplit un seul fragment parmi les voix — plus les voix sont nombreuses,
                              // plus ces tours sont fréquents (0 voix → 0%, max voix → 100%)
   voixPool: string[]         // ids des voix convoquées, mélangées
   echo: boolean              // true = l'écho (dernier mot du vers précédent) ; false = obscurité totale
+  /** Quelles voix parlent sur quel vers — index dans voixPool. Voir repartirVoix. */
+  voixParVers: Record<number, number[]>
+}
+
+const MIN_VERS = 5
+const MAX_VERS = 37
+
+/**
+ * Répartit les voix sur les vers, en ROTATION.
+ *
+ * Le tirage se faisait vers par vers, en remélangeant le pool entier à chaque
+ * fois, sans mémoire de qui avait déjà parlé. Convoquer les 46 voix ne les
+ * faisait donc pas parler : simulé sur quatre mille séances de 37 vers,
+ * seize d'entre elles en moyenne restaient muettes pendant qu'une autre
+ * prenait la parole jusqu'à huit fois. La table ronde n'avait pas lieu.
+ *
+ * On vide donc une file mélangée avant d'en tirer une nouvelle : toutes
+ * parlent une fois avant que l'une reparle. Et le nombre de voix par vers
+ * n'est plus plafonné à trois — mieux vaut cinq voix sur un vers qu'une voix
+ * qui ne dit jamais rien.
+ */
+export function repartirVoix(
+  nbVoix: number,
+  versIA: number[],
+  versFragment: number[],
+): Record<number, number[]> {
+  if (nbVoix === 0) return {}
+  const porteurs = [...versIA, ...versFragment].sort((a, b) => a - b)
+  if (!porteurs.length) return {}
+
+  // Un vers de fragment garde une case pour le médium : au plus quatre voix,
+  // pour que le gabarit ne dépasse jamais cinq cases.
+  const fragment = new Set(versFragment)
+  const plafond = (v: number) => (fragment.has(v) ? 4 : 5)
+
+  // Le tirage reste vivant, mais son assiette se relève si la couverture
+  // l'exige : c'est le nombre de convives qui commande la densité.
+  const requise = Math.ceil(nbVoix / porteurs.length)
+  const bas = Math.max(1, requise - 1)
+  const haut = Math.max(bas, requise + 1)
+
+  const compte: Record<number, number> = {}
+  for (const v of porteurs) {
+    compte[v] = Math.min(bas + Math.floor(Math.random() * (haut - bas + 1)), plafond(v))
+  }
+  // Le solo du médium : sur un vers de fragment, le sort peut le tirer seul.
+  for (const v of versFragment) {
+    if (Math.random() < 0.12) compte[v] = 0
+  }
+
+  // Rattrapage — sans lui la garantie n'en serait pas une : tant que le total
+  // des cases n'atteint pas le nombre de voix, on charge les vers qui ont
+  // encore de la place.
+  let total = porteurs.reduce((s, v) => s + compte[v], 0)
+  while (total < nbVoix) {
+    const dispo = porteurs.filter(v => compte[v] < plafond(v))
+    if (!dispo.length) break   // poème trop court malgré le plancher : on fait au mieux
+    compte[dispo[Math.floor(Math.random() * dispo.length)]]++
+    total++
+  }
+
+  const parVers: Record<number, number[]> = {}
+  let file: number[] = []
+  const recharger = () => {
+    file = Array.from({ length: nbVoix }, (_, i) => i).sort(() => Math.random() - 0.5)
+  }
+  recharger()
+  for (const v of porteurs) {
+    const ligne: number[] = []
+    let gardes = 0
+    while (ligne.length < compte[v] && gardes < nbVoix * 2 + 4) {
+      if (!file.length) recharger()
+      const candidat = file.shift() as number
+      // Jamais deux fois la même voix sur un même vers : elle repart en queue.
+      if (ligne.includes(candidat)) { file.push(candidat); gardes++; continue }
+      ligne.push(candidat)
+    }
+    parVers[v] = ligne
+  }
+  return parVers
 }
 
 // La cadence du retour est quasi plate : la présence du médium ne se mesure
@@ -40,11 +120,16 @@ export function cadenceRetour(nbVoix: number): [number, number] {
   return [Math.round(1 + t), Math.round(2 + t)]
 }
 
-// La main revient : le médium ouvre, referme, et la main lui revient selon la cadence.
-// À zéro voix (« seul »), tous les vers lui reviennent — le cadavre exquis se joue
-// contre sa propre mémoire : l'écho ou l'obscurité s'applique à sa propre trace.
-export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
-  const totalVers = 5 + Math.floor(Math.random() * 23) // 5–27
+/**
+ * Le plan, tiré à une longueur plancher donnée.
+ *
+ * Séparé de `tirerPlan` parce que la couverture ne se calcule pas d'avance :
+ * le nombre de vers qui portent des voix dépend de la cadence du médium et du
+ * tirage des tours fragment, tous deux aléatoires. On construit, on vérifie,
+ * on rallonge si besoin.
+ */
+function construirePlan(nbVoix: number, echo: boolean, plancher: number): PlanAtelier {
+  const totalVers = plancher + Math.floor(Math.random() * (MAX_VERS - plancher + 1))
   if (nbVoix === 0) {
     return {
       totalVers,
@@ -52,6 +137,7 @@ export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
       toursFragmentJoueur: [],
       voixPool: [],
       echo,
+      voixParVers: {},
     }
   }
   const [pasMin, pasMax] = cadenceRetour(nbVoix)
@@ -80,7 +166,36 @@ export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
   const toursFragmentJoueur = tours.filter(
     t => t !== 0 && t !== totalVers - 1 && Math.random() < probFragment
   )
-  return { totalVers, toursJoueur: tours, toursFragmentJoueur, voixPool: pool, echo }
+  const auJoueur = new Set(tours)
+  const versIA = Array.from({ length: totalVers }, (_, i) => i).filter(i => !auJoueur.has(i))
+  const voixParVers = repartirVoix(nbVoix, versIA, toursFragmentJoueur)
+  return { totalVers, toursJoueur: tours, toursFragmentJoueur, voixPool: pool, echo, voixParVers }
+}
+
+/** Combien de voix distinctes prennent réellement la parole dans ce plan. */
+export function voixEntendues(plan: PlanAtelier): number {
+  const vues = new Set<number>()
+  for (const ligne of Object.values(plan.voixParVers)) for (const v of ligne) vues.add(v)
+  return vues.size
+}
+
+// La main revient : le médium ouvre, referme, et la main lui revient selon la
+// cadence. À zéro voix (« seul »), tous les vers lui reviennent.
+//
+// Le poème s'allonge jusqu'à ce que toutes les voix convoquées y tiennent.
+// Un plancher calculé d'avance ne suffisait pas : avec peu de voix, le médium
+// reprend la main tous les un à deux vers et les porteurs se raréfient — à
+// douze voix, jusqu'à sept restaient muettes. On construit, on compte, on
+// rallonge de deux vers et on recommence.
+export function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
+  let plancher = Math.min(MAX_VERS, Math.max(MIN_VERS, Math.ceil(nbVoix / 3)))
+  let plan = construirePlan(nbVoix, echo, plancher)
+  for (let essai = 0; essai < 20; essai++) {
+    if (nbVoix === 0 || voixEntendues(plan) >= nbVoix || plancher >= MAX_VERS) break
+    plancher = Math.min(MAX_VERS, plancher + 2)
+    plan = construirePlan(nbVoix, echo, plancher)
+  }
+  return plan
 }
 
 export default function Atelier() {

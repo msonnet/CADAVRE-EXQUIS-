@@ -86,7 +86,7 @@ const GERONDIF: RoleFragment = {
   type: 'gérondif', consigne: tr('un gérondif (en + participe présent)', 'a gerund clause (an -ing form)'), role: tr('GÉRONDIF', 'GERUND'), apres: ',',
 }
 const QUESTION: RoleFragment = {
-  type: 'proposition', consigne: tr('une question courte et étrange', 'a short, strange question'), role: 'QUESTION',
+  type: 'proposition', consigne: tr('une question courte — celle que ton travail te ferait poser', 'a short question — the one your work would make you ask'), role: 'QUESTION',
 }
 
 function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
@@ -96,7 +96,7 @@ function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
     // un vers libre de longueur tirée au sort (3 à 6 mots)
     if (questionPermise && Math.random() < 0.12) return [QUESTION]
     const mots = 3 + Math.floor(Math.random() * 4)
-    return [{ type: 'libre', consigne: tr('un vers — une image physique et inattendue', 'one line of verse — a physical, unexpected image'), role: tr('VERS ENTIER', 'FULL LINE'), mots }]
+    return [{ type: 'libre', consigne: tr('un vers — une chose vue, concrète', 'one line of verse — a concrete thing seen'), role: tr('VERS ENTIER', 'FULL LINE'), mots }]
   }
   if (nVoix === 2) {
     const variantes: RoleFragment[][] = [
@@ -105,6 +105,30 @@ function tirerGabarit(nVoix: number, questionPermise = true): RoleFragment[] {
       [GN_SUJET, ADJECTIF],        // « une lumière » + « froide » — vers nominal
       [INFINITIF, GN_COMPLEMENT],  // « brûler » + « la cendre »
       [CONJ_COORD, GROUPE_VERBAL], // « mais » + « traverse la nuit » — ellipse sans sujet
+    ]
+    return variantes[Math.floor(Math.random() * variantes.length)]
+  }
+  if (nVoix === 4) {
+    const variantes: RoleFragment[][] = [
+      [GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],      // « la lumière » « froide » « dévore » « la cendre »
+      [ADVERBE_TETE, GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT],  // « doucement, » « le sel » « ronge » « la nuit »
+      [GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT, ADVERBE_FIN],   // « le sel » « dévore » « la nuit » « lentement »
+      [CONJ_SUBORD, GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT],   // « quand » « la cendre » « fissure » « le mur »
+      [GERONDIF, GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT],      // « en tombant, » « la pluie » « creuse » « la pierre »
+      [CONJ_COORD, GN_SUJET, ADJECTIF, GROUPE_VERBAL],           // « mais » « la lumière » « froide » « pèse sur le monde »
+    ]
+    return variantes[Math.floor(Math.random() * variantes.length)]
+  }
+  if (nVoix >= 5) {
+    // Cinq voix sur un seul vers : la densité maximale de la table ronde.
+    // Elle n'existe que parce que la couverture prime — toutes les voix
+    // convoquées doivent parler, quitte à se serrer sur le même vers.
+    const variantes: RoleFragment[][] = [
+      [GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT, ADVERBE_FIN],
+      [ADVERBE_TETE, GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],
+      [CONJ_SUBORD, GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT, ADVERBE_FIN],
+      [GERONDIF, GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],
+      [CONJ_COORD, GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],
     ]
     return variantes[Math.floor(Math.random() * variantes.length)]
   }
@@ -269,8 +293,14 @@ export default function JeuAtelier() {
 
     async function ecrireVersIA() {
       const p = plan!
-      const nVoix = Math.min(1 + Math.floor(Math.random() * 3), p.voixPool.length)
-      const indices = p.voixPool.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, nVoix)
+      // Les voix de ce vers ont été réparties au tirage du plan, en rotation :
+      // c'est ce qui garantit que les 46 convoquées parlent toutes. Le repli
+      // couvre les brouillons ouverts avant cette bascule.
+      const assignees = p.voixParVers?.[idx]
+      const indices = assignees ?? p.voixPool.map((_, i) => i)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.min(1 + Math.floor(Math.random() * 3), p.voixPool.length))
+      const nVoix = indices.length
       // L'interrogatif est plafonné : une question par poème (deux au-delà de XX vers)
       // — sans budget, les « Qui pleure sous la craie ? » s'accumulent en tic
       const questionsOk = versRef.current.filter(v => v.texte.includes('?')).length
@@ -373,9 +403,15 @@ export default function JeuAtelier() {
       // Le médium écrit surtout des FRAGMENTS cousus avec les voix : le vers
       // entier en solitaire devient l'exception (12 %) — c'est la couture
       // aveugle qui fait l'atelier, pas l'écriture en solo.
+      // Comme pour les vers IA : la répartition vient du plan. Le tirage du
+      // solo (le médium seul sur son vers) y a été déplacé — un vers sans voix
+      // assignée est un vers qu'il tient seul.
+      const assignees = p.voixParVers?.[idx]
       const r = Math.random()
-      const nAIVoulu = r < 0.12 ? 0 : r < 0.56 ? 1 : 2
-      const nAI = Math.min(nAIVoulu, p.voixPool.length)
+      const aiDuPlan = assignees ?? p.voixPool.map((_, i) => i)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.min(r < 0.12 ? 0 : r < 0.56 ? 1 : 2, p.voixPool.length))
+      const nAI = aiDuPlan.length
       const nTotal = nAI + 1
       // Le budget interrogatif s'applique aussi à la plume du médium
       const questionsOk = versRef.current.filter(v => v.texte.includes('?')).length
@@ -387,9 +423,7 @@ export default function JeuAtelier() {
       dernierGabarit.current = signatureGabarit(gabarit)
 
       const slotJoueur = Math.floor(Math.random() * gabarit.length)
-      const aiIndices = p.voixPool.map((_, i) => i)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, nAI)
+      const aiIndices = aiDuPlan
 
       setFragGabarit(gabarit)
       setFragSlotJoueur(slotJoueur)

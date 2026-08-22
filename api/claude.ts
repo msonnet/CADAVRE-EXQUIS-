@@ -411,11 +411,11 @@ export default async function handler(req: any, res: any): Promise<void> {
   // jeu : c'est là que la distinction entre les 46 voix se gagne ou se perd.
   const personaLine = type === 'libre'
     ? (langue === 'en'
-      ? "\nThis full line must carry your signature: one concrete, singular image from your own world. Avoid expected surrealist metaphors — choose the image only you would see."
-      : "\nCe vers entier doit porter ton empreinte : une image concrète et singulière depuis ton univers propre. Évite les métaphores surréalistes attendues — choisis l'image que toi seul verrais.")
+      ? "\nThis full line must carry your signature: one concrete thing from your own world. Don't try to surprise — set down what you have in front of you, in your own terms. What sets you apart is exactness."
+      : "\nCe vers entier doit porter ton empreinte : une chose concrète, prise dans ton univers propre. Ne cherche pas à surprendre — note ce que tu as devant toi, dans les termes qui sont les tiens. C'est ton exactitude qui te distingue.")
     : (langue === 'en'
-      ? "\nEven this short, the fragment must be yours: take the word from the world you work in — what you handle, weigh, watch, fear. The word only you would put here, not an all-purpose poetic one."
-      : "\nMême aussi court, le fragment doit être le tien : prends le mot dans le monde où tu travailles — ce que tu manipules, pèses, observes, redoutes. Le mot que toi seul mettrais là, pas un mot poétique passe-partout.")
+      ? "\nEven this short, the fragment must be yours: take the word from the world you work in — what you handle, weigh, watch, fear. The word only you would put here, not a vague one that would suit anybody."
+      : "\nMême aussi court, le fragment doit être le tien : prends le mot dans le monde où tu travailles — ce que tu manipules, pèses, observes, redoutes. Le mot que toi seul mettrais là, pas un mot vague qui irait à n'importe qui.")
 
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 25_000)

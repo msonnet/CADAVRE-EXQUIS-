@@ -1,57 +1,12 @@
 import { describe, it, expect } from 'vitest'
+import { cadenceRetour, tirerPlan, voixEntendues } from '../pages/Atelier'
 
-// ── Fonctions miroir de Atelier.tsx (exportées) ──────────────────────────────
-// On teste les invariants sans dépendre du DOM ni des imports React.
+// Ces tests importaient une COPIE des fonctions d'Atelier.tsx, « pour ne pas
+// dépendre du DOM ni de React ». La copie avait déjà divergé : elle tirait
+// encore entre 5 et 27 vers et ignorait la répartition des voix. Un test qui
+// vérifie un double ne vérifie rien. Vitest importe le module réel sans peine.
 
 const NB_VOIX_MAX = 46 // VOICE_IDS.length
-
-function cadenceRetour(nbVoix: number): [number, number] {
-  const t = (Math.min(Math.max(nbVoix, 1), NB_VOIX_MAX) - 1) / (NB_VOIX_MAX - 1)
-  return [Math.round(1 + t), Math.round(2 + t)]
-}
-
-interface PlanAtelier {
-  totalVers: number
-  toursJoueur: number[]
-  toursFragmentJoueur: number[]
-  voixPool: string[]
-  echo: boolean
-}
-
-const VOICE_IDS: string[] = Array.from({ length: NB_VOIX_MAX }, (_, i) => `voix-${i}`)
-
-function tirerPlan(nbVoix: number, echo: boolean): PlanAtelier {
-  const totalVers = 5 + Math.floor(Math.random() * 23)
-  if (nbVoix === 0) {
-    return {
-      totalVers,
-      toursJoueur: Array.from({ length: totalVers }, (_, i) => i),
-      toursFragmentJoueur: [],
-      voixPool: [],
-      echo,
-    }
-  }
-  const [pasMin, pasMax] = cadenceRetour(nbVoix)
-  const tours = [0]
-  let curseur = 0
-  for (;;) {
-    const pas = pasMin + Math.floor(Math.random() * (pasMax - pasMin + 1))
-    const suivant = curseur + pas
-    if (suivant >= totalVers - 1) break
-    tours.push(suivant)
-    curseur = suivant
-  }
-  tours.push(totalVers - 1)
-  if (tours.length >= totalVers) {
-    tours.splice(1 + Math.floor(Math.random() * (tours.length - 2)), 1)
-  }
-  const pool = [...VOICE_IDS].sort(() => Math.random() - 0.5).slice(0, nbVoix)
-  const probFragment = nbVoix / NB_VOIX_MAX
-  const toursFragmentJoueur = tours.filter(
-    t => t !== 0 && t !== totalVers - 1 && Math.random() < probFragment
-  )
-  return { totalVers, toursJoueur: tours, toursFragmentJoueur, voixPool: pool, echo }
-}
 
 // ── Tests cadenceRetour ──────────────────────────────────────────────────────
 
@@ -95,11 +50,21 @@ describe('cadenceRetour', () => {
 describe('tirerPlan — invariants structurels', () => {
   const RUNS = 200
 
-  it('totalVers est toujours compris entre 5 et 27', () => {
+  it('totalVers est toujours compris entre 5 et 37', () => {
     for (let i = 0; i < RUNS; i++) {
       const plan = tirerPlan(4, true)
       expect(plan.totalVers).toBeGreaterThanOrEqual(5)
-      expect(plan.totalVers).toBeLessThanOrEqual(27)
+      expect(plan.totalVers).toBeLessThanOrEqual(37)
+    }
+  })
+
+  it('le poème s\'allonge assez pour loger toutes les voix convoquées', () => {
+    for (const nb of [46, 30, 12, 6]) {
+      for (let i = 0; i < 60; i++) {
+        const plan = tirerPlan(nb, true)
+        // Il faut au moins ceil(nb / 5) vers porteurs : cinq voix par vers au plus.
+        expect(Object.keys(plan.voixParVers).length).toBeGreaterThanOrEqual(Math.ceil(nb / 5))
+      }
     }
   })
 
@@ -163,6 +128,79 @@ describe('tirerPlan — invariants structurels', () => {
 })
 
 // ── Tests toursFragmentJoueur ────────────────────────────────────────────────
+
+describe('repartirVoix — la table ronde a vraiment lieu', () => {
+  // Le tirage se faisait vers par vers sans mémoire : convoquer 46 voix n'en
+  // faisait parler qu'une trentaine, et l'une d'elles jusqu'à huit fois.
+  for (const nb of [46, 30, 12, 6, 3, 1]) {
+    it(`${nb} voix convoquées : les ${nb} prennent la parole`, () => {
+      for (let i = 0; i < 120; i++) {
+        const plan = tirerPlan(nb, true)
+        expect(voixEntendues(plan)).toBe(nb)
+      }
+    })
+  }
+
+  it('jamais deux fois la même voix sur un même vers', () => {
+    for (const nb of [46, 12, 3]) {
+      for (let i = 0; i < 80; i++) {
+        const plan = tirerPlan(nb, true)
+        for (const ligne of Object.values(plan.voixParVers)) {
+          expect(new Set(ligne).size).toBe(ligne.length)
+        }
+      }
+    }
+  })
+
+  it('au plus cinq voix sur un vers — le gabarit ne va pas au-delà', () => {
+    for (const nb of [46, 30, 12]) {
+      for (let i = 0; i < 80; i++) {
+        const plan = tirerPlan(nb, true)
+        for (const ligne of Object.values(plan.voixParVers)) {
+          expect(ligne.length).toBeLessThanOrEqual(5)
+        }
+      }
+    }
+  })
+
+  it('au plus quatre voix sur un vers de fragment — le médium garde sa case', () => {
+    for (let i = 0; i < 200; i++) {
+      const plan = tirerPlan(46, true)
+      for (const t of plan.toursFragmentJoueur) {
+        expect((plan.voixParVers[t] ?? []).length).toBeLessThanOrEqual(4)
+      }
+    }
+  })
+
+  it('les index désignent toujours une voix du pool', () => {
+    for (let i = 0; i < 120; i++) {
+      const plan = tirerPlan(46, true)
+      for (const ligne of Object.values(plan.voixParVers)) {
+        for (const v of ligne) {
+          expect(v).toBeGreaterThanOrEqual(0)
+          expect(v).toBeLessThan(plan.voixPool.length)
+        }
+      }
+    }
+  })
+
+  it('mode seul : aucune voix, aucune répartition', () => {
+    for (let i = 0; i < 40; i++) {
+      expect(Object.keys(tirerPlan(0, true).voixParVers)).toHaveLength(0)
+    }
+  })
+
+  it('rotation : personne ne parle deux fois avant que tout le monde ait parlé', () => {
+    for (let i = 0; i < 120; i++) {
+      const plan = tirerPlan(12, true)
+      const ordre = Object.keys(plan.voixParVers)
+        .map(Number).sort((a, b) => a - b)
+        .flatMap(v => plan.voixParVers[v])
+      // Le premier tour de file couvre exactement les 12 voix, sans doublon.
+      expect(new Set(ordre.slice(0, 12)).size).toBe(12)
+    }
+  })
+})
 
 describe('toursFragmentJoueur — invariants', () => {
   const RUNS = 200
