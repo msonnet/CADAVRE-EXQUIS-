@@ -71,8 +71,11 @@ export function promptSysteme(v: Voix, type?: string): string {
 
   // On sert ce que la case réclame. Donner les matières à une case VERBE ne
   // l'aide en rien : c'est précisément ce qui manquait.
+  // Les gestes sont donnés à l'infinitif, et c'est dit : sans cette mention,
+  // un geste composé (« relever une lacune ») voit son NOM ressortir dans une
+  // case qui attend un verbe seul — l'archiviste a rendu « lacune ».
   const ancrage = type && CASES_VERBE.has(type)
-    ? `Quelques-uns de ses gestes, pour te situer : ${tirer(v.gestes, ECHANTILLON)}.`
+    ? `Quelques-uns de ses gestes, donnés à l'infinitif — à toi de conjuguer, et c'est le VERBE seul qui compte, jamais le nom qui l'accompagne : ${tirer(v.gestes, ECHANTILLON)}.`
     : type && CASES_LARGES.has(type)
       ? `Quelques-unes de ses matières : ${tirer(v.lexique, 3)}. Quelques-uns de ses gestes : ${tirer(v.gestes, 3)}.`
       : `Quelques-unes de ses matières, pour te situer : ${tirer(v.lexique, ECHANTILLON)}.`
