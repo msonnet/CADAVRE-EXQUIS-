@@ -435,8 +435,8 @@ export default async function handler(req: any, res: any): Promise<void> {
         max_tokens: maxTokens,
         stop_sequences: ['.', '!', '?'],
         system: langue === 'en'
-          ? promptSysteme(voix) + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre — ton lexique se traduit, il ne se remplace pas."
-          : promptSysteme(voix),
+          ? promptSysteme(voix, type) + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre — ton lexique se traduit, il ne se remplace pas."
+          : promptSysteme(voix, type),
         messages: [
           {
             role: 'user',
