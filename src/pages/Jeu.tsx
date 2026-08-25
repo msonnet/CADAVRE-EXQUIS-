@@ -542,7 +542,8 @@ export default function Jeu() {
     // Le déterminant d'un groupe nominal se tire dans l'idiolecte de la voix :
     // la contrainte serveur est la même pour les 46, et rendait partout « le ».
     const determinant = TYPES_A_DETERMINANT.has(def.type) && voiceId
-      ? tirerStrategie(voiceId)
+      // Le groupe nominal riche exige un déterminant : le nom nu s'y contredirait.
+      ? tirerStrategie(voiceId, def.type === 'groupe-nominal-riche' ? new Set(['ZERO']) : new Set())
       : undefined
     demanderFragmentIA({ consigne: consigneIA, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA, ...(determinant ? { determinant } : {}) })
       .then(({ texte, source, voixNom }) => finaliser(texte.trim(), source, voixNom))

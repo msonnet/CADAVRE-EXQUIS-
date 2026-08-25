@@ -3,6 +3,7 @@ import {
   FAMILLE, HORS_GN, TYPES_A_DETERMINANT,
   consigneDeterminant, familleOuvrante,
 } from '../../api/_determinants'
+import { normaliserSortie } from '../../api/claude'
 import { PROFILS } from '../lib/determinants'
 
 describe('consigneDeterminant — la mise en mots, côté serveur', () => {
@@ -64,5 +65,57 @@ describe('familleOuvrante — pour trier la réserve du serveur', () => {
                      'negatif', 'zero']) {
       expect(FAMILLE[s], s).toBeTruthy()
     }
+  })
+})
+
+// ── Ce que le validateur de sortie accepte ────────────────────────────────
+//
+// C'est là que six des douze stratégies mouraient : le validateur n'admettait
+// qu'un article en tête, si bien que « chaque fêlure » ou « ledit bordereau »
+// étaient rejetés et repartaient en réserve. La stratégie était bien demandée
+// au modèle, et bien suivie par lui ; elle n'arrivait simplement jamais au vers.
+
+describe('normaliserSortie — groupe nominal', () => {
+  it('accepte enfin toutes les têtes de groupe nominal', () => {
+    for (const gn of ['chaque fêlure', 'nulle issue', 'aucun seuil', 'toute lumière',
+                      'ledit bordereau', 'ladite parcelle', 'de la suie', "de l'ambre",
+                      'du sérum', 'cette discordance', 'mon escalier', 'votre sérum']) {
+      expect(normaliserSortie(gn, 'groupe-nominal'), gn).toBe(gn)
+    }
+  })
+
+  it('rend le nom nu quand la stratégie est le nom nu', () => {
+    expect(normaliserSortie('cendre', 'groupe-nominal', 'fr', 'zero')).toBe('cendre')
+    // Le modèle a remis un article malgré la consigne : on le retire, sinon la
+    // voix qui n'en use jamais ne parlerait pas dans sa langue.
+    expect(normaliserSortie('la cendre', 'groupe-nominal', 'fr', 'zero')).toBe('cendre')
+    expect(normaliserSortie('chaque cendre', 'groupe-nominal', 'fr', 'zero')).toBe('cendre')
+  })
+
+  it('refuse toujours le groupe sans déterminant quand un déterminant est demandé', () => {
+    expect(normaliserSortie('racines', 'groupe-nominal')).toBe('')
+    expect(normaliserSortie('chair opposée', 'groupe-nominal')).toBe('')
+  })
+
+  it("refuse le groupe qui s'arrête sur son déterminant", () => {
+    // « de la » : trois mots coupés à deux, un déterminant sans son nom
+    expect(normaliserSortie('de la', 'groupe-nominal')).toBe('')
+    expect(normaliserSortie('de la suie noire du seuil', 'groupe-nominal')).toBe('de la suie')
+  })
+
+  it("garde l'exigence d'un vrai article là où elle a un sens", () => {
+    // La case article-adj n'a pas de stratégie : « chaque sombre » n'y entre pas
+    expect(normaliserSortie('un sombre', 'article-adj')).toBe('un sombre')
+    expect(normaliserSortie('chaque sombre', 'article-adj')).toBe('')
+  })
+
+  it('retire aussi le quantifieur quand la case demande un nom seul', () => {
+    expect(normaliserSortie('chaque fêlure', 'nom')).toBe('fêlure')
+    expect(normaliserSortie('ledit bordereau', 'nom')).toBe('bordereau')
+  })
+
+  it('laisse passer le groupe nominal riche à tête large', () => {
+    expect(normaliserSortie('chaque fêlure ancienne', 'groupe-nominal-riche')).toBe('chaque fêlure ancienne')
+    expect(normaliserSortie('nulle issue praticable', 'groupe-nominal-riche')).toBe('nulle issue praticable')
   })
 })

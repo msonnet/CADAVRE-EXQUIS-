@@ -4,7 +4,7 @@ import { cors } from './_cors.js'
 import { choisirVoixAleatoire, promptSysteme, VOIX } from './_voices.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
 import { utilisateurDuJeton, partieReglee } from './_acces.js'
-import { consigneDeterminant, familleOuvrante, FAMILLE, HORS_GN, TYPES_A_DETERMINANT } from './_determinants.js'
+import { consigneDeterminant, familleOuvrante, FAMILLE, HORS_GN, TETES_LARGES_EN, TETES_LARGES_FR, TYPES_A_DETERMINANT } from './_determinants.js'
 
 type TypeCase =
   | 'nom'
@@ -196,10 +196,17 @@ const TETES_LOCUTION_ADV = new Set([
 
 // Valide et normalise la sortie du modèle selon le type attendu.
 // Retourne '' si invalide (déclenchera le fallback).
-function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = 'fr'): string {
+export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = 'fr', determinant?: unknown): string {
   const t = texte.trim()
   const mots = t.split(/\s+/)
   const ARTICLES = langue === 'en' ? ARTICLES_EN : ARTICLES_FR
+  // Article + tout ce qui peut tenir la tête d'un groupe nominal : quantifieur,
+  // négatif, « ledit », partitif féminin. Sans ce second cercle, six des douze
+  // stratégies de déterminant étaient rejetées à la sortie et repartaient en
+  // réserve — la variété demandée n'arrivait jamais jusqu'au poème.
+  // `ARTICLES` reste seul juge de la case article-adj, qui exige un vrai article.
+  const DETERMINANTS = new Set([...ARTICLES, ...(langue === 'en' ? TETES_LARGES_EN : TETES_LARGES_FR)])
+  const strategie = typeof determinant === 'string' ? determinant : undefined
   // L'élision (l'ombre, d'encre) n'existe qu'en français
   const elision = (w: string) => langue === 'fr' && /^[lLdD][''\u2019]\S+/.test(w)
 
@@ -213,7 +220,7 @@ function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = '
       // Cas "l'ombre" ou "d'encre" — élision sans espace → strip l' / d'
       if (mots.length === 1) return langue === 'fr' ? t.replace(/^[lLdD][''’]/, '') : t
       // Cas "le silence" / "the silence" — article séparé → strip l'article
-      if (ARTICLES.has(mots[0].toLowerCase())) return mots.slice(1).join(' ')
+      if (DETERMINANTS.has(mots[0].toLowerCase())) return mots.slice(1).join(' ')
       if (mots.length > 2) return mots[0]
       return t
     }
@@ -244,7 +251,7 @@ function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = '
       // jamais de coupe qui laisserait un mot-outil pendu en fin de groupe.
       const propre = t.replace(/[.,;:!?…]+$/g, '')
       let gm = propre.split(/\s+/)
-      const commenceBien = ARTICLES.has(gm[0]?.toLowerCase()) || elision(gm[0] ?? '')
+      const commenceBien = DETERMINANTS.has(gm[0]?.toLowerCase()) || elision(gm[0] ?? '')
       if (!commenceBien) return ''
       if (gm.length > 4) gm = gm.slice(0, 4)
       const OUTILS_FIN = langue === 'en' ? OUTILS_FIN_EN : new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux',
@@ -254,12 +261,27 @@ function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = '
       return gm.join(' ')
     }
     case 'groupe-nominal': {
-      // Strictement article + nom — un GN sans article (« racines », « chair opposée »)
-      // casse la syntaxe du vers cousu : on rejette → fallback avec article garanti
-      const gn = mots.length > 2 ? mots.slice(0, 2).join(' ') : t
+      // Le nom nu est demandé : c'est la seule stratégie qui interdit le
+      // déterminant. Si le modèle en a mis un quand même, on le retire — sinon
+      // la voix qui n'use jamais d'article (le télégraphiste, le psalmiste) ne
+      // parlerait pas dans sa langue.
+      if (strategie === 'zero') {
+        const nu = DETERMINANTS.has(mots[0].toLowerCase()) ? mots.slice(1) : mots
+        return nu.slice(0, 2).join(' ')
+      }
+      // Le partitif féminin fait trois mots — « de la suie ». La coupe à deux
+      // le mutilait en « de la », un déterminant sans son nom.
+      const tetePartitive = langue === 'fr' && mots[0]?.toLowerCase() === 'de'
+      const limite = tetePartitive ? 3 : 2
+      const gn = mots.length > limite ? mots.slice(0, limite).join(' ') : t
       const gm = gn.split(/\s+/)
       if (gm.length === 1) return elision(gm[0]) ? gn : ''
-      return ARTICLES.has(gm[0].toLowerCase()) ? gn : ''
+      // Un GN sans déterminant (« racines », « chair opposée ») casse la syntaxe
+      // du vers cousu : on rejette → réserve, où le déterminant est garanti.
+      if (!DETERMINANTS.has(gm[0].toLowerCase())) return ''
+      // …et un groupe qui se termine sur son déterminant n'est pas un groupe.
+      if (DETERMINANTS.has(gm[gm.length - 1].toLowerCase())) return ''
+      return gn
     }
     case 'conjonction-coord': {
       // Strip anything past the first word — the model sometimes adds context
@@ -505,7 +527,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       /^(here is|here's|sure|of course|i will|i'll|to (answer|complete|create|generate))\b/i.test(propre) ||
       propre.endsWith(':')
 
-    let texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase, langue)
+    let texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase, langue, determinant)
     // Si un nombre de mots est imposé, tronquer doucement les débordements.
     // Pour un vers entier ('libre'), couper en plein vers recréerait le
     // télégramme : on tolère le dépassement, garde-fou à 9 mots seulement.

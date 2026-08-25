@@ -96,3 +96,23 @@ export function familleOuvrante(texte: string): string {
   for (const [re, f] of OUVERTURES) if (re.test(brut)) return f
   return 'ZERO'
 }
+
+/**
+ * Les têtes de groupe nominal que la table des articles ne connaissait pas.
+ *
+ * Le validateur de sortie n'acceptait qu'un article : « chaque fêlure »,
+ * « nulle issue », « ledit bordereau », « de la suie » étaient rejetés et
+ * repartaient en réserve. Autrement dit, six des douze stratégies ne pouvaient
+ * pas aboutir — elles auraient ramené par la réserve la monotonie qu'on
+ * chasse.
+ */
+export const TETES_LARGES_FR = new Set([
+  'chaque', 'tout', 'toute', 'quelque', 'maint', 'mainte',
+  'nul', 'nulle', 'aucun', 'aucune',
+  'ledit', 'ladite', 'lesdits', 'lesdites',
+  'de',   // « de la suie », « de l'ambre »
+])
+
+export const TETES_LARGES_EN = new Set([
+  'all', 'said', 'not', 'much', 'many', 'both', 'either', 'neither',
+])

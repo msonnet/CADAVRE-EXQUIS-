@@ -340,7 +340,13 @@ export function determinantDeCase(
   interdites?: Set<string>,
   horsGN = false,
 ): string | undefined {
-  if (TYPES_A_DETERMINANT.has(type)) return tirerStrategie(voixId, interdites ?? new Set())
+  if (TYPES_A_DETERMINANT.has(type)) {
+    const exclure = new Set(interdites ?? [])
+    // Le groupe nominal RICHE porte un adjectif ou un complément : sa contrainte
+    // exige un déterminant, et le nom nu s'y contredirait.
+    if (type === 'groupe-nominal-riche') exclure.add('ZERO')
+    return tirerStrategie(voixId, exclure)
+  }
   // Le vers entier est écrit d'un seul tenant : on ne peut pas lui imposer un
   // déterminant sans lui imposer d'ouvrir sur un groupe nominal, ce qui serait
   // la monotonie inverse. On ne lui demande donc que de ne pas en ouvrir un.
