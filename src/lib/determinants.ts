@@ -225,6 +225,11 @@ export function souder(texte: string): string {
     .trim()
 }
 
+// L'adverbe de tête est reconnu à sa virgule, pas à sa terminaison : les cases
+// qui ouvrent un vers sur un adverbe la posent toujours (« doucement, »). Sans
+// elle, « suintement », « décollement », « building » — des noms nus parfaitement
+// ordinaires — étaient lus comme des ouvertures hors groupe nominal, et la garde
+// croyait avoir aéré le poème alors qu'elle n'avait rien fait.
 // Les deux langues dans la même expression : l'Atelier se joue aussi en
 // anglais, et un diagnostic qui ne saurait lire que le français y verrait
 // partout du « nom nu » — la garde d'ouverture réclamerait alors une ouverture
@@ -236,7 +241,7 @@ export function souder(texte: string): string {
 const DET_ELIDES = /^(de\s+l['’]|l['’])/i
 const DET_OUVRANTS = /^(le|la|les|un|une|des|du|de la|ce|cet|cette|ces|mon|ma|mes|ton|ta|tes|son|sa|ses|votre|vos|ledit|ladite|lesdits|lesdites|nul|nulle|aucun|aucune|chaque|tout|toute|quelque|quelques|plusieurs|maint|mainte|the|said|a|an|this|that|these|those|my|your|his|her|its|our|their|some|no|each|every|all|both|many|several)\b/i
 
-const OUVERTURES_HORS_GN = /^(et|ou|mais|or|donc|car|ni|quand|lorsque|tandis|pourtant|cependant|sitôt|tant|puisque|comme|si|en\s+\w+ant|à|dans|sur|sous|par|pour|avec|sans|vers|depuis|jusqu|entre|contre|selon|malgré|il|elle|je|tu|nous|vous|on|ça|cela|rien|toujours|jamais|encore|déjà|ainsi|alors|ici|là|\w+ment\b|and|but|yet|so|nor|when|while|whereas|if|as|since|though|although|because|until|before|after|in|on|at|by|with|without|under|over|through|into|from|against|toward|beneath|it|he|she|they|we|i|you|nothing|never|always|still|already|thus|then|here|there|\w+ing\b|\w+ly\b)/i
+const OUVERTURES_HORS_GN = /^(et|ou|mais|or|donc|car|ni|quand|lorsque|tandis|pourtant|cependant|sitôt|tant|puisque|comme|si|en\s+\w+ant|à|dans|sur|sous|par|pour|avec|sans|vers|depuis|jusqu|entre|contre|selon|malgré|il|elle|je|tu|nous|vous|on|ça|cela|rien|toujours|jamais|encore|déjà|ainsi|alors|ici|là|\w+ment\s*,|and|but|yet|so|nor|when|while|whereas|if|as|since|though|although|because|until|before|after|in|on|at|by|with|without|under|over|through|into|from|against|toward|beneath|it|he|she|they|we|i|you|nothing|never|always|still|already|thus|then|here|there|\w+ing\s*,|\w+ly\s*,)/i
 
 export interface Diagnostic {
   total: number

@@ -318,3 +318,25 @@ describe('la séance entière', () => {
     }
   })
 })
+
+describe("l'adverbe de tête se reconnaît à sa virgule", () => {
+  it('ne prend pas un nom en -ment pour un adverbe', () => {
+    // Ces trois-là sont sortis de vraies voix : le somnambule, le convalescent,
+    // le géologue. Lus comme des adverbes, ils faisaient croire à la garde que
+    // le poème respirait déjà.
+    expect(familleDe('suintement retient son souffle')).toBe('ZERO')
+    expect(familleDe('décollement consent')).toBe('ZERO')
+    expect(familleDe('mouvement sans fin')).toBe('ZERO')
+  })
+
+  it("reconnaît toujours l'adverbe quand la case a posé sa virgule", () => {
+    expect(familleDe('doucement, le sel ronge la nuit')).toBe(HORS_GN)
+    expect(familleDe('obliquement , la pluie creuse')).toBe(HORS_GN)
+    expect(familleDe('softly, the salt gnaws')).toBe(HORS_GN)
+    expect(familleDe('falling, the rain carves')).toBe(HORS_GN)
+  })
+
+  it("ne prend pas un nom anglais en -ing pour un gérondif", () => {
+    expect(familleDe('building without end')).toBe('ZERO')
+  })
+})
