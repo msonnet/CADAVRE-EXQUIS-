@@ -15,6 +15,10 @@ import { placerVoix, multiplicitesVoix, type PlanAtelier } from './Atelier'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
+import {
+  GardeOuverture, HORS_GN, TYPES_A_DETERMINANT, FAMILLE,
+  diagnostic, familleDe, souder, tirerStrategie,
+} from '../lib/determinants'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -112,6 +116,9 @@ const QUESTION: RoleFragment = {
 const EST_OUTIL = (f: RoleFragment) =>
   f.type === 'conjonction-coord' || f.type === 'conjonction-subord'
 
+const EST_GN = (f: RoleFragment) =>
+  f.type === 'groupe-nominal' || f.type === 'groupe-nominal-riche'
+
 /**
  * `outilsPermis` : le vers a-t-il une voix qui parle ailleurs dans le poème ?
  *
@@ -121,11 +128,26 @@ const EST_OUTIL = (f: RoleFragment) =>
  * voix présentes sont dans ce cas — il n'y avait personne à qui confier le
  * « or ». Le gabarit lui-même s'efface donc.
  */
-export function tirerGabarit(nVoix: number, questionPermise = true, outilsPermis = true): RoleFragment[] {
+export function tirerGabarit(
+  nVoix: number,
+  questionPermise = true,
+  outilsPermis = true,
+  /** La garde d'ouverture réclame un vers qui ne commence pas par un groupe
+   *  nominal — au-delà de trois à six vers nominaux d'affilée, l'oreille n'entend
+   *  plus qu'un métronome. */
+  ouvertureHorsGN = false,
+): RoleFragment[] {
   const filtrer = (v: RoleFragment[][]) => {
-    if (outilsPermis) return v
-    const sansOutil = v.filter(g => !g.some(EST_OUTIL))
-    return sansOutil.length ? sansOutil : v
+    let dispo = v
+    if (!outilsPermis) {
+      const sansOutil = dispo.filter(g => !g.some(EST_OUTIL))
+      if (sansOutil.length) dispo = sansOutil
+    }
+    if (ouvertureHorsGN) {
+      const autrement = dispo.filter(g => !EST_GN(g[0]))
+      if (autrement.length) dispo = autrement
+    }
+    return dispo
   }
   if (nVoix === 1) {
     // Une seule plume écrit le vers entier — rarement une question (l'interrogatif
@@ -254,8 +276,15 @@ function dernierMot(texte: string): string | undefined {
 
 // Réserve locale par rôle si l'API est injoignable — le poème ne s'arrête jamais
 const RESERVE_FR: Record<string, string[]> = {
+  // Toutes les familles de déterminant, sinon une panne de réseau ramène la
+  // litanie de « le » que la stratégie sert justement à défaire.
   'groupe-nominal': ['le silence', "l'ombre", 'une cendre', 'la nuit', 'un souffle', 'la pierre', 'le givre', 'une porte',
-                     'la rouille', 'un seuil', "l'écume", 'le lierre', 'une aiguille', 'le limon'],
+                     'la rouille', 'un seuil', "l'écume", 'le lierre', 'une aiguille', 'le limon',
+                     'ce seuil', 'cette faille', 'cet écart', 'ce lierre',
+                     'du sable', 'de la suie', "de l'ambre", 'du sel',
+                     'mon ombre', 'sa cendre', 'ton silence', 'son givre',
+                     'chaque fêlure', 'nulle issue', 'aucun seuil', 'toute la suie',
+                     'poussière', 'rouille', 'cendre', 'brume'],
   'verbe': ['tremble', 'dévore', 'veille', 'chavire', 'demeure', 'glisse', 'rôde', 'vacille',
             'affleure', 'se penche', 'consent', 'recule'],
   'verbe-transitif': ['dévore', 'effleure', 'avale', 'fissure', 'traverse', 'ronge',
@@ -274,7 +303,12 @@ const RESERVE_FR: Record<string, string[]> = {
 }
 const RESERVE_EN: Record<string, string[]> = {
   'groupe-nominal': ['the silence', 'the shadow', 'an ember', 'the night', 'a breath', 'the stone', 'the frost', 'a door',
-                     'the rust', 'a threshold', 'the foam', 'the ivy', 'a needle', 'the silt'],
+                     'the rust', 'a threshold', 'the foam', 'the ivy', 'a needle', 'the silt',
+                     'this threshold', 'that rift', 'this ivy',
+                     'some soot', 'some amber', 'some salt',
+                     'my shadow', 'its ash', 'your silence',
+                     'each crack', 'no way out', 'every seam',
+                     'dust', 'rust', 'ash', 'fog'],
   'verbe': ['trembles', 'devours', 'keeps watch', 'capsizes', 'remains', 'glides', 'prowls', 'wavers',
             'surfaces', 'leans over', 'consents', 'recoils'],
   'verbe-transitif': ['devours', 'grazes', 'swallows', 'cracks', 'crosses', 'gnaws',
@@ -292,6 +326,36 @@ const RESERVE_EN: Record<string, string[]> = {
   'gérondif': ['falling', 'gliding', 'burning', 'trembling', 'sleeping', 'searching'],
 }
 const RESERVE: Record<string, string[]> = langueActuelle() === 'en' ? RESERVE_EN : RESERVE_FR
+
+/**
+ * La stratégie de déterminant d'une case — ou rien du tout.
+ *
+ * On n'envoie qu'une CLÉ : c'est le serveur qui la met en mots
+ * (`api/_determinants.ts`). Une phrase venue du navigateur entrerait telle
+ * quelle dans le prompt système.
+ */
+export function determinantDeCase(
+  type: string,
+  voixId: string,
+  interdites?: Set<string>,
+  horsGN = false,
+): string | undefined {
+  if (TYPES_A_DETERMINANT.has(type)) return tirerStrategie(voixId, interdites ?? new Set())
+  // Le vers entier est écrit d'un seul tenant : on ne peut pas lui imposer un
+  // déterminant sans lui imposer d'ouvrir sur un groupe nominal, ce qui serait
+  // la monotonie inverse. On ne lui demande donc que de ne pas en ouvrir un.
+  if (type === 'libre' && horsGN) return HORS_GN
+  return undefined
+}
+
+/** La réserve locale, elle aussi tenue à la stratégie demandée. */
+export function piocherReserve(type: string, determinant?: string): string {
+  const pool = RESERVE[type] ?? RESERVE['libre']
+  const famille = determinant ? FAMILLE[determinant] : undefined
+  const conformes = famille ? pool.filter(m => familleDe(m) === famille) : []
+  const source = conformes.length ? conformes : pool
+  return source[Math.floor(Math.random() * source.length)]
+}
 
 const CLE_BROUILLON = 'atelier-en-cours'
 
@@ -333,6 +397,14 @@ export default function JeuAtelier() {
   })
   const versRef = useRef<VersAtelier[]>(vers)
   versRef.current = vers
+
+  // La garde d'ouverture : pas deux fois la même famille de déterminant de
+  // suite, et pas plus de trois à six vers nominaux d'affilée. Elle reprend
+  // l'histoire du brouillon rouvert — sinon une séance reprise au vingtième
+  // vers repartirait avec une mémoire vide.
+  const [garde] = useState(() => new GardeOuverture({
+    histoire: diagnostic(vers.map(v => v.texte)).familles,
+  }))
 
   const [saisie, setSaisie] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
@@ -381,6 +453,10 @@ export default function JeuAtelier() {
   }, [plan, vers, termine])
 
   function ajouterVers(v: VersAtelier) {
+    // On enregistre ce qui est SORTI, pas ce qui avait été demandé : la voix
+    // ne suit pas toujours la stratégie, et la réserve locale ne la connaît
+    // même pas. La garde doit compter le poème réel.
+    garde.enregistrer(familleDe(v.texte))
     setVers(prev => [...prev, v])
   }
 
@@ -413,10 +489,14 @@ export default function JeuAtelier() {
       const mult = multiplicitesVoix(p)
       const outilsOk = indices.some(v => (mult[v] ?? 0) > 1)
 
+      // Ce que la garde d'ouverture réclame pour ce vers-ci.
+      const famillesInterdites = garde.famillesInterdites()
+      const horsGN = garde.exigeOuvertureHorsGN()
+
       // Jamais deux fois de suite la même forme — la métrique respire
-      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk)
+      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk)
+        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -450,6 +530,16 @@ export default function JeuAtelier() {
           echo: contexte, enCours, vers: versRef.current, conjCourtes: conjCourtesUsees,
         })
 
+        // Le déterminant se tire dans l'idiolecte de la voix qui parle —
+        // le boucher part du partitif, l'enfant du possessif, le
+        // télégraphiste du nom nu. Sur la case de tête seulement, la garde
+        // retire la famille qui vient de servir deux fois.
+        const determinant = determinantDeCase(
+          caseRole.type, p.voixPool[ordre[k]],
+          k === 0 ? famillesInterdites : undefined,
+          k === 0 && horsGN,
+        )
+
         const requete = {
           consigne: caseRole.consigne,
           type: caseRole.type,
@@ -457,6 +547,7 @@ export default function JeuAtelier() {
           contexte,
           eviter,
           ...(caseRole.mots ? { mots: caseRole.mots } : {}),
+          ...(determinant ? { determinant } : {}),
         }
         let texte = ''
         let nomCase: string | undefined
@@ -481,8 +572,7 @@ export default function JeuAtelier() {
         if (!texte) {
           deLaReserve = true
           nomCase = undefined
-          const pool = RESERVE[caseRole.type] ?? RESERVE['libre']
-          texte = pool[Math.floor(Math.random() * pool.length)]
+          texte = piocherReserve(caseRole.type, determinant)
         }
         // Les questions retrouvent leur point d'interrogation (le serveur coupe la ponctuation finale)
         if (caseRole.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += langueActuelle() === 'en' ? '?' : ' ?'
@@ -499,7 +589,9 @@ export default function JeuAtelier() {
       if (annule) return
       setVoixEnCours([])
       ajouterVers({
-        texte: fragments.join(' ').replace(/\s+/g, ' ').trim(),
+        // `souder` recolle ce que la couture sépare : « sitôt qu' une faille »
+        // devient « sitôt qu'une faille ».
+        texte: souder(fragments.join(' ')),
         auteur: 'ia',
         voixNums: ordre.map(i => i + 1),
         voixNoms: nomsVoix,
@@ -542,9 +634,11 @@ export default function JeuAtelier() {
         < Math.max(1, Math.floor(p.totalVers / 10))
       const mult = multiplicitesVoix(p)
       const outilsOk = aiDuPlan.some(v => (mult[v] ?? 0) > 1)
-      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk)
+      const famillesInterdites = garde.famillesInterdites()
+      const horsGN = garde.exigeOuvertureHorsGN()
+      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk)
+        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -597,12 +691,18 @@ export default function JeuAtelier() {
       await Promise.all(aiSlots.map(async ({ k, aiIdx: localIdx }) => {
         if (annule) return
         const role = gabarit[k]
+        const determinant = determinantDeCase(
+          role.type, p.voixPool[aiIndices[localIdx]],
+          k === 0 ? famillesInterdites : undefined,
+          k === 0 && horsGN,
+        )
         const requete = {
           consigne: role.consigne,
           type: role.type,
           voiceId: p.voixPool[aiIndices[localIdx]],
           contexte,
           eviter: eviterBase,
+          ...(determinant ? { determinant } : {}),
         }
         let texte = ''
         let nomCase: string | undefined
@@ -622,8 +722,7 @@ export default function JeuAtelier() {
         if (!texte) {
           deLaReserve = true
           nomCase = undefined
-          const pool = RESERVE[role.type] ?? RESERVE['libre']
-          texte = pool[Math.floor(Math.random() * pool.length)]
+          texte = piocherReserve(role.type, determinant)
         }
         mainsFragment[k] = { role: role.role, texte, voixNom: nomCase, reserve: deLaReserve || undefined }
         if (role.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += langueActuelle() === 'en' ? '?' : ' ?'
@@ -648,7 +747,7 @@ export default function JeuAtelier() {
       const cousu = k === 0 ? t : t.charAt(0).toLowerCase() + t.slice(1)
       return cousu + (role.apres ?? '')
     })
-    const texte = coutures.join(' ').replace(/\s+/g, ' ').trim()
+    const texte = souder(coutures.join(' '))
     const voixNums = fragVoixIndices.map(i => i + 1)
 
     // Le détail case par case : celles des voix ont été notées pendant les

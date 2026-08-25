@@ -12,6 +12,10 @@ export interface RequeteIA {
   contexte?: string
   eviter?: string[]
   mots?: number   // atelier : nombre de mots imposé au fragment (1–8)
+  /** Stratégie de déterminant tirée dans l'idiolecte de la voix, ou 'HORS_GN'
+   *  pour un vers entier qui ne doit pas ouvrir sur un groupe nominal.
+   *  Le serveur la met en mots (`api/_determinants.ts`) — on n'envoie qu'une clé. */
+  determinant?: string
 }
 
 export interface ReponseIA {

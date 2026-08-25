@@ -11,6 +11,7 @@ import { validerCase } from '../utils/validation'
 import type { NiveauValidation } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
 import { VOICE_IDS, nomDeVoix } from '../data/voiceIds'
+import { TYPES_A_DETERMINANT, tirerStrategie } from '../lib/determinants'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
@@ -538,7 +539,12 @@ export default function Jeu() {
     // ainsi que l'imagerie de la partie précédente est bien interdite.
     const eviterIA = [...motsPartie, ...[...motsIaRecents.current].reverse()]
     const consigneIA = def.type === 'libre' ? ouvertureAleatoire(def.consigne) : def.consigne
-    demanderFragmentIA({ consigne: consigneIA, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA })
+    // Le déterminant d'un groupe nominal se tire dans l'idiolecte de la voix :
+    // la contrainte serveur est la même pour les 46, et rendait partout « le ».
+    const determinant = TYPES_A_DETERMINANT.has(def.type) && voiceId
+      ? tirerStrategie(voiceId)
+      : undefined
+    demanderFragmentIA({ consigne: consigneIA, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA, ...(determinant ? { determinant } : {}) })
       .then(({ texte, source, voixNom }) => finaliser(texte.trim(), source, voixNom))
       .catch(()  => finaliser('', 'fallback'))
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps

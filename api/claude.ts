@@ -4,6 +4,7 @@ import { cors } from './_cors.js'
 import { choisirVoixAleatoire, promptSysteme, VOIX } from './_voices.js'
 import { checkRateLimit, getClientIp } from './_rateLimit.js'
 import { utilisateurDuJeton, partieReglee } from './_acces.js'
+import { consigneDeterminant, familleOuvrante, FAMILLE, HORS_GN, TYPES_A_DETERMINANT } from './_determinants.js'
 
 type TypeCase =
   | 'nom'
@@ -49,8 +50,8 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
   'adverbe': '1 SEUL ADVERBE INVARIABLE (en -ment : "doucement", "obliquement") ou une locution adverbiale de 2 mots ("sans bruit", "à rebours"). INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
-  'groupe-nominal': '2 MOTS EXACTEMENT : article + nom — ex : "le silence", "une ombre", "la pluie", "un couteau". JAMAIS d\'adjectif après le nom.',
-  'groupe-nominal-riche': '2 à 4 mots — un GROUPE NOMINAL COMPLET commençant TOUJOURS par un déterminant. VARIE la forme d\'une fois à l\'autre : article + nom ("la pluie"), article + adjectif + nom ("une vieille clef"), article + nom + adjectif ("un souffle perdu"), article + nom + complément du nom ("le bruit du vent", "la nuit sans fond"). INTERDIT ABSOLU : verbe conjugué, pronom relatif (qui, que), groupe sans déterminant.',
+  'groupe-nominal': '2 MOTS EXACTEMENT : déterminant + nom — ex : "une ombre", "ce givre", "du sel", "la pluie". JAMAIS d\'adjectif après le nom.',
+  'groupe-nominal-riche': '2 à 4 mots — un GROUPE NOMINAL COMPLET commençant TOUJOURS par un déterminant. VARIE la forme d\'une fois à l\'autre : article + nom ("une pluie"), article + adjectif + nom ("une vieille clef"), article + nom + adjectif ("un souffle perdu"), article + nom + complément du nom ("le bruit du vent", "la nuit sans fond"). INTERDIT ABSOLU : verbe conjugué, pronom relatif (qui, que), groupe sans déterminant.',
   'groupe-verbal': '3 à 4 mots — verbe conjugué à la 3e personne du singulier + complément AVEC son article ou sa préposition (ex : "traverse la nuit", "pèse sur le monde"). JAMAIS de complément sans article ("cède terrain" est INTERDIT, "cède du terrain" est correct).',
   'proposition': '4 à 6 mots (phrase courte)',
   'libre': '3 à 6 mots (un vers)',
@@ -91,6 +92,13 @@ const FALLBACKS: Record<TypeCase, string[]> = {
     'le corps', 'une ombre', 'la porte', 'un feu',
     'le ventre', 'une bouche', 'le ciel', 'un os',
     'la pierre', 'un crâne', 'le sel', 'une racine',
+    // Les autres familles : sans elles, une panne de l'API ramène le poème
+    // aux douze « le » consécutifs qu'on vient d'en chasser.
+    'ce seuil', 'cette faille', 'cet écart', 'ce givre',
+    'du sable', 'de la suie', "de l'ambre", 'du fer',
+    'mon ombre', 'sa cendre', 'ton silence', 'son gel',
+    'chaque fêlure', 'nulle issue', 'aucun seuil', 'toute la nuit',
+    'poussière', 'rouille', 'cendre', 'brume',
   ],
   'groupe-verbal': [
     'traverse la nuit', 'brûle en silence', "glisse dans l'ombre", 'tombe sans bruit',
@@ -157,7 +165,7 @@ const FALLBACKS_EN: Record<TypeCase, string[]> = {
   'verbe-transitif': ['devours', 'grazes', 'swallows', 'cracks', 'crosses', 'gnaws', 'lifts', 'mends', 'cradles', 'digs', 'tames', 'engulfs', 'tears', 'erases'],
   'adjectif': ['motionless', 'pale', 'deep', 'strange', 'broken', 'nocturnal', 'hollow', 'heavy', 'cold', 'muffled', 'bitter', 'veiled', 'opaque', 'slow', 'bare', 'mute', 'dense', 'fragile'],
   'adverbe': ['softly', 'slowly', 'in silence', 'without sound', 'forever', 'still', 'elsewhere', 'in vain', 'almost', 'always', 'sometimes', 'nowhere'],
-  'groupe-nominal': ['the shadow', 'the night', 'a breath', 'the ash', 'the sound', 'a light', 'the earth', 'a gaze', 'the rain', 'a wall', 'the hand', 'the silence', 'the edge', 'a voice', 'the water', 'the body', 'a door', 'a fire'],
+  'groupe-nominal': ['the shadow', 'the night', 'a breath', 'the ash', 'the sound', 'a light', 'the earth', 'a gaze', 'the rain', 'a wall', 'the hand', 'the silence', 'the edge', 'a voice', 'the water', 'the body', 'a door', 'a fire', 'this seam', 'that hollow', 'some soot', 'some amber', 'my shadow', 'its rust', 'your silence', 'each crack', 'no way out', 'dust', 'rust', 'fog'],
   'groupe-nominal-riche': ['the cast shadow', 'a bottomless night', 'a lost breath', 'the cold ash', 'the sound of wind', 'a veiled light', 'the hardened earth', 'an empty gaze', 'the thin rain', 'a wall of fog', 'the open hand', 'a thick silence', "the gulf's edge", 'a hollow voice', 'the black water', 'an old key'],
   'groupe-verbal': ['crosses the night', 'burns in silence', 'slips into shadow', 'falls without sound', 'stays motionless', 'erases the traces', 'waits without hope', 'weighs on the world', 'haunts the hallways', 'grazes the walls'],
   'proposition': ['What remains of us?', 'Where do shadows go?', 'Who put out the light?', 'When will the cold return?', 'Why this silence?', 'Who still keeps watch?', 'Where does the night end?'],
@@ -300,9 +308,16 @@ function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | 'en' = '
   }
 }
 
-function pickFallback(type: TypeCase, eviter: string[] = [], langue: 'fr' | 'en' = 'fr'): string {
+function pickFallback(type: TypeCase, eviter: string[] = [], langue: 'fr' | 'en' = 'fr', determinant?: unknown): string {
   const table = langue === 'en' ? FALLBACKS_EN : FALLBACKS
-  const arr = table[type] ?? table['libre']
+  let arr = table[type] ?? table['libre']
+  // La stratégie de déterminant vaut aussi pour la réserve : sinon la panne
+  // rend exactement la monotonie que la stratégie sert à défaire.
+  const famille = typeof determinant === 'string' ? FAMILLE[determinant] : undefined
+  if (famille && TYPES_A_DETERMINANT.has(type)) {
+    const conformes = arr.filter(m => familleOuvrante(m) === famille)
+    if (conformes.length) arr = conformes
+  }
   // Prefer fallback words that haven't already been used in the game
   const used = new Set(eviter.map(m => m.toLowerCase()))
   const dispo = arr.filter(m => !used.has(m.toLowerCase()))
@@ -330,7 +345,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type, voiceId, contexte, eviter, mots, partieId, langue: langueBrute } = req.body ?? {}
+  const { consigne, type, voiceId, contexte, eviter, mots, partieId, determinant, langue: langueBrute } = req.body ?? {}
   const langue: 'fr' | 'en' = langueBrute === 'en' ? 'en' : 'fr'
 
   // ── Accès ───────────────────────────────────────────────────────────────
@@ -360,7 +375,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY
 
   if (!apiKey) {
-    res.status(200).json({ texte: pickFallback(type as TypeCase, [], langue), source: 'fallback' })
+    res.status(200).json({ texte: pickFallback(type as TypeCase, [], langue, determinant), source: 'fallback' })
     return
   }
 
@@ -380,6 +395,18 @@ export default async function handler(req: any, res: any): Promise<void> {
       ? `environ ${motsCible} mots — un vers COMPLET et grammatical : un sujet avec son article et un verbe conjugué, ou une image nominale complète. JAMAIS de style télégraphique : chaque nom garde son article. Sans ponctuation finale.`
       : `${motsCible} MOT${motsCible > 1 ? 'S' : ''} EXACTEMENT — un fragment de vers, pas une phrase complète, sans ponctuation`)
     : ((langue === 'en' ? CONTRAINTES_EN : CONTRAINTES)[type as TypeCase] ?? '2 à 4 mots')
+
+  // ── La stratégie de déterminant ────────────────────────────────────────
+  // Douze vers consécutifs ouvraient sur « le » ou « la » dans un atelier de
+  // trente vers. La cause était ici : la contrainte est la même pour les 46
+  // voix, et le déterminant n'était donc pas un choix. Le client tire
+  // maintenant une stratégie dans l'idiolecte de la voix qui parle ; le
+  // serveur la met en mots, et lui seul — une clé ne peut rien injecter.
+  const consigneDet = (TYPES_A_DETERMINANT.has(type) || (type === 'libre' && determinant === HORS_GN))
+    ? consigneDeterminant(determinant, langue)
+    : ''
+  const contrainteComplete = consigneDet ? `${contrainte} ${consigneDet}` : contrainte
+
   // Strip the « — ex : … » part so examples never influence the AI (they're only for human players)
   const consigneIA = consigne.replace(/\s*[—–-]\s*ex\s*:.*$/i, '').trim()
 
@@ -441,8 +468,8 @@ export default async function handler(req: any, res: any): Promise<void> {
           {
             role: 'user',
             content: langue === 'en'
-              ? `Write ONLY the requested fragment, no final punctuation, no explanation.\nType: ${consigneIA}.\nAbsolute constraint: ${contrainte}.\nStay true to your way of seeing. Avoid the most expected word and clichés.${echoLine}${eviterLine}${personaLine}\nAnswer with the fragment alone.`
-              : `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainte}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}${personaLine}\nRéponds avec le fragment seul.`,
+              ? `Write ONLY the requested fragment, no final punctuation, no explanation.\nType: ${consigneIA}.\nAbsolute constraint: ${contrainteComplete}.\nStay true to your way of seeing. Avoid the most expected word and clichés.${echoLine}${eviterLine}${personaLine}\nAnswer with the fragment alone.`
+              : `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainteComplete}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}${personaLine}\nRéponds avec le fragment seul.`,
           },
         ],
       }),
@@ -488,13 +515,13 @@ export default async function handler(req: any, res: any): Promise<void> {
       if (m.length > plafond) texte = m.slice(0, type === 'libre' ? plafond : motsCible).join(' ')
     }
     res.status(200).json({
-      texte: texte || pickFallback(type as TypeCase, motsEviter, langue),
+      texte: texte || pickFallback(type as TypeCase, motsEviter, langue, determinant),
       source: texte ? 'ia' : 'fallback',
       voixNom: voix.id,
     })
   } catch (err) {
     console.error('Erreur Claude API:', err)
-    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter, langue), source: 'fallback' })
+    res.status(200).json({ texte: pickFallback(type as TypeCase, motsEviter, langue, determinant), source: 'fallback' })
   } finally {
     clearTimeout(timer)
   }
