@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { demanderFragmentIA } from '../api/claude'
+import { nomDeVoix } from '../data/voiceIds'
 import { corrigerAccords } from '../api/corriger'
 import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
@@ -183,6 +184,60 @@ export function tirerGabarit(nVoix: number, questionPermise = true, outilsPermis
   ]
   const dispoTrois = filtrer(variantesTrois)
   return dispoTrois[Math.floor(Math.random() * dispoTrois.length)]
+}
+
+/**
+ * Recale les cases d'un vers sur son texte corrigé.
+ *
+ * La correction d'accords s'applique au vers entier, après la séance : les
+ * cases gardaient le fragment d'avant. Les coutures affichaient « la calotte
+ * colationne » sous un vers qui disait « collationne », et « le traverse »
+ * sous « le travers ». L'appareil critique mentait sur son propre texte.
+ *
+ * On redécoupe le vers corrigé selon le nombre de mots de chaque case. Si la
+ * correction a changé ce compte, on n'invente rien : les cases d'origine sont
+ * rendues telles quelles.
+ */
+export function recalerMains(mains: MainAtelier[], versCorrige: string): MainAtelier[] {
+  const parCase = mains.map(m => m.texte.trim().split(/\s+/).filter(Boolean).length)
+  const attendus = parCase.reduce((a, b) => a + b, 0)
+  const mots = versCorrige.trim().split(/\s+/).filter(Boolean)
+  if (!attendus || mots.length !== attendus) return mains
+  let i = 0
+  return mains.map((m, k) => {
+    const part = mots.slice(i, i + parCase[k]).join(' ')
+    i += parCase[k]
+    return { ...m, texte: part }
+  })
+}
+
+/**
+ * Les mots interdits, DU PLUS RÉCENT AU PLUS ANCIEN.
+ *
+ * Le serveur ne garde que les soixante premiers de la liste. L'Atelier les
+ * envoyait dans l'ordre du poème : sur trente-quatre vers, les mots récents —
+ * dont l'écho qu'on vient de transmettre — étaient coupés avant d'arriver.
+ * D'où « le virage glacé lève du couvain » suivi de « le couvain couvant » :
+ * la voix suivante reprenait le mot entendu parce que rien ne le lui
+ * interdisait. Le mode écrit inversait déjà sa liste ; l'Atelier avait été
+ * oublié.
+ *
+ * L'écho passe en tête : c'est le mot qu'il est le plus tentant de recopier,
+ * et le seul qu'on ait délibérément mis dans l'oreille de la voix.
+ */
+export function motsInterdits(opts: {
+  echo?: string
+  enCours?: string
+  vers: { texte: string }[]
+  conjCourtes: string[]
+}): string[] {
+  const mots = (t: string) => (t.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2)
+  return [
+    ...(opts.echo ? mots(opts.echo) : []),
+    ...(opts.enCours ? mots(opts.enCours) : []),
+    ...[...opts.vers].reverse().flatMap(v => mots(v.texte)),
+    ...opts.conjCourtes,
+  ]
 }
 
 // Signature d'un gabarit — pour ne jamais tirer deux fois de suite la même forme
@@ -382,11 +437,9 @@ export default function JeuAtelier() {
         if (annule) return
         const caseRole = gabarit[k]
         const enCours = fragments.join(' ')
-        const eviter = [
-          ...versRef.current.flatMap(v => v.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2),
-          ...(enCours.toLowerCase().match(/[a-zà-ÿ]+/gi)?.filter(m => m.length > 2) ?? []),
-          ...conjCourtesUsees,
-        ]
+        const eviter = motsInterdits({
+          echo: contexte, enCours, vers: versRef.current, conjCourtes: conjCourtesUsees,
+        })
 
         const requete = {
           consigne: caseRole.consigne,
@@ -409,7 +462,11 @@ export default function JeuAtelier() {
           // Le serveur sert lui aussi des mots en conserve quand l'appel à
           // Claude échoue : `source` est la seule chose qui les trahisse.
           deLaReserve = reponse.source === 'fallback'
-          nomCase = deLaReserve ? undefined : reponse.voixNom
+          // Le serveur renvoie l'identifiant brut (« geologue ») : les coutures
+          // affichaient ça au lieu du nom (« Le géologue »).
+          nomCase = deLaReserve || !reponse.voixNom
+            ? undefined
+            : nomDeVoix(reponse.voixNom, langueActuelle())
           if (texte && nomCase) nomsVoix.push(nomCase)
         } catch { /* réserve locale */ }
         if (!texte) {
@@ -508,11 +565,6 @@ export default function JeuAtelier() {
         const m = v.texte.trim().toLowerCase().match(/^[a-zà-ÿ]+/)
         return m && CONJ_COURTES_F.has(m[0]) ? [m[0]] : []
       })
-      const eviterBase = [
-        ...versRef.current.flatMap(v => v.texte.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2),
-        ...conjCourtesUsees,
-      ]
-
       const nomsFragment: string[] = []
       // Une entrée par case du gabarit : la case du médium reste vide, les
       // autres reçoivent leur persona — ou le drapeau réserve.
@@ -521,6 +573,9 @@ export default function JeuAtelier() {
       const echoVers = versRef.current[idx - 1]?.texte
       const echoMot = echoVers ? dernierMot(echoVers) : undefined
       const contexte = p.echo && echoMot ? echoMot : undefined
+      const eviterBase = motsInterdits({
+        echo: contexte, vers: versRef.current, conjCourtes: conjCourtesUsees,
+      })
 
       // Slots IA numérotés pour mise à jour de voixEnCours
       const aiSlots: { k: number; aiIdx: number }[] = []
@@ -550,7 +605,9 @@ export default function JeuAtelier() {
           ])
           texte = reponse.texte.trim()
           deLaReserve = reponse.source === 'fallback'
-          nomCase = deLaReserve ? undefined : reponse.voixNom
+          nomCase = deLaReserve || !reponse.voixNom
+            ? undefined
+            : nomDeVoix(reponse.voixNom, langueActuelle())
           if (texte && nomCase) nomsFragment.push(nomCase)
         } catch { /* réserve locale */ }
         if (!texte) {
@@ -639,7 +696,7 @@ export default function JeuAtelier() {
         // savoir les lire, et rien ne distinguait un mot de réserve.
         nbVoix: v.voixNums.length,
         voixNom: (v.voixNoms ?? []).filter(Boolean).join(' · ') || undefined,
-        mains: v.mains,
+        mains: v.mains ? recalerMains(v.mains, textes[i]) : undefined,
         texte: textes[i],
         ts: Date.now(),
       }))
