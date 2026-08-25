@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
+import { attribution } from '../lib/attribution'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import { corrigerAccords } from '../api/corriger'
 import type { Poeme } from '../types'
@@ -592,9 +593,7 @@ export default function PoemeDetail() {
                     {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
                     <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
                     <span style={{ fontFamily: "'Playfair Display', serif", textTransform: 'none', letterSpacing: 0 }}>
-                      {cas.auteur === 'ia'
-                        ? (cas.voixNom ? `${tr('voix', 'voice')} · ${cas.voixNom}` : tr('voix IA', 'AI voice'))
-                        : cas.joueurNumero ? `${tr('joueur', 'player')} ${cas.joueurNumero}` : tr('toi', 'you')}
+                      {attribution(cas)}
                     </span>
                   </div>
                   <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>

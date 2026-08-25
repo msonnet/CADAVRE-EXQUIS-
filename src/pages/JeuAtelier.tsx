@@ -587,6 +587,10 @@ export default function JeuAtelier() {
             : tr(`vers de ${signature}`, `line by ${signature}`)
         })(),
         auteur: v.auteur,
+        // Le nombre de mains sur ce vers, et leurs noms : les coutures les
+        // affichaient en « voix IA » générique faute de savoir les lire.
+        nbVoix: v.voixNums.length,
+        voixNom: (v.voixNoms ?? []).filter(Boolean).join(' · ') || undefined,
         texte: textes[i],
         ts: Date.now(),
       }))

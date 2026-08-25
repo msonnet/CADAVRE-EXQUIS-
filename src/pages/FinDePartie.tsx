@@ -17,6 +17,7 @@ import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
+import { attribution } from '../lib/attribution'
 import type { Refus } from '../lib/acces'
 
 const STYLES = langueActuelle() === 'en' ? [
@@ -576,9 +577,7 @@ export default function FinDePartie() {
                       {c.fonction.toUpperCase()}
                       <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
                       <span style={{ fontFamily: "'Playfair Display', serif" }}>
-                        {c.auteur === 'ia'
-                          ? `${tr('voix', 'voice')} ${iaNum}${c.voixNom ? ` · ${c.voixNom}` : ''}`
-                          : c.joueurNumero ? `${tr('joueur', 'player')} ${c.joueurNumero}` : tr('toi', 'you')}
+                        {attribution(c, iaNum)}
                       </span>
                       {c.fallback && (
                         <span style={{

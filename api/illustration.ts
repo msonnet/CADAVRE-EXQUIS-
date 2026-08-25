@@ -23,6 +23,52 @@ const STYLE_PROMPTS: Record<string, string> = {
   collage_surrealiste: 'surrealist photomontage collage in the style of Max Ernst and Hannah Höch, cut-and-paste fragments of engravings and photographs, dreamlike juxtapositions of scale and context, torn paper edges, anatomical diagrams mixed with natural history prints, vintage typographic scraps, Dada composition, overlapping layers with visible paste marks and creases',
 }
 
+/**
+ * Au-delà de ce seuil, le texte n'est plus une phrase mais un poème long :
+ * un cadavre d'atelier fait cinq à trente-sept vers.
+ */
+const SEUIL_POEME_LONG = 200
+
+/**
+ * L'instruction de conversion, selon la taille de ce qu'on lui donne.
+ *
+ * Une seule existait, écrite pour la phrase unique du cadavre écrit :
+ * « garde chaque sujet et chaque objet, 25 à 35 mots ». Sur un atelier de
+ * trente-sept vers, la consigne se contredit elle-même — on ne garde pas
+ * cent objets en trente mots — et le modèle rend une bouillie, quand le
+ * texte n'est pas simplement refusé pour longueur.
+ *
+ * Un poème long n'a pas à être transcrit : il faut y CHOISIR une scène.
+ */
+function consigneVisuelle(texte: string): string {
+  if (texte.length <= SEUIL_POEME_LONG) {
+    return `Convert this French surrealist poem into a vivid English visual scene description for a fine art image generator.
+
+Rules:
+- Keep every subject and object`
+  }
+  return `Below is a long French poem, written line by line by many different hands. Do NOT summarise it and do NOT try to depict all of it.
+
+Choose ONE single image from it — the most physically striking thing the poem contains — and describe that one scene for a fine art image generator. Ignore everything else. A reader who knows the poem must recognise the moment you chose.
+
+Rules:
+- One scene only: name what is present, what touches what`
+}
+
+/**
+ * Le repli quand la conversion échoue.
+ *
+ * On renvoyait le texte tel quel — soit, pour un atelier, trente-sept vers
+ * envoyés en bloc au générateur d'images. C'était exactement le cas à éviter.
+ * On garde le vers le plus long : le plus susceptible de contenir une scène.
+ */
+function repliVisuel(texte: string): string {
+  if (texte.length <= SEUIL_POEME_LONG) return texte
+  const vers = texte.split('\n').map(v => v.trim()).filter(Boolean)
+  if (!vers.length) return texte.slice(0, SEUIL_POEME_LONG)
+  return vers.reduce((a, b) => (b.length > a.length ? b : a))
+}
+
 async function texteVersPromptVisuel(texte: string, anthropicKey: string): Promise<string> {
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -37,15 +83,15 @@ async function texteVersPromptVisuel(texte: string, anthropicKey: string): Promi
         max_tokens: 140,
         messages: [{
           role: 'user',
-          content: `Convert this French surrealist poem into a vivid English visual scene description for a fine art image generator.\n\nRules:\n- Keep every subject and object\n- Use GERUND form for all actions to show the act in progress, not the result:\n  * "eats/devours" = "jaws wide open, teeth sinking into [object], actively devouring — NOT the aftermath"\n  * "crushes" = "pressing [object] flat underfoot, the act of crushing mid-motion"\n  * "flies" = "airborne mid-flight, wings fully spread"\n  * "caresses" = "hand in motion touching [object]"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- Nudity: describe as classical fine art ("nude figure", "draped torso", "sculptural female form") — painterly and museum-quality, never explicit\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
+          content: `${consigneVisuelle(texte)}\n- Use GERUND form for all actions to show the act in progress, not the result:\n  * "eats/devours" = "jaws wide open, teeth sinking into [object], actively devouring — NOT the aftermath"\n  * "crushes" = "pressing [object] flat underfoot, the act of crushing mid-motion"\n  * "flies" = "airborne mid-flight, wings fully spread"\n  * "caresses" = "hand in motion touching [object]"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- Nudity: describe as classical fine art ("nude figure", "draped torso", "sculptural female form") — painterly and museum-quality, never explicit\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
         }],
       }),
     })
-    if (!response.ok) return texte
+    if (!response.ok) return repliVisuel(texte)
     const data = await response.json()
-    return (data.content?.[0]?.text ?? texte).trim()
+    return (data.content?.[0]?.text ?? repliVisuel(texte)).trim()
   } catch {
-    return texte
+    return repliVisuel(texte)
   }
 }
 
@@ -87,7 +133,9 @@ export default async function handler(req: any, res: any): Promise<void> {
 
   const { texte, style, promptLibre } = req.body ?? {}
   if (typeof texte !== 'string' || !texte) { res.status(400).json({ error: 'texte requis' }); return }
-  if (texte.length > 1500) { res.status(400).json({ error: 'texte trop long' }); return }
+  // Un atelier de trente-sept vers dépasse allègrement 1500 signes : le
+  // plafond refusait les poèmes les plus longs avec une erreur générique.
+  if (texte.length > 6000) { res.status(400).json({ error: 'texte trop long' }); return }
   if (promptLibre !== undefined && (typeof promptLibre !== 'string' || promptLibre.length > 500)) {
     res.status(400).json({ error: 'promptLibre invalide' }); return
   }
@@ -124,7 +172,7 @@ export default async function handler(req: any, res: any): Promise<void> {
   const stylePrompt = style !== 'libre' ? (STYLE_PROMPTS[style] ?? STYLE_PROMPTS.aquarelle) : ''
 
   // Description visuelle explicite : force FLUX à rendre les actions littéralement
-  const textePrompt = anthropicKey ? await texteVersPromptVisuel(texte, anthropicKey) : texte
+  const textePrompt = anthropicKey ? await texteVersPromptVisuel(texte, anthropicKey) : repliVisuel(texte)
 
   let prompt: string
   let guidance_scale: number
