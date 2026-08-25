@@ -21,6 +21,14 @@ export interface ConfigPartie {
   voixIA: number          // 0–4
 }
 
+/** Une case d'un vers d'atelier, et la main qui l'a remplie. */
+export interface MainCase {
+  role: string          // la case grammaticale (SUJET, VERBE…)
+  texte: string         // le fragment tel qu'il a été cousu
+  voixNom?: string      // la persona ; absente pour le médium et pour la réserve
+  reserve?: boolean     // true si le fragment vient de la réserve, pas d'une voix
+}
+
 export interface Case {
   numero: number
   fonction: string
@@ -30,6 +38,7 @@ export interface Case {
   voixSlot?: number       // slot IA stable dans la séquence (1-based) — pour affichage cohérent
   voixNom?: string        // persona qui a écrit le fragment — révélée dans les coutures, jamais pendant la partie
   nbVoix?: number         // atelier : combien de voix ont écrit CE vers (0 = le médium seul)
+  mains?: MainCase[]      // atelier : qui a rempli quelle case, dans l'ordre du vers
   texte: string
   ts: number
   fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)

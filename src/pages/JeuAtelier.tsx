@@ -26,6 +26,23 @@ interface VersAtelier {
   auteur: 'humain' | 'ia' | 'mixte'  // 'mixte' = médium + voix(es) sur le même vers
   voixNums: number[]   // numéros (1-based) des voix IA qui ont participé — vide pour 'humain' pur
   voixNoms?: string[]  // personas correspondantes, révélées après la séance
+  mains?: MainAtelier[] // qui a écrit QUELLE case, dans l'ordre du vers
+}
+
+/**
+ * Une case du vers, et la main qui l'a remplie.
+ *
+ * Le vers ne gardait que la liste de ses voix, sans dire laquelle avait écrit
+ * quoi — et surtout sans distinguer une voix d'un mot tiré de la réserve.
+ * Quand l'appel échoue, le serveur renvoie un mot en conserve : dans les
+ * coutures il était indiscernable d'un fragment écrit. Sur un recueil, c'est
+ * la garantie de publier un vers en croyant qu'une voix l'a signé.
+ */
+interface MainAtelier {
+  role: string          // la case grammaticale remplie (SUJET, VERBE…)
+  texte: string         // le fragment tel qu'il a été cousu
+  voixNom?: string      // la persona, absente si c'est le médium ou la réserve
+  reserve?: boolean     // true si le fragment vient de la réserve, pas d'une voix
 }
 
 interface VoixEnCours {
@@ -267,6 +284,7 @@ export default function JeuAtelier() {
   const sauvegardeFaite = useRef(false)
   const dernierGabarit = useRef('')
   const fragNomsRef = useRef<string[]>([])
+  const fragMainsRef = useRef<(MainAtelier | null)[]>([])
 
   // État pour les tours fragment du médium (verse co-écrit avec des voix IA)
   const [fragGabarit, setFragGabarit] = useState<RoleFragment[] | null>(null)
@@ -351,6 +369,7 @@ export default function JeuAtelier() {
 
       const fragments: string[] = []
       const nomsVoix: string[] = []
+      const mains: MainAtelier[] = []
       // Conjonctions courtes (≤2 lettres) : "en" (gérondif), "or", "si", "et", "ni"
       // échappent au filtre > 2 chars. Calculé avant la boucle : versRef est stable
       // entre itérations, inutile de refaire le scan à chaque fragment.
@@ -378,6 +397,8 @@ export default function JeuAtelier() {
           ...(caseRole.mots ? { mots: caseRole.mots } : {}),
         }
         let texte = ''
+        let nomCase: string | undefined
+        let deLaReserve = false
         try {
           const [reponse] = await Promise.all([
             // Une reprise avant la réserve locale — les lignes en conserve se reconnaissent
@@ -385,9 +406,15 @@ export default function JeuAtelier() {
             attendre(650 + Math.random() * 450),   // respiration théâtrale minimale par voix
           ])
           texte = reponse.texte.trim()
-          if (texte && reponse.voixNom) nomsVoix.push(reponse.voixNom)
+          // Le serveur sert lui aussi des mots en conserve quand l'appel à
+          // Claude échoue : `source` est la seule chose qui les trahisse.
+          deLaReserve = reponse.source === 'fallback'
+          nomCase = deLaReserve ? undefined : reponse.voixNom
+          if (texte && nomCase) nomsVoix.push(nomCase)
         } catch { /* réserve locale */ }
         if (!texte) {
+          deLaReserve = true
+          nomCase = undefined
           const pool = RESERVE[caseRole.type] ?? RESERVE['libre']
           texte = pool[Math.floor(Math.random() * pool.length)]
         }
@@ -397,6 +424,7 @@ export default function JeuAtelier() {
         // Les fragments suivants se cousent en minuscule — un seul fil
         const cousu = k === 0 ? texte : texte.charAt(0).toLowerCase() + texte.slice(1)
         fragments.push(cousu + (caseRole.apres ?? ''))
+        mains.push({ role: caseRole.role, texte: cousu, voixNom: nomCase, reserve: deLaReserve || undefined })
         if (annule) return
         setVoixEnCours(prev => prev.map((v, j) => j === k ? { ...v, fait: true } : v))
       }
@@ -409,6 +437,7 @@ export default function JeuAtelier() {
         auteur: 'ia',
         voixNums: ordre.map(i => i + 1),
         voixNoms: nomsVoix,
+        mains,
       })
     }
 
@@ -485,6 +514,10 @@ export default function JeuAtelier() {
       ]
 
       const nomsFragment: string[] = []
+      // Une entrée par case du gabarit : la case du médium reste vide, les
+      // autres reçoivent leur persona — ou le drapeau réserve.
+      const mainsFragment: (MainAtelier | null)[] = new Array(gabarit.length).fill(null)
+      fragMainsRef.current = mainsFragment
       const echoVers = versRef.current[idx - 1]?.texte
       const echoMot = echoVers ? dernierMot(echoVers) : undefined
       const contexte = p.echo && echoMot ? echoMot : undefined
@@ -508,18 +541,25 @@ export default function JeuAtelier() {
           eviter: eviterBase,
         }
         let texte = ''
+        let nomCase: string | undefined
+        let deLaReserve = false
         try {
           const [reponse] = await Promise.all([
             demanderFragmentIA(requete).catch(async () => { await attendre(800); return demanderFragmentIA(requete) }),
             attendre(400 + Math.random() * 400),
           ])
           texte = reponse.texte.trim()
-          if (texte && reponse.voixNom) nomsFragment.push(reponse.voixNom)
+          deLaReserve = reponse.source === 'fallback'
+          nomCase = deLaReserve ? undefined : reponse.voixNom
+          if (texte && nomCase) nomsFragment.push(nomCase)
         } catch { /* réserve locale */ }
         if (!texte) {
+          deLaReserve = true
+          nomCase = undefined
           const pool = RESERVE[role.type] ?? RESERVE['libre']
           texte = pool[Math.floor(Math.random() * pool.length)]
         }
+        mainsFragment[k] = { role: role.role, texte, voixNom: nomCase, reserve: deLaReserve || undefined }
         if (role.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += langueActuelle() === 'en' ? '?' : ' ?'
         if (annule) return
         setFragTextes(prev => { const next = [...prev]; if (next.length > k) next[k] = texte; return next })
@@ -545,9 +585,16 @@ export default function JeuAtelier() {
     const texte = coutures.join(' ').replace(/\s+/g, ' ').trim()
     const voixNums = fragVoixIndices.map(i => i + 1)
 
+    // Le détail case par case : celles des voix ont été notées pendant les
+    // fetches, celle du médium se remplit ici — c'est la seule qui manque.
+    const mains: MainAtelier[] = fragGabarit.map((role, k) => {
+      const notee = fragMainsRef.current[k]
+      return notee ?? { role: role.role, texte: coutures[k] }
+    })
+
     setVoixEnCours([])
     // Tiré seul sur le vers, le médium signe seul — pas de couture mixte
-    ajouterVers({ texte, auteur: voixNums.length === 0 ? 'humain' : 'mixte', voixNums, voixNoms: fragNomsRef.current })
+    ajouterVers({ texte, auteur: voixNums.length === 0 ? 'humain' : 'mixte', voixNums, voixNoms: fragNomsRef.current, mains })
     setFragGabarit(null)
     setFragTextes([])
   }, [fragTextes, fragGabarit]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -587,10 +634,12 @@ export default function JeuAtelier() {
             : tr(`vers de ${signature}`, `line by ${signature}`)
         })(),
         auteur: v.auteur,
-        // Le nombre de mains sur ce vers, et leurs noms : les coutures les
-        // affichaient en « voix IA » générique faute de savoir les lire.
+        // Le nombre de mains sur ce vers, leurs noms, et le détail case par
+        // case : les coutures affichaient « voix IA » générique faute de
+        // savoir les lire, et rien ne distinguait un mot de réserve.
         nbVoix: v.voixNums.length,
         voixNom: (v.voixNoms ?? []).filter(Boolean).join(' · ') || undefined,
+        mains: v.mains,
         texte: textes[i],
         ts: Date.now(),
       }))

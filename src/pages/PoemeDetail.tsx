@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { attribution } from '../lib/attribution'
+import MainsDuVers from '../components/MainsDuVers'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import { corrigerAccords } from '../api/corriger'
 import type { Poeme } from '../types'
@@ -599,6 +600,7 @@ export default function PoemeDetail() {
                   <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                     {cas.texte}
                   </p>
+                  {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} /> : null}
                 </div>
               ))}
             </motion.div>

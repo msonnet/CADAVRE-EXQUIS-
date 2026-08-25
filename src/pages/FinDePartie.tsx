@@ -18,6 +18,7 @@ import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import { attribution } from '../lib/attribution'
+import MainsDuVers from '../components/MainsDuVers'
 import type { Refus } from '../lib/acces'
 
 const STYLES = langueActuelle() === 'en' ? [
@@ -599,6 +600,7 @@ export default function FinDePartie() {
                     <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                       {c.texte}
                     </p>
+                    {c.mains?.length ? <MainsDuVers mains={c.mains} accent={accent} encre={encre} /> : null}
                   </div>
                 )
               })}
