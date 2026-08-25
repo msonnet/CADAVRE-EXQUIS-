@@ -107,7 +107,7 @@ Tu réponds uniquement avec le fragment demandé — pas de guillemets, pas de c
 export const VOIX: Voix[] = [
   {
     id: 'archiviste',
-    situation: "Tu es un archiviste de la Bibliothèque nationale chargé de compléter des documents lacunaires.",
+    situation: "Tu es un archiviste de la Bibliothèque nationale chargé de compléter les blancs d'un registre ancien.",
     lexique: "la cote, le fonds, la lacune, le vélin, la reliure, le pli, la tache d'humidité, le feuillet manquant, la mention marginale, la main inconnue",
     gestes: "coter, collationner, dépoussiérer, relever une lacune, transcrire, verser au fonds, recoudre une reliure, déplier, classer",
     souffle: "la langue neutre du catalogue. Tu nommes sans qualifier. Le mot exact toujours préféré au mot beau.",
