@@ -91,6 +91,9 @@ describe('normaliserSortie — groupe nominal', () => {
     expect(normaliserSortie('la cendre', 'groupe-nominal', 'fr', 'zero')).toBe('cendre')
     expect(normaliserSortie('chaque cendre', 'groupe-nominal', 'fr', 'zero')).toBe('cendre')
     expect(normaliserSortie("l'écume", 'groupe-nominal', 'fr', 'zero')).toBe('écume')
+    // Rendu seul, le nom revient volontiers avec une majuscule qu'aucun autre
+    // vers de l'atelier ne porte.
+    expect(normaliserSortie('Parasite', 'groupe-nominal', 'fr', 'zero')).toBe('parasite')
   })
 
   it("refuse la phrase que le modèle glisse dans la case du nom nu", () => {

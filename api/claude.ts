@@ -271,7 +271,10 @@ export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | '
         // — « L'instruction contient » est sorti comme ça une fois.
         const sansDet = DETERMINANTS.has(mots[0].toLowerCase()) ? mots.slice(1) : mots
         if (sansDet.length !== 1) return ''
-        return langue === 'fr' ? sansDet[0].replace(/^[lLdD]['’]/, '') : sansDet[0]
+        const nu = langue === 'fr' ? sansDet[0].replace(/^[lLdD]['’]/, '') : sansDet[0]
+        // Le modèle capitalise volontiers un nom qu'il rend seul (« Parasite »).
+        // Les vers de l'atelier n'ont pas de majuscule : celle-ci se verrait.
+        return nu.charAt(0).toLowerCase() + nu.slice(1)
       }
       // Le partitif féminin fait trois mots — « de la suie ». La coupe à deux
       // le mutilait en « de la », un déterminant sans son nom.
