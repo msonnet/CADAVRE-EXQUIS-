@@ -266,8 +266,12 @@ export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | '
       // la voix qui n'use jamais d'article (le télégraphiste, le psalmiste) ne
       // parlerait pas dans sa langue.
       if (strategie === 'zero') {
-        const nu = DETERMINANTS.has(mots[0].toLowerCase()) ? mots.slice(1) : mots
-        return nu.slice(0, 2).join(' ')
+        // Un nom nu n'a pas de tête à vérifier : il se vérifie par sa taille.
+        // Sans cette borne, une phrase entière du modèle passerait telle quelle
+        // — « L'instruction contient » est sorti comme ça une fois.
+        const sansDet = DETERMINANTS.has(mots[0].toLowerCase()) ? mots.slice(1) : mots
+        if (sansDet.length !== 1) return ''
+        return langue === 'fr' ? sansDet[0].replace(/^[lLdD]['’]/, '') : sansDet[0]
       }
       // Le partitif féminin fait trois mots — « de la suie ». La coupe à deux
       // le mutilait en « de la », un déterminant sans son nom.
@@ -424,10 +428,24 @@ export default async function handler(req: any, res: any): Promise<void> {
   // voix, et le déterminant n'était donc pas un choix. Le client tire
   // maintenant une stratégie dans l'idiolecte de la voix qui parle ; le
   // serveur la met en mots, et lui seul — une clé ne peut rien injecter.
-  const consigneDet = (TYPES_A_DETERMINANT.has(type) || (type === 'libre' && determinant === HORS_GN))
+  // Le nom nu est le seul cas où la stratégie ne s'AJOUTE pas à la contrainte :
+  // elle la remplace. « 2 mots exactement : déterminant + nom » suivi de « ce
+  // groupe n'a aucun déterminant » est une contradiction, et le modèle
+  // répondait ce que fait un modèle devant une contradiction — il la
+  // commentait (« L'instruction contient… »).
+  const nomNu = determinant === 'zero' && type === 'groupe-nominal'
+  // Un groupe nominal RICHE porte un adjectif ou un complément : sa contrainte
+  // exige un déterminant, le nom nu s'y contredirait aussi. On l'ignore.
+  const strategieRecevable = !(determinant === 'zero' && type === 'groupe-nominal-riche')
+  const consigneDet = strategieRecevable
+    && (TYPES_A_DETERMINANT.has(type) || (type === 'libre' && determinant === HORS_GN))
     ? consigneDeterminant(determinant, langue)
     : ''
-  const contrainteComplete = consigneDet ? `${contrainte} ${consigneDet}` : contrainte
+  const contrainteComplete = nomNu
+    ? (langue === 'en'
+      ? 'ONE WORD ONLY: a bare singular noun, NO article at all — ex: "dust", "rust", "ash", "fog".'
+      : "1 MOT SEUL : un nom au singulier, SANS aucun article — ex : « poussière », « rouille », « cendre », « brume ».")
+    : (consigneDet ? `${contrainte} ${consigneDet}` : contrainte)
 
   // Strip the « — ex : … » part so examples never influence the AI (they're only for human players)
   const consigneIA = consigne.replace(/\s*[—–-]\s*ex\s*:.*$/i, '').trim()
@@ -523,6 +541,8 @@ export default async function handler(req: any, res: any): Promise<void> {
       /^d['']accord\b/i.test(propre) ||
       /^bien s[uû]r\b/i.test(propre) ||
       /^pour\s+(répondre|compléter|créer|générer)\b/i.test(propre) ||
+      /^(la |le |l['’])?(consigne|instruction|contrainte|demande|réponse)\b/i.test(propre) ||
+      /^(the |this )?(instruction|constraint|request|prompt)\b/i.test(propre) ||
       /\bétapes?\b/i.test(propre) ||
       /^(here is|here's|sure|of course|i will|i'll|to (answer|complete|create|generate))\b/i.test(propre) ||
       propre.endsWith(':')

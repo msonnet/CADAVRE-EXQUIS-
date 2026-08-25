@@ -90,6 +90,15 @@ describe('normaliserSortie — groupe nominal', () => {
     // voix qui n'en use jamais ne parlerait pas dans sa langue.
     expect(normaliserSortie('la cendre', 'groupe-nominal', 'fr', 'zero')).toBe('cendre')
     expect(normaliserSortie('chaque cendre', 'groupe-nominal', 'fr', 'zero')).toBe('cendre')
+    expect(normaliserSortie("l'écume", 'groupe-nominal', 'fr', 'zero')).toBe('écume')
+  })
+
+  it("refuse la phrase que le modèle glisse dans la case du nom nu", () => {
+    // Le nom nu n'a pas de tête à vérifier : sans borne de taille, la réponse
+    // qui commente la consigne au lieu de l'exécuter passait telle quelle.
+    expect(normaliserSortie("L'instruction contient", 'groupe-nominal', 'fr', 'zero')).toBe('')
+    expect(normaliserSortie('la cendre froide', 'groupe-nominal', 'fr', 'zero')).toBe('')
+    expect(normaliserSortie('', 'groupe-nominal', 'fr', 'zero')).toBe('')
   })
 
   it('refuse toujours le groupe sans déterminant quand un déterminant est demandé', () => {
