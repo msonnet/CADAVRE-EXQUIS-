@@ -415,7 +415,21 @@ export function validerCase(
       return { valide: true }
     }
 
-    case 'groupe-nominal':
+    case 'groupe-nominal': {
+      // La consigne annonce « 2 MOTS EXACTEMENT : article + nom ». La règle
+      // était partagée avec le groupe nominal riche, qui en admet quatre :
+      // une proposition entière passait donc sans un mot. C'est ce qui a
+      // produit « Le garçon se couche tient du vide » dans un atelier réel —
+      // le médium avait posé une phrase dans la case du sujet.
+      if (mots(texte).length > 3) {
+        return {
+          valide: false,
+          message: 'La consigne demande un groupe nominal court — un article et un nom, pas une phrase.',
+        }
+      }
+      return { valide: true }
+    }
+
     case 'groupe-nominal-riche': {
       if (contientVerbe(texte) && mots(texte).length > 3) {
         return {

@@ -5,6 +5,8 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { demanderFragmentIA } from '../api/claude'
+import { validerCase } from '../utils/validation'
+import type { NiveauValidation, TypeCase } from '../utils/validation'
 import { nomDeVoix } from '../data/voiceIds'
 import { corrigerAccords } from '../api/corriger'
 import { sauvegarderPoeme } from '../db'
@@ -333,6 +335,13 @@ export default function JeuAtelier() {
   versRef.current = vers
 
   const [saisie, setSaisie] = useState('')
+  const [erreur, setErreur] = useState<string | null>(null)
+
+  // Le niveau de validation vient des Réglages, comme dans le cadavre écrit.
+  // L'Atelier ne le lisait pas : un vers cassé y passait sans un mot, et le
+  // médium pouvait poser une proposition entière dans une case qui attendait
+  // un groupe nominal — d'où « Le garçon se couche tient du vide ».
+  const niveauValidation = (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
   const [voixEnCours, setVoixEnCours] = useState<VoixEnCours[]>([])
   const traites = useRef<Set<number>>(new Set())
   const traiteFragment = useRef<Set<number>>(new Set())
@@ -724,6 +733,11 @@ export default function JeuAtelier() {
   function deposerVers() {
     const t = saisie.trim()
     if (!t || !tourJoueur || tourFragmentJoueur) return
+    // Le vers entier se valide comme un vers libre : en stricte, on refuse
+    // surtout le vide et les formes qui ne tiennent pas debout.
+    const v = validerCase(t, 'libre', niveauValidation)
+    if (!v.valide) { setErreur(v.message ?? tr('Texte invalide.', 'Invalid text.')); return }
+    setErreur(null)
     jouer('soumettre')
     setSaisie('')
     ajouterVers({ texte: t, auteur: 'humain', voixNums: [] })
@@ -732,6 +746,11 @@ export default function JeuAtelier() {
   function deposerFragment() {
     let t = saisie.trim()
     if (!t || !fragGabarit || fragTextes[fragSlotJoueur] !== null) return
+    // La case du médium se valide contre son type, exactement comme celle
+    // qu'on demande aux voix : c'est le même gabarit grammatical.
+    const v = validerCase(t, fragGabarit[fragSlotJoueur].type as TypeCase, niveauValidation)
+    if (!v.valide) { setErreur(v.message ?? tr('Texte invalide.', 'Invalid text.')); return }
+    setErreur(null)
     // La question du médium retrouve son point d'interrogation, comme celle des voix
     if (fragGabarit[fragSlotJoueur].type === 'proposition' && !/[?!.]\s*$/.test(t)) t += langueActuelle() === 'en' ? '?' : ' ?'
     jouer('soumettre')
@@ -909,7 +928,7 @@ export default function JeuAtelier() {
                   </div>
                   <input
                     value={saisie}
-                    onChange={e => setSaisie(e.target.value)}
+                    onChange={e => { setSaisie(e.target.value); if (erreur) setErreur(null) }}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); deposerFragment() } }}
                     placeholder={tr('ton fragment…', 'your fragment…')}
                     autoFocus
@@ -937,6 +956,11 @@ export default function JeuAtelier() {
                   >
                     {tr('Glisser le fragment', 'Slip in the fragment')} →
                   </button>
+                  {erreur && (
+                    <p role="alert" style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: accent, marginTop: 8 }}>
+                      {erreur}
+                    </p>
+                  )}
                 </>
               ) : (
                 <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginTop: 8 }}>
@@ -976,7 +1000,7 @@ export default function JeuAtelier() {
 
               <textarea
                 value={saisie}
-                onChange={e => setSaisie(e.target.value)}
+                onChange={e => { setSaisie(e.target.value); if (erreur) setErreur(null) }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); deposerVers() }
                 }}
@@ -1007,6 +1031,11 @@ export default function JeuAtelier() {
               >
                 {idx === total - 1 ? tr('Refermer le poème →', 'Close the poem →') : tr('Déposer le vers →', 'Lay down the line →')}
               </button>
+              {erreur && (
+                <p role="alert" style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: accent, marginTop: 8 }}>
+                  {erreur}
+                </p>
+              )}
             </motion.div>
 
           /* Tour IA pur ou attente init fragment */
