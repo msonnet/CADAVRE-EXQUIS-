@@ -45,6 +45,17 @@ const ECHANTILLON = 4
 /** Les cases qui appellent un verbe : on y sert les gestes, pas les matières. */
 const CASES_VERBE = new Set(['verbe', 'verbe-transitif', 'groupe-verbal', 'infinitif', 'gérondif'])
 
+/**
+ * Les cases qui n'admettent qu'un SEUL mot, et rien autour.
+ *
+ * On n'y montre que les gestes d'un seul mot. Mesuré deux fois sur deux :
+ * l'archiviste, dont les gestes contiennent « relever une lacune » et dont le
+ * métier est de traiter des documents lacunaires, rendait « lacune » — un nom.
+ * Le dire dans la consigne n'a pas suffi ; retirer le nom de sous ses yeux,
+ * oui. Un geste composé garde toute sa place sur les cases plus larges.
+ */
+const CASES_UN_MOT = new Set(['verbe', 'verbe-transitif', 'infinitif'])
+
 /** Les cases assez larges pour demander le monde entier de la voix. */
 const CASES_LARGES = new Set(['libre', 'proposition'])
 
@@ -74,10 +85,14 @@ export function promptSysteme(v: Voix, type?: string): string {
   // Les gestes sont donnés à l'infinitif, et c'est dit : sans cette mention,
   // un geste composé (« relever une lacune ») voit son NOM ressortir dans une
   // case qui attend un verbe seul — l'archiviste a rendu « lacune ».
+  const gestesUtiles = type && CASES_UN_MOT.has(type)
+    ? v.gestes.split(', ').filter(g => !g.includes(' ')).join(', ') || v.gestes
+    : v.gestes
+
   const ancrage = type && CASES_VERBE.has(type)
-    ? `Quelques-uns de ses gestes, donnés à l'infinitif — à toi de conjuguer, et c'est le VERBE seul qui compte, jamais le nom qui l'accompagne : ${tirer(v.gestes, ECHANTILLON)}.`
+    ? `Quelques-uns de ses gestes, donnés à l'infinitif — à toi de conjuguer : ${tirer(gestesUtiles, ECHANTILLON)}.`
     : type && CASES_LARGES.has(type)
-      ? `Quelques-unes de ses matières : ${tirer(v.lexique, 3)}. Quelques-uns de ses gestes : ${tirer(v.gestes, 3)}.`
+      ? `Quelques-unes de ses matières : ${tirer(v.lexique, 3)}. Quelques-uns de ses gestes : ${tirer(gestesUtiles, 3)}.`
       : `Quelques-unes de ses matières, pour te situer : ${tirer(v.lexique, ECHANTILLON)}.`
 
   return `${v.situation}
@@ -360,7 +375,7 @@ export const VOIX: Voix[] = [
     id: 'convalescent',
     situation: "Tu es un convalescent fiévreux qui note dans un cahier les sensations qui traversent son corps.",
     lexique: "la chaleur qui monte, le vertige, le drap, le plafond, la fatigue, la soif, l'heure sans fin, le bruit du couloir",
-    gestes: "trembler, transpirer, se relever, retomber, sentir monter, avoir soif, compter les heures",
+    gestes: "trembler, transpirer, retomber, suinter, chanceler, brûler, se relever, sentir monter, avoir soif, compter les heures",
     souffle: "notée à mesure que ça traverse. Tu écris la sensation, pas la maladie.",
   },
   {
