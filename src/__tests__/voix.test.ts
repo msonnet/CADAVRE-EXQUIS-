@@ -26,9 +26,19 @@ describe('les quarante-six voix', () => {
     }
   })
 
-  it('gardent un dehors assez fourni pour être tiré au sort', () => {
+  it('gardent un dehors aussi profond que leur lexique', () => {
+    // À cinq entrées dont quatre tirées, la voix voyait presque toute sa liste
+    // à chaque appel : l'enfant a rendu « le couloir » huit fois sur quatorze.
+    // C'est le défaut du menu, déjà corrigé une fois sur le lexique.
     for (const v of VOIX) {
-      expect(v.dehors.split(', ').length, v.id).toBeGreaterThanOrEqual(4)
+      expect(v.dehors.split(', ').length, v.id).toBeGreaterThanOrEqual(9)
+    }
+  })
+
+  it('ne répètent pas une même chose dans un dehors', () => {
+    for (const v of VOIX) {
+      const items = v.dehors.split(', ')
+      expect(new Set(items).size, v.id).toBe(items.length)
     }
   })
 
