@@ -20,6 +20,10 @@ import {
   diagnostic, familleDe, souder, tirerStrategie,
 } from '../lib/determinants'
 import { GardeFormes, POIDS_FAMILLE, familleDuVers, type Famille } from '../lib/formes'
+import {
+  GardeMetrique, classeDeLongueur, diagnosticMetrique, longueurEstimee, motsDuVers,
+  type Classe,
+} from '../lib/metrique'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -97,6 +101,17 @@ const VERBE: RoleFragment = {
 // qu'un complément suit (principe du cadavre), mais le gabarit, lui, le sait
 const VERBE_TRANSITIF: RoleFragment = {
   type: 'verbe-transitif', consigne: tr('un verbe transitif conjugué', 'a conjugated transitive verb'), role: tr('VERBE', 'VERB'),
+}
+// ── Les cases larges ─────────────────────────────────────────────────────────
+// `groupe-nominal-riche` — deux à quatre mots, validé par le serveur depuis
+// toujours — n'était employé par AUCUN gabarit de l'atelier. C'est la raison
+// pour laquelle zéro pour cent des vers atteignaient dix mots : toutes les
+// cases étaient étroites, et cinq cases étroites font un vers court.
+const GN_RICHE_SUJET: RoleFragment = {
+  type: 'groupe-nominal-riche', consigne: tr('un groupe nominal sujet développé', 'a developed subject noun phrase'), role: tr('SUJET', 'SUBJECT'),
+}
+const GN_RICHE_COMPLEMENT: RoleFragment = {
+  type: 'groupe-nominal-riche', consigne: tr('un groupe nominal complément développé', 'a developed object noun phrase'), role: tr('COMPLÉMENT', 'OBJECT'),
 }
 const GROUPE_VERBAL: RoleFragment = {
   type: 'groupe-verbal', consigne: tr("un verbe conjugué suivi d'un complément court", 'a conjugated verb followed by a short complement'), role: tr('VERBE + COMPL.', 'VERB + COMPL.'),
@@ -182,6 +197,10 @@ const syntagmeGN = (): RoleFragment => ({
 const GN_SUSPENDU: RoleFragment = {
   type: 'groupe-nominal', consigne: tr('un groupe nominal', 'a noun phrase'), role: tr('SUSPENS', 'SUSPENDED'),
   nu: true,
+}
+const GN_SUSPENDU_RICHE: RoleFragment = {
+  type: 'groupe-nominal-riche', consigne: tr('un groupe nominal développé', 'a developed noun phrase'),
+  role: tr('SUSPENS', 'SUSPENDED'),
 }
 // Le verbe transitif qu'on laisse sans complément : la phrase s'arrête sur
 // une main tendue.
@@ -287,6 +306,9 @@ export function gabaritsIncomplets(nVoix: number): { famille: Famille; cases: Ro
       L('APPOSITION', [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
       L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
       L('SUSPENS', [ADVERBE_TETE, GN_SUJET, ADJECTIF, VERBE_SUSPENDU]),
+      // Une suspension LARGE : sans elle, toutes les formes inachevées étaient
+      // courtes et le souffle long ne pouvait venir que d'une proposition.
+      L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU_RICHE, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
       L('LISTE', enumeration(4)),
       L('LISTE', litanie(4)),
     ]
@@ -332,8 +354,9 @@ export function partIncomplete(nVoix: number, tailleTable = 1): number {
   return Math.min(0.62, base + bonus)
 }
 
-export function tirerGabarit(
+function tirerGabaritBrut(
   nVoix: number,
+  souffles: Set<Classe> | undefined,
   questionPermise = true,
   outilsPermis = true,
   /** La garde d'ouverture réclame un vers qui ne commence pas par un groupe
@@ -405,7 +428,10 @@ export function tirerGabarit(
     // épuisé devient un tic sur un poème long : budget géré par l'appelant), sinon
     // un vers libre de longueur tirée au sort (3 à 6 mots)
     if (questionPermise && Math.random() < 0.12) return [QUESTION]
-    const mots = 3 + Math.floor(Math.random() * 4)
+    // Une voix seule écrit le vers entier : c'est le seul endroit où le
+    // souffle long s'obtient sans compter des mains. On le lui demande.
+    const long = souffles?.size === 1 && souffles.has('LONG')
+    const mots = long ? 8 + Math.floor(Math.random() * 5) : 3 + Math.floor(Math.random() * 4)
     return [{ type: 'libre', consigne: tr('un vers', 'one line of verse'), role: tr('VERS ENTIER', 'FULL LINE'), mots }]
   }
   if (nVoix === 2) {
@@ -421,6 +447,9 @@ export function tirerGabarit(
   }
   if (nVoix === 4) {
     const variantes: RoleFragment[][] = [
+      [GN_RICHE_SUJET, VERBE_TRANSITIF, GN_RICHE_COMPLEMENT, ADVERBE_FIN],
+      [CONJ_SUBORD, GN_RICHE_SUJET, GROUPE_VERBAL, ADVERBE_FIN],
+      [GERONDIF, GN_RICHE_SUJET, VERBE_TRANSITIF, GN_RICHE_COMPLEMENT],
       [GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],      // « la lumière » « froide » « dévore » « la cendre »
       [ADVERBE_TETE, GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT],  // « doucement, » « le sel » « ronge » « la nuit »
       [GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT, ADVERBE_FIN],   // « le sel » « dévore » « la nuit » « lentement »
@@ -436,6 +465,9 @@ export function tirerGabarit(
     // Elle n'existe que parce que la couverture prime — toutes les voix
     // convoquées doivent parler, quitte à se serrer sur le même vers.
     const variantes: RoleFragment[][] = [
+      [GN_RICHE_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_RICHE_COMPLEMENT, ADVERBE_FIN],
+      [CONJ_SUBORD, GN_RICHE_SUJET, GROUPE_VERBAL, GN_RICHE_COMPLEMENT, ADVERBE_FIN],
+      [GERONDIF, GN_RICHE_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_RICHE_COMPLEMENT],
       [GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT, ADVERBE_FIN],
       [ADVERBE_TETE, GN_SUJET, ADJECTIF, VERBE_TRANSITIF, GN_COMPLEMENT],
       [CONJ_SUBORD, GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT, ADVERBE_FIN],
@@ -446,6 +478,12 @@ export function tirerGabarit(
     return dispo[Math.floor(Math.random() * dispo.length)]
   }
   const variantesTrois: RoleFragment[][] = [
+    // Les trois premières sont les LARGES : sans elles, le vers de dix mots
+    // n'existait pas. Elles restent minoritaires — c'est la garde métrique
+    // qui va les chercher quand le poème n'a pas respiré depuis longtemps.
+    [GN_RICHE_SUJET, VERBE_TRANSITIF, GN_RICHE_COMPLEMENT],
+    [GN_RICHE_SUJET, GROUPE_VERBAL, ADVERBE_FIN],
+    [GERONDIF, GN_RICHE_SUJET, GROUPE_VERBAL],
     [GN_SUJET, VERBE_TRANSITIF, GN_COMPLEMENT], // la phrase courte de Breton
     [GN_SUJET, ADJECTIF, GROUPE_VERBAL],    // « la lumière » + « froide » + « traverse la nuit »
     [ADVERBE_TETE, GN_SUJET, GROUPE_VERBAL], // « doucement, » + « la cendre » + « pèse sur le monde »
@@ -459,6 +497,34 @@ export function tirerGabarit(
   ]
   const dispoTrois = filtrer(variantesTrois)
   return dispoTrois[Math.floor(Math.random() * dispoTrois.length)]
+}
+
+/**
+ * Le tirage, avec le souffle.
+ *
+ * La longueur ne se choisit pas case par case : elle est le produit du nombre
+ * de cases par leur largeur, et on ne la connaît qu'une fois le gabarit tiré.
+ * On tire donc, on mesure, et on retire si le souffle demandé n'y est pas.
+ * Huit essais, pas plus — au-delà on rend ce qu'on a : mieux vaut un vers de
+ * la mauvaise longueur qu'une boucle qui ne rend rien.
+ */
+export function tirerGabarit(
+  nVoix: number,
+  questionPermise = true,
+  outilsPermis = true,
+  ouvertureHorsGN = false,
+  tailleTable = 1,
+  permises?: Set<Famille>,
+  /** Les souffles que la garde métrique autorise encore. Sans elle, zéro pour
+   *  cent des vers atteignaient dix mots, à toutes les tailles de table. */
+  souffles?: Set<Classe>,
+): RoleFragment[] {
+  const brut = () =>
+    tirerGabaritBrut(nVoix, souffles, questionPermise, outilsPermis, ouvertureHorsGN, tailleTable, permises)
+  let g = brut()
+  if (!souffles || souffles.size === 0) return g
+  for (let i = 0; i < 8 && !souffles.has(classeDeLongueur(longueurEstimee(g))); i++) g = brut()
+  return g
 }
 
 /**
@@ -723,6 +789,14 @@ export default function JeuAtelier() {
     vers.map(v => familleDuVers((v.mains ?? []).map(m => m.role))),
   ))
 
+  // La garde du SOUFFLE : pas plus de deux ou trois vers de la même longueur
+  // d'affilée, et un vers long réclamé tous les quatre à huit vers. Mesuré
+  // avant elle : zéro pour cent des vers atteignaient dix mots, et jusqu'à
+  // huit vers de suite avaient exactement la même taille.
+  const [gardeMetrique] = useState(() => new GardeMetrique({
+    histoire: diagnosticMetrique(vers.map(v => v.texte)).classes,
+  }))
+
   const [saisie, setSaisie] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
 
@@ -775,6 +849,9 @@ export default function JeuAtelier() {
     // même pas. La garde doit compter le poème réel.
     garde.enregistrer(familleDe(v.texte))
     gardeFormes.enregistrer(familleDuVers((v.mains ?? []).map(m => m.role)))
+    // Le souffle se compte sur le vers RENDU, pas sur celui qui avait été
+    // demandé : une case peut déborder ou repartir en réserve.
+    gardeMetrique.enregistrer(classeDeLongueur(motsDuVers(v.texte)))
     setVers(prev => [...prev, v])
   }
 
@@ -814,9 +891,10 @@ export default function JeuAtelier() {
       // Jamais deux fois de suite la même forme — la métrique respire
       const table = p.voixPool.length
       const formesOk = gardeFormes.permises()
-      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk)
+      const soufflesOk = gardeMetrique.permises(GardeMetrique.peutEtreLong(nVoix))
+      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk)
+        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -960,9 +1038,10 @@ export default function JeuAtelier() {
       const horsGN = garde.exigeOuvertureHorsGN()
       const table = p.voixPool.length
       const formesOk = gardeFormes.permises()
-      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk)
+      const soufflesOk = gardeMetrique.permises(GardeMetrique.peutEtreLong(nTotal))
+      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk)
+        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 

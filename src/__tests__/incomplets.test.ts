@@ -306,10 +306,18 @@ describe('une séance simulée de bout en bout', () => {
     }
   })
 
-  it('fait entendre au moins cinq formes différentes sur une grande table', () => {
-    for (let s = 0; s < 30; s++) {
-      expect(seance(46, 30).diversite).toBeGreaterThanOrEqual(5)
+  it('fait entendre presque toutes les formes sur une grande table', () => {
+    // Mesuré sur cinq cents séances de trente vers, table de quarante-six :
+    // sept formes 44 %, six 48 %, cinq 7 %, quatre moins de 1 %. Le plancher
+    // est donc à quatre — pas à cinq, et l'écrire à cinq rendait le test
+    // capricieux une fois sur cent.
+    let total = 0
+    for (let s = 0; s < 40; s++) {
+      const d = seance(46, 30).diversite
+      expect(d).toBeGreaterThanOrEqual(4)
+      total += d
     }
+    expect(total / 40).toBeGreaterThan(5.5)
   })
 
   it('inachève davantage à mesure que la table grandit', () => {
