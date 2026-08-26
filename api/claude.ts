@@ -49,14 +49,9 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier (tout temps : "dévore", "hantait", "boira", "frôle", "vacilla", "glissera"). ÉPREUVE OBLIGATOIRE avant de répondre : « il <ton mot> » ou « elle <ton mot> » doit se dire en français courant. Si tu n\'as jamais entendu ce mot conjugué, c\'est un NOM — recommence. INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms (surtout les noms savants en -tion, -ment, -eur, -ance, -isme, -este), participes passés non conjugués, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
   'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). ÉPREUVE OBLIGATOIRE avant de répondre : « il <ton mot> quelque chose » doit se dire en français courant. Si tu n\'as jamais entendu ce mot conjugué, c\'est un NOM — recommence. INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
-  // Mesuré sur douze voix : dix réponses sur onze étaient des locutions
-  // « préposition + nom » — à couvert, à blanc, par empilement, sous réserve,
-  // à contre-courant. Un seul -ment. La consigne d'avant donnait deux exemples
-  // de locution et deux d'adverbe simple, mais les locutions fermaient la
-  // phrase, et trois autres instructions poussent le modèle à fuir le mot
-  // attendu : le -ment, qui est la forme la plus attendue, ne sortait plus
-  // jamais. On dit donc lequel est la règle et lequel est l'exception.
-  'adverbe': '1 SEUL MOT, le plus souvent : un adverbe en -ment ("doucement", "obliquement", "âprement", "sourdement", "inégalement", "tardivement", "sourdement") ou un invariable ("encore", "ailleurs", "jadis", "à peine", "de biais"). Une locution en préposition + nom ("sans bruit", "à rebours") reste possible, mais c\'est l\'EXCEPTION : n\'y va que si aucun adverbe simple ne dit ce que tu veux dire. INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
+  // Cette entrée-ci ne sert que de repli : la vraie contrainte adverbe est
+  // tirée à chaque appel par contrainteAdverbe(). Voir la note là-bas.
+  'adverbe': '1 SEUL ADVERBE INVARIABLE ou une locution adverbiale courte. INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
   'groupe-nominal': '2 MOTS EXACTEMENT : déterminant + nom — ex : "une ombre", "ce givre", "du sel", "la pluie". JAMAIS d\'adjectif après le nom.',
   'groupe-nominal-riche': '2 à 4 mots — un GROUPE NOMINAL COMPLET commençant TOUJOURS par un déterminant. VARIE la forme d\'une fois à l\'autre : article + nom ("une pluie"), article + adjectif + nom ("une vieille clef"), article + nom + adjectif ("un souffle perdu"), article + nom + complément du nom ("le bruit du vent", "la nuit sans fond"). INTERDIT ABSOLU : verbe conjugué, pronom relatif (qui, que), groupe sans déterminant.',
   'groupe-verbal': '3 à 4 mots — verbe conjugué à la 3e personne du singulier + complément AVEC son article ou sa préposition (ex : "traverse la nuit", "pèse sur le monde"). JAMAIS de complément sans article ("cède terrain" est INTERDIT, "cède du terrain" est correct).',
@@ -153,7 +148,7 @@ const CONTRAINTES_EN: Record<TypeCase, string> = {
   'verbe': 'ONE WORD — a CONJUGATED verb, third person singular, any tense ("devours", "haunted", "will drink", "grazes" — one word only, so prefer simple present or past). MANDATORY TEST before answering: "it <your word>" must be sayable in ordinary English. If you have never heard the word conjugated, it is a NOUN — start again. ABSOLUTELY FORBIDDEN: adjectives, nouns, bare infinitives, adverbs. If the word could read as a noun ("waves", "marches"), pick an unambiguous verb.',
   'verbe-transitif': 'ONE WORD — a TRANSITIVE conjugated verb, third person singular, that calls for an object ("devours", "carves", "lifts", "gnaws"). ABSOLUTELY FORBIDDEN: intransitive verbs, adjectives, nouns, adverbs.',
   'adjectif': 'ONE WORD ONLY (a qualifying adjective — ex: "nocturnal", "broken", "hollow", "deep")',
-  'adverbe': 'ONE SINGLE WORD, most of the time: an adverb in -ly ("softly", "sideways", "harshly", "unevenly", "belatedly") or an invariable one ("still", "elsewhere", "hardly", "once"). A prepositional phrase ("without sound", "at dusk") is allowed but it is the EXCEPTION: use it only when no single adverb says what you mean. ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs.',
+  'adverbe': 'ONE INVARIABLE ADVERB or a short adverbial phrase. ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs.',
   'groupe-nominal': 'EXACTLY 2 WORDS: article + SINGULAR noun — ex: "the silence", "a shadow", "the rain", "a knife". The noun MUST be singular (a third-person-singular verb follows). NEVER an adjective after the noun.',
   'groupe-nominal-riche': '2 to 4 words — a COMPLETE NOUN PHRASE that ALWAYS starts with a determiner, with a SINGULAR head noun (a third-person-singular verb may follow). VARY the form: article + noun ("the rain"), article + adjective + noun ("an old key"), article + noun + complement ("the sound of wind", "a wall of fog"). ABSOLUTELY FORBIDDEN: plural head nouns, conjugated verbs, relative pronouns (who, which), phrases without a determiner.',
   'groupe-verbal': '3 to 4 words — a conjugated verb (third person singular) + its complement WITH its article or preposition (ex: "crosses the night", "weighs on the world"). NEVER a bare complement.',
@@ -403,6 +398,73 @@ function pickFallback(type: TypeCase, eviter: string[] = [], langue: 'fr' | 'en'
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
+/**
+ * La contrainte de la case ADVERBE, tirée à chaque appel.
+ *
+ * Elle est la seule qui ne peut pas être un texte fixe, et il a fallu deux
+ * mesures pour le comprendre.
+ *
+ * Première mesure, sur douze voix : dix réponses sur onze étaient des
+ * locutions « préposition + nom » — à couvert, à blanc, par empilement, sous
+ * réserve, à contre-courant. Un seul -ment. La consigne donnait pourtant deux
+ * exemples de chaque, mais trois autres instructions poussent le modèle à
+ * fuir le mot attendu, et le -ment est la forme la plus attendue.
+ *
+ * Seconde mesure, après avoir réécrit la consigne pour dire que le -ment est
+ * la règle : « obliquement » ONZE fois sur seize. La collapse avait changé de
+ * côté, pas disparu.
+ *
+ * C'est la leçon déjà apprise deux fois — sur le lexique, où le boucher
+ * rendait « le persillé » huit fois sur huit, et sur le déterminant, où les
+ * quarante-six voix rendaient toutes l'article défini. Aucune formulation ne
+ * défait un ancrage ; seul un tirage par appel y arrive. On tire donc la
+ * FORME, et on échantillonne ses exemples — la voix ne voit jamais deux fois
+ * la même amorce.
+ */
+const FORMES_ADVERBE: { poids: number; fr: string; en: string; exFr: string[]; exEn: string[] }[] = [
+  {
+    poids: 45,
+    fr: "1 SEUL MOT : un adverbe de manière en -ment, et rien d'autre",
+    en: 'ONE SINGLE WORD: an adverb of manner ending in -ly, nothing else',
+    exFr: ['âprement', 'sourdement', 'inégalement', 'tardivement', 'mollement', 'brusquement',
+           'patiemment', 'confusément', 'étroitement', 'gauchement', 'faiblement', 'obstinément',
+           'proprement', 'crûment', 'lourdement', 'imperceptiblement', 'régulièrement', 'sèchement'],
+    exEn: ['harshly', 'dully', 'unevenly', 'belatedly', 'limply', 'abruptly', 'patiently',
+           'faintly', 'tightly', 'clumsily', 'weakly', 'stubbornly', 'plainly', 'heavily'],
+  },
+  {
+    poids: 25,
+    fr: "1 SEUL MOT : un adverbe invariable, SANS -ment",
+    en: 'ONE SINGLE WORD: an invariable adverb, NOT ending in -ly',
+    exFr: ['encore', 'ailleurs', 'jadis', 'partout', 'longtemps', 'soudain', 'dehors', 'tard',
+           'désormais', 'autrefois', 'presque', 'parfois', 'toujours', 'alentour', 'dedans', 'vite'],
+    exEn: ['still', 'elsewhere', 'once', 'everywhere', 'long', 'suddenly', 'outside', 'late',
+           'henceforth', 'formerly', 'almost', 'sometimes', 'always', 'around', 'inside'],
+  },
+  {
+    poids: 30,
+    fr: '2 ou 3 MOTS : une locution adverbiale, préposition + nom',
+    en: '2 or 3 WORDS: an adverbial phrase, preposition + noun',
+    exFr: ['sans bruit', 'à rebours', 'de biais', 'à la dérobée', 'en silence', 'à contre-jour',
+           'par en dessous', 'à mi-voix', 'en vain', 'sans retour', 'à tâtons', 'de travers',
+           'par bribes', 'à découvert', 'en pure perte', 'sans un mot'],
+    exEn: ['without sound', 'at dusk', 'sideways on', 'by stealth', 'in silence', 'against the light',
+           'from below', 'under breath', 'in vain', 'for nothing', 'by touch', 'askew', 'in scraps'],
+  },
+]
+
+export function contrainteAdverbe(langue: 'fr' | 'en'): string {
+  const total = FORMES_ADVERBE.reduce((s, f) => s + f.poids, 0)
+  let t = Math.random() * total
+  let forme = FORMES_ADVERBE[FORMES_ADVERBE.length - 1]
+  for (const f of FORMES_ADVERBE) { t -= f.poids; if (t <= 0) { forme = f; break } }
+  const pool = langue === 'en' ? forme.exEn : forme.exFr
+  const ex = [...pool].sort(() => Math.random() - 0.5).slice(0, 4).map(m => `"${m}"`).join(', ')
+  return langue === 'en'
+    ? `${forme.en} — in the manner of ${ex}. These are only examples, do not copy them. ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs, and any other form than the one asked for here.`
+    : `${forme.fr} — dans le genre de ${ex}. Ce ne sont que des exemples, ne les recopie pas. INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes, et toute autre forme que celle demandée ici.`
+}
+
 const TYPES_VALIDES: Set<string> = new Set([
   'nom', 'verbe', 'verbe-transitif', 'adjectif', 'adverbe',
   'groupe-nominal', 'groupe-nominal-riche', 'groupe-verbal',
@@ -472,7 +534,9 @@ export default async function handler(req: any, res: any): Promise<void> {
     ? (type === 'libre'
       ? `environ ${motsCible} mots — un vers COMPLET et grammatical : un sujet avec son article et un verbe conjugué, ou une image nominale complète. JAMAIS de style télégraphique : chaque nom garde son article. Sans ponctuation finale.`
       : `${motsCible} MOT${motsCible > 1 ? 'S' : ''} EXACTEMENT — un fragment de vers, pas une phrase complète, sans ponctuation`)
-    : ((langue === 'en' ? CONTRAINTES_EN : CONTRAINTES)[type as TypeCase] ?? '2 à 4 mots')
+    : type === 'adverbe'
+      ? contrainteAdverbe(langue)
+      : ((langue === 'en' ? CONTRAINTES_EN : CONTRAINTES)[type as TypeCase] ?? '2 à 4 mots')
 
   // ── La stratégie de déterminant ────────────────────────────────────────
   // Douze vers consécutifs ouvraient sur « le » ou « la » dans un atelier de
