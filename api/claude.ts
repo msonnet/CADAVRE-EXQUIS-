@@ -49,7 +49,14 @@ const CONTRAINTES: Record<TypeCase, string> = {
   'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier (tout temps : "dévore", "hantait", "boira", "frôle", "vacilla", "glissera"). ÉPREUVE OBLIGATOIRE avant de répondre : « il <ton mot> » ou « elle <ton mot> » doit se dire en français courant. Si tu n\'as jamais entendu ce mot conjugué, c\'est un NOM — recommence. INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms (surtout les noms savants en -tion, -ment, -eur, -ance, -isme, -este), participes passés non conjugués, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
   'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). ÉPREUVE OBLIGATOIRE avant de répondre : « il <ton mot> quelque chose » doit se dire en français courant. Si tu n\'as jamais entendu ce mot conjugué, c\'est un NOM — recommence. INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
-  'adverbe': '1 SEUL ADVERBE INVARIABLE (en -ment : "doucement", "obliquement") ou une locution adverbiale de 2 mots ("sans bruit", "à rebours"). INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
+  // Mesuré sur douze voix : dix réponses sur onze étaient des locutions
+  // « préposition + nom » — à couvert, à blanc, par empilement, sous réserve,
+  // à contre-courant. Un seul -ment. La consigne d'avant donnait deux exemples
+  // de locution et deux d'adverbe simple, mais les locutions fermaient la
+  // phrase, et trois autres instructions poussent le modèle à fuir le mot
+  // attendu : le -ment, qui est la forme la plus attendue, ne sortait plus
+  // jamais. On dit donc lequel est la règle et lequel est l'exception.
+  'adverbe': '1 SEUL MOT, le plus souvent : un adverbe en -ment ("doucement", "obliquement", "âprement", "sourdement", "inégalement", "tardivement", "sourdement") ou un invariable ("encore", "ailleurs", "jadis", "à peine", "de biais"). Une locution en préposition + nom ("sans bruit", "à rebours") reste possible, mais c\'est l\'EXCEPTION : n\'y va que si aucun adverbe simple ne dit ce que tu veux dire. INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
   'groupe-nominal': '2 MOTS EXACTEMENT : déterminant + nom — ex : "une ombre", "ce givre", "du sel", "la pluie". JAMAIS d\'adjectif après le nom.',
   'groupe-nominal-riche': '2 à 4 mots — un GROUPE NOMINAL COMPLET commençant TOUJOURS par un déterminant. VARIE la forme d\'une fois à l\'autre : article + nom ("une pluie"), article + adjectif + nom ("une vieille clef"), article + nom + adjectif ("un souffle perdu"), article + nom + complément du nom ("le bruit du vent", "la nuit sans fond"). INTERDIT ABSOLU : verbe conjugué, pronom relatif (qui, que), groupe sans déterminant.',
   'groupe-verbal': '3 à 4 mots — verbe conjugué à la 3e personne du singulier + complément AVEC son article ou sa préposition (ex : "traverse la nuit", "pèse sur le monde"). JAMAIS de complément sans article ("cède terrain" est INTERDIT, "cède du terrain" est correct).',
@@ -146,7 +153,7 @@ const CONTRAINTES_EN: Record<TypeCase, string> = {
   'verbe': 'ONE WORD — a CONJUGATED verb, third person singular, any tense ("devours", "haunted", "will drink", "grazes" — one word only, so prefer simple present or past). MANDATORY TEST before answering: "it <your word>" must be sayable in ordinary English. If you have never heard the word conjugated, it is a NOUN — start again. ABSOLUTELY FORBIDDEN: adjectives, nouns, bare infinitives, adverbs. If the word could read as a noun ("waves", "marches"), pick an unambiguous verb.',
   'verbe-transitif': 'ONE WORD — a TRANSITIVE conjugated verb, third person singular, that calls for an object ("devours", "carves", "lifts", "gnaws"). ABSOLUTELY FORBIDDEN: intransitive verbs, adjectives, nouns, adverbs.',
   'adjectif': 'ONE WORD ONLY (a qualifying adjective — ex: "nocturnal", "broken", "hollow", "deep")',
-  'adverbe': 'ONE INVARIABLE ADVERB ("softly", "sideways", "forever") or a 2-word adverbial phrase ("without sound", "at dusk"). ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs.',
+  'adverbe': 'ONE SINGLE WORD, most of the time: an adverb in -ly ("softly", "sideways", "harshly", "unevenly", "belatedly") or an invariable one ("still", "elsewhere", "hardly", "once"). A prepositional phrase ("without sound", "at dusk") is allowed but it is the EXCEPTION: use it only when no single adverb says what you mean. ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs.',
   'groupe-nominal': 'EXACTLY 2 WORDS: article + SINGULAR noun — ex: "the silence", "a shadow", "the rain", "a knife". The noun MUST be singular (a third-person-singular verb follows). NEVER an adjective after the noun.',
   'groupe-nominal-riche': '2 to 4 words — a COMPLETE NOUN PHRASE that ALWAYS starts with a determiner, with a SINGULAR head noun (a third-person-singular verb may follow). VARY the form: article + noun ("the rain"), article + adjective + noun ("an old key"), article + noun + complement ("the sound of wind", "a wall of fog"). ABSOLUTELY FORBIDDEN: plural head nouns, conjugated verbs, relative pronouns (who, which), phrases without a determiner.',
   'groupe-verbal': '3 to 4 words — a conjugated verb (third person singular) + its complement WITH its article or preposition (ex: "crosses the night", "weighs on the world"). NEVER a bare complement.',
@@ -179,7 +186,34 @@ const FALLBACKS_EN: Record<TypeCase, string[]> = {
 
 const ADVERBES_INVARIABLES_EN = new Set(['forever', 'still', 'elsewhere', 'almost', 'always', 'sometimes', 'nowhere', 'sideways', 'twice', 'today', 'tonight', 'yesterday'])
 const TETES_LOCUTION_ADV_EN = new Set(['in', 'at', 'with', 'without', 'for', 'by'])
-const OUTILS_FIN_EN = new Set(['the', 'a', 'an', 'of', 'in', 'on', 'at', 'with', 'without', 'and', 'or', 'to', 'that', 'which', 'who'])
+const OUTILS_FIN_EN = new Set(['the', 'a', 'an', 'of', 'in', 'on', 'at', 'with', 'without', 'and', 'or', 'to', 'that', 'which', 'who',
+  'when', 'while', 'as', 'if', 'than', 'about', 'into', 'from', 'by', 'for'])
+
+/**
+ * Les mots qui ne peuvent pas terminer un fragment.
+ *
+ * Une coupe aveugle laisse pendre un mot-outil. C'est le même défaut trois
+ * fois : « de la suie noire » coupé à deux mots donnait « de la » ; « en
+ * lisant à voix basse » coupé à trois donne « en lisant à » ; « en doutant
+ * quand même » donne « en doutant quand ». Les deux derniers sont sortis d'un
+ * atelier réel. On rabote donc la queue partout où l'on coupe.
+ */
+const OUTILS_FIN_FR = new Set([
+  'le', 'la', 'les', "l'", 'un', 'une', 'des', 'du', 'de', "d'", 'au', 'aux',
+  'ce', 'cet', 'cette', 'ces', 'mon', 'ma', 'ton', 'ta', 'son', 'sa', 'mes', 'tes', 'ses',
+  'sans', 'sous', 'sur', 'dans', 'en', 'à', 'par', 'pour', 'vers', 'avec', 'contre',
+  'entre', 'depuis', 'selon', 'malgré', 'chez', 'dès',
+  'et', 'ou', 'ni', 'or', 'mais', 'car', 'que', "qu'", 'qui', 'quand', 'lorsque',
+  'si', 'comme', 'dont', 'où', 'tant', 'plus', 'moins', 'aussi',
+])
+
+/** Rabote les mots-outils qui pendent en fin de fragment coupé. */
+function raboter(mots: string[], langue: 'fr' | 'en'): string[] {
+  const outils = langue === 'en' ? OUTILS_FIN_EN : OUTILS_FIN_FR
+  const out = [...mots]
+  while (out.length > 1 && outils.has(out[out.length - 1].toLowerCase().replace(/[,;:.!?…]+$/, ''))) out.pop()
+  return out
+}
 
 
 const ADVERBES_INVARIABLES = new Set([
@@ -243,7 +277,18 @@ export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | '
         if (langue === 'en') return /ly$/.test(w) || ADVERBES_INVARIABLES_EN.has(w) ? t : ''
         return /ment$/.test(w) || ADVERBES_INVARIABLES.has(w) ? t : ''
       }
-      if (mots.length === 2 && (langue === 'en' ? TETES_LOCUTION_ADV_EN : TETES_LOCUTION_ADV).has(mots[0].toLowerCase())) return t
+      // Deux ou trois mots : « sans bruit », mais aussi « à la dérobée »,
+      // « sans un bruit », « en fin de compte » — ces locutions-là étaient
+      // rejetées d'office et repartaient en réserve.
+      const tetes = langue === 'en' ? TETES_LOCUTION_ADV_EN : TETES_LOCUTION_ADV
+      // Pas de borne haute : c'est la TÊTE qui protège. Une phrase entière ne
+      // commence pas par « à » ou « sans » ; ce qui passe ici est déjà un
+      // circonstanciel, il suffit de le ramener à trois mots et de raboter.
+      if (mots.length >= 2 && tetes.has(mots[0].toLowerCase())) {
+        const ad = raboter(mots.slice(0, 3), langue)
+        // « à la » : une tête et un déterminant, pas une locution.
+        return ad.length >= 2 ? ad.join(' ') : ''
+      }
       return ''
     }
     case 'groupe-nominal-riche': {
@@ -254,9 +299,7 @@ export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | '
       const commenceBien = DETERMINANTS.has(gm[0]?.toLowerCase()) || elision(gm[0] ?? '')
       if (!commenceBien) return ''
       if (gm.length > 4) gm = gm.slice(0, 4)
-      const OUTILS_FIN = langue === 'en' ? OUTILS_FIN_EN : new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux',
-        'sans', 'sous', 'sur', 'dans', 'en', 'à', 'et', 'ou', 'qui', 'que', "d'", "l'"])
-      while (gm.length > 1 && OUTILS_FIN.has(gm[gm.length - 1].toLowerCase())) gm.pop()
+      gm = raboter(gm, langue)
       if (gm.length === 1 && !elision(gm[0])) return ''
       return gm.join(' ')
     }
@@ -329,8 +372,14 @@ export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | '
       // FR : doit commencer par « en » ; EN : par un verbe en -ing
       if (langue === 'en') { if (!/ing$/.test(mots[0].toLowerCase())) return '' }
       else if (mots[0].toLowerCase() !== 'en') return ''
-      if (mots.length > 3) return mots.slice(0, 3).join(' ')
-      return t
+      // La coupe à trois mots produisait « en lisant à » (de « en lisant à
+      // voix basse ») et « en doutant quand » (de « en doutant quand même »).
+      // On rabote la queue, et un gérondif réduit à son seul « en » repart en
+      // réserve plutôt que d'entrer estropié dans le vers.
+      const ge = raboter(mots.length > 3 ? mots.slice(0, 3) : mots, langue)
+      if (langue === 'fr' && ge.length < 2) return ''
+      if (langue === 'en' && ge.length < 1) return ''
+      return ge.join(' ')
     }
     default:
       return t
