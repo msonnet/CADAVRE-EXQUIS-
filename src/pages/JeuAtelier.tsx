@@ -19,6 +19,7 @@ import {
   GardeOuverture, HORS_GN, TYPES_A_DETERMINANT, FAMILLE,
   diagnostic, familleDe, souder, tirerStrategie,
 } from '../lib/determinants'
+import { GardeFormes, POIDS_FAMILLE, familleDuVers, type Famille } from '../lib/formes'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -70,6 +71,12 @@ interface RoleFragment {
   mots?: number      // uniquement pour le vers à une voix (longueur aléatoire)
   apres?: string     // ponctuation cousue après le fragment (ex : virgule de l'adverbe en tête)
   nu?: boolean       // le nom sans déterminant y est-il recevable ? (voir GN_SUJET)
+  /** Mot d'attelage cousu DEVANT le fragment, que personne n'écrit.
+   *  C'est lui qui rend possibles les deux formes que le médium écrivait et
+   *  que la machine ne savait pas produire : « il est grand le silence des
+   *  saisons » et « au travers un trésor ». Sans un mot fixe en tête, une
+   *  dislocation ou un syntagme flottant n'existent pas. */
+  avant?: string
 }
 
 // Le sujet supporte le nom nu : « lacune penche sur l'abîme » est une ellipse
@@ -146,6 +153,30 @@ const NOM_SEUL: RoleFragment = {
 const ADJ_APPOSE: RoleFragment = {
   type: 'adjectif', consigne: tr('un adjectif qualificatif seul', 'a single descriptive adjective'), role: tr('ADJECTIF', 'ADJECTIVE'),
 }
+// ── Les deux formes que le médium écrivait et que la machine ignorait ───────
+//
+// Relevé sur deux ateliers : les seuls vers qui sonnaient humains étaient les
+// siens, et aucun n'était une proposition indépendante.
+//
+//   « Il est grand le silence des saisons »  — une dislocation
+//   « Au travers un trésor »                 — un syntagme qui pend
+//
+// Ni l'une ni l'autre n'est une liste. Ce sont des morceaux d'une phrase qui
+// n'est pas là — et c'est exactement ce qui leur donne une voix.
+const TETES_DISLOCATION = ['il est', 'elle est', "c'est", 'il y a', 'il reste', 'il vient']
+const TETES_SYNTAGME = ['dans', 'sous', 'contre', 'depuis', 'derrière', 'entre',
+                        'par-dessus', 'à même', 'vers', 'sans', 'au travers', 'auprès de']
+const auHasard = (v: string[]) => v[Math.floor(Math.random() * v.length)]
+
+const disloqueAdj = (): RoleFragment => ({
+  type: 'adjectif', consigne: tr('un adjectif qualificatif seul', 'a single descriptive adjective'),
+  role: tr('DISLOCATION', 'DISLOCATION'), avant: auHasard(TETES_DISLOCATION),
+})
+const syntagmeGN = (): RoleFragment => ({
+  type: 'groupe-nominal', consigne: tr('un groupe nominal', 'a noun phrase'),
+  role: tr('SYNTAGME', 'PHRASE'), avant: auHasard(TETES_SYNTAGME), nu: true,
+})
+
 // Le groupe nominal d'une subordonnée qu'on n'achève pas : « tandis que le
 // carreau ». C'est exactement la forme de « Dans la totalité du monde ».
 const GN_SUSPENDU: RoleFragment = {
@@ -161,8 +192,11 @@ const VERBE_SUSPENDU: RoleFragment = {
 const EST_OUTIL = (f: RoleFragment) =>
   f.type === 'conjonction-coord' || f.type === 'conjonction-subord'
 
+// Un mot d'attelage en tête change ce sur quoi le VERS ouvre : « sous un
+// trésor » commence par une préposition, pas par un groupe nominal, même si
+// la case, elle, en est un.
 const EST_GN = (f: RoleFragment) =>
-  f.type === 'groupe-nominal' || f.type === 'groupe-nominal-riche'
+  !f.avant && (f.type === 'groupe-nominal' || f.type === 'groupe-nominal-riche')
 
 /**
  * `outilsPermis` : le vers a-t-il une voix qui parle ailleurs dans le poème ?
@@ -204,43 +238,71 @@ const enumeration = (n: number): RoleFragment[] =>
 const litanie = (n: number): RoleFragment[] =>
   Array.from({ length: n }, (_, i) => (i === n - 1 ? INFINITIF_FIN : INFINITIF_LISTE))
 
-export function gabaritsIncomplets(nVoix: number): RoleFragment[][] {
-  if (nVoix <= 1) return [[NOM_SEUL]]
+/**
+ * L'allongement des formes qui ne sont PAS des listes.
+ *
+ * Une apposition qui s'étend par des cases d'énumération se lit comme une
+ * liste — et c'est bien ce qu'elle devient : le diagnostic de forme, qui va
+ * chercher le premier rôle reconnu, la comptait en LISTE. La famille déclarée
+ * et la famille lue divergeaient, et le plafond des listes ne s'appliquait
+ * donc pas à la moitié d'entre elles.
+ */
+const appositions = (n: number): RoleFragment[] =>
+  Array.from({ length: n }, (_, i) => (i === n - 1 ? GN_APPOSE : { ...GN_APPOSE, apres: ',' }))
+
+export function gabaritsIncomplets(nVoix: number): { famille: Famille; cases: RoleFragment[] }[] {
+  const L = (famille: Famille, cases: RoleFragment[]) => ({ famille, cases })
+  if (nVoix <= 1) {
+    return [
+      L('MOT', [NOM_SEUL]),
+      L('SYNTAGME', [syntagmeGN()]),                            // « au travers un trésor »
+    ]
+  }
   if (nVoix === 2) {
     return [
-      [{ ...GN_APPOSE, apres: ',' }, GN_APPOSE],   // « le carreau, une lampe »
-      [GN_SUJET, VERBE_SUSPENDU],                  // « la réfraction cisaille » — sans objet
-      [CONJ_SUBORD, GN_SUSPENDU],                  // « tandis que le carreau »
-      litanie(2),                                  // « mourir, compter »
+      L('DISLOCATION', [disloqueAdj(), GN_SUJET]),              // « il est grand le silence »
+      L('SYNTAGME', [syntagmeGN(), ADJ_APPOSE]),                // « sous un trésor perdu »
+      L('APPOSITION', [{ ...GN_APPOSE, apres: ',' }, GN_APPOSE]),
+      L('SUSPENS', [GN_SUJET, VERBE_SUSPENDU]),                 // « la craie efface »
+      L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU]),                 // « tandis que le carreau »
+      L('LISTE', litanie(2)),
     ]
   }
   if (nVoix === 3) {
     return [
-      enumeration(3),
-      litanie(3),
-      [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE],  // « le carreau froid, une lampe »
-      [CONJ_SUBORD, GN_SUSPENDU, ADJ_APPOSE],                // « tandis que le carreau froid »
-      [ADVERBE_TETE, GN_SUJET, VERBE_SUSPENDU],              // « doucement, la craie efface »
+      L('DISLOCATION', [disloqueAdj(), GN_SUJET, ADJ_APPOSE]),
+      L('DISLOCATION', [disloqueAdj(), { ...GN_SUJET, apres: ',' }, GN_APPOSE]),
+      L('SYNTAGME', [syntagmeGN(), { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
+      L('APPOSITION', [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
+      L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU, ADJ_APPOSE]),
+      L('SUSPENS', [ADVERBE_TETE, GN_SUJET, VERBE_SUSPENDU]),
+      L('LISTE', enumeration(3)),
+      L('LISTE', litanie(3)),
     ]
   }
   if (nVoix === 4) {
     return [
-      enumeration(4),
-      litanie(4),
-      [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_LISTE, GN_LISTE_FIN],
-      [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE],
-      [ADVERBE_TETE, GN_SUJET, ADJECTIF, VERBE_SUSPENDU],
+      L('DISLOCATION', [disloqueAdj(), { ...GN_SUJET, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
+      L('SYNTAGME', [syntagmeGN(), { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
+      L('APPOSITION', [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
+      L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
+      L('SUSPENS', [ADVERBE_TETE, GN_SUJET, ADJECTIF, VERBE_SUSPENDU]),
+      L('LISTE', enumeration(4)),
+      L('LISTE', litanie(4)),
     ]
   }
-  // Cinq voix et plus : l'énumération et la litanie prennent toute la table,
-  // les formes mixtes ouvrent autrement puis énumèrent le reste.
+  // Cinq voix et plus : les formes s'allongent par APPOSITION, jamais par
+  // énumération — sans quoi la famille déclarée et la famille lue divergent,
+  // et le plafond des listes ne s'applique plus à la moitié d'entre elles.
   return [
-    enumeration(nVoix),
-    litanie(nVoix),
-    [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, ...enumeration(nVoix - 2)],
-    [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, ...enumeration(nVoix - 3)],
-    [ADVERBE_TETE, ...enumeration(nVoix - 2), ADJ_APPOSE],
-  ].filter(g => g.length === nVoix)
+    L('DISLOCATION', [disloqueAdj(), { ...GN_SUJET, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
+    L('SYNTAGME', [syntagmeGN(), { ...ADJ_APPOSE, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
+    L('APPOSITION', [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
+    L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, ...appositions(nVoix - 3)]),
+    L('SUSPENS', [ADVERBE_TETE, ...appositions(nVoix - 3), ADJECTIF, VERBE_SUSPENDU]),
+    L('LISTE', enumeration(nVoix)),
+    L('LISTE', litanie(nVoix)),
+  ].filter(g => g.cases.length === nVoix)
 }
 
 /**
@@ -281,6 +343,9 @@ export function tirerGabarit(
   /** Le nombre de voix convoquées pour la séance entière — pas celles de ce
    *  vers-ci. C'est lui qui décide de la part inachevée du poème. */
   tailleTable = 1,
+  /** Les familles de forme que la garde autorise encore. Sans elle, sept vers
+   *  sur seize se retrouvaient être des listes. */
+  permises?: Set<Famille>,
 ): RoleFragment[] {
   const filtrer = (v: RoleFragment[][]) => {
     let dispo = v
@@ -295,9 +360,44 @@ export function tirerGabarit(
     return dispo
   }
   // Les formes inachevées passent d'abord, et leur part monte avec la table.
-  if (Math.random() < partIncomplete(nVoix, tailleTable)) {
-    const incomplets = filtrer(gabaritsIncomplets(nVoix))
-    if (incomplets.length) return incomplets[Math.floor(Math.random() * incomplets.length)]
+  //
+  // Quand la garde a retiré la PROPOSITION — trois phrases complètes se
+  // suivaient déjà — le tirage n'est plus tiré : il est imposé. Sans cela la
+  // garde ne servait à rien de ce côté-là, et la simulation montrait des
+  // séries de quinze propositions d'affilée : elle pouvait interdire la
+  // phrase complète, mais rien n'obligeait le sort à l'écouter.
+  const inacheveImpose = permises !== undefined && !permises.has('PROPOSITION')
+  if (inacheveImpose || Math.random() < partIncomplete(nVoix, tailleTable)) {
+    // On tire la FAMILLE d'abord, avec ses poids, et la variante ensuite —
+    // pas l'inverse. En tirant à plat dans le vivier, c'est le NOMBRE de
+    // variantes qui décidait de la fréquence : deux variantes de liste sur
+    // cinq ont donné sept listes sur seize vers. Le poids d'une famille ne
+    // doit rien devoir à la quantité de formes qu'on lui a écrites.
+    // Le tri se fait sur le vivier ENTIER, jamais variante par variante : le
+    // filtre garde tout quand plus rien ne passe, et appliqué à une variante
+    // seule ce repli laissait justement passer celle qu'il fallait exclure —
+    // une case-outil interdite, une ouverture nominale que la garde refusait.
+    // Et si rien ne survit, on ne force pas l'inachevé : on retombe sur les
+    // formes complètes, qui ont leurs propres replis.
+    const pool = gabaritsIncomplets(nVoix).filter(g => !permises || permises.has(g.famille))
+    const cartes = new Map<RoleFragment[], Famille>(pool.map(g => [g.cases, g.famille] as const))
+    const retenus = [...cartes.keys()].filter(c =>
+      (outilsPermis || !c.some(EST_OUTIL)) && (!ouvertureHorsGN || !EST_GN(c[0])))
+
+    const parFamille = new Map<Famille, RoleFragment[][]>()
+    for (const c of retenus) {
+      const f = cartes.get(c)!
+      parFamille.set(f, [...(parFamille.get(f) ?? []), c])
+    }
+    const familles = [...parFamille.keys()]
+    const total = familles.reduce((s, f) => s + POIDS_FAMILLE[f], 0)
+    if (total > 0) {
+      let t = Math.random() * total
+      let choisie = familles[familles.length - 1]
+      for (const f of familles) { t -= POIDS_FAMILLE[f]; if (t <= 0) { choisie = f; break } }
+      const v = parFamille.get(choisie)!
+      return v[Math.floor(Math.random() * v.length)]
+    }
   }
 
   if (nVoix === 1) {
@@ -614,6 +714,15 @@ export default function JeuAtelier() {
     histoire: diagnostic(vers.map(v => v.texte)).familles,
   }))
 
+  // La garde des FORMES : pas deux listes de suite, pas plus d'un vers sur
+  // huit en liste. Sans elle, sept vers sur seize en étaient — le métronome
+  // de la proposition complète avait été remplacé par un métronome plus
+  // pauvre encore. Elle reprend l'histoire d'un brouillon rouvert.
+  const [gardeFormes] = useState(() => new GardeFormes(
+    plan?.totalVers ?? 20,
+    vers.map(v => familleDuVers((v.mains ?? []).map(m => m.role))),
+  ))
+
   const [saisie, setSaisie] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
 
@@ -665,6 +774,7 @@ export default function JeuAtelier() {
     // ne suit pas toujours la stratégie, et la réserve locale ne la connaît
     // même pas. La garde doit compter le poème réel.
     garde.enregistrer(familleDe(v.texte))
+    gardeFormes.enregistrer(familleDuVers((v.mains ?? []).map(m => m.role)))
     setVers(prev => [...prev, v])
   }
 
@@ -703,9 +813,10 @@ export default function JeuAtelier() {
 
       // Jamais deux fois de suite la même forme — la métrique respire
       const table = p.voixPool.length
-      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table)
+      const formesOk = gardeFormes.permises()
+      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table)
+        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -786,7 +897,10 @@ export default function JeuAtelier() {
 
         // Tous les fragments de voix se cousent en minuscule — un seul fil,
         // celui d'attaque compris.
-        const cousu = enMinuscule(texte)
+        // Le mot d'attelage — « il est », « au travers » — n'est écrit par
+        // personne : il tient la forme. Il entre dans le texte de la case pour
+        // que les coutures restent alignées sur le vers.
+        const cousu = (caseRole.avant ? `${caseRole.avant} ` : '') + enMinuscule(texte)
         fragments.push(cousu + (caseRole.apres ?? ''))
         mains.push({ role: caseRole.role, texte: cousu, voixNom: nomCase, reserve: deLaReserve || undefined })
         if (annule) return
@@ -845,9 +959,10 @@ export default function JeuAtelier() {
       const famillesInterdites = garde.famillesInterdites()
       const horsGN = garde.exigeOuvertureHorsGN()
       const table = p.voixPool.length
-      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table)
+      const formesOk = gardeFormes.permises()
+      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table)
+        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -962,7 +1077,8 @@ export default function JeuAtelier() {
       const t = fragTextes[k] as string
       // La case du médium en tête de vers garde sa frappe ; celle d'une voix,
       // non — c'est le même fil que partout ailleurs.
-      const cousu = k === 0 && k === fragSlotJoueur ? t : enMinuscule(t)
+      const nu = k === 0 && k === fragSlotJoueur ? t : enMinuscule(t)
+      const cousu = (role.avant ? `${role.avant} ` : '') + nu
       return cousu + (role.apres ?? '')
     })
     const texte = souder(coutures.join(' '))

@@ -1,76 +1,203 @@
 import { describe, it, expect } from 'vitest'
 import { gabaritsIncomplets, partIncomplete, piocherReserve, tirerGabarit } from '../pages/JeuAtelier'
+import { FAMILLES, GardeFormes, diagnosticFormes, familleDuVers, type Famille } from '../lib/formes'
 
 // Mesuré sur un atelier de dix-sept vers : les quinze vers de voix étaient
 // quinze propositions complètes. Les seuls vers qui sonnaient humains étaient
 // ceux du médium — « Il est beau le soleil couchant », une dislocation, et
-// « Dans la totalité du monde », une subordonnée qui pend. Le moteur savait
-// faire de la syntaxe, pas de la parole.
+// « Dans la totalité du monde », un syntagme qui pend. Le moteur savait faire
+// de la syntaxe, pas de la parole.
+//
+// Puis, une fois les formes inachevées ouvertes, mesuré sur un atelier de
+// dix-huit vers : SEPT vers sur seize étaient des listes, dont deux paires
+// consécutives. Un métronome en avait remplacé un autre, et le nouveau était
+// plus pauvre — une liste n'a aucune syntaxe.
 
-// Les rôles disent l'intention mieux que les types : « la lumière tremble »
-// n'a pas de complément et reste une proposition complète, tandis que « la
-// craie efface » s'arrête sur un verbe qui en réclamait un.
-const ROLES_INCOMPLETS = new Set([
-  'APPOSITION', 'ÉNUMÉRATION', 'LITANIE', 'SUSPENS', 'UN MOT',
-  'LIST', 'LITANY', 'SUSPENDED', 'ONE WORD',
-])
-const estIncomplet = (g: { role: string }[]) => g.some(f => ROLES_INCOMPLETS.has(f.role))
-
-// Le plan ne met jamais plus de cinq voix sur un vers (quatre plus le médium
-// sur un vers de fragment) : c'est le plafond de repartirVoix.
-const PLAFOND = 5
+const VERBES_FERMANTS = new Set(['verbe', 'groupe-verbal'])
 
 describe('gabaritsIncomplets', () => {
   it('rend toujours autant de cases que de voix, de une à douze', () => {
     for (let n = 1; n <= 12; n++) {
       const v = gabaritsIncomplets(n)
       expect(v.length, `n=${n}`).toBeGreaterThan(0)
-      for (const g of v) expect(g.length, `n=${n} ${g.map(f => f.role).join('|')}`).toBe(n)
+      for (const { cases } of v) expect(cases.length, `n=${n}`).toBe(n)
     }
   })
 
   it('ne finit jamais sa phrase', () => {
     for (let n = 1; n <= 12; n++) {
-      for (const g of gabaritsIncomplets(n)) {
-        const nom = `n=${n} ${g.map(f => f.role).join('|')}`
-        expect(estIncomplet(g), nom).toBe(true)
+      for (const { famille, cases } of gabaritsIncomplets(n)) {
+        const nom = `n=${n} ${famille} ${cases.map(f => f.role).join('|')}`
+        expect(famille, nom).not.toBe('PROPOSITION')
+        expect(familleDuVers(cases.map(f => f.role)), nom).toBe(famille)
         // Jamais de verbe intransitif ni de groupe verbal : ceux-là referment
-        // le vers. Un transitif est admis, mais seulement en dernier — c'est
-        // le complément manquant qui fait le suspens.
-        expect(g.some(f => f.type === 'verbe' || f.type === 'groupe-verbal'), nom).toBe(false)
-        const iv = g.findIndex(f => f.type === 'verbe-transitif')
-        if (iv !== -1) expect(iv, nom).toBe(g.length - 1)
+        // le vers. Un transitif est admis, mais en dernier seulement — c'est
+        // le complément absent qui fait le suspens.
+        expect(cases.some(f => VERBES_FERMANTS.has(f.type)), nom).toBe(false)
+        const iv = cases.findIndex(f => f.type === 'verbe-transitif')
+        if (iv !== -1) expect(iv, nom).toBe(cases.length - 1)
       }
     }
   })
 
-  it("offre l'énumération et la litanie dès trois voix — les deux seules formes qui grandissent", () => {
-    for (let n = 3; n <= 12; n++) {
-      const roles = gabaritsIncomplets(n).map(g => g.map(f => f.role).join('|'))
-      expect(roles.some(r => r.split('|').every(x => x === 'ÉNUMÉRATION')), `n=${n}`).toBe(true)
-      expect(roles.some(r => r.split('|').every(x => x === 'LITANIE')), `n=${n}`).toBe(true)
+  it("offre les deux formes du médium dès qu'il y a de la place", () => {
+    // « Il est grand le silence des saisons » et « Au travers un trésor ».
+    for (let n = 2; n <= 8; n++) {
+      const f = gabaritsIncomplets(n).map(g => g.famille)
+      expect(f, `n=${n}`).toContain('DISLOCATION')
+      expect(f, `n=${n}`).toContain('SYNTAGME')
+      expect(f, `n=${n}`).toContain('SUSPENS')
+    }
+    expect(gabaritsIncomplets(1).map(g => g.famille)).toContain('SYNTAGME')
+  })
+
+  it('coud un mot d\'attelage devant la dislocation et le syntagme', () => {
+    for (let n = 1; n <= 6; n++) {
+      for (const { famille, cases } of gabaritsIncomplets(n)) {
+        if (famille === 'DISLOCATION' || famille === 'SYNTAGME') {
+          expect(cases[0].avant, `${famille} n=${n}`).toBeTruthy()
+        }
+      }
     }
   })
 
-  it('donne le vers d\'un seul mot quand une voix parle seule', () => {
+  it('ne laisse jamais la liste occuper plus du quart du vivier', () => {
+    // C'est ce déséquilibre-là qui a produit sept listes sur seize vers :
+    // deux variantes pures sur cinq, plus une mixte.
+    for (let n = 2; n <= 8; n++) {
+      const v = gabaritsIncomplets(n)
+      const listes = v.filter(g => g.famille === 'LISTE').length
+      expect(listes / v.length, `n=${n}`).toBeLessThanOrEqual(0.3)
+    }
+  })
+
+  it("donne le vers d'un seul mot quand une voix parle seule", () => {
     const v = gabaritsIncomplets(1)
-    expect(v).toHaveLength(1)
-    expect(v[0]).toHaveLength(1)
-    expect(v[0][0].type).toBe('nom')
+    for (const g of v) expect(g.cases).toHaveLength(1)
+    expect(v.some(g => g.cases[0].type === 'nom')).toBe(true)
   })
 
   it('coud les virgules partout sauf après la dernière case', () => {
     for (let n = 2; n <= 8; n++) {
-      for (const g of gabaritsIncomplets(n)) {
-        expect(g[g.length - 1].apres, `n=${n}`).toBeUndefined()
+      for (const { cases } of gabaritsIncomplets(n)) {
+        expect(cases[cases.length - 1].apres, `n=${n}`).toBeUndefined()
       }
     }
   })
 
   it('laisse le nom nu dans les énumérations — « poussière, le drap, un verre »', () => {
-    for (const g of gabaritsIncomplets(5)) {
-      const enums = g.filter(f => f.role === 'ÉNUMÉRATION')
-      for (const f of enums) expect(f.nu).toBe(true)
+    for (const { cases } of gabaritsIncomplets(5)) {
+      for (const f of cases.filter(c => c.role === 'ÉNUMÉRATION')) expect(f.nu).toBe(true)
+    }
+  })
+})
+
+// ── La garde des formes ───────────────────────────────────────────────────
+
+describe('GardeFormes', () => {
+  it('interdit deux listes de suite — la faute la plus audible du poème mesuré', () => {
+    const g = new GardeFormes(20)
+    expect(g.permises().has('LISTE')).toBe(true)
+    g.enregistrer('LISTE')
+    expect(g.permises().has('LISTE')).toBe(false)
+    g.enregistrer('SUSPENS')
+    expect(g.permises().has('LISTE')).toBe(true)
+  })
+
+  it('plafonne la liste à un vers sur huit', () => {
+    const g = new GardeFormes(16)
+    let posees = 0
+    for (let i = 0; i < 40; i++) {
+      if (g.permises().has('LISTE')) { g.enregistrer('LISTE'); posees++ }
+      else g.enregistrer('PROPOSITION')
+    }
+    expect(posees).toBeLessThanOrEqual(2)
+  })
+
+  it('ne plafonne pas la proposition — elle est le fond du poème', () => {
+    const g = new GardeFormes(20)
+    for (let i = 0; i < 40; i++) g.enregistrer('PROPOSITION')
+    expect(g.permises().size).toBeGreaterThan(1)
+  })
+
+  it('interdit trois propositions de suite', () => {
+    const g = new GardeFormes(20)
+    g.enregistrer('PROPOSITION'); g.enregistrer('PROPOSITION'); g.enregistrer('PROPOSITION')
+    expect(g.permises().has('PROPOSITION')).toBe(false)
+  })
+
+  it('ne ferme jamais toutes les portes', () => {
+    const g = new GardeFormes(3)
+    for (const f of FAMILLES) { g.enregistrer(f); g.enregistrer(f); g.enregistrer(f) }
+    expect(g.permises().size).toBeGreaterThanOrEqual(1)
+  })
+
+  it("repart avec la mémoire d'un brouillon rouvert", () => {
+    const g = new GardeFormes(20, ['LISTE'])
+    expect(g.permises().has('LISTE')).toBe(false)
+  })
+})
+
+// ── Ce que la table produit vraiment ─────────────────────────────────────
+
+describe('tirerGabarit', () => {
+  const familleTiree = (n: number, table = 1, permises?: Set<Famille>) =>
+    familleDuVers(tirerGabarit(n, true, true, false, table, permises).map(f => f.role))
+
+  const mesurer = (n: number, table = 1) => {
+    const c: Record<string, number> = {}
+    const N = 3000
+    for (let i = 0; i < N; i++) {
+      const f = familleTiree(n, table)
+      c[f] = (c[f] ?? 0) + 1
+    }
+    return { inacheve: 1 - (c.PROPOSITION ?? 0) / N, liste: (c.LISTE ?? 0) / N }
+  }
+
+  it("inachève plus souvent à cinq voix qu'à deux", () => {
+    expect(mesurer(5).inacheve).toBeGreaterThan(mesurer(2).inacheve + 0.15)
+  })
+
+  it('inachève deux fois plus souvent sur une table de quarante-six que de quatre', () => {
+    for (const n of [2, 3]) {
+      expect(mesurer(n, 46).inacheve, `n=${n}`).toBeGreaterThan(mesurer(n, 4).inacheve * 1.5)
+    }
+  })
+
+  it('ne laisse pas la liste dépasser un vers sur dix, même sans garde', () => {
+    for (const n of [2, 3, 4, 5]) {
+      for (const table of [4, 46]) {
+        expect(mesurer(n, table).liste, `n=${n} t=${table}`).toBeLessThan(0.10)
+      }
+    }
+  })
+
+  it('respecte la famille interdite quand la garde en passe une', () => {
+    const sansListe = new Set(FAMILLES.filter(f => f !== 'LISTE'))
+    for (const n of [2, 3, 4, 5]) {
+      for (let i = 0; i < 800; i++) {
+        expect(familleTiree(n, 46, sansListe), `n=${n}`).not.toBe('LISTE')
+      }
+    }
+  })
+
+  it("respecte encore la garde d'ouverture et l'absence d'outils", () => {
+    const OUTIL = new Set(['conjonction-coord', 'conjonction-subord'])
+    // Un mot d'attelage en tête change ce sur quoi le vers ouvre : « sous un
+    // trésor » commence par une préposition, pas par un groupe nominal.
+    const OUVRE_GN = (f: { type: string; avant?: string }) =>
+      !f.avant && (f.type === 'groupe-nominal' || f.type === 'groupe-nominal-riche')
+    for (const n of [1, 2, 3, 4, 5, 7]) {
+      for (let i = 0; i < 400; i++) {
+        expect(tirerGabarit(n, true, false).some(f => OUTIL.has(f.type)), `outils n=${n}`).toBe(false)
+        expect(OUVRE_GN(tirerGabarit(n, true, true, true)[0]), `horsGN n=${n}`).toBe(false)
+      }
+    }
+  })
+
+  it("rend une case par voix jusqu'au plafond de cinq", () => {
+    for (let n = 1; n <= 5; n++) {
+      for (let i = 0; i < 400; i++) expect(tirerGabarit(n).length, `n=${n}`).toBe(n)
     }
   })
 })
@@ -82,96 +209,115 @@ describe('la part inachevée monte avec le vers ET avec la table', () => {
   })
 
   it('croît aussi avec le nombre de convives, à vers égal', () => {
-    // La grande table n'entasse pas les voix sur un vers, elle allonge le
-    // poème : mesuré, 1,5 voix par vers à quatre convives, 2,3 à quarante-six.
-    // Sans ce second cadran, une séance de quarante-six voix serait à peine
-    // plus inachevée qu'une séance de quatre.
-    const petites = partIncomplete(2, 4)
-    const grandes = partIncomplete(2, 46)
-    expect(grandes - petites).toBeGreaterThan(0.15)
+    expect(partIncomplete(2, 46) - partIncomplete(2, 4)).toBeGreaterThan(0.15)
   })
 
-  it('ne dépasse jamais deux vers sur trois — le poème garde des phrases', () => {
+  it('ne dépasse jamais deux vers sur trois', () => {
     for (let n = 1; n <= 6; n++) {
       for (const t of [1, 4, 12, 24, 46, 200]) {
         expect(partIncomplete(n, t), `n=${n} t=${t}`).toBeLessThanOrEqual(0.62)
       }
     }
   })
-
-  it('ne bouge pas sur une petite table — la forme complète y reste la règle', () => {
-    expect(partIncomplete(2, 4)).toBe(partIncomplete(2, 1))
-  })
 })
 
-describe('tirerGabarit — ce que la table produit vraiment', () => {
-  const mesurer = (n: number, table = 1) => {
-    let inc = 0
-    const N = 3000
-    for (let i = 0; i < N; i++) if (estIncomplet(tirerGabarit(n, true, true, false, table))) inc++
-    return inc / N
-  }
+// ── Le diagnostic de forme, sur le poème qui a motivé tout ceci ──────────
 
-  it('inachève plus souvent à cinq voix qu\'à deux', () => {
-    expect(mesurer(5)).toBeGreaterThan(mesurer(2) + 0.15)
+describe('diagnosticFormes', () => {
+  it("retrouve les sept listes sur seize de l'atelier mesuré", () => {
+    const poeme: string[][] = [
+      ['SUSPENS'], ['SUJET', 'VERBE'], ['SUJET', 'VERBE'],
+      ['ÉNUMÉRATION'], ['SUJET', 'VERBE'], ['LITANIE'], ['SUSPENS'],
+      ['SUJET', 'VERBE'], ['LITANIE'], ['LITANIE'], ['SUJET', 'VERBE'],
+      ['ÉNUMÉRATION'], ['LITANIE'], ['APPOSITION'], ['SUJET', 'VERBE'],
+      ['ÉNUMÉRATION'],
+    ]
+    const d = diagnosticFormes(poeme)
+    expect(d.comptes.LISTE).toBe(7)
+    expect(d.parts.LISTE).toBeGreaterThan(0.4)
+    expect(d.plusLongueSerie).toBe(2)
   })
 
-  it("tient la promesse : autour de la moitié des vers à cinq voix", () => {
-    const t = mesurer(5)
-    expect(t).toBeGreaterThan(0.45)
-    expect(t).toBeLessThan(0.65)
+  it('compte la diversité des formes', () => {
+    const d = diagnosticFormes([['SUSPENS'], ['ÉNUMÉRATION'], ['SUJET'], ['DISLOCATION']])
+    expect(d.diversite).toBe(4)
   })
 
-  it('inachève deux fois plus souvent sur une table de quarante-six que sur une table de quatre', () => {
-    for (const n of [2, 3]) {
-      expect(mesurer(n, 46), `n=${n}`).toBeGreaterThan(mesurer(n, 4) * 1.5)
-    }
-  })
-
-  it('laisse malgré tout passer des propositions complètes partout', () => {
-    for (const n of [1, 2, 3, 4, 5]) expect(mesurer(n), `n=${n}`).toBeLessThan(0.7)
-  })
-
-  it("respecte encore la garde d'ouverture et l'absence d'outils", () => {
-    const OUTIL = new Set(['conjonction-coord', 'conjonction-subord'])
-    const EST_GN = (t: string) => t === 'groupe-nominal' || t === 'groupe-nominal-riche'
-    for (const n of [1, 2, 3, 4, 5, 7]) {
-      for (let i = 0; i < 500; i++) {
-        expect(tirerGabarit(n, true, false).some(f => OUTIL.has(f.type)), `outils n=${n}`).toBe(false)
-        expect(EST_GN(tirerGabarit(n, true, true, true)[0].type), `horsGN n=${n}`).toBe(false)
-      }
-    }
-  })
-
-  it('rend une case par voix jusqu\'au plafond de cinq', () => {
-    for (let n = 1; n <= PLAFOND; n++) {
-      for (let i = 0; i < 400; i++) expect(tirerGabarit(n).length, `n=${n}`).toBe(n)
-    }
-  })
-
-  it("ne dépasse jamais cinq cases, quelle que soit la table", () => {
-    // Le plan ne demande jamais plus, mais si le plafond bougeait, un gabarit
-    // plus long que le nombre de mains laisserait une case sans voix.
-    for (const n of [6, 8, 12]) {
-      for (let i = 0; i < 200; i++) {
-        const g = tirerGabarit(n)
-        expect(g.length === n || g.length === PLAFOND, `n=${n} → ${g.length}`).toBe(true)
-      }
-    }
+  it('range tout ce qui ne porte aucun rôle de forme en proposition', () => {
+    expect(familleDuVers(['SUJET', 'VERBE', 'COMPLÉMENT'])).toBe('PROPOSITION')
+    expect(familleDuVers(['VERS ENTIER'])).toBe('PROPOSITION')
+    expect(familleDuVers([])).toBe('PROPOSITION')
   })
 })
 
 describe('la réserve locale suit les nouvelles formes', () => {
   it("rend un mot, pas une phrase, quand le vers n'en demande qu'un", () => {
-    for (let i = 0; i < 60; i++) {
-      const t = piocherReserve('nom')
-      expect(t.split(/\s+/).length, t).toBe(1)
-    }
+    for (let i = 0; i < 60; i++) expect(piocherReserve('nom').split(/\s+/).length).toBe(1)
   })
 
   it('sait encore servir les cases des formes complètes', () => {
     for (const type of ['groupe-nominal', 'verbe', 'infinitif', 'adjectif', 'adverbe']) {
       expect(piocherReserve(type), type).toBeTruthy()
     }
+  })
+})
+
+// ── La séance entière, du plan au poème ──────────────────────────────────
+
+describe('une séance simulée de bout en bout', () => {
+  const seance = (table: number, totalVers = 30) => {
+    const g = new GardeFormes(totalVers)
+    const roles: string[][] = []
+    for (let i = 0; i < totalVers; i++) {
+      const n = 1 + Math.floor(Math.random() * 4)
+      const gab = tirerGabarit(n, true, true, false, table, g.permises())
+      const r = gab.map(x => x.role)
+      g.enregistrer(familleDuVers(r))
+      roles.push(r)
+    }
+    return diagnosticFormes(roles)
+  }
+
+  it("ne laisse jamais filer une longue série d'une même forme", () => {
+    // Sans contrainte sur la proposition, la simulation montrait des séries de
+    // quinze phrases complètes d'affilée : la garde pouvait interdire, mais
+    // rien n'obligeait le tirage à l'écouter.
+    for (const table of [4, 12, 24, 46]) {
+      for (let s = 0; s < 40; s++) {
+        expect(seance(table).plusLongueSerie, `table=${table}`).toBeLessThanOrEqual(6)
+      }
+    }
+  })
+
+  it('garde la liste à sa place — quelques vers, jamais le poème', () => {
+    for (const table of [4, 12, 24, 46]) {
+      for (let s = 0; s < 40; s++) {
+        const d = seance(table)
+        expect(d.comptes.LISTE, `table=${table}`).toBeLessThanOrEqual(4)
+        expect(d.parts.LISTE, `table=${table}`).toBeLessThan(0.15)
+      }
+    }
+  })
+
+  it('laisse la proposition rester le fond du poème', () => {
+    for (const table of [4, 12, 24, 46]) {
+      const d = seance(table, 60)
+      expect(d.parts.PROPOSITION, `table=${table}`).toBeGreaterThan(0.35)
+    }
+  })
+
+  it('fait entendre au moins cinq formes différentes sur une grande table', () => {
+    for (let s = 0; s < 30; s++) {
+      expect(seance(46, 30).diversite).toBeGreaterThanOrEqual(5)
+    }
+  })
+
+  it('inachève davantage à mesure que la table grandit', () => {
+    const part = (t: number) => {
+      let n = 0
+      for (let s = 0; s < 40; s++) n += 1 - seance(t).parts.PROPOSITION
+      return n / 40
+    }
+    expect(part(46)).toBeGreaterThan(part(4) + 0.10)
   })
 })

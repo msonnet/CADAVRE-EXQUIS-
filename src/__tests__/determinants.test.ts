@@ -14,7 +14,11 @@ function des(graine: number): () => number {
   }
 }
 
-const EST_GN = (t: string) => t === 'groupe-nominal' || t === 'groupe-nominal-riche'
+// Un mot d'attelage en tête change ce sur quoi le VERS ouvre : « sous un
+// trésor » commence par une préposition, pas par un groupe nominal, même si la
+// case, elle, en est un.
+const EST_GN = (f: { type: string; avant?: string }) =>
+  !f.avant && (f.type === 'groupe-nominal' || f.type === 'groupe-nominal-riche')
 
 // Le déterminant témoin de chaque stratégie — pour fabriquer un vers de test
 const TEMOIN: Record<string, string> = {
@@ -172,7 +176,7 @@ describe("tirerGabarit — l'ouverture hors groupe nominal", () => {
   it("n'ouvre jamais sur un groupe nominal quand la garde l'exige", () => {
     for (const n of [2, 3, 4, 5]) {
       for (let i = 0; i < 300; i++) {
-        expect(EST_GN(tirerGabarit(n, true, true, true)[0].type)).toBe(false)
+        expect(EST_GN(tirerGabarit(n, true, true, true)[0])).toBe(false)
       }
     }
   })
@@ -181,7 +185,7 @@ describe("tirerGabarit — l'ouverture hors groupe nominal", () => {
     for (const n of [2, 3, 4, 5]) {
       for (let i = 0; i < 300; i++) {
         const g = tirerGabarit(n, true, false, true)
-        expect(EST_GN(g[0].type)).toBe(false)
+        expect(EST_GN(g[0])).toBe(false)
         expect(g.some(f => f.type.startsWith('conjonction'))).toBe(false)
       }
     }
@@ -189,7 +193,7 @@ describe("tirerGabarit — l'ouverture hors groupe nominal", () => {
 
   it('laisse le gabarit libre quand la garde ne demande rien', () => {
     let nominaux = 0
-    for (let i = 0; i < 400; i++) if (EST_GN(tirerGabarit(3)[0].type)) nominaux++
+    for (let i = 0; i < 400; i++) if (EST_GN(tirerGabarit(3)[0])) nominaux++
     expect(nominaux).toBeGreaterThan(0)
   })
 })
