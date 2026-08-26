@@ -138,24 +138,37 @@ export function promptSysteme(v: Voix, type?: string): string {
   // respire entre deux.
   const duMetier = Math.random() < (v.technicite ?? 0.75)
 
+  // La phrase qui suit l'échantillon n'est pas la même des deux côtés, et
+  // c'est tout le point. « Ces exemples ne sont que cent parmi mille, le mot
+  // juste n'y figure probablement pas, ne les recopie pas » a été écrite pour
+  // le LEXIQUE, où elle empêche la voix de s'ancrer sur un terme de métier.
+  // Servie sur le DEHORS, elle dit à la voix de fuir « le verre d'eau » — et
+  // le modèle, chassé de l'ordinaire, n'a plus qu'un endroit où aller : le
+  // dictionnaire. Mesuré en production : le rêveur a rendu « une
+  // centrifugeuse », l'insomniaque « ma soude », le photographe « ce
+  // débitmètre ». Du côté du dehors, recopier est permis : c'est
+  // l'ordinaire qu'on cherche, pas la trouvaille.
+  const ECARTER = "Ce ne sont que des exemples parmi cent autres — ton monde est bien plus large, et le mot juste n'y figure probablement pas. Ne les recopie pas : va chercher ailleurs dans le même territoire."
+  const RESTER = "Prends l'une de ces choses-là, ou une chose voisine de la même vie. Elle doit rester ORDINAIRE : un objet, un bruit, une heure, quelqu'un — jamais un terme de métier, jamais un mot savant."
+
   const ancrage = duMetier
     ? (type && CASES_VERBE.has(type)
-      ? `Quelques-uns de ses gestes, donnés à l'infinitif — à toi de conjuguer : ${tirer(gestesUtiles, ECHANTILLON)}.`
+      ? `Quelques-uns de ses gestes, donnés à l'infinitif — à toi de conjuguer : ${tirer(gestesUtiles, ECHANTILLON)}. ${ECARTER}`
       : type && CASES_LARGES.has(type)
-        ? `Quelques-unes de ses matières : ${tirer(v.lexique, 3)}. Quelques-uns de ses gestes : ${tirer(gestesUtiles, 3)}.`
-        : `Quelques-unes de ses matières, pour te situer : ${tirer(v.lexique, ECHANTILLON)}.`)
+        ? `Quelques-unes de ses matières : ${tirer(v.lexique, 3)}. Quelques-uns de ses gestes : ${tirer(gestesUtiles, 3)}. ${ECARTER}`
+        : `Quelques-unes de ses matières, pour te situer : ${tirer(v.lexique, ECHANTILLON)}. ${ECARTER}`)
     // Le dehors ne contient que des choses, pas des gestes : sur une case
     // verbe on ne peut pas le servir tel quel. On renvoie alors la voix à son
     // enjeu, qui est justement ce qui la fait agir.
     : (type && CASES_VERBE.has(type)
-      ? `Ce geste-ci ne vient pas de ton travail : il vient de ce qui te tient en ce moment.`
-      : `Ce mot-ci ne vient pas de ton travail. Prends-le dans ce qui t'entoure par ailleurs : ${tirer(v.dehors, ECHANTILLON)}.`)
+      ? `Ce geste-ci ne vient pas de ton travail : il vient de ce qui te tient en ce moment. C'est un geste ORDINAIRE, de ceux qu'on fait sans y penser — jamais un verbe de métier.`
+      : `Ce mot-ci ne vient pas de ton travail. Prends-le dans ce qui t'entoure par ailleurs : ${tirer(v.dehors, ECHANTILLON)}. ${RESTER}`)
 
   return `${v.situation}
 
 Et ceci, en ce moment : ${v.enjeu} Tu n'en parles pas, mais c'est de là que tu regardes.
 
-${duMetier ? 'Ta langue vient de ce monde-là.' : "Ta langue ne vient pas toujours du travail."} ${ancrage} Ce ne sont que des exemples parmi cent autres — ton monde est bien plus large, et le mot juste n'y figure probablement pas. Ne les recopie pas : va chercher ailleurs dans le même territoire.
+${duMetier ? 'Ta langue vient de ce monde-là.' : "Ta langue ne vient pas toujours du travail."} ${ancrage}
 
 Ta manière : ${v.souffle} ${v.defaut}
 

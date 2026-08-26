@@ -105,6 +105,34 @@ describe('le prompt système', () => {
     }
   })
 
+  it("demande l'ordinaire quand le mot vient du dehors, et l'écart quand il vient du métier", () => {
+    // « le mot juste n'y figure probablement pas, ne les recopie pas » a été
+    // écrite pour le lexique de métier. Servie sur le dehors, elle chasse la
+    // voix de l'ordinaire, et il ne lui reste que le dictionnaire : le rêveur
+    // a rendu « une centrifugeuse », l'insomniaque « ma soude ».
+    for (const v of VOIX) {
+      for (let i = 0; i < 30; i++) {
+        const p = promptSysteme(v, 'groupe-nominal')
+        const dehors = p.includes('ne vient pas de ton travail')
+        expect(p.includes('Ne les recopie pas'), `${v.id} dehors=${dehors}`).toBe(!dehors)
+        expect(p.includes('doit rester ORDINAIRE'), `${v.id} dehors=${dehors}`).toBe(dehors)
+      }
+    }
+  })
+
+  it('interdit le verbe de métier quand le geste vient du dehors', () => {
+    const e = VOIX.find(v => v.id === 'enfant')!
+    let vus = 0
+    for (let i = 0; i < 60; i++) {
+      const p = promptSysteme(e, 'verbe')
+      if (p.includes('ne vient pas de ton travail')) {
+        expect(p).toContain('geste ORDINAIRE')
+        vus++
+      }
+    }
+    expect(vus).toBeGreaterThan(30)
+  })
+
   it('ne montre jamais le lexique en entier — la voix retomberait sur son premier article', () => {
     for (const v of VOIX) {
       for (let i = 0; i < 10; i++) {

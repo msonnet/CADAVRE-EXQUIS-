@@ -486,8 +486,13 @@ export default async function handler(req: any, res: any): Promise<void> {
       ? "\nThis full line must carry your signature: one concrete thing from your own world. Don't try to surprise — set down what you have in front of you, in your own terms. What sets you apart is exactness."
       : "\nCe vers entier doit porter ton empreinte : une chose concrète, prise dans ton univers propre. Ne cherche pas à surprendre — note ce que tu as devant toi, dans les termes qui sont les tiens. C'est ton exactitude qui te distingue.")
     : (langue === 'en'
-      ? "\nEven this short, the fragment must be yours: take the word from the world you work in — what you handle, weigh, watch, fear. The word only you would put here, not a vague one that would suit anybody."
-      : "\nMême aussi court, le fragment doit être le tien : prends le mot dans le monde où tu travailles — ce que tu manipules, pèses, observes, redoutes. Le mot que toi seul mettrais là, pas un mot vague qui irait à n'importe qui.")
+      // « le monde où tu travailles » : cette formule renvoyait au métier à
+      // chaque fragment court, et contredisait le prompt système chaque fois
+      // qu'il servait la vie du dehors. Mesuré : le rêveur a rendu « une
+      // centrifugeuse », l'insomniaque « ma soude ». Le monde d'une voix est
+      // plus large que son travail — c'est tout l'objet du cadran.
+      ? "\nEven this short, the fragment must be yours: take the word from your own world — what you handle, cross paths with, watch, fear. The word only you would put here, not a vague one that would suit anybody."
+      : "\nMême aussi court, le fragment doit être le tien : prends le mot dans ton monde à toi — ce que tu manipules, croises, observes, redoutes. Le mot que toi seul mettrais là, pas un mot vague qui irait à n'importe qui.")
 
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 25_000)
