@@ -150,8 +150,39 @@ function premiermot(texte: string): string {
   return mots(texte)[0]?.toLowerCase() ?? ''
 }
 
+/**
+ * Le mot dépouillé de ce qui le précède : « s'effondre » → « effondre ».
+ * La liste de verbes ne contient que des formes nues ; « s'effondre » n'y
+ * tombait donc jamais, et « l'attend » non plus.
+ */
+function sansClitique(mot: string): string {
+  return normaliser(mot).replace(/^(s|m|t|n|l|j|c|d|qu)['’]/, '')
+}
+
+/**
+ * Le pronom réfléchi accroché à un verbe — « s'effondre », « se referme »,
+ * « m'échappe ». Aucun nom français ne le porte : c'est la seule marque
+ * verbale qu'on puisse lire sans dictionnaire, et elle vaut pour les verbes
+ * qu'aucune liste ne contiendra jamais.
+ */
+function porteUnReflechi(texte: string): boolean {
+  const ms = mots(texte)
+  return ms.some((m, i) =>
+    /^(s|m|t)['’]\S/i.test(m) || (['se', 'me', 'te'].includes(normaliser(m)) && i < ms.length - 1))
+}
+
+/**
+ * Y a-t-il un verbe là-dedans ? La liste répond oui pour les cinq cents formes
+ * courantes ; le réfléchi répond oui pour tout le reste.
+ */
 function contientVerbe(texte: string): boolean {
-  return mots(texte).some(m => VERBES.has(normaliser(m)))
+  return mots(texte).some(m => VERBES.has(normaliser(m)) || VERBES.has(sansClitique(m)))
+    || porteUnReflechi(texte)
+}
+
+/** Ce mot-ci ouvre-t-il un groupe NOMINAL ? (« l'ombre » compte, « s'effondre » non) */
+function ouvreSurUnDeterminant(mot: string): boolean {
+  return ARTICLES.has(normaliser(mot).replace(/['’].*$/, ''))
 }
 
 function contientArticle(texte: string): boolean {
@@ -319,10 +350,12 @@ function validerCaseEN(texte: string, type: TypeCase): ResultatValidation {
     }
 
     case 'groupe-verbal': {
-      if (!contientVerbeEN(texte) && n > 2) {
-        return { valide: false, message: "A verb phrase needs a conjugated verb (e.g. 'crosses the night', 'burns in silence')." }
-      }
-      return { valide: true }
+      // Même raison qu'en français : on lit la place, pas la liste.
+      const msEN = motsEN(texte)
+      if (n <= 2) return { valide: true }
+      if (contientVerbeEN(texte)) return { valide: true }
+      if (!ARTICLES_EN.has(normEN(msEN[0]))) return { valide: true }
+      return { valide: false, message: "This reads as a noun phrase. The prompt asks for a conjugated verb followed by a short complement (e.g. 'crosses the night', 'burns in silence')." }
     }
 
     case 'conjonction-coord': {
@@ -468,10 +501,22 @@ export function validerCase(
     }
 
     case 'groupe-verbal': {
-      if (!contientVerbe(texte) && mots(texte).length > 2) {
-        return { valide: false, message: "Un groupe verbal doit contenir un verbe conjugué (ex : 'traverse la nuit', 'brûle en silence')." }
+      // La liste des cinq cents verbes courants ne peut pas suffire ici : les
+      // voix — et le médium avec elles — écrivent « dissèque », « macère »,
+      // « calcine », « s'effondre ». Exiger l'appartenance à une liste, c'est
+      // refuser tout le vocabulaire pour lequel ce jeu existe.
+      //
+      // On lit donc la PLACE, pas le mot : un groupe verbal commence par son
+      // verbe, un groupe nominal par son déterminant. On ne refuse que ce qui
+      // ouvre sur un déterminant sans qu'aucune marque verbale ne se montre.
+      const ms = mots(texte)
+      if (ms.length <= 2) return { valide: true }
+      if (contientVerbe(texte)) return { valide: true }
+      if (!ouvreSurUnDeterminant(ms[0])) return { valide: true }
+      return {
+        valide: false,
+        message: "Ceci se lit comme un groupe nominal. La consigne demande un verbe conjugué, suivi d'un complément court (ex : 'traverse la nuit', 'brûle en silence').",
       }
-      return { valide: true }
     }
 
     case 'conjonction-coord': {
