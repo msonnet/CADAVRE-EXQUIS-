@@ -44,6 +44,7 @@ STRICT RULES:
 1. Within each line only: fix subject-verb agreement (third-person -s) and the article a/an before vowel sounds.
 2. Never create agreement across different lines — each line is a closed world.
 3. Never change any lexical word (nouns, verbs stay the same words — only their inflection may change), never reorder words.
+4. Some lines have NO verb — an apposition, a list, a run of infinitives — and others stop before their object. That is deliberate. Never add a verb, a word or an ending: copy those lines unchanged.
 
 Reply with EXACTLY ${(blocs as unknown[]).length} lines — the corrected lines in order, one per line, no numbering, no quotes, no comment.`
     } else {
@@ -73,6 +74,7 @@ RÈGLES STRICTES :
 2. Ne crée AUCUN accord entre vers différents — chaque vers est un monde clos.
 3. Ne modifie aucun mot lexical (noms, verbes, adverbes restent identiques).
 4. Conserve l'ordre des mots de chaque vers.
+5. Certains vers n'ont PAS de verbe — une apposition, une énumération, une suite d'infinitifs — et d'autres s'arrêtent avant leur complément. C'est voulu. N'ajoute jamais un verbe, un mot ni une fin de phrase : recopie ces vers-là tels quels.
 
 Réponds avec EXACTEMENT ${(blocs as unknown[]).length} lignes — les vers corrigés dans l'ordre, un par ligne, sans numérotation, sans guillemets, sans commentaire.`
 

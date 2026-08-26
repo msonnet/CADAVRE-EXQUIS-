@@ -119,6 +119,45 @@ const QUESTION: RoleFragment = {
   type: 'proposition', consigne: tr('une question', 'a question'), role: 'QUESTION',
 }
 
+// ── Les cases des formes incomplètes ─────────────────────────────────────────
+// Ces cases-là ne servent à rien d'autre qu'à ne pas finir la phrase.
+const GN_APPOSE: RoleFragment = {
+  type: 'groupe-nominal', consigne: tr('un groupe nominal', 'a noun phrase'), role: tr('APPOSITION', 'APPOSITION'),
+  nu: true,
+}
+const GN_LISTE: RoleFragment = {
+  type: 'groupe-nominal', consigne: tr('un groupe nominal', 'a noun phrase'), role: tr('ÉNUMÉRATION', 'LIST'),
+  nu: true, apres: ',',
+}
+const GN_LISTE_FIN: RoleFragment = {
+  type: 'groupe-nominal', consigne: tr('un groupe nominal', 'a noun phrase'), role: tr('ÉNUMÉRATION', 'LIST'),
+  nu: true,
+}
+const INFINITIF_LISTE: RoleFragment = {
+  type: 'infinitif', consigne: tr("un verbe à l'infinitif", 'a verb in the infinitive'), role: tr('LITANIE', 'LITANY'),
+  apres: ',',
+}
+const INFINITIF_FIN: RoleFragment = {
+  type: 'infinitif', consigne: tr("un verbe à l'infinitif", 'a verb in the infinitive'), role: tr('LITANIE', 'LITANY'),
+}
+const NOM_SEUL: RoleFragment = {
+  type: 'nom', consigne: tr('un nom seul', 'a single noun'), role: tr('UN MOT', 'ONE WORD'),
+}
+const ADJ_APPOSE: RoleFragment = {
+  type: 'adjectif', consigne: tr('un adjectif qualificatif seul', 'a single descriptive adjective'), role: tr('ADJECTIF', 'ADJECTIVE'),
+}
+// Le groupe nominal d'une subordonnée qu'on n'achève pas : « tandis que le
+// carreau ». C'est exactement la forme de « Dans la totalité du monde ».
+const GN_SUSPENDU: RoleFragment = {
+  type: 'groupe-nominal', consigne: tr('un groupe nominal', 'a noun phrase'), role: tr('SUSPENS', 'SUSPENDED'),
+  nu: true,
+}
+// Le verbe transitif qu'on laisse sans complément : la phrase s'arrête sur
+// une main tendue.
+const VERBE_SUSPENDU: RoleFragment = {
+  type: 'verbe-transitif', consigne: tr('un verbe transitif conjugué', 'a conjugated transitive verb'), role: tr('SUSPENS', 'SUSPENDED'),
+}
+
 const EST_OUTIL = (f: RoleFragment) =>
   f.type === 'conjonction-coord' || f.type === 'conjonction-subord'
 
@@ -134,6 +173,103 @@ const EST_GN = (f: RoleFragment) =>
  * voix présentes sont dans ce cas — il n'y avait personne à qui confier le
  * « or ». Le gabarit lui-même s'efface donc.
  */
+/**
+ * Les formes qui ne finissent pas leur phrase.
+ *
+ * Mesuré sur un atelier de dix-sept vers : les quinze vers de voix étaient
+ * quinze propositions complètes — sujet, verbe, complément, circonstanciel.
+ * Aucun fragment, aucune reprise, aucun vers de deux mots. Les seuls vers qui
+ * sonnaient humains étaient ceux du médium, et aucun des deux n'était une
+ * proposition indépendante : « Il est beau le soleil couchant » est une
+ * dislocation, « Dans la totalité du monde » une subordonnée qui pend.
+ *
+ * Le moteur savait faire de la syntaxe, pas de la parole.
+ *
+ * ── Pourquoi elles vont d'abord aux GRANDES tables ──────────────────────
+ *
+ * Le nombre de voix commande le nombre de cases, et toutes les formes à trois
+ * voix et plus étaient des propositions complètes. Le poème à quarante-six
+ * voix aurait donc été le plus CONTRAINT du recueil, pas le plus riche :
+ * quarante-six phrases bien faites à la file. C'est l'inverse de ce qu'une
+ * multitude devrait produire.
+ *
+ * L'énumération et la litanie règlent ça parce qu'elles sont les deux seules
+ * formes qui GRANDISSENT avec le nombre de mains : cinq voix, cinq noms
+ * juxtaposés. Une proposition, elle, ne peut pas grandir — elle ne peut que
+ * s'alourdir de circonstanciels.
+ */
+const enumeration = (n: number): RoleFragment[] =>
+  Array.from({ length: n }, (_, i) => (i === n - 1 ? GN_LISTE_FIN : GN_LISTE))
+
+const litanie = (n: number): RoleFragment[] =>
+  Array.from({ length: n }, (_, i) => (i === n - 1 ? INFINITIF_FIN : INFINITIF_LISTE))
+
+export function gabaritsIncomplets(nVoix: number): RoleFragment[][] {
+  if (nVoix <= 1) return [[NOM_SEUL]]
+  if (nVoix === 2) {
+    return [
+      [{ ...GN_APPOSE, apres: ',' }, GN_APPOSE],   // « le carreau, une lampe »
+      [GN_SUJET, VERBE_SUSPENDU],                  // « la réfraction cisaille » — sans objet
+      [CONJ_SUBORD, GN_SUSPENDU],                  // « tandis que le carreau »
+      litanie(2),                                  // « mourir, compter »
+    ]
+  }
+  if (nVoix === 3) {
+    return [
+      enumeration(3),
+      litanie(3),
+      [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE],  // « le carreau froid, une lampe »
+      [CONJ_SUBORD, GN_SUSPENDU, ADJ_APPOSE],                // « tandis que le carreau froid »
+      [ADVERBE_TETE, GN_SUJET, VERBE_SUSPENDU],              // « doucement, la craie efface »
+    ]
+  }
+  if (nVoix === 4) {
+    return [
+      enumeration(4),
+      litanie(4),
+      [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_LISTE, GN_LISTE_FIN],
+      [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE],
+      [ADVERBE_TETE, GN_SUJET, ADJECTIF, VERBE_SUSPENDU],
+    ]
+  }
+  // Cinq voix et plus : l'énumération et la litanie prennent toute la table,
+  // les formes mixtes ouvrent autrement puis énumèrent le reste.
+  return [
+    enumeration(nVoix),
+    litanie(nVoix),
+    [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, ...enumeration(nVoix - 2)],
+    [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, ...enumeration(nVoix - 3)],
+    [ADVERBE_TETE, ...enumeration(nVoix - 2), ADJ_APPOSE],
+  ].filter(g => g.length === nVoix)
+}
+
+/**
+ * La part des vers qu'on laisse inachevés.
+ *
+ * Elle lit DEUX choses, et il a fallu mesurer pour comprendre pourquoi.
+ *
+ * Le nombre de mains sur CE vers, d'abord : plus elles sont nombreuses, plus
+ * le gabarit complet s'alourdit de circonstanciels, et plus l'inachevé
+ * soulage.
+ *
+ * La taille de la TABLE ensuite, et c'est elle qu'on avait oubliée. Une
+ * grande table n'entasse pas les voix sur un vers — elle allonge le poème.
+ * Mesuré sur trois cents plans : 1,5 voix par vers à quatre convives, 2,3 à
+ * quarante-six. Autrement dit, la monotonie d'une grande séance n'est pas
+ * dans le vers, elle est à l'échelle du POÈME : trente vers bien construits
+ * à la file. Seule la taille de la table peut la corriger, et c'est
+ * exactement ce qu'on demandait.
+ */
+export function partIncomplete(nVoix: number, tailleTable = 1): number {
+  const base = nVoix <= 1 ? 0.18
+    : nVoix === 2 ? 0.22
+      : nVoix === 3 ? 0.30
+        : nVoix === 4 ? 0.42
+          : 0.50
+  const bonus = Math.min(0.20, Math.max(0, ((tailleTable - 6) / 40) * 0.20))
+  return Math.min(0.62, base + bonus)
+}
+
 export function tirerGabarit(
   nVoix: number,
   questionPermise = true,
@@ -142,6 +278,9 @@ export function tirerGabarit(
    *  nominal — au-delà de trois à six vers nominaux d'affilée, l'oreille n'entend
    *  plus qu'un métronome. */
   ouvertureHorsGN = false,
+  /** Le nombre de voix convoquées pour la séance entière — pas celles de ce
+   *  vers-ci. C'est lui qui décide de la part inachevée du poème. */
+  tailleTable = 1,
 ): RoleFragment[] {
   const filtrer = (v: RoleFragment[][]) => {
     let dispo = v
@@ -155,6 +294,12 @@ export function tirerGabarit(
     }
     return dispo
   }
+  // Les formes inachevées passent d'abord, et leur part monte avec la table.
+  if (Math.random() < partIncomplete(nVoix, tailleTable)) {
+    const incomplets = filtrer(gabaritsIncomplets(nVoix))
+    if (incomplets.length) return incomplets[Math.floor(Math.random() * incomplets.length)]
+  }
+
   if (nVoix === 1) {
     // Une seule plume écrit le vers entier — rarement une question (l'interrogatif
     // épuisé devient un tic sur un poème long : budget géré par l'appelant), sinon
@@ -278,7 +423,10 @@ export function motsInterdits(opts: {
 
 // Signature d'un gabarit — pour ne jamais tirer deux fois de suite la même forme
 function signatureGabarit(g: RoleFragment[]): string {
-  return g.map(f => `${f.type}:${f.mots ?? ''}`).join('|')
+  // Le rôle entre dans la signature : une énumération de trois groupes
+  // nominaux et une proposition « sujet + verbe + complément » ne partagent pas
+  // leurs types, mais une énumération et une apposition, si.
+  return g.map(f => `${f.type}:${f.role}:${f.mots ?? ''}`).join('|')
 }
 
 // Dernier mot d'un vers, dépouillé de sa ponctuation — la seule trace transmise en écho
@@ -297,6 +445,10 @@ const RESERVE_FR: Record<string, string[]> = {
                      'mon ombre', 'sa cendre', 'ton silence', 'son givre',
                      'chaque fêlure', 'nulle issue', 'aucun seuil', 'toute la suie',
                      'poussière', 'rouille', 'cendre', 'brume'],
+  // Le vers d'un seul mot tire ici : sans cette entrée, la réserve retombait
+  // sur celle des vers entiers et rendait une phrase là où on attendait un mot.
+  'nom': ['cendre', 'seuil', 'givre', 'rouille', 'limon', 'écume', 'suie', 'lierre',
+          'brume', 'poussière', 'sel', 'craie', 'ardoise', 'fêlure'],
   'verbe': ['tremble', 'dévore', 'veille', 'chavire', 'demeure', 'glisse', 'rôde', 'vacille',
             'affleure', 'se penche', 'consent', 'recule'],
   'verbe-transitif': ['dévore', 'effleure', 'avale', 'fissure', 'traverse', 'ronge',
@@ -321,6 +473,8 @@ const RESERVE_EN: Record<string, string[]> = {
                      'my shadow', 'its ash', 'your silence',
                      'each crack', 'no way out', 'every seam',
                      'dust', 'rust', 'ash', 'fog'],
+  'nom': ['ash', 'threshold', 'frost', 'rust', 'silt', 'foam', 'soot', 'ivy',
+          'fog', 'dust', 'salt', 'chalk', 'slate', 'crack'],
   'verbe': ['trembles', 'devours', 'keeps watch', 'capsizes', 'remains', 'glides', 'prowls', 'wavers',
             'surfaces', 'leans over', 'consents', 'recoils'],
   'verbe-transitif': ['devours', 'grazes', 'swallows', 'cracks', 'crosses', 'gnaws',
@@ -367,6 +521,25 @@ export function determinantDeCase(
   // la monotonie inverse. On ne lui demande donc que de ne pas en ouvrir un.
   if (type === 'libre' && horsGN) return HORS_GN
   return undefined
+}
+
+/**
+ * Le tireur de déterminants d'UN vers.
+ *
+ * La garde d'ouverture ne surveillait que la tête du vers. À l'intérieur,
+ * rien : « la cendre traverse la nuit » a deux articles définis, et une
+ * énumération de cinq groupes nominaux pouvait en aligner cinq. On garde donc
+ * la famille de la case précédente et on l'écarte de la suivante.
+ */
+function tireurDeVers(famillesEnTete: Set<string>) {
+  let precedente: string | undefined
+  return (r: RoleFragment, voixId: string, premiere: boolean, horsGN: boolean) => {
+    const exclure = new Set<string>(premiere ? famillesEnTete : [])
+    if (precedente) exclure.add(precedente)
+    const d = determinantDeCase(r.type, voixId, exclure, premiere && horsGN, r.nu === true)
+    if (d && FAMILLE[d]) precedente = FAMILLE[d]
+    return d
+  }
 }
 
 /** La réserve locale, elle aussi tenue à la stratégie demandée. */
@@ -529,9 +702,10 @@ export default function JeuAtelier() {
       const horsGN = garde.exigeOuvertureHorsGN()
 
       // Jamais deux fois de suite la même forme — la métrique respire
-      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN)
+      const table = p.voixPool.length
+      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN)
+        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -546,6 +720,7 @@ export default function JeuAtelier() {
       const echo = precedent ? dernierMot(precedent) : undefined
       const contexte = p.echo && echo ? echo : undefined
 
+      const tirer = tireurDeVers(famillesInterdites)
       const fragments: string[] = []
       const nomsVoix: string[] = []
       const mains: MainAtelier[] = []
@@ -567,14 +742,10 @@ export default function JeuAtelier() {
 
         // Le déterminant se tire dans l'idiolecte de la voix qui parle —
         // le boucher part du partitif, l'enfant du possessif, le
-        // télégraphiste du nom nu. Sur la case de tête seulement, la garde
-        // retire la famille qui vient de servir deux fois.
-        const determinant = determinantDeCase(
-          caseRole.type, p.voixPool[ordre[k]],
-          k === 0 ? famillesInterdites : undefined,
-          k === 0 && horsGN,
-          caseRole.nu === true,
-        )
+        // télégraphiste du nom nu. En tête, la garde retire la famille qui
+        // vient de servir deux fois ; à l'intérieur, le tireur écarte celle
+        // de la case d'avant.
+        const determinant = tirer(caseRole, p.voixPool[ordre[k]], k === 0, horsGN)
 
         const requete = {
           consigne: caseRole.consigne,
@@ -673,9 +844,10 @@ export default function JeuAtelier() {
       const outilsOk = aiDuPlan.some(v => (mult[v] ?? 0) > 1)
       const famillesInterdites = garde.famillesInterdites()
       const horsGN = garde.exigeOuvertureHorsGN()
-      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN)
+      const table = p.voixPool.length
+      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN)
+        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
 
@@ -724,16 +896,22 @@ export default function JeuAtelier() {
         if (k !== slotJoueur) aiSlots.push({ k, aiIdx: c++ })
       }
 
+      // Les stratégies se tirent AVANT les appels : le tireur garde la mémoire
+      // du vers, et les appels partent en parallèle — ils ne peuvent donc pas
+      // se la transmettre. On parcourt le gabarit dans l'ordre, case du médium
+      // comprise (elle n'a pas de déterminant, mais elle occupe une place).
+      const tirer = tireurDeVers(famillesInterdites)
+      const determinants: (string | undefined)[] = gabarit.map((role, k) => {
+        if (k === slotJoueur) return undefined
+        const localIdx = aiSlots.findIndex(a => a.k === k)
+        return tirer(role, p.voixPool[aiIndices[localIdx]], k === 0, horsGN)
+      })
+
       // Fetch en parallèle — le médium tape pendant que les voix cherchent
       await Promise.all(aiSlots.map(async ({ k, aiIdx: localIdx }) => {
         if (annule) return
         const role = gabarit[k]
-        const determinant = determinantDeCase(
-          role.type, p.voixPool[aiIndices[localIdx]],
-          k === 0 ? famillesInterdites : undefined,
-          k === 0 && horsGN,
-          role.nu === true,
-        )
+        const determinant = determinants[k]
         const requete = {
           consigne: role.consigne,
           type: role.type,
