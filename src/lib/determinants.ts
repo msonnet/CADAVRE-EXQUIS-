@@ -215,14 +215,21 @@ export class GardeOuverture {
  * Soude les élisions à la jointure des cases.
  * « sitôt qu' une faille » → « sitôt qu'une faille ».
  * À appliquer sur le vers assemblé, jamais sur une case isolée.
+ *
+ * La ponctuation haute — « ? », « ! », « ; », « : » — garde son espace en
+ * français. Recoller sans distinguer donnait « désoperculation? », qui est la
+ * règle anglaise appliquée à un vers français.
  */
-export function souder(texte: string): string {
-  return String(texte)
+export function souder(texte: string, langue: 'fr' | 'en' = 'fr'): string {
+  let t = String(texte)
     .replace(/(['’])\s+/g, '$1')
-    .replace(/\s+([,;:.!?…])/g, '$1')
+    .replace(/\s+([,.…])/g, '$1')
     .replace(/([,;:])(?=\S)/g, '$1 ')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
+  t = langue === 'en'
+    ? t.replace(/\s+([;:!?])/g, '$1')
+    // Une espace avant, une seule, et jamais deux signes séparés l'un de l'autre
+    : t.replace(/\s*([;:!?])/g, ' $1').replace(/([;:!?])\s+(?=[;:!?])/g, '$1')
+  return t.replace(/\s{2,}/g, ' ').trim()
 }
 
 // L'adverbe de tête est reconnu à sa virgule, pas à sa terminaison : les cases

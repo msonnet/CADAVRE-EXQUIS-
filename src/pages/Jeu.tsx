@@ -541,9 +541,11 @@ export default function Jeu() {
     const consigneIA = def.type === 'libre' ? ouvertureAleatoire(def.consigne) : def.consigne
     // Le déterminant d'un groupe nominal se tire dans l'idiolecte de la voix :
     // la contrainte serveur est la même pour les 46, et rendait partout « le ».
+    // Le nom nu est écarté ici : les grilles du cadavre écrit placent leurs
+    // groupes nominaux en sujet comme en complément, et rien dans la case ne
+    // dit lequel. « froisse vibrure » n'est pas une ellipse, c'est une faute.
     const determinant = TYPES_A_DETERMINANT.has(def.type) && voiceId
-      // Le groupe nominal riche exige un déterminant : le nom nu s'y contredirait.
-      ? tirerStrategie(voiceId, def.type === 'groupe-nominal-riche' ? new Set(['ZERO']) : new Set())
+      ? tirerStrategie(voiceId, new Set(['ZERO']))
       : undefined
     demanderFragmentIA({ consigne: consigneIA, type: def.type, voiceId, contexte: contexteIA, eviter: eviterIA, ...(determinant ? { determinant } : {}) })
       .then(({ texte, source, voixNom }) => finaliser(texte.trim(), source, voixNom))

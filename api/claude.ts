@@ -46,8 +46,8 @@ const MAX_TOKENS: Record<TypeCase, number> = {
 // Contraintes de longueur explicites dans le prompt
 const CONTRAINTES: Record<TypeCase, string> = {
   'nom': '1 MOT SEUL — jamais d\'article, jamais 2 mots (ex: "cœur", "nuage", "cendre", "os")',
-  'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier (tout temps : "dévore", "hantait", "boira", "frôle", "vacilla", "glissera"). INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms, participes passés non conjugués, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
-  'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
+  'verbe': '1 MOT — VERBE CONJUGUÉ à la 3e personne du singulier (tout temps : "dévore", "hantait", "boira", "frôle", "vacilla", "glissera"). ÉPREUVE OBLIGATOIRE avant de répondre : « il <ton mot> » ou « elle <ton mot> » doit se dire en français courant. Si tu n\'as jamais entendu ce mot conjugué, c\'est un NOM — recommence. INTERDIT ABSOLU : adjectifs (sourd, pâle, brisé…), noms (surtout les noms savants en -tion, -ment, -eur, -ance, -isme, -este), participes passés non conjugués, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
+  'verbe-transitif': '1 MOT — VERBE TRANSITIF DIRECT conjugué à la 3e personne du singulier, qui appelle un complément d\'objet (tout temps : "dévore", "effleurait", "rongera", "soulève"). ÉPREUVE OBLIGATOIRE avant de répondre : « il <ton mot> quelque chose » doit se dire en français courant. Si tu n\'as jamais entendu ce mot conjugué, c\'est un NOM — recommence. INTERDIT ABSOLU : verbes intransitifs (trembler, vaciller, tressaillir…), verbes pronominaux, adjectifs, noms, adverbes. Si le mot peut se lire comme un nom ("feuille", "voile", "marche"), choisis-en un autre, sans ambiguïté verbale.',
   'adjectif': '1 MOT SEUL (adjectif qualificatif — ex : "nocturne", "brisé", "sourd", "profond")',
   'adverbe': '1 SEUL ADVERBE INVARIABLE (en -ment : "doucement", "obliquement") ou une locution adverbiale de 2 mots ("sans bruit", "à rebours"). INTERDIT ABSOLU : adjectifs (pesant, sourd…), noms, verbes.',
   'groupe-nominal': '2 MOTS EXACTEMENT : déterminant + nom — ex : "une ombre", "ce givre", "du sel", "la pluie". JAMAIS d\'adjectif après le nom.',
@@ -143,7 +143,7 @@ const ARTICLES_EN = new Set([
 
 const CONTRAINTES_EN: Record<TypeCase, string> = {
   'nom': 'ONE WORD ONLY — never an article, never 2 words (ex: "heart", "cloud", "ash", "bone")',
-  'verbe': 'ONE WORD — a CONJUGATED verb, third person singular, any tense ("devours", "haunted", "will drink", "grazes" — one word only, so prefer simple present or past). ABSOLUTELY FORBIDDEN: adjectives, nouns, bare infinitives, adverbs. If the word could read as a noun ("waves", "marches"), pick an unambiguous verb.',
+  'verbe': 'ONE WORD — a CONJUGATED verb, third person singular, any tense ("devours", "haunted", "will drink", "grazes" — one word only, so prefer simple present or past). MANDATORY TEST before answering: "it <your word>" must be sayable in ordinary English. If you have never heard the word conjugated, it is a NOUN — start again. ABSOLUTELY FORBIDDEN: adjectives, nouns, bare infinitives, adverbs. If the word could read as a noun ("waves", "marches"), pick an unambiguous verb.',
   'verbe-transitif': 'ONE WORD — a TRANSITIVE conjugated verb, third person singular, that calls for an object ("devours", "carves", "lifts", "gnaws"). ABSOLUTELY FORBIDDEN: intransitive verbs, adjectives, nouns, adverbs.',
   'adjectif': 'ONE WORD ONLY (a qualifying adjective — ex: "nocturnal", "broken", "hollow", "deep")',
   'adverbe': 'ONE INVARIABLE ADVERB ("softly", "sideways", "forever") or a 2-word adverbial phrase ("without sound", "at dusk"). ABSOLUTELY FORBIDDEN: adjectives, nouns, verbs.',
@@ -467,8 +467,10 @@ export default async function handler(req: any, res: any): Promise<void> {
     : []
   const eviterLine = motsEviter.length
     ? (langue === 'en'
-      ? `\nABSOLUTELY FORBIDDEN to reuse these already-used words (find something else): ${motsEviter.join(', ')}.`
-      : `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés (trouve autre chose) : ${motsEviter.join(', ')}.`)
+      ? `\nABSOLUTELY FORBIDDEN to reuse these already-used words, or any word sharing their stem (find something else): ${motsEviter.join(', ')}.`
+      // « un macérat » puis « macère » : deux mots différents, un seul radical.
+      // La liste ne portait que sur les formes exactes.
+      : `\nINTERDICTION ABSOLUE de réutiliser ces mots déjà employés, ni aucun mot de la même famille — même radical, autre terminaison (trouve autre chose) : ${motsEviter.join(', ')}.`)
     : ''
 
   // L'empreinte de la voix, à toutes les tailles de fragment.

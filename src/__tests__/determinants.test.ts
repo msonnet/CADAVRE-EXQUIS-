@@ -3,7 +3,7 @@ import {
   FAMILLE, GardeOuverture, HORS_GN, PROFILS,
   diagnostic, familleDe, souder, tirerStrategie,
 } from '../lib/determinants'
-import { determinantDeCase, piocherReserve, tirerGabarit } from '../pages/JeuAtelier'
+import { determinantDeCase, motsInterdits, piocherReserve, tirerGabarit } from '../pages/JeuAtelier'
 
 // Un générateur reproductible — les mesures doivent tomber deux fois pareil
 function des(graine: number): () => number {
@@ -338,5 +338,78 @@ describe("l'adverbe de tête se reconnaît à sa virgule", () => {
 
   it("ne prend pas un nom anglais en -ing pour un gérondif", () => {
     expect(familleDe('building without end')).toBe('ZERO')
+  })
+})
+
+// ── Ce que l'atelier de trente-cinq vers a montré ─────────────────────────
+
+describe('souder — la ponctuation française garde son espace', () => {
+  it("ne colle pas le point d'interrogation au dernier mot", () => {
+    // Mesuré : « Qui butine encore après désoperculation? » — la règle anglaise
+    // appliquée à un vers français, par une soudure qui ne distinguait pas.
+    expect(souder('Qui butine encore après désoperculation ?'))
+      .toBe('Qui butine encore après désoperculation ?')
+    expect(souder('où va la nuit  ?')).toBe('où va la nuit ?')
+    expect(souder('le sel !')).toBe('le sel !')
+    expect(souder('ceci : cela')).toBe('ceci : cela')
+  })
+
+  it("pose l'espace quand la case l'avait perdue", () => {
+    expect(souder('le vide reste?')).toBe('le vide reste ?')
+  })
+
+  it('colle toujours la virgule et le point', () => {
+    expect(souder('doucement , le sel ronge')).toBe('doucement, le sel ronge')
+    expect(souder('la nuit .')).toBe('la nuit.')
+  })
+
+  it("suit la règle anglaise quand le vers est anglais", () => {
+    expect(souder('who still forages after uncapping ?', 'en'))
+      .toBe('who still forages after uncapping?')
+    expect(souder('softly , the salt gnaws', 'en')).toBe('softly, the salt gnaws')
+  })
+
+  it("recolle toujours l'élision", () => {
+    expect(souder("sitôt qu' une faille")).toBe("sitôt qu'une faille")
+  })
+})
+
+describe('le nom nu ne se pose pas après un verbe', () => {
+  it("ne se tire jamais sur une case qui ne le permet pas", () => {
+    // « la fraise froisse vibrure » : le nom nu en complément n'est pas une
+    // ellipse, c'est la faute que la contrainte du groupe verbal interdit
+    // depuis toujours (« cède terrain » / « cède du terrain »).
+    for (const voix of ['telegraphiste', 'psalmiste', 'lexicographe', 'fossoyeur']) {
+      for (let i = 0; i < 200; i++) {
+        expect(determinantDeCase('groupe-nominal', voix)).not.toBe('zero')
+        expect(determinantDeCase('groupe-nominal-riche', voix, undefined, false, true)).not.toBe('zero')
+      }
+    }
+  })
+
+  it('reste possible là où la poésie le connaît — le sujet', () => {
+    let nus = 0
+    for (let i = 0; i < 300; i++) {
+      if (determinantDeCase('groupe-nominal', 'telegraphiste', undefined, false, true) === 'zero') nus++
+    }
+    expect(nus).toBeGreaterThan(50)
+  })
+})
+
+describe('motsInterdits — les conjonctions courtes ne se font plus couper', () => {
+  it('les place assez tôt pour survivre à la troncature du serveur', () => {
+    // Le serveur ne garde que les soixante premiers mots. Sur trente-cinq vers,
+    // « or » se retrouvait au-delà : il a ouvert les vers 7, 23 et 28.
+    const vers = Array.from({ length: 35 }, (_, i) => ({ texte: `vers numéro ${'aaa'.repeat(i % 3 + 1)}${i} porte quatre mots longs ici` }))
+    const liste = motsInterdits({ echo: 'cendre', vers, conjCourtes: ['or', 'en', 'si'] })
+    for (const c of ['or', 'en', 'si']) {
+      expect(liste.slice(0, 60), c).toContain(c)
+    }
+  })
+
+  it("laisse l'écho passer devant", () => {
+    const liste = motsInterdits({ echo: 'cendre', vers: [], conjCourtes: ['or'] })
+    expect(liste[0]).toBe('cendre')
+    expect(liste[1]).toBe('or')
   })
 })

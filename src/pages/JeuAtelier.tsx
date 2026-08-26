@@ -69,10 +69,16 @@ interface RoleFragment {
   role: string       // étiquette affichée pendant que la voix écrit
   mots?: number      // uniquement pour le vers à une voix (longueur aléatoire)
   apres?: string     // ponctuation cousue après le fragment (ex : virgule de l'adverbe en tête)
+  nu?: boolean       // le nom sans déterminant y est-il recevable ? (voir GN_SUJET)
 }
 
+// Le sujet supporte le nom nu : « lacune penche sur l'abîme » est une ellipse
+// que la poésie connaît. Le complément, non — « froisse vibrure » n'est pas une
+// ellipse, c'est une faute, et la contrainte du groupe verbal le disait déjà
+// depuis toujours (« cède terrain » est INTERDIT, « cède du terrain » est correct).
 const GN_SUJET: RoleFragment = {
   type: 'groupe-nominal', consigne: tr('un groupe nominal sujet', 'a subject noun phrase'), role: tr('SUJET', 'SUBJECT'),
+  nu: true,
 }
 const GN_COMPLEMENT: RoleFragment = {
   type: 'groupe-nominal', consigne: tr('un groupe nominal complément', 'an object noun phrase'), role: tr('COMPLÉMENT', 'OBJECT'),
@@ -248,6 +254,12 @@ export function recalerMains(mains: MainAtelier[], versCorrige: string): MainAte
  *
  * L'écho passe en tête : c'est le mot qu'il est le plus tentant de recopier,
  * et le seul qu'on ait délibérément mis dans l'oreille de la voix.
+ *
+ * Les conjonctions courtes le suivent immédiatement, et c'est la deuxième
+ * moitié de la même leçon : elles étaient en QUEUE de liste, donc coupées dès
+ * le vingtième vers. Mesuré sur un atelier de trente-cinq vers : « or » ouvrait
+ * les vers 7, 23 et 28. Elles sont cinq au maximum, ce sont les mots les plus
+ * exposés à la répétition, et ils sont invisibles au filtre des mots longs.
  */
 export function motsInterdits(opts: {
   echo?: string
@@ -258,9 +270,9 @@ export function motsInterdits(opts: {
   const mots = (t: string) => (t.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2)
   return [
     ...(opts.echo ? mots(opts.echo) : []),
+    ...opts.conjCourtes,
     ...(opts.enCours ? mots(opts.enCours) : []),
     ...[...opts.vers].reverse().flatMap(v => mots(v.texte)),
-    ...opts.conjCourtes,
   ]
 }
 
@@ -339,12 +351,15 @@ export function determinantDeCase(
   voixId: string,
   interdites?: Set<string>,
   horsGN = false,
+  /** Le nom nu est-il recevable à cette place ? Faux par défaut : seul le
+   *  groupe SUJET le porte (voir GN_SUJET). */
+  nuPermis = false,
 ): string | undefined {
   if (TYPES_A_DETERMINANT.has(type)) {
     const exclure = new Set(interdites ?? [])
     // Le groupe nominal RICHE porte un adjectif ou un complément : sa contrainte
     // exige un déterminant, et le nom nu s'y contredirait.
-    if (type === 'groupe-nominal-riche') exclure.add('ZERO')
+    if (type === 'groupe-nominal-riche' || !nuPermis) exclure.add('ZERO')
     return tirerStrategie(voixId, exclure)
   }
   // Le vers entier est écrit d'un seul tenant : on ne peut pas lui imposer un
@@ -361,6 +376,20 @@ export function piocherReserve(type: string, determinant?: string): string {
   const conformes = famille ? pool.filter(m => familleDe(m) === famille) : []
   const source = conformes.length ? conformes : pool
   return source[Math.floor(Math.random() * source.length)]
+}
+
+/**
+ * La minuscule d'attaque des vers de voix.
+ *
+ * Les fragments cousus après le premier étaient déjà mis en minuscule — un seul
+ * fil. Mais le premier gardait ce que le modèle avait envoyé, et le modèle
+ * capitalise ce qu'il rend comme une phrase entière. Sur trente-cinq vers, cinq
+ * portaient une majuscule et trente non : « Le registre demeure clos » au-dessus
+ * de « le rochet macère ». Les vers du médium, eux, gardent sa frappe — c'est
+ * la sienne.
+ */
+function enMinuscule(texte: string): string {
+  return texte.charAt(0).toLowerCase() + texte.slice(1)
 }
 
 const CLE_BROUILLON = 'atelier-en-cours'
@@ -544,6 +573,7 @@ export default function JeuAtelier() {
           caseRole.type, p.voixPool[ordre[k]],
           k === 0 ? famillesInterdites : undefined,
           k === 0 && horsGN,
+          caseRole.nu === true,
         )
 
         const requete = {
@@ -583,8 +613,9 @@ export default function JeuAtelier() {
         // Les questions retrouvent leur point d'interrogation (le serveur coupe la ponctuation finale)
         if (caseRole.type === 'proposition' && !/[?!.]\s*$/.test(texte)) texte += langueActuelle() === 'en' ? '?' : ' ?'
 
-        // Les fragments suivants se cousent en minuscule — un seul fil
-        const cousu = k === 0 ? texte : texte.charAt(0).toLowerCase() + texte.slice(1)
+        // Tous les fragments de voix se cousent en minuscule — un seul fil,
+        // celui d'attaque compris.
+        const cousu = enMinuscule(texte)
         fragments.push(cousu + (caseRole.apres ?? ''))
         mains.push({ role: caseRole.role, texte: cousu, voixNom: nomCase, reserve: deLaReserve || undefined })
         if (annule) return
@@ -701,6 +732,7 @@ export default function JeuAtelier() {
           role.type, p.voixPool[aiIndices[localIdx]],
           k === 0 ? famillesInterdites : undefined,
           k === 0 && horsGN,
+          role.nu === true,
         )
         const requete = {
           consigne: role.consigne,
@@ -750,7 +782,9 @@ export default function JeuAtelier() {
 
     const coutures = fragGabarit.map((role, k) => {
       const t = fragTextes[k] as string
-      const cousu = k === 0 ? t : t.charAt(0).toLowerCase() + t.slice(1)
+      // La case du médium en tête de vers garde sa frappe ; celle d'une voix,
+      // non — c'est le même fil que partout ailleurs.
+      const cousu = k === 0 && k === fragSlotJoueur ? t : enMinuscule(t)
       return cousu + (role.apres ?? '')
     })
     const texte = souder(coutures.join(' '))
