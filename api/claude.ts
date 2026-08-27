@@ -414,6 +414,107 @@ function pickFallback(type: TypeCase, eviter: string[] = [], langue: 'fr' | 'en'
 }
 
 /**
+ * Sur-générer, puis choisir.
+ *
+ * Jusqu'ici chaque case n'avait qu'une chance : le modèle rendait un fragment,
+ * on le validait ou on le jetait à la réserve. Toutes les corrections de ce
+ * projet étaient donc des CONTRAINTES — on essayait de faire tomber le premier
+ * jet du bon côté, par des consignes, des gardes, des quotas.
+ *
+ * On demande maintenant TROIS propositions dans le même appel, et on garde la
+ * meilleure. Le problème change de nature : de la contrainte à la sélection.
+ * Les instruments déjà construits — la métrique, le lexique — deviennent des
+ * juges au lieu d'espoirs.
+ *
+ * Et c'est presque gratuit, contrairement à l'intuition. Le prompt système
+ * d'une voix fait six à huit cents tokens, la réponse en fait dix : la SORTIE
+ * pèse environ sept pour cent du coût d'un appel. La tripler ajoute une
+ * quinzaine de pour cent au total, pas deux cents.
+ */
+const N_PROPOSITIONS = 3
+
+/** Nettoie une proposition : puce, numérotation, gras, ponctuation finale. */
+function nettoyerProposition(brut: string): string {
+  return brut
+    .replace(/^\s*[-–—•*]\s*/, '')
+    .replace(/^\s*\d+\s*[.)]\s*/, '')
+    .replace(/\*+([^*]*)\*+/g, '$1')
+    .replace(/#+\s*/g, '')
+    .replace(/\d{1,2}\s+\w+\s+\d{4}/g, '')
+    .replace(/^["«»']+|["«»']+$/g, '')
+    .replace(/[.!?;,]+$/, '')
+    .trim()
+}
+
+/** Le modèle explique sa tâche au lieu de l'exécuter. */
+function estMeta(t: string): boolean {
+  return /^je vais\b/i.test(t)
+    || /^voici\b/i.test(t)
+    || /^d['']accord\b/i.test(t)
+    || /^bien s[uû]r\b/i.test(t)
+    || /^pour\s+(répondre|compléter|créer|générer)\b/i.test(t)
+    || /^(la |le |l['’])?(consigne|instruction|contrainte|demande|réponse|proposition)s?\b/i.test(t)
+    || /^(the |this )?(instruction|constraint|request|prompt|option)s?\b/i.test(t)
+    || /\bétapes?\b/i.test(t)
+    || /^(here is|here's|sure|of course|i will|i'll|to (answer|complete|create|generate))\b/i.test(t)
+    || t.endsWith(':')
+}
+
+const SUFFIXES_SAVANTS = /(tions?|sions?|ances?|ences?|ités?|ismes?|oses?|ements?|ateurs?|atoires?)$/i
+
+/**
+ * Ce qui rend une proposition moins bonne qu'une autre.
+ *
+ * Ce n'est PAS une validation — les trois candidats ont déjà passé
+ * `normaliserSortie`. C'est un classement, et il ne juge que ce qu'on sait
+ * mesurer sans dictionnaire : la longueur, les suffixes de nomenclature, et
+ * la reprise d'un mot déjà employé.
+ *
+ * Le poids le plus lourd va à la reprise : le modèle désobéit à la liste des
+ * interdits plus souvent qu'on ne croit, et c'est la faute la plus audible.
+ * Les pénalités de longueur et de suffixe ne s'appliquent QUE si l'on avait
+ * demandé l'ordinaire — sur une case de métier, « déhiscence » est le mot
+ * juste, pas un défaut.
+ */
+function penaliteProposition(t: string, ordinaire: boolean, eviter: string[]): number {
+  const mots = (t.toLowerCase().match(/[a-zà-ÿ'’-]+/g) ?? [])
+    .map(m => m.replace(/^[ldjcmnts]['’]/, ''))
+    .filter(m => m.length > 2)
+  let p = 0
+  for (const m of mots) {
+    // Huit, et non trois ou quatre : la reprise est une DÉSOBÉISSANCE — la
+    // liste des mots interdits était dans le prompt — tandis que la longueur
+    // n'est qu'une préférence. Un mot repris doit peser plus lourd qu'un mot
+    // savant isolé, moins lourd que deux.
+    if (eviter.some(e => e === m
+      || (m.length >= 5 && e.length >= 5 && m.slice(0, 5) === e.slice(0, 5)))) p += 8
+    if (!ordinaire) continue
+    if (m.length >= 11) p += 3
+    else if (m.length >= 9) p += 1
+    if (m.length >= 8 && SUFFIXES_SAVANTS.test(m)) p += 2
+  }
+  return p
+}
+
+/** La meilleure des propositions, ou '' si aucune ne tient. */
+export function choisirProposition(
+  candidats: string[],
+  ordinaire: boolean,
+  eviter: string[] = [],
+): string {
+  const retenus = candidats.filter(Boolean)
+  if (!retenus.length) return ''
+  let meilleur = retenus[0]
+  let score = Number.POSITIVE_INFINITY
+  for (const c of retenus) {
+    // À pénalité égale, le plus court : c'est presque toujours le plus juste.
+    const s = penaliteProposition(c, ordinaire, eviter) * 100 + c.length
+    if (s < score) { score = s; meilleur = c }
+  }
+  return meilleur
+}
+
+/**
  * La contrainte de la case ADVERBE, tirée à chaque appel.
  *
  * Elle est la seule qui ne peut pas être un texte fixe, et il a fallu deux
@@ -594,7 +695,19 @@ export default async function handler(req: any, res: any): Promise<void> {
   // Le vocabulaire reste libre — on interdit seulement les doublons exacts déjà sortis.
   const motsEviter = Array.isArray(eviter)
     ? [...new Set(eviter.filter((m: unknown): m is string => typeof m === 'string' && m.trim().length > 0)
-        .map((m: string) => m.trim().toLowerCase()))].slice(0, 60)
+        // Vingt-cinq, et non plus soixante.
+        //
+        // La liste devait empêcher les redites. Passé un certain volume elle
+        // fait l'inverse : au vingtième vers, le modèle avait SOIXANTE mots
+        // interdits, plus l'ordre de fuir « le mot le plus attendu ». Il ne
+        // lui restait qu'à fabriquer — « inenvoyée », « désengrener »,
+        // « effloche », « à mi-clou » sont sortis de là. Six vers sur treize
+        // rejetés dans l'atelier du 27 portaient un mot inventé.
+        //
+        // Vingt-cinq couvre les cinq à sept derniers vers : assez pour que
+        // l'écho et l'imagerie récente ne reviennent pas, pas assez pour
+        // acculer la voix.
+        .map((m: string) => m.trim().toLowerCase()))].slice(0, 25)
     : []
   const eviterLine = motsEviter.length
     ? (langue === 'en'
@@ -625,6 +738,34 @@ export default async function handler(req: any, res: any): Promise<void> {
       ? "\nEven this short, the fragment must be yours: take the word from your own world — what you handle, cross paths with, watch, fear. The word only you would put here, not a vague one that would suit anybody."
       : "\nMême aussi court, le fragment doit être le tien : prends le mot dans ton monde à toi — ce que tu manipules, croises, observes, redoutes. Le mot que toi seul mettrais là, pas un mot vague qui irait à n'importe qui.")
 
+  // ── Ce qu'on NE demande pas quand la case doit rester ordinaire ────────
+  //
+  // Deux instructions partaient avec chaque fragment, y compris ceux à qui le
+  // quota venait d'interdire le lexique de métier :
+  //
+  //   « Évite le mot le plus attendu et les clichés. »
+  //   « Le mot que toi seul mettrais là, pas un mot vague. »
+  //
+  // Sur une case à qui l'on vient de dire « prends un objet ordinaire », elles
+  // disent exactement le contraire. C'est la troisième fois que ce projet
+  // rencontre la même faute — une consigne juste dans un contexte, fausse dans
+  // l'autre : « le monde où tu travailles » l'était, « ne les recopie pas »
+  // l'était. Le modèle, coincé entre deux ordres opposés, choisit le rare.
+  //
+  // Sur une case ordinaire, on ne demande donc ni l'écart ni la signature. On
+  // demande la justesse, ce qui est plus difficile et beaucoup plus rare.
+  const ordinaire = metierDemande === false
+  const empreinte = ordinaire
+    ? (langue === 'en'
+      ? '\nDo not look for the unexpected word: name the thing exactly as it is. What sets you apart here is accuracy, not strangeness.'
+      : "\nNe cherche pas le mot inattendu : nomme la chose exactement comme elle est. Ici, ce qui te distingue est la justesse, pas l'étrangeté.")
+    : personaLine
+  const ecart = ordinaire
+    ? ''
+    : (langue === 'en'
+      ? ' Avoid the most expected word and clichés.'
+      : ' Évite le mot le plus attendu et les clichés.')
+
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 25_000)
   try {
@@ -640,8 +781,11 @@ export default async function handler(req: any, res: any): Promise<void> {
         // Vers entiers ('libre') : Opus 4.8 — c'est là que la qualité poétique se joue.
         // Fragments d'1 à 4 mots : Sonnet 4.6 suffit, plus rapide.
         model: type === 'libre' ? 'claude-opus-4-8' : 'claude-sonnet-4-6',
-        max_tokens: maxTokens,
-        stop_sequences: ['.', '!', '?'],
+        // Trois propositions au lieu d'une, et de la marge pour les séparer.
+        max_tokens: maxTokens * N_PROPOSITIONS + 12,
+        // Plus de séquence d'arrêt : elle coupait à la première ponctuation,
+        // ce qui décapiterait les deuxième et troisième propositions. Le
+        // nettoyage ligne à ligne fait le même travail, après coup.
         system: langue === 'en'
           ? promptSysteme(voix, type, metierDemande) + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre — ton lexique se traduit, il ne se remplace pas."
           : promptSysteme(voix, type, metierDemande),
@@ -649,8 +793,8 @@ export default async function handler(req: any, res: any): Promise<void> {
           {
             role: 'user',
             content: langue === 'en'
-              ? `Write ONLY the requested fragment, no final punctuation, no explanation.\nType: ${consigneIA}.\nAbsolute constraint: ${contrainteComplete}.\nStay true to your way of seeing. Avoid the most expected word and clichés.${echoLine}${eviterLine}${personaLine}\nAnswer with the fragment alone.`
-              : `Écris UNIQUEMENT le fragment demandé, sans ponctuation finale, sans explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainteComplete}.\nReste fidèle à ta manière de voir. Évite le mot le plus attendu et les clichés.${echoLine}${eviterLine}${personaLine}\nRéponds avec le fragment seul.`,
+              ? `Write ${N_PROPOSITIONS} DIFFERENT proposals for the requested fragment, one per line, nothing else — no numbering, no final punctuation, no explanation.\nType: ${consigneIA}.\nAbsolute constraint: ${contrainteComplete}.\nStay true to your way of seeing.${ecart}${echoLine}${eviterLine}${empreinte}\nAnswer with the ${N_PROPOSITIONS} lines alone.`
+              : `Écris ${N_PROPOSITIONS} propositions DIFFÉRENTES pour le fragment demandé, une par ligne, rien d'autre — pas de numérotation, pas de ponctuation finale, pas d'explication.\nType : ${consigneIA}.\nContrainte absolue : ${contrainteComplete}.\nReste fidèle à ta manière de voir.${ecart}${echoLine}${eviterLine}${empreinte}\nRéponds avec les ${N_PROPOSITIONS} lignes seules.`,
           },
         ],
       }),
@@ -661,34 +805,21 @@ export default async function handler(req: any, res: any): Promise<void> {
     }
 
     const data = await response.json()
-    const brut = (data.content?.[0]?.text ?? '').trim()
-    let propre = brut
-      .replace(/\*+([^*]*)\*+/g, '$1')
-      .replace(/#+\s*/g, '')
-      .replace(/\n+/g, ' ')
-      .replace(/\d{1,2}\s+\w+\s+\d{4}/g, '')
-      .replace(/[.!?;,]+$/, '')
-      .trim()
+    const lignes = String(data.content?.[0]?.text ?? '').split('\n')
 
-    // Plafond de tokens atteint → le dernier mot est probablement tronqué (« l'asymét ») : on le retire
-    if (data.stop_reason === 'max_tokens') {
-      propre = propre.replace(/\s*\S+$/, '').trim()
-    }
+    // Plafond de tokens atteint : c'est la DERNIÈRE proposition qui est
+    // tronquée (« l'asymét »). On la jette entière plutôt que de la réparer —
+    // il en reste deux.
+    if (data.stop_reason === 'max_tokens' && lignes.length > 1) lignes.pop()
 
-    // Detect meta-responses where the AI explains its task instead of generating poetic content
-    const isMetaResponse =
-      /^je vais\b/i.test(propre) ||
-      /^voici\b/i.test(propre) ||
-      /^d['']accord\b/i.test(propre) ||
-      /^bien s[uû]r\b/i.test(propre) ||
-      /^pour\s+(répondre|compléter|créer|générer)\b/i.test(propre) ||
-      /^(la |le |l['’])?(consigne|instruction|contrainte|demande|réponse)\b/i.test(propre) ||
-      /^(the |this )?(instruction|constraint|request|prompt)\b/i.test(propre) ||
-      /\bétapes?\b/i.test(propre) ||
-      /^(here is|here's|sure|of course|i will|i'll|to (answer|complete|create|generate))\b/i.test(propre) ||
-      propre.endsWith(':')
+    const candidats = lignes
+      .map(nettoyerProposition)
+      .filter(t => t && !estMeta(t))
+      .slice(0, N_PROPOSITIONS)
+      .map(t => normaliserSortie(t, type as TypeCase, langue, determinant))
+      .filter(Boolean)
 
-    let texte = isMetaResponse ? '' : normaliserSortie(propre, type as TypeCase, langue, determinant)
+    let texte = choisirProposition(candidats, metierDemande === false, motsEviter)
     // Si un nombre de mots est imposé, tronquer doucement les débordements.
     // Pour un vers entier ('libre'), couper en plein vers recréerait le
     // télégramme : on tolère le dépassement, garde-fou à 9 mots seulement.
