@@ -332,6 +332,17 @@ export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | '
       if (DETERMINANTS.has(gm[gm.length - 1].toLowerCase())) return ''
       return gn
     }
+    // Les trois cases qui n'avaient jamais été rabotées, et qui sont les
+    // dernières où l'on coupe. « le levé traverse un septembre comme » est
+    // sorti d'un atelier réel : le groupe verbal n'avait pas de case ici du
+    // tout, il repartait tel quel. C'est la même faute qu'à quatre autres
+    // endroits déjà corrigés — une coupe, ou une sortie de modèle, qui laisse
+    // pendre un mot-outil.
+    case 'groupe-verbal':
+    case 'libre': {
+      const gv = raboter(mots, langue)
+      return gv.length >= 2 ? gv.join(' ') : ''
+    }
     case 'conjonction-coord': {
       // Strip anything past the first word — the model sometimes adds context
       return mots[0]

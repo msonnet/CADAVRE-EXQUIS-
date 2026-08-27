@@ -130,3 +130,25 @@ describe('contrainteAdverbe', () => {
     }
   })
 })
+
+describe('groupe verbal et vers entier — les deux dernières coupes', () => {
+  it("ne laisse plus pendre le mot-outil", () => {
+    // « le levé traverse un septembre comme » est sorti d'un atelier réel :
+    // le groupe verbal n'avait aucune case dans le validateur, il repartait
+    // tel quel. Cinquième et dernier endroit de la même faute.
+    expect(normaliserSortie('traverse un septembre comme', 'groupe-verbal')).toBe('traverse un septembre')
+    expect(normaliserSortie('pèse sur le monde et', 'groupe-verbal')).toBe('pèse sur le monde')
+    expect(normaliserSortie("glisse dans l'ombre sans", 'groupe-verbal')).toBe("glisse dans l'ombre")
+    expect(normaliserSortie('quelque chose demeure quand', 'libre')).toBe('quelque chose demeure')
+  })
+
+  it('garde intacts les groupes qui tiennent debout', () => {
+    expect(normaliserSortie('traverse la nuit', 'groupe-verbal')).toBe('traverse la nuit')
+    expect(normaliserSortie('pèse sur le monde', 'groupe-verbal')).toBe('pèse sur le monde')
+    expect(normaliserSortie("l'absence a une forme", 'libre')).toBe("l'absence a une forme")
+  })
+
+  it("refuse ce qui se réduit à un seul mot après rabotage", () => {
+    expect(normaliserSortie('traverse comme', 'groupe-verbal')).toBe('')
+  })
+})

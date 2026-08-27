@@ -605,7 +605,25 @@ export function motsInterdits(opts: {
   vers: { texte: string }[]
   conjCourtes: string[]
 }): string[] {
-  const mots = (t: string) => (t.toLowerCase().match(/[a-zà-ÿ]+/gi) ?? []).filter(m => m.length > 2)
+  // Les mots composés livrent aussi leurs morceaux, même courts.
+  //
+  // Le filtre à plus de deux lettres laissait passer « mi » : un atelier a
+  // rendu « à mi-verger » puis « à mi-clou ». La seconde fois, « verger »
+  // était bien interdit — mais « mi- », l'élément réellement repris, ne
+  // figurait nulle part. C'est la même leçon que « or » et « en » : les mots
+  // les plus courts sont ceux qu'on reprend le plus, et le filtre de longueur
+  // les protégeait.
+  const mots = (t: string) => {
+    const bruts = t.toLowerCase().match(/[a-zà-ÿ]+(?:-[a-zà-ÿ]+)+|[a-zà-ÿ]+/gi) ?? []
+    const out: string[] = []
+    for (const b of bruts) {
+      if (b.includes('-')) {
+        out.push(b)
+        for (const part of b.split('-')) if (part.length > 1) out.push(part)
+      } else if (b.length > 2) out.push(b)
+    }
+    return out
+  }
   return [
     ...(opts.echo ? mots(opts.echo) : []),
     ...opts.conjCourtes,

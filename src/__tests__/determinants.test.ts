@@ -417,3 +417,29 @@ describe('motsInterdits — les conjonctions courtes ne se font plus couper', ()
     expect(liste[1]).toBe('or')
   })
 })
+
+describe("motsInterdits — les morceaux des mots composés", () => {
+  it('interdit aussi le préfixe court d\'un composé', () => {
+    // Un atelier a rendu « à mi-verger » puis « à mi-clou » : le filtre à plus
+    // de deux lettres protégeait « mi », l'élément réellement repris.
+    const liste = motsInterdits({ vers: [{ texte: 'le verrou à mi-verger' }], conjCourtes: [] })
+    expect(liste).toContain('mi-verger')
+    expect(liste).toContain('verger')
+    expect(liste).toContain('mi')
+  })
+
+  it("garde le composé entier et ses morceaux d'au moins deux lettres", () => {
+    const liste = motsInterdits({ vers: [{ texte: 'un pare-boue et un coffre-fort' }], conjCourtes: [] })
+    expect(liste).toContain('pare-boue')
+    expect(liste).toContain('pare')
+    expect(liste).toContain('boue')
+    expect(liste).toContain('coffre-fort')
+  })
+
+  it('laisse toujours tomber les mots simples de deux lettres', () => {
+    const liste = motsInterdits({ vers: [{ texte: 'il va au mur' }], conjCourtes: [] })
+    expect(liste).not.toContain('il')
+    expect(liste).not.toContain('va')
+    expect(liste).toContain('mur')
+  })
+})
