@@ -200,6 +200,7 @@ const OUTILS_FIN_FR = new Set([
   'entre', 'depuis', 'selon', 'malgré', 'chez', 'dès',
   'et', 'ou', 'ni', 'or', 'mais', 'car', 'que', "qu'", 'qui', 'quand', 'lorsque',
   'si', 'comme', 'dont', 'où', 'tant', 'plus', 'moins', 'aussi',
+  'pendant', 'durant', 'devant', 'derrière', 'auprès', 'autour', 'près', 'loin',
 ])
 
 /** Rabote les mots-outils qui pendent en fin de fragment coupé. */
@@ -280,7 +281,10 @@ export function normaliserSortie(texte: string, type: TypeCase, langue: 'fr' | '
       // commence pas par « à » ou « sans » ; ce qui passe ici est déjà un
       // circonstanciel, il suffit de le ramener à trois mots et de raboter.
       if (mots.length >= 2 && tetes.has(mots[0].toLowerCase())) {
-        const ad = raboter(mots.slice(0, 3), langue)
+        // Quatre mots, pas trois : « à fleur de peau » coupé à trois donnait
+        // « à fleur de », raboté en « à fleur » — une locution amputée qui ne
+        // se dit pas seule. Elle est sortie telle quelle d'un atelier réel.
+        const ad = raboter(mots.slice(0, 4), langue)
         // « à la » : une tête et un déterminant, pas une locution.
         return ad.length >= 2 ? ad.join(' ') : ''
       }

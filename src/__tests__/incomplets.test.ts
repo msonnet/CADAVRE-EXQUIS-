@@ -329,3 +329,49 @@ describe('une séance simulée de bout en bout', () => {
     expect(part(46)).toBeGreaterThan(part(4) + 0.10)
   })
 })
+
+// ── Les mots d'attelage ───────────────────────────────────────────────────
+
+describe("les mots d'attelage", () => {
+  const tetesDe = (famille: 'DISLOCATION' | 'SYNTAGME', n = 3, evites?: Set<string>) =>
+    gabaritsIncomplets(n, evites).filter(g => g.famille === famille).map(g => g.cases[0].avant!)
+
+  it("ne disloque qu'avec un verbe attributif", () => {
+    // Mesuré sur un atelier réel : « il y a persistante une lézarde » et
+    // « c'est frictionné un relais ». Deux fautes — « il y a » réclame un
+    // groupe nominal nu, « c'est » ne prend pas d'attribut avant son sujet.
+    // « Il est court le temps de l'amour », si.
+    const vues = new Set<string>()
+    for (let i = 0; i < 400; i++) for (const t of tetesDe('DISLOCATION')) vues.add(t)
+    expect(vues.size).toBeGreaterThan(3)
+    for (const t of vues) {
+      expect(t, t).not.toBe("c'est")
+      expect(t, t).not.toBe('il y a')
+      expect(t, t).toMatch(/^(il|elle) (est|reste|demeure|paraît|semble|devient)$/)
+    }
+  })
+
+  it('évite celui qui vient de servir', () => {
+    // « il reste » a ouvert les vers 10 et 13 du même poème : le tirage
+    // n'avait aucune mémoire, comme le déterminant avant sa garde.
+    const evites = new Set(['il est', 'il reste'])
+    for (let i = 0; i < 400; i++) {
+      for (const t of tetesDe('DISLOCATION', 3, evites)) expect(evites.has(t), t).toBe(false)
+    }
+    for (let i = 0; i < 400; i++) {
+      for (const t of tetesDe('SYNTAGME', 3, new Set(['dans', 'sous', 'à même']))) {
+        expect(['dans', 'sous', 'à même'].includes(t), t).toBe(false)
+      }
+    }
+  })
+
+  it("rend quand même une tête quand toutes sont évitées", () => {
+    const toutes = new Set(tetesDe('SYNTAGME', 3))
+    for (let i = 0; i < 60; i++) {
+      for (let j = 0; j < 40; j++) for (const t of tetesDe('SYNTAGME', 3)) toutes.add(t)
+    }
+    for (const t of tetesDe('SYNTAGME', 3, toutes)) expect(t).toBeTruthy()
+    for (const t of tetesDe('DISLOCATION', 3, new Set(['il est', 'elle est', 'il reste',
+      'il demeure', 'il paraît', 'il semble', 'il devient', 'elle demeure']))) expect(t).toBeTruthy()
+  })
+})

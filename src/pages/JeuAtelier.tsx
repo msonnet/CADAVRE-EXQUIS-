@@ -178,18 +178,35 @@ const ADJ_APPOSE: RoleFragment = {
 //
 // Ni l'une ni l'autre n'est une liste. Ce sont des morceaux d'une phrase qui
 // n'est pas là — et c'est exactement ce qui leur donne une voix.
-const TETES_DISLOCATION = ['il est', 'elle est', "c'est", 'il y a', 'il reste', 'il vient']
+// Seuls les verbes attributifs supportent la dislocation « TÊTE + adjectif +
+// groupe nominal ». Mesuré sur un atelier réel : « il y a persistante une
+// lézarde » et « c'est frictionné un relais » — deux fautes, parce que « il y
+// a » réclame un groupe nominal nu et que « c'est » ne prend pas d'attribut
+// avant son sujet. « Il est court le temps de l'amour », si.
+const TETES_DISLOCATION = ['il est', 'elle est', 'il reste', 'il demeure',
+                           'il paraît', 'il semble', 'il devient', 'elle demeure']
 const TETES_SYNTAGME = ['dans', 'sous', 'contre', 'depuis', 'derrière', 'entre',
                         'par-dessus', 'à même', 'vers', 'sans', 'au travers', 'auprès de']
-const auHasard = (v: string[]) => v[Math.floor(Math.random() * v.length)]
+/**
+ * Le mot d'attelage, en évitant ceux qui viennent de servir.
+ *
+ * Il est tiré à chaque gabarit et n'avait aucune mémoire : « il reste » a
+ * ouvert les vers 10 et 13 du même poème. C'est le même défaut que partout
+ * ailleurs dans ce projet — un tirage sans garde revient sur ses pas.
+ */
+const auHasard = (v: string[], evites?: Set<string>): string => {
+  const dispo = evites ? v.filter(x => !evites.has(x)) : v
+  const pool = dispo.length ? dispo : v
+  return pool[Math.floor(Math.random() * pool.length)]
+}
 
-const disloqueAdj = (): RoleFragment => ({
+const disloqueAdj = (evites?: Set<string>): RoleFragment => ({
   type: 'adjectif', consigne: tr('un adjectif qualificatif seul', 'a single descriptive adjective'),
-  role: tr('DISLOCATION', 'DISLOCATION'), avant: auHasard(TETES_DISLOCATION),
+  role: tr('DISLOCATION', 'DISLOCATION'), avant: auHasard(TETES_DISLOCATION, evites),
 })
-const syntagmeGN = (): RoleFragment => ({
+const syntagmeGN = (evites?: Set<string>): RoleFragment => ({
   type: 'groupe-nominal', consigne: tr('un groupe nominal', 'a noun phrase'),
-  role: tr('SYNTAGME', 'PHRASE'), avant: auHasard(TETES_SYNTAGME), nu: true,
+  role: tr('SYNTAGME', 'PHRASE'), avant: auHasard(TETES_SYNTAGME, evites), nu: true,
 })
 
 // Le groupe nominal d'une subordonnée qu'on n'achève pas : « tandis que le
@@ -269,18 +286,23 @@ const litanie = (n: number): RoleFragment[] =>
 const appositions = (n: number): RoleFragment[] =>
   Array.from({ length: n }, (_, i) => (i === n - 1 ? GN_APPOSE : { ...GN_APPOSE, apres: ',' }))
 
-export function gabaritsIncomplets(nVoix: number): { famille: Famille; cases: RoleFragment[] }[] {
+export function gabaritsIncomplets(
+  nVoix: number,
+  /** Les mots d'attelage qui viennent de servir — « il reste » a ouvert deux
+   *  vers du même poème faute de cette mémoire. */
+  attelages?: Set<string>,
+): { famille: Famille; cases: RoleFragment[] }[] {
   const L = (famille: Famille, cases: RoleFragment[]) => ({ famille, cases })
   if (nVoix <= 1) {
     return [
       L('MOT', [NOM_SEUL]),
-      L('SYNTAGME', [syntagmeGN()]),                            // « au travers un trésor »
+      L('SYNTAGME', [syntagmeGN(attelages)]),                            // « au travers un trésor »
     ]
   }
   if (nVoix === 2) {
     return [
-      L('DISLOCATION', [disloqueAdj(), GN_SUJET]),              // « il est grand le silence »
-      L('SYNTAGME', [syntagmeGN(), ADJ_APPOSE]),                // « sous un trésor perdu »
+      L('DISLOCATION', [disloqueAdj(attelages), GN_SUJET]),              // « il est grand le silence »
+      L('SYNTAGME', [syntagmeGN(attelages), ADJ_APPOSE]),                // « sous un trésor perdu »
       L('APPOSITION', [{ ...GN_APPOSE, apres: ',' }, GN_APPOSE]),
       L('SUSPENS', [GN_SUJET, VERBE_SUSPENDU]),                 // « la craie efface »
       L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU]),                 // « tandis que le carreau »
@@ -289,9 +311,9 @@ export function gabaritsIncomplets(nVoix: number): { famille: Famille; cases: Ro
   }
   if (nVoix === 3) {
     return [
-      L('DISLOCATION', [disloqueAdj(), GN_SUJET, ADJ_APPOSE]),
-      L('DISLOCATION', [disloqueAdj(), { ...GN_SUJET, apres: ',' }, GN_APPOSE]),
-      L('SYNTAGME', [syntagmeGN(), { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
+      L('DISLOCATION', [disloqueAdj(attelages), GN_SUJET, ADJ_APPOSE]),
+      L('DISLOCATION', [disloqueAdj(attelages), { ...GN_SUJET, apres: ',' }, GN_APPOSE]),
+      L('SYNTAGME', [syntagmeGN(attelages), { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
       L('APPOSITION', [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
       L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU, ADJ_APPOSE]),
       L('SUSPENS', [ADVERBE_TETE, GN_SUJET, VERBE_SUSPENDU]),
@@ -301,8 +323,8 @@ export function gabaritsIncomplets(nVoix: number): { famille: Famille; cases: Ro
   }
   if (nVoix === 4) {
     return [
-      L('DISLOCATION', [disloqueAdj(), { ...GN_SUJET, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
-      L('SYNTAGME', [syntagmeGN(), { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
+      L('DISLOCATION', [disloqueAdj(attelages), { ...GN_SUJET, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
+      L('SYNTAGME', [syntagmeGN(attelages), { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
       L('APPOSITION', [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE, ADJ_APPOSE]),
       L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, GN_APPOSE]),
       L('SUSPENS', [ADVERBE_TETE, GN_SUJET, ADJECTIF, VERBE_SUSPENDU]),
@@ -317,8 +339,8 @@ export function gabaritsIncomplets(nVoix: number): { famille: Famille; cases: Ro
   // énumération — sans quoi la famille déclarée et la famille lue divergent,
   // et le plafond des listes ne s'applique plus à la moitié d'entre elles.
   return [
-    L('DISLOCATION', [disloqueAdj(), { ...GN_SUJET, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
-    L('SYNTAGME', [syntagmeGN(), { ...ADJ_APPOSE, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
+    L('DISLOCATION', [disloqueAdj(attelages), { ...GN_SUJET, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
+    L('SYNTAGME', [syntagmeGN(attelages), { ...ADJ_APPOSE, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
     L('APPOSITION', [GN_SUJET, { ...ADJ_APPOSE, apres: ',' }, ...appositions(nVoix - 3), ADJ_APPOSE]),
     L('SUSPENS', [CONJ_SUBORD, GN_SUSPENDU, { ...ADJ_APPOSE, apres: ',' }, ...appositions(nVoix - 3)]),
     L('SUSPENS', [ADVERBE_TETE, ...appositions(nVoix - 3), ADJECTIF, VERBE_SUSPENDU]),
@@ -357,6 +379,7 @@ export function partIncomplete(nVoix: number, tailleTable = 1): number {
 function tirerGabaritBrut(
   nVoix: number,
   souffles: Set<Classe> | undefined,
+  attelages: Set<string> | undefined,
   questionPermise = true,
   outilsPermis = true,
   /** La garde d'ouverture réclame un vers qui ne commence pas par un groupe
@@ -402,7 +425,7 @@ function tirerGabaritBrut(
     // une case-outil interdite, une ouverture nominale que la garde refusait.
     // Et si rien ne survit, on ne force pas l'inachevé : on retombe sur les
     // formes complètes, qui ont leurs propres replis.
-    const pool = gabaritsIncomplets(nVoix).filter(g => !permises || permises.has(g.famille))
+    const pool = gabaritsIncomplets(nVoix, attelages).filter(g => !permises || permises.has(g.famille))
     const cartes = new Map<RoleFragment[], Famille>(pool.map(g => [g.cases, g.famille] as const))
     const retenus = [...cartes.keys()].filter(c =>
       (outilsPermis || !c.some(EST_OUTIL)) && (!ouvertureHorsGN || !EST_GN(c[0])))
@@ -518,9 +541,11 @@ export function tirerGabarit(
   /** Les souffles que la garde métrique autorise encore. Sans elle, zéro pour
    *  cent des vers atteignaient dix mots, à toutes les tailles de table. */
   souffles?: Set<Classe>,
+  /** Les mots d'attelage récemment employés, à ne pas reprendre. */
+  attelages?: Set<string>,
 ): RoleFragment[] {
   const brut = () =>
-    tirerGabaritBrut(nVoix, souffles, questionPermise, outilsPermis, ouvertureHorsGN, tailleTable, permises)
+    tirerGabaritBrut(nVoix, souffles, attelages, questionPermise, outilsPermis, ouvertureHorsGN, tailleTable, permises)
   let g = brut()
   if (!souffles || souffles.size === 0) return g
   for (let i = 0; i < 8 && !souffles.has(classeDeLongueur(longueurEstimee(g))); i++) g = brut()
@@ -797,6 +822,12 @@ export default function JeuAtelier() {
     histoire: diagnosticMetrique(vers.map(v => v.texte)).classes,
   }))
 
+  // Les deux derniers mots d'attelage employés — « il reste », « à même ».
+  // Ils sont cousus par le gabarit, personne ne les écrit, et rien ne les
+  // empêchait de revenir : « il reste » a ouvert les vers 10 et 13 du même
+  // poème.
+  const attelages = useRef<string[]>([])
+
   const [saisie, setSaisie] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
 
@@ -892,11 +923,13 @@ export default function JeuAtelier() {
       const table = p.voixPool.length
       const formesOk = gardeFormes.permises()
       const soufflesOk = gardeMetrique.permises(GardeMetrique.peutEtreLong(nVoix))
-      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
+      const evites = new Set(attelages.current.slice(-2))
+      let gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk, evites)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
+        gabarit = tirerGabarit(nVoix, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk, evites)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
+      if (gabarit[0].avant) attelages.current.push(gabarit[0].avant)
 
       // Et quand elle s'ouvre, elle revient à l'une de ces voix-là.
       const ordre = placerVoix(indices, gabarit.map(g => g.type), mult)
@@ -1039,11 +1072,13 @@ export default function JeuAtelier() {
       const table = p.voixPool.length
       const formesOk = gardeFormes.permises()
       const soufflesOk = gardeMetrique.permises(GardeMetrique.peutEtreLong(nTotal))
-      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
+      const evites = new Set(attelages.current.slice(-2))
+      let gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk, evites)
       for (let essai = 0; essai < 5 && signatureGabarit(gabarit) === dernierGabarit.current; essai++) {
-        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk)
+        gabarit = tirerGabarit(nTotal, questionsOk, outilsOk, horsGN, table, formesOk, soufflesOk, evites)
       }
       dernierGabarit.current = signatureGabarit(gabarit)
+      if (gabarit[0].avant) attelages.current.push(gabarit[0].avant)
 
       const slotJoueur = Math.floor(Math.random() * gabarit.length)
       // Même règle que sur les vers de voix, en sautant la case du médium.
@@ -1152,23 +1187,31 @@ export default function JeuAtelier() {
     if (!fragGabarit || fragTextes.length === 0) return
     if (fragTextes.some(t => t === null)) return
 
-    const coutures = fragGabarit.map((role, k) => {
+    // Le fragment tel qu'il entre dans le vers — mot d'attelage compris,
+    // minuscule appliquée. Les coutures doivent montrer CELUI-LÀ.
+    const cousus = fragGabarit.map((role, k) => {
       const t = fragTextes[k] as string
       // La case du médium en tête de vers garde sa frappe ; celle d'une voix,
       // non — c'est le même fil que partout ailleurs.
       const nu = k === 0 && k === fragSlotJoueur ? t : enMinuscule(t)
-      const cousu = (role.avant ? `${role.avant} ` : '') + nu
-      return cousu + (role.apres ?? '')
+      return (role.avant ? `${role.avant} ` : '') + nu
     })
+    const coutures = fragGabarit.map((role, k) => cousus[k] + (role.apres ?? ''))
     const texte = souder(coutures.join(' '))
     const voixNums = fragVoixIndices.map(i => i + 1)
 
     // Le détail case par case : celles des voix ont été notées pendant les
     // fetches, celle du médium se remplit ici — c'est la seule qui manque.
-    const mains: MainAtelier[] = fragGabarit.map((role, k) => {
-      const notee = fragMainsRef.current[k]
-      return notee ?? { role: role.role, texte: coutures[k] }
-    })
+    // Le texte vient TOUJOURS d'ici, jamais de ce qui a été noté pendant le
+    // fetch : là-bas c'est la sortie brute du modèle, sans minuscule et sans
+    // mot d'attelage. Les coutures affichaient donc « le mordant » sous un
+    // vers qui disait « à même le mordant » — et `recalerMains`, qui recale
+    // les cases sur le vers corrigé en comptant les mots, ne retrouvait plus
+    // ses comptes et rendait tout inchangé.
+    const mains: MainAtelier[] = fragGabarit.map((role, k) => ({
+      ...(fragMainsRef.current[k] ?? { role: role.role, texte: '' }),
+      texte: cousus[k],
+    }))
 
     setVoixEnCours([])
     // Tiré seul sur le vers, le médium signe seul — pas de couture mixte
