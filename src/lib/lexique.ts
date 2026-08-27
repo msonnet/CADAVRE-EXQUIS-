@@ -111,46 +111,63 @@ export class GardeLexique {
   }
 }
 
-// ── Le diagnostic ─────────────────────────────────────────────────────────
+// ── Le diagnostic, et ce qu'il ne sait pas faire ──────────────────────────
 //
-// Mesurer « rare » demande un jugement, pas une fréquence de corpus : on n'a
-// pas de lexique de référence embarqué et on n'en veut pas. La liste ci-
-// dessous est celle des mots qu'un lecteur de quatorze ans emploie sans y
-// penser, plus le fonds poétique commun. Elle est courte, elle est assumée,
-// et elle sert à comparer un poème à un autre — pas à trancher sur un mot.
+// AVERTISSEMENT, écrit après deux tentatives ratées. Cette mesure ne dit PAS
+// si un mot est rare en français. Elle dit s'il est absent d'une liste de cinq
+// cents mots très courants, ce qui n'est pas la même chose : « fixe »,
+// « accuse », « bougie », « grain », « écume », « badge », « loyer »,
+// « cendrier » en sortent, et aucun n'est savant.
+//
+// Une liste de cette taille ne peut pas trancher — le français courant en
+// compte plusieurs milliers, et les écrire à la main serait arbitraire d'une
+// autre façon. Le seul usage honnête est COMPARATIF : appliquée à l'identique
+// à deux poèmes, elle dit lequel est le plus dense. Mesuré ainsi, l'atelier du
+// 27 août donne 61 % et quinze vers tirés après le quota 49 %.
+//
+// Le vrai jugement reste la lecture. Sur ces mêmes quinze vers, un lecteur
+// compte NEUF vers sans aucun mot savant ; sur les vingt-deux de l'atelier du
+// 27, il en compte zéro. C'est ce chiffre-là qui vaut, et aucun instrument de
+// ce dépôt ne sait le produire.
 
 const COURANTS = new Set(`
 le la les un une des du de au aux ce cet cette ces mon ma mes ton ta tes son sa ses
-notre votre leur nos vos leurs et ou ni or mais car donc que qui quoi dont où si
-comme quand lorsque tandis dès tant pour par sur sous dans entre depuis vers sans
-avec chez contre selon malgré même encore déjà toujours jamais parfois souvent
-plus moins très trop peu tout toute tous toutes chaque nul nulle aucun aucune
-je tu il elle on nous vous ils elles me te se lui y en
-être est sont était sera soit avoir eu ont avait aller va vient venir faire fait
-voir sait peut veut doit prend tient met dit passe reste demeure devient semble
-paraît marche tombe monte descend entre sort ouvre ferme donne porte laisse garde
-attend cherche trouve perd oublie souvient regarde écoute touche sent respire
-dort rêve pleure rit parle crie appelle répond compte lit écrit efface
-brûle glisse coule fond gèle sèche mouille casse plie tient cède serre lâche
-ronge use creuse traverse retient dévore recouvre remplit vide
-refroidi refroidit refroidir chauffe gonfle penche tourne pousse tire coupe verse
-frotte gratte plante arrache jette pose lave essuie berce
-maison porte fenêtre mur toit chambre lit table chaise escalier couloir seuil
-rue route chemin champ arbre pierre terre eau feu air vent pluie neige gel givre
-nuit jour matin soir heure temps saison hiver été automne printemps dimanche
-main doigt bras jambe pied tête visage œil yeux bouche dent peau cœur ventre dos
-corps souffle voix silence bruit cri mot nom lettre livre page papier encre
-pain sel eau vin lait sucre cendre poussière suie boue sable terre
-ombre lumière nuit noir blanc rouge bleu vert jaune gris
-chien chat oiseau bête insecte
-verre tasse assiette couteau clef lampe drap couverture chaise
-mère père frère sœur enfant fils fille femme homme voisin
-grand petit long court haut bas vieux jeune neuf beau laid bon mauvais
-froid chaud sec humide dur mou lourd léger plein vide propre sale
-lent rapide fort faible clair sombre doux amer profond mince épais
-usé cassé fendu ouvert fermé perdu oublié tombé
-doucement lentement vite tard tôt loin près ici là dehors dedans ailleurs
-inutile parfaitement
+notre votre leur nos vos leurs et ou ni or mais car donc que qui quoi dont où si comme
+quand lorsque tandis dès tant pour par sur sous dans entre depuis vers sans avec chez
+contre selon malgré même encore déjà toujours jamais parfois souvent plus moins très
+trop peu tout toute tous toutes chaque nul nulle aucun aucune je tu il elle on nous vous
+ils elles me te se lui y en être est sont était sera soit avoir eu ont avait aller va
+vient venir faire fait voir sait peut veut doit prend tient met dit passe reste demeure
+devient semble paraît marche tombe monte descend sort ouvre ferme donne porte laisse
+garde attend cherche trouve perd oublie souvient regarde écoute touche sent respire dort
+rêve pleure rit parle crie appelle répond compte lit écrit efface brûle glisse coule
+fond gèle sèche mouille casse plie cède serre lâche ronge use creuse traverse retient
+dévore recouvre remplit vide refroidi refroidit refroidir chauffe gonfle penche tourne
+pousse tire coupe verse frotte gratte plante arrache jette pose lave essuie berce maison
+fenêtre mur toit chambre table chaise escalier couloir seuil rue route chemin champ
+arbre pierre terre eau feu air vent pluie neige gel givre nuit jour matin soir heure
+temps saison hiver été automne printemps dimanche main doigt bras jambe pied tête visage
+œil yeux bouche dent peau cœur ventre dos corps souffle voix silence bruit cri mot nom
+lettre livre page papier encre pain sel vin lait sucre cendre poussière suie boue sable
+ombre lumière noir blanc rouge bleu vert jaune gris chien chat oiseau bête insecte verre
+tasse assiette couteau clef lampe drap couverture mère père frère sœur enfant fils fille
+femme homme voisin grand petit long court haut bas vieux jeune neuf beau laid bon
+mauvais froid chaud sec humide dur mou lourd léger plein propre sale lent rapide fort
+faible clair sombre doux amer profond mince épais usé cassé fendu ouvert fermé perdu
+oublié tombé doucement lentement vite tard tôt loin près ici là dehors dedans ailleurs
+inutile parfaitement soufflé pelé boueux givré penché granuleux mouillé bridé saturé
+inhabité rouillé sourd muet aveugle nu couvert vêtu tordu plié courbé droit rond carré
+pointu serré tendu raide souple lisse rugueux rayé strié tacheté net flou trouble
+limpide terne brillant mat tiède glacé brûlant gelé fondu séché trempé abîmé fané flétri
+pourri moisi rance aigre creux bombé plat tombant pendant brun beige rose orange violet
+seul unique double simple entier demi complet calme agité tranquille inquiet triste gai
+vif las étrange bizarre commun ordinaire pauvre riche proche lointain ancien récent
+dernier premier prochain large étroit entrouvert clos scellé bouché percé craquelé brisé
+rompu déchiré coupé arraché contient grignote froisse avale alourdit comprime effeuille
+dévisse visse desserre noue dénoue retourne redresse soulève abaisse dépose enlève
+ajoute retire mange boit veille guette flaire renifle rince trempe traîne saisit rend
+claque grince craque siffle sonne bat cogne frappe fuit goutte suinte déborde roule fume
+pourrit rouille tord déchire fend perce troue
 `.trim().split(/\s+/))
 
 /**
