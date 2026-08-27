@@ -489,7 +489,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const { consigne, type, voiceId, contexte, eviter, mots, partieId, determinant, langue: langueBrute } = req.body ?? {}
+  const { consigne, type, voiceId, contexte, eviter, mots, partieId, determinant, metier, langue: langueBrute } = req.body ?? {}
   const langue: 'fr' | 'en' = langueBrute === 'en' ? 'en' : 'fr'
 
   // ── Accès ───────────────────────────────────────────────────────────────
@@ -526,6 +526,9 @@ export default async function handler(req: any, res: any): Promise<void> {
   const voix = voiceId
     ? (VOIX.find(v => v.id === voiceId) ?? choisirVoixAleatoire())
     : choisirVoixAleatoire()
+  // Le quota du vers, décidé par l'appelant qui seul connaît le vers entier.
+  // Absent, la voix retombe sur son cadran personnel (cadavre écrit).
+  const metierDemande = typeof metier === 'boolean' ? metier : undefined
   // Mode atelier : nombre de mots imposé dynamiquement (1 à 8) — prime sur la contrainte du type
   const motsCible = Number.isInteger(mots) && mots >= 1 && mots <= 8 ? (mots as number) : null
   const maxTokens = motsCible
@@ -629,8 +632,8 @@ export default async function handler(req: any, res: any): Promise<void> {
         max_tokens: maxTokens,
         stop_sequences: ['.', '!', '?'],
         system: langue === 'en'
-          ? promptSysteme(voix, type) + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre — ton lexique se traduit, il ne se remplace pas."
-          : promptSysteme(voix, type),
+          ? promptSysteme(voix, type, metierDemande) + "\n\nIMPORTANT : cette partie se joue en ANGLAIS. Tu écris ton fragment en anglais, dans ta manière propre — ton lexique se traduit, il ne se remplace pas."
+          : promptSysteme(voix, type, metierDemande),
         messages: [
           {
             role: 'user',

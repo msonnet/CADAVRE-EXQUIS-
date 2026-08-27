@@ -117,7 +117,7 @@ const CASES_LARGES = new Set(['libre', 'proposition'])
  * premier article sur lequel retomber, et deux appels successifs ne voient
  * pas la même amorce.
  */
-export function promptSysteme(v: Voix, type?: string): string {
+export function promptSysteme(v: Voix, type?: string, metier?: boolean): string {
   const tirer = (champ: string, n: number) =>
     [...champ.split(', ')].sort(() => Math.random() - 0.5).slice(0, n).join(', ')
 
@@ -131,12 +131,19 @@ export function promptSysteme(v: Voix, type?: string): string {
     : v.gestes
 
   // ── Le cadran ─────────────────────────────────────────────────────────
-  // Ce tirage-ci vient-il du métier, ou du dehors ? C'est le seul endroit où
-  // la technicité agit, et il suffit : c'est le lexique servi qui décide de
-  // la densité du fragment. Tiré à chaque appel, jamais fixé une fois pour
-  // toutes — une voix à 0,7 parle métier sept fois sur dix, et le poème
-  // respire entre deux.
-  const duMetier = Math.random() < (v.technicite ?? 0.75)
+  // Ce tirage-ci vient-il du métier, ou du dehors ?
+  //
+  // La décision se prend maintenant chez l'appelant, et c'est une correction
+  // d'arithmétique. Tirée ICI, elle l'était par CASE : à 0,68 de moyenne sur
+  // les quarante-six voix et quatre cases par vers, un vers avait 99 % de
+  // chances de porter un mot de métier et 2,7 en moyenne. Mesuré sur un
+  // atelier réel : zéro vers sur vingt-deux sans un seul mot rare. Aucun
+  // réglage par case ne pouvait corriger ça — c'est le VERS qu'on lit, et
+  // seul l'appelant le connaît. Il envoie donc `metier`, et on obéit.
+  //
+  // Le repli — quand rien n'est envoyé — garde l'ancien comportement : le
+  // cadavre écrit et les vieux clients n'ont pas de quota à faire valoir.
+  const duMetier = metier ?? (Math.random() < (v.technicite ?? 0.75))
 
   // La phrase qui suit l'échantillon n'est pas la même des deux côtés, et
   // c'est tout le point. « Ces exemples ne sont que cent parmi mille, le mot

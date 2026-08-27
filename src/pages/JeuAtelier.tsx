@@ -20,6 +20,8 @@ import {
   diagnostic, familleDe, souder, tirerStrategie,
 } from '../lib/determinants'
 import { GardeFormes, POIDS_FAMILLE, familleDuVers, type Famille } from '../lib/formes'
+import { GardeLexique } from '../lib/lexique'
+import { technicite } from '../data/technicite'
 import {
   GardeMetrique, classeDeLongueur, diagnosticMetrique, longueurEstimee, motsDuVers,
   type Classe,
@@ -828,6 +830,14 @@ export default function JeuAtelier() {
   // poème.
   const attelages = useRef<string[]>([])
 
+  // La garde du LEXIQUE : au plus une case par vers puise dans le métier de sa
+  // voix, et près d'un vers sur deux n'y a pas droit du tout. Mesuré avant
+  // elle, sur un atelier de vingt-quatre vers dont les trois autres axes
+  // étaient réglés : 45 % de mots hors vocabulaire courant, et ZÉRO vers sur
+  // vingt-deux sans un seul. Le cadran de technicité existait, mais il tirait
+  // par CASE — or c'est le vers qu'on lit.
+  const [gardeLexique] = useState(() => new GardeLexique())
+
   const [saisie, setSaisie] = useState('')
   const [erreur, setErreur] = useState<string | null>(null)
 
@@ -943,6 +953,7 @@ export default function JeuAtelier() {
       const contexte = p.echo && echo ? echo : undefined
 
       const tirer = tireurDeVers(famillesInterdites)
+      gardeLexique.ouvrirVers()
       const fragments: string[] = []
       const nomsVoix: string[] = []
       const mains: MainAtelier[] = []
@@ -968,6 +979,10 @@ export default function JeuAtelier() {
         // vient de servir deux fois ; à l'intérieur, le tireur écarte celle
         // de la case d'avant.
         const determinant = tirer(caseRole, p.voixPool[ordre[k]], k === 0, horsGN)
+        // Le quota se dépense dans l'ordre des cases : la première voix dont
+        // la technicité mord prend le mot de métier du vers, les suivantes
+        // parlent de leur vie.
+        const metier = gardeLexique.auMetier(technicite(p.voixPool[ordre[k]]))
 
         const requete = {
           consigne: caseRole.consigne,
@@ -975,6 +990,7 @@ export default function JeuAtelier() {
           voiceId: p.voixPool[ordre[k]],
           contexte,
           eviter,
+          metier,
           ...(caseRole.mots ? { mots: caseRole.mots } : {}),
           ...(determinant ? { determinant } : {}),
         }
@@ -1130,11 +1146,16 @@ export default function JeuAtelier() {
       // se la transmettre. On parcourt le gabarit dans l'ordre, case du médium
       // comprise (elle n'a pas de déterminant, mais elle occupe une place).
       const tirer = tireurDeVers(famillesInterdites)
-      const determinants: (string | undefined)[] = gabarit.map((role, k) => {
-        if (k === slotJoueur) return undefined
+      gardeLexique.ouvrirVers()
+      const determinants: (string | undefined)[] = []
+      const metiers: boolean[] = []
+      for (let k = 0; k < gabarit.length; k++) {
+        if (k === slotJoueur) { determinants.push(undefined); metiers.push(false); continue }
         const localIdx = aiSlots.findIndex(a => a.k === k)
-        return tirer(role, p.voixPool[aiIndices[localIdx]], k === 0, horsGN)
-      })
+        const voixId = p.voixPool[aiIndices[localIdx]]
+        determinants.push(tirer(gabarit[k], voixId, k === 0, horsGN))
+        metiers.push(gardeLexique.auMetier(technicite(voixId)))
+      }
 
       // Fetch en parallèle — le médium tape pendant que les voix cherchent
       await Promise.all(aiSlots.map(async ({ k, aiIdx: localIdx }) => {
@@ -1147,6 +1168,7 @@ export default function JeuAtelier() {
           voiceId: p.voixPool[aiIndices[localIdx]],
           contexte,
           eviter: eviterBase,
+          metier: metiers[k],
           ...(determinant ? { determinant } : {}),
         }
         let texte = ''

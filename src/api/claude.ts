@@ -16,6 +16,11 @@ export interface RequeteIA {
    *  pour un vers entier qui ne doit pas ouvrir sur un groupe nominal.
    *  Le serveur la met en mots (`api/_determinants.ts`) — on n'envoie qu'une clé. */
   determinant?: string
+  /** Cette case a-t-elle le droit de puiser dans le lexique de métier de la
+   *  voix ? Le quota est tenu par vers, pas par case : à 0,68 de moyenne et
+   *  quatre cases, un vers portait 2,7 mots de métier — zéro vers sur
+   *  vingt-deux n'en était exempt. Voir `src/lib/lexique.ts`. */
+  metier?: boolean
 }
 
 export interface ReponseIA {
