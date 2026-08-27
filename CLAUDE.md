@@ -155,6 +155,36 @@ phases restantes, les valeurs exactes à recopier, les points de contrôle.
   monde sans rapporter un centime. Tant que la migration n'est pas passée,
   l'app fonctionne donc exactement comme avant, en gratuit intégral.
 
+## L'Atelier — gelé le 27 août 2026
+
+Six chantiers de mesure, quatre instruments, quatre gardes. **Gelé dans cet
+état** : la suite du projet est administrative.
+
+| instrument | garde | ce qu'il a corrigé |
+|---|---|---|
+| `src/lib/determinants.ts` | `GardeOuverture` | douze vers d'affilée ouvrant sur « le » ou « la » |
+| `src/lib/formes.ts` | `GardeFormes` | quinze propositions complètes de suite, puis sept listes sur seize |
+| `src/lib/metrique.ts` | `GardeMetrique` | zéro vers de dix mots ou plus, à toutes les tables |
+| `src/lib/lexique.ts` | `GardeLexique` | zéro vers sur vingt-deux sans un mot savant |
+
+**La méthode, si le chantier reprend un jour.** Une monotonie ne se corrige
+que si on sait la compter : d'abord l'instrument, ensuite la cause, jamais la
+reformulation de consigne. Reformuler n'a JAMAIS marché dans ce projet — le
+boucher rendait « le persillé » huit fois sur huit, l'adverbe « obliquement »
+onze fois sur seize. Seul un tirage par appel, ou une garde qui compte les
+cases, y arrive.
+
+**Mesure de clôture**, atelier du 27 août à trente-six voix : 19 % d'articles
+définis, cinq familles de forme sur sept, vers de 1 à 10 mots, une dizaine de
+mots savants sur vingt-deux vers. À la lecture, neuf ou dix vers dignes d'être
+gardés — contre zéro deux jours plus tôt.
+
+**Ce qui n'a pas été fait, et pourquoi.** La récolte : garder un vers, un
+carnet qui les accumule à travers les séances, réordonnable et exportable.
+C'est ce qui rendrait « Expiation Cadavérique » possible — un recueil n'est
+pas vingt poèmes générés, c'est trois cents vers récoltés et assemblés à la
+main. Chantier décidé mais non ouvert.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
