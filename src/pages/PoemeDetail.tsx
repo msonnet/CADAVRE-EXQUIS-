@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { attribution } from '../lib/attribution'
 import MainsDuVers from '../components/MainsDuVers'
+import BoutonRecolte from '../components/BoutonRecolte'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import { corrigerAccords } from '../api/corriger'
 import type { Poeme } from '../types'
@@ -601,6 +602,16 @@ export default function PoemeDetail() {
                     {cas.texte}
                   </p>
                   {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} /> : null}
+                  <BoutonRecolte
+                    texte={cas.texte}
+                    accent={accent}
+                    encre={encre}
+                    poemeId={poeme.id}
+                    poemeTitre={poeme.titre}
+                    datePoeme={poeme.dateCreation}
+                    signature={attribution(cas)}
+                    nbVoix={cas.nbVoix}
+                  />
                 </div>
               ))}
             </motion.div>

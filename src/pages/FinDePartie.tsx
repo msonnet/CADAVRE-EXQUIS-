@@ -19,6 +19,7 @@ import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import { attribution } from '../lib/attribution'
 import MainsDuVers from '../components/MainsDuVers'
+import BoutonRecolte from '../components/BoutonRecolte'
 import type { Refus } from '../lib/acces'
 
 const STYLES = langueActuelle() === 'en' ? [
@@ -601,6 +602,16 @@ export default function FinDePartie() {
                       {c.texte}
                     </p>
                     {c.mains?.length ? <MainsDuVers mains={c.mains} accent={accent} encre={encre} /> : null}
+                    <BoutonRecolte
+                      texte={c.texte}
+                      accent={accent}
+                      encre={encre}
+                      poemeId={poeme.id}
+                      poemeTitre={poeme.titre}
+                      datePoeme={poeme.dateCreation}
+                      signature={attribution(c, iaNum)}
+                      nbVoix={c.nbVoix}
+                    />
                   </div>
                 )
               })}

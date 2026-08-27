@@ -179,11 +179,21 @@ définis, cinq familles de forme sur sept, vers de 1 à 10 mots, une dizaine de
 mots savants sur vingt-deux vers. À la lecture, neuf ou dix vers dignes d'être
 gardés — contre zéro deux jours plus tôt.
 
-**Ce qui n'a pas été fait, et pourquoi.** La récolte : garder un vers, un
-carnet qui les accumule à travers les séances, réordonnable et exportable.
-C'est ce qui rendrait « Expiation Cadavérique » possible — un recueil n'est
-pas vingt poèmes générés, c'est trois cents vers récoltés et assemblés à la
-main. Chantier décidé mais non ouvert.
+## Le carnet — la récolte
+
+Un recueil n'est pas vingt poèmes générés : c'est trois cents vers récoltés
+puis assemblés à la main. Le moteur produisait dix-huit vers gardables par
+séance et il n'existait aucun moyen de les garder.
+
+- `◇ GARDER` sous chaque ligne des coutures, en fin de partie et dans la
+  bibliothèque (`src/components/BoutonRecolte.tsx`).
+- `/recolte` — le carnet : les vers de toutes les séances, réordonnables à la
+  flèche, avec leur provenance, copiables et exportables en `.txt`.
+- Table Dexie `recolte` (version 4), API dans `src/db/index.ts`. L'ordre est
+  celui du médium, pas celui des dates : un recueil se compose.
+
+L'entrée n'apparaît dans la bibliothèque que si le carnet contient quelque
+chose — un carnet vide n'est pas une invitation, c'est un reproche.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
@@ -191,7 +201,7 @@ main. Chantier décidé mais non ouvert.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (74 tests unitaires) + Playwright (16 tests E2E, FR et EN)
+- Tests : Vitest (312 tests unitaires) + Playwright (17 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

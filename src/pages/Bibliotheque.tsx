@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { chargerPoemes, chargerDessins } from '../db'
+import { chargerPoemes, chargerDessins, chargerRecolte } from '../db'
 import { Decor, useReve } from '../reve'
 import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_BIBLIO } from '../hooks/useTutoriel'
@@ -41,6 +41,7 @@ export default function Bibliotheque() {
   const [dessins, setDessins] = useState<DessinCadavre[]>([])
   const [chargement, setChargement] = useState(true)
   const [recherche, setRecherche] = useState('')
+  const [nRecolte, setNRecolte] = useState(0)
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -51,8 +52,8 @@ export default function Bibliotheque() {
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
-    Promise.all([chargerPoemes(), chargerDessins()])
-      .then(([p, d]) => { setPoemes(p); setDessins(d) })
+    Promise.all([chargerPoemes(), chargerDessins(), chargerRecolte()])
+      .then(([p, d, r]) => { setPoemes(p); setDessins(d); setNRecolte(r.length) })
       .catch(console.error)
       .finally(() => setChargement(false))
   }, [])
@@ -105,6 +106,28 @@ export default function Bibliotheque() {
             </div>
           )}
         </motion.div>
+
+        {/* ── LE CARNET ── */}
+        {/* Le carnet vit à part du recueil : un poème est une séance, le
+            carnet est ce qu'on en garde. On n'affiche l'entrée que lorsqu'il
+            contient quelque chose — un carnet vide n'est pas une invitation,
+            c'est un reproche. */}
+        {!chargement && nRecolte > 0 && (
+          <button
+            onClick={() => { jouer('clic'); navigate('/recolte') }}
+            style={{
+              ...mono, fontSize: 12, letterSpacing: '0.15em', color: accent,
+              background: 'none', border: `1px solid ${accent}44`, borderRadius: 3,
+              cursor: 'pointer', padding: '10px 14px', marginBottom: 14, minHeight: 44,
+              textAlign: 'left', width: '100%',
+            }}
+          >
+            ◆ {tr('LE CARNET', 'THE NOTEBOOK')}
+            <span style={{ color: encre, opacity: 0.45, marginLeft: 10 }}>
+              {nRecolte} {tr('vers gardé', 'line kept')}{nRecolte > 1 ? tr('s', 's') : ''}
+            </span>
+          </button>
+        )}
 
         {/* ── RECHERCHE ── */}
         {!chargement && poemes.length > 0 && (
