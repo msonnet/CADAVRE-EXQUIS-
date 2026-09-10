@@ -215,11 +215,19 @@ c'était une attente.
   et jamais par lettre (mille nœuds animés tueraient un vieil iPhone).
 - **La partition** (`src/lib/rythme.ts`) — le seul module qui se mesure. Le
   souffle du vers décide de son temps : `metrique.ts` compte ses mots, un vers
-  court tombe vite et laisse un silence, un vers long se déroule. Le tout tient
-  dans un budget de 7,6 s, comprimé d'un même facteur si le poème déborde — les
-  rapports entre les vers sont conservés. **Budget tenu jusqu'à quarante-trois
-  vers** ; au-delà le plancher de compression allonge plutôt que de rendre
-  illisible.
+  court tombe vite et laisse un silence, un vers long se déroule.
+  **Le plancher est un temps absolu, jamais un ratio** : un mot ne paraît
+  jamais en moins de 58 ms, quelle que soit la longueur du poème. Première
+  version : le plancher était en ratio (22 % de la vitesse naturelle), ce qui
+  donnait 25 ms par mot sur un poème d'atelier — un clignotement, pas une
+  écriture.
+- **On n'anime que ce qu'on regarde** (`VERS_ANIMES = 9`). Un vers lisible
+  coûte au moins un tiers de seconde ; trente-sept vers lisibles coûtent vingt
+  à vingt-cinq secondes, quoi qu'on règle. Or l'écran d'un téléphone en montre
+  neuf. La tête reçoit le rythme entier ; le reste du poème est porté par un
+  dernier volet qui s'ouvre sur un texte déjà écrit — ce que fait une vraie
+  feuille qu'on déplie. **Toute longueur tient donc en 10,7 s**, à 128–145 ms
+  par mot.
 - **Toute séquence est interruptible** : un appui n'importe où pose le poème
   entier. Une belle animation qu'on subit une deuxième fois est pire qu'une
   animation bancale.

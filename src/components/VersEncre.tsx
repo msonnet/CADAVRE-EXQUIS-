@@ -34,11 +34,24 @@ interface Props {
   style?: React.CSSProperties
 }
 
-/** La durée du masque sur un mot pris seul. */
-const MOT_MIN = 0.13
-const MOT_MAX = 0.28
-/** Les masques se chevauchent : sans quoi on lit une machine à écrire. */
-const CHEVAUCHEMENT = 1.9
+/**
+ * La durée du masque sur un mot pris seul.
+ *
+ * Le plancher était à 0,13 s : à cette vitesse le mot ne s'écrit pas, il
+ * clignote. On ne voit plus l'encre traverser, seulement un texte qui se
+ * remplit par saccades.
+ */
+const MOT_MIN = 0.19
+const MOT_MAX = 0.42
+
+/**
+ * De combien les masques se chevauchent.
+ *
+ * À deux, on ne distingue plus quel mot est en train de venir ; à un, c'est
+ * une machine à écrire. Un peu moins qu'avant : chaque mot a besoin d'être
+ * identifiable comme le mot qui arrive.
+ */
+const CHEVAUCHEMENT = 1.6
 
 export default function VersEncre({ texte, debut, duree, immediat, avant, style }: Props) {
   // On garde les espaces dans le découpage — ils ne s'animent pas, mais ils

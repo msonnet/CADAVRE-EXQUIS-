@@ -116,7 +116,7 @@ export default function PoemeDevoile({
                     animate={{ y: 0, opacity: 1 }}
                     transition={immediat ? { duration: 0, delay: 0 } : {
                       delay: t.debut / 1000,
-                      duration: 0.5,
+                      duration: 0.72,
                       ease: [0.22, 1.4, 0.36, 1],
                     }}
                     onAnimationComplete={() => {

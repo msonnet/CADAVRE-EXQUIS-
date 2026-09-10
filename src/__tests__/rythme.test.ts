@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  partitionDuPoeme, plierEnPanneaux, BUDGET_ENCRE, DUREE_DEPLI, PANNEAUX_MAX,
+  partitionDuPoeme, plierEnPanneaux, DUREE_DEPLI, PANNEAUX_MAX, VERS_ANIMES,
 } from '../lib/rythme'
 
 /**
@@ -46,37 +46,46 @@ describe('plierEnPanneaux', () => {
   })
 })
 
-describe('partitionDuPoeme — le budget', () => {
-  it('tient le budget sur le poème qui a motivé le chantier', () => {
-    // Trente-sept vers : 20,1 s avec l'ancien dévoilement.
-    const p = partitionDuPoeme(poeme(37))
-    expect(p.fin).toBeLessThan(BUDGET_ENCRE + DUREE_DEPLI)
-    expect(p.fin / 1000).toBeLessThan(9)
-    expect(p.facteur).toBeLessThan(1)
-  })
-
-  it('ne comprime pas un poème qui tient déjà dans le budget', () => {
-    const p = partitionDuPoeme(poeme(4))
-    expect(p.facteur).toBe(1)
-  })
-
-  it('tient le budget jusqu’à quarante-trois vers — le point de bascule annoncé', () => {
-    for (let n = 1; n <= 43; n++) {
-      expect(partitionDuPoeme(poeme(n)).fin).toBeLessThan(9_000)
+describe('partitionDuPoeme — la durée, et la lisibilité qui la commande', () => {
+  it('tient sous douze secondes à toutes les longueurs', () => {
+    // Le poème d'atelier à trente-sept vers mettait 20,1 s avec l'ancien
+    // dévoilement. Il n'y a plus de longueur qui fasse déborder la séquence :
+    // au-delà de la tête, le reste part dans un volet déjà écrit.
+    for (const n of [1, 3, 5, 9, 12, 24, 37, 50, 120]) {
+      expect(partitionDuPoeme(poeme(n)).fin, `n=${n}`).toBeLessThan(12_000)
     }
   })
 
-  it('au-delà, le plancher allonge la séquence plutôt que de la rendre illisible', () => {
-    // C'est le prix assumé du plancher de compression : passé le point de
-    // bascule, chaque vers garde de quoi se voir et le total s'allonge.
-    const p = partitionDuPoeme(poeme(120))
-    expect(p.fin).toBeGreaterThan(9_000)
-    for (const v of p.vers) expect(v.duree).toBeGreaterThan(120)
+  it('n’écrit jamais un mot plus vite que l’œil ne le suit', () => {
+    // Le reproche fait à la première version : à 25 ms par mot ce n'est plus
+    // une écriture, c'est un clignotement. Le plancher est absolu, donc il
+    // tient quelle que soit la longueur du poème.
+    for (const n of [3, 9, 24, 37, 120]) {
+      for (const v of partitionDuPoeme(poeme(n)).vers) {
+        if (v.duree === 0) continue   // le volet de queue est déjà écrit
+        expect(v.duree / v.mots, `n=${n}`).toBeGreaterThan(55)
+      }
+    }
   })
 
-  it('avance toujours : aucun vers ne commence avant le précédent', () => {
+  it('anime la tête et pose le reste d’un coup', () => {
     const p = partitionDuPoeme(poeme(37))
-    for (let i = 1; i < p.vers.length; i++) {
+    const animes = p.vers.filter(v => v.duree > 0).length
+    expect(animes).toBe(VERS_ANIMES)
+    // Les vers de la queue partagent tous l'instant d'ouverture de leur volet.
+    const queue = p.vers.slice(VERS_ANIMES)
+    expect(new Set(queue.map(v => v.debut)).size).toBe(1)
+  })
+
+  it('anime tout le poème quand il tient dans la tête', () => {
+    const p = partitionDuPoeme(poeme(6))
+    expect(p.vers.every(v => v.duree > 0)).toBe(true)
+    expect(p.facteur).toBe(1)
+  })
+
+  it('avance toujours : aucun vers animé ne commence avant le précédent', () => {
+    const p = partitionDuPoeme(poeme(37))
+    for (let i = 1; i < VERS_ANIMES; i++) {
       expect(p.vers[i].debut).toBeGreaterThan(p.vers[i - 1].debut)
     }
   })
