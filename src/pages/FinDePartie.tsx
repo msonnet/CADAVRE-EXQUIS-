@@ -167,6 +167,12 @@ export default function FinDePartie() {
           if (pv) setPromptVisuel(pv)
           const illustration = { url, style, promptLibre: pl, promptUtilise: texte, dateGeneration: Date.now() }
           sauvegarderIllustration(poeme.id, illustration).catch(console.error)
+          // On NE lève pas l'attente ici : c'est `onLoad` de l'image qui s'en
+          // charge. Voir la note sur le drapeau, plus bas dans le rendu.
+          // Sauf si le serveur rend exactement l'image déjà affichée —
+          // `onLoad` ne se déclencherait pas et l'attente ne finirait jamais.
+          if (url === illustrationUrl) setGeneratingIllustration(false)
+          return
         } else {
           const msg = reason === 'not_configured'
             ? tr("Génération d'images non configurée (clé FAL_KEY manquante)", 'Image generation not configured (missing FAL_KEY)')
@@ -176,12 +182,28 @@ export default function FinDePartie() {
           setErreurIllustration(msg)
           setStyleChoisi(null)
         }
+        setGeneratingIllustration(false)
       })
-      .finally(() => setGeneratingIllustration(false))
+      // Un `then` qui jette laisserait « EN COURS… » à vie : le repli est ici.
+      .catch(() => {
+        setErreurIllustration(tr(
+          'Illustration indisponible — réessaie dans un instant',
+          'Illustration unavailable — try again in a moment',
+        ))
+        setGeneratingIllustration(false)
+      })
   }
 
+  /**
+   * Relancer après un échec.
+   *
+   * `styleChoisi` est remis à null quand la génération échoue — la relance
+   * lisait donc null et ne faisait rien. Le style demandé survit dans la
+   * référence, qui existait déjà pour rejouer la demande après l'abonnement.
+   */
   function relancer() {
-    if (styleChoisi) choisirStyle(styleChoisi)
+    const style = styleChoisi ?? styleChoisiRef.current
+    if (style) choisirStyle(style)
   }
 
   if (!poeme) {
@@ -401,10 +423,30 @@ export default function FinDePartie() {
               aria-label={tr("Voir l'illustration en plein écran", 'View the illustration full screen')}
               style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: generatingIllustration ? 'default' : 'zoom-in', width: '100%' }}
             >
+              {/*
+                C'est l'image qui lève l'attente, pas la promesse réseau.
+
+                Ceinture et bretelles, et il faut dire pourquoi : sur le chemin
+                normal `normaliserFormatInstagram` attend déjà le `onload` de
+                l'image avant de la rasteriser en data URL, si bien que la
+                promesse ne se résout jamais avant le décodage. Ce garde-fou ne
+                sert donc que le repli — quand la normalisation échoue (CORS,
+                canvas indisponible) et qu'on affiche l'URL distante brute. Là,
+                l'image se charge vraiment après coup, et sans `onLoad`
+                l'attente se lèverait sur un cadre vide.
+              */}
               <img
                 src={illustrationUrl}
                 alt={tr('Illustration du poème', 'Poem illustration')}
                 className="w-full border"
+                onLoad={() => setGeneratingIllustration(false)}
+                onError={() => {
+                  setGeneratingIllustration(false)
+                  setErreurIllustration(tr(
+                    "L'illustration ne s'est pas chargée — réessaie",
+                    'The illustration failed to load — try again',
+                  ))
+                }}
                 style={{ borderColor: `${accent}30`, filter: 'contrast(0.97)', opacity: generatingIllustration ? 0.4 : 1, transition: 'opacity 0.5s' }}
               />
             </button>
@@ -452,6 +494,14 @@ export default function FinDePartie() {
               aria-live="polite"
               className="flex flex-col items-center gap-2 my-4"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              // Le fondu de sortie n'était pas réglé, donc à la valeur par
+              // défaut de framer-motion. Mesuré : l'étiquette « EN COURS… »
+              // restait un demi-tour de seconde AU-DESSUS de l'image finie
+              // — opacité 0,98 puis 0,52 puis 0,03. C'est ce que l'audit a
+              // relevé comme « l'état ne se lève pas » : le drapeau se levait
+              // bien, c'est le fondu qui traînait. Un tiers de seconde suffit
+              // à passer la main sans faire douter.
+              transition={{ opacity: { duration: 0.18 } }}
             >
               <motion.span
                 aria-hidden
@@ -629,10 +679,16 @@ export default function FinDePartie() {
               {/* Style buttons */}
               {!generatingIllustration && (
                 <div className="flex flex-col gap-2">
-                  {/* Regenerate if we have an image */}
-                  {illustrationUrl && (
+                  {/*
+                    Relancer — après une image, mais aussi après un échec.
+                    Le bouton était conditionné à l'existence d'une image :
+                    une première génération ratée ne laissait donc qu'un
+                    message, sans aucun moyen de réessayer autrement qu'en
+                    retrouvant son style dans la liste.
+                  */}
+                  {(illustrationUrl || erreurIllustration) && (
                     <button
-                      onClick={() => styleChoisi && choisirStyle(styleChoisi)}
+                      onClick={relancer}
                       style={{ ...mono, fontSize: 13, color: encre, opacity: 0.8, background: 'none', border: `0.5px solid ${encre}20`, borderRadius: 3, padding: '8px', cursor: 'pointer' }}
                     >
                       ↺ {tr('RELANCER', 'RETRY')}
