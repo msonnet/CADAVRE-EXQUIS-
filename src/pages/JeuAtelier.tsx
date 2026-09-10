@@ -817,6 +817,13 @@ export default function JeuAtelier() {
   const versRef = useRef<VersAtelier[]>(vers)
   versRef.current = vers
 
+  // Les rangs déjà pourvus — voir `ajouterVers`. Ensemencé avec le brouillon :
+  // une séance rouverte au vingtième vers ne doit pas croire ses dix-neuf
+  // premiers rangs libres.
+  const rangsPourvus = useRef<Set<number>>(
+    new Set(Array.from({ length: vers.length }, (_, i) => i)),
+  )
+
   // La garde d'ouverture : pas deux fois la même famille de déterminant de
   // suite, et pas plus de trois à six vers nominaux d'affilée. Elle reprend
   // l'histoire du brouillon rouvert — sinon une séance reprise au vingtième
@@ -903,6 +910,26 @@ export default function JeuAtelier() {
   }, [plan, vers, termine])
 
   function ajouterVers(v: VersAtelier) {
+    // ── Un vers par rang, jamais deux ──
+    //
+    // La garde tient ici, à l'entonnoir, et non sur le bouton : c'est un
+    // invariant de la séance, pas une précaution d'interface. Les deux
+    // chemins des voix avaient déjà la leur (`traites`, `traiteFragment`) ;
+    // celui du médium n'en avait aucune, et c'est par là que le poème se
+    // corrompait.
+    //
+    // Deux appuis rapprochés sur DÉPOSER LE VERS — le « ghost tap » du
+    // tactile — s'exécutent avant le re-rendu, donc tous deux lisent le rendu
+    // d'avant : `saisie` porte encore le texte, `tourJoueur` est encore vrai,
+    // et le vers s'empilait deux fois. Mesuré : ["alpha", "beta", "beta"] là
+    // où le joueur avait tapé deux vers. Le tour suivant se trouvait ainsi
+    // consommé, et le vers écrit pour lui n'avait plus de rang où se poser —
+    // il disparaissait du poème sans un mot.
+    //
+    // Le second appel porte le même `idx` périmé que le premier : il suffit
+    // donc de refuser un rang déjà pourvu.
+    if (rangsPourvus.current.has(idx)) return
+    rangsPourvus.current.add(idx)
     // On enregistre ce qui est SORTI, pas ce qui avait été demandé : la voix
     // ne suit pas toujours la stratégie, et la réserve locale ne la connaît
     // même pas. La garde doit compter le poème réel.
