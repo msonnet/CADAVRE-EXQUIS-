@@ -149,15 +149,25 @@ describe('le souffle du poème, de bout en bout', () => {
   })
 
   it('ne laisse pas filer une longue série de vers de même souffle', () => {
+    // Mesuré sur quatre mille séances de trente vers PAR TABLE : série de 3
+    // dans 73 % des poèmes, 4 dans 22 %, 5 dans 2,7 %, 6 dans 0,4 %, 7 dans
+    // 0,03 %, et jamais au-delà de 8 en douze mille poèmes.
+    //
+    // Ce test plafonnait la série de CHAQUE poème, ce qui en faisait un test
+    // de queue : à cent vingt tirages par exécution, il échouait environ une
+    // fois sur huit — d'abord écrit à cinq, puis relevé à six, et capricieux
+    // dans les deux cas. On mesure donc la DISTRIBUTION, qui est la propriété
+    // qu'on veut réellement tenir, et on garde une borne large sur le pire.
     for (const table of [4, 24, 46]) {
-      for (let s = 0; s < 40; s++) {
+      const N = 200
+      let longues = 0, pire = 0
+      for (let s = 0; s < N; s++) {
         const d = diagnosticMetrique(seance(table).map(l => 'x '.repeat(l).trim()))
-        // Mesuré sur huit cents séances de trente vers, table de quarante-six :
-        // série de 3 dans 74 % des poèmes, 4 dans 20 %, 5 dans 3 %, 6 dans un
-        // poème sur deux cents. Le plancher honnête est donc six — l'écrire à
-        // cinq rendait le test capricieux une fois sur cinq.
-        expect(d.plusLongueSerie, `table=${table}`).toBeLessThanOrEqual(6)
+        if (d.plusLongueSerie > 5) longues++
+        pire = Math.max(pire, d.plusLongueSerie)
       }
+      expect(longues / N, `table=${table}`).toBeLessThan(0.03)
+      expect(pire, `table=${table}`).toBeLessThanOrEqual(9)
     }
   })
 

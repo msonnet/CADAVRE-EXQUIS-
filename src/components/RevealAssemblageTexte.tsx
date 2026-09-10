@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { tr } from '../i18n'
 import { motion } from 'framer-motion'
 import { vibrer } from '../utils/haptics'
@@ -15,10 +15,34 @@ interface Props {
   accent: string
   encre: string
   bg: string
+  /**
+   * Ce qui s'écrit au-dessus du titre. Par défaut « N VOIX » — mais à
+   * l'atelier une case est un VERS et non une voix, et l'écran annonçait
+   * « 37 VOIX » pour une table de trente-six.
+   */
+  libelle?: string
   /** Appelé une fois la convergence + le battement terminés : le parent dévoile alors le poème. */
   onTermine: () => void
   /** Optionnel : son de révélation joué au climax. */
   jouerClimax?: () => void
+}
+
+/**
+ * Combien de fragments convergent, et combien de bandes se posent.
+ *
+ * Sans plafond, un poème d'atelier de trente-sept vers fabriquait trente-sept
+ * divs animés en absolu et autant de bandes : de quoi faire tomber la
+ * cadence sur un vieux téléphone, pour une différence que personne ne voit.
+ * On échantillonne au lieu de tout montrer.
+ */
+const FRAGMENTS_MAX = 16
+const BANDES_MAX = 12
+
+/** Prend n éléments répartis régulièrement dans la liste, premier et dernier compris. */
+function echantillonner<T>(liste: T[], n: number): T[] {
+  if (liste.length <= n) return liste
+  const pas = (liste.length - 1) / (n - 1)
+  return Array.from({ length: n }, (_, i) => liste[Math.round(i * pas)])
 }
 
 const reduced =
@@ -36,9 +60,11 @@ const T_FLASH = reduced ? 200 : 480
  * de tension et un flash de lumière passent la main au dévoilement du poème.
  */
 export default function RevealAssemblageTexte({
-  fragments, voixCount, accent, encre, bg, onTermine, jouerClimax,
+  fragments: tousLesFragments, voixCount, accent, encre, bg, libelle, onTermine, jouerClimax,
 }: Props) {
   const [phase, setPhase] = useState<'convergence' | 'battement' | 'flash'>('convergence')
+  const fragments = useMemo(() => echantillonner(tousLesFragments, FRAGMENTS_MAX), [tousLesFragments])
+  const nBandes = Math.min(Math.max(voixCount, 2), BANDES_MAX)
   const dim = useRef({ w: 0, h: 0 })
   if (dim.current.w === 0 && typeof window !== 'undefined') {
     dim.current = { w: window.innerWidth, h: window.innerHeight }
@@ -85,14 +111,21 @@ export default function RevealAssemblageTexte({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.5 } }}
+      // Un rideau qu'on ne peut pas écarter se fait détester à la deuxième
+      // partie. Un appui n'importe où passe directement au poème.
+      onClick={onTermine}
+      role="button"
+      tabIndex={0}
+      aria-label={tr('Passer la révélation', 'Skip the reveal')}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onTermine() }}
       style={{
         position: 'fixed', inset: 0, zIndex: 250, background: bg, overflow: 'hidden',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center', padding: '0 28px',
+        textAlign: 'center', padding: '0 28px', cursor: 'pointer',
       }}
     >
       {/* Bandes horizontales — texture des voix qui se superposent */}
-      {Array.from({ length: voixCount }).map((_, i) => (
+      {Array.from({ length: nBandes }).map((_, i) => (
         <motion.div
           key={`bande-${i}`}
           initial={{ x: i % 2 === 0 ? '-110%' : '110%' }}
@@ -100,7 +133,7 @@ export default function RevealAssemblageTexte({
           transition={{ delay: i * 0.16, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
           style={{
             position: 'absolute', left: 0, right: 0,
-            height: `${100 / voixCount}%`, top: `${(i * 100) / voixCount}%`,
+            height: `${100 / nBandes}%`, top: `${(i * 100) / nBandes}%`,
             background: accent, opacity: 0.08, pointerEvents: 'none',
           }}
         />
@@ -116,7 +149,13 @@ export default function RevealAssemblageTexte({
             animate={{ x: d.x1, y: d.y1, opacity: [0, 0.5, 0], rotate: d.rot * 0.3, scale: 0.92 }}
             transition={{
               delay: i * 0.09,
-              duration: (T_CONVERGENCE / 1000) - i * 0.05,
+              // Les fragments les plus tardifs traversent plus vite — mais
+              // jamais en un temps négatif. Sous `prefers-reduced-motion`, la
+              // convergence tombe à 600 ms : au treizième fragment le calcul
+              // passait sous zéro et l'API Web Animations refusait la durée.
+              // La page de fin plantait alors entièrement, ce qui ne se voyait
+              // pas — personne ne l'avait ouverte avec le réglage actif.
+              duration: Math.max(0.15, (T_CONVERGENCE / 1000) - i * 0.05),
               ease: [0.33, 0, 0.2, 1],
             }}
             style={{
@@ -145,7 +184,7 @@ export default function RevealAssemblageTexte({
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 18, opacity: 0.8 }}>
-          — {voixCount} {tr('VOIX', 'VOICES')} —
+          — {libelle ?? `${voixCount} ${tr('VOIX', 'VOICES')}`} —
         </div>
         <div style={{
           fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',

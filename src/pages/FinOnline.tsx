@@ -15,6 +15,7 @@ import type { Refus } from '../lib/acces'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import { fetchAvecTimeout } from '../utils/fetchAvecTimeout'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
+import PoemeDevoile from '../components/PoemeDevoile'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
@@ -361,9 +362,6 @@ export default function FinOnline() {
 
   const texteAffiche = texteCorrige ?? texteAssemble
   const lignes = texteAffiche.split('\n')
-  const ligne0 = (lignes[0]?.trim() ?? '').replace(/^[«»"''"""'']+/, '')
-  const lettrine = ligne0.charAt(0) ?? ''
-  const resteLigne0 = ligne0.slice(1) ?? ''
 
   return (
     <>
@@ -532,22 +530,18 @@ export default function FinOnline() {
               </div>
             )}
 
-            {/* ── Mode écrit : poème ── */}
+            {/* ── Mode écrit : le feuillet s'ouvre, l'encre vient dessus ── */}
             {room.mode !== 'dessin' && (
               <div style={{ marginBottom: 28 }}>
-                {lignes.map((ligne, i) => (
-                  <motion.p key={i}
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.5, duration: 0.6, ease: 'easeOut' }}
-                    style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6, margin: '0 0 4px' }}>
-                    {i === 0 && lettrine ? (
-                      <>
-                        <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: '3.6rem', lineHeight: 0.85, color: accent, float: 'left', margin: '6px 8px 0 0' }}>{lettrine}</span>
-                        {resteLigne0}
-                      </>
-                    ) : (ligne || ' ')}
-                  </motion.p>
-                ))}
+                <PoemeDevoile
+                  lignes={lignes}
+                  accent={accent}
+                  actif
+                  lettrine
+                  tailleLettrine="3.6rem"
+                  onLettrine={() => jouer('lettrine')}
+                  style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6 }}
+                />
               </div>
             )}
 

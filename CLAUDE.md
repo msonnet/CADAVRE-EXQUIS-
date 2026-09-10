@@ -42,7 +42,9 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] Mode spectateur codé mais sans point d'entrée
 - [ ] La série (streak) compte les ouvertures, pas les poèmes écrits
 - [ ] Réactions et vues de la galerie invisibles pour l'auteur
-- [ ] `prefers-reduced-motion` ne neutralise pas les animations framer-motion
+- [ ] `prefers-reduced-motion` : le dévoilement du poème l'honore (et le plantage
+      de la page de fin est corrigé), mais les autres animations framer-motion
+      ne le lisent toujours pas
 - [ ] Monitoring erreurs Sentry (optionnel — Vercel Analytics couvre les Web Vitals)
 - [ ] Nettoyage galerie ancienne (images orphelines dans Storage)
 
@@ -195,13 +197,49 @@ séance et il n'existait aucun moyen de les garder.
 L'entrée n'apparaît dans la bibliothèque que si le carnet contient quelque
 chose — un carnet vide n'est pas une invitation, c'est un reproche.
 
+## Le dévoilement — le dépli et l'encre
+
+L'ancienne révélation tenait dans une ligne : `delay: 0.3 + i * 0.55`. Chaque
+vers attendait la même chose, qu'il fasse un mot ou dix. Sur le poème d'atelier
+à trente-sept vers, le dernier apparaissait à **20,1 s**, après 4,8 s
+d'assemblage qu'on ne pouvait pas interrompre. Ce n'était pas une animation,
+c'était une attente.
+
+- **Le dépli** (`src/components/Depli.tsx`) — le feuillet est plié en volets,
+  jusqu'à cinq, charnière en haut, `rotateX(-92°)` qui tombe à plat. Un volet
+  par vers quand le poème est court : c'est exactement le pliage d'origine d'un
+  cadavre exquis à trois ou quatre mains. La pliure SUBSISTE, faible, une fois
+  le poème posé — le feuillet garde la marque d'avoir été plié.
+- **L'encre** (`src/components/VersEncre.tsx`) — le vers n'apparaît plus en
+  fondu : un masque le découvre mot après mot, à la vitesse d'une main. Par mot
+  et jamais par lettre (mille nœuds animés tueraient un vieil iPhone).
+- **La partition** (`src/lib/rythme.ts`) — le seul module qui se mesure. Le
+  souffle du vers décide de son temps : `metrique.ts` compte ses mots, un vers
+  court tombe vite et laisse un silence, un vers long se déroule. Le tout tient
+  dans un budget de 7,6 s, comprimé d'un même facteur si le poème déborde — les
+  rapports entre les vers sont conservés. **Budget tenu jusqu'à quarante-trois
+  vers** ; au-delà le plancher de compression allonge plutôt que de rendre
+  illisible.
+- **Toute séquence est interruptible** : un appui n'importe où pose le poème
+  entier. Une belle animation qu'on subit une deuxième fois est pire qu'une
+  animation bancale.
+
+`src/components/PoemeDevoile.tsx` compose le tout ; `FinDePartie` et
+`FinOnline` l'appellent. Rien n'a été ajouté aux dépendances — framer-motion
+était déjà là, c'était un manque de dessin, pas de librairie.
+
+**Corrigé au passage, et c'était un plantage :** sous
+`prefers-reduced-motion: reduce`, `RevealAssemblageTexte` calculait une durée
+négative au treizième fragment et l'API Web Animations refusait. La page de fin
+plantait entièrement — personne ne l'avait ouverte avec le réglage actif.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (312 tests unitaires) + Playwright (17 tests E2E, FR et EN)
+- Tests : Vitest (328 tests unitaires) + Playwright (20 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

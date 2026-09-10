@@ -11,6 +11,7 @@ import { corrigerAccords } from '../api/corriger'
 import { Decor, useReve } from '../reve'
 import { partagerStory, partagerVideoStory } from '../utils/partager'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
+import PoemeDevoile from '../components/PoemeDevoile'
 import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_IMAGE, T_FIN_SHARE, T_FIN_RECUEIL } from '../hooks/useTutoriel'
 import { vibrer } from '../utils/haptics'
@@ -86,7 +87,6 @@ export default function FinDePartie() {
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
-  const [lettrineChutee, setLettrineChutee] = useState(false)
   const { jouer } = useSound()
 
   useEffect(() => {
@@ -204,9 +204,6 @@ export default function FinDePartie() {
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
   const lignes = texteAffiche.split('\n')
-  const ligne0 = (lignes[0]?.trim() ?? '').replace(/^[«»"''"“”‘’]+/, '')
-  const lettrine = ligne0.charAt(0) ?? ''
-  const resteLigne0 = ligne0.slice(1) ?? ''
   const voixCount = poeme.cases.length
 
   async function partager() {
@@ -248,6 +245,7 @@ export default function FinDePartie() {
           <RevealAssemblageTexte
             fragments={poeme.cases.map(c => ({ texte: c.texte }))}
             voixCount={voixCount}
+            libelle={`${voixCount} ${poeme.structureId === 'atelier' ? tr('VERS', 'LINES') : tr('VOIX', 'VOICES')}`}
             accent={accent}
             encre={encre}
             bg={bg}
@@ -370,50 +368,19 @@ export default function FinDePartie() {
             CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
           </div>
 
-          {/* Poem text — lignes dévoilées une à une après le rideau */}
-          <div
+          {/* Le poème — le feuillet s'ouvre volet par volet, l'encre vient dessus */}
+          <PoemeDevoile
+            lignes={lignes}
+            accent={accent}
+            actif={revealReady}
+            lettrine
+            onLettrine={() => { jouer('lettrine'); vibrer('devoilement') }}
             style={{
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
               color: encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
               overflowWrap: 'break-word', wordBreak: 'break-word',
             }}
-          >
-            {revealReady && lignes.map((ligne, i) => (
-              <motion.span
-                key={i}
-                style={{ display: 'block', minHeight: '1.65em' }}
-                initial={{ opacity: 0, x: i % 2 === 0 ? -14 : 14 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.55, duration: 0.7, ease: [0.22, 0.88, 0.32, 1] }}
-              >
-                {i === 0 && lettrine && (
-                  <motion.span
-                    initial={{ y: -40, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.5, ease: [0.22, 1.4, 0.36, 1] }}
-                    onAnimationComplete={() => {
-                      if (!lettrineChutee) {
-                        setLettrineChutee(true)
-                        jouer('lettrine')
-                        vibrer('devoilement')
-                      }
-                    }}
-                    style={{
-                      display: 'inline-block',
-                      fontFamily: "'Bodoni Moda', serif",
-                      fontWeight: 900,
-                      fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
-                      lineHeight: 0.85, color: accent,
-                      float: 'left', marginRight: 6, marginTop: 4,
-                    }}
-                  >
-                    {lettrine}
-                  </motion.span>
-                )}
-                {i === 0 ? resteLigne0 : (ligne || ' ')}
-              </motion.span>
-            ))}
-          </div>
+          />
 
           {/* Card footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
