@@ -46,17 +46,9 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,mp3,ogg,wav}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
+        // Plus de règle de cache pour Google Fonts : il n'y a plus rien à
+        // aller y chercher. Les .woff2 vivent dans /fonts et le
+        // `globPatterns` ci-dessus les précache comme le reste.
       },
     }),
   ],

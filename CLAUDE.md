@@ -241,13 +241,37 @@ c'était une attente.
 négative au treizième fragment et l'API Web Animations refusait. La page de fin
 plantait entièrement — personne ne l'avait ouverte avec le réglage actif.
 
+## Les polices — auto-hébergées depuis le 11 septembre 2026
+
+Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.
+Pendant l'audit du 10 septembre ce chargement a échoué et `document.fonts`
+est resté **vide** : l'app est tombée en police système, identité comprise.
+Sur une PWA installable, hors ligne ou en réseau dégradé, c'est l'état normal
+du jeu dans un train.
+
+- Quatre familles en fontes **variables**, sous-ensembles `latin` +
+  `latin-ext` : 14 fichiers, 530 Ko dans `public/fonts/`. En statique il en
+  aurait fallu vingt pour les mêmes graisses.
+- `src/polices.css` — les `@font-face`, `font-display: swap`, les
+  `unicode-range` de Google inchangés.
+- Précachées par le service worker (`globPatterns` contenait déjà `woff2`) :
+  101 entrées au lieu de 86.
+- La règle `runtimeCaching` vers Google est retirée — elle n'avait plus
+  d'objet.
+- **Effet de bord qui compte** : un `<link>` vers Google transmettait l'IP du
+  joueur à chaque chargement, sous un écran de Réglages affichant « AUCUN
+  TRACKING · AUCUNE DONNÉE VENDUE ». La promesse cesse d'être contredite.
+
+`Fraunces` n'a jamais été chargée : `tailwind.config.js` l'aliase sur Bodoni
+Moda. Rien ne manquait, mais le nom trompe à la lecture.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (328 tests unitaires) + Playwright (27 tests E2E, FR et EN)
+- Tests : Vitest (328 tests unitaires) + Playwright (30 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
