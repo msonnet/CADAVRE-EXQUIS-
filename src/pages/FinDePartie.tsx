@@ -87,6 +87,10 @@ export default function FinDePartie() {
   const [pleinEcran, setPleinEcran] = useState(false)
   const [partageOk, setPartageOk] = useState(false)
   const [partageEnCours, setPartageEnCours] = useState(false)
+  // Le poème est dans le presse-papiers — dit dès la copie, sans attendre
+  // que la vidéo finisse de s'encoder.
+  const [partageCopie, setPartageCopie] = useState(false)
+  const [partageErreur, setPartageErreur] = useState(false)
   const { jouer } = useSound()
 
   useEffect(() => {
@@ -241,15 +245,44 @@ export default function FinDePartie() {
       date: poeme.dateCreation,
       seed: poeme.id,
     }
+    // ── Le presse-papiers d'abord, et c'est une question de délai ──
+    //
+    // Sans feuille de partage — tout navigateur de bureau, et le mode
+    // émulé — le repli est un téléchargement de la vidéo. Mesuré : 6,2 s
+    // d'encodage pendant lesquelles le bouton ne disait que « EN COURS… ».
+    // L'audit a conclu que le bouton ne faisait rien ; en réalité il
+    // travaillait, trop longtemps pour qu'on l'attende.
+    //
+    // On copie donc le poème TOUT DE SUITE, et avant l'encodage : le droit
+    // d'écrire dans le presse-papiers tient à l'activation par le geste, et
+    // dix secondes d'attente plus tard le navigateur l'aurait refusé. Le
+    // joueur repart avec son texte même s'il quitte la page entre-temps.
+    let copie = false
+    if (!navigator.share) {
+      try {
+        await navigator.clipboard.writeText(textePartage)
+        copie = true
+        setPartageCopie(true)
+      } catch { /* presse-papiers refusé : le fichier reste */ }
+    }
+
     try {
       // Vidéo animée (le format viral) ; repli automatique sur l'affiche fixe si l'encodage est indisponible
       const ok = await partagerVideoStory(opts)
-      if (ok === 'annule') return // feuille fermée par l'utilisateur : ni repli ni « ✓ »
+      if (ok === 'annule') { setPartageCopie(false); return } // feuille fermée : ni repli ni « ✓ »
       if (!ok) await partagerStory(opts)
       setPartageOk(true)
-      setTimeout(() => setPartageOk(false), 2000)
+      setTimeout(() => { setPartageOk(false); setPartageCopie(false) }, 2600)
     } catch (e) {
       console.error('partage échoué', e)
+      // Un bouton qui ne dit rien est pire qu'un bouton absent : si le texte
+      // est au moins copié, on le dit ; sinon on avoue l'échec.
+      if (!copie) {
+        setPartageErreur(true)
+        setTimeout(() => setPartageErreur(false), 2600)
+      } else {
+        setTimeout(() => setPartageCopie(false), 2600)
+      }
     } finally {
       setPartageEnCours(false)
     }
@@ -554,9 +587,20 @@ export default function FinDePartie() {
             onClick={partager}
             disabled={partageEnCours}
             className={tutActif && tutEtape === T_FIN_SHARE ? 'appui tut-cible' : 'appui'}
-            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: partageOk || partageEnCours ? accent : encre, opacity: partageOk || partageEnCours ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44 }}
+            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: partageOk || partageCopie || partageEnCours || partageErreur ? accent : encre, opacity: partageOk || partageCopie || partageEnCours || partageErreur ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partageEnCours ? 'default' : 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44 }}
           >
-            {partageEnCours ? tr('✦ EN COURS…', '✦ WORKING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('PARTAGER', 'SHARE')}
+            {/*
+              Le libellé dit ce qui s'est réellement passé, dans l'ordre où
+              ça arrive : le texte copié d'abord — c'est immédiat —, puis
+              l'encodage, puis le partage ou le fichier. « ✓ PARTAGÉ » sur un
+              navigateur sans feuille de partage aurait été un mensonge.
+            */}
+            {partageErreur ? tr('✕ PARTAGE IMPOSSIBLE', '✕ SHARING FAILED')
+              : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED')
+              : partageCopie && partageEnCours ? tr('✓ COPIÉ · VIDÉO…', '✓ COPIED · VIDEO…')
+              : partageCopie ? tr('✓ POÈME COPIÉ', '✓ POEM COPIED')
+              : partageEnCours ? tr('✦ EN COURS…', '✦ WORKING…')
+              : tr('PARTAGER', 'SHARE')}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
