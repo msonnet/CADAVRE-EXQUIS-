@@ -265,13 +265,34 @@ du jeu dans un train.
 `Fraunces` n'a jamais été chargée : `tailwind.config.js` l'aliase sur Bodoni
 Moda. Rien ne manquait, mais le nom trompe à la lecture.
 
+## Le clavier logiciel — `src/lib/clavier.ts`
+
+Les champs de saisie n'avaient aucun attribut de contrôle du clavier. Sur
+iOS, l'absence d'`autocapitalize` vaut `sentences` : chaque fragment saisi
+commençait par une majuscule. Or un fragment est presque toujours un MILIEU
+de vers — d'où les « Vacille », « Calcaire », « La cire durcit » plantés au
+milieu d'une phrase dans toute la galerie de production.
+
+Deux régimes, parce qu'il y a deux gestes :
+
+| | `autocapitalize` | `autocorrect` | `enterkeyhint` |
+|---|---|---|---|
+| `CLAVIER_FRAGMENT` — un morceau de vers | `none` | `off` | `done` |
+| `CLAVIER_VERS` — une phrase entière | `sentences` | `off` | `send` |
+
+Quatre champs les emploient : la case du cadavre écrit (`Jeu`), celle du
+salon (`JeuOnline`), le fragment et le vers entier de l'atelier
+(`JeuAtelier`). `spellcheck` reste actif — souligner une faute est utile, la
+corriger sans demander ne l'est pas. **La taille de 20 px ne se touche
+pas** : sous 16, iOS zoome à la mise au point.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (328 tests unitaires) + Playwright (30 tests E2E, FR et EN)
+- Tests : Vitest (328 tests unitaires) + Playwright (33 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

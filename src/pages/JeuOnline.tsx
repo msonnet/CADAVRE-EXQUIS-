@@ -9,6 +9,7 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { getStructure, nombreCasesEffectif } from '../structures'
 import { mono } from '../lib/typo'
+import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { api } from '../lib/apiBase'
 import { tr } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
@@ -629,7 +630,7 @@ export default function JeuOnline() {
                 onKeyDown={handleKeyDown}
                 placeholder="…"
                 aria-label={caseDef.consigne}
-                enterKeyHint="send"
+                {...CLAVIER_FRAGMENT}
                 autoFocus
                 rows={3}
                 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: encre, background: 'rgba(255,253,247,0.5)', border: 'none', borderLeft: `2px solid ${encre}`, padding: '12px 16px', outline: 'none', caretColor: accent, width: '100%', resize: 'none' }}

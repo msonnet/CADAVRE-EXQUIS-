@@ -13,6 +13,7 @@ import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
 import { placerVoix, multiplicitesVoix, type PlanAtelier } from './Atelier'
 import { mono } from '../lib/typo'
+import { CLAVIER_FRAGMENT, CLAVIER_VERS } from '../lib/clavier'
 import { tr, langueActuelle } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
 import {
@@ -1553,6 +1554,8 @@ export default function JeuAtelier() {
                     onChange={e => { setSaisie(e.target.value); if (erreur) setErreur(null) }}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); deposerFragment() } }}
                     placeholder={tr('ton fragment…', 'your fragment…')}
+                    aria-label={tr('Ton fragment', 'Your fragment')}
+                    {...CLAVIER_FRAGMENT}
                     autoFocus
                     style={{
                       width: '100%',
@@ -1627,6 +1630,8 @@ export default function JeuAtelier() {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); deposerVers() }
                 }}
                 placeholder={tr('ton vers…', 'your line…')}
+                aria-label={tr('Ton vers', 'Your line')}
+                {...CLAVIER_VERS}
                 rows={2}
                 autoFocus
                 style={{

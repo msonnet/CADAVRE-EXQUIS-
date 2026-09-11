@@ -19,6 +19,7 @@ import { useSound } from '../hooks/useSound'
 import { useClavierOuvert } from '../hooks/useClavierOuvert'
 import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
+import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { tr, langueActuelle } from '../i18n'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
@@ -1102,7 +1103,7 @@ export default function Jeu() {
                   onKeyDown={handleKeyDown}
                   placeholder={tr('Écris ici — toi seul le verras…', 'Write here — only you will see it…')}
                   aria-label={tr('Ta contribution', 'Your contribution')}
-                  enterKeyHint="send"
+                  {...CLAVIER_FRAGMENT}
                   autoFocus
                   rows={3}
                 />
