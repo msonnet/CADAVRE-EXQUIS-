@@ -247,7 +247,7 @@ plantait entièrement — personne ne l'avait ouverte avec le réglage actif.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (328 tests unitaires) + Playwright (26 tests E2E, FR et EN)
+- Tests : Vitest (328 tests unitaires) + Playwright (27 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

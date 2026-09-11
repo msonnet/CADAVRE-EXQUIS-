@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { chargerDessin, supprimerDessin, mettreAJourTitreDessin } from '../db'
-import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
+import { exporterPDF } from '../utils/partager'
+import { usePartage } from '../hooks/usePartage'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
@@ -33,8 +34,7 @@ export default function DessinDetail() {
   const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
-  const [partageEnCours, setPartageEnCours] = useState(false)
-  const [partageOk, setPartageOk] = useState(false)
+  const partage = usePartage({ libelleTravail: tr('✦ COMPOSITION…', '✦ COMPOSING…') })
   const { profile } = useAuth()
   const { jouer } = useSound()
 
@@ -113,25 +113,16 @@ export default function DessinDetail() {
   }
 
   async function partager() {
-    if (!dessin || partageEnCours) return
-    setPartageEnCours(true)
-    const opts = {
-      type: 'dessin' as const,
+    if (!dessin) return
+    await partage.partager({
+      type: 'dessin',
       titre: dessin.titre ?? '',
       texte: dessin.texteVision || undefined,
       imageDataUrl: dessin.imageDataUrl,
       accent, bg: fond, ink: encre,
       date: dessin.dateCreation,
       seed: dessin.id,
-    }
-    try {
-      const ok = await partagerVideoStory(opts, 'cadavre-dessiné')
-      if (!ok) await partagerStory(opts, 'cadavre-dessiné')
-      setPartageOk(true)
-      setTimeout(() => setPartageOk(false), 2200)
-    } finally {
-      setPartageEnCours(false)
-    }
+    }, 'cadavre-dessiné')
   }
 
   async function exporterDessinPDF() {
@@ -296,19 +287,19 @@ export default function DessinDetail() {
         >
           <button
             onClick={partager}
-            disabled={partageEnCours}
+            disabled={partage.enCours}
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent',
-              color: partageOk || partageEnCours ? accent : encre,
+              color: partage.actif ? accent : encre,
               ...mono, fontSize: 17, textTransform: 'uppercase',
-              border: `0.5px solid ${partageOk || partageEnCours ? accent : `${encre}25`}`,
+              border: `0.5px solid ${partage.actif ? accent : `${encre}25`}`,
               borderRadius: 3,
-              cursor: partageEnCours ? 'default' : 'pointer',
-              opacity: partageEnCours ? 0.9 : 0.75,
+              cursor: partage.enCours ? 'default' : 'pointer',
+              opacity: partage.actif ? 0.9 : 0.75,
             }}
           >
-            {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : partageOk ? tr('✓ PARTAGÉ', '✓ SHARED') : tr('↗ PARTAGER CE DESSIN', '↗ SHARE THIS DRAWING')}
+            {partage.libelle(tr('↗ PARTAGER CE DESSIN', '↗ SHARE THIS DRAWING'))}
           </button>
         </motion.div>
 

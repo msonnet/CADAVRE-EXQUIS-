@@ -90,3 +90,72 @@ test("le partage va jusqu'au bout et l'annonce", async ({ page }) => {
   await expect(bouton).toHaveText(/PARTAGÉ|SHARED/, { timeout: 30_000 })
   expect(telechargements, 'le fichier emporté').not.toHaveLength(0)
 })
+
+/**
+ * La feuille refermée n'est pas un partage.
+ *
+ * `DessinDetail` annonçait « ✓ PARTAGÉ » même quand l'utilisateur avait
+ * refermé la feuille de partage sans rien envoyer — seul des trois boutons à
+ * ne pas traiter l'annulation. C'est le genre d'écart qui naît de trois
+ * copies d'une même logique ; elles n'en font plus qu'une.
+ */
+test('une feuille de partage refermée ne se dit pas partagée', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => {
+    localStorage.setItem('cadavre-onboarding-done', '1')
+    // Une feuille de partage qui existe et que l'utilisateur referme.
+    const nav = navigator as unknown as Record<string, unknown>
+    nav.share = () => Promise.reject(Object.assign(new Error('annulé'), { name: 'AbortError' }))
+    nav.canShare = () => true
+  })
+  await page.route('**/supabase.co/**', r => r.fulfill({ status: 200, body: '[]' }))
+  await page.route('**/api/**', r => r.fulfill({ status: 500, body: '{}' }))
+
+  await page.goto('/bibliotheque')
+  await page.waitForLoadState('networkidle')
+  await franchir(page)
+  await page.waitForTimeout(600)
+  const id = await page.evaluate(async () => {
+    const d = {
+      id: 'dessin-test', titre: 'Le monstre', nbBandes: 2,
+      imageDataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      texteVision: 'un chapeau qui se souvient',
+      dateCreation: Date.now(), dateModification: Date.now(),
+    }
+    const b: IDBDatabase = await new Promise((ok, ko) => {
+      const r = indexedDB.open('cadavre-exquis')
+      r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error)
+    })
+    await new Promise<void>((ok, ko) => {
+      const tx = b.transaction('dessins', 'readwrite')
+      tx.objectStore('dessins').put(d)
+      tx.oncomplete = () => ok(); tx.onerror = () => ko(tx.error)
+    })
+    b.close()
+    return d.id
+  })
+
+  await page.goto(`/bibliotheque/dessin/${id}`)
+  await page.waitForLoadState('domcontentloaded')
+  await franchir(page)
+  await page.waitForTimeout(800)
+
+  const bouton = page.getByRole('button', { name: /PARTAGER CE DESSIN|SHARE THIS DRAWING|COMPOSITION|EN COURS|PARTAGÉ|SHARED|COPIÉ/ })
+  await expect(bouton).toBeVisible({ timeout: 10_000 })
+  await bouton.click()
+
+  // On SURVEILLE au lieu de regarder une fois. L'ancien code annonçait
+  // « ✓ PARTAGÉ » de la sixième à la huitième seconde — un instantané pris
+  // avant ou après passait sans rien voir, et le test aurait été vert pour
+  // de mauvaises raisons.
+  const vus: string[] = []
+  const t0 = Date.now()
+  while (Date.now() - t0 < 11_000) {
+    const l = (await bouton.innerText().catch(() => '')).trim()
+    if (l && vus[vus.length - 1] !== l) vus.push(l)
+    await page.waitForTimeout(200)
+  }
+
+  // Rien n'a été envoyé : à aucun moment le bouton ne doit s'en vanter.
+  expect(vus.join(' | '), 'ce que le bouton a dit').not.toMatch(/PARTAGÉ|SHARED/)
+})

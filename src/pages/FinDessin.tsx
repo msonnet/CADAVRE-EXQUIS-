@@ -6,7 +6,7 @@ import RevealDessin from '../components/RevealDessin'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin, chargerBandesDessin } from '../db'
-import { partagerStory, partagerVideoStory } from '../utils/partager'
+import { usePartage } from '../hooks/usePartage'
 import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
@@ -73,7 +73,7 @@ export default function FinDessin() {
   const [texteVision, setTexteVision] = useState<string>('')
   const [pleinEcran, setPleinEcran] = useState(false)
   const [sauvegarde, setSauvegarde] = useState(false)
-  const [partageEnCours, setPartageEnCours] = useState(false)
+  const partage = usePartage({ libelleTravail: tr('✦ COMPOSITION…', '✦ COMPOSING…') })
   const [nbBandes, setNbBandes] = useState(0)
   const [erreurVision, setErreurVision] = useState(false)
   const [refus, setRefus] = useState<Refus | null>(null)
@@ -148,26 +148,16 @@ export default function FinDessin() {
   }
 
   async function partager() {
-    if (!imageAssemblee || partageEnCours) return
-    setPartageEnCours(true)
-    const opts = {
-      type: 'dessin' as const,
+    if (!imageAssemblee) return
+    await partage.partager({
+      type: 'dessin',
       titre: '',
       texte: texteVision,
       imageDataUrl: imageAssemblee,
       accent, bg, ink: encre,
       date: Date.now(),
       seed: texteVision || 'dessin',
-    }
-    try {
-      const ok = await partagerVideoStory(opts, 'cadavre-dessiné')
-      if (ok === 'annule') return // feuille fermée par l'utilisateur
-      if (!ok) await partagerStory(opts, 'cadavre-dessiné')
-    } catch (e) {
-      console.error('partage échoué', e)
-    } finally {
-      setPartageEnCours(false)
-    }
+    }, 'cadavre-dessiné')
   }
 
   async function sauvegarder() {
@@ -371,19 +361,19 @@ export default function FinDessin() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={partager}
-                  disabled={partageEnCours}
+                  disabled={partage.enCours}
                   style={{
                     flex: 1,
                     ...mono, fontSize: 13,
                     background: 'transparent',
-                    color: partageEnCours ? accent : `${encre}70`,
-                    border: `0.5px solid ${partageEnCours ? accent : `${encre}25`}`,
+                    color: partage.actif ? accent : `${encre}70`,
+                    border: `0.5px solid ${partage.actif ? accent : `${encre}25`}`,
                     borderRadius: 3,
                     padding: '10px 8px',
-                    cursor: partageEnCours ? 'default' : 'pointer',
+                    cursor: partage.enCours ? 'default' : 'pointer',
                   }}
                 >
-                  {partageEnCours ? tr('✦ COMPOSITION…', '✦ COMPOSING…') : tr('↗ PARTAGER', '↗ SHARE')}
+                  {partage.libelle(tr('↗ PARTAGER', '↗ SHARE'))}
                 </button>
                 <button
                   onClick={() => navigate('/')}
