@@ -343,6 +343,43 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 /* ── Liens-actions « — X — » : le tap répond visiblement ──
    L'opacité de repos vient du style inline ; !important ne s'applique
    qu'à l'état pressé. ── */
+/* ── Cible tactile — 44 px garantis, sans bouger un pixel du dessin ──
+   Relevé sur iPhone 14 Pro émulé : les liens de navigation et de sortie
+   font 20 px de haut (← ACCUEIL, ← SORTIR, POÈME DU JOUR →), les boutons
+   d'option 39 à 40, les petits ✦ 31 à 33. Le seuil tactile est 44.
+
+   On agrandit la ZONE et non le dessin. Un pseudo-élément centré, étiré au
+   plus grand des deux — la taille réelle ou 44 px — reçoit les appuis à la
+   place de son parent sans rien déplacer dans le flux. Grossir la
+   typographie, ou poser un vrai padding, aurait décalé les en-têtes de
+   vingt-quatre pixels : la finesse du carnet doit rester intacte.
+
+   La règle est GLOBALE et non posée cible par cible : énumérer les fautifs
+   les corrige aujourd'hui, la règle les corrige aussi demain. Le seul effet
+   de bord possible est le `position: relative` sur les boutons — il change
+   le bloc conteneur d'un éventuel enfant en position absolue. Neuf boutons
+   du dépôt en contiennent un ; les dix écrans ont été capturés avant et
+   après, au pixel, pour vérifier que rien n'a bougé.
+
+   La classe `.cible` reste disponible pour un élément qui n'est ni bouton
+   ni lien — un `<div>` rendu cliquable, par exemple. */
+button,
+a[href],
+[role='button'] { position: relative; }
+
+button::after,
+a[href]::after,
+[role='button']::after,
+.cible::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+}
+
 .appui { transition: opacity 0.12s ease, transform 0.12s ease; }
 .appui:active { opacity: 1 !important; transform: scale(0.96); }
 

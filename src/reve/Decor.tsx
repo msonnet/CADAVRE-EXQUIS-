@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, createContext, useContext, useEffect } from 'react'
+import React, { useState, useMemo, useCallback, createContext, useContext, useEffect, useLayoutEffect, useRef } from 'react'
 import { tr } from '../i18n'
 import { mulberry32, pickOne, pickN } from './prng'
 import { COLLAGES, type CollageDef, Hatches } from './collages'
@@ -345,6 +345,145 @@ function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: 
 
 const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
 
+/**
+ * La vignette cède la place.
+ *
+ * ── Ce que la mesure a dit ────────────────────────────────────────────────
+ *
+ * Le collage d'ambiance est posé en absolu, à une place tirée au sort, sans
+ * rien savoir de ce qu'il y a dessous. Relevé sur iPhone 14 Pro émulé : il
+ * recouvre la carte « I. Phrase courte » des préparatifs, et le champ de
+ * saisie du vers à l'Atelier. Deux écrans, pas les cinq du rapport — mais
+ * l'un des deux est le champ où l'on écrit.
+ *
+ * Il porte déjà `pointer-events: none` : la gêne est visuelle, pas
+ * fonctionnelle, et c'est bien pour ça que `pointer-events` ne suffisait pas.
+ *
+ * ── Ce qu'on ne voulait pas faire ─────────────────────────────────────────
+ *
+ * Lui réserver une bande d'en-tête réglait le problème et tuait l'essentiel :
+ * c'est le placement libre qui fait qu'aucun écran ne ressemble au précédent.
+ * On lui garde donc sa liberté et on lui retire seulement le droit de mordre.
+ *
+ * ── Comment ───────────────────────────────────────────────────────────────
+ *
+ * Après la mise en page, on mesure ce que la vignette recouvre. Si elle mord
+ * sur un élément interactif, on essaie quelques places voisines et on retient
+ * celle qui recouvre le moins. Le décalage est un `translate`, donc il ne
+ * déplace rien d'autre et ne déclenche aucun recalcul de mise en page.
+ */
+
+/**
+ * Les décalages tentés, en anneaux autour de la place d'origine.
+ *
+ * Premier jet : onze décalages fixes. Ça marchait sur les deux écrans
+ * mesurés et échouait sur d'autres tirages d'ambiance — la place de départ
+ * étant elle-même aléatoire, un jeu fixe de onze positions ne couvre rien.
+ *
+ * On cherche donc en spirale : le plus près d'abord, et on s'arrête au
+ * premier emplacement libre. La vignette reste ainsi le plus près possible
+ * de là où le sort l'avait posée.
+ */
+const ECARTS: [number, number][] = (() => {
+  const out: [number, number][] = [[0, 0]]
+  for (let r = 40; r <= 360; r += 40) {
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2
+      out.push([Math.round(Math.cos(a) * r), Math.round(Math.sin(a) * r)])
+    }
+  }
+  return out
+})()
+
+function useEcarterDuTexte(ref: React.RefObject<HTMLDivElement | null>) {
+  const [ecart, setEcart] = useState<[number, number]>([0, 0])
+
+  useLayoutEffect(() => {
+    const noeud = ref.current
+    if (!noeud) return
+
+    const replacer = () => {
+      // ── Mesurer la place D'ORIGINE, transition gelée ──
+      //
+      // Effacer le décalage ne suffit pas : l'élément porte une transition de
+      // 450 ms, donc l'effacer lance une animation et `getBoundingClientRect`
+      // rend une position en cours de route. Toutes les mesures après la
+      // première étaient ainsi fausses, et la vignette restait sur un
+      // recouvrement qu'elle croyait minimal.
+      const transitionAvant = noeud.style.transition
+      const decalageAvant = noeud.style.translate
+      noeud.style.transition = 'none'
+      noeud.style.translate = ''
+      void noeud.offsetWidth                       // force le recalcul
+      const base = noeud.getBoundingClientRect()
+      noeud.style.translate = decalageAvant
+      void noeud.offsetWidth
+      noeud.style.transition = transitionAvant
+      if (base.width === 0) return
+
+      const obstacles = [...document.querySelectorAll(
+        'button, a[href], input, textarea, [role="button"]',
+      )]
+        .map(e => e.getBoundingClientRect())
+        .filter(r => r.width > 0 && r.height > 0)
+
+      const recouvrement = ([dx, dy]: [number, number]) => {
+        const l = base.left + dx, t = base.top + dy
+        const r = l + base.width, b = t + base.height
+        // Hors de l'écran : pire que tout, on ne veut pas la perdre.
+        if (l < 0 || t < 0 || r > window.innerWidth || b > window.innerHeight) return Infinity
+        return obstacles.reduce((somme, o) => {
+          const w = Math.min(r, o.right) - Math.max(l, o.left)
+          const h = Math.min(b, o.bottom) - Math.max(t, o.top)
+          return somme + (w > 0 && h > 0 ? w * h : 0)
+        }, 0)
+      }
+
+      const surPlace = recouvrement([0, 0])
+      if (surPlace === 0) { setEcart([0, 0]); return }
+
+      let meilleur: [number, number] = [0, 0]
+      let score = surPlace
+      for (const e of ECARTS) {
+        const v = recouvrement(e)
+        if (v < score) { score = v; meilleur = e }
+        if (score === 0) break
+      }
+      setEcart(meilleur)
+    }
+
+    // ── Mesurer une fois ne suffit pas ──
+    //
+    // Le décor se monte avant le contenu : au premier relevé, la carte ou le
+    // champ de saisie n'existent pas encore. Et à l'Atelier le champ est
+    // remonté à chaque tour — une vignette placée au premier vers se
+    // retrouverait sous le onzième.
+    //
+    // On observe donc les ajouts et retraits de nœuds. Seul `childList` est
+    // écouté : notre propre écriture est un changement d'ATTRIBUT, elle ne
+    // peut donc pas se rappeler elle-même en boucle.
+    let attente: number | undefined
+    const bientot = () => {
+      window.clearTimeout(attente)
+      attente = window.setTimeout(replacer, 160)
+    }
+
+    const t = requestAnimationFrame(() => requestAnimationFrame(replacer))
+    const oeil = new MutationObserver(bientot)
+    oeil.observe(document.body, { childList: true, subtree: true })
+    window.addEventListener('resize', bientot)
+    return () => {
+      cancelAnimationFrame(t)
+      window.clearTimeout(attente)
+      oeil.disconnect()
+      window.removeEventListener('resize', bientot)
+    }
+  }, [ref])
+
+  return ecart
+}
+
+
 function SymboleAvecCartel({
   symbole, pos, variant,
 }: {
@@ -353,6 +492,8 @@ function SymboleAvecCartel({
   variant: Variant
 }) {
   const s = useReve()
+  const boite = useRef<HTMLDivElement>(null)
+  const [dx, dy] = useEcarterDuTexte(boite)
   const Draw = symbole.draw
   const size = symbole.w * pos.sizeMul
   const isCentered = variant === 'jeu-ia' || variant === 'multi'
@@ -361,12 +502,16 @@ function SymboleAvecCartel({
   return (
     // Outer: position + centering + responsive CSS scale (not touched by inner animation)
     <div
+      ref={boite}
       className={variant === 'accueil' ? 'decor-symbol-accueil' : undefined}
       style={{
         position: 'absolute',
         top: pos.top, bottom: pos.bottom,
         left: pos.left, right: pos.right,
         transform: isCentered ? 'translateX(-50%)' : undefined,
+        // `translate` et non `transform` : le second porte déjà le centrage.
+        translate: dx || dy ? `${dx}px ${dy}px` : undefined,
+        transition: 'translate 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)',
         zIndex: 3, pointerEvents: 'none',
       }}
     >

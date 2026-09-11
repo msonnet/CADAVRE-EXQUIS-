@@ -309,13 +309,40 @@ seul, où il n'y a qu'une main.
 Corrigé au passage : le recueil affichait « 11 VOIX » pour un poème
 d'atelier là où la fin de partie affichait « 11 VERS ».
 
+## Le tactile et le décor — lots 7 et 8 de l'audit
+
+**Aucune cible sous 44 px.** La classe est posée GLOBALEMENT sur
+`button, a[href], [role=button]` dans `src/index.css` : énumérer les fautifs
+les corrigeait aujourd'hui, la règle les corrige aussi demain. Un
+pseudo-élément centré, étiré au plus grand des deux — la taille réelle ou
+44 px — reçoit les appuis sans rien déplacer dans le flux. Les dix écrans
+ont été capturés avant/après avec un tirage d'ambiance fixé : pas un pixel
+de déplacé. `e2e/cibles-tactiles.spec.ts` mesure la zone d'appui réelle,
+pseudo-élément compris.
+
+**La vignette d'ambiance cède la place** (`useEcarterDuTexte`, `Decor.tsx`).
+Elle garde son placement libre — c'est lui qui fait qu'aucun écran ne
+ressemble au précédent — et perd seulement le droit de mordre : elle mesure
+ce qu'elle recouvre et se décale en spirale jusqu'au premier emplacement
+libre. Deux pièges rencontrés, tous deux écrits dans le code :
+- un `MutationObserver` est nécessaire — le décor se monte avant le contenu,
+  et à l'Atelier le champ est remonté à chaque tour ;
+- la mesure doit geler la transition de 450 ms, sinon effacer le décalage
+  lance une animation et l'on mesure une cible en mouvement.
+
+**Le lot 6 (fondus) n'a pas été fait, et c'est délibéré.** Mesuré : le bouton
+d'action est utilisable en 0 à 313 ms sur les cinq écrans (accueil 313,
+préparatifs 44, atelier 0, en jeu 15, acte I 29). Les « 4 à 6 secondes » du
+rapport ne se reproduisent pas ; les cascades décoratives se jouent derrière
+un contenu déjà lisible.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (334 tests unitaires) + Playwright (33 tests E2E, FR et EN)
+- Tests : Vitest (334 tests unitaires) + Playwright (36 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
