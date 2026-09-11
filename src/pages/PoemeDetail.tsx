@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { attribution } from '../lib/attribution'
+import { attribution, libelleMorceaux } from '../lib/attribution'
 import MainsDuVers from '../components/MainsDuVers'
 import BoutonRecolte from '../components/BoutonRecolte'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
@@ -465,7 +465,7 @@ export default function PoemeDetail() {
             ))}
           </div>
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}15` }}>
-            {dateStr} · {voixCount} {tr('VOIX', 'VOICES')} · {structLabel.toUpperCase()} · {heureStr}
+            {dateStr} · {libelleMorceaux(poeme.structureId, voixCount)} · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </motion.div>
 

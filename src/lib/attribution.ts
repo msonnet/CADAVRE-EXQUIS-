@@ -46,3 +46,37 @@ export function attribution(c: Case, iaNum?: number): string {
   if (c.joueurNumero) return `${tr('joueur', 'player')} ${c.joueurNumero}`
   return tr('toi', 'you')
 }
+
+/**
+ * Combien de morceaux composent ce poème, tel que le pied de carte l'annonce.
+ *
+ * ── Le mot qui mentait ────────────────────────────────────────────────────
+ *
+ * Les pieds de carte écrivaient « 5 VOIX » en comptant les CASES. Sur une
+ * partie jouée seul, l'écran annonçait donc cinq voix là où il n'y avait
+ * qu'une main — le reproche exact de l'audit du 10 septembre.
+ *
+ * Contrairement à ce que ce rapport supposait, « voix » ne désignait pas
+ * trois choses mais deux. Le cadavre écrit convoque les mêmes quarante-six
+ * personas que l'atelier (`Jeu.tsx` importe `VOICE_IDS`) : « VOIX IA »,
+ * « la voix écrit en secret », « voix 2 · L'horloger » sont tous justes et
+ * restent. Seul le COMPTE était faux, et c'est lui seul qu'on corrige.
+ *
+ * « fragment » plutôt que « case » : c'est le mot de l'écran d'entrée —
+ * « Chaque fragment ignore les autres. » — et celui du champ de saisie.
+ * « case » désigne l'emplacement, « fragment » ce qu'on y a écrit, et c'est
+ * bien ce qu'on compte.
+ *
+ * L'atelier fait exception : une case y est un VERS entier, pas un morceau.
+ */
+export function libelleMorceaux(structureId: string, n: number): string {
+  if (structureId === 'atelier') {
+    return `${n} ${n === 1 ? tr('VERS', 'LINE') : tr('VERS', 'LINES')}`
+  }
+  return `${n} ${n === 1 ? tr('FRAGMENT', 'FRAGMENT') : tr('FRAGMENTS', 'FRAGMENTS')}`
+}
+
+/** Combien de mains se sont posées sur la feuille — de vraies personnes. */
+export function libelleMains(n: number): string {
+  return `${n} ${n === 1 ? tr('MAIN', 'HAND') : tr('MAINS', 'HANDS')}`
+}

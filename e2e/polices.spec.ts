@@ -82,7 +82,13 @@ test('le texte est réellement composé en Bodoni, pas en repli', async ({ page 
   // famille demandée, qu'elle soit chargée ou non — un test là-dessus
   // passerait même avec la police système, ce qui est précisément le défaut
   // qu'on prétend garder.
-  const { avec, sans } = await page.evaluate(() => {
+  const { avec, sans } = await page.evaluate(async () => {
+    // On DEMANDE la fonte avant de mesurer. `document.fonts.ready` ne
+    // garantit rien ici : il se résout dès qu'il n'y a plus de chargement en
+    // cours, or tant qu'aucun texte de la page n'a réclamé Bodoni, il n'y en
+    // a aucun. Mesurer à ce moment-là compare deux replis identiques et rend
+    // zéro — ce test échouait ainsi une fois sur quatre.
+    await document.fonts.load('64px "Bodoni Moda"')
     const mesurer = (famille: string) => {
       const n = document.createElement('span')
       n.textContent = 'Le cadavre est exquis'

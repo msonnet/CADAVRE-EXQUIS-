@@ -21,6 +21,7 @@ import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin } from '../db'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
+import { libelleMains } from '../lib/attribution'
 import { api } from '../lib/apiBase'
 import { tr, langueActuelle } from '../i18n'
 
@@ -374,6 +375,7 @@ export default function FinOnline() {
               auteur: players.find(p => p.player_id === c.player_id)?.pseudo ?? null,
             }))}
             voixCount={Math.max(players.length, 2)}
+            libelle={libelleMains(players.length)}
             accent={accent}
             encre={encre}
             bg={bg}
@@ -394,7 +396,7 @@ export default function FinOnline() {
                 style={{ position: 'absolute', left: 0, right: 0, height: `${100 / Math.max(players.length, 2)}%`, top: `${(i * 100) / Math.max(players.length, 2)}%`, background: accent, opacity: 0.12, pointerEvents: 'none' }} />
             ))}
             <motion.div style={{ position: 'relative', zIndex: 1 }} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.7 }}>
-              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>— {players.length} {tr('VOIX', 'VOICES')} —</div>
+              <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 20, opacity: 0.8 }}>— {libelleMains(players.length)} —</div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 7vw, 2.2rem)', color: encre, lineHeight: 1.3 }}>
                 {tr('Le cadavre', 'The cadavre')}<br />{tr('se reconstitue', 'is taking shape')}
                 <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>…</motion.span>

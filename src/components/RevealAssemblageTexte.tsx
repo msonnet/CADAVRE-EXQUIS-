@@ -16,11 +16,14 @@ interface Props {
   encre: string
   bg: string
   /**
-   * Ce qui s'écrit au-dessus du titre. Par défaut « N VOIX » — mais à
-   * l'atelier une case est un VERS et non une voix, et l'écran annonçait
-   * « 37 VOIX » pour une table de trente-six.
+   * Ce qui s'écrit au-dessus du titre — « 5 FRAGMENTS », « 4 MAINS ».
+   *
+   * Obligatoire, et c'est délibéré. Le repli valait « N VOIX » en comptant
+   * les cases : à l'atelier l'écran annonçait « 37 VOIX » pour une table de
+   * trente-six, et en solo « 5 VOIX » pour une seule main. Seul l'appelant
+   * sait ce qu'il compte ; l'exiger empêche de l'oublier.
    */
-  libelle?: string
+  libelle: string
   /** Appelé une fois la convergence + le battement terminés : le parent dévoile alors le poème. */
   onTermine: () => void
   /** Optionnel : son de révélation joué au climax. */
@@ -184,7 +187,7 @@ export default function RevealAssemblageTexte({
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 18, opacity: 0.8 }}>
-          — {libelle ?? `${voixCount} ${tr('VOIX', 'VOICES')}`} —
+          — {libelle} —
         </div>
         <div style={{
           fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'italic',

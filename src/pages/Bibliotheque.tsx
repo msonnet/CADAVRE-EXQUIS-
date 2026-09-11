@@ -100,7 +100,15 @@ export default function Bibliotheque() {
           </p>
           {!chargement && (poemes.length > 0 || dessins.length > 0) && (
             <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.18em', opacity: 0.75, marginBottom: 14 }}>
-              {poemes.length > 0 && `${poemes.length} ${tr('POÈME', 'POEM')}${poemes.length > 1 ? 'S' : ''} · ${poemes.reduce((s, p) => s + p.cases.length, 0)} ${tr('VOIX', 'VOICES')}`}
+              {/*
+                Le second compte est retiré, et pas par paresse : il
+                additionnait les cases de tous les poèmes, or une case
+                d'atelier est un VERS entier et une case de cadavre écrit un
+                fragment. Aucun mot n'est vrai pour les deux — « 17 VOIX »
+                l'était encore moins. Le compte des poèmes suffit ; le détail
+                est sur chaque carte, juste en dessous.
+              */}
+              {poemes.length > 0 && `${poemes.length} ${tr('POÈME', 'POEM')}${poemes.length > 1 ? 'S' : ''}`}
               {poemes.length > 0 && dessins.length > 0 && '  ·  '}
               {dessins.length > 0 && `${dessins.length} DESSIN${dessins.length > 1 ? 'S' : ''}`}
             </div>

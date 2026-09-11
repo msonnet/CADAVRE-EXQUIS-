@@ -286,13 +286,36 @@ salon (`JeuOnline`), le fragment et le vers entier de l'atelier
 corriger sans demander ne l'est pas. **La taille de 20 px ne se touche
 pas** : sous 16, iOS zoome à la mise au point.
 
+## Le vocabulaire — « voix » ne compte plus les cases
+
+L'audit disait que « voix » désignait trois choses. Vérifié : **deux**. Le
+cadavre écrit convoque les mêmes quarante-six personas que l'atelier
+(`Jeu.tsx` importe `VOICE_IDS`), donc « VOIX IA », « la voix écrit en
+secret », « SCELLER CETTE VOIX » et « voix 2 · L'horloger » sont tous justes
+et **restent**. Seul le COMPTE mentait — « 5 VOIX » sur une partie jouée
+seul, où il n'y a qu'une main.
+
+- `libelleMorceaux(structureId, n)` — « 5 FRAGMENTS », et « 11 VERS » à
+  l'atelier où une case est un vers entier. « fragment » plutôt que « case » :
+  c'est le mot de l'écran d'entrée et du champ de saisie.
+- `libelleMains(n)` — « 4 MAINS » pour de vraies personnes, dans un salon.
+  « main » est déjà le mot maison : « la main te revient ».
+- Le second compte de la bibliothèque est **retiré** : il additionnait les
+  cases de tous les poèmes, or une case d'atelier est un vers. Aucun mot
+  n'était vrai pour les deux.
+- `RevealAssemblageTexte` exige désormais son `libelle` : seul l'appelant
+  sait ce qu'il compte, et le repli permettait de l'oublier.
+
+Corrigé au passage : le recueil affichait « 11 VOIX » pour un poème
+d'atelier là où la fin de partie affichait « 11 VERS ».
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (328 tests unitaires) + Playwright (33 tests E2E, FR et EN)
+- Tests : Vitest (334 tests unitaires) + Playwright (33 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

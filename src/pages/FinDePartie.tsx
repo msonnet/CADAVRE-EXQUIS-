@@ -17,7 +17,7 @@ import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
-import { attribution } from '../lib/attribution'
+import { attribution, libelleMorceaux } from '../lib/attribution'
 import MainsDuVers from '../components/MainsDuVers'
 import { usePartage } from '../hooks/usePartage'
 import BoutonRecolte from '../components/BoutonRecolte'
@@ -254,7 +254,7 @@ export default function FinDePartie() {
           <RevealAssemblageTexte
             fragments={poeme.cases.map(c => ({ texte: c.texte }))}
             voixCount={voixCount}
-            libelle={`${voixCount} ${poeme.structureId === 'atelier' ? tr('VERS', 'LINES') : tr('VOIX', 'VOICES')}`}
+            libelle={libelleMorceaux(poeme.structureId, voixCount)}
             accent={accent}
             encre={encre}
             bg={bg}
@@ -393,7 +393,7 @@ export default function FinDePartie() {
 
           {/* Card footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
-            {voixCount} {poeme.structureId === 'atelier' ? tr('VERS', 'LINES') : tr('VOIX', 'VOICES')} · {structLabel.toUpperCase()} · {heureStr}
+            {libelleMorceaux(poeme.structureId, voixCount)} · {structLabel.toUpperCase()} · {heureStr}
           </div>
         </motion.div>
 
