@@ -344,13 +344,35 @@ préparatifs 44, atelier 0, en jeu 15, acte I 29). Les « 4 à 6 secondes » du
 rapport ne se reproduisent pas ; les cascades décoratives se jouent derrière
 un contenu déjà lisible.
 
+## L'ambiance, le passage, la promesse — lots 12, 10 et 14
+
+**L'ambiance tient à la journée** (`CLE_AMBIANCE`, `reve/Decor.tsx`). Elle
+était retirée à chaque rechargement — mesuré N° 935 puis N° 767 — sous un
+écran de Réglages qui annonce « Chaque jour, une ambiance est tirée au
+sort ». La graine est stockée avec SON JOUR (local, comme la série) et n'est
+retirée que si le jour a changé. « Nouvelle ambiance » réécrit les deux, si
+bien qu'un tirage volontaire tient jusqu'au lendemain.
+
+**Plus d'écran de passage en solo** (`RIDEAU_SOLO`, `Jeu.tsx`). L'écran
+« Joueur 1. — C'EST PARTI → » s'intercalait avant chaque acte même à une
+seule main : quatre tapes inutiles par partie. Le rideau reste — la
+respiration entre les actes fait partie du rythme — mais il annonce
+« Acte III. », trace un trait qui se remplit, et se lève seul en 1,1 s. À
+plusieurs il attend toujours le geste : c'est lui qui garantit qu'on ne voit
+pas la case du voisin.
+
+**La promesse d'anonymat ne se contredit plus.** « tu ne sauras jamais
+lesquelles parlent » devient « leurs noms ne te seront rendus qu'au dernier
+vers » — les COUTURES cessent d'être un démenti pour devenir la récompense
+annoncée.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (338 tests unitaires) + Playwright (36 tests E2E, FR et EN)
+- Tests : Vitest (338 tests unitaires) + Playwright (40 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

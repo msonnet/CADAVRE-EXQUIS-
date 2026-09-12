@@ -88,13 +88,62 @@ function composerSeance(seed: number): SeanceReve {
   }
 }
 
+/**
+ * L'ambiance du jour — et pourquoi elle est persistée.
+ *
+ * Les Réglages annoncent « Chaque jour, une ambiance est tirée au sort ».
+ * C'était faux : la graine venait d'un `Math.random()` au montage et rien ne
+ * la conservait. Mesuré le 12 septembre — N° 935 puis N° 767 sur un simple
+ * rechargement de page. Le feuillet changeait de numéro et de couleur sous
+ * les pieds du joueur, plusieurs fois par partie.
+ *
+ * On stocke donc la graine avec SON JOUR, et on ne retire que si le jour a
+ * changé. Le bouton « Nouvelle ambiance » reste le moyen de forcer : il
+ * réécrit la graine ET le jour, si bien qu'un tirage volontaire tient
+ * jusqu'au lendemain comme un tirage naturel.
+ *
+ * Jour LOCAL et non UTC : le passage d'un jour à l'autre suit le fuseau du
+ * joueur, comme la série quotidienne de `utils/streak.ts`.
+ */
+const CLE_AMBIANCE = 'cadavre-ambiance'
+
+function jourLocal(d = new Date()): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const j = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${j}`
+}
+
+function tirerGraine(): number {
+  return Math.floor(Math.random() * 100000)
+}
+
+/** La graine du jour : celle d'aujourd'hui si elle existe, sinon une neuve. */
+function graineDuJour(): number {
+  try {
+    const brut = localStorage.getItem(CLE_AMBIANCE)
+    if (brut) {
+      const { graine, jour } = JSON.parse(brut) as { graine: number; jour: string }
+      if (jour === jourLocal() && Number.isFinite(graine)) return graine
+    }
+  } catch { /* stockage refusé : on tire, simplement */ }
+  const neuve = tirerGraine()
+  poserGraine(neuve)
+  return neuve
+}
+
+function poserGraine(graine: number): void {
+  try {
+    localStorage.setItem(CLE_AMBIANCE, JSON.stringify({ graine, jour: jourLocal() }))
+  } catch { /* navigation privée : l'ambiance vivra le temps de l'onglet */ }
+}
+
 export function ReveProvider({ children }: { children: React.ReactNode }) {
-  const [seed, setSeed] = useState<number>(
-    () => Math.floor(Math.random() * 100000)
-  )
+  const [seed, setSeed] = useState<number>(graineDuJour)
 
   const retirer = useCallback(() => {
-    setSeed(Math.floor(Math.random() * 100000))
+    const neuve = tirerGraine()
+    poserGraine(neuve)
+    setSeed(neuve)
   }, [])
 
   const seance = useMemo<SeanceReve>(() => {

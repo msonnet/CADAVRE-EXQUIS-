@@ -83,6 +83,14 @@ function buildSequence(
   return seq
 }
 
+/**
+ * Combien de temps le rideau d'acte tient, en solo.
+ *
+ * Assez pour qu'on lise le chiffre et qu'on quitte des yeux la case qu'on
+ * vient d'écrire ; pas assez pour qu'on ait envie de taper dessus.
+ */
+const RIDEAU_SOLO = 1100
+
 function toRomain(n: number): string {
   const map: [number, string][] = [
     [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
@@ -450,12 +458,23 @@ export default function Jeu() {
     if (!muted) ambianceStart()
   }, [muted, ambianceStart])
 
-  // Écran de passage avant chaque tour humain + reset de l'animation de soumission
+  // ── Le passage, et ce qu'il devient quand on joue seul ──
+  //
+  // L'écran « Joueur 1. — C'EST PARTI → » s'intercalait avant CHAQUE acte,
+  // même à une seule main : quatre tapes inutiles par partie, et la fiction
+  // du « passe l'appareil » n'a plus d'objet quand il n'y a personne à qui
+  // le passer.
+  //
+  // En solo, le rideau reste — la respiration entre les actes fait partie du
+  // rythme — mais il se lève de lui-même. À plusieurs, il attend toujours le
+  // geste : c'est lui qui garantit qu'on ne voit pas la case du voisin.
   useEffect(() => {
     setSealing(false)
-    if (participantActuel?.type === 'humain') {
-      setAttendPassage(true)
-    }
+    if (participantActuel?.type !== 'humain') return
+    setAttendPassage(true)
+    if (multiJoueurs) return
+    const t = setTimeout(() => setAttendPassage(false), RIDEAU_SOLO)
+    return () => clearTimeout(t)
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tour IA
@@ -731,22 +750,36 @@ export default function Jeu() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
         >
-          {tr('Joueur', 'Player')} {participantActuel.num}.
+          {multiJoueurs
+            ? `${tr('Joueur', 'Player')} ${participantActuel.num}.`
+            : `${tr('Acte', 'Act')} ${toRomain(caseIndex + 1)}.`}
         </motion.p>
-        <motion.div
-          className="mt-16"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <button
-            onClick={() => setAttendPassage(false)}
-            className="btn-primaire"
+        {multiJoueurs ? (
+          <motion.div
+            className="mt-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            whileTap={{ scale: 0.97 }}
           >
-            {multiJoueurs ? tr("C'est à moi →", 'My turn →') : tr("C'est parti →", "Let's go →")}
-          </button>
-        </motion.div>
+            <button
+              onClick={() => setAttendPassage(false)}
+              className="btn-primaire"
+            >
+              {tr("C'est à moi →", 'My turn →')}
+            </button>
+          </motion.div>
+        ) : (
+          // Solo : rien à taper. Le trait se remplit, et l'acte s'ouvre.
+          <motion.div
+            className="mt-16"
+            style={{ width: 96, height: 1.2, background: 'var(--reve-ink)', opacity: 0.5, transformOrigin: 'left' }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: RIDEAU_SOLO / 1000, ease: 'linear' }}
+            aria-hidden
+          />
+        )}
       </PageTransition>
     )
   }

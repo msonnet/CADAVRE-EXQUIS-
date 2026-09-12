@@ -391,7 +391,12 @@ export default function Atelier() {
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.7, marginTop: 8 }}>
             {nbVoix === 0
               ? tr('Aucune voix ne parlera — la dernière main se passe le papier à elle-même.', 'No voice will speak — the last hand passes the paper to itself.')
-              : tr('Les voix sont tirées au sort — tu ne sauras jamais lesquelles parlent.', 'The voices are drawn at random — you will never know which ones speak.')}
+              // La promesse disait « tu ne sauras JAMAIS lesquelles parlent »,
+              // et le panneau COUTURES du même poème les nomme toutes. Les
+              // deux sont défendables, pas ensemble. La révélation est trop
+              // belle pour être supprimée : c'est la promesse qui se
+              // reformule, et la contradiction devient une récompense.
+              : tr('Les voix sont tirées au sort — leurs noms ne te seront rendus qu’au dernier vers.', 'The voices are drawn at random — their names are given back to you at the last line.')}
           </div>
         </motion.div>
 

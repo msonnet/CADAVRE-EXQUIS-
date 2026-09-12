@@ -18,12 +18,16 @@ async function setConfig(page: import('@playwright/test').Page, overrides: Recor
 
 // Play through one human case: passage screen → type → submit
 async function joueurContribue(page: import('@playwright/test').Page, texte: string) {
-  const passerBtn = page.locator('button', { hasText: "C'est parti" })
-  await passerBtn.waitFor({ timeout: 8000 })
-  await passerBtn.dispatchEvent('click')
-
+  // Plus d'écran de passage à taper en solo depuis le lot 10 : le rideau
+  // annonce l'acte et se lève de lui-même au bout de 1,1 s.
+  //
+  // On attend un champ VIDE et pas seulement présent : entre deux actes, le
+  // champ de l'acte précédent reste monté le temps d'une frame, et le
+  // remplir à cet instant écrivait dans une case sur le point de
+  // disparaître — la partie n'avançait plus.
   const textarea = page.locator('textarea[aria-label="Ta contribution"]')
-  await textarea.waitFor({ timeout: 6000 })
+  await textarea.waitFor({ timeout: 10000 })
+  await expect(textarea).toHaveValue('', { timeout: 8000 })
   await textarea.fill(texte)
 
   const sceller = page.locator('button[aria-label="Sceller cette voix et passer à la suivante"]')
@@ -65,14 +69,11 @@ test.describe('Solo poem flow with AI voice (phrase-simple)', () => {
     await setConfig(page, { voixIA: 1, premierJoueur: 'ia' })
     await page.goto('/jeu')
 
-    // AI handles case 0 automatically (2600ms reveal timer hardcoded)
-    // Wait for the passage screen for the human's turn
-    const passerBtn = page.locator('button', { hasText: "C'est parti" })
-    await passerBtn.waitFor({ timeout: 15000 })
-    await passerBtn.dispatchEvent('click')
-
+    // La voix traite la case 0 toute seule (révélation de 2600 ms), puis le
+    // rideau d'acte se lève sans qu'on tape quoi que ce soit — lot 10.
     const textarea = page.locator('textarea[aria-label="Ta contribution"]')
-    await textarea.waitFor({ timeout: 6000 })
+    await textarea.waitFor({ timeout: 20000 })
+    await expect(textarea).toHaveValue('', { timeout: 8000 })
     await textarea.fill('embrasse')
     await page.locator('button[aria-label="Sceller cette voix et passer à la suivante"]').dispatchEvent('click')
 

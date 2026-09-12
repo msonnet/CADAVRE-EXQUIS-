@@ -79,12 +79,10 @@ test('la case du cadavre écrit ne met pas de majuscule', async ({ page }) => {
   await page.goto('/jeu')
   await page.waitForLoadState('networkidle')
   await franchir(page)
-  const passer = page.locator('button', { hasText: "C'est parti" })
-  await passer.waitFor({ timeout: 10_000 })
-  await passer.dispatchEvent('click')
-
+  // Le rideau d'acte se lève seul en solo — rien à taper pour atteindre
+  // le champ. Voir le lot 10.
   const champ = page.locator('textarea[aria-label="Ta contribution"]')
-  await champ.waitFor({ timeout: 10_000 })
+  await champ.waitFor({ timeout: 12_000 })
   const a = await attributs(champ)
   expect(a).toMatchObject(FRAGMENT)
   expect(a.spellcheck).toBe(true)
