@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { VOICE_IDS } from '../data/voiceIds'
 import { mono } from '../lib/typo'
+import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
@@ -410,7 +411,7 @@ export default function Atelier() {
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             {tr('— VISIBILITÉ —', '— VISIBILITY —')}
           </div>
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-3" {...groupeRadio(tr('Visibilité', 'Visibility'))}>
             {[
               { id: true,  label: tr("L'ÉCHO", 'THE ECHO') },
               { id: false, label: tr('OBSCURITÉ', 'DARKNESS') },
@@ -419,6 +420,7 @@ export default function Atelier() {
               return (
                 <button
                   key={String(opt.id)}
+                  {...optionRadio(active)}
                   onClick={() => setEcho(opt.id)}
                   style={{
                     flex: 1, padding: '8px 4px',

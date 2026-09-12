@@ -9,6 +9,7 @@ import {
   rappelDisponible, activerRappelQuotidien, desactiverRappelQuotidien, RAPPEL_KEY,
 } from '../utils/notifications'
 import { mono } from '../lib/typo'
+import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr, langueActuelle, changerLangue } from '../i18n'
 import { useAcces } from '../hooks/useAcces'
 import { achatsDisponibles, restaurer } from '../lib/achats'
@@ -158,12 +159,13 @@ export default function Reglages() {
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             — VALIDATION —
           </div>
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-3" {...groupeRadio(tr('Niveau de validation', 'Validation level'))}>
             {NIVEAUX.map(n => {
               const active = validation === n.id
               return (
                 <button
                   key={n.id}
+                  {...optionRadio(active, `${n.label} — ${n.desc}`)}
                   onClick={() => changerValidation(n.id)}
                   style={{
                     flex: 1, padding: '8px 4px',
@@ -354,6 +356,7 @@ export default function Reglages() {
                 return (
                   <button
                     key={String(opt.actif)}
+                    {...optionRadio(active)}
                     onClick={() => changerRappel(opt.actif)}
                     disabled={rappelBusy}
                     style={{

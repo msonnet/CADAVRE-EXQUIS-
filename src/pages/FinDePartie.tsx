@@ -548,6 +548,7 @@ export default function FinDePartie() {
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
             aria-expanded={activeSection === 'coutures'}
+            aria-controls="panneau-coutures"
             className="appui"
             style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
@@ -557,6 +558,7 @@ export default function FinDePartie() {
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
             className={tutActif && tutEtape === T_FIN_IMAGE ? 'appui tut-cible' : 'appui'}
             aria-expanded={activeSection === 'image'}
+            aria-controls="panneau-image"
             style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
             {tr('IMAGE', 'IMAGE')}
@@ -565,9 +567,21 @@ export default function FinDePartie() {
 
         {/* ── COUTURES PANEL ── */}
         <AnimatePresence>
+          {/*
+            L'audit (lot 16) voulait faire de ces trois libellés une barre
+            d'onglets, au motif qu'ouvrir IMAGE laisserait COUTURES ouvert.
+            Reproduit : c'est faux — un seul `activeSection` les gouverne,
+            ils sont DÉJÀ exclusifs. Et `role="tablist"` serait un mensonge
+            d'un autre genre : PARTAGER, le premier des trois, est une action
+            et non un onglet.
+            Ce qui manquait vraiment, c'est le lien entre la bascule et son
+            panneau — `aria-expanded` disait qu'une chose s'ouvrait sans
+            jamais dire laquelle.
+          */}
           {activeSection === 'coutures' && (
             <motion.div
               key="coutures"
+              id="panneau-coutures"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
@@ -628,6 +642,7 @@ export default function FinDePartie() {
           {activeSection === 'image' && (
             <motion.div
               key="image"
+              id="panneau-image"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}

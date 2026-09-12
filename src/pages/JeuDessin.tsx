@@ -6,6 +6,7 @@ import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
 import { mono } from '../lib/typo'
+import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
 import { sauvegarderBandesDessin } from '../db'
@@ -898,7 +899,7 @@ export default function JeuDessin() {
                 <button
                   key={t}
                   onClick={() => setTool(t)}
-                  aria-pressed={active}
+                  {...optionRadio(active, TOOL_NAMES[t])}
                   title={TOOL_NAMES[t]}
                   style={{
                     flex: '0 0 auto', width: 52, height: 62,
@@ -957,12 +958,12 @@ export default function JeuDessin() {
         {/* Rangée tailles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{ ...mono, fontSize: 11, color: `${TB_INK}88`, flexShrink: 0 }}>{tr('TAILLE', 'SIZE')}</span>
-          <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }}>
+          <div style={{ display: 'flex', flex: 1, gap: 4, alignItems: 'center' }} {...groupeRadio(tr('Taille du trait', 'Stroke size'))}>
             {SIZES.map((sz, i) => (
               <button
                 key={i}
                 onClick={() => setSizeIdx(i)}
-                aria-pressed={sizeIdx === i}
+                {...optionRadio(sizeIdx === i, `${tr('Taille', 'Size')} ${i + 1}`)}
                 style={{
                   flex: 1, height: 44,
                   background: sizeIdx === i ? TB_ACTIVE : 'transparent',

@@ -7,6 +7,7 @@ import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import type { ConfigPartie, StructureId, Visibilite } from '../types'
 import { mono } from '../lib/typo'
+import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
@@ -155,12 +156,13 @@ export default function Configuration() {
         </motion.div>
 
         {/* ── STRUCTURE CARDS ── */}
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-2 mb-8" {...groupeRadio(tr('Structure du poème', 'Poem structure'))}>
           {STRUCTURES.map((s, i) => {
             const active = config.structureId === s.id
             return (
               <motion.button
                 key={s.id}
+                {...optionRadio(active, `${s.label} — ${s.description}`)}
                 onClick={() => setConfig(prev => ({ ...prev, structureId: s.id }))}
                 initial={{ opacity: 0, x: -6 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -199,12 +201,13 @@ export default function Configuration() {
             label={tr('VISIBILITÉ', 'VISIBILITY')} accent={accent} encre={encre}
             aide={<>{tr("Aveugle : tu écris sans rien voir des autres. Un mot : seul le dernier mot précédent t'est montré. Une case : toute la case précédente est révélée.", 'Blind: you write without seeing anything. One word: only the previous last word is shown. One part: the whole previous part is revealed.')}</>}
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2" {...groupeRadio(tr('Visibilité', 'Visibility'))}>
             {(['aveugle', 'dernier-mot', 'derniere-case'] as Visibilite[]).map(v => {
               const active = config.visibilite === v
               return (
                 <button
                   key={v}
+                  {...optionRadio(active)}
                   onClick={() => setConfig(c => ({ ...c, visibilite: v }))}
                   style={{
                     flex: 1, padding: '8px 4px', minHeight: 44,
@@ -321,12 +324,13 @@ export default function Configuration() {
             label={tr('MODE', 'MODE')} accent={accent} encre={encre}
             aide={<>{tr("Standard : prends le temps qu'il faut pour chaque fragment. Hypnotique : 30 secondes par fragment, puis il se scelle de lui-même — l'écriture automatique, sans retour.", 'Standard: take all the time you need. Hypnotic: 30 seconds per fragment, then it seals itself — automatic writing, no going back.')}</>}
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2" {...groupeRadio(tr('Mode de jeu', 'Game mode'))}>
             {(['standard', 'hypnotique'] as const).map(m => {
               const active = config.mode === m
               return (
                 <button
                   key={m}
+                  {...optionRadio(active)}
                   onClick={() => setConfig(c => ({ ...c, mode: m }))}
                   style={{
                     flex: 1, padding: '8px 4px', minHeight: 44,

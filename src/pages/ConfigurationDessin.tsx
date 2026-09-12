@@ -7,6 +7,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin } from '../types'
 import { mono } from '../lib/typo'
+import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr } from '../i18n'
 import { effacerBandesDessin } from '../db'
 
@@ -190,7 +191,7 @@ export default function ConfigurationDessin() {
             label={tr('VISIBILITÉ', 'VISIBILITY')} accent={accent} encre={encre}
             aide={<>{tr("Aveugle : chaque bande commence dans l'obscurité totale. Raccord : un mince raccord révèle la lisière du fragment précédent, pour prolonger les traits.", 'Blind: each band begins in total darkness. Joined: a thin strip reveals the edge of the previous fragment, so you can extend its strokes.')}</>}
           />
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-2" {...groupeRadio(tr('Visibilité', 'Visibility'))}>
             {([
               { id: 'aveugle', label: tr('AVEUGLE', 'BLIND') },
               { id: 'raccord', label: tr('RACCORD', 'JOINED') },
@@ -199,6 +200,7 @@ export default function ConfigurationDessin() {
               return (
                 <button
                   key={v.id}
+                  {...optionRadio(active)}
                   onClick={() => setConfig(c => ({ ...c, visibilite: v.id }))}
                   style={{
                     flex: 1, padding: '8px 4px',

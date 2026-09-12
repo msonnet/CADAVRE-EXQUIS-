@@ -13,6 +13,7 @@ import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
 import { placerVoix, multiplicitesVoix, type PlanAtelier } from './Atelier'
 import { mono } from '../lib/typo'
+import { zoneVivante } from '../lib/a11y'
 import { CLAVIER_FRAGMENT, CLAVIER_VERS } from '../lib/clavier'
 import { tr, langueActuelle } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
@@ -1449,7 +1450,12 @@ export default function JeuAtelier() {
           <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em' }}>
             {tr("— L'ATELIER —", '— THE WORKSHOP —')}
           </span>
-          <span style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6 }}>
+          {/*
+            Le compteur est la seule chose qui annonce qu'un tour est passé.
+            Sans `aria-live`, un joueur non voyant ne savait pas que la main
+            lui était revenue : il entendait le silence, puis plus rien.
+          */}
+          <span {...zoneVivante} style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6 }}>
             {tr('VERS', 'LINE')} {toRomain(Math.min(idx + 1, total))} / {toRomain(total)}
           </span>
         </div>
@@ -1588,7 +1594,7 @@ export default function JeuAtelier() {
                   )}
                 </>
               ) : (
-                <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginTop: 8 }}>
+                <div {...zoneVivante} style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, marginTop: 8 }}>
                   {tr('— LES VOIX TERMINENT —', '— THE VOICES ARE FINISHING —')}
                 </div>
               )}
@@ -1675,7 +1681,7 @@ export default function JeuAtelier() {
               transition={{ duration: 0.4 }}
               style={{ paddingBottom: 24, textAlign: 'center' }}
             >
-              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 14 }}>
+              <div {...zoneVivante} style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 14 }}>
                 {tr('— LES VOIX ÉCRIVENT —', '— THE VOICES ARE WRITING —')}
               </div>
               {voixEnCours.map((v, k) => (

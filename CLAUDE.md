@@ -366,13 +366,39 @@ lesquelles parlent » devient « leurs noms ne te seront rendus qu'au dernier
 vers » — les COUTURES cessent d'être un démenti pour devenir la récompense
 annoncée.
 
+## L'accessibilité — `src/lib/a11y.ts`, lots 17 et 16
+
+Relevé le 12 septembre sur six écrans : **zéro** groupe sémantique dans toute
+l'application, et cinq boutons sans aucun nom. Les sélecteurs étaient des
+suites de `<button>` dont l'un est teinté — à l'œil on voit lequel est
+choisi, au lecteur d'écran on entend sept boutons sans rapport.
+
+- `groupeRadio()` / `optionRadio()` — sept sélecteurs les emploient :
+  structure, visibilité (écrit, atelier, dessin), mode, validation, outils et
+  tailles du studio. `role="radio"` et non `aria-pressed` : un bouton pressé
+  est un interrupteur indépendant, une radio appartient à un groupe où l'on
+  ne choisit qu'une chose. Le lecteur annonce « 2 sur 3 » au lieu de
+  « activé ».
+- `zoneVivante` — le compteur `VERS VII / XI` et « LES VOIX ÉCRIVENT ».
+  C'était la seule chose qui disait qu'un tour était passé, et elle ne le
+  disait à personne.
+- Les cinq boutons muets étaient les **tailles de trait** du studio, pas les
+  outils : ceux-là portaient déjà un `title`. Ils ont maintenant les deux.
+- `:focus-visible` était **déjà** traité (`index.css`) — rien à faire.
+
+**Lot 16 · la prémisse du rapport est fausse.** Les trois libellés PARTAGER /
+COUTURES / IMAGE sont déjà exclusifs : un seul `activeSection` les gouverne,
+ouvrir IMAGE ferme COUTURES. Et `role="tablist"` serait un mensonge d'un
+autre genre — PARTAGER est une action, pas un onglet. Ce qui manquait
+vraiment : `aria-controls`, pour que `aria-expanded` dise enfin QUOI s'ouvre.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (338 tests unitaires) + Playwright (40 tests E2E, FR et EN)
+- Tests : Vitest (338 tests unitaires) + Playwright (44 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
