@@ -249,9 +249,17 @@ est resté **vide** : l'app est tombée en police système, identité comprise.
 Sur une PWA installable, hors ligne ou en réseau dégradé, c'est l'état normal
 du jeu dans un train.
 
-- Quatre familles en fontes **variables**, sous-ensembles `latin` +
-  `latin-ext` : 14 fichiers, 530 Ko dans `public/fonts/`. En statique il en
-  aurait fallu vingt pour les mêmes graisses.
+- **Trois familles au maximum, et c'est une règle** — Bodoni Moda, Playfair
+  Display, Raleway. En fontes **variables**, sous-ensembles `latin` +
+  `latin-ext` : 12 fichiers, 428 Ko dans `public/fonts/`. En statique il en
+  aurait fallu quinze pour les mêmes graisses.
+  `src/__tests__/polices.test.ts` tient le plafond : une quatrième famille
+  se glisse vite, et sur une PWA chaque famille est précachée pour toujours.
+- **Caveat retirée le 12 septembre.** Une seule occurrence dans tout le
+  dépôt — le « № 477 » griffonné sur le collage MERZ — pour 102 Ko, soit un
+  cinquième du poids typographique. Remplacée par Playfair en italique, qui
+  écrit déjà tout le reste de ce collage. L'alias Tailwind `caveat` n'était
+  employé nulle part.
 - `src/polices.css` — les `@font-face`, `font-display: swap`, les
   `unicode-range` de Google inchangés.
 - Précachées par le service worker (`globPatterns` contenait déjà `woff2`) :
@@ -342,7 +350,7 @@ un contenu déjà lisible.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (334 tests unitaires) + Playwright (36 tests E2E, FR et EN)
+- Tests : Vitest (338 tests unitaires) + Playwright (36 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

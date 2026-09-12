@@ -27,11 +27,13 @@ export default {
       },
       fontFamily: {
         // Typographie unifiée
-        // ── Polices réellement chargées (4) : Bodoni Moda · Playfair Display · Raleway · Caveat ──
+        // ── Polices réellement chargées (3) : Bodoni Moda · Playfair Display · Raleway ──
+        // Caveat a été retirée le 12 septembre : une seule occurrence — le
+        // « № 477 » d'un collage — pour 102 Ko, soit un cinquième du poids
+        // typographique de l'application.
         bodonimoda: ['"Bodoni Moda"', 'serif'],     // display/manchette · lettrines · « Joueur N. » · chiffres romains
         playfair: ['"Playfair Display"', 'serif'],  // littéraire : vers · citations · titres de section
         raleway:  ['Raleway', 'sans-serif'],        // labels capitales trackés · boutons · cartels
-        caveat:   ['Caveat', 'cursive'],            // manuscrit : annotations marginales · signatures
 
         // Alias legacy → repointent vers le système (Fraunces et Inter ne sont plus chargés)
         fraunces: ['"Bodoni Moda"', 'serif'],       // ancien display → Bodoni Moda

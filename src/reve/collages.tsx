@@ -253,7 +253,11 @@ const TicketMerz: React.FC<SVGProps> = ({ w = 120 }) => (
     <line x1="12" y1="55" x2="80" y2="55" stroke={ENCRE} strokeWidth="0.5" />
     <text x="12" y="64" fontFamily="'Playfair Display', serif" fontSize="5" fill={ENCRE}>billet annulé · 14h22</text>
     <text x="12" y="72" fontFamily="'Playfair Display', serif" fontSize="5" fill={ENCRE}>1 cl. unique · n° 7</text>
-    <text x="80" y="82" fontFamily="Caveat" fontSize="12" fill={ROUGE}>№ 477</text>
+    {/* Le numéro griffonné du billet. Il était en Caveat — une quatrième
+        famille chargée pour ce seul texte, et la plus lourde des quatre.
+        Playfair en italique tient le même rôle : c'est déjà la main qui
+        écrit tout le reste de ce collage. */}
+    <text x="80" y="82" fontFamily="'Playfair Display', serif" fontStyle="italic" fontSize="12" fill={ROUGE}>№ 477</text>
     <line x1="15" y1="80" x2="55" y2="78" stroke={ENCRE} strokeWidth="0.4" opacity="0.6" />
   </svg>
 )
