@@ -13,6 +13,7 @@ import { sauvegarderPoeme } from '../db'
 import type { Poeme, Case } from '../types'
 import { placerVoix, multiplicitesVoix, type PlanAtelier } from './Atelier'
 import { mono } from '../lib/typo'
+import { accorderDislocation } from '../lib/accord'
 import { zoneVivante } from '../lib/a11y'
 import { CLAVIER_FRAGMENT, CLAVIER_VERS } from '../lib/clavier'
 import { tr, langueActuelle } from '../i18n'
@@ -1087,7 +1088,11 @@ export default function JeuAtelier() {
       ajouterVers({
         // `souder` recolle ce que la couture sépare : « sitôt qu' une faille »
         // devient « sitôt qu'une faille ».
-        texte: souder(fragments.join(' ')),
+        // La couture est le SEUL endroit qui voit à la fois la tête tirée au
+        // sort et le nom qu'une autre voix a écrit. Aucune consigne ne peut
+        // faire accorder « givré » à « la rue » : celle qui écrit l'adjectif
+        // ne verra jamais le nom. Voir `lib/accord.ts`.
+        texte: accorderDislocation(souder(fragments.join(' '))),
         auteur: 'ia',
         voixNums: ordre.map(i => i + 1),
         voixNoms: nomsVoix,
@@ -1266,7 +1271,7 @@ export default function JeuAtelier() {
       return (role.avant ? `${role.avant} ` : '') + nu
     })
     const coutures = fragGabarit.map((role, k) => cousus[k] + (role.apres ?? ''))
-    const texte = souder(coutures.join(' '))
+    const texte = accorderDislocation(souder(coutures.join(' ')))
     const voixNums = fragVoixIndices.map(i => i + 1)
 
     // Le détail case par case : celles des voix ont été notées pendant les

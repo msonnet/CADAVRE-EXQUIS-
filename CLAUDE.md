@@ -392,13 +392,59 @@ ouvrir IMAGE ferme COUTURES. Et `role="tablist"` serait un mensonge d'un
 autre genre — PARTAGER est une action, pas un onglet. Ce qui manquait
 vraiment : `aria-controls`, pour que `aria-expanded` dise enfin QUOI s'ouvre.
 
+## L'accord de la dislocation — `src/lib/accord.ts`, lot 15
+
+Le vers que l'audit désigne comme le seul vraiment raté d'une séance de onze :
+**« il devient givré la rue, lait »**. Ce n'est pas de l'étrangeté, c'est une
+faute, et elle se lit comme un bug — le surréalisme repose sur une syntaxe
+CORRECTE appliquée à des images impossibles.
+
+Deux fautes structurelles, pas lexicales : la tête (« il devient ») est tirée
+AVANT que le nom (« la rue ») existe, et la virgule de dislocation manque.
+
+**La correction se fait à la couture**, seul endroit qui voit à la fois la
+tête et le nom. Aucune consigne ne peut faire accorder « givré » à « la rue » :
+celle qui écrit l'adjectif ne verra jamais le nom, c'est le principe du jeu.
+`corrigerAccords` (le modèle, à la fin, si le réseau répond) reste en second
+rideau.
+
+**Ce module ne touche à rien quand il n'est pas sûr** : élision (« l'ombre »),
+nom nu, adjectif hors règles, adjectif invariable — on laisse. Un accord
+inventé est pire que l'accord manquant, parce qu'il est invisible à la
+relecture.
+
+Mesuré sur 200 vers par table et trois tailles de table, engendrés par les
+vrais gabarits : **5 dislocations, 4 fautives avant, 0 après**, 1 non jugée.
+Limite connue : l'adjectif APPOSÉ à un groupe nominal plus loin dans le vers
+n'est pas accordé — il faudrait les rôles, pas le texte.
+
+## Emporter le recueil — `src/lib/recueil.ts`, lot 20
+
+**Le rapport se trompe** en écrivant que le poème « part chez Supabase » :
+`sauvegarderPoeme` écrit dans Dexie et aucun appel n'envoie un poème au
+serveur. Seules les publications en galerie y vont, et ce sont des copies. Sa
+conclusion tient quand même, et elle est plus sévère : il n'existe **nulle
+part** une seule copie de la bibliothèque.
+
+Deux fichiers, parce qu'ils ne servent pas à la même chose — un `.txt`
+lisible (le livrable) et un `.json` qui se relit (la sauvegarde). Sans le
+second, l'export serait un souvenir et non une sauvegarde.
+
+`restaurerRecueil` remet tout dans UNE transaction : une restauration
+interrompue laisserait une bibliothèque à moitié écrasée.
+
+**Le bouton REMETTRE s'affiche même quand la bibliothèque est vide** — c'est
+le test qui l'a imposé. Il était d'abord conditionné à avoir des poèmes, si
+bien qu'il disparaissait exactement quand on en a besoin : après avoir tout
+perdu.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (338 tests unitaires) + Playwright (44 tests E2E, FR et EN)
+- Tests : Vitest (365 tests unitaires) + Playwright (47 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

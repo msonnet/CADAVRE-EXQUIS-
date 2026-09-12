@@ -196,3 +196,22 @@ export async function deplacerDansLaRecolte(id: string, sens: -1 | 1): Promise<v
 export async function viderLaRecolte(): Promise<void> {
   await db.recolte.clear()
 }
+
+/**
+ * Remet une bibliothèque entière — lot 20.
+ *
+ * `put` et non `add` : réimporter par-dessus ce qu'on a déjà ne doit pas
+ * échouer sur un identifiant en double, il doit écraser. Et tout passe dans
+ * UNE transaction : une restauration interrompue à mi-chemin laisserait une
+ * bibliothèque à moitié écrasée, ce qui est pire que pas de restauration.
+ */
+export async function restaurerRecueil(
+  poemes: Poeme[],
+  recolte: VersRecolte[],
+): Promise<{ poemes: number; recolte: number }> {
+  await db.transaction('rw', db.poemes, db.recolte, async () => {
+    for (const p of poemes) await db.poemes.put(p)
+    for (const v of recolte) await db.recolte.put(v)
+  })
+  return { poemes: poemes.length, recolte: recolte.length }
+}

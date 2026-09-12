@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { chargerPoemes, chargerDessins, chargerRecolte } from '../db'
+import { chargerPoemes, chargerDessins, chargerRecolte, restaurerRecueil } from '../db'
 import { Decor, useReve } from '../reve'
 import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_BIBLIO } from '../hooks/useTutoriel'
 import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
 import { mono } from '../lib/typo'
+import { composerTexte, composerSauvegarde, lireSauvegarde, nomDeFichier } from '../lib/recueil'
 import { tr } from '../i18n'
 
 const NOMS_STRUCTURES: Record<string, string> = {
@@ -34,13 +35,54 @@ function normaliser(s: string): string {
 }
 
 export default function Bibliotheque() {
-  const navigate = useNavigate()
-  const seance = useReve()
-  const { jouer } = useSound()
   const [poemes, setPoemes] = useState<Poeme[]>([])
   const [dessins, setDessins] = useState<DessinCadavre[]>([])
   const [chargement, setChargement] = useState(true)
   const [recherche, setRecherche] = useState('')
+
+  // ── Emporter le recueil ──
+  //
+  // Les poèmes ne quittent JAMAIS l'appareil : `sauvegarderPoeme` écrit dans
+  // Dexie et rien ne les envoie ailleurs. Vider les données du navigateur,
+  // changer de téléphone ou réinstaller la PWA les efface tous, et il
+  // n'existe nulle part une seule copie. C'est le défaut le plus grave du
+  // produit, et il ne se voit pas.
+  const [restauration, setRestauration] = useState<string | null>(null)
+  const fichierRef = useRef<HTMLInputElement>(null)
+  const aQuelqueChose = poemes.length > 0 || dessins.length > 0
+
+  function emporter(ext: 'txt' | 'json', contenu: string) {
+    const blob = new Blob([contenu], { type: ext === 'txt' ? 'text/plain;charset=utf-8' : 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nomDeFichier(ext)
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 4000)
+  }
+
+  async function emporterLisible() {
+    emporter('txt', composerTexte(await chargerPoemes(), await chargerRecolte()))
+  }
+
+  async function emporterSauvegarde() {
+    emporter('json', composerSauvegarde(await chargerPoemes(), await chargerRecolte()))
+  }
+
+  async function restaurer(f: File) {
+    const lu = lireSauvegarde(await f.text())
+    if (!lu.ok) { setRestauration(lu.raison); return }
+    const n = await restaurerRecueil(lu.data.poemes, lu.data.recolte)
+    setRestauration(tr(
+      `${n.poemes} poème${n.poemes > 1 ? 's' : ''} remis${n.poemes > 1 ? '' : ''}.`,
+      `${n.poemes} poem${n.poemes > 1 ? 's' : ''} restored.`,
+    ))
+    setPoemes(await chargerPoemes())
+  }
+
+  const navigate = useNavigate()
+  const seance = useReve()
+  const { jouer } = useSound()
   const [nRecolte, setNRecolte] = useState(0)
 
   const c = seance?.colorSchema
@@ -342,6 +384,60 @@ export default function Bibliotheque() {
             >
               Nouvelle partie →
             </button>
+          </motion.div>
+        )}
+
+
+        {/* ── EMPORTER LE RECUEIL ──
+            Les poèmes ne quittent jamais l'appareil. La phrase le dit, parce
+            qu'un joueur qui change de téléphone doit l'avoir su AVANT. */}
+        {/*
+          Le bloc est TOUJOURS rendu, et c'est le test qui l'a imposé : il
+          était d'abord conditionné à une bibliothèque non vide, si bien que
+          le bouton REMETTRE disparaissait exactement quand on en a besoin —
+          après avoir tout perdu. Seuls les deux boutons d'export dépendent
+          d'avoir quelque chose à emporter.
+        */}
+        {!chargement && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+            style={{ marginTop: 28, paddingTop: 16, borderTop: `0.5px solid ${encre}18` }}
+          >
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, color: encre, opacity: 0.6, lineHeight: 1.5, marginBottom: 12 }}>
+              {aQuelqueChose
+                ? tr(
+                    'Ce recueil ne vit que sur cet appareil. Vider ton navigateur, changer de téléphone ou réinstaller le jeu l’efface. Emporte-le.',
+                    'This collection lives only on this device. Clearing your browser, changing phone or reinstalling the game erases it. Take it with you.',
+                  )
+                : tr(
+                    'Si tu as emporté un recueil depuis un autre appareil, remets-le ici.',
+                    'If you took a collection from another device, put it back here.',
+                  )}
+            </p>
+            <div className="grid grid-cols-3" style={{ gap: 0 }}>
+              <button onClick={emporterLisible} disabled={!aQuelqueChose} style={{ ...mono, fontSize: 12, letterSpacing: '0.08em', color: encre, opacity: 0.8, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0', minHeight: 44 }}>
+                {tr('À LIRE', 'READABLE')}
+              </button>
+              <button onClick={emporterSauvegarde} disabled={!aQuelqueChose} style={{ ...mono, fontSize: 12, letterSpacing: '0.08em', color: encre, opacity: aQuelqueChose ? 0.8 : 0.3, background: 'none', border: 'none', borderLeft: `0.5px solid ${encre}1f`, borderRight: `0.5px solid ${encre}1f`, cursor: aQuelqueChose ? 'pointer' : 'default', padding: '12px 0', minHeight: 44 }}>
+                {tr('SAUVEGARDE', 'BACKUP')}
+              </button>
+              <button onClick={() => fichierRef.current?.click()} style={{ ...mono, fontSize: 12, letterSpacing: '0.08em', color: accent, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0', minHeight: 44 }}>
+                {tr('REMETTRE', 'RESTORE')}
+              </button>
+            </div>
+            <input
+              ref={fichierRef}
+              type="file"
+              accept="application/json,.json"
+              aria-label={tr('Choisir une sauvegarde', 'Choose a backup')}
+              style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; if (f) restaurer(f); e.target.value = '' }}
+            />
+            {restauration && (
+              <p role="status" aria-live="polite" style={{ ...mono, fontSize: 12, color: accent, opacity: 0.9, textAlign: 'center', marginTop: 4 }}>
+                {restauration}
+              </p>
+            )}
           </motion.div>
         )}
 
