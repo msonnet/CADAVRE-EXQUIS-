@@ -9,6 +9,8 @@ import { useTutoriel, TUTORIEL_TOTAL, T_BIBLIO } from '../hooks/useTutoriel'
 import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
 import { mono } from '../lib/typo'
+import { getStructure, reconstruirePoeme } from '../structures'
+import { libelleMorceaux } from '../lib/attribution'
 import { composerTexte, composerSauvegarde, lireSauvegarde, nomDeFichier } from '../lib/recueil'
 import { tr } from '../i18n'
 
@@ -25,9 +27,19 @@ function formatDate(ts: number): string {
   })
 }
 
-function extraitPoeme(poeme: Poeme): string {
-  const premier = poeme.cases[0]?.texte ?? ''
-  return premier.length > 60 ? premier.slice(0, 57) + '…' : premier
+/**
+ * Le premier VERS du poème, et non son premier fragment.
+ *
+ * La carte affichait `cases[0].texte` : sur une phrase étoffée, cela donnait
+ * « le vernis » là où le poème dit « le vernis craquelé avale une lampe
+ * sourde ». L'audit le relève, et c'est la faute la plus coûteuse de cet
+ * écran — un recueil où l'on ne reconnaît pas ses propres poèmes n'est pas
+ * un recueil.
+ */
+function premierVers(poeme: Poeme): string {
+  const entier = reconstruirePoeme(poeme.cases, getStructure(poeme.structureId))
+  const ligne = entier.split('\n').find(l => l.trim()) ?? ''
+  return ligne.trim()
 }
 
 function normaliser(s: string): string {
@@ -272,38 +284,80 @@ export default function Bibliotheque() {
                   </p>
                 )}
                 {poemesFiltres.map((poeme, i) => (
-                  <motion.button
+                  <motion.div
                     key={poeme.id}
-                    onClick={() => { jouer('clic'); if (tutActif && tutEtape === T_BIBLIO) tutAvancer(); navigate(`/bibliotheque/${poeme.id}`) }}
-                    className={tutActif && tutEtape === T_BIBLIO && i === 0 ? 'tut-cible' : undefined}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
                     style={{
-                      ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
-                      display: 'block', width: '100%', textAlign: 'left',
-                      padding: '13px 0 13px 12px',
+                      display: 'flex', alignItems: 'stretch', gap: 12,
                       borderBottom: `0.5px solid ${encre}12`,
-                      borderLeft: `2px solid transparent`,
-                      background: 'transparent', cursor: 'pointer',
+                      borderLeft: '2px solid transparent',
                       transition: 'border-left-color 0.15s',
                     }}
                     onMouseEnter={e => (e.currentTarget.style.borderLeftColor = accent)}
                     onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
                   >
-                    <p style={{
-                      fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17,
-                      lineHeight: 1.3, marginBottom: 3,
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    }}>
-                      {poeme.titre || extraitPoeme(poeme) || 'Sans titre'}
-                    </p>
-                    <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
-                      {(NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
-                      {' · '}{poeme.cases.length} voix
-                      {' · '}{formatDate(poeme.dateCreation).toUpperCase()}
-                    </p>
-                  </motion.button>
+                    {/*
+                      La vignette n'apparaît que si l'illustration existe : une
+                      case grise en attente vaudrait moins que rien. Elle est
+                      décorative — le nom du poème est juste à côté — donc
+                      `alt` vide plutôt qu'une description inventée.
+                    */}
+                    {poeme.illustration?.url && (
+                      <img
+                        src={poeme.illustration.url}
+                        alt=""
+                        style={{
+                          width: 54, height: 72, objectFit: 'cover', flexShrink: 0,
+                          marginLeft: 12, marginTop: 13, marginBottom: 13,
+                          border: `0.5px solid ${accent}30`, filter: 'contrast(0.97)',
+                        }}
+                      />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0, paddingLeft: poeme.illustration?.url ? 0 : 12 }}>
+                      <button
+                        onClick={() => { jouer('clic'); if (tutActif && tutEtape === T_BIBLIO) tutAvancer(); navigate(`/bibliotheque/${poeme.id}`) }}
+                        className={tutActif && tutEtape === T_BIBLIO && i === 0 ? 'tut-cible' : undefined}
+                        style={{
+                          ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
+                          display: 'block', width: '100%', textAlign: 'left',
+                          padding: '13px 0 2px', background: 'transparent',
+                          border: 'none', cursor: 'pointer',
+                        }}
+                      >
+                        <p style={{
+                          fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17,
+                          lineHeight: 1.35, marginBottom: 4,
+                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                        } as React.CSSProperties}>
+                          {poeme.titre || premierVers(poeme) || tr('Sans titre', 'Untitled')}
+                        </p>
+                        <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
+                          {(NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
+                          {' · '}{libelleMorceaux(poeme.structureId, poeme.cases.length)}
+                          {' · '}{formatDate(poeme.dateCreation).toUpperCase()}
+                        </p>
+                      </button>
+                      {/*
+                        Les coutures sont la meilleure page du produit, et il
+                        fallait deux gestes pour y arriver. Un bouton à part et
+                        non imbriqué : un bouton dans un bouton n'est pas du
+                        HTML valide, et le clavier n'y arrive jamais.
+                      */}
+                      <button
+                        onClick={() => { jouer('clic'); navigate(`/bibliotheque/${poeme.id}?coutures`) }}
+                        aria-label={tr('Ouvrir les coutures de ce poème', 'Open this poem’s seams')}
+                        style={{
+                          ...mono, fontSize: 11, letterSpacing: '0.16em',
+                          color: accent, opacity: 0.7, background: 'none', border: 'none',
+                          cursor: 'pointer', padding: '2px 0 13px',
+                        }}
+                      >
+                        ⟡ {tr('COUTURES', 'SEAMS')}
+                      </button>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             </AnimatePresence>

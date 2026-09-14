@@ -14,15 +14,18 @@ import { libelleMorceaux, libelleMains } from '../lib/attribution'
  */
 
 describe('libelleMorceaux', () => {
-  it('compte des fragments dans le cadavre écrit', () => {
+  it('compte des fragments là où une case est un morceau de phrase', () => {
     expect(libelleMorceaux('phrase-simple', 5)).toBe('5 FRAGMENTS')
     expect(libelleMorceaux('phrase-etoffee', 3)).toBe('3 FRAGMENTS')
-    expect(libelleMorceaux('vers-libre', 4)).toBe('4 FRAGMENTS')
   })
 
-  it('compte des vers à l’atelier — une case y est un vers entier', () => {
+  it('compte des vers partout où une case EST un vers', () => {
+    // `reconstruirePoeme` joint les cases de `vers-libre` et d'`atelier` par
+    // des retours à la ligne : ce sont des vers, pas des fragments. Le
+    // libellé avait oublié `vers-libre` et le recueil annonçait
+    // « 2 FRAGMENTS » pour un poème de deux vers — vu à l'écran.
+    expect(libelleMorceaux('vers-libre', 4)).toBe('4 VERS')
     expect(libelleMorceaux('atelier', 37)).toBe('37 VERS')
-    expect(libelleMorceaux('atelier', 11)).toBe('11 VERS')
   })
 
   it('accorde le singulier', () => {

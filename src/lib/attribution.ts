@@ -69,8 +69,18 @@ export function attribution(c: Case, iaNum?: number): string {
  *
  * L'atelier fait exception : une case y est un VERS entier, pas un morceau.
  */
+/**
+ * Les structures où une case est un VERS ENTIER et non un fragment.
+ *
+ * `reconstruirePoeme` les traite déjà ensemble — elle joint leurs cases par
+ * des retours à la ligne là où les autres structures les cousent en une
+ * phrase. Le libellé avait oublié `vers-libre`, et le recueil annonçait donc
+ * « 2 FRAGMENTS » pour un poème de deux vers.
+ */
+const UNE_CASE_EST_UN_VERS = new Set(['atelier', 'vers-libre'])
+
 export function libelleMorceaux(structureId: string, n: number): string {
-  if (structureId === 'atelier') {
+  if (UNE_CASE_EST_UN_VERS.has(structureId)) {
     return `${n} ${n === 1 ? tr('VERS', 'LINE') : tr('VERS', 'LINES')}`
   }
   return `${n} ${n === 1 ? tr('FRAGMENT', 'FRAGMENT') : tr('FRAGMENTS', 'FRAGMENTS')}`

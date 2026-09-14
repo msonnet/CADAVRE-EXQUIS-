@@ -304,7 +304,10 @@ et **restent**. Seul le COMPTE mentait — « 5 VOIX » sur une partie jouée
 seul, où il n'y a qu'une main.
 
 - `libelleMorceaux(structureId, n)` — « 5 FRAGMENTS », et « 11 VERS » à
-  l'atelier où une case est un vers entier. « fragment » plutôt que « case » :
+  l'atelier **comme en vers libre**, les deux structures où
+  `reconstruirePoeme` joint les cases par des retours à la ligne. Le vers
+  libre avait été oublié au premier passage : le recueil annonçait
+  « 2 FRAGMENTS » pour un poème de deux vers, vu à l'écran pendant le lot 11. « fragment » plutôt que « case » :
   c'est le mot de l'écran d'entrée et du champ de saisie.
 - `libelleMains(n)` — « 4 MAINS » pour de vraies personnes, dans un salon.
   « main » est déjà le mot maison : « la main te revient ».
@@ -438,13 +441,36 @@ le test qui l'a imposé. Il était d'abord conditionné à avoir des poèmes, si
 bien qu'il disparaissait exactement quand on en a besoin : après avoir tout
 perdu.
 
+## La carte du Recueil — lot 11
+
+Le rapport la désigne comme le point faible du produit, et la mesure lui
+donne raison. Relevé avant :
+
+    « le vernis · PHRASE ÉTOFFÉE · 5 voix · 14 SEPTEMBRE 2026 »
+
+là où le poème dit « le vernis craquelé avale une lampe sourde ».
+
+- **Le premier VERS et non le premier fragment.** `extraitPoeme` lisait
+  `cases[0].texte` ; `premierVers` reconstruit le poème et en prend la
+  première ligne. Un recueil où l'on ne reconnaît pas ses propres poèmes
+  n'est pas un recueil.
+- **La vignette de l'illustration**, quand elle existe seulement — une case
+  grise en attente vaudrait moins que rien. `alt` vide : elle est
+  décorative, le nom du poème est juste à côté.
+- **« ⟡ COUTURES » sur chaque carte**, vers `?coutures` — un paramètre d'URL
+  et non un état de navigation, pour qu'il survive au rechargement et se
+  partage. Les coutures sont la meilleure page du produit et il fallait deux
+  gestes pour y arriver.
+- Deux boutons **côte à côte et non imbriqués** : un bouton dans un bouton
+  n'est pas du HTML valide, et le clavier n'y arrive jamais.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (365 tests unitaires) + Playwright (47 tests E2E, FR et EN)
+- Tests : Vitest (365 tests unitaires) + Playwright (51 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

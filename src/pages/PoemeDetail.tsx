@@ -43,7 +43,13 @@ export default function PoemeDetail() {
   const seance = useReve()
   const [poeme, setPoeme] = useState<Poeme | null>(null)
   const [chargement, setChargement] = useState(true)
-  const [casesVisibles, setCasesVisibles] = useState(false)
+  // Les coutures s'ouvrent d'emblée quand on est venu les chercher —
+  // « ⟡ COUTURES » depuis la carte du recueil pose `?coutures`. Un paramètre
+  // d'URL et non un état de navigation : il survit au rechargement et se
+  // partage, alors qu'un `state` disparaît dès qu'on recharge la page.
+  const [casesVisibles, setCasesVisibles] = useState(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('coutures'),
+  )
   const [texteCorrige, setTexteCorrige] = useState<string | null>(null)
   const [editionTitre, setEditionTitre] = useState(false)
   const [titreDraft, setTitreDraft] = useState('')
