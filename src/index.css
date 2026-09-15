@@ -40,6 +40,27 @@
 /* ── Base ─────────────────────────────────────── */
 @layer base {
   html { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  /*
+    Le rebond — lot 18 de l'audit du 10 septembre.
+
+    Tiré trop loin, le document rebondit et découvre le fond de la webvue,
+    qui est blanc sous WKWebView. Sur les cinq ambiances sombres, c'est une
+    bande claire au bord de l'écran, et elle apparaît au moindre geste.
+
+    `overscroll-behavior: none` supprime le rebond plutôt que d'essayer de
+    le repeindre : la couleur du canevas se négocie entre trois couches et
+    la webvue a le dernier mot, alors que le geste, lui, s'annule net.
+
+    Effet attendu et voulu : le « tirer pour recharger » d'Android disparaît
+    avec. Un geste de trop en pleine partie rechargeait la page, et un
+    fragment saisi ne survit pas à un rechargement.
+
+    Non reproduit ici — il n'y a pas d'iOS dans cet environnement. C'est le
+    correctif standard, il ne coûte rien, et l'écran natif tranchera.
+  */
+  html, body { overscroll-behavior: none; }
+
   body {
     margin: 0;
     background-color: var(--reve-bg);
