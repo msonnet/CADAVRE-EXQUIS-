@@ -13,6 +13,8 @@ import { demanderFragmentIA } from '../api/claude'
 import { VOICE_IDS, nomDeVoix } from '../data/voiceIds'
 import { TYPES_A_DETERMINANT, tirerStrategie } from '../lib/determinants'
 import { sauvegarderPoeme } from '../db'
+import { rituelEnCours, marquerRituelFait, cloreRituelEnCours } from '../lib/rituel'
+import { pointerSerie } from '../utils/streak'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
@@ -618,6 +620,10 @@ export default function Jeu() {
         // La partie découverte est finie : les parties suivantes retrouvent
         // l'auto-avance normale des tours IA.
         sessionStorage.removeItem('decouverte')
+        // Le cadavre du jour n'est compté qu'ICI, à son dernier fragment.
+        // Ouvrir la contrainte et s'en aller ne fait pas le rituel.
+        const jourDuRituel = rituelEnCours()
+        if (jourDuRituel) { marquerRituelFait(jourDuRituel); cloreRituelEnCours(); pointerSerie() }
         navigate('/fin', { state: { poeme } })
       })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps

@@ -41,6 +41,9 @@ export interface Case {
   mains?: MainCase[]      // atelier : qui a rempli quelle case, dans l'ordre du vers
   texte: string
   ts: number
+  /** L'amorce du cadavre du jour : donnée à tout le monde, écrite par
+   *  personne. Les coutures ne doivent l'attribuer à aucune main. */
+  donne?: boolean
   fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)
 }
 

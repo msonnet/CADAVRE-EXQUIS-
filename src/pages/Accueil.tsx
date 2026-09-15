@@ -4,7 +4,8 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
-import { pointerSerie, type Serie } from '../utils/streak'
+import { lireSerie, type Serie } from '../utils/streak'
+import { rituelDuJourFait } from '../lib/rituel'
 import { rearmerRappelSiActif } from '../utils/notifications'
 import { tr } from '../i18n'
 
@@ -22,7 +23,11 @@ export default function Accueil() {
   const seance = useReve()
   const { jouer } = useSound()
   // L'ouverture de l'accueil = le passage du jour : on pointe la série une fois.
-  const [serie] = useState<Serie>(() => pointerSerie())
+  // La série ne se pointe plus à l'OUVERTURE : elle comptait les fois où
+  // l'on poussait la porte, pas les poèmes écrits. C'est le dernier
+  // fragment du cadavre du jour qui l'incrémente désormais (`Jeu.tsx`).
+  const [serie] = useState<Serie>(() => lireSerie())
+  const [rituelFait] = useState(() => rituelDuJourFait())
 
   // Premier lancement : au lieu d'un onboarding lu, on emmène directement le
   // joueur dans une partie Découverte (il vit une révélation avant qu'on lui
@@ -217,6 +222,32 @@ export default function Accueil() {
             </div>
           </div>
         )}
+
+        {/* ── LE CADAVRE DU JOUR ──
+             En tête des actions, et pas dans un coin de la Galerie où il
+             vivait jusqu'ici : un rendez-vous quotidien qu'il faut aller
+             chercher n'est pas un rendez-vous. Il porte sa propre marque
+             tant qu'il n'est pas écrit — la seule chose de cet écran qui
+             change d'un jour à l'autre pour une raison. */}
+        <button
+          onClick={() => nav('/poeme-du-jour')}
+          style={{
+            width: '100%', marginBottom: 6,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+            background: 'transparent', color: encre,
+            ...ui, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
+            padding: '0.7em 0.9em',
+            border: `1px solid ${rituelFait ? `${encre}28` : `${accent}80`}`,
+            borderRadius: 3, cursor: 'pointer',
+          }}
+        >
+          <span style={{ opacity: rituelFait ? 0.55 : 0.9 }}>
+            {tr('Le cadavre du jour', 'Cadavre of the day')}
+          </span>
+          <span style={{ color: rituelFait ? encre : accent, opacity: rituelFait ? 0.5 : 1 }}>
+            {rituelFait ? tr('ÉCRIT', 'WRITTEN') : '✧'}
+          </span>
+        </button>
 
         {/* ── CTA ── */}
         <div style={{ marginBottom: 10 }}>

@@ -7,26 +7,53 @@ import { supabase } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { mono } from '../lib/typo'
+import { libelleMorceaux } from '../lib/attribution'
 import { tr, langueActuelle } from '../i18n'
+import { contrainteDuJour, jourLocal } from '../lib/contrainteDuJour'
+import { ouvrirRituel, rituelDuJourFait } from '../lib/rituel'
+import { lireSerie } from '../utils/streak'
+
+/**
+ * Le cadavre du jour.
+ *
+ * ── Ce que cette page était ───────────────────────────────────────────────
+ *
+ * Une page de LECTURE : elle prenait les quatre-vingt-dix dernières
+ * publications de la galerie et en désignait une par `dayOfYear() % n`. Sur
+ * un stock de quarante pièces dont aucune depuis le 18 juillet, cela
+ * revenait à ressortir un poème de l'été tous les quarante jours et à
+ * l'appeler « poème du jour ». C'était un musée, pas un rendez-vous.
+ *
+ * ── Ce qu'elle est ────────────────────────────────────────────────────────
+ *
+ * Un rendez-vous, dans cet ordre : la contrainte, ta main, puis les autres.
+ * On écrit d'abord et on lit ensuite — l'inverse donnerait la réponse avant
+ * la question, et un cadavre exquis dont on a lu les voisins n'est plus un
+ * cadavre exquis.
+ *
+ * Les poèmes montrés sont ceux du JOUR MÊME. Quand il n'y en a pas encore,
+ * la page le dit et invite, au lieu de meubler avec un ancien : un rendez-vous
+ * vide est une invitation, un rendez-vous truqué est une déception qu'on
+ * découvre plus tard.
+ */
 
 interface PoemeCase { texte: string }
-interface PoemePayload { cases: PoemeCase[]; structureId: string; titre?: string }
+interface PoemePayload { cases: PoemeCase[]; structureId: string; langue?: string }
 
 interface GalleryItem {
   id: string
-  type: string
   titre: string | null
   payload: string
-  image_url: string | null
   author_pseudo: string
-  author_avatar: string | null
   created_at: string
 }
 
-function dayOfYear(): number {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), 0, 0)
-  return Math.floor((now.getTime() - start.getTime()) / 86_400_000)
+function toRomain(n: number): string {
+  const map: [number, string][] = [
+    [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
+    [50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I'],
+  ]
+  return map.reduce((r, [v, s]) => { while (n >= v) { r += s; n -= v } return r }, '')
 }
 
 export default function PoemeDuJour() {
@@ -36,174 +63,216 @@ export default function PoemeDuJour() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
 
-  const [item, setItem] = useState<GalleryItem | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [poeme, setPoeme] = useState<string>('')
-  const [partagé, setPartagé] = useState(false)
+  const [contrainte] = useState(() => contrainteDuJour())
+  const [fait] = useState(() => rituelDuJourFait())
+  const [serie] = useState(() => lireSerie())
+  const [autres, setAutres] = useState<GalleryItem[] | null>(null)
+
+  const structure = getStructure(contrainte.structureId)
+  const nomStructure = structure.nom
+  // « VII cases » était faux : en vers libre une case EST un vers, et c'est
+  // précisément ce que `libelleMorceaux` sait dire depuis le lot 9.
+  const morceaux = libelleMorceaux(contrainte.structureId, contrainte.nbCases).toLowerCase()
 
   useEffect(() => {
-    async function load() {
-      setLoading(true)
-      // Fetch recent gallery poems (up to 90 to give at least 90 unique daily poems)
+    let vivant = true
+    ;(async () => {
+      // Le jour même, et rien d'autre. `jourLocal` borne au fuseau du joueur :
+      // un poème publié hier soir à 23 h 50 n'est pas celui d'aujourd'hui.
+      const debut = new Date()
+      debut.setHours(0, 0, 0, 0)
       const { data } = await supabase
         .from('gallery')
-        .select('id,type,titre,payload,image_url,author_pseudo,author_avatar,created_at')
+        .select('id,titre,payload,author_pseudo,created_at')
         .eq('type', 'poeme')
+        .gte('created_at', debut.toISOString())
         .order('created_at', { ascending: false })
-        .limit(90)
-
+        .limit(30)
+      if (!vivant) return
       const tous = (data ?? []) as GalleryItem[]
-      // Le poème du jour se tire parmi les publications de la langue active
-      const items = tous.filter(it => {
-        try { return (((JSON.parse(it.payload) as { langue?: string }).langue === 'en') ? 'en' : 'fr') === langueActuelle() }
-        catch { return langueActuelle() === 'fr' }
-      })
-      if (!items.length) { setLoading(false); return }
-
-      // Stable daily pick — same poem for everyone on the same day
-      const idx = dayOfYear() % items.length
-      const picked = items[idx]
-      setItem(picked)
-
-      try {
-        const p = JSON.parse(picked.payload) as PoemePayload
-        const structure = getStructure(p.structureId)
-        const fakeCases = p.cases.map((c, i) => ({
-          numero: i + 1, fonction: '', consigne: '', auteur: 'humain' as const, texte: c.texte, ts: 0,
-        }))
-        setPoeme(reconstruirePoeme(fakeCases, structure))
-      } catch {
-        setPoeme(picked.payload)
-      }
-
-      setLoading(false)
-    }
-    load()
+      setAutres(tous.filter(it => {
+        try {
+          const l = (JSON.parse(it.payload) as PoemePayload).langue === 'en' ? 'en' : 'fr'
+          return l === langueActuelle()
+        } catch { return langueActuelle() === 'fr' }
+      }))
+    })().catch(() => { if (vivant) setAutres([]) })
+    return () => { vivant = false }
   }, [])
 
-  async function partager() {
-    if (!item || !poeme) return
-    jouer('clic')
-    const titre = item.titre ? tr(`« ${item.titre} »`, `“${item.titre}”`) : tr('Cadavre exquis', 'Exquisite corpse')
-    const texte = `${titre}\n\n${poeme}\n\n— ${item.author_pseudo}`
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: titre, text: texte })
-      } else {
-        await navigator.clipboard.writeText(texte)
-        setPartagé(true)
-        setTimeout(() => setPartagé(false), 2000)
-      }
-    } catch { /* user cancelled */ }
+  function ecrire() {
+    jouer('demarrage')
+    navigate(ouvrirRituel(contrainte))
   }
 
-  const date = item ? new Date(item.created_at).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }) : ''
-  const lignes = poeme.split('\n').filter(Boolean)
+  function texteDe(it: GalleryItem): string {
+    try {
+      const p = JSON.parse(it.payload) as PoemePayload
+      const s = getStructure(p.structureId)
+      return reconstruirePoeme(
+        p.cases.map((x, i) => ({
+          numero: i + 1, fonction: '', consigne: '', auteur: 'humain' as const, texte: x.texte, ts: 0,
+        })), s)
+    } catch { return it.payload }
+  }
 
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="aide" />
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <button onClick={() => navigate(-1)} style={{ ...mono, fontSize: 13, color: encre, opacity: 0.65, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          ← {tr('RETOUR', 'BACK')}
-        </button>
-        <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700 }}>{tr('POÈME DU JOUR', 'POEM OF THE DAY')}</span>
-      </div>
-      <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45, marginBottom: 28 }} />
+      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
-      {loading && (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+        {/* ── EN-TÊTE ── */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <button
+            onClick={() => navigate('/')}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            ← {tr('ACCUEIL', 'HOME')}
+          </button>
+          <span style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.1em' }}>
+            {tr('CADAVRE DU JOUR', 'CADAVRE OF THE DAY')}
+          </span>
         </div>
-      )}
+        <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-      {!loading && !item && (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 20, color: encre, opacity: 0.6 }}>
-            {tr('La galerie est encore vide.', 'The gallery is still empty.')}<br />{tr('Sois le premier à composer.', 'Be the first to compose.')}
-          </p>
-        </div>
-      )}
-
-      {!loading && item && (
+        {/* ── LA CONTRAINTE ── */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+          transition={{ duration: 0.5 }}
+          style={{ marginTop: 26 }}
         >
-          {/* Poem title */}
-          {item.titre && (
-            <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-              — {item.titre.toUpperCase()} —
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+            {tr('— LA CONTRAINTE —', '— TODAY’S CONSTRAINT —')}
+          </div>
+
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8, marginBottom: 14, lineHeight: 1.5 }}>
+            {tr(
+              `Tout le monde part du même mot aujourd’hui. Tu écris la suite sans jamais te relire — ${nomStructure.toLowerCase()}, ${morceaux}.`,
+              `Everyone starts from the same words today. You write the rest without ever rereading — ${nomStructure.toLowerCase()}, ${morceaux}.`,
+            )}
+          </div>
+
+          {/* L'amorce, donnée telle quelle — c'est elle, le rendez-vous. */}
+          <div
+            style={{
+              borderLeft: `2px solid ${accent}`,
+              paddingLeft: 14, paddingTop: 4, paddingBottom: 4,
+              marginBottom: 8,
+            }}
+          >
+            <div
+              className="font-fraunces font-black leading-tight"
+              style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: accent }}
+            >
+              {contrainte.amorce}
+            </div>
+          </div>
+          <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5, letterSpacing: '0.14em' }}>
+            {tr('DONNÉ À TOUS · AUCUNE VOIX IA · RIEN N’EST DÉCOMPTÉ',
+                'GIVEN TO ALL · NO AI VOICE · NOTHING IS COUNTED')}
+          </div>
+        </motion.div>
+
+        <div style={{ flex: 1, minHeight: 20 }} />
+
+        {/* ── TA MAIN ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          style={{ marginBottom: 6 }}
+        >
+          {fait ? (
+            <>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 18, color: encre, opacity: 0.8, marginBottom: 12, textAlign: 'center' }}>
+                {serie.compte >= 2
+                  ? tr(`Ton cadavre du jour est écrit — ${toRomain(serie.compte)}ᵉ jour de suite.`,
+                       `Today’s cadavre is written — ${serie.compte} days in a row.`)
+                  : tr('Ton cadavre du jour est écrit.', 'Today’s cadavre is written.')}
+              </div>
+              <button
+                onClick={() => { jouer('clic'); navigate('/bibliotheque') }}
+                style={{
+                  width: '100%', ...mono, fontSize: 14, letterSpacing: '0.12em',
+                  background: 'transparent', color: encre,
+                  border: `0.5px solid ${encre}30`, borderRadius: 3,
+                  padding: '0.9em 1em', cursor: 'pointer',
+                }}
+              >
+                {tr('LE RELIRE DANS LE RECUEIL', 'REREAD IT IN THE COLLECTION')} →
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={ecrire}
+              style={{
+                width: '100%', background: encre, color: bg,
+                ...mono, fontSize: 16, letterSpacing: '0.12em', textTransform: 'uppercase',
+                padding: '0.9em 1em', border: 'none', borderRadius: 3, cursor: 'pointer',
+              }}
+            >
+              {tr('Écrire le cadavre du jour', 'Write today’s cadavre')} ✧
+            </button>
+          )}
+        </motion.div>
+
+        {/* ── LES AUTRES MAINS — après la tienne, jamais avant ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          style={{ marginTop: 22 }}
+        >
+          <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.14, marginBottom: 14 }} />
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+            {tr('— LES AUTRES MAINS, AUJOURD’HUI —', '— OTHER HANDS, TODAY —')}
+          </div>
+
+          {autres === null && (
+            <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.45 }}>
+              {tr('LECTURE…', 'READING…')}
             </div>
           )}
 
-          {/* Poem text */}
-          <div style={{ flex: 1 }}>
-            {lignes.map((ligne, i) => (
-              <motion.p
-                key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.18, duration: 0.5, ease: 'easeOut' }}
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontStyle: 'italic',
-                  fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)',
-                  lineHeight: 1.65,
-                  color: encre,
-                  margin: '0 0 2px',
-                }}
-              >
-                {ligne}
-              </motion.p>
-            ))}
-          </div>
+          {autres?.length === 0 && (
+            <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.65, lineHeight: 1.5 }}>
+              {fait
+                ? tr('Personne d’autre n’a encore publié aujourd’hui. Reviens ce soir.',
+                     'No one else has published today. Come back tonight.')
+                : tr('Personne n’a encore écrit aujourd’hui. La première main est la tienne.',
+                     'No one has written today. The first hand is yours.')}
+            </div>
+          )}
 
-          {/* Attribution */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 + lignes.length * 0.18, duration: 0.5 }}
-            style={{ marginTop: 28, paddingTop: 16, borderTop: `0.5px solid ${encre}20` }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-              {item.author_avatar ? (
-                <img src={item.author_avatar} alt={item.author_pseudo} style={{ width: 32, height: 32, borderRadius: 3, objectFit: 'cover' }} />
-              ) : (
-                <div style={{ width: 32, height: 32, borderRadius: 3, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 17, color: accent }}>
-                    {item.author_pseudo[0]?.toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <div>
-                <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700 }}>{item.author_pseudo}</div>
-                <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.55, marginTop: 2 }}>{date}</div>
+          {autres?.map((it, i) => (
+            <div key={it.id} style={{ marginBottom: 16, paddingBottom: 14, borderBottom: i < autres.length - 1 ? `0.5px solid ${encre}14` : 'none' }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 18, color: encre, lineHeight: 1.55, whiteSpace: 'pre-line', marginBottom: 6 }}>
+                {texteDe(it)}
+              </div>
+              <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5, letterSpacing: '0.1em' }}>
+                {it.author_pseudo.toUpperCase()}
               </div>
             </div>
+          ))}
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={partager}
-                style={{ flex: 1, ...mono, fontSize: 13, background: accent, color: '#0f0805', border: 'none', borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em' }}
-              >
-                {partagé ? tr('✓ COPIÉ', '✓ COPIED') : tr('PARTAGER', 'SHARE')}
-              </button>
-              <button
-                onClick={() => { jouer('clic'); navigate('/galerie') }}
-                style={{ flex: 1, ...mono, fontSize: 13, background: 'transparent', color: encre, border: `1px solid ${encre}30`, borderRadius: 3, padding: '12px 0', cursor: 'pointer', letterSpacing: '0.12em', opacity: 0.8 }}
-              >
-                {tr('GALERIE', 'GALLERY')} →
-              </button>
-            </div>
-          </motion.div>
+          {!!autres?.length && (
+            <button
+              onClick={() => { jouer('clic'); navigate('/galerie') }}
+              style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0' }}
+            >
+              {tr('TOUTE LA GALERIE', 'THE WHOLE GALLERY')} →
+            </button>
+          )}
         </motion.div>
-      )}
+
+        <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.35, letterSpacing: '0.12em', marginTop: 8 }}>
+          {jourLocal()}
+        </div>
+      </div>
     </PageTransition>
   )
 }
