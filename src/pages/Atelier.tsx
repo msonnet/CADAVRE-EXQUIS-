@@ -9,6 +9,7 @@ import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
+import SoldeEncrier from '../components/SoldeEncrier'
 import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
 
 function toRomain(n: number): string {
@@ -471,6 +472,15 @@ export default function Atelier() {
         >
           {tr('Ouvrir la séance', 'Open the séance')} ✧
         </motion.button>
+
+        {/*
+          Le solde sous le bouton, et seulement quand des voix sont
+          convoquées : une séance « Seul » n'appelle rien et ne coûte rien,
+          y annoncer une réserve inventerait une limite.
+        */}
+        {nbVoix > 0 && (
+          <SoldeEncrier acte="partie_ia" encre={encre} accent={accent} style={{ marginBottom: 10 }} />
+        )}
 
       </div>
 

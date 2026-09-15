@@ -17,6 +17,7 @@ import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
+import SoldeEncrier from '../components/SoldeEncrier'
 import { attribution, libelleMorceaux } from '../lib/attribution'
 import MainsDuVers from '../components/MainsDuVers'
 import { usePartage } from '../hooks/usePartage'
@@ -78,6 +79,11 @@ export default function FinDePartie() {
   const [generatingIllustration, setGeneratingIllustration] = useState(false)
   const [erreurIllustration, setErreurIllustration] = useState<string | null>(null)
   const [refus, setRefus] = useState<Refus | null>(null)
+  // Le solde se relit à la RETOMBÉE de la génération, jamais au montage : un
+  // chiffre affiché juste avant que l'image soit décomptée serait périmé
+  // sous les yeux du joueur.
+  const [soldeRelu, setSoldeRelu] = useState(0)
+  const generationPrecedente = useRef(false)
   // Dernier style demandé — le mur le rejoue une fois l'abonnement ouvert
   const styleChoisiRef = useRef<string | null>(null)
   const [promptVisuel, setPromptVisuel] = useState<string | null>(null)
@@ -142,6 +148,11 @@ export default function FinDePartie() {
   useEffect(() => {
     if (tutActif && tutEtape === T_FIN_SHARE && partage.fait) tutAvancer()
   }, [partage.fait]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (generationPrecedente.current && !generatingIllustration) setSoldeRelu(v => v + 1)
+    generationPrecedente.current = generatingIllustration
+  }, [generatingIllustration])
 
   function choisirStyle(style: string) {
     if (!poeme || generatingIllustration) return
@@ -650,6 +661,17 @@ export default function FinDePartie() {
               className="mb-6"
             >
               <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.15, marginBottom: 16 }} />
+
+              {/*
+                Le solde en tête du panneau : c'est la première chose qu'on
+                lit en ouvrant IMAGE, avant de choisir un style. Le joueur
+                apprenait la limite au refus, ce qui fait passer un modèle
+                annoncé pour un piège.
+              */}
+              <SoldeEncrier
+                acte="image_pro" encre={encre} accent={accent} relire={soldeRelu}
+                style={{ marginBottom: 14 }}
+              />
 
               {/* Prompt libre */}
               <div className="mb-4">

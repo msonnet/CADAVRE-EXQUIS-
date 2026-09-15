@@ -45,6 +45,23 @@ async function jetonExistant(): Promise<string | null> {
   return session?.access_token ?? null
 }
 
+/** Une identité existe-t-elle déjà ? Sans jamais en ouvrir une. */
+export async function identiteOuverte(): Promise<boolean> {
+  try {
+    return (await jetonExistant()) !== null
+  } catch {
+    return false
+  }
+}
+
+/**
+ * La réserve d'essai à l'ouverture — les valeurs par DEFAUT de la table
+ * `acces`. Tant qu'aucune identité n'existe, elle est intacte par
+ * définition : c'est ce qu'on peut annoncer sans rien créer ni rien
+ * consommer.
+ */
+export const ESSAI_OFFERT = { images: 5, parties: 5, lectures: 3 } as const
+
 /**
  * Lit l'état d'accès. Par défaut sans rien créer : afficher un écran de
  * réglages ne doit pas ouvrir une identité, ni entamer l'essai offert. Ce

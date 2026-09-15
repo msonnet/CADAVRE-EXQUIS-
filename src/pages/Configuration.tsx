@@ -10,6 +10,7 @@ import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
+import SoldeEncrier from '../components/SoldeEncrier'
 import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
 
 const STRUCTURES_UI_FR: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
@@ -351,6 +352,16 @@ export default function Configuration() {
         </div>
 
         <div style={{ flex: 1 }} />
+
+        {/*
+          Le solde AVANT le bouton et non sous lui : le bouton est collant,
+          une ligne posée sous lui flotterait par-dessus le texte qui défile.
+          Il n'apparaît que si une voix est convoquée — une table sans voix
+          n'appelle rien et ne coûte rien.
+        */}
+        {voixIA > 0 && (
+          <SoldeEncrier acte="partie_ia" encre={encre} accent={accent} style={{ marginBottom: 8 }} />
+        )}
 
         {/* ── CTA — sticky pour rester accessible même en bas de page ── */}
         <motion.div
