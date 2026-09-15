@@ -464,13 +464,62 @@ là où le poème dit « le vernis craquelé avale une lampe sourde ».
 - Deux boutons **côte à côte et non imbriqués** : un bouton dans un bouton
   n'est pas du HTML valide, et le clavier n'y arrive jamais.
 
+## Le solde de l'encrier — lot 13
+
+La réserve d'essai n'était lisible que dans les Réglages, écran qu'un joueur
+n'ouvre pas avant de jouer. Il découvrait donc la limite **au moment du
+refus**, ce qui fait passer un modèle annoncé pour un piège.
+
+`src/components/SoldeEncrier.tsx` l'écrit là où la dépense se décide : sous
+« Ouvrir la séance » à l'Atelier, avant le bouton de la table du cadavre
+écrit, en tête du panneau IMAGE. Petites capitales, onze pixels — la voix de
+la revue, pas une bannière. `src/lib/solde.ts` porte le libellé, à part,
+parce qu'il se mesure.
+
+**Trois silences, et ils comptent.** L'abonné ne voit rien — il n'y a rien à
+compter. Le **registre muet** ne montre rien non plus : le principe tenu
+partout est que la comptabilité injoignable laisse passer, et afficher un
+chiffre qu'on n'a pas reçu reviendrait à l'inventer — il serait faux
+exactement pour celui qui a déjà consommé. **Aucune identité encore** : la
+réserve est intacte par définition, on l'annonce telle quelle, sans ouvrir
+d'identité ni entamer l'essai.
+
+Une séance « Seul » et une table sans voix n'affichent rien. La lecture
+surréaliste d'un dessin non plus : elle se lance toute seule à l'arrivée, il
+n'y a pas d'appui à précéder.
+
+## La fiche d'installation — lot 18
+
+Le manifeste n'avait ni `id`, ni `shortcuts`, ni `screenshots` : Android
+n'affichait que l'invite minimale — une ligne et un bouton — pour une
+application dont c'est le seul étalage.
+
+- **`id: '/'`** — sans lui l'identité installée est déduite de `start_url`.
+  Le jour où celle-ci changerait, le navigateur croirait à une AUTRE
+  application et en proposerait une seconde, avec son propre stockage. Or
+  toute la bibliothèque vit dans IndexedDB : le joueur retrouverait une app
+  vide en croyant ouvrir la sienne. **Cette chaîne ne se change plus.**
+- **Trois captures**, de vraies captures prises au 540 × 960, écartées du
+  précache (`globIgnores`) — le service worker reste à 103 entrées. Android
+  exige un **rapport constant** entre les captures étroites : une seule d'un
+  autre format et il les écarte toutes, en silence. Le test le mesure.
+- **Deux raccourcis** — le cadavre écrit et l'Atelier. Pas le mode en ligne :
+  il exige un salon, donc un code, donc quelqu'un d'autre.
+- **`overscroll-behavior: none`** sur `html, body`. Le rebond découvre le
+  fond de la webvue, blanc sous WKWebView : une bande claire sur les
+  ambiances sombres. On supprime le geste plutôt que de repeindre un fond qui
+  se négocie entre trois couches. Le « tirer pour recharger » part avec, et
+  c'est voulu — un geste de trop rechargeait la page, et un fragment saisi
+  n'y survit pas. **Non reproduit** : il n'y a pas d'iOS dans l'environnement
+  de travail, c'est le correctif standard et l'écran natif tranchera.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (365 tests unitaires) + Playwright (51 tests E2E, FR et EN)
+- Tests : Vitest (369 tests unitaires) + Playwright (55 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
