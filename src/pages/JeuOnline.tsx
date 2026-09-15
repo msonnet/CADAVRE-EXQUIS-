@@ -597,7 +597,7 @@ export default function JeuOnline() {
             <div style={{ marginBottom: 16 }}>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>{tr('— CONSIGNE —', '— PROMPT —')}</div>
               <div className="font-fraunces font-black" style={{ fontSize: 'clamp(1.6rem, 7vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.01em', color: encre, marginBottom: 4 }}>
-                {caseDef.consigne.charAt(0).toUpperCase() + caseDef.consigne.slice(1)}.
+                {caseDef.consigne.charAt(0).toUpperCase() + caseDef.consigne.slice(1)}
               </div>
               {TYPE_LABEL[caseDef.type] && (
                 <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginBottom: 12 }}>{TYPE_LABEL[caseDef.type]}</div>

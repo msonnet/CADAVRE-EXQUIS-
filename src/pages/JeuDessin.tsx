@@ -1201,7 +1201,7 @@ export default function JeuDessin() {
                 {tr('— BANDE', '— BAND')} 1/{config.nbBandes} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
-                {tr('Joueur', 'Player')} 1.
+                {tr('Joueur', 'Player')} 1
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
                 {tr('Dessine la première bande.', 'Draw the first band.')}

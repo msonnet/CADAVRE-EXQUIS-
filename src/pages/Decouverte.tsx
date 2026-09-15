@@ -87,7 +87,7 @@ export default function Decouverte() {
             className="font-fraunces font-black"
             style={{ fontSize: 'clamp(2.6rem, 11vw, 3.6rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 20 }}
           >
-            {tr('Le cadavre', 'The exquisite')}<br /><span style={{ color: accent }}>{tr('exquis.', 'corpse.')}</span>
+            {tr('Le cadavre', 'The exquisite')}<br /><span style={{ color: accent }}>{tr('exquis', 'corpse')}</span>
           </div>
 
           <p style={{

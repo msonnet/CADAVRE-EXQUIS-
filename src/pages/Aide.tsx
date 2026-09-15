@@ -84,7 +84,7 @@ export default function Aide() {
             className="font-fraunces font-black leading-tight mb-3"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            {tr('Comment', 'How to')} <span style={{ color: accent }}>{tr('jouer.', 'play.')}</span>
+            {tr('Comment', 'How to')} <span style={{ color: accent }}>{tr('jouer', 'play')}</span>
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65 }}>
             {tr("Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.", 'The exquisite corpse is a surrealist game invented in Paris in the 1920s. Each participant contributes to the work without seeing what the others have produced. The revealed result is always a surprise.')}
@@ -121,7 +121,7 @@ export default function Aide() {
                     className="font-fraunces font-black"
                     style={{ fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)', color: col, lineHeight: 1 }}
                   >
-                    {isEcrit ? tr('Cadavre Écrit.', 'Written Cadavre.') : isAtelier ? tr("L'Atelier.", 'The Workshop.') : tr('Cadavre Dessiné.', 'Drawn Cadavre.')}
+                    {isEcrit ? tr('Cadavre Écrit', 'Written Cadavre') : isAtelier ? tr("L'Atelier", 'The Workshop') : tr('Cadavre Dessiné', 'Drawn Cadavre')}
                   </div>
                 </div>
                 <span style={{

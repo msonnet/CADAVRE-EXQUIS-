@@ -6,7 +6,7 @@ import { test, expect, type Page } from '@playwright/test'
  * 12 · L'ambiance était retirée à chaque rechargement — N° 935 puis N° 767 —
  *      sous un écran de Réglages qui annonce « Chaque jour, une ambiance est
  *      tirée au sort ».
- * 10 · L'écran « Joueur 1. — C'EST PARTI → » s'intercalait avant chaque acte
+ * 10 · L'écran « Joueur 1 — C'EST PARTI → » s'intercalait avant chaque acte
  *      même à une seule main.
  * 14 · La préparation promettait qu'on ne saurait JAMAIS quelles voix
  *      parlent, et les coutures les nomment toutes.
@@ -110,8 +110,9 @@ test('en solo, aucun écran de passage à taper', async ({ page }) => {
 
   const vu = (await page.evaluate(() => (window as unknown as { __vu: string[] }).__vu)).join('\n')
   expect(vu, 'aucun bouton de passage n’a été proposé').not.toMatch(/C'est parti|Let's go|C'est à moi|My turn/)
-  expect(vu, 'le rideau a bien annoncé les actes').toMatch(/Acte I\.|Act I\./)
-  expect(vu, 'et l’acte suivant aussi').toMatch(/Acte II\.|Act II\./)
+  // Sans point final : en Bodoni d'affichage il se lit comme un disque.
+  expect(vu, 'le rideau a bien annoncé les actes').toMatch(/Acte I\b|Act I\b/)
+  expect(vu, 'et l’acte suivant aussi').toMatch(/Acte II\b|Act II\b/)
 })
 
 test('la promesse d’anonymat ne contredit plus les coutures', async ({ page }) => {

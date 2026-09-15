@@ -152,7 +152,7 @@ export default function Configuration() {
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 18 }}
           >
             {tr('Choisir la', 'Choose the')}{' '}
-            <span style={{ color: accent }}>{tr('structure.', 'structure.')}</span>
+            <span style={{ color: accent }}>{tr('structure', 'structure')}</span>
           </div>
         </motion.div>
 

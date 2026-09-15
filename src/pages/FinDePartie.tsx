@@ -363,7 +363,7 @@ export default function FinDePartie() {
             }}
           >
             <span style={{ display: 'block' }}>{tr('Le cadavre', 'The corpse')}</span>
-            <span style={{ display: 'block', color: accent }}>{tr('est exquis.', 'is exquisite.')}</span>
+            <span style={{ display: 'block', color: accent }}>{tr('est exquis', 'is exquisite')}</span>
           </div>
         </motion.div>
 

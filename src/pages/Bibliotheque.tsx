@@ -145,7 +145,7 @@ export default function Bibliotheque() {
             className="font-fraunces font-black leading-tight mb-1"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            {tr('Mes', 'My')} <span style={{ color: accent }}>{tr('poèmes.', 'poems.')}</span>
+            {tr('Mes', 'My')} <span style={{ color: accent }}>{tr('poèmes', 'poems')}</span>
           </div>
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85, marginBottom: 10,

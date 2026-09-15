@@ -61,7 +61,7 @@ export default function Accueil() {
   const annee = toRomain(new Date().getFullYear())
   const idxBiais = seance?.idxBiais ?? -1
   const angleBiais = seance?.angleBiais ?? 0
-  const letters = 'Exquis.'
+  const letters = 'Exquis'
 
   const bg = c?.bg ?? '#0f0805'
   const ui: React.CSSProperties = { fontFamily: "'Raleway', sans-serif" }

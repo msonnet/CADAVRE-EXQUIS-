@@ -191,7 +191,7 @@ export function TutorielFete({ visible, accent, encre, bg }: { visible: boolean;
             className="font-fraunces font-black"
             style={{ fontSize: 'clamp(1.3rem, 6vw, 1.7rem)', color: encre, lineHeight: 1.1, marginBottom: 5 }}
           >
-            {tr('Guide terminé.', 'Guide complete.')}
+            {tr('Guide terminé', 'Guide complete')}
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.8 }}>
             {tr('Le jeu est à toi — bonne écriture.', 'The game is yours — happy writing.')}

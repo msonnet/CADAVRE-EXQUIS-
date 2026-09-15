@@ -6,15 +6,16 @@ async function skipOnboarding(page: import('@playwright/test').Page) {
 }
 
 test.describe('Accueil', () => {
-  test('page loads with Exquis. title and CTA buttons', async ({ page }) => {
+  test('page loads with Exquis title and CTA buttons', async ({ page }) => {
     await skipOnboarding(page)
     await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
 
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    // The large "Exquis." typographic title should be visible
-    await expect(page.locator('text=Exquis.')).toBeVisible({ timeout: 5000 })
+    // The large "Exquis" typographic title should be visible. The word
+    // carries no full stop: at 106px the Bodoni period reads as a red disc.
+    await expect(page.locator('text=Exquis')).toBeVisible({ timeout: 5000 })
 
     // Primary CTAs
     await expect(page.locator('button', { hasText: 'Cadavre Écrit' })).toBeVisible()

@@ -116,7 +116,7 @@ export default function Reglages() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 4 }}
           >
-            {tr('Préférences', 'Session')} <span style={{ color: accent }}>{tr('de séance.', 'preferences.')}</span>
+            {tr('Préférences', 'Session')} <span style={{ color: accent }}>{tr('de séance', 'preferences')}</span>
           </div>
         </motion.div>
 

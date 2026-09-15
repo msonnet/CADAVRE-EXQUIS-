@@ -165,7 +165,7 @@ function renderConsigneTitre(consigne: string, accent: string): React.ReactNode 
   const idx = consigne.indexOf(' ')
   if (idx === -1) {
     const cap = consigne.charAt(0).toUpperCase() + consigne.slice(1)
-    return <span style={{ color: accent }}>{cap}.</span>
+    return <span style={{ color: accent }}>{cap}</span>
   }
   const article = consigne.slice(0, idx + 1)
   const keyword = consigne.slice(idx + 1)
@@ -173,7 +173,6 @@ function renderConsigneTitre(consigne: string, accent: string): React.ReactNode 
     <>
       {article.charAt(0).toUpperCase() + article.slice(1)}
       <span style={{ color: accent }}>{keyword}</span>
-      {'.'}
     </>
   )
 }
@@ -751,8 +750,8 @@ export default function Jeu() {
           transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
         >
           {multiJoueurs
-            ? `${tr('Joueur', 'Player')} ${participantActuel.num}.`
-            : `${tr('Acte', 'Act')} ${toRomain(caseIndex + 1)}.`}
+            ? `${tr('Joueur', 'Player')} ${participantActuel.num}`
+            : `${tr('Acte', 'Act')} ${toRomain(caseIndex + 1)}`}
         </motion.p>
         {multiJoueurs ? (
           <motion.div

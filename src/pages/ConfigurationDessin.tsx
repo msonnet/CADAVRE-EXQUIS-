@@ -104,7 +104,7 @@ export default function ConfigurationDessin() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 6 }}
           >
-            {tr('Préparer le', 'Prepare the')} <span style={{ color: accent }}>{tr('rituel.', 'ritual.')}</span>
+            {tr('Préparer le', 'Prepare the')} <span style={{ color: accent }}>{tr('rituel', 'ritual')}</span>
           </div>
         </motion.div>
 

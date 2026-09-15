@@ -568,7 +568,7 @@ export default function Galerie() {
             className="font-fraunces font-black leading-tight mb-1"
             style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
-            {tr('Créations', 'Shared')} <span style={{ color: accent }}>{tr('partagées.', 'creations.')}</span>
+            {tr('Créations', 'Shared')} <span style={{ color: accent }}>{tr('partagées', 'creations')}</span>
           </div>
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 18,

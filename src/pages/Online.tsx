@@ -242,7 +242,7 @@ export default function Online() {
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 12 }}
           >
-            {tr('Jouer à plusieurs.', 'Play together.')}
+            {tr('Jouer à plusieurs', 'Play together')}
           </div>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, lineHeight: 1.65, marginBottom: 28 }}>
             {tr("Chaque joueur sur son propre appareil. Tu composes un cadavre exquis à plusieurs, chacun ignorant ce qu'ont écrit les autres. La révélation est collective.", 'Each player on their own device. You compose an exquisite corpse together, each unaware of what the others have written. The reveal is collective.')}
