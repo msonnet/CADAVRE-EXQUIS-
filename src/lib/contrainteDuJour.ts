@@ -36,13 +36,22 @@ import { langueActuelle } from '../i18n'
  * répartit les voix de l'Atelier. Même chose pour les amorces : aucune ne
  * revient avant que son sac ne soit vide.
  *
- * ── Pourquoi zéro voix ────────────────────────────────────────────────────
+ * ── Pourquoi des voix, et non zéro ────────────────────────────────────────
  *
- * Le cadavre du jour n'appelle pas l'IA, donc il n'entame jamais l'encrier.
- * Un rituel quotidien qui grignoterait la réserve d'essai chaque matin
- * serait une trappe : le joueur le plus fidèle serait le premier puni. Et
- * écrire tous les fragments soi-même sans jamais se relire est de toute
- * façon la forme la plus pure du jeu.
+ * Premier jet : zéro voix, pour que le rituel n'entame jamais l'encrier.
+ * C'était une bonne réponse économique et une mauvaise réponse de jeu — un
+ * cadavre exquis écrit d'une seule main n'est pas un cadavre exquis, c'est
+ * un exercice. Le rendez-vous quotidien doit être le JEU, pas sa version
+ * amoindrie.
+ *
+ * Le nombre de voix est donc lui aussi tiré du jour : la table change d'un
+ * matin à l'autre, comme l'amorce.
+ *
+ * Conséquence assumée, et elle se règle ailleurs : une partie avec voix se
+ * décompte de l'encrier comme toutes les autres (`ouvrirPartieIA`). Si le
+ * rituel doit rester gratuit au-delà de la réserve d'essai, c'est un acte
+ * `cadavre_jour` exempté et plafonné à un par jour qu'il faut ajouter dans
+ * `api/_acces.ts`, sur le modèle d'`avatar` — pas une exception ici.
  */
 
 export interface ContrainteDuJour {
@@ -57,6 +66,8 @@ export interface ContrainteDuJour {
    * même jour incomparables.
    */
   nbCases: number
+  /** Combien de voix t'accompagnent. Jamais zéro : c'est un cadavre exquis. */
+  voixIA: number
 }
 
 /** Les trois structures du cadavre écrit. L'Atelier n'en est pas : une séance
@@ -287,7 +298,14 @@ export function contrainteDuJour(d = new Date()): ContrainteDuJour {
     ? VERS_LIBRE_MIN + (hachage(`longueur:${jour}`) % (VERS_LIBRE_MAX - VERS_LIBRE_MIN + 1))
     : (structureId === 'phrase-simple' ? 3 : 5)
 
-  return { jour, structureId, amorce, nbCases }
+  // Une à trois voix, bornées par la table : au-delà de la moitié des cases
+  // restantes, le joueur ne tiendrait plus la plume assez souvent pour que
+  // le poème soit aussi le sien.
+  const placesLibres = Math.max(1, nbCases - 1)
+  const maxVoix = Math.max(1, Math.min(3, Math.ceil(placesLibres / 2)))
+  const voixIA = 1 + (hachage(`voix:${jour}`) % maxVoix)
+
+  return { jour, structureId, amorce, nbCases, voixIA }
 }
 
 /** Combien d'amorces par structure — le test s'en sert, et le rythme aussi. */

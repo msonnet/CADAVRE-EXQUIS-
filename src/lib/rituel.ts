@@ -14,13 +14,22 @@ import { contrainteDuJour, jourLocal, type ContrainteDuJour } from './contrainte
  * d'états : il croit reprendre, et il a raison — la première main a bien été
  * jouée, simplement elle l'a été par le jour.
  *
- * ── Zéro voix, et c'est structurel ────────────────────────────────────────
+ * ── Des voix, parce que c'est un cadavre exquis ───────────────────────────
  *
- * `voixIA: 0`. Le cadavre du jour n'appelle jamais l'IA, donc n'entame
- * jamais l'encrier. Un rituel quotidien qui grignoterait la réserve d'essai
- * chaque matin punirait le joueur le plus fidèle — et écrire tous les
- * fragments soi-même sans se relire est de toute façon la forme la plus pure
- * du jeu.
+ * Premier jet : `voixIA: 0`, pour que le rituel n'entame jamais l'encrier.
+ * Bonne réponse économique, mauvaise réponse de jeu — un cadavre exquis
+ * écrit d'une seule main est un exercice, pas le jeu. Le rendez-vous
+ * quotidien doit être le jeu entier.
+ *
+ * La partie se règle donc à son ouverture comme toutes les autres, par
+ * `ouvrirPartieIA`, et c'est l'appelant qui s'en charge : ce module prépare,
+ * il ne paie pas. Si le rituel doit rester gratuit au-delà de la réserve
+ * d'essai, la réponse est un acte `cadavre_jour` exempté et plafonné à un
+ * par jour dans `api/_acces.ts`, sur le modèle d'`avatar`.
+ *
+ * `premierJoueur: 'ia'` : l'amorce occupe la première place de la séquence,
+ * et cette place est celle d'une voix. C'est juste — l'amorce est bien une
+ * main qui n'est pas la tienne.
  */
 
 /** Le jour dont le cadavre est fait — local, comme la série et l'ambiance. */
@@ -64,10 +73,10 @@ export function ouvrirRituel(c: ContrainteDuJour = contrainteDuJour()): string {
   const config: ConfigPartie = {
     structureId: c.structureId,
     visibilite: 'aveugle',
-    premierJoueur: 'humain',
+    premierJoueur: 'ia',
     mode: 'standard',
     joueursHumains: 1,
-    voixIA: 0,
+    voixIA: c.voixIA,
   }
 
   // L'amorce est une case scellée, pas un texte de départ à modifier : la

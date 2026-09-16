@@ -31,13 +31,14 @@ test('l’accueil mène au cadavre du jour, et la contrainte y est écrite', asy
   test.setTimeout(60_000)
   await ouvrir(page)
 
+  // Le sceau tient la colonne du milieu, entre les quatre entrées du pied.
   await page.getByRole('button', { name: /cadavre du jour|cadavre of the day/i }).click()
   await page.waitForTimeout(900)
 
   await expect(page.getByText(/— LA CONTRAINTE —|— TODAY’S CONSTRAINT —/)).toBeVisible()
-  // Rien n'est décompté : c'est la promesse qui rend le rituel tenable tous
-  // les jours, et elle doit être écrite, pas seulement vraie.
-  await expect(page.getByText(/RIEN N’EST DÉCOMPTÉ|NOTHING IS COUNTED/)).toBeVisible()
+  // Les voix sont annoncées : le rendez-vous est un cadavre exquis, pas un
+  // exercice d'écriture en solitaire.
+  await expect(page.getByText(/VOIX T’ACCOMPAGNE|VOICES? JOINS? YOU/)).toBeVisible()
   await expect(page.getByRole('button', { name: /Écrire le cadavre du jour|Write today’s cadavre/i })).toBeVisible()
 })
 
@@ -53,7 +54,9 @@ test('la contrainte ouvre une partie déjà amorcée, au bon compte', async ({ p
   expect(attendu, 'la page annonce un nombre de morceaux').toBeGreaterThan(1)
 
   await page.getByRole('button', { name: /Écrire le cadavre du jour|Write today’s cadavre/i }).click()
-  await page.waitForURL('**/jeu', { timeout: 10_000 })
+  // La partie se règle à son ouverture : le passage par l'encrier précède la
+  // navigation. Registre injoignable ici (Supabase bouchonné) — on passe.
+  await page.waitForURL('**/jeu', { timeout: 15_000 })
   await page.waitForTimeout(1200)
 
   // …doit être ce que la partie joue. L'amorce occupe la case 1, donc le
@@ -67,7 +70,8 @@ test('la contrainte ouvre une partie déjà amorcée, au bon compte', async ({ p
   expect(brouillon.total, 'le total vient de la contrainte, pas d’un tirage').toBe(attendu)
   expect(brouillon.cases, 'une seule case est déjà remplie').toHaveLength(1)
   expect(brouillon.cases[0].donne, 'elle est marquée comme donnée, pas écrite').toBe(true)
-  expect(brouillon.config.voixIA, 'aucune voix IA — rien ne se décompte').toBe(0)
+  expect(brouillon.config.voixIA, 'des voix accompagnent le joueur').toBeGreaterThanOrEqual(1)
+  expect(brouillon.config.voixIA, 'mais jamais au point de lui prendre la plume').toBeLessThanOrEqual(3)
 })
 
 test('la série ne compte plus les ouvertures', async ({ page }) => {

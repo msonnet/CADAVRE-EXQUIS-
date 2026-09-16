@@ -223,32 +223,6 @@ export default function Accueil() {
           </div>
         )}
 
-        {/* ── LE CADAVRE DU JOUR ──
-             En tête des actions, et pas dans un coin de la Galerie où il
-             vivait jusqu'ici : un rendez-vous quotidien qu'il faut aller
-             chercher n'est pas un rendez-vous. Il porte sa propre marque
-             tant qu'il n'est pas écrit — la seule chose de cet écran qui
-             change d'un jour à l'autre pour une raison. */}
-        <button
-          onClick={() => nav('/poeme-du-jour')}
-          style={{
-            width: '100%', marginBottom: 6,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-            background: 'transparent', color: encre,
-            ...ui, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
-            padding: '0.7em 0.9em',
-            border: `1px solid ${rituelFait ? `${encre}28` : `${accent}80`}`,
-            borderRadius: 3, cursor: 'pointer',
-          }}
-        >
-          <span style={{ opacity: rituelFait ? 0.55 : 0.9 }}>
-            {tr('Le cadavre du jour', 'Cadavre of the day')}
-          </span>
-          <span style={{ color: rituelFait ? encre : accent, opacity: rituelFait ? 0.5 : 1 }}>
-            {rituelFait ? tr('ÉCRIT', 'WRITTEN') : '✧'}
-          </span>
-        </button>
-
         {/* ── CTA ── */}
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -294,17 +268,23 @@ export default function Accueil() {
           </button>
         </div>
 
-        {/* ── FOOTER ── */}
+        {/* ── FOOTER ──
+             Le cadavre du jour tient la colonne du MILIEU, entre les quatre
+             entrées du pied. Il occupait d'abord toute la largeur au-dessus
+             des boutons de jeu, où il pesait autant que « Cadavre écrit » —
+             or ce n'est pas un mode de jeu de plus, c'est un rendez-vous. Au
+             centre, il est vu sans rien écraser : le sceau d'un almanach au
+             milieu de sa page. */}
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          gap: '4px 0', paddingBottom: 4,
+          display: 'grid', gridTemplateColumns: '1fr auto 1fr',
+          gap: '4px 0', paddingBottom: 4, alignItems: 'center',
         }}>
           {[
-            { label: tr('Recueil', 'Collection'), path: '/bibliotheque' },
-            { label: tr('Galerie', 'Gallery'),  path: '/galerie',       align: 'right' },
-            { label: tr('Règles', 'Rules'),   path: '/aide' },
-            { label: tr('Réglages', 'Settings'), path: '/reglages',      align: 'right' },
-          ].map(({ label, path, align }) => (
+            { label: tr('Recueil', 'Collection'), path: '/bibliotheque', col: 1, row: 1 },
+            { label: tr('Galerie', 'Gallery'),  path: '/galerie',       col: 3, row: 1, align: 'right' },
+            { label: tr('Règles', 'Rules'),   path: '/aide',          col: 1, row: 2 },
+            { label: tr('Réglages', 'Settings'), path: '/reglages',      col: 3, row: 2, align: 'right' },
+          ].map(({ label, path, align, col, row }) => (
             <button
               key={path}
               onClick={() => nav(path)}
@@ -314,16 +294,57 @@ export default function Accueil() {
                 background: 'none', border: 'none', cursor: 'pointer',
                 textAlign: (align as 'right') ?? 'left',
                 padding: '10px 0',
+                gridColumn: col, gridRow: row,
               }}
             >
               {label}
             </button>
           ))}
+
+          {/* Le sceau du jour. Le quantième en Bodoni dit « aujourd'hui »
+              sans avoir à l'écrire — c'est le procédé de l'en-tête de la
+              revue, « N° 1.42 · MMXXVI ». En accent tant qu'il n'est pas
+              écrit, éteint ensuite. */}
+          <button
+            onClick={() => nav('/poeme-du-jour')}
+            aria-label={rituelFait
+              ? tr('Le cadavre du jour, déjà écrit', 'Today’s cadavre, already written')
+              : tr('Écrire le cadavre du jour', 'Write today’s cadavre')}
+            title={tr('Le cadavre du jour', 'Cadavre of the day')}
+            style={{
+              gridColumn: 2, gridRow: '1 / 3',
+              justifySelf: 'center', alignSelf: 'center',
+              width: 52, height: 52, borderRadius: '50%',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 1,
+              background: 'none', cursor: 'pointer',
+              border: `1px solid ${rituelFait ? `${encre}24` : accent}`,
+              transition: 'border-color 0.3s',
+            }}
+          >
+            <span
+              className="font-fraunces font-black"
+              style={{
+                fontSize: 19, lineHeight: 1,
+                color: rituelFait ? encre : accent,
+                opacity: rituelFait ? 0.42 : 1,
+              }}
+            >
+              {new Date().getDate()}
+            </span>
+            <span style={{
+              ...ui, fontSize: 7, letterSpacing: '0.18em',
+              color: rituelFait ? encre : accent,
+              opacity: rituelFait ? 0.32 : 0.75,
+            }}>
+              {rituelFait ? tr('ÉCRIT', 'DONE') : '✧'}
+            </span>
+          </button>
           {/* Entrée discrète — l'atelier du recueil */}
           <button
             onClick={() => nav('/atelier')}
             style={{
-              ...ui, gridColumn: '1 / -1', fontSize: 11, letterSpacing: '0.3em',
+              ...ui, gridColumn: '1 / -1', gridRow: 3, fontSize: 11, letterSpacing: '0.3em',
               textTransform: 'uppercase', color: encre, opacity: 0.35,
               background: 'none', border: 'none', cursor: 'pointer',
               textAlign: 'center', padding: '7px 0 2px',

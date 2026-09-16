@@ -87,6 +87,34 @@ describe('l’amorce tient dans sa case', () => {
   })
 })
 
+describe('le rendez-vous est un cadavre exquis, pas un exercice', () => {
+  it('convoque toujours au moins une voix', () => {
+    // Premier jet : zéro voix, pour ne jamais entamer l'encrier. Bonne
+    // réponse économique, mauvaise réponse de jeu — un cadavre exquis écrit
+    // d'une seule main n'en est pas un.
+    for (const c of serie(3 * 365)) {
+      expect(c.voixIA, `${c.jour}`).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('ne prend jamais la plume au joueur', () => {
+    // Au-delà de la moitié des cases restantes, le poème cesserait d'être
+    // aussi le sien. `buildSequence` entrelace : plus de voix que de cases
+    // libres et le médium ne jouerait presque plus.
+    for (const c of serie(3 * 365)) {
+      const libres = c.nbCases - 1   // l'amorce occupe la première
+      expect(c.voixIA, `${c.jour} : ${c.voixIA} voix pour ${libres} cases libres`)
+        .toBeLessThanOrEqual(Math.max(1, Math.ceil(libres / 2)))
+      expect(c.voixIA).toBeLessThanOrEqual(3)
+    }
+  })
+
+  it('ne fige pas la table sur un seul nombre', () => {
+    const nombres = new Set(serie(3 * 365).map(c => c.voixIA))
+    expect(nombres.size, 'la table change d’un matin à l’autre').toBeGreaterThanOrEqual(2)
+  })
+})
+
 describe('les deux langues reçoivent la MÊME contrainte', () => {
   it('les sacs français et anglais ont la même taille, structure par structure', () => {
     // C'est ce qui garantit qu'un index tiré en français désigne l'amorce

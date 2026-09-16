@@ -12,6 +12,9 @@ import { tr, langueActuelle } from '../i18n'
 import { contrainteDuJour, jourLocal } from '../lib/contrainteDuJour'
 import { ouvrirRituel, rituelDuJourFait } from '../lib/rituel'
 import { lireSerie } from '../utils/streak'
+import MurAbonnement from '../components/MurAbonnement'
+import SoldeEncrier from '../components/SoldeEncrier'
+import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
 
 /**
  * Le cadavre du jour.
@@ -69,6 +72,8 @@ export default function PoemeDuJour() {
   const [fait] = useState(() => rituelDuJourFait())
   const [serie] = useState(() => lireSerie())
   const [autres, setAutres] = useState<GalleryItem[] | null>(null)
+  const [refus, setRefus] = useState<Refus | null>(null)
+  const [ouverture, setOuverture] = useState(false)
 
   const structure = getStructure(contrainte.structureId)
   const nomStructure = structure.nom
@@ -102,8 +107,18 @@ export default function PoemeDuJour() {
     return () => { vivant = false }
   }, [])
 
-  function ecrire() {
+  // Le cadavre du jour convoque des voix : il se règle à son ouverture comme
+  // toute partie avec IA, jamais en cours de route. Registre injoignable :
+  // on laisse passer, comme partout ailleurs.
+  async function ecrire() {
+    if (ouverture) return
     jouer('demarrage')
+    setOuverture(true)
+    const partieId = nouvellePartieId()
+    const refuse = await ouvrirPartieIA(partieId, 'jour')
+    setOuverture(false)
+    if (refuse) { setRefus(refuse); return }
+    deposerRecu(partieId)
     navigate(ouvrirRituel(contrainte))
   }
 
@@ -172,8 +187,10 @@ export default function PoemeDuJour() {
             </div>
           </div>
           <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5, letterSpacing: '0.14em' }}>
-            {tr('DONNÉ À TOUS · AUCUNE VOIX IA · RIEN N’EST DÉCOMPTÉ',
-                'GIVEN TO ALL · NO AI VOICE · NOTHING IS COUNTED')}
+            {tr(
+              `DONNÉ À TOUS · ${contrainte.voixIA === 1 ? 'UNE VOIX T’ACCOMPAGNE' : `${toRomain(contrainte.voixIA)} VOIX T’ACCOMPAGNENT`}`,
+              `GIVEN TO ALL · ${contrainte.voixIA === 1 ? 'ONE VOICE JOINS YOU' : `${contrainte.voixIA} VOICES JOIN YOU`}`,
+            )}
           </div>
         </motion.div>
 
@@ -207,16 +224,23 @@ export default function PoemeDuJour() {
               </button>
             </>
           ) : (
-            <button
-              onClick={ecrire}
-              style={{
-                width: '100%', background: encre, color: bg,
-                ...mono, fontSize: 16, letterSpacing: '0.12em', textTransform: 'uppercase',
-                padding: '0.9em 1em', border: 'none', borderRadius: 3, cursor: 'pointer',
-              }}
-            >
-              {tr('Écrire le cadavre du jour', 'Write today’s cadavre')} ✧
-            </button>
+            <>
+              <button
+                onClick={ecrire}
+                disabled={ouverture}
+                style={{
+                  width: '100%', background: encre, color: bg,
+                  ...mono, fontSize: 16, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  padding: '0.9em 1em', border: 'none', borderRadius: 3,
+                  cursor: ouverture ? 'default' : 'pointer', opacity: ouverture ? 0.7 : 1,
+                }}
+              >
+                {tr('Écrire le cadavre du jour', 'Write today’s cadavre')} ✧
+              </button>
+              {/* Le solde sous le bouton, comme partout où une voix se paie :
+                  le joueur apprenait la limite au refus. */}
+              <SoldeEncrier acte="partie_ia" encre={encre} accent={accent} style={{ marginTop: 8 }} />
+            </>
           )}
         </motion.div>
 
@@ -273,6 +297,16 @@ export default function PoemeDuJour() {
           {jourLocal()}
         </div>
       </div>
+
+      <MurAbonnement
+        visible={refus !== null}
+        acte={refus?.acte ?? 'partie_ia'}
+        motif={refus?.motif ?? 'essai_epuise'}
+        plafond={refus?.plafond}
+        onFermer={() => setRefus(null)}
+        onAbonne={() => { setRefus(null); ecrire() }}
+        accent={accent} encre={encre} bg={bg}
+      />
     </PageTransition>
   )
 }
