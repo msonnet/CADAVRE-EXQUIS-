@@ -88,3 +88,97 @@ test('la série ne compte plus les ouvertures', async ({ page }) => {
   const serie = await page.evaluate(() => localStorage.getItem('cadavre-serie'))
   expect(serie, 'aucune série n’est inscrite par la seule ouverture').toBeNull()
 })
+
+const AMORCE_MOCK = 'une amorce de ce jour'
+function jourLocalTest(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function poemeDuJour(pseudo: string, suite: string[]) {
+  return {
+    id: 'p' + pseudo, type: 'poeme', titre: null,
+    payload: JSON.stringify({
+      structureId: 'vers-libre', langue: 'fr',
+      rituel: { jour: jourLocalTest(), amorce: AMORCE_MOCK },
+      cases: [{ texte: AMORCE_MOCK }, ...suite.map(t => ({ texte: t }))],
+    }),
+    image_url: null, author_pseudo: pseudo, author_avatar: null,
+    created_at: new Date().toISOString(),
+  }
+}
+
+test('la colonne ne montre que la MÊME base, et rien d’autre', async ({ page }) => {
+  test.setTimeout(60_000)
+  await page.addInitScript(() => localStorage.setItem('cadavre-onboarding-done', '1'))
+  await page.route('**/rest/v1/gallery**', r => r.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify([
+      poemeDuJour('Nadja', ['un chien traverse le vestibule']),
+      poemeDuJour('Desnos', ['le sel dort dans les poches']),
+      // Publié aujourd'hui, mais SANS la marque : une séance d'Atelier, une
+      // partie libre. C'est exactement ce que l'ancienne requête ramassait.
+      {
+        id: 'intrus', type: 'poeme', titre: null,
+        payload: JSON.stringify({ structureId: 'atelier', langue: 'fr', cases: [{ texte: 'un poème sans rapport' }] }),
+        image_url: null, author_pseudo: 'Intrus', author_avatar: null,
+        created_at: new Date().toISOString(),
+      },
+    ]),
+  }))
+  await page.route('**/supabase.co/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
+
+  await page.goto('/poeme-du-jour')
+  await page.waitForLoadState('networkidle')
+  await franchir(page)
+  await page.waitForTimeout(1200)
+
+  await expect(page.getByText('NADJA')).toBeVisible()
+  await expect(page.getByText('DESNOS')).toBeVisible()
+  await expect(page.getByText('INTRUS'), 'un poème sans la marque n’est pas du rendez-vous').toHaveCount(0)
+  await expect(page.getByText('un poème sans rapport')).toHaveCount(0)
+
+  // L'amorce est hissée UNE fois et retirée de chaque suite : c'est la
+  // divergence qu'on vient lire, pas dix fois le même tronc.
+  await expect(page.getByText('un chien traverse le vestibule')).toBeVisible()
+  expect(
+    await page.evaluate(t => (document.body.innerText.match(new RegExp(t, 'g')) ?? []).length, AMORCE_MOCK),
+    'l’amorce n’apparaît qu’une fois dans la colonne',
+  ).toBeLessThanOrEqual(1)
+})
+
+test('la même table est servie à tout le monde', async ({ page }) => {
+  test.setTimeout(120_000)
+
+  // `voixParSlot` n'est écrit au brouillon qu'une fois un tour joué : on
+  // ouvre donc le rituel et on scelle un fragment, deux fois, le même jour.
+  async function tableApresUnTour(): Promise<Record<string, string>> {
+    await page.evaluate(() => {
+      localStorage.removeItem('brouillon-actuel')
+      localStorage.removeItem('cadavre-rituel-fait')
+      sessionStorage.clear()
+    })
+    await page.goto('/poeme-du-jour')
+    await page.waitForLoadState('networkidle')
+    await franchir(page)
+    await page.waitForTimeout(800)
+    await page.getByRole('button', { name: /Écrire le cadavre du jour|Write today’s cadavre/i }).click()
+    await page.waitForURL('**/jeu', { timeout: 15_000 })
+    const champ = page.locator('textarea, input[type="text"]').first()
+    await champ.waitFor({ timeout: 15_000 })
+    await champ.fill('le vernis craque')
+    await page.locator('button[aria-label="Sceller cette voix et passer à la suivante"]').click()
+    await page.waitForTimeout(1500)
+    return page.evaluate(() =>
+      JSON.parse(localStorage.getItem('brouillon-actuel') ?? 'null')?.voixParSlot ?? {})
+  }
+
+  await ouvrir(page, '/poeme-du-jour')
+  const a = await tableApresUnTour()
+  const b = await tableApresUnTour()
+
+  expect(Object.keys(a).length, 'des voix ont été attribuées').toBeGreaterThan(0)
+  // Les personas étaient tirées par joueur, fenêtre glissante : deux parties
+  // du même jour convoquaient deux tables. On comparait des tirages, pas des
+  // mains.
+  expect(b, 'la table du jour ne dépend pas du tirage du joueur').toEqual(a)
+})

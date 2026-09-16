@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  contrainteDuJour, jourLocal, tailleDuSac, STRUCTURES_DU_RITUEL,
+  contrainteDuJour, jourLocal, tailleDuSac, voixDuJour, STRUCTURES_DU_RITUEL,
   type ContrainteDuJour,
 } from '../lib/contrainteDuJour'
 import { STRUCTURES, STRUCTURES_EN, getStructure } from '../structures'
@@ -112,6 +112,38 @@ describe('le rendez-vous est un cadavre exquis, pas un exercice', () => {
   it('ne fige pas la table sur un seul nombre', () => {
     const nombres = new Set(serie(3 * 365).map(c => c.voixIA))
     expect(nombres.size, 'la table change d’un matin à l’autre').toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('la table du jour est la même pour tout le monde', () => {
+  const VOIX = Array.from({ length: 46 }, (_, i) => `v${i}`)
+
+  it('rend la même table pour un jour donné', () => {
+    // Les personas étaient tirées par joueur : deux poèmes du même jour
+    // divergeaient surtout parce que le TIRAGE avait différé. On comparait
+    // des tirages, pas des mains.
+    expect(voixDuJour(VOIX, 3, '2026-09-16')).toEqual(voixDuJour(VOIX, 3, '2026-09-16'))
+  })
+
+  it('change de table d’un jour à l’autre', () => {
+    const jours = ['2026-09-16', '2026-09-17', '2026-09-18', '2026-09-19']
+    const tables = new Set(jours.map(j => voixDuJour(VOIX, 2, j).join('|')))
+    expect(tables.size, 'la table ne se fige pas').toBeGreaterThanOrEqual(3)
+  })
+
+  it('ne convoque jamais deux fois la même voix à une table', () => {
+    for (const j of ['2026-09-16', '2026-11-01', '2027-03-08']) {
+      for (const n of [1, 2, 3]) {
+        const table = voixDuJour(VOIX, n, j)
+        expect(table).toHaveLength(n)
+        expect(new Set(table).size, `${j} · ${n} voix`).toBe(n)
+      }
+    }
+  })
+
+  it('ne rend rien quand il n’y a rien à convoquer', () => {
+    expect(voixDuJour(VOIX, 0, '2026-09-16')).toEqual([])
+    expect(voixDuJour([], 3, '2026-09-16')).toEqual([])
   })
 })
 

@@ -301,10 +301,16 @@ export default function Accueil() {
             </button>
           ))}
 
-          {/* Le sceau du jour. Le quantième en Bodoni dit « aujourd'hui »
-              sans avoir à l'écrire — c'est le procédé de l'en-tête de la
-              revue, « N° 1.42 · MMXXVI ». En accent tant qu'il n'est pas
-              écrit, éteint ensuite. */}
+          {/* Le sceau du jour.
+              Premier jet : le QUANTIÈME en Bodoni, « 16 », au motif qu'il
+              dirait « aujourd'hui » sans l'écrire, comme le « N° 1.42 ·
+              MMXXVI » de l'en-tête. Illisible : entre RECUEIL, GALERIE,
+              RÈGLES et RÉGLAGES, un nombre nu peut être un compte, une
+              version, un numéro de feuillet. Le procédé ne marche dans
+              l'en-tête que parce que le mot « N° » l'accompagne.
+              Le mot d'abord, donc. L'état tient dans la marque : ✧ en
+              attente, ✦ une fois écrit — c'est déjà le vocabulaire de la
+              série, « ✦ IIᵉ nuit de suite ». */}
           <button
             onClick={() => nav('/poeme-du-jour')}
             aria-label={rituelFait
@@ -322,22 +328,19 @@ export default function Accueil() {
               transition: 'border-color 0.3s',
             }}
           >
-            <span
-              className="font-fraunces font-black"
-              style={{
-                fontSize: 19, lineHeight: 1,
-                color: rituelFait ? encre : accent,
-                opacity: rituelFait ? 0.42 : 1,
-              }}
-            >
-              {new Date().getDate()}
+            <span style={{
+              fontSize: 13, lineHeight: 1,
+              color: rituelFait ? encre : accent,
+              opacity: rituelFait ? 0.42 : 1,
+            }}>
+              {rituelFait ? '✦' : '✧'}
             </span>
             <span style={{
-              ...ui, fontSize: 7, letterSpacing: '0.18em',
+              ...ui, fontSize: 9, letterSpacing: '0.14em', fontWeight: 700,
               color: rituelFait ? encre : accent,
-              opacity: rituelFait ? 0.32 : 0.75,
+              opacity: rituelFait ? 0.42 : 0.9,
             }}>
-              {rituelFait ? tr('ÉCRIT', 'DONE') : '✧'}
+              {tr('JOUR', 'DAY')}
             </span>
           </button>
           {/* Entrée discrète — l'atelier du recueil */}

@@ -41,7 +41,12 @@ import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../li
  */
 
 interface PoemeCase { texte: string }
-interface PoemePayload { cases: PoemeCase[]; structureId: string; langue?: string }
+interface PoemePayload {
+  cases: PoemeCase[]
+  structureId: string
+  langue?: string
+  rituel?: { jour: string; amorce: string }
+}
 
 interface GalleryItem {
   id: string
@@ -97,11 +102,17 @@ export default function PoemeDuJour() {
         .limit(30)
       if (!vivant) return
       const tous = (data ?? []) as GalleryItem[]
+      // On filtre sur la MARQUE, pas sur la seule date de publication. Sans
+      // elle, la page ramassait n'importe quel poème publié aujourd'hui —
+      // une séance d'Atelier à trente-sept vers, une partie libre dans une
+      // autre structure — et la comparaison, qui est tout l'intérêt du
+      // rendez-vous, était cassée à la requête.
       setAutres(tous.filter(it => {
         try {
-          const l = (JSON.parse(it.payload) as PoemePayload).langue === 'en' ? 'en' : 'fr'
-          return l === langueActuelle()
-        } catch { return langueActuelle() === 'fr' }
+          const p = JSON.parse(it.payload) as PoemePayload
+          const l = p.langue === 'en' ? 'en' : 'fr'
+          return l === langueActuelle() && p.rituel?.jour === contrainte.jour
+        } catch { return false }
       }))
     })().catch(() => { if (vivant) setAutres([]) })
     return () => { vivant = false }
@@ -122,15 +133,26 @@ export default function PoemeDuJour() {
     navigate(ouvrirRituel(contrainte))
   }
 
-  function texteDe(it: GalleryItem): string {
+  /**
+   * Ce que cette main a écrit APRÈS l'amorce.
+   *
+   * L'amorce est hissée une seule fois en tête de la colonne : la répéter
+   * dans chaque poème la noierait dans dix paragraphes, et l'on ne verrait
+   * plus diverger — or c'est la divergence qu'on vient lire. Une colonne
+   * d'écarts se lit en trois secondes ; dix paragraphes ne se lisent pas.
+   */
+  function suiteDe(it: GalleryItem): string {
     try {
       const p = JSON.parse(it.payload) as PoemePayload
       const s = getStructure(p.structureId)
+      // La première case est l'amorce, commune à tous : on la retire.
+      const suite = p.cases.slice(1)
+      if (!suite.length) return ''
       return reconstruirePoeme(
-        p.cases.map((x, i) => ({
+        suite.map((x, i) => ({
           numero: i + 1, fonction: '', consigne: '', auteur: 'humain' as const, texte: x.texte, ts: 0,
         })), s)
-    } catch { return it.payload }
+    } catch { return '' }
   }
 
   return (
@@ -272,16 +294,37 @@ export default function PoemeDuJour() {
             </div>
           )}
 
-          {autres?.map((it, i) => (
-            <div key={it.id} style={{ marginBottom: 16, paddingBottom: 14, borderBottom: i < autres.length - 1 ? `0.5px solid ${encre}14` : 'none' }}>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 18, color: encre, lineHeight: 1.55, whiteSpace: 'pre-line', marginBottom: 6 }}>
-                {texteDe(it)}
+          {!!autres?.length && (
+            <>
+              {/* L'amorce, une fois, en tête de la colonne — le tronc commun
+                  d'où partent toutes les branches. */}
+              <div style={{
+                fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
+                fontSize: 17, color: accent, opacity: 0.9, marginBottom: 2,
+              }}>
+                {contrainte.amorce}
               </div>
-              <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5, letterSpacing: '0.1em' }}>
-                {it.author_pseudo.toUpperCase()}
+              <div style={{ borderLeft: `1px solid ${accent}40`, paddingLeft: 12, marginLeft: 3 }}>
+                {autres.map((it, i) => (
+                  <div key={it.id} style={{
+                    paddingTop: 12, paddingBottom: 12,
+                    borderBottom: i < autres.length - 1 ? `0.5px solid ${encre}14` : 'none',
+                  }}>
+                    <div style={{
+                      fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
+                      fontSize: 18, color: encre, lineHeight: 1.55,
+                      whiteSpace: 'pre-line', marginBottom: 5,
+                    }}>
+                      {suiteDe(it)}
+                    </div>
+                    <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5, letterSpacing: '0.1em' }}>
+                      {it.author_pseudo.toUpperCase()}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          ))}
+            </>
+          )}
 
           {!!autres?.length && (
             <button

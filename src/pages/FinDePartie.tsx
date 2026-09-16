@@ -22,6 +22,8 @@ import { attribution, libelleMorceaux } from '../lib/attribution'
 import MainsDuVers from '../components/MainsDuVers'
 import { usePartage } from '../hooks/usePartage'
 import BoutonRecolte from '../components/BoutonRecolte'
+import { publierPoeme } from '../lib/publier'
+import { useAuth } from '../hooks/useAuth'
 import type { Refus } from '../lib/acces'
 
 const STYLES = langueActuelle() === 'en' ? [
@@ -83,6 +85,11 @@ export default function FinDePartie() {
   // chiffre affiché juste avant que l'image soit décomptée serait périmé
   // sous les yeux du joueur.
   const [soldeRelu, setSoldeRelu] = useState(0)
+  // La publication du cadavre du jour, en un geste. Elle vivait à trois
+  // gestes d'ici — fin, Recueil, ouvrir le poème, PUBLIER — ce qui, pour
+  // un rendez-vous quotidien, revient à ne jamais publier. Et sans
+  // publication il n'y a rien à comparer, donc pas de rendez-vous.
+  const [publication, setPublication] = useState<'repos' | 'cours' | 'fait' | 'echec'>('repos')
   const generationPrecedente = useRef(false)
   // Dernier style demandé — le mur le rejoue une fois l'abonnement ouvert
   const styleChoisiRef = useRef<string | null>(null)
@@ -92,6 +99,7 @@ export default function FinDePartie() {
   const correctionPromise = useRef<Promise<string> | null>(null)
   const [pleinEcran, setPleinEcran] = useState(false)
   const partage = usePartage({ libelleCopie: tr('✓ POÈME COPIÉ', '✓ POEM COPIED') })
+  const { profile } = useAuth()
   const { jouer } = useSound()
 
   useEffect(() => {
@@ -536,6 +544,42 @@ export default function FinDePartie() {
           >
             <span>{tr('Sceller au recueil', 'Seal into the collection')}&nbsp;→</span>
           </button>
+
+          {/* Publier le cadavre du jour — ici, et pas trois écrans plus loin.
+              Seulement pour le rendez-vous : une partie ordinaire se publie
+              depuis le recueil, quand on l'a relue et qu'on l'a choisie. */}
+          {poeme?.rituel && (
+            <button
+              onClick={async () => {
+                if (!poeme || publication === 'cours' || publication === 'fait') return
+                setPublication('cours')
+                try {
+                  await publierPoeme(poeme, profile)
+                  jouer('soumettre')
+                  setPublication('fait')
+                } catch {
+                  setPublication('echec')
+                  setTimeout(() => setPublication('repos'), 2600)
+                }
+              }}
+              disabled={publication === 'cours' || publication === 'fait'}
+              style={{
+                width: '100%', marginTop: 8,
+                ...mono, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
+                background: 'transparent',
+                color: publication === 'fait' ? accent : encre,
+                border: `0.5px solid ${publication === 'fait' ? accent : `${encre}30`}`,
+                borderRadius: 3, padding: '0.85em 1em',
+                cursor: publication === 'cours' || publication === 'fait' ? 'default' : 'pointer',
+                opacity: publication === 'cours' ? 0.7 : 1,
+              }}
+            >
+              {publication === 'cours' ? tr('PUBLICATION…', 'PUBLISHING…')
+                : publication === 'fait' ? tr('✦ PUBLIÉ AU CADAVRE DU JOUR', '✦ PUBLISHED TO THE DAY')
+                : publication === 'echec' ? tr('PUBLICATION IMPOSSIBLE — RÉESSAIE', 'COULD NOT PUBLISH — RETRY')
+                : tr('Publier au cadavre du jour', 'Publish to today’s cadavre')}
+            </button>
+          )}
         </motion.div>
 
         {/* ── FOOTER LINKS ──

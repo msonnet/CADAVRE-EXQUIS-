@@ -313,4 +313,28 @@ export function tailleDuSac(structureId: ContrainteDuJour['structureId']): numbe
   return AMORCES_FR[structureId].length
 }
 
+/**
+ * Les voix du jour : les mêmes pour tout le monde.
+ *
+ * Elles étaient tirées par joueur, fenêtre glissante sur les personas
+ * récentes. Deux poèmes du même jour différaient donc surtout parce que le
+ * TIRAGE avait différé — on comparait des tirages, pas des mains. Or c'est
+ * la main qu'on vient lire.
+ *
+ * Tirées du jour, tout le monde s'assoit à la même table : même amorce,
+ * même structure, même longueur, mêmes personas aux mêmes places. La seule
+ * variable restante est humaine.
+ *
+ * Ce qui n'est PAS partagé, et qu'on assume : le TEXTE que chaque voix
+ * écrit, puisqu'il est engendré à chaque appel. C'est le bruit du jeu, pas
+ * un défaut de conception — le partager exigerait un serveur.
+ */
+export function voixDuJour(ids: readonly string[], nb: number, jour: string): string[] {
+  if (!ids.length || nb <= 0) return []
+  const sac = melange([...ids], hachage(`table:${jour}`))
+  // Le sac est plus grand que la table : on prend les premières, sans
+  // répétition tant que la table tient dans le sac.
+  return Array.from({ length: nb }, (_, i) => sac[i % sac.length])
+}
+
 export const STRUCTURES_DU_RITUEL = STRUCTURES

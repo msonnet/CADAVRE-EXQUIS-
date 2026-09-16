@@ -14,6 +14,7 @@ import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
 import { useAuth } from '../hooks/useAuth'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
+import { publierPoeme } from '../lib/publier'
 import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
@@ -137,28 +138,7 @@ export default function PoemeDetail() {
     setPublishing(true)
     setPublishError(false)
     try {
-      const payload = JSON.stringify({
-        cases: poeme.cases,
-        structureId: poeme.structureId,
-        titre: poeme.titre,
-        langue: langueActuelle(),
-      })
-      // L'illustration locale est un dataURL (1080×1440) : on l'héberge sur
-      // Storage plutôt que d'insérer des mégaoctets de base64 en base.
-      let imageUrl = poeme.illustration?.url ?? null
-      if (imageUrl?.startsWith('data:')) {
-        imageUrl = await uploaderImageGalerie(imageUrl, 'illustration')
-      }
-      const { error } = await supabase.from('gallery').insert({
-        type: 'poeme',
-        titre: poeme.titre,
-        payload,
-        image_url: imageUrl,
-        author_pseudo: profile?.pseudo ?? 'Anonyme',
-        author_avatar: profile?.avatar_url ?? null,
-        author_id: profile?.id ?? null,
-      })
-      if (error) throw error
+      await publierPoeme(poeme, profile)
       jouer('soumettre')
       setPublished(true)
       setTimeout(() => setPublished(false), 2000)

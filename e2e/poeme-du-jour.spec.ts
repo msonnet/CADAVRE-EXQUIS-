@@ -13,14 +13,31 @@ import { test, expect, type Page } from '@playwright/test'
  * `cadavre-du-jour.spec.ts`.
  */
 
+/** Le jour local, comme la page le calcule. */
+function jourLocal(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const AMORCE = 'le ciel pèse'
+
+/**
+ * La maquette porte la MARQUE du rendez-vous.
+ *
+ * Sans elle, la page l'écarte — et c'est la correction même : elle filtrait
+ * naguère sur la seule date de publication et ramassait n'importe quel poème
+ * du jour. La première case est l'amorce, commune à tous.
+ */
 const POEME_DU_JOUR = {
   id: 'test-poem-1',
   type: 'poeme',
   titre: 'Le Ciel Brisé',
   payload: JSON.stringify({
     structureId: 'phrase-simple',
+    langue: 'fr',
+    rituel: { jour: jourLocal(), amorce: AMORCE },
     cases: [
-      { texte: 'le ciel pèse' },
+      { texte: AMORCE },
       { texte: 'dévore' },
       { texte: 'une main ouverte' },
     ],
@@ -53,7 +70,9 @@ test.describe('Le cadavre du jour', () => {
     await expect(page.getByText('CADAVRE DU JOUR', { exact: true })).toBeVisible({ timeout: 5000 })
     await expect(page.getByText(/— LES AUTRES MAINS, AUJOURD’HUI —/)).toBeVisible({ timeout: 6000 })
 
-    await expect(page.locator('text=le ciel pèse dévore une main ouverte')).toBeVisible({ timeout: 6000 })
+    // L'amorce est hissée en tête de colonne, pas répétée dans chaque poème :
+    // seule la SUITE de chaque main s'affiche sous elle.
+    await expect(page.locator('text=dévore une main ouverte')).toBeVisible({ timeout: 6000 })
     await expect(page.locator('text=AUTEUR TEST')).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole('button', { name: /TOUTE LA GALERIE/ })).toBeVisible()
   })
