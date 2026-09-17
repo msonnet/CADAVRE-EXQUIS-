@@ -1,5 +1,7 @@
+export { jourLocal } from './tirage'
 import type { StructureId } from '../types'
 import { langueActuelle } from '../i18n'
+import { jourLocal, rangDuJour, hachage, melange, tirageEnFile } from './tirage'
 
 /**
  * La contrainte du jour — le rituel quotidien.
@@ -173,93 +175,6 @@ const AMORCES_EN: Record<ContrainteDuJour['structureId'], string[]> = {
 const VERS_LIBRE_MIN = 4
 const VERS_LIBRE_MAX = 7
 
-/** Le jour local, AAAA-MM-JJ. Même règle que la série et que l'ambiance. */
-export function jourLocal(d = new Date()): string {
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const j = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${j}`
-}
-
-/** Le rang du jour depuis l'époque — l'index qui fait avancer les files. */
-function rangDuJour(jour: string): number {
-  const [a, m, j] = jour.split('-').map(Number)
-  return Math.floor(Date.UTC(a, m - 1, j) / 86_400_000)
-}
-
-/** FNV-1a 32 bits — petit, sans dépendance, et suffisamment mélangeant pour
- *  décider de l'ordre d'un sac de trente entrées. */
-function hachage(s: string): number {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193) >>> 0
-  }
-  return h >>> 0
-}
-
-/** Un tirage reproductible, pour mélanger un sac à partir de son numéro. */
-function melange<T>(items: T[], graine: number): T[] {
-  const out = [...items]
-  let x = (graine || 1) >>> 0
-  for (let i = out.length - 1; i > 0; i--) {
-    // xorshift32 — déterministe, et sans les motifs d'un simple modulo
-    x ^= x << 13; x >>>= 0
-    x ^= x >> 17
-    x ^= x << 5; x >>>= 0
-    const j = x % (i + 1)
-    ;[out[i], out[j]] = [out[j], out[i]]
-  }
-  return out
-}
-
-/**
- * Un sac mélangé dont la tête ne répète jamais la queue du précédent.
- *
- * C'est LE défaut d'une file qui se vide : à l'intérieur d'un sac rien ne se
- * répète, mais au raccord entre deux sacs la dernière entrée de l'un peut
- * reparaître en tête de l'autre. Mesuré sur trente ans avant correction :
- * une amorce revenait parfois au bout d'UN jour, et comme une structure
- * pouvait elle aussi enjamber le raccord, il existait des jours où la
- * contrainte entière se répétait deux matins de suite.
- *
- * On échange donc la tête avec une position tirée du même mélange. Le sac
- * reste complet — aucune entrée n'est perdue, elles changent seulement
- * d'ordre — et le raccord cesse d'être une couture visible.
- *
- * L'échange ne touche JAMAIS la dernière position, et c'est ce qui rend la
- * garantie exacte au lieu d'approchée : pour savoir sur quoi finit le sac
- * précédent, il faut pouvoir le lire sans le corriger à son tour, sinon la
- * lecture appelle la lecture du sac d'avant, indéfiniment. En laissant la
- * queue intacte, un simple mélange suffit à la connaître. Premier jet :
- * l'échange pouvait tomber sur la dernière case, et le garde regardait
- * alors une queue qui n'était pas la vraie.
- */
-function sacSansRaccord<T>(items: T[], sel: string, numeroSac: number): T[] {
-  const graine = hachage(`${sel}:${numeroSac}`)
-  const sac = melange(items, graine)
-  if (items.length < 3) return sac
-  const precedent = melange(items, hachage(`${sel}:${numeroSac - 1}`))
-  if (Object.is(sac[0], precedent[precedent.length - 1])) {
-    // 1 à length-2 : la queue reste où elle est.
-    const j = 1 + (graine % (sac.length - 2))
-    ;[sac[0], sac[j]] = [sac[j], sac[0]]
-  }
-  return sac
-}
-
-/**
- * Le n-ième tirage d'une file qui se vide avant d'être refaite.
- *
- * Aucune entrée ne revient tant que les autres n'ont pas servi — le même
- * raisonnement que `repartirVoix` à l'Atelier, plus la couture du raccord
- * ci-dessus, que l'Atelier n'a pas à traiter parce qu'un poème s'arrête.
- */
-function tirageEnFile<T>(items: T[], rang: number, sel: string): T {
-  const taille = items.length
-  const numeroSac = Math.floor(rang / taille)
-  const position = ((rang % taille) + taille) % taille
-  return sacSansRaccord(items, sel, numeroSac)[position]
-}
 
 /**
  * Le rang de l'amorce, qui n'est PAS celui du jour.

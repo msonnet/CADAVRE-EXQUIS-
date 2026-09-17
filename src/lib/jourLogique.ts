@@ -1,175 +1,189 @@
 /**
- * Le cadavre du jour à plusieurs mains — la logique de distribution.
+ * Le poème du jour — une chaîne, une main, un vers.
  *
  * ── Ce que c'est ──────────────────────────────────────────────────────────
  *
- * Tu n'écris pas un poème : tu écris UNE case d'un poème commencé par
- * quelqu'un d'autre. Tu vois l'amorce du jour — elle est publique — et rien
- * d'autre. Le poème se scelle quand ses cases sont pleines, et tu découvres
- * alors où ta main a atterri, entre des mains que tu ne connaîtras jamais.
+ * UN seul poème par jour et par langue. Chaque main qui passe y ajoute un
+ * vers, à la suite, en ne voyant que le DERNIER MOT du vers précédent. À
+ * minuit la chaîne se scelle et se dévoile : tu apprends alors de quoi tu
+ * faisais partie, et entre quelles mains le hasard t'a mis.
  *
- * C'est le cadavre exquis de 1925 : plusieurs mains, chacune aveugle des
- * autres, une syntaxe correcte et des images impossibles. Les voix de l'IA
- * n'y remplacent pas les joueurs — elles prennent les sièges que personne
- * n'a pris.
+ * Une main, un vers, un jour. C'est la règle entière.
  *
- * ── Le monde vide est une contrainte de conception, pas un problème ───────
+ * ── Pourquoi la chaîne et non des poèmes parallèles ───────────────────────
  *
- * Un poème n'attend JAMAIS quatre humains. Une case ouverte depuis trop
- * longtemps revient à une voix. Avec un seul joueur : une case écrite, trois
- * voix, le poème scellé dans l'heure. Avec six cents : scellé en trois
- * minutes, tout en mains humaines. La forme de l'expérience ne change pas,
- * seule la proportion — et elle s'affiche, « IV mains, dont une humaine ».
+ * Premier modèle : des poèmes de taille fixe, quatre sièges chacun. Défaut
+ * de fond — en fixant la taille, on faisait du NOMBRE de poèmes la variable
+ * d'ajustement. À deux cents joueurs cela donnait trente-trois parties
+ * privées le même jour, et « LE poème du jour » devenait un mensonge.
+ *
+ * On inverse : le poème n'a pas de taille, il grandit avec la foule. Sa
+ * longueur EST le nombre de gens venus. Un joueur, cinq vers ; deux cents
+ * joueurs, deux cents vers. C'est aussi ce qui donne des rendements
+ * croissants — le poème à deux cents mains ne pouvait pas exister à six.
+ *
+ * ── Pourquoi l'écho et non l'aveuglement total ────────────────────────────
+ *
+ * Voir le vers entier qui précède, c'est du renga : chacun répond, le texte
+ * converge, il devient sage. Breton pliait le papier pour empêcher
+ * exactement cela. Mais l'aveuglement TOTAL sur deux cents vers donne un
+ * texte qui se disloque, sans rien à quoi se tenir.
+ *
+ * L'écho — le dernier mot seulement — est le régime que le jeu nomme déjà
+ * (`visibilite: 'dernier-mot'`) : assez pour accrocher, pas assez pour
+ * diriger.
+ *
+ * ── Ce que les voix font, et c'est peu ────────────────────────────────────
+ *
+ * Elles ne comblent plus des sièges toute la journée : elles garantissent un
+ * PLANCHER, et seulement au scellement. Moins de cinq mains sont venues ? on
+ * complète à cinq. Au-delà, aucune voix n'intervient. Quatre appels par jour
+ * au maximum, zéro dès qu'il y a cinq joueurs — l'encrier n'est plus
+ * concerné.
  *
  * ── Ce module ne fait que décider ─────────────────────────────────────────
  *
- * Aucune entrée-sortie, aucune date implicite : on lui passe l'état et
- * l'instant, il répond. C'est ce qui le rend mesurable, et c'est là que
- * toutes les règles du rendez-vous sont écrites — pas dispersées dans des
- * requêtes SQL qu'on ne peut pas éprouver.
+ * Aucune entrée-sortie, aucune date implicite. C'est ce qui le rend
+ * mesurable, et c'est là que toutes les règles du rendez-vous sont écrites
+ * plutôt que dispersées dans des requêtes qu'on ne peut pas éprouver.
  */
 
-/** Une case d'un poème en cours. `main` absente = siège libre. */
-export interface Siege {
+export interface Vers {
   rang: number
-  /** L'identité qui l'a remplie, ou null si elle attend encore. */
+  /** L'identité qui l'a écrit ; null quand c'est une voix. */
   main: string | null
-  /** true si c'est une voix qui a pris le siège. */
   voix?: boolean
-  /** Quand le siège a été rempli. C'est de là que repart l'attente. */
+  voixNom?: string
+  texte: string
   pose?: number
 }
 
-export interface PoemeEnCours {
-  id: string
-  /** Quand le poème a été ouvert. */
-  ouvert: number
-  sieges: Siege[]
+export interface Chaine {
+  jour: string
+  amorce: string
+  vers: Vers[]
+  /** Quand elle a été scellée. Absente tant que la journée court. */
+  scelle?: number
 }
 
 /**
- * Depuis quand ce poème n'a rien reçu.
+ * La longueur minimale d'un poème du jour.
  *
- * Premier jet : l'attente courait depuis l'OUVERTURE du poème. Défaut réel —
- * passé le délai, chaque passage comblait un siège de plus, si bien que trois
- * arrivées rapprochées scellaient d'un coup un poème que personne n'avait
- * délaissé. La promesse « il garde sa chance de recevoir une vraie main au
- * prochain passage » était donc fausse dès que le rendez-vous s'animait —
- * c'est-à-dire exactement quand elle comptait.
- *
- * L'attente repart de la DERNIÈRE main posée : un poème qui avance n'est
- * jamais comblé, un poème délaissé l'est douze minutes après son dernier
- * signe de vie.
+ * C'est le seul endroit où les voix interviennent, et seulement au
+ * scellement : en dessous de cinq vers un poème n'a pas eu le temps de
+ * devenir un poème. Au-dessus, on n'ajoute rien — la longueur doit rester la
+ * mesure de la journée.
  */
-export function dernierSigne(p: PoemeEnCours): number {
-  return p.sieges.reduce((t, s) => Math.max(t, s.pose ?? 0), p.ouvert)
-}
+export const PLANCHER_VERS = 5
 
 /**
- * Au bout de combien de temps une voix prend un siège libre.
+ * Ce qu'on accepte comme vers.
  *
- * Douze minutes : assez pour qu'une vraie main passe aux heures vives, assez
- * court pour qu'un joueur seul voie son poème se sceller avant d'avoir oublié
- * qu'il l'avait commencé. C'est le seul cadran du rendez-vous, et il se règle
- * ici.
+ * Neuf mots au plus : c'est la borne que `GardeMetrique` tient déjà à
+ * l'Atelier — « zéro vers de dix mots ou plus ». Elle n'est pas une
+ * politesse. Une main qui écrirait trois phrases écrirait le poème des
+ * autres à leur place, et la chaîne cesserait d'être un cadavre exquis.
  */
-export const ATTENTE_VOIX_MS = 12 * 60 * 1000
+export const MOTS_MAX = 9
+export const CARACTERES_MAX = 100
 
-/** Le fragment le plus long qu'on accepte — une case, pas un vers. */
-export const MAX_FRAGMENT = 80
-
-export type Verdict =
-  | { quoi: 'siege'; poeme: string; rang: number }
-  | { quoi: 'ouvrir' }
-  | { quoi: 'rien' }
+export type RefusVers = 'vide' | 'trop-long' | 'trop-de-mots' | 'plusieurs-lignes' | 'deja-ecrit'
 
 /**
- * Quel siège tendre à cette main.
+ * Le dernier mot d'un texte, ponctuation ôtée — c'est tout ce qu'on voit.
  *
- * Trois règles, dans cet ordre, et chacune a sa raison :
- *
- * 1. JAMAIS deux fois dans le même poème. Une main qui remplirait deux cases
- *    d'une même phrase cesserait d'être aveugle : elle verrait la moitié du
- *    poème et pourrait le diriger. C'est la règle qui protège le jeu.
- * 2. Le poème le PLUS AVANCÉ d'abord. On finit ce qui est commencé plutôt que
- *    d'éparpiller les mains sur dix poèmes à moitié vides — sans quoi, avec
- *    peu de joueurs, tout serait scellé par des voix.
- * 3. À égalité, le plus ANCIEN. Il a le plus attendu ; c'est aussi ce qui
- *    l'empêche d'être comblé par une voix.
+ * On REMONTE jusqu'au premier morceau qui contient une lettre : « une valise »
+ * fermé d'un guillemet rendait sinon un écho vide, et la main suivante se
+ * retrouvait sans rien à quoi répondre. Un vers qui finit sur un guillemet,
+ * un tiret ou des points de suspension n'est pas rare.
  */
-export function prochainSiege(
-  poemes: PoemeEnCours[],
-  main: string,
-  nbCases: number,
-): Verdict {
-  const ouverts = poemes.filter(p => {
-    if (p.sieges.some(s => s.main === main)) return false
-    return p.sieges.some(s => s.main === null)
-  })
-
-  if (!ouverts.length) {
-    // Rien à remplir : on n'ouvre un poème que si cette main peut l'entamer.
-    // Un poème créé sans main dedans serait un stock fantôme, scellé par des
-    // voix et payé pour personne.
-    return nbCases > 1 ? { quoi: 'ouvrir' } : { quoi: 'rien' }
+export function dernierMot(texte: string): string {
+  const mots = texte.trim().split(/\s+/).filter(Boolean)
+  for (let i = mots.length - 1; i >= 0; i--) {
+    const mot = mots[i].replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '')
+    if (mot) return mot
   }
-
-  const rempli = (p: PoemeEnCours) => p.sieges.filter(s => s.main !== null).length
-  ouverts.sort((a, b) => (rempli(b) - rempli(a)) || (a.ouvert - b.ouvert))
-
-  const p = ouverts[0]
-  const libre = p.sieges.find(s => s.main === null)!
-  return { quoi: 'siege', poeme: p.id, rang: libre.rang }
+  return ''
 }
 
 /**
- * Les sièges qu'une voix doit prendre maintenant.
+ * L'écho que verra la prochaine main.
  *
- * Appelé PARESSEUSEMENT, à chaque fois qu'une main se présente : pas de
- * tâche à minuit, donc pas de question de fuseau horaire. Le cron horaire
- * qui existe déjà sert de filet pour les journées sans personne.
- *
- * On ne comble que le PREMIER siège libre d'un poème en souffrance, jamais
- * tous : un poème à moitié écrit doit garder sa chance de recevoir une vraie
- * main au prochain passage. Combler d'un coup le scellerait en une fois et
- * chasserait les humains de leur propre rendez-vous.
- *
- * Et l'attente repart de la dernière main posée, jamais de l'ouverture —
- * voir `dernierSigne`. Un poème qui avance ne se fait jamais combler.
+ * Le dernier mot du dernier vers — ou celui de l'amorce quand la chaîne est
+ * encore vide. La première main n'est donc pas plus démunie que les autres :
+ * elle aussi répond à un mot, simplement il vient du calendrier.
  */
-export function siegesAAffranchir(
-  poemes: PoemeEnCours[],
-  maintenant: number,
-  attente = ATTENTE_VOIX_MS,
-): { poeme: string; rang: number }[] {
-  const dus: { poeme: string; rang: number }[] = []
-  for (const p of poemes) {
-    if (maintenant - dernierSigne(p) < attente) continue
-    const libre = p.sieges.find(s => s.main === null)
-    if (libre) dus.push({ poeme: p.id, rang: libre.rang })
-  }
-  return dus
+export function echoDe(c: Chaine): string {
+  const dernier = c.vers.length ? c.vers[c.vers.length - 1].texte : c.amorce
+  return dernierMot(dernier)
 }
 
-/** Un poème est scellé quand aucun siège n'attend plus. */
-export function estScelle(p: PoemeEnCours): boolean {
-  return p.sieges.every(s => s.main !== null)
+/** Une main n'écrit qu'un vers par jour : c'est ce qui fait que la longueur
+ *  du poème compte les gens, et non les bavards. */
+export function aDejaEcrit(c: Chaine, main: string): boolean {
+  return c.vers.some(v => v.main === main)
 }
 
-/** Combien de mains humaines — ce que la page annonce, sans le farder. */
-export function mainsHumaines(p: PoemeEnCours): number {
-  return p.sieges.filter(s => s.main !== null && !s.voix).length
+/** Le rang du prochain vers. */
+export function rangSuivant(c: Chaine): number {
+  return c.vers.length + 1
 }
 
-/**
- * Un fragment est-il recevable ?
- *
- * On refuse ici ce qui n'est pas une case : le vide, et ce qui déborde. La
- * longueur n'est pas une politesse — un joueur qui écrirait une phrase
- * entière dans la case « un adjectif » écrirait le poème des autres à leur
- * place, et le cadavre exquis cesserait d'en être un.
- */
-export function fragmentRecevable(texte: string): boolean {
+/** Le rang du vers de cette main — ce que la révélation lui montre d'abord. */
+export function rangDe(c: Chaine, main: string): number | null {
+  return c.vers.find(v => v.main === main)?.rang ?? null
+}
+
+/** Combien de mains humaines. Annoncé tel quel, jamais fardé. */
+export function mainsHumaines(c: Chaine): number {
+  return c.vers.filter(v => !v.voix).length
+}
+
+/** Ce vers est-il recevable ? Le motif du refus, ou null. */
+export function refusDuVers(texte: string): RefusVers | null {
   const t = texte.trim()
-  return t.length > 0 && t.length <= MAX_FRAGMENT && !/[\r\n]/.test(t)
+  if (!t) return 'vide'
+  if (/[\r\n]/.test(t)) return 'plusieurs-lignes'
+  if (t.length > CARACTERES_MAX) return 'trop-long'
+  if (t.split(/\s+/).filter(Boolean).length > MOTS_MAX) return 'trop-de-mots'
+  return null
+}
+
+/**
+ * Cette main peut-elle écrire maintenant ?
+ *
+ * Une chaîne scellée ne se rouvre pas : le poème d'hier appartient à hier.
+ */
+export function peutEcrire(c: Chaine, main: string): RefusVers | 'scelle' | null {
+  if (c.scelle) return 'scelle'
+  if (aDejaEcrit(c, main)) return 'deja-ecrit'
+  return null
+}
+
+/**
+ * Les rangs que des voix doivent écrire pour sceller la journée.
+ *
+ * Appelé UNIQUEMENT au scellement, jamais en cours de route : pendant la
+ * journée, la chaîne fait exactement la longueur des mains qui sont venues.
+ * C'est ce qui rend vraie la phrase « le poème est la mesure du jour ».
+ */
+export function versDuScellement(c: Chaine, plancher = PLANCHER_VERS): number[] {
+  const manque = plancher - c.vers.length
+  if (manque <= 0) return []
+  return Array.from({ length: manque }, (_, i) => c.vers.length + 1 + i)
+}
+
+/**
+ * Le voisinage d'une main dans le poème scellé.
+ *
+ * La révélation ne commence pas au premier vers : elle commence par le TIEN,
+ * avec les deux inconnus entre lesquels le hasard t'a mis. Sur deux cents
+ * vers, ouvrir au début reviendrait à cacher la seule chose qu'on vient
+ * chercher.
+ */
+export function voisinage(c: Chaine, main: string, rayon = 1): Vers[] {
+  const rang = rangDe(c, main)
+  if (rang === null) return c.vers.slice(0, rayon * 2 + 1)
+  const i = rang - 1
+  return c.vers.slice(Math.max(0, i - rayon), Math.min(c.vers.length, i + rayon + 1))
 }
