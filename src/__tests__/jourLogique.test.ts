@@ -85,6 +85,55 @@ describe('les voix prennent les sièges que personne n’a pris', () => {
     expect(dus[0].rang).toBe(2)
   })
 
+  it('ne comble pas un poème qui AVANCE, même passé le délai', () => {
+    /*
+      Le défaut que ce test a sorti. L'attente courait depuis l'OUVERTURE du
+      poème : passé douze minutes, chaque passage comblait un siège de plus,
+      si bien que trois arrivées rapprochées scellaient d'un coup un poème que
+      personne n'avait délaissé. La promesse « il garde sa chance de recevoir
+      une vraie main » était donc fausse dès que le rendez-vous s'animait,
+      c'est-à-dire exactement quand elle comptait.
+    */
+    const vieux = ATTENTE_VOIX_MS * 3
+    const p: PoemeEnCours = {
+      id: 'a', ouvert: 0,
+      sieges: [
+        { rang: 1, main: 'x', pose: 0 },
+        // Une main vient de se poser, sur un poème ouvert il y a longtemps.
+        { rang: 2, main: 'y', pose: vieux },
+        { rang: 3, main: null },
+        { rang: 4, main: null },
+      ],
+    }
+    expect(siegesAAffranchir([p], vieux + 1_000),
+      'le poème vient de recevoir une main : aucune voix ne le comble').toEqual([])
+    expect(siegesAAffranchir([p], vieux + ATTENTE_VOIX_MS),
+      'douze minutes après ce dernier signe, oui').toEqual([{ poeme: 'a', rang: 3 }])
+  })
+
+  it('trois passages rapprochés ne scellent pas un poème d’un coup', () => {
+    const p: PoemeEnCours = {
+      id: 'a', ouvert: 0,
+      sieges: [
+        { rang: 1, main: 'x', pose: 0 },
+        { rang: 2, main: null }, { rang: 3, main: null }, { rang: 4, main: null },
+      ],
+    }
+    // Trois appels à une seconde d'intervalle, bien après le délai.
+    let t = ATTENTE_VOIX_MS + 1
+    let comblés = 0
+    for (let i = 0; i < 3; i++) {
+      for (const d of siegesAAffranchir([p], t)) {
+        const s = p.sieges.find(x => x.rang === d.rang)!
+        s.main = 'voix'; s.voix = true; s.pose = t
+        comblés++
+      }
+      t += 1_000
+    }
+    expect(comblés, 'une voix par délai, pas une par passage').toBe(1)
+    expect(estScelle(p)).toBe(false)
+  })
+
   it('ne touche pas à ce qui est scellé', () => {
     const p = [poeme('a', 0, ['x', 'y', 'z', 'w'])]
     expect(siegesAAffranchir(p, ATTENTE_VOIX_MS * 10)).toEqual([])

@@ -36,15 +36,33 @@ export interface Siege {
   main: string | null
   /** true si c'est une voix qui a pris le siège. */
   voix?: boolean
-  /** Quand le siège a été rempli — sert à dater le poème, pas à décider. */
+  /** Quand le siège a été rempli. C'est de là que repart l'attente. */
   pose?: number
 }
 
 export interface PoemeEnCours {
   id: string
-  /** Quand le poème a été ouvert : c'est de là que court l'attente. */
+  /** Quand le poème a été ouvert. */
   ouvert: number
   sieges: Siege[]
+}
+
+/**
+ * Depuis quand ce poème n'a rien reçu.
+ *
+ * Premier jet : l'attente courait depuis l'OUVERTURE du poème. Défaut réel —
+ * passé le délai, chaque passage comblait un siège de plus, si bien que trois
+ * arrivées rapprochées scellaient d'un coup un poème que personne n'avait
+ * délaissé. La promesse « il garde sa chance de recevoir une vraie main au
+ * prochain passage » était donc fausse dès que le rendez-vous s'animait —
+ * c'est-à-dire exactement quand elle comptait.
+ *
+ * L'attente repart de la DERNIÈRE main posée : un poème qui avance n'est
+ * jamais comblé, un poème délaissé l'est douze minutes après son dernier
+ * signe de vie.
+ */
+export function dernierSigne(p: PoemeEnCours): number {
+  return p.sieges.reduce((t, s) => Math.max(t, s.pose ?? 0), p.ouvert)
 }
 
 /**
@@ -115,6 +133,9 @@ export function prochainSiege(
  * tous : un poème à moitié écrit doit garder sa chance de recevoir une vraie
  * main au prochain passage. Combler d'un coup le scellerait en une fois et
  * chasserait les humains de leur propre rendez-vous.
+ *
+ * Et l'attente repart de la dernière main posée, jamais de l'ouverture —
+ * voir `dernierSigne`. Un poème qui avance ne se fait jamais combler.
  */
 export function siegesAAffranchir(
   poemes: PoemeEnCours[],
@@ -123,7 +144,7 @@ export function siegesAAffranchir(
 ): { poeme: string; rang: number }[] {
   const dus: { poeme: string; rang: number }[] = []
   for (const p of poemes) {
-    if (maintenant - p.ouvert < attente) continue
+    if (maintenant - dernierSigne(p) < attente) continue
     const libre = p.sieges.find(s => s.main === null)
     if (libre) dus.push({ poeme: p.id, rang: libre.rang })
   }
