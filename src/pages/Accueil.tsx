@@ -5,7 +5,6 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { lireSerie, type Serie } from '../utils/streak'
-import { rituelDuJourFait } from '../lib/rituel'
 import { rearmerRappelSiActif } from '../utils/notifications'
 import { tr } from '../i18n'
 
@@ -27,7 +26,6 @@ export default function Accueil() {
   // l'on poussait la porte, pas les poèmes écrits. C'est le dernier
   // fragment du cadavre du jour qui l'incrémente désormais (`Jeu.tsx`).
   const [serie] = useState<Serie>(() => lireSerie())
-  const [rituelFait] = useState(() => rituelDuJourFait())
 
   // Premier lancement : au lieu d'un onboarding lu, on emmène directement le
   // joueur dans une partie Découverte (il vit une révélation avant qu'on lui
@@ -313,10 +311,8 @@ export default function Accueil() {
               série, « ✦ IIᵉ nuit de suite ». */}
           <button
             onClick={() => nav('/poeme-du-jour')}
-            aria-label={rituelFait
-              ? tr('Le cadavre du jour, déjà écrit', 'Today’s cadavre, already written')
-              : tr('Écrire le cadavre du jour', 'Write today’s cadavre')}
-            title={tr('Le cadavre du jour', 'Cadavre of the day')}
+            aria-label={tr('Le poème du jour', 'The poem of the day')}
+            title={tr('Le poème du jour', 'The poem of the day')}
             style={{
               gridColumn: 2, gridRow: '1 / 3',
               justifySelf: 'center', alignSelf: 'center',
@@ -324,21 +320,14 @@ export default function Accueil() {
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', gap: 1,
               background: 'none', cursor: 'pointer',
-              border: `1px solid ${rituelFait ? `${encre}24` : accent}`,
+              border: `1px solid ${accent}`,
               transition: 'border-color 0.3s',
             }}
           >
-            <span style={{
-              fontSize: 13, lineHeight: 1,
-              color: rituelFait ? encre : accent,
-              opacity: rituelFait ? 0.42 : 1,
-            }}>
-              {rituelFait ? '✦' : '✧'}
-            </span>
+            <span style={{ fontSize: 13, lineHeight: 1, color: accent }}>✧</span>
             <span style={{
               ...ui, fontSize: 9, letterSpacing: '0.14em', fontWeight: 700,
-              color: rituelFait ? encre : accent,
-              opacity: rituelFait ? 0.42 : 0.9,
+              color: accent, opacity: 0.9,
             }}>
               {tr('JOUR', 'DAY')}
             </span>

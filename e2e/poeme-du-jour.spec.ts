@@ -1,118 +1,176 @@
 import { test, expect, type Page } from '@playwright/test'
 
 /**
- * La page du cadavre du jour, côté lecture.
+ * Le poème du jour — une chaîne, une main, un vers.
  *
- * Ces quatre tests décrivaient l'ancienne page : elle ressortait une
- * publication quelconque de la galerie par `dayOfYear() % n` et l'appelait
- * « poème du jour ». Ils sont réécrits, pas supprimés — ce qu'ils
- * vérifiaient reste utile, seule la promesse a changé : les poèmes affichés
- * sont ceux du JOUR MÊME, et ils viennent après la contrainte, jamais avant.
+ * Ce que ces tests gardent, et que rien d'autre ne peut garder : que la page
+ * ne montre JAMAIS le poème en cours. C'est le pli du papier. Il est tenu à
+ * trois endroits — la politique RLS, l'API qui ne renvoie qu'un mot, et
+ * l'écran — et c'est le troisième qu'on mesure ici.
  *
- * La chaîne complète (contrainte → partie amorcée → série) est mesurée dans
- * `cadavre-du-jour.spec.ts`.
+ * Les versions précédentes de ce fichier décrivaient deux modèles
+ * abandonnés : un poème de la galerie ressorti par `dayOfYear() % n`, puis
+ * des poèmes parallèles sur une base commune. Ils sont déposés, pas
+ * conservés — le dépôt ne doit jamais porter deux conceptions à la fois.
  */
 
-/** Le jour local, comme la page le calcule. */
-function jourLocal(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const ETAT = {
+  jour: '2026-09-21',
+  amorce: 'une horloge',
+  echo: 'poches',
+  rang: 12,
+  mains: 11,
+  monVers: null as { rang: number; texte: string } | null,
+  scelle: false,
 }
 
-const AMORCE = 'le ciel pèse'
+const CHAINE_SCELLEE = { id: 'c1', jour: '2026-09-20', amorce: 'le sel' }
 
-/**
- * La maquette porte la MARQUE du rendez-vous.
- *
- * Sans elle, la page l'écarte — et c'est la correction même : elle filtrait
- * naguère sur la seule date de publication et ramassait n'importe quel poème
- * du jour. La première case est l'amorce, commune à tous.
- */
-const POEME_DU_JOUR = {
-  id: 'test-poem-1',
-  type: 'poeme',
-  titre: 'Le Ciel Brisé',
-  payload: JSON.stringify({
-    structureId: 'phrase-simple',
-    langue: 'fr',
-    rituel: { jour: jourLocal(), amorce: AMORCE },
-    cases: [
-      { texte: AMORCE },
-      { texte: 'dévore' },
-      { texte: 'une main ouverte' },
-    ],
-  }),
-  image_url: null,
-  author_pseudo: 'Auteur Test',
-  author_avatar: null,
-  created_at: new Date().toISOString(),
+const VERS_SCELLES = [
+  { rang: 1, texte: 'la porte bat dans le grenier', pseudo: 'Nadja', voix: false, voix_nom: null, main_id: 'autre-1' },
+  { rang: 2, texte: 'personne ne compte les marches', pseudo: null, voix: true, voix_nom: 'archiviste', main_id: null },
+  { rang: 3, texte: 'le cuivre chante quand on l’oublie', pseudo: 'Moi', voix: false, voix_nom: null, main_id: 'moi' },
+  { rang: 4, texte: 'un drap glisse le long du couloir', pseudo: 'Desnos', voix: false, voix_nom: null, main_id: 'autre-2' },
+  { rang: 5, texte: 'les racines remontent vers la lampe', pseudo: 'Man Ray', voix: false, voix_nom: null, main_id: 'autre-3' },
+]
+
+async function franchir(page: Page) {
+  const s = page.getByLabel(/Entrer dans le jeu|Enter the game/)
+  await s.click({ timeout: 4000 }).catch(() => {})
+  await s.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {})
 }
 
-function passerLeSeuil(page: Page) {
-  return page.addInitScript(() => localStorage.setItem('cadavre-onboarding-done', '1'))
+/** Bouchonne le rendez-vous : l'état du jour, et le poème d'hier. */
+async function poser(page: Page, opts: {
+  etat?: Partial<typeof ETAT>
+  hier?: boolean
+  surEcriture?: (texte: string) => { status: number; corps: unknown }
+} = {}) {
+  const etat = { ...ETAT, ...opts.etat }
+  await page.addInitScript(() => localStorage.setItem('cadavre-onboarding-done', '1'))
+
+  await page.route('**/api/jour**', async route => {
+    if (route.request().method() === 'POST') {
+      const texte = JSON.parse(route.request().postData() ?? '{}').texte ?? ''
+      const r = opts.surEcriture?.(texte) ?? { status: 200, corps: { rang: etat.rang } }
+      if (r.status === 200) { etat.monVers = { rang: etat.rang, texte }; etat.mains += 1 }
+      return route.fulfill({ status: r.status, contentType: 'application/json', body: JSON.stringify(r.corps) })
+    }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(etat) })
+  })
+
+  await page.route('**/rest/v1/jour_chaines**', r => r.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify(opts.hier ? CHAINE_SCELLEE : null),
+  }))
+  await page.route('**/rest/v1/jour_vers**', r => r.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify(opts.hier ? VERS_SCELLES : []),
+  }))
+  // L'identité anonyme s'ouvre au premier vers : sans elle, « une main, un
+  // vers » n'existe pas, et le POST n'est même pas émis.
+  await page.route('**/auth/v1/**', r => r.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      access_token: 'jeton-test', token_type: 'bearer', expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'r',
+      user: { id: 'moi', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() },
+    }),
+  }))
+  await page.route('**/supabase.co/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
 }
 
-function galerie(page: Page, corps: unknown[]) {
-  return page.route('**/rest/v1/gallery**', route =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corps) }))
+async function ouvrir(page: Page, url = '/poeme-du-jour') {
+  await page.goto(url)
+  await page.waitForLoadState('networkidle')
+  await franchir(page)
+  await page.waitForTimeout(900)
 }
 
-test.describe('Le cadavre du jour', () => {
-  test('montre les poèmes écrits aujourd’hui', async ({ page }) => {
-    await passerLeSeuil(page)
-    await galerie(page, [POEME_DU_JOUR])
+test('on ne voit qu’un mot — jamais le poème en cours', async ({ page }) => {
+  await poser(page)
+  await ouvrir(page)
 
-    await page.goto('/poeme-du-jour')
-    await page.waitForLoadState('networkidle')
+  await expect(page.getByText(/— L’ÉCHO —|— THE ECHO —/)).toBeVisible()
+  await expect(page.getByText('poches', { exact: true })).toBeVisible()
 
-    // Exact : « cadavre du jour » se retrouve aussi dans le libellé du
-    // bouton d'écriture, et un `text=` non ancré les prend tous les deux.
-    await expect(page.getByText('CADAVRE DU JOUR', { exact: true })).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText(/— LES AUTRES MAINS, AUJOURD’HUI —/)).toBeVisible({ timeout: 6000 })
+  // Le pli du papier : rien du poème en cours ne doit paraître à l'écran.
+  const vu = await page.evaluate(() => document.body.innerText)
+  for (const v of VERS_SCELLES) {
+    expect(vu, `« ${v.texte} » ne doit pas être lisible`).not.toContain(v.texte)
+  }
+  // Et l'on sait seulement COMBIEN de mains sont passées, jamais lesquelles.
+  expect(vu).toMatch(/11 MAINS SONT PASSÉES|11 HANDS HAVE PASSED/)
+  expect(vu).not.toContain('Nadja')
+})
 
-    // L'amorce est hissée en tête de colonne, pas répétée dans chaque poème :
-    // seule la SUITE de chaque main s'affiche sous elle.
-    await expect(page.locator('text=dévore une main ouverte')).toBeVisible({ timeout: 6000 })
-    await expect(page.locator('text=AUTEUR TEST')).toBeVisible({ timeout: 5000 })
-    await expect(page.getByRole('button', { name: /TOUTE LA GALERIE/ })).toBeVisible()
+test('la première main reçoit l’amorce du jour, et on le lui dit', async ({ page }) => {
+  await poser(page, { etat: { mains: 0, rang: 1, echo: 'horloge' } })
+  await ouvrir(page)
+
+  await expect(page.getByText(/— L’AMORCE DU JOUR —|— TODAY’S SEED —/)).toBeVisible()
+  await expect(page.getByText(/TU OUVRES LE POÈME|YOU OPEN THE POEM/)).toBeVisible()
+})
+
+test('un vers posé change l’écran, et le champ disparaît', async ({ page }) => {
+  await poser(page)
+  await ouvrir(page)
+
+  await page.getByLabel(/Ton vers|Your line/).fill('le sel dort dans les poches')
+  await page.getByRole('button', { name: /Donner ma main|Give my hand/ }).click()
+  await page.waitForTimeout(1200)
+
+  await expect(page.getByText(/— TON VERS —|— YOUR LINE —/)).toBeVisible()
+  await expect(page.getByText('le sel dort dans les poches')).toBeVisible()
+  // On n'écrit qu'une fois par jour : le champ n'est plus là.
+  await expect(page.getByLabel(/Ton vers|Your line/)).toHaveCount(0)
+  // Et la série ne compte que les jours où une main a réellement écrit.
+  expect(await page.evaluate(() => localStorage.getItem('cadavre-serie'))).toBeTruthy()
+})
+
+test('un vers trop long est refusé sans déranger le serveur', async ({ page }) => {
+  let appels = 0
+  await poser(page, { surEcriture: () => { appels++; return { status: 200, corps: { rang: 12 } } } })
+  await ouvrir(page)
+
+  await page.getByLabel(/Ton vers|Your line/).fill(Array(14).fill('mot').join(' '))
+  await page.getByRole('button', { name: /Donner ma main|Give my hand/ }).click()
+  await page.waitForTimeout(600)
+
+  await expect(page.getByText(/pas une strophe|not a stanza/)).toBeVisible()
+  expect(appels, 'le client anticipe le refus, le serveur n’est pas sollicité').toBe(0)
+})
+
+test('« déjà écrit » n’est pas une erreur de saisie mais un état du jour', async ({ page }) => {
+  await poser(page, { surEcriture: () => ({ status: 409, corps: { motif: 'deja-ecrit' } }) })
+  await ouvrir(page)
+
+  await page.getByLabel(/Ton vers|Your line/).fill('un vers de trop')
+  await page.getByRole('button', { name: /Donner ma main|Give my hand/ }).click()
+  await page.waitForTimeout(800)
+
+  await expect(page.getByText(/déjà donné ta main|already given your hand/)).toBeVisible()
+})
+
+test('le poème achevé s’ouvre sur ton vers et ses voisins', async ({ page }) => {
+  // Sur un poème long, ouvrir au premier vers reviendrait à cacher la seule
+  // chose qu'on vient chercher.
+  await page.addInitScript(() => {
+    localStorage.setItem('sb-test-auth', JSON.stringify({ user: { id: 'moi' } }))
   })
+  await poser(page, { hier: true })
+  await ouvrir(page)
 
-  test('n’invente rien quand personne n’a encore écrit', async ({ page }) => {
-    // L'ancienne page meublait avec un poème de juillet. Un rendez-vous vide
-    // est une invitation ; un rendez-vous truqué est une déception qu'on
-    // découvre plus tard.
-    await passerLeSeuil(page)
-    await galerie(page, [])
+  await expect(page.getByText(/— LE POÈME ACHEVÉ —|— THE FINISHED POEM —/)).toBeVisible()
+  // Cinq vers, quatre mains : la voix est comptée à part et annoncée telle.
+  await expect(page.getByText(/5 VERS|5 LINES/)).toBeVisible()
+  await expect(page.getByText(/4 MAINS|4 HANDS/)).toBeVisible()
+  await expect(page.getByText('le cuivre chante quand on l’oublie')).toBeVisible()
+})
 
-    await page.goto('/poeme-du-jour')
-    await page.waitForLoadState('networkidle')
-
-    await expect(page.getByText(/La première main est la tienne|The first hand is yours/))
-      .toBeVisible({ timeout: 6000 })
-  })
-
-  test('le retour ramène à l’accueil', async ({ page }) => {
-    await passerLeSeuil(page)
-    await galerie(page, [])
-
-    await page.goto('/poeme-du-jour')
-    await page.waitForLoadState('networkidle')
-    await page.getByRole('button', { name: /← ACCUEIL|← HOME/ }).dispatchEvent('click')
-
-    await expect(page).toHaveURL(/\/$/, { timeout: 5000 })
-  })
-
-  test('TOUTE LA GALERIE mène à la galerie', async ({ page }) => {
-    await passerLeSeuil(page)
-    await galerie(page, [POEME_DU_JOUR])
-    await page.route('**/supabase.co/**', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
-
-    await page.goto('/poeme-du-jour')
-    const bouton = page.getByRole('button', { name: /TOUTE LA GALERIE/ })
-    await bouton.waitFor({ timeout: 10_000 })
-    await bouton.dispatchEvent('click')
-
-    await expect(page).toHaveURL(/\/galerie$/, { timeout: 5000 })
-  })
+test('l’accueil mène au poème du jour', async ({ page }) => {
+  await poser(page)
+  await ouvrir(page, '/')
+  await page.getByRole('button', { name: /poème du jour|poem of the day/i }).click()
+  await expect(page).toHaveURL(/\/poeme-du-jour$/, { timeout: 5000 })
 })

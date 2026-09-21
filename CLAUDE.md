@@ -27,6 +27,11 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [x] **Pas de contenu de debug livré** — gestionnaire d'erreurs retiré d'`index.html`, écran de secours au registre du carnet
 - [x] **Illustrations au format Instagram** — 3:4 vertical, 1080 × 1440 px
 
+#### Le poème du jour — reste à faire
+- [ ] Appliquer `supabase/migrations/20260917000010_cadavre_du_jour.sql` — **rien ne marche sans elle**
+- [ ] Le signalement au vers (un vers retiré est remplacé par une voix, jamais effacé)
+- [ ] La notification du scellement
+
 #### Abonnement — reste à faire hors du code
 - [ ] Appliquer `supabase/migrations/20260730000010_abonnement.sql`
 - [ ] Créer le compte RevenueCat, l'entitlement `encrier`, l'offering par défaut
@@ -40,7 +45,6 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] `useAmbiance` est un moignon : le bouton son du mode dessin ne coupe rien
 - [ ] Minuteur de tour en ligne côté serveur (une partie attend si le joueur ferme l'app)
 - [ ] Mode spectateur codé mais sans point d'entrée
-- [ ] La série (streak) compte les ouvertures, pas les poèmes écrits
 - [ ] Réactions et vues de la galerie invisibles pour l'auteur
 - [ ] `prefers-reduced-motion` : le dévoilement du poème l'honore (et le plantage
       de la page de fin est corrigé), mais les autres animations framer-motion
@@ -513,13 +517,101 @@ application dont c'est le seul étalage.
   n'y survit pas. **Non reproduit** : il n'y a pas d'iOS dans l'environnement
   de travail, c'est le correctif standard et l'écran natif tranchera.
 
+## Le poème du jour — une chaîne, une main, un vers
+
+**UN seul poème par jour et par langue.** Chaque main qui passe y ajoute un
+vers à la suite, en ne voyant que le **dernier mot** du vers précédent. À
+minuit UTC la chaîne se scelle et se dévoile : on apprend alors de quoi on
+faisait partie, et entre quelles mains le sort vous a mis.
+
+**Une main, un vers, un jour.** C'est la règle entière.
+
+### Deux modèles abandonnés avant celui-là
+
+1. **Chacun son poème sur une amorce commune.** Ce n'était pas un cadavre
+   exquis : chaque poème était écrit par une seule main qui voyait tout ce
+   qu'elle écrivait. La porte d'entrée du jeu aurait été le seul mode qui
+   n'est pas le jeu.
+2. **Des poèmes à quatre sièges, en parallèle.** Défaut de fond : en fixant
+   la TAILLE, on faisait du NOMBRE de poèmes la variable d'ajustement. À deux
+   cents joueurs, « LE poème du jour » désignait trente-trois parties privées
+   et le mot « le » mentait.
+
+On inverse : **le poème n'a pas de taille, il grandit avec la foule.** Sa
+longueur EST le nombre de gens venus — un joueur cinq vers, deux cents
+joueurs deux cents vers. Rendements croissants : le poème à deux cents mains
+ne pouvait pas exister à six.
+
+### L'écho, et non l'aveuglement total
+
+Voir le vers entier qui précède, c'est du **renga** : chacun répond, le texte
+converge, il devient sage — Breton pliait le papier pour empêcher cela. Mais
+l'aveuglement TOTAL sur deux cents vers donne un texte qui se disloque.
+L'écho — le dernier mot seulement — est le régime que le jeu nomme déjà
+(`visibilite: 'dernier-mot'`) : assez pour accrocher, pas assez pour diriger.
+
+### L'aveuglement est tenu par les DROITS
+
+Un vers ne se lit qu'une fois la chaîne scellée, ou s'il est le sien
+(politique RLS). L'API ne renvoie qu'un mot. L'écran ne pourrait pas tricher
+même s'il le voulait. **Ce n'est pas une politesse d'affichage, c'est le pli
+du papier**, et il est posé à trois endroits.
+
+### Ce que les voix font, et c'est peu
+
+Elles complètent au **plancher de cinq vers, au scellement seulement**. Au-delà,
+aucune voix n'intervient — la longueur doit rester la mesure de la journée.
+Quatre appels par jour au maximum, zéro dès cinq joueurs : **l'encrier n'est
+pas concerné**, le rendez-vous ne décompte rien à personne. Chaque voix reçoit
+l'écho comme tout le monde ; une voix qui verrait le poème écrirait une chute.
+
+### Le jour est UTC, et c'est une conséquence
+
+Dès que les vers circulent, le jour LOCAL devient impossible : un joueur à
+Lisbonne à 00 h 30 serait déjà sur la journée suivante et ne pourrait pas
+s'asseoir à la même table qu'un joueur à Paris. Minuit UTC, soit 01 h ou 02 h
+à Lamastre selon la saison. L'ambiance et la série, elles, restent locales.
+
+### Où ça vit
+
+- `api/_amorces.ts` — les 41 amorces, trois formes (déterminant + nom,
+  + adjectif, + verbe) et le tirage en file. **Côté serveur** : une amorce
+  calculée par le client serait une donnée que le client contrôle.
+  Garde-raccord à 4 — à 1, la même amorce revenait parfois à deux jours
+  d'écart (0,17 % des retours, deux fois l'an). Mesuré : min 5, médiane 41.
+- `api/_jour.ts` · `api/jour.ts` — l'état, la pose d'un vers, la collision de
+  rang tranchée par la base puis rejouée.
+- `api/sceller-jour.ts` — le cron horaire. Ne scelle jamais le jour en cours.
+- `src/lib/jourLogique.ts` — les règles côté client. **Elles sont en double
+  avec le serveur, et c'est voulu** : le client anticipe pour refuser un vers
+  de douze mots sans aller-retour, le serveur TRANCHE. Onze mesures tiennent
+  les deux copies d'accord, parce qu'une duplication qui dérive serait pire
+  qu'une duplication assumée.
+- `src/lib/jour.ts` · `src/pages/PoemeDuJour.tsx` — le côté joueur.
+- `supabase/migrations/20260917000010_cadavre_du_jour.sql` — **à appliquer.**
+
+### Bornes du vers
+
+Neuf mots au plus, cent caractères : c'est la borne que `GardeMetrique` tient
+déjà à l'Atelier. Une main qui écrirait trois phrases écrirait le poème des
+autres à leur place. `nettoyerVersDeVoix` impose la même aux voix — sinon la
+chaîne serait injuste avant d'être belle.
+
+### Reste à faire
+
+- Le **signalement au vers** : un vers retiré doit être **remplacé par une
+  voix**, jamais effacé, sinon la chaîne casse et l'écho du suivant ne veut
+  plus rien dire. À faire avant toute mise en ligne.
+- La **notification** : « le poème du 21 est achevé — 214 mains, le tien est
+  le 147ᵉ vers ». Une nouvelle, pas un rappel.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (369 tests unitaires) + Playwright (55 tests E2E, FR et EN)
+- Tests : Vitest (414 tests unitaires) + Playwright (58 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

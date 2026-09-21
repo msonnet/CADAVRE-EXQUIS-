@@ -41,9 +41,6 @@ export interface Case {
   mains?: MainCase[]      // atelier : qui a rempli quelle case, dans l'ordre du vers
   texte: string
   ts: number
-  /** L'amorce du cadavre du jour : donnée à tout le monde, écrite par
-   *  personne. Les coutures ne doivent l'attribuer à aucune main. */
-  donne?: boolean
   fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)
 }
 
@@ -55,24 +52,6 @@ export interface Illustration {
   dateGeneration: number
 }
 
-/**
- * La marque du cadavre du jour, portée par le poème lui-même.
- *
- * Sans elle, la page du jour ne peut PAS montrer des poèmes de la même
- * base : elle filtrait sur la seule date de publication, et ramassait donc
- * n'importe quel poème publié le même jour — une séance d'Atelier à
- * trente-sept vers, une partie libre dans une autre structure. La
- * comparaison, qui est tout l'intérêt du rendez-vous, était cassée à la
- * requête.
- */
-export interface MarqueRituel {
-  /** AAAA-MM-JJ local du rendez-vous. */
-  jour: string
-  /** L'amorce donnée ce jour-là — recopiée pour que la galerie soit lisible
-   *  sans rejouer le calcul de la contrainte. */
-  amorce: string
-}
-
 export interface Poeme {
   id: string
   titre: string | null
@@ -81,7 +60,6 @@ export interface Poeme {
   visibilite: Visibilite
   cases: Case[]
   illustration?: Illustration
-  rituel?: MarqueRituel
   dateCreation: number
   dateModification: number
 }

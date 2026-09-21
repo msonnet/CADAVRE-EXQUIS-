@@ -16,13 +16,6 @@ import { langueActuelle } from '../i18n'
  * Le code est donc sorti de la page pour que la fin de partie puisse
  * l'appeler aussi, sans le recopier.
  *
- * ── Ce que le payload porte en plus ───────────────────────────────────────
- *
- * `rituel` : le jour du rendez-vous et son amorce. Sans cette clé, la page
- * du jour ne peut filtrer que sur la date de publication et ramasse
- * n'importe quel poème publié le même jour. La marque est recopiée dans le
- * payload plutôt que déduite : une galerie doit se lire sans rejouer le
- * calcul de la contrainte.
  */
 
 export interface AuteurPublication {
@@ -37,7 +30,6 @@ export async function publierPoeme(poeme: Poeme, auteur: AuteurPublication | nul
     structureId: poeme.structureId,
     titre: poeme.titre,
     langue: langueActuelle(),
-    ...(poeme.rituel ? { rituel: poeme.rituel } : {}),
   })
 
   // L'illustration locale est un dataURL (1080 × 1440) : on l'héberge sur

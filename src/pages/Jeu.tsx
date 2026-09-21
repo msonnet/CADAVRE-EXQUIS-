@@ -13,9 +13,6 @@ import { demanderFragmentIA } from '../api/claude'
 import { VOICE_IDS, nomDeVoix } from '../data/voiceIds'
 import { TYPES_A_DETERMINANT, tirerStrategie } from '../lib/determinants'
 import { sauvegarderPoeme } from '../db'
-import { rituelEnCours, marquerRituelFait, cloreRituelEnCours } from '../lib/rituel'
-import { voixDuJour } from '../lib/contrainteDuJour'
-import { pointerSerie } from '../utils/streak'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
@@ -323,22 +320,6 @@ export default function Jeu() {
   const [voixParSlot] = useState<Record<number, string>>(() => {
     if (b?.voixParSlot) return b.voixParSlot
 
-    // ── Le cadavre du jour : la même table pour tout le monde ──────────
-    // Les personas tirées par joueur faisaient diverger deux poèmes du
-    // même jour pour une raison qui n'appartient à personne. Tirées du
-    // jour, la seule variable qui reste est la main humaine — et c'est
-    // elle qu'on vient comparer.
-    const jourDuRituel = rituelEnCours()
-    if (jourDuRituel) {
-      const slotsIA = seq.map((p, idx) => (p.type === 'ia' ? idx : -1)).filter(i => i >= 0)
-      const choisies = voixDuJour(VOICE_IDS, slotsIA.length, jourDuRituel)
-      const table: Record<number, string> = {}
-      slotsIA.forEach((idx, i) => { table[idx] = choisies[i] })
-      // On n'écrit PAS dans `voix-recentes` : la table du jour est imposée,
-      // elle n'a pas à peser sur la fenêtre glissante des parties libres.
-      return table
-    }
-
     const FENETRE_VOIX = 20
     let recentes = safeParse<string[]>(localStorage.getItem('voix-recentes'), [])
       .filter(id => (VOICE_IDS as readonly string[]).includes(id))
@@ -620,10 +601,6 @@ export default function Jeu() {
     if (sauvegardeFaite.current) return
     sauvegardeFaite.current = true
 
-    // Le rituel se lit AVANT la sauvegarde : c'est lui qui fait de ce poème
-    // un poème du jour, et sans cette marque la page du jour ne saurait pas
-    // qu'il partage sa base avec les autres.
-    const jourDuRituel = rituelEnCours()
     const poeme: Poeme = {
       id: poemeId,
       titre: null,
@@ -631,9 +608,6 @@ export default function Jeu() {
       mode: config.mode,
       visibilite: config.visibilite,
       cases,
-      ...(jourDuRituel
-        ? { rituel: { jour: jourDuRituel, amorce: cases[0]?.texte ?? '' } }
-        : {}),
       dateCreation: Date.now(),
       dateModification: Date.now(),
     }
@@ -645,9 +619,6 @@ export default function Jeu() {
         // La partie découverte est finie : les parties suivantes retrouvent
         // l'auto-avance normale des tours IA.
         sessionStorage.removeItem('decouverte')
-        // Le cadavre du jour n'est compté qu'ICI, à son dernier fragment.
-        // Ouvrir la contrainte et s'en aller ne fait pas le rituel.
-        if (jourDuRituel) { marquerRituelFait(jourDuRituel); cloreRituelEnCours(); pointerSerie() }
         navigate('/fin', { state: { poeme } })
       })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps

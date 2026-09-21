@@ -39,9 +39,6 @@ export function attribution(c: Case, iaNum?: number): string {
   }
 
   // ── Cadavre écrit : une seule main par case ──────────────────────────
-  // L'amorce du jour d'abord : elle n'a pas d'auteur, et l'attribuer au
-  // joueur serait le seul mensonge du panneau des coutures.
-  if (c.donne) return tr('donné à tous', 'given to all')
   if (c.auteur === 'ia') {
     const num = iaNum !== undefined ? ` ${iaNum}` : ''
     return `${tr('voix', 'voice')}${num}${noms}`
