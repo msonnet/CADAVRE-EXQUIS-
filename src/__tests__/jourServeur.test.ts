@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { dernierMot, refusDuVers, langueValide, MOTS_MAX, CARACTERES_MAX, PLANCHER_VERS } from '../../api/_jour.js'
+import {
+  dernierMot, refusDuVers, langueValide, refusDeSignalement,
+  MOTS_MAX, CARACTERES_MAX, PLANCHER_VERS, SEUIL_RETRAIT,
+} from '../../api/_jour.js'
 import { nettoyerVersDeVoix } from '../../api/sceller-jour.js'
 import {
   dernierMot as dernierMotClient,
@@ -108,5 +111,40 @@ describe('ce qu’on garde de la réponse d’une voix', () => {
       expect(v, brut).not.toBeNull()
       expect(refusDuVers(v as string), brut).toBeNull()
     }
+  })
+})
+
+describe('qui peut signaler quel vers', () => {
+  const dUnAutre = { main_id: 'autre', voix: false }
+
+  it('refuse le SIEN', () => {
+    // Se signaler soi-même permettrait de retirer son propre vers après coup,
+    // donc de récrire le poème des autres. C'est la règle qui compte le plus.
+    expect(refusDeSignalement({ main_id: 'moi', voix: false }, 'moi', false)).toBe('sien')
+  })
+
+  it('refuse celui d’une VOIX', () => {
+    // Elle n'a pas de main à protéger, et un vers de voix qui déplaît est un
+    // défaut de gabarit — il se corrige à la source, pas par signalement.
+    expect(refusDeSignalement({ main_id: null, voix: true }, 'moi', false)).toBe('voix')
+  })
+
+  it('refuse deux fois la même main sur le même vers', () => {
+    expect(refusDeSignalement(dUnAutre, 'moi', true)).toBe('deja')
+  })
+
+  it('refuse un vers qui n’existe pas', () => {
+    expect(refusDeSignalement(null, 'moi', false)).toBe('introuvable')
+  })
+
+  it('accepte le vers d’une autre main, une fois', () => {
+    expect(refusDeSignalement(dUnAutre, 'moi', false)).toBeNull()
+  })
+
+  it('demande DEUX signalements pour retirer', () => {
+    // À un seul, n'importe qui ferait tomber chaque vers du poème l'un après
+    // l'autre — une main par vers, et la règle « un signalement par main et
+    // par vers » n'y changerait rien.
+    expect(SEUIL_RETRAIT).toBeGreaterThanOrEqual(2)
   })
 })

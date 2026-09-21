@@ -11,10 +11,11 @@ import { zoneVivante } from '../lib/a11y'
 import { nomDeVoix } from '../data/voiceIds'
 import { refusDuVers, MOTS_MAX, type RefusVers } from '../lib/jourLogique'
 import {
-  lireJour, poserVers, dernierPoemeScelle,
+  lireJour, poserVers, dernierPoemeScelle, signalerVers,
   type EtatDuJour, type PoemeScelle, type MotifRefus,
 } from '../lib/jour'
 import { pointerSerie } from '../utils/streak'
+import { annoncerScellement } from '../utils/notifications'
 
 /**
  * Le poème du jour — une chaîne, une main, un vers.
@@ -69,6 +70,10 @@ export default function PoemeDuJour() {
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
   const [toutVoir, setToutVoir] = useState(false)
+  // Les vers qu'on vient de signaler, le temps de la visite : le serveur ne
+  // dit pas « déjà signalé » deux fois de suite, et griser le drapeau évite
+  // d'appuyer en boucle sans retour.
+  const [signales, setSignales] = useState<Set<string>>(new Set())
   const champ = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -99,8 +104,19 @@ export default function PoemeDuJour() {
     jouer('soumettre')
     // La série ne compte que les jours où une main a réellement écrit.
     pointerSerie()
+    // Et l'on se donne rendez-vous : le poème sera scellé demain matin.
+    void annoncerScellement(r.rang)
     setEtat(await lireJour())
     setTexte('')
+  }
+
+  async function signaler(id: string) {
+    if (signales.has(id)) return
+    setSignales(s => new Set(s).add(id))
+    const r = await signalerVers(id)
+    // Retiré sur-le-champ : le vers a atteint le seuil, on relit le poème
+    // plutôt que de laisser le texte signalé à l'écran.
+    if (r.ok && r.retire) setHier(await dernierPoemeScelle())
   }
 
   const aEcrit = !!etat?.monVers
@@ -292,12 +308,39 @@ export default function PoemeDuJour() {
                             }}>
                               {v.texte}
                             </div>
-                            <div style={{ ...mono, fontSize: 10, color: encre, opacity: 0.45, letterSpacing: '0.1em', marginTop: 2 }}>
-                              {v.rang} · {v.aMoi
-                                ? tr('TOI', 'YOU')
-                                : v.voix
-                                  ? (v.voixNom ? nomDeVoix(v.voixNom, langueActuelle()).toUpperCase() : tr('UNE VOIX', 'A VOICE'))
-                                  : (v.pseudo ?? tr('ANONYME', 'ANONYMOUS')).toUpperCase()}
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 2 }}>
+                              <span style={{ ...mono, fontSize: 10, color: encre, opacity: 0.45, letterSpacing: '0.1em' }}>
+                                {v.rang} · {v.aMoi
+                                  ? tr('TOI', 'YOU')
+                                  : v.voix
+                                    ? (v.voixNom ? nomDeVoix(v.voixNom, langueActuelle()).toUpperCase() : tr('UNE VOIX', 'A VOICE'))
+                                    : (v.pseudo ?? tr('ANONYME', 'ANONYMOUS')).toUpperCase()}
+                                {v.retire && ` · ${tr('VERS RETIRÉ', 'LINE WITHDRAWN')}`}
+                              </span>
+                              {/*
+                                Le drapeau ne s'offre que sur le vers d'une
+                                autre main : on ne signale pas le sien — ce
+                                serait un moyen de récrire le poème des
+                                autres après coup — ni celui d'une voix, qui
+                                n'a pas de main à protéger.
+                              */}
+                              {!v.aMoi && !v.voix && !v.retire && (
+                                <button
+                                  onClick={() => signaler(v.id)}
+                                  disabled={signales.has(v.id)}
+                                  aria-label={tr('Signaler ce vers', 'Report this line')}
+                                  title={tr('Signaler ce vers', 'Report this line')}
+                                  style={{
+                                    ...mono, fontSize: 10, letterSpacing: '0.1em',
+                                    background: 'none', border: 'none', padding: 0,
+                                    color: signales.has(v.id) ? accent : encre,
+                                    opacity: signales.has(v.id) ? 0.8 : 0.35,
+                                    cursor: signales.has(v.id) ? 'default' : 'pointer',
+                                  }}
+                                >
+                                  {signales.has(v.id) ? tr('⚑ SIGNALÉ', '⚑ REPORTED') : '⚑'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}

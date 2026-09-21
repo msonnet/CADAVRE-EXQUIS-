@@ -34,6 +34,47 @@ export const CARACTERES_MAX = 100
  */
 export const PLANCHER_VERS = 5
 
+/**
+ * Combien de signalements retirent un vers.
+ *
+ * Les vers circulent chez des inconnus : un vers déplacé entre dans LE poème
+ * du jour, celui de tout le monde, et attendre une modération manuelle
+ * laisserait la journée entière pour le lire.
+ *
+ * DEUX, et pas un. À un seul, n'importe qui pourrait faire tomber chaque
+ * vers du poème l'un après l'autre — une main par vers, la règle « un
+ * signalement par main et par vers » n'y changerait rien. À deux, il faut
+ * deux comptes d'accord, ce qui n'empêche pas la malveillance organisée
+ * mais lui demande un effort que le modérateur a le temps de voir passer.
+ *
+ * Le premier signalement part quand même par courriel : c'est lui le vrai
+ * chemin tant que le rendez-vous est petit.
+ */
+export const SEUIL_RETRAIT = 2
+
+export type RefusSignalement = 'sien' | 'deja' | 'voix' | 'introuvable'
+
+/**
+ * Cette main peut-elle signaler ce vers ?
+ *
+ * On refuse le SIEN — se signaler soi-même n'a aucun sens et permettrait de
+ * retirer son propre vers après coup, donc de récrire le poème des autres.
+ * On refuse aussi ceux d'une VOIX : elles n'ont pas de main à protéger, et
+ * un vers de voix qui déplairait est un défaut de gabarit, pas une
+ * malveillance — il se corrige à la source.
+ */
+export function refusDeSignalement(
+  vers: { main_id: string | null; voix: boolean } | null,
+  main: string,
+  dejaSignale: boolean,
+): RefusSignalement | null {
+  if (!vers) return 'introuvable'
+  if (vers.voix) return 'voix'
+  if (vers.main_id === main) return 'sien'
+  if (dejaSignale) return 'deja'
+  return null
+}
+
 export interface EtatDuJour {
   jour: string
   amorce: string
@@ -256,4 +297,51 @@ export async function sceller(chaineId: string): Promise<boolean> {
     .update({ scelle_le: new Date().toISOString() })
     .eq('id', chaineId).is('scelle_le', null)
   return !error
+}
+
+
+/**
+ * Retire un vers : on le REMPLACE, on ne l'efface jamais.
+ *
+ * Un trou dans la chaîne casserait les rangs, et l'écho qu'a reçu la main
+ * suivante ne voudrait plus rien dire. Le vers devient donc un vers de voix,
+ * écrit sur le MÊME écho que celui qu'il remplace — la main qui a suivi
+ * répondait à ce mot-là, et elle continue d'y répondre.
+ *
+ * Ce que le retrait efface, en revanche : le lien vers la main et son
+ * pseudo. Le poème garde sa forme, la personne disparaît du registre.
+ *
+ * Le texte de remplacement est fourni par l'appelant — ce module ne sait pas
+ * parler au modèle. S'il manque, on pose une ligne neutre plutôt que de
+ * laisser le vers en place : mieux vaut un vers pâle qu'un vers signalé
+ * deux fois qui reste affiché.
+ */
+export async function retirerVers(versId: string, remplacement: string | null, voixId: string | null): Promise<boolean> {
+  const admin = clientAdmin()
+  if (!admin) return false
+  const { error } = await admin
+    .from('jour_vers')
+    .update({
+      texte: remplacement ?? '—',
+      retire: true,
+      voix: true,
+      voix_nom: remplacement ? voixId : null,
+      main_id: null,
+      pseudo: null,
+    })
+    .eq('id', versId)
+  if (error) console.error('[jour] retrait impossible', error.message)
+  return !error
+}
+
+/** L'écho qu'avait reçu le vers de ce rang — celui du vers précédent. */
+export async function echoDuRang(chaineId: string, rang: number, amorce: string): Promise<string> {
+  if (rang <= 1) return dernierMot(amorce)
+  const admin = clientAdmin()
+  if (!admin) return dernierMot(amorce)
+  const { data } = await admin
+    .from('jour_vers').select('texte')
+    .eq('chaine_id', chaineId).eq('rang', rang - 1)
+    .maybeSingle()
+  return dernierMot((data as { texte?: string } | null)?.texte ?? amorce)
 }

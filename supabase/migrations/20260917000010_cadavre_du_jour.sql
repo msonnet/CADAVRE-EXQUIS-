@@ -111,6 +111,35 @@ CREATE POLICY "Lire les vers scelles" ON public.jour_vers
 -- fonctions Vercel en service_role, les seules à voir l'état complet et donc
 -- les seules à pouvoir décider sans tricher.
 
+-- ── Le signalement, au VERS ───────────────────────────────────────────────
+--
+-- Les vers circulent chez des inconnus : un vers déplacé entre dans LE poème
+-- du jour, celui de tout le monde. Le signalement de la galerie porte sur une
+-- publication entière ; il faut qu'il descende au vers.
+--
+-- Une main ne signale qu'une fois le même vers, et jamais le sien : sans
+-- l'index unique, un seul compte suffirait à faire tomber n'importe quoi.
+CREATE TABLE IF NOT EXISTS public.jour_signalements (
+  id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  vers_id    UUID NOT NULL REFERENCES public.jour_vers ON DELETE CASCADE,
+  main_id    UUID NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  motif      TEXT NOT NULL DEFAULT 'autre',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (vers_id, main_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_jour_signalements_vers
+  ON public.jour_signalements(vers_id);
+
+ALTER TABLE public.jour_signalements ENABLE ROW LEVEL SECURITY;
+
+-- On lit ses propres signalements, pour que l'écran sache quoi griser. On
+-- n'écrit jamais d'ici : la route serveur vérifie qu'on ne signale pas son
+-- propre vers, ce qu'une politique RLS ne saurait pas faire proprement.
+DROP POLICY IF EXISTS "Lire ses signalements" ON public.jour_signalements;
+CREATE POLICY "Lire ses signalements" ON public.jour_signalements
+  FOR SELECT USING (auth.uid() = main_id);
+
 -- ── Ménage ────────────────────────────────────────────────────────────────
 -- Les chaînes ne sont pas la galerie : elles vivent le temps qu'on puisse
 -- les découvrir, puis s'effacent. Ce qui mérite d'être gardé est publié en

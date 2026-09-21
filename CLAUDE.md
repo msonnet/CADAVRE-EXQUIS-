@@ -29,8 +29,6 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 
 #### Le poème du jour — reste à faire
 - [ ] Appliquer `supabase/migrations/20260917000010_cadavre_du_jour.sql` — **rien ne marche sans elle**
-- [ ] Le signalement au vers (un vers retiré est remplacé par une voix, jamais effacé)
-- [ ] La notification du scellement
 
 #### Abonnement — reste à faire hors du code
 - [ ] Appliquer `supabase/migrations/20260730000010_abonnement.sql`
@@ -597,13 +595,45 @@ déjà à l'Atelier. Une main qui écrirait trois phrases écrirait le poème de
 autres à leur place. `nettoyerVersDeVoix` impose la même aux voix — sinon la
 chaîne serait injuste avant d'être belle.
 
-### Reste à faire
+### Le signalement descend au vers
 
-- Le **signalement au vers** : un vers retiré doit être **remplacé par une
-  voix**, jamais effacé, sinon la chaîne casse et l'écho du suivant ne veut
-  plus rien dire. À faire avant toute mise en ligne.
-- La **notification** : « le poème du 21 est achevé — 214 mains, le tien est
-  le 147ᵉ vers ». Une nouvelle, pas un rappel.
+Celui de la galerie porte sur une publication entière, qui appartient à son
+auteur. Ici les vers circulent chez des inconnus : un vers déplacé entre dans
+LE poème du jour, celui de tout le monde.
+
+**Un vers retiré est REMPLACÉ, jamais effacé.** Un trou casserait les rangs,
+et l'écho qu'a reçu la main suivante ne voudrait plus rien dire. Le vers
+devient un vers de voix écrit sur le MÊME écho — la main d'après répondait à
+ce mot-là, elle continue d'y répondre. Ce qui disparaît, c'est le lien vers
+la personne : `main_id` et `pseudo` sont vidés.
+
+**Deux signalements, et le premier part par courriel.** À un seul, n'importe
+qui ferait tomber chaque vers du poème l'un après l'autre — une main par
+vers, et « un signalement par main et par vers » n'y changerait rien. À
+deux, il faut deux comptes d'accord.
+
+On ne signale **jamais le sien** : ce serait un moyen de récrire le poème des
+autres après coup. Ni celui d'une **voix** : elle n'a pas de main à protéger,
+et un vers de voix qui déplaît est un défaut de gabarit, qui se corrige à la
+source. `api/signaler-vers.ts`, table `jour_signalements`.
+
+### La notification du scellement — locale, et pourtant juste
+
+Une notification locale est planifiée à l'avance : elle ne peut pas savoir
+qu'un poème vient de se sceller, et le vrai push (FCM, APNs, déclencheur
+serveur) est un chantier d'un autre ordre.
+
+Mais on n'en a pas besoin pour dire la vérité. Au moment où une main pose son
+vers, on sait deux choses avec certitude : que le poème se scellera à minuit
+UTC, et à quel rang cette main y est entrée. L'annonce est donc planifiée au
+**lendemain 9 h locales** — après le scellement, jamais avant. Neuf heures et
+non minuit : le poème se ferme à 01 h ou 02 h à Lamastre, et on ne réveille
+personne pour un poème.
+
+Elle ne part qu'à qui a écrit, et **ne demande aucune autorisation** : un
+joueur qui pose son premier vers n'a pas à recevoir une demande dans la
+foulée. S'il a déjà armé le rappel du soir, il est d'accord ; sinon on se
+tait. `annoncerScellement` dans `src/utils/notifications.ts`.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
@@ -611,7 +641,7 @@ chaîne serait injuste avant d'être belle.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (414 tests unitaires) + Playwright (58 tests E2E, FR et EN)
+- Tests : Vitest (420 tests unitaires) + Playwright (58 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

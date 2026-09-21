@@ -34,11 +34,14 @@ export interface EtatDuJour {
 }
 
 export interface VersScelle {
+  id: string
   rang: number
   texte: string
   pseudo: string | null
   voix: boolean
   voixNom: string | null
+  /** Un vers retiré après signalement : remplacé par une voix, jamais effacé. */
+  retire: boolean
   aMoi: boolean
 }
 
@@ -51,6 +54,10 @@ export interface PoemeScelle {
 }
 
 export type MotifRefus = RefusVers | 'scelle' | 'deja-ecrit' | 'indisponible' | 'auth'
+
+export type ResultatSignalement =
+  | { ok: true; retire: boolean }
+  | { ok: false; motif: 'sien' | 'deja' | 'voix' | 'introuvable' | 'indisponible' | 'auth' }
 
 /** L'état du rendez-vous. `null` si le serveur ne répond pas. */
 export async function lireJour(): Promise<EtatDuJour | null> {
@@ -112,7 +119,7 @@ export async function dernierPoemeScelle(): Promise<PoemeScelle | null> {
 
     const { data: vers } = await supabase
       .from('jour_vers')
-      .select('rang,texte,pseudo,voix,voix_nom,main_id')
+      .select('id,rang,texte,pseudo,voix,voix_nom,main_id,retire')
       .eq('chaine_id', (chaine as { id: string }).id)
       .order('rang', { ascending: true })
 
@@ -120,8 +127,8 @@ export async function dernierPoemeScelle(): Promise<PoemeScelle | null> {
     const moi = session?.user?.id ?? null
 
     const lignes = (vers ?? []) as {
-      rang: number; texte: string; pseudo: string | null
-      voix: boolean; voix_nom: string | null; main_id: string | null
+      id: string; rang: number; texte: string; pseudo: string | null
+      voix: boolean; voix_nom: string | null; main_id: string | null; retire: boolean
     }[]
 
     const c = chaine as { jour: string; amorce: string }
@@ -129,13 +136,37 @@ export async function dernierPoemeScelle(): Promise<PoemeScelle | null> {
       jour: c.jour,
       amorce: c.amorce,
       vers: lignes.map(v => ({
-        rang: v.rang, texte: v.texte, pseudo: v.pseudo,
-        voix: v.voix, voixNom: v.voix_nom,
+        id: v.id, rang: v.rang, texte: v.texte, pseudo: v.pseudo,
+        voix: v.voix, voixNom: v.voix_nom, retire: v.retire,
         aMoi: !!moi && v.main_id === moi,
       })),
       monRang: lignes.find(v => !!moi && v.main_id === moi)?.rang ?? null,
     }
   } catch {
     return null
+  }
+}
+
+/**
+ * Signaler un vers du poème achevé.
+ *
+ * Deux signalements le retirent — remplacé par un vers de voix écrit sur le
+ * même écho, jamais effacé : un trou casserait les rangs et l'écho qu'a reçu
+ * la main suivante ne voudrait plus rien dire.
+ */
+export async function signalerVers(versId: string, motif = 'autre'): Promise<ResultatSignalement> {
+  try {
+    const jeton = await jetonOuIdentite()
+    if (!jeton) return { ok: false, motif: 'auth' }
+    const r = await fetch(api('/api/signaler-vers'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jeton}` },
+      body: JSON.stringify({ versId, motif }),
+    })
+    const d = await r.json().catch(() => ({}))
+    if (r.ok) return { ok: true, retire: !!d.retire }
+    return { ok: false, motif: d.motif ?? 'indisponible' }
+  } catch {
+    return { ok: false, motif: 'indisponible' }
   }
 }
