@@ -1,9 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { amorceDuJour, sacAmorces, MOTS_AMORCE_MAX } from '../lib/amorce'
+import { amorcePour, sacAmorces, jourUTC, MOTS_AMORCE_MAX } from '../../api/_amorces.js'
 import { dernierMot } from '../lib/jourLogique'
 
 /**
  * L'amorce du jour — la tête de la chaîne.
+ *
+ * La mesure porte sur `api/_amorces.ts`, la copie qui FAIT AUTORITÉ : c'est
+ * le serveur qui crée la chaîne du jour et y inscrit son amorce. Le client
+ * la lit dans la réponse au lieu de la recalculer — une amorce calculée par
+ * le client serait une donnée que le client contrôle.
  *
  * Premier jet : des amorces de six mots, « une porte qui donne sur la mer ».
  * C'était déjà un vers : il ne restait rien à faire à la première main, et
@@ -11,11 +16,12 @@ import { dernierMot } from '../lib/jourLogique'
  * Une amorce n'est pas un vers, c'est ce à quoi le premier vers répond.
  */
 
-function serie(n: number, depart = new Date(2026, 8, 17)) {
+function serie(n: number, depart = new Date(Date.UTC(2026, 8, 17))) {
   return Array.from({ length: n }, (_, i) => {
     const d = new Date(depart)
-    d.setDate(d.getDate() + i)
-    return amorceDuJour(d)
+    d.setUTCDate(d.getUTCDate() + i)
+    const jour = jourUTC(d)
+    return { jour, texte: amorcePour(jour, 'fr') }
   })
 }
 
@@ -69,9 +75,16 @@ describe('les deux langues jouent la même journée', () => {
 
 describe('le rendez-vous ne tourne pas en rond', () => {
   it('ne dépend que de la date', () => {
-    const matin = new Date(2026, 8, 17, 6, 0)
-    const soir = new Date(2026, 8, 17, 23, 59)
-    expect(amorceDuJour(matin)).toEqual(amorceDuJour(soir))
+    const matin = new Date(Date.UTC(2026, 8, 17, 6, 0))
+    const soir = new Date(Date.UTC(2026, 8, 17, 23, 59))
+    expect(jourUTC(matin)).toBe(jourUTC(soir))
+    expect(amorcePour(jourUTC(matin), 'fr')).toBe(amorcePour(jourUTC(soir), 'fr'))
+  })
+
+  it('les deux langues reçoivent la même place dans le sac', () => {
+    const jour = '2026-09-17'
+    expect(sacAmorces('en').indexOf(amorcePour(jour, 'en')))
+      .toBe(sacAmorces('fr').indexOf(amorcePour(jour, 'fr')))
   })
 
   it('change tous les jours', () => {
