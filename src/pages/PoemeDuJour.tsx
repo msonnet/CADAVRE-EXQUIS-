@@ -210,7 +210,7 @@ export default function PoemeDuJour() {
           </div>
           <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5, letterSpacing: '0.14em' }}>
             {tr(
-              `DONNÉ À TOUS · ${contrainte.voixIA === 1 ? 'UNE VOIX T’ACCOMPAGNE' : `${toRomain(contrainte.voixIA)} VOIX T’ACCOMPAGNENT`}`,
+              `DONNÉ À TOUS · ${contrainte.voixIA === 1 ? 'UNE VOIX T’ACCOMPAGNE' : `${contrainte.voixIA} VOIX T’ACCOMPAGNENT`}`,
               `GIVEN TO ALL · ${contrainte.voixIA === 1 ? 'ONE VOICE JOINS YOU' : `${contrainte.voixIA} VOICES JOIN YOU`}`,
             )}
           </div>

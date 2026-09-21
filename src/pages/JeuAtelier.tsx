@@ -1322,7 +1322,7 @@ export default function JeuAtelier() {
           const noms = (v.voixNoms ?? []).filter(Boolean)
           const signature = noms.length
             ? noms.join(' · ')
-            : v.voixNums.map(toRomain).join(' · ')
+            : v.voixNums.join(' · ')
           if (v.auteur === 'humain') return tr('vers du médium', 'line by the medium')
           return v.auteur === 'mixte'
             ? tr(`vers du médium et de ${signature}`, `line by the medium and ${signature}`)
@@ -1461,11 +1461,11 @@ export default function JeuAtelier() {
             lui était revenue : il entendait le silence, puis plus rien.
           */}
           <span {...zoneVivante} style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6 }}>
-            {tr('VERS', 'LINE')} {toRomain(Math.min(idx + 1, total))} / {toRomain(total)}
+            {tr('VERS', 'LINE')} {Math.min(idx + 1, total)} / {total}
           </span>
         </div>
         <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.45, marginTop: 3 }}>
-          {plan.voixPool.length === 0 ? tr('SEUL', 'ALONE') : tr(`${toRomain(plan.voixPool.length)} VOIX`, `${toRomain(plan.voixPool.length)} VOICES`)} · {plan.echo ? tr("L'ÉCHO", 'THE ECHO') : tr('OBSCURITÉ TOTALE', 'TOTAL DARKNESS')}
+          {plan.voixPool.length === 0 ? tr('SEUL', 'ALONE') : tr(`${plan.voixPool.length} VOIX`, `${plan.voixPool.length} VOICES`)} · {plan.echo ? tr("L'ÉCHO", 'THE ECHO') : tr('OBSCURITÉ TOTALE', 'TOTAL DARKNESS')}
         </div>
 
         {/* ── FEUILLET MASQUÉ : la forme du poème, jamais le texte ── */}
@@ -1536,7 +1536,7 @@ export default function JeuAtelier() {
                       transition={{ duration: 0.3 }}
                       style={{ ...mono, fontSize: 12, color: encre, marginBottom: 5 }}
                     >
-                      {tr('VOIX', 'VOICE')} {toRomain(v.num)} · {v.role}{' '}
+                      {tr('VOIX', 'VOICE')} {v.num} · {v.role}{' '}
                       {v.fait
                         ? <span style={{ color: accent }}>✦</span>
                         : <motion.span
@@ -1555,7 +1555,7 @@ export default function JeuAtelier() {
                   <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 6 }}>
                     {fragGabarit.length === 1
                       ? <>{tr('— LE SORT TE TIRE SEUL ·', '— FATE DRAWS YOU ALONE ·')} {fragGabarit[fragSlotJoueur].role} —</>
-                      : <>{tr('— FRAGMENT', '— FRAGMENT')} {toRomain(fragSlotJoueur + 1)} / {toRomain(fragGabarit.length)} · {fragGabarit[fragSlotJoueur].role} —</>}
+                      : <>{tr('— FRAGMENT', '— FRAGMENT')} {fragSlotJoueur + 1} / {fragGabarit.length} · {fragGabarit[fragSlotJoueur].role} —</>}
                   </div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontStyle: 'italic', color: encre, opacity: 0.7, marginBottom: 10 }}>
                     {fragGabarit[fragSlotJoueur].consigne}
@@ -1697,7 +1697,7 @@ export default function JeuAtelier() {
                   transition={{ duration: 0.3 }}
                   style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginBottom: 7 }}
                 >
-                  {tr('VOIX', 'VOICE')} {toRomain(v.num)} · {v.role}{' '}
+                  {tr('VOIX', 'VOICE')} {v.num} · {v.role}{' '}
                   {v.fait
                     ? <span style={{ color: accent }}>✦</span>
                     : <motion.span

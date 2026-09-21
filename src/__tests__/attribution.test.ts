@@ -7,7 +7,7 @@ const base = { numero: 1, fonction: 'vers 1', consigne: '', texte: 'x', ts: 0 }
 describe('attribution — vers d\'atelier', () => {
   it('annonce le nombre de mains avant les noms', () => {
     const c: Case = { ...base, auteur: 'ia', nbVoix: 3, voixNom: 'le fossoyeur · le graveur · l\'apiculteur' }
-    expect(attribution(c)).toBe("III voix · le fossoyeur · le graveur · l'apiculteur")
+    expect(attribution(c)).toBe("3 voix · le fossoyeur · le graveur · l'apiculteur")
   })
 
   it('accorde le singulier', () => {
@@ -17,7 +17,7 @@ describe('attribution — vers d\'atelier', () => {
 
   it('sait lire un vers mixte — que personne ne savait lire', () => {
     expect(attribution({ ...base, auteur: 'mixte', nbVoix: 2, voixNom: 'le marin · le graveur' }))
-      .toBe('toi et II voix · le marin · le graveur')
+      .toBe('toi et 2 voix · le marin · le graveur')
   })
 
   it('le médium seul sur son vers', () => {
@@ -25,7 +25,7 @@ describe('attribution — vers d\'atelier', () => {
   })
 
   it('sans nom de voix — quand tout vient de la réserve', () => {
-    expect(attribution({ ...base, auteur: 'ia', nbVoix: 2 })).toBe('II voix')
+    expect(attribution({ ...base, auteur: 'ia', nbVoix: 2 })).toBe('2 voix')
   })
 })
 

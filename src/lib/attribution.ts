@@ -31,7 +31,7 @@ export function attribution(c: Case, iaNum?: number): string {
     const n = c.nbVoix
     const compte = n === 1
       ? tr('une voix', 'one voice')
-      : `${toRomain(n)} ${tr('voix', 'voices')}`
+      : `${n} ${tr('voix', 'voices')}`
 
     if (c.auteur === 'humain' || n === 0) return tr('toi seul', 'you alone')
     if (c.auteur === 'mixte') return `${tr('toi et', 'you and')} ${compte}${noms}`

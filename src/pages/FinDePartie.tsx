@@ -262,7 +262,10 @@ export default function FinDePartie() {
 
   const structLabel = STRUCT_LABELS[poeme.structureId] ?? poeme.structureId
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString(tr('fr-FR', 'en-GB'), { hour: '2-digit', minute: '2-digit' })
-  const feuilletLabel = `${tr('FEUILLET', 'FOLIO')} ${toRomain(voixCount)} · ${tr('FIN', 'END')}`
+  // `voixCount` est le nombre de CASES du poème, pas un numéro de feuillet :
+  // le compte s'écrit donc en chiffres, comme les vers et les mains partout
+  // ailleurs. Le mot « FEUILLET » posé sur un compte reste discutable.
+  const feuilletLabel = `${tr('FEUILLET', 'FOLIO')} ${voixCount} · ${tr('FIN', 'END')}`
   const labelStyle = STYLES.find(s => s.id === styleChoisi)?.label
 
   return (

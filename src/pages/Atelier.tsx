@@ -354,9 +354,9 @@ export default function Atelier() {
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, fontStyle: 'italic', lineHeight: 1.5 }}>
             {nbVoix === 0
-              ? <>{tr(`Le sort fixera la longueur du poème — de ${toRomain(fourchetteVers(nbVoix)[0])} à ${toRomain(fourchetteVers(nbVoix)[1])} vers. Tu les écriras tous, seul, sans jamais relire : le cadavre exquis se joue contre ta propre mémoire.`,
-                  `Fate will set the length of the poem — from ${toRomain(fourchetteVers(nbVoix)[0])} to ${toRomain(fourchetteVers(nbVoix)[1])} lines. You will write them all, alone, without ever rereading: the exquisite corpse is played against your own memory.`)}</>
-              : <>{tr(`Le sort fixera la longueur du poème — de ${toRomain(fourchetteVers(nbVoix)[0])} à ${toRomain(fourchetteVers(nbVoix)[1])} vers.${nbVoix > 1 ? ' Toutes les voix convoquées y parleront.' : ''} Tu l'ouvriras, tu le refermeras, et la main te reviendra tous les`, `Fate will set the length of the poem — from ${toRomain(fourchetteVers(nbVoix)[0])} to ${toRomain(fourchetteVers(nbVoix)[1])} lines.${nbVoix > 1 ? ' Every voice you summon will speak.' : ''} You will open it, you will close it, and the pen will return to you every`)} {toRomain(cadenceRetour(nbVoix)[0])} {tr('à', 'to')} {toRomain(cadenceRetour(nbVoix)[1])} {tr('vers — plus les voix sont nombreuses, plus tes retours se font fragments.', 'lines — the more voices there are, the more your turns shrink to fragments.')}</>
+              ? <>{tr(`Le sort fixera la longueur du poème — de ${fourchetteVers(nbVoix)[0]} à ${fourchetteVers(nbVoix)[1]} vers. Tu les écriras tous, seul, sans jamais relire : le cadavre exquis se joue contre ta propre mémoire.`,
+                  `Fate will set the length of the poem — from ${fourchetteVers(nbVoix)[0]} to ${fourchetteVers(nbVoix)[1]} lines. You will write them all, alone, without ever rereading: the exquisite corpse is played against your own memory.`)}</>
+              : <>{tr(`Le sort fixera la longueur du poème — de ${fourchetteVers(nbVoix)[0]} à ${fourchetteVers(nbVoix)[1]} vers.${nbVoix > 1 ? ' Toutes les voix convoquées y parleront.' : ''} Tu l'ouvriras, tu le refermeras, et la main te reviendra tous les`, `Fate will set the length of the poem — from ${fourchetteVers(nbVoix)[0]} to ${fourchetteVers(nbVoix)[1]} lines.${nbVoix > 1 ? ' Every voice you summon will speak.' : ''} You will open it, you will close it, and the pen will return to you every`)} {cadenceRetour(nbVoix)[0]} {tr('à', 'to')} {cadenceRetour(nbVoix)[1]} {tr('vers — plus les voix sont nombreuses, plus tes retours se font fragments.', 'lines — the more voices there are, the more your turns shrink to fragments.')}</>
             }
           </div>
         </motion.div>
@@ -375,7 +375,7 @@ export default function Atelier() {
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 10 }}>
             <span className="font-fraunces font-black" style={{ fontSize: 44, color: accent, lineHeight: 1 }}>
-              {nbVoix === 0 ? tr('Seul', 'Alone') : toRomain(nbVoix)}
+              {nbVoix === 0 ? tr('Seul', 'Alone') : nbVoix}
             </span>
             <span style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, textTransform: 'uppercase' }}>
               {nbVoix === 0 ? tr('ta main uniquement', 'your hand only') : toutes ? tr('Toutes les voix', 'All the voices') : nbVoix === 1 ? tr('une seule voix', 'a single voice') : tr(`${nbVoix} voix`, `${nbVoix} voices`)}
