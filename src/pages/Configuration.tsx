@@ -400,7 +400,7 @@ export default function Configuration() {
         motif={refus?.motif ?? 'essai_epuise'}
         plafond={refus?.plafond}
         onFermer={() => setRefus(null)}
-        onAbonne={() => { setRefus(null); demarrer() }}
+        onEncrierRempli={() => { setRefus(null); demarrer() }}
         accent={accent} encre={encre} bg={seance?.ambiance.bg ?? '#f0e4cc'}
       />
     </PageTransition>

@@ -128,12 +128,31 @@ d'abonnement nommé *L'Encrier*, contenant deux produits.
 | `fr.nathansonnet.cadavreexquis.encrier.mensuel` | 1 mois | 4,99 € |
 | `fr.nathansonnet.cadavreexquis.encrier.annuel` | 1 an | 39,99 € |
 
+**Et deux consommables** (Fonctionnalités → Achats intégrés → Consommable),
+les flacons d'encre — des illustrations achetées à l'unité, pour qui ne
+veut pas s'abonner :
+
+| Identifiant | Type | Prix | Crédite |
+|---|---|---|---|
+| `fr.nathansonnet.cadavreexquis.flacon.4` | consommable | 0,99 € | 4 illustrations |
+| `fr.nathansonnet.cadavreexquis.flacon.12` | consommable | 2,99 € | 12 illustrations |
+
+Le nombre d'images est décidé **côté serveur** (`FLACONS` dans
+`api/_acces.ts`) : l'identifiant du produit doit donc correspondre au
+caractère près, sinon l'achat est encaissé et rien n'est crédité.
+
 Les mêmes identifiants dans Google Play Console.
 
 **Dans RevenueCat** : un entitlement nommé **`encrier`** (le code le cherche
-sous ce nom exact), un offering `default` contenant les deux produits, puis
-le webhook pointé sur `https://cadavre-exquis-beta.vercel.app/api/revenuecat`
-avec l'en-tête `Authorization` égal à `REVENUECAT_WEBHOOK_SECRET`.
+sous ce nom exact), un offering `default` contenant **les quatre produits**
+— deux abonnements et deux flacons —, puis le webhook pointé sur
+`https://cadavre-exquis-beta.vercel.app/api/revenuecat` avec l'en-tête
+`Authorization` égal à `REVENUECAT_WEBHOOK_SECRET`.
+
+Les flacons peuvent vivre dans le même offering sans risque : `lireOffres`
+et `lireFlacons` les trient par identifiant de produit. Sans ce tri, un
+consommable apparaissait comme un abonnement mensuel — le mur aurait vendu
+« 2,99 € par mois » pour douze images achetées une fois.
 
 **S'inscrire au Small Business Program** d'Apple : 15 % de commission au lieu
 de 30 %. Tous les calculs de marge du dossier partent de ce taux.
@@ -147,7 +166,7 @@ pseudo de test et cette note :
 > mode", enter any pen name, then "Create a game". Solo play (Written Cadavre,
 > Drawn Cadavre, The Workshop) needs no account at all.
 >
-> The game is free. A one-time trial (2 illustrations, 5 games with the AI
+> The game is free. A one-time trial (2 illustrations, 8 games with the AI
 > voices, 3 drawing readings) is granted automatically on first use — no
 > account, no purchase needed, so the reviewer can exercise every paid
 > feature without subscribing. The "Inkwell" subscription only unlocks

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { mono } from '../lib/typo'
-import { libelleSolde, caseDEssai } from '../lib/solde'
-import { lireAcces, identiteOuverte, ESSAI_OFFERT, type ActePayant } from '../lib/acces'
+import { libelleSolde, caseDEssai, resteTotal, type Reserve } from '../lib/solde'
+import { lireAcces, identiteOuverte, ESSAI_OFFERT, RATION_HEBDO, type ActePayant } from '../lib/acces'
 
 /**
  * Le solde de l'encrier, au point de choix — lot 13 de l'audit du
@@ -39,27 +39,35 @@ export interface SoldeEncrierProps {
 }
 
 export default function SoldeEncrier({ acte, encre, accent, relire = 0, style }: SoldeEncrierProps) {
-  const [reste, setReste] = useState<number | null>(null)
+  const [reserve, setReserve] = useState<Reserve | null>(null)
 
   useEffect(() => {
     let vivant = true
     ;(async () => {
+      const cle = caseDEssai(acte)
       if (!(await identiteOuverte())) {
-        if (vivant) setReste(ESSAI_OFFERT[caseDEssai(acte)])
+        // Aucune identité : la réserve est intacte par définition, et la
+        // ration de la première semaine est pleine puisqu'elle n'a jamais
+        // été entamée. On l'annonce sans rien ouvrir.
+        if (vivant) setReserve({ essai: ESSAI_OFFERT[cle], flacon: 0, ration: RATION_HEBDO[cle] })
         return
       }
       const etat = await lireAcces()
       if (!vivant) return
       // Registre muet ou abonnement en cours : on se tait, dans les deux cas.
-      if (!etat || etat.abonne) { setReste(null); return }
-      setReste(etat.essai[caseDEssai(acte)])
+      if (!etat || etat.abonne) { setReserve(null); return }
+      setReserve({
+        essai: etat.essai[cle],
+        flacon: cle === 'images' ? (etat.flacon?.images ?? 0) : 0,
+        ration: cle === 'parties' ? (etat.ration?.parties ?? 0) : 0,
+      })
     })()
     return () => { vivant = false }
   }, [acte, relire])
 
-  if (reste === null) return null
+  if (reserve === null) return null
 
-  const epuise = reste <= 0
+  const epuise = resteTotal(reserve) <= 0
   return (
     <div
       style={{
@@ -69,7 +77,7 @@ export default function SoldeEncrier({ acte, encre, accent, relire = 0, style }:
         ...style,
       }}
     >
-      {libelleSolde(acte, reste)}
+      {libelleSolde(acte, reserve)}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
+import { ESSAI_OFFERT, RATION_HEBDO } from '../lib/reserves'
 
 const STRUCTURES = [
   { romain: 'I',   label: tr('Phrase courte', 'Short sentence'),  detail: tr('3 cases · sujet, verbe, complément', '3 slots · subject, verb, complement'), exemple: tr("L'ombre / glisse / dans la nuit froide", 'The shadow / slides / through the cold night') },
@@ -32,10 +33,76 @@ const SECTIONS = [
   { id: 'ecrit',    label: tr('CADAVRE ÉCRIT', 'WRITTEN CADAVRE') },
   { id: 'dessine',  label: tr('CADAVRE DESSINÉ', 'DRAWN CADAVRE') },
   { id: 'atelier',  label: tr("L'ATELIER", 'THE WORKSHOP') },
-  // Le rendez-vous quotidien. Il ferme la liste parce qu'il ne se joue pas
-  // comme les trois autres : on n'y ouvre pas une partie, on ajoute une main
+  // Le rendez-vous quotidien. Il vient après les trois modes parce qu'il ne
+  // se joue pas comme eux : on n'y ouvre pas une partie, on ajoute une main
   // à celle de tout le monde.
   { id: 'jour',     label: tr('LE POÈME DU JOUR', 'THE POEM OF THE DAY') },
+  // L'encrier ferme la liste, et ce n'est pas un mode de jeu : c'est ce qui
+  // explique pourquoi trois gestes sur toute l'application sont comptés et
+  // pourquoi tout le reste ne l'est pas. Un joueur qui découvre cela AU
+  // MOMENT DU REFUS croit à un piège ; ici, il l'apprend avant.
+  { id: 'encrier',  label: tr("L'ENCRIER", 'THE INKWELL') },
+]
+
+/**
+ * Ce que l'encrier compte, et ce qu'il ne compte pas.
+ *
+ * L'ordre est celui où le joueur les rencontre : d'abord ce qui est
+ * gratuit — c'est l'essentiel du jeu et il doit venir en premier — puis les
+ * trois actes comptés, puis les réserves, de la plus offerte à la plus
+ * engageante.
+ *
+ * On ne cite AUCUN prix : il dépend du pays, il change, et le magasin
+ * l'affiche lui-même au moment de l'achat. Une page de règles qui annonce
+ * « 4,99 € » vieillit mal et ment à qui vit ailleurs.
+ */
+const ENCRIER = [
+  {
+    label: tr('CE QUI NE COÛTE RIEN', 'WHAT COSTS NOTHING'),
+    detail: tr(
+      "Écrire à plusieurs, dessiner, publier en galerie, relire ses poèmes, composer son recueil, donner sa main au poème du jour : rien de tout cela n'est compté, et rien ne le sera.",
+      'Writing together, drawing, publishing to the gallery, rereading your poems, composing your collection, giving your hand to the poem of the day: none of it is counted, and none of it will be.',
+    ),
+  },
+  {
+    label: tr('CE QUI EST COMPTÉ', 'WHAT IS COUNTED'),
+    detail: tr(
+      "Trois gestes seulement appellent une machine qui me facture : une illustration grand format, une partie où les voix de l'IA écrivent, la lecture surréaliste d'un dessin. Ce sont les seuls que l'encrier mesure.",
+      'Only three acts call a machine that bills me: a large-format illustration, a game where the AI voices write, the surrealist reading of a drawing. Those are the only ones the inkwell measures.',
+    ),
+  },
+  {
+    // Les nombres viennent d'`ESSAI_OFFERT` et non de la phrase. Écrits en
+    // toutes lettres ils annonçaient encore « cinq illustrations » le jour
+    // où la réserve est passée à deux — la faute même que le lot 9 a
+    // corrigée ailleurs, et ici elle se lirait comme une promesse non tenue.
+    label: tr("L'ESSAI, UNE FOIS", 'THE TRIAL, ONCE'),
+    detail: tr(
+      `À ta première partie, ton encrier est plein : ${ESSAI_OFFERT.images} illustrations, ${ESSAI_OFFERT.parties} parties avec les voix, ${ESSAI_OFFERT.lectures} lectures de dessin. De quoi voir exactement ce que tout cela vaut, sans rien donner.`,
+      `At your first game, your inkwell is full: ${ESSAI_OFFERT.images} illustrations, ${ESSAI_OFFERT.parties} games with the voices, ${ESSAI_OFFERT.lectures} drawing readings. Enough to see exactly what it is worth, without giving anything.`,
+    ),
+  },
+  {
+    label: tr('LA RATION, CHAQUE SEMAINE', 'THE RATION, EVERY WEEK'),
+    detail: tr(
+      `Puis, ${RATION_HEBDO.parties} partie avec les voix te revient chaque semaine, gratuitement et sans fin. L'encrier n'est jamais vraiment sec.`,
+      `Then ${RATION_HEBDO.parties} game with the voices comes back to you every week, free and without end. The inkwell is never truly dry.`,
+    ),
+  },
+  {
+    label: tr('LE FLACON', 'THE FLASK'),
+    detail: tr(
+      "Des illustrations achetées à l'unité, quand tu en veux. Achat unique, aucune reconduction, et l'encre ne s'évapore pas : ce que tu n'utilises pas t'attend.",
+      'Illustrations bought by the handful, when you want them. One-time purchase, no renewal, and the ink does not evaporate: what you do not use waits for you.',
+    ),
+  },
+  {
+    label: tr("L'ABONNEMENT", 'THE SUBSCRIPTION'),
+    detail: tr(
+      "Voix de l'IA et lectures de dessins sans compter, deux illustrations grand format par jour. Pour qui écrit souvent — les autres n'en ont pas besoin.",
+      'AI voices and drawing readings without counting, two large-format illustrations a day. For those who write often — the others do not need it.',
+    ),
+  },
 ]
 
 export default function Aide() {
@@ -103,7 +170,10 @@ export default function Aide() {
           const isEcrit = section.id === 'ecrit'
           const isAtelier = section.id === 'atelier'
           const isJour = section.id === 'jour'
-          const col = isEcrit ? accent : isAtelier || isJour ? encre : second
+          const isEncrier = section.id === 'encrier'
+          // L'accent, comme le bandeau du mur : c'est le même objet, il doit
+          // se reconnaître d'un écran à l'autre.
+          const col = isEcrit || isEncrier ? accent : isAtelier || isJour ? encre : second
 
           return (
             <motion.div
@@ -129,6 +199,7 @@ export default function Aide() {
                     {isEcrit ? tr('Cadavre Écrit', 'Written Cadavre')
                       : isAtelier ? tr("L'Atelier", 'The Workshop')
                       : isJour ? tr('Le poème du jour', 'The poem of the day')
+                      : isEncrier ? tr("L'Encrier", 'The Inkwell')
                       : tr('Cadavre Dessiné', 'Drawn Cadavre')}
                   </div>
                 </div>
@@ -269,7 +340,32 @@ export default function Aide() {
                         </>
                       )}
 
-                      {!isEcrit && !isAtelier && !isJour && (
+                      {isEncrier && (
+                        <>
+                          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
+                            {tr(
+                              'Le jeu est gratuit et entier. Trois gestes seulement appellent une machine qui coûte de l’argent réel : c’est l’encrier qui les compte, et lui seul. Tout le reste est sans limite, et le restera.',
+                              'The game is free and whole. Only three acts call a machine that costs real money: the inkwell counts those, and nothing else. Everything else is without limit, and will stay so.',
+                            )}
+                          </p>
+
+                          {ENCRIER.map(v => (
+                            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+                              <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+                              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
+                            </div>
+                          ))}
+
+                          <p style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, lineHeight: 1.7, marginTop: 16 }}>
+                            {tr(
+                              'Aucune publicité, aucun pisteur, aucune donnée vendue. Le prix, lui, est celui qu’affiche ton magasin au moment de l’achat.',
+                              'No advertising, no trackers, no data sold. The price is the one your store shows at the moment of purchase.',
+                            )}
+                          </p>
+                        </>
+                      )}
+
+                      {!isEcrit && !isAtelier && !isJour && !isEncrier && (
                         <>
                           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
                             {tr('La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.', 'The graphic variant. Each player draws a portion of the body on a horizontal band, without seeing the neighbouring fragments. The monster revealed at the end is interpreted by an artificial intelligence in surrealist verse.')}

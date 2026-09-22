@@ -42,6 +42,12 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] Appliquer `supabase/migrations/20260730000010_abonnement.sql`
 - [ ] Créer le compte RevenueCat, l'entitlement `encrier`, l'offering par défaut
 - [ ] Créer les abonnements dans App Store Connect et Google Play Console
+- [ ] **Créer les deux flacons** — consommables, mêmes identifiants que
+      `FLACONS` dans `api/_acces.ts` :
+      `fr.nathansonnet.cadavreexquis.flacon.4` (0,99 €) et
+      `…flacon.12` (2,99 €). À ranger dans le **même offering** que les
+      abonnements : `lireOffres` et `lireFlacons` les trient par
+      identifiant de produit
 - [ ] Renseigner les 4 variables `REVENUECAT_*` (voir `.env.example`)
 - [ ] S'inscrire au Small Business Program d'Apple (15 % au lieu de 30 %)
 
@@ -115,19 +121,60 @@ facturé, rien n'est compté.
 | Lecture surréaliste d'un dessin | Sonnet 4.6 + vision | ~0,008 $ |
 | *(photo de profil)* | FLUX schnell | 0,003 $ |
 
-**Essai offert une fois**, à la création de l'identité : **2 illustrations**,
-5 parties avec les voix, 3 lectures de dessin — soit **0,204 $** au maximum.
-C'est la dépense d'acquisition, et elle montre exactement ce que l'abonnement
-ouvre. `src/__tests__/essaiOffert.test.ts` la **mesure** : plafond à 0,25 $,
-et les valeurs du client doivent égaler les `DEFAULT` de la migration.
+**Essai offert une fois**, à la création de l'identité : **2 illustrations,
+8 parties avec les voix, 3 lectures de dessin** — soit **0,264 $** au
+maximum, donc un point mort à **5,8 %** des installations abonnées un mois
+si tout est consommé. `src/__tests__/essaiOffert.test.ts` le **mesure** :
+plafond de coût à 0,30 $, et les valeurs du client doivent égaler les
+`DEFAULT` de la migration.
 
-Les illustrations sont passées de 5 à 2 le 22 septembre. À cinq, elles
-pesaient 0,20 $ des 0,32 $ — les deux tiers de l'acquisition pour l'acte
-qu'on comprend dès la première. Et **l'essai n'est pas attaché à une
-personne mais à une identité anonyme** : une réinstallation, un effacement
-des données du site, un nouveau téléphone, et il se rouvre. Ce n'est pas une
-dépense par joueur, c'est une dépense par remise à zéro, et rien ne la
-borne — raison de plus pour qu'elle soit petite.
+Deux mouvements le 22 septembre, en sens contraire. Les **illustrations de
+5 à 2** (−0,12 $) : à cinq elles pesaient les deux tiers de l'acquisition,
+pour l'acte qu'on comprend dès la première. Les **parties de 5 à 8**
+(+0,06 $) : les voix demandent d'y revenir pour se faire aimer. La
+générosité s'est donc DÉPLACÉE des images vers les voix, elle n'a pas
+seulement diminué — et elle l'a fait là où la dépense est **unique**, la
+ration hebdomadaire étant, elle, ce qu'on a gardé bas.
+
+Et **l'essai n'est pas attaché à une personne mais à une identité
+anonyme** : une réinstallation, un effacement des données du site, un
+nouveau téléphone, et il se rouvre. Ce n'est pas une dépense par joueur,
+c'est une dépense par remise à zéro, et rien ne la borne — raison de plus
+pour qu'elle soit petite.
+
+**Quatre sources, et l'ordre où l'on y puise est une décision.**
+
+| source | ce qu'elle donne | renouvelée ? |
+|---|---|---|
+| **ration** | 1 partie avec les voix / semaine | lundi UTC, perdue si non bue |
+| **essai** | 2 images, 8 parties, 3 lectures | jamais — offert une fois |
+| **flacon** | des images achetées (4 ou 12) | jamais — permanent |
+| **abonnement** | sans compter, sous plafonds | mensuel ou annuel |
+
+- **Parties : ration d'abord, essai ensuite.** La ration périt le lundi,
+  l'essai ne périt pas ; on boit ce qui va se perdre.
+- **Images : essai d'abord, flacon ensuite.** Ni l'un ni l'autre ne périt,
+  donc on dépense ce qui est offert avant ce qui est acheté. Brûler un
+  flacon payé pendant que l'essai dort serait un tour de passe-passe.
+- **Une génération ratée retourne à SON bocal.** Rendre une image de flacon
+  à l'essai serait un vol invisible — d'où `usage_events.source`, qui a
+  remplacé le booléen `sur_essai`.
+
+**La ration, et pourquoi elle est à UNE.** Un mur qu'on franchit une fois
+s'oublie : le joueur part au lieu de s'abonner, d'autant qu'une porte
+gratuite est juste à côté — le poème du jour, qui lui donne de vraies
+autres mains tous les jours. Une ration se ressent chaque semaine.
+Elle coûte **1,04 $ par an** et par actif non abonné, et s'autofinance dès
+**1,9 %** d'abonnés parmi eux ; à deux par semaine il en faudrait 3,6 %, à
+trois **5,4 %** — au-dessus de ce que le freemium obtient d'ordinaire, et le
+coût y monte AVEC le succès. **Une ration se relève, jamais ne se baisse** :
+la reprendre fabrique les notes à une étoile. On part donc bas.
+
+**Le flacon, et pourquoi il ne vaut que pour les images.** Un flacon n'a de
+sens que s'il se vide. À 0,020 $ la partie, un pack honnête à 2,99 € en
+contiendrait des dizaines — des mois de jeu, jamais racheté, et il
+remplacerait un abonnement possible par une pièce. À 0,040 $ l'illustration,
+douze se boivent. **Les images sont le flacon, les voix sont l'abonnement.**
 
 **Abonnement** : 4,99 €/mois ou 39,99 €/an. Voix de l'IA et lectures de
 dessins illimitées, 2 illustrations grand format par jour.
@@ -137,8 +184,8 @@ dessins illimitées, 2 illustrations grand format par jour.
 | Revenu net mensuel | 4,58 $ (après les 15 % Apple) |
 | Coût d'un abonné moyen | ~0,80 $/mois → marge 83 % |
 | Coût de l'abonné qui sature tous les plafonds | ~2,70 $/mois → marge 41 % |
-| Point mort, essai consommé à FOND | **4,5 %** des installations abonnées un mois (7,1 % avant le passage à 2 illustrations) |
-| Point mort, essai consommé à moitié | ~2,2 % |
+| Point mort, essai consommé à FOND | **5,8 %** des installations abonnées un mois (7,1 % avant le 22 septembre) |
+| Point mort, essai consommé à moitié | ~2,9 % |
 
 Le point mort ci-dessus ne couvre que l'**inférence**. Il ignore les coûts
 fixes — Vercel Pro, Supabase Pro, les 99 $/an d'Apple — soit de l'ordre de
@@ -157,12 +204,23 @@ phases restantes, les valeurs exactes à recopier, les points de contrôle.
 
 - `supabase/migrations/20260730000010_abonnement.sql` — tables `acces` et
   `usage_events`, RPC `etat_acces` / `consommer_acces` / `rendre_acces` /
-  `poser_abonnement`. **Migration à appliquer.**
+  `poser_abonnement` / `crediter_flacon`, plus les deux constantes
+  `ration_hebdo()` et `semaine_courante()`. **Migration à appliquer.**
+  Éprouvée le 22 septembre sur un Postgres 16 jetable : onze scénarios
+  joués — ordre des sources, idempotence, semaine qui tourne, webhook
+  rejoué, restitution au bon bocal, plafond de l'abonné.
+- `src/lib/reserves.ts` — `ESSAI_OFFERT` et `RATION_HEBDO`, **sans une
+  seule importation** : les mesures unitaires ET les tests de bout en bout
+  sous Node doivent pouvoir les lire sans entraîner le client Supabase.
 - `api/_acces.ts` — les plafonds journaliers (`PLAFOND_JOUR`) et le point de
   passage unique. C'est là que se règlent tous les cadrans économiques.
 - `api/acces.ts` — état du joueur (GET) et ouverture d'une partie IA (POST).
 - `api/revenuecat.ts` — webhook du magasin, **seul** endroit où le statut
-  d'abonné s'écrit.
+  d'abonné s'écrit et où un flacon se crédite. Le flacon est traité AVANT
+  le contrôle d'`expiration_at_ms` : un consommable n'expire pas, il n'en
+  porte aucune, et le garde le jetterait comme un événement malformé —
+  Apple aurait débité, le joueur n'aurait rien reçu, et les journaux
+  diraient « ignoré ».
 - `api/_revenuecat.ts` — lecture directe chez RevenueCat, pour « Restaurer
   mes achats » après une réinstallation.
 - `src/lib/acces.ts` · `src/lib/achats.ts` · `src/hooks/useAcces.ts` ·
@@ -724,7 +782,7 @@ tait. `annoncerScellement` dans `src/utils/notifications.ts`.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (420 tests unitaires) + Playwright (58 tests E2E, FR et EN)
+- Tests : Vitest (440 tests unitaires) + Playwright (68 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

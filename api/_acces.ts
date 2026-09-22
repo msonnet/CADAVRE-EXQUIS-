@@ -37,11 +37,42 @@ export const PLAFOND_JOUR: Record<ActePayant, number> = {
   avatar: 5,
 }
 
+/**
+ * Les flacons — des illustrations achetées à l'unité, sans engagement.
+ *
+ * C'est la table de conversion entre un identifiant de produit du magasin
+ * et un nombre d'images, et elle vit **côté serveur exclusivement** : si le
+ * client annonçait la quantité, il annoncerait cent.
+ *
+ * Marges, au tarif d'Apple pour un petit éditeur (15 %) :
+ *   · 4 images  → 0,99 € encaissés 0,84 € pour 0,16 $ de FLUX
+ *   · 12 images → 2,99 € encaissés 2,54 € pour 0,48 $ de FLUX
+ *
+ * Un flacon n'a de sens que pour les IMAGES. À 0,020 $ la partie avec les
+ * voix, un pack honnête en contiendrait des dizaines — des mois de jeu,
+ * jamais racheté, et il remplacerait un abonnement possible par une pièce.
+ * Les voix sont donc l'abonnement, et rien d'autre.
+ */
+export const FLACONS: Record<string, number> = {
+  'fr.nathansonnet.cadavreexquis.flacon.4': 4,
+  'fr.nathansonnet.cadavreexquis.flacon.12': 12,
+}
+
+/** Combien d'images ce produit crédite. 0 si ce n'est pas un flacon. */
+export function imagesDuFlacon(produit: unknown): number {
+  return FLACONS[String(produit ?? '')] ?? 0
+}
+
 export interface EtatAcces {
   abonne: boolean
   jusqua: string | null
   produit: string | null
+  /** Offert une fois, permanent : ce qui reste reste. */
   essai: { images: number; parties: number; lectures: number }
+  /** Acheté, permanent. Les images seulement. */
+  flacon: { images: number }
+  /** Rendue chaque lundi UTC ; ce qui n'a pas été bu est perdu. */
+  ration: { parties: number }
 }
 
 export interface Verdict {
@@ -144,6 +175,38 @@ export async function rendre(userId: string, event?: number): Promise<void> {
   if (!admin) return
   const { error } = await admin.rpc('rendre_acces', { p_user: userId, p_event: event })
   if (error) console.error('[acces] restitution impossible', error.message)
+}
+
+/**
+ * Crédite un flacon acheté. Appelé par le seul webhook du magasin.
+ *
+ * `reference` est l'identifiant de la transaction : le magasin REJOUE ses
+ * rappels quand il n'a pas reçu notre accusé, et c'est lui qui rend le
+ * second passage inoffensif. Renvoie le nombre réellement crédité, donc 0
+ * si la transaction était déjà connue.
+ *
+ * Contrairement au reste de ce module, un échec ici ne « laisse pas
+ * passer » : il remonte, pour que le webhook réponde 500 et que le magasin
+ * réessaie. Laisser passer signifierait ici perdre un achat payé.
+ */
+export async function crediterFlacon(
+  userId: string,
+  images: number,
+  reference: string,
+): Promise<{ ok: boolean; credite: number }> {
+  const admin = clientAdmin()
+  if (!admin) return { ok: false, credite: 0 }
+  const { data, error } = await admin.rpc('crediter_flacon', {
+    p_user: userId,
+    p_images: images,
+    p_reference: reference,
+  })
+  if (error) {
+    console.error('[acces] flacon non crédité', error.message)
+    return { ok: false, credite: 0 }
+  }
+  const d = data as any
+  return { ok: true, credite: d?.credite ? Number(d.images) : 0 }
 }
 
 /**

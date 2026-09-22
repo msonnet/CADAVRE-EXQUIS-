@@ -447,7 +447,7 @@ export default function FinDessin() {
         motif={refus?.motif ?? 'essai_epuise'}
         plafond={refus?.plafond}
         onFermer={() => setRefus(null)}
-        onAbonne={() => { setRefus(null); reessayerVision() }}
+        onEncrierRempli={() => { setRefus(null); reessayerVision() }}
         accent={accent} encre={encre} bg={bg}
       />
 

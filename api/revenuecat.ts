@@ -1,11 +1,13 @@
 import { clientAdmin } from './_supabase.js'
+import { crediterFlacon, imagesDuFlacon } from './_acces.js'
 
 /**
  * Webhook du magasin (RevenueCat).
  *
- * C'est le seul endroit où le statut d'abonné s'écrit. L'application ne
- * décide jamais qu'elle a été payée : elle lit un état que seul ce rappel
- * serveur a pu poser, après qu'Apple ou Google ont validé la transaction.
+ * C'est le seul endroit où le statut d'abonné s'écrit, et le seul où un
+ * flacon se crédite. L'application ne décide jamais qu'elle a été payée :
+ * elle lit un état que seul ce rappel serveur a pu poser, après qu'Apple ou
+ * Google ont validé la transaction.
  *
  * L'`app_user_id` transmis par RevenueCat est l'identifiant Supabase du
  * joueur — c'est l'application qui le lui donne à l'ouverture de session.
@@ -52,6 +54,46 @@ export default async function handler(req: any, res: any): Promise<void> {
     // Supabase n'était pas ouverte à l'achat. Rien à rattacher.
     console.warn(`[revenuecat] app_user_id non rattachable (${type})`)
     res.status(200).json({ ok: true, ignore: 'app_user_id' })
+    return
+  }
+
+  /*
+    Le flacon — un achat NON RENOUVELABLE.
+
+    Il doit être traité AVANT le contrôle d'`expiration_at_ms` : un
+    consommable n'expire pas, il n'en porte donc aucune, et le garde
+    ci-dessous le jetterait comme un événement malformé. C'est exactement
+    le genre de panne qui ne se voit pas — l'achat est débité chez Apple,
+    le joueur ne reçoit rien, et nos journaux disent « ignoré ».
+
+    La quantité vient de la TABLE, jamais de l'événement : un identifiant
+    de produit inconnu ne crédite rien.
+  */
+  if (type === 'NON_RENEWING_PURCHASE') {
+    const images = imagesDuFlacon(evt.product_id)
+    if (!images) {
+      console.warn(`[revenuecat] produit non renouvelable inconnu : ${evt.product_id}`)
+      res.status(200).json({ ok: true, ignore: 'produit_inconnu' })
+      return
+    }
+    // `transaction_id` identifie l'achat chez le magasin ; à défaut, l'`id`
+    // de l'événement. L'un des deux existe toujours, et il faut qu'il soit
+    // stable d'un rejeu à l'autre — sans quoi l'idempotence ne tient plus.
+    const reference = String(evt.transaction_id ?? evt.id ?? '')
+    if (!reference) {
+      console.error('[revenuecat] achat sans référence stable — non crédité')
+      res.status(500).json({ error: 'reference_absente' })
+      return
+    }
+
+    const { ok, credite } = await crediterFlacon(userId, images, reference)
+    if (!ok) {
+      // 500 : le magasin réessaiera. Laisser passer perdrait un achat payé.
+      res.status(500).json({ error: 'ecriture_impossible' })
+      return
+    }
+    console.log(`[revenuecat] flacon ${evt.product_id} → ${credite} image(s)`)
+    res.status(200).json({ ok: true, images: credite })
     return
   }
 

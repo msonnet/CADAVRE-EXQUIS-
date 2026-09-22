@@ -16,7 +16,12 @@ import { api } from './apiBase'
 export interface EtatAcces {
   abonne: boolean
   jusqua: string | null
+  /** Offert une fois, permanent. */
   essai: { images: number; parties: number; lectures: number }
+  /** Acheté, permanent. Les images seulement — voir `FLACONS` côté serveur. */
+  flacon: { images: number }
+  /** Rendue chaque lundi UTC ; ce qui n'a pas été bu est perdu. */
+  ration: { parties: number }
   plafonds: { image_pro: number; partie_ia: number; lecture_dessin: number }
 }
 
@@ -54,20 +59,13 @@ export async function identiteOuverte(): Promise<boolean> {
   }
 }
 
-/**
- * La réserve d'essai à l'ouverture — les valeurs par DEFAUT de la table
- * `acces`. Tant qu'aucune identité n'existe, elle est intacte par
- * définition : c'est ce qu'on peut annoncer sans rien créer ni rien
- * consommer.
- *
- * Ces trois nombres SONT la dépense d'acquisition du jeu. Ils doivent rester
- * identiques aux valeurs par défaut de
- * `supabase/migrations/20260730000010_abonnement.sql` — une mesure les tient
- * d'accord, et la même mesure plafonne le coût total de l'essai. Deux
- * illustrations et non cinq : elles pesaient les deux tiers de la dépense,
- * et l'essai se rouvre à chaque réinstallation.
- */
-export const ESSAI_OFFERT = { images: 2, parties: 5, lectures: 3 } as const
+/*
+  Les réserves vivent dans `reserves.ts`, sans une seule importation : les
+  mesures et les tests de bout en bout doivent pouvoir les lire sans
+  entraîner le client Supabase. On les ré-exporte ici pour que les appelants
+  n'aient qu'une porte à connaître.
+*/
+export { ESSAI_OFFERT, RATION_HEBDO } from './reserves'
 
 /**
  * Lit l'état d'accès. Par défaut sans rien créer : afficher un écran de

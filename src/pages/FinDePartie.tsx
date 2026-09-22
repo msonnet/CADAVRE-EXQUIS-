@@ -301,7 +301,7 @@ export default function FinDePartie() {
         motif={refus?.motif ?? 'essai_epuise'}
         plafond={refus?.plafond}
         onFermer={() => setRefus(null)}
-        onAbonne={() => {
+        onEncrierRempli={() => {
           setRefus(null)
           if (styleChoisiRef.current) choisirStyle(styleChoisiRef.current)
         }}

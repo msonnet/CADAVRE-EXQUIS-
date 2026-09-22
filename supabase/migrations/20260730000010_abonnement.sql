@@ -1,16 +1,43 @@
 -- ════════════════════════════════════════════════════════════════════
--- Accès aux fonctions payantes : essai offert, puis abonnement
+-- L'encrier : essai, ration, flacon, abonnement
 --
 -- Le jeu est gratuit et entier. Seuls trois actes appellent un serveur qui
 -- me facture — une illustration grand format, une partie où l'IA écrit, la
 -- lecture surréaliste d'un dessin. Ces trois-là passent par ici.
 --
--- Deux états, pas plus :
---   · non abonné → il lui reste une réserve d'essai, offerte une seule fois
---     à la création du profil ; quand elle est vide, le mur s'ouvre.
---   · abonné     → illimité, sous des plafonds journaliers qui ne sont pas
---     des règles de jeu mais des pare-feu : ils rendent le pire cas
---     impossible à rendre déficitaire.
+-- QUATRE SOURCES, et l'ordre dans lequel on y puise est une décision :
+--
+--   · ration   — une partie avec les voix par SEMAINE, gratuite, pour
+--                toujours. Elle se recharge le lundi et ce qui n'a pas été
+--                bu est perdu.
+--   · essai    — offert une seule fois à la création de l'identité.
+--                Permanent : ce qui reste reste.
+--   · flacon   — des illustrations ACHETÉES, à l'unité, sans engagement.
+--                Permanent aussi.
+--   · abonnement — sans compter, sous des plafonds journaliers qui ne sont
+--                pas des règles de jeu mais des pare-feu.
+--
+-- ── Pourquoi une ration plutôt qu'un mur ────────────────────────────────
+--
+-- L'essai seul faisait un mur : cinq parties, puis plus rien, pour
+-- toujours. Un mur qu'on franchit une fois s'oublie, et le joueur part au
+-- lieu de s'abonner — d'autant qu'une porte gratuite est juste à côté, le
+-- poème du jour, qui lui donne de vraies autres mains tous les jours.
+--
+-- Une partie par semaine coûte 1,04 $ par an et par joueur actif non
+-- abonné. La ration s'autofinance dès 1,9 % d'abonnés parmi les actifs
+-- hebdomadaires ; à deux par semaine il en faudrait 3,6 %, à trois 5,4 % —
+-- au-dessus de ce que le freemium obtient d'ordinaire. Et une ration se
+-- RELÈVE, jamais ne se baisse : la reprendre est ce qui fabrique les notes
+-- à une étoile. On part donc bas.
+--
+-- ── Pourquoi le flacon ne vaut que pour les images ──────────────────────
+--
+-- Un flacon n'a de sens que s'il se vide. À 0,020 $ la partie, un pack
+-- honnête à 2,99 € en contiendrait des dizaines, c'est-à-dire des mois de
+-- jeu : il ne serait jamais racheté, et il REMPLACERAIT un abonnement
+-- possible par une pièce, une fois. À 0,040 $ l'illustration, douze se
+-- boivent. Les images sont donc le flacon, les voix sont l'abonnement.
 --
 -- Rien de tout cela ne peut vivre côté client : un statut d'abonné en
 -- localStorage s'éditerait en dix secondes, et chaque acte coûte de l'argent
@@ -48,8 +75,24 @@ CREATE TABLE IF NOT EXISTS public.acces (
   -- par défaut ne touche AUCUNE ligne existante :
   --   ALTER TABLE public.acces ALTER COLUMN essai_images SET DEFAULT 2;
   essai_images   INTEGER NOT NULL DEFAULT 2 CHECK (essai_images  >= 0),
-  essai_parties  INTEGER NOT NULL DEFAULT 5 CHECK (essai_parties >= 0),
+  essai_parties  INTEGER NOT NULL DEFAULT 8 CHECK (essai_parties >= 0),
   essai_lectures INTEGER NOT NULL DEFAULT 3 CHECK (essai_lectures >= 0),
+
+  -- Le flacon : des illustrations achetées à l'unité, hors abonnement.
+  -- Écrit EXCLUSIVEMENT par `crediter_flacon`, appelée par le webhook du
+  -- magasin — comme l'abonnement, un achat ne se déclare pas depuis l'app.
+  flacon_images  INTEGER NOT NULL DEFAULT 0 CHECK (flacon_images >= 0),
+
+  -- La ration hebdomadaire. `ration_semaine` porte le lundi UTC de la
+  -- semaine en cours : si elle diffère, la ration est rechargée avant
+  -- d'être lue. Ce qui n'a pas été bu la semaine passée est perdu — c'est
+  -- ce qui en fait une ration et non une cagnotte.
+  --
+  -- NULL au départ, et c'est voulu : la toute première consommation
+  -- déclenche la recharge, si bien qu'une identité créée un dimanche soir
+  -- n'est pas privée de sa semaine.
+  ration_parties INTEGER NOT NULL DEFAULT 0 CHECK (ration_parties >= 0),
+  ration_semaine DATE,
 
   -- Abonnement. Écrit exclusivement par le webhook du magasin : l'app ne
   -- décide jamais si elle a été payée.
@@ -69,11 +112,20 @@ CREATE TABLE IF NOT EXISTS public.usage_events (
   user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   -- 'avatar' n'a pas de réserve d'essai : il est simplement plafonné par
   -- jour, pour tout le monde. Une photo de profil ne se refait pas dix fois.
-  type       TEXT NOT NULL CHECK (type IN ('image_pro', 'partie_ia', 'lecture_dessin', 'avatar')),
+  -- 'flacon_achat' n'est pas une consommation mais un CRÉDIT : il vit ici
+  -- quand même, parce que l'index unique sur (user_id, type, reference) est
+  -- exactement ce qui rend un webhook rejoué inoffensif, et qu'un achat a
+  -- sa place dans le journal qui sert à l'audit.
+  type       TEXT NOT NULL CHECK (type IN ('image_pro', 'partie_ia', 'lecture_dessin', 'avatar', 'flacon_achat')),
   -- Identifiant de la partie pour 'partie_ia' : une partie se paie une fois,
   -- puis ses douze fragments passent librement. NULL pour les actes unitaires.
   reference  TEXT,
-  sur_essai  BOOLEAN NOT NULL DEFAULT FALSE,
+  -- Dans QUELLE source cet acte a été puisé. C'était un booléen
+  -- `sur_essai` tant qu'il n'y avait que deux cas ; il en faut quatre pour
+  -- que `rendre_acces` sache à quel bocal rendre une génération ratée — et
+  -- rendre une image de flacon à l'essai serait un vol silencieux.
+  source     TEXT NOT NULL DEFAULT 'essai'
+             CHECK (source IN ('abonnement', 'flacon', 'ration', 'essai')),
   detail     JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -95,6 +147,31 @@ DROP POLICY IF EXISTS "Lire sa consommation" ON public.usage_events;
 CREATE POLICY "Lire sa consommation" ON public.usage_events
   FOR SELECT USING (auth.uid() = user_id);
 
+-- ── Les deux constantes du dispositif ───────────────────────────────────
+-- Écrites en fonctions et non en nombres semés dans les requêtes : c'est
+-- ici, et nulle part ailleurs, que se règle la générosité du jeu.
+
+-- Combien d'actes de ce type sont rendus chaque semaine, gratuitement.
+-- Seules les parties en ont une : à 0,008 $ la lecture de dessin le geste
+-- serait presque gratuit, mais le mur y est rare et l'essai de trois suffit
+-- pour l'instant. Passer les lectures à une ration, c'est changer ce seul
+-- CASE.
+CREATE OR REPLACE FUNCTION public.ration_hebdo(p_type TEXT)
+RETURNS INTEGER LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE p_type WHEN 'partie_ia' THEN 1 ELSE 0 END;
+$$;
+
+-- Le lundi de la semaine en cours, en UTC.
+--
+-- UTC et non l'heure locale, pour la même raison que le poème du jour : la
+-- base ne connaît pas le fuseau du joueur, et une semaine qui tournerait à
+-- des instants différents selon l'appareil se rechargerait deux fois pour
+-- qui voyage.
+CREATE OR REPLACE FUNCTION public.semaine_courante()
+RETURNS DATE LANGUAGE sql STABLE AS $$
+  SELECT date_trunc('week', (NOW() AT TIME ZONE 'UTC'))::date;
+$$;
+
 -- ── État courant ────────────────────────────────────────────────────────
 -- Crée la ligne au premier appel : c'est là que la réserve d'essai est
 -- attribuée, une seule fois, par la valeur par défaut des colonnes.
@@ -114,6 +191,17 @@ BEGIN
       'images',   v_row.essai_images,
       'parties',  v_row.essai_parties,
       'lectures', v_row.essai_lectures
+    ),
+    'flacon', jsonb_build_object('images', v_row.flacon_images),
+    -- La ration est CALCULÉE et non rechargée ici : lire son état ne doit
+    -- rien écrire. Si la semaine a tourné, on annonce la ration pleine ;
+    -- `consommer_acces` la posera réellement au premier acte.
+    'ration', jsonb_build_object(
+      'parties', CASE
+        WHEN v_row.ration_semaine IS DISTINCT FROM semaine_courante()
+          THEN ration_hebdo('partie_ia')
+        ELSE v_row.ration_parties
+      END
     )
   );
 END;
@@ -141,6 +229,8 @@ DECLARE
   v_reste   INTEGER;
   v_faites  INTEGER;
   v_event   BIGINT;
+  v_semaine DATE;
+  v_source  TEXT;
 BEGIN
   INSERT INTO acces (user_id) VALUES (p_user) ON CONFLICT (user_id) DO NOTHING;
 
@@ -155,6 +245,19 @@ BEGIN
     WHERE user_id = p_user AND type = p_type AND reference = p_reference
   ) THEN
     RETURN jsonb_build_object('autorise', TRUE, 'deja', TRUE, 'abonne', v_abonne);
+  END IF;
+
+  -- La semaine a tourné : on recharge la ration avant de lire quoi que ce
+  -- soit. Sous le verrou, donc une seule fois même à deux requêtes de front.
+  v_semaine := semaine_courante();
+  IF v_row.ration_semaine IS DISTINCT FROM v_semaine THEN
+    UPDATE acces SET
+      ration_parties = ration_hebdo('partie_ia'),
+      ration_semaine = v_semaine,
+      updated_at     = NOW()
+    WHERE user_id = p_user;
+    v_row.ration_parties := ration_hebdo('partie_ia');
+    v_row.ration_semaine := v_semaine;
   END IF;
 
   v_reste := CASE p_type
@@ -174,7 +277,7 @@ BEGIN
   -- l'abonnement.
   IF p_plafond_jour IS NOT NULL AND (v_abonne OR v_reste IS NULL) THEN
     SELECT COUNT(*) INTO v_faites FROM usage_events
-    WHERE user_id = p_user AND type = p_type AND sur_essai = FALSE
+    WHERE user_id = p_user AND type = p_type AND source = 'abonnement'
       AND created_at >= date_trunc('day', NOW());
     IF v_faites >= p_plafond_jour THEN
       RETURN jsonb_build_object(
@@ -185,32 +288,63 @@ BEGIN
   END IF;
 
   IF v_abonne OR v_reste IS NULL THEN
-    INSERT INTO usage_events (user_id, type, reference, sur_essai, detail)
-    VALUES (p_user, p_type, p_reference, FALSE, p_detail)
+    INSERT INTO usage_events (user_id, type, reference, source, detail)
+    VALUES (p_user, p_type, p_reference, 'abonnement', p_detail)
     RETURNING id INTO v_event;
     RETURN jsonb_build_object('autorise', TRUE, 'abonne', v_abonne, 'event', v_event);
   END IF;
 
-  -- Non abonné : on puise dans la réserve d'essai.
-  IF v_reste <= 0 THEN
+  /*
+    Non abonné : l'ORDRE des sources, et il se justifie source par source.
+
+    · Les parties : la RATION d'abord, l'essai ensuite. La ration périt le
+      lundi, l'essai ne périt pas — on boit toujours ce qui va se perdre.
+      Puiser dans l'essai en laissant filer la ration reviendrait à faire
+      payer au joueur une réserve qu'on lui avait donnée.
+
+    · Les images : l'ESSAI d'abord, le flacon ensuite. Ni l'un ni l'autre ne
+      périt, alors on dépense ce qui est offert avant ce qui est acheté.
+      L'inverse — brûler un flacon payé pendant que l'essai dort — se lit
+      comme un tour de passe-passe, et il le serait.
+  */
+  v_source := CASE
+    WHEN p_type = 'partie_ia' AND v_row.ration_parties > 0 THEN 'ration'
+    WHEN v_reste > 0                                       THEN 'essai'
+    WHEN p_type = 'image_pro' AND v_row.flacon_images > 0  THEN 'flacon'
+    ELSE NULL
+  END;
+
+  -- Plus rien à puiser, nulle part. Le motif garde son nom historique
+  -- `essai_epuise` : il commande seulement QUEL mur s'ouvre, et le mur
+  -- propose désormais les deux portes — s'abonner, ou remplir l'encrier.
+  -- Le joueur ne voit jamais cette chaîne.
+  IF v_source IS NULL THEN
     RETURN jsonb_build_object(
       'autorise', FALSE, 'motif', 'essai_epuise', 'abonne', FALSE, 'essai_restant', 0
     );
   END IF;
 
   UPDATE acces SET
-    essai_images   = essai_images   - (CASE WHEN p_type = 'image_pro'      THEN 1 ELSE 0 END),
-    essai_parties  = essai_parties  - (CASE WHEN p_type = 'partie_ia'      THEN 1 ELSE 0 END),
-    essai_lectures = essai_lectures - (CASE WHEN p_type = 'lecture_dessin' THEN 1 ELSE 0 END),
+    essai_images   = essai_images   - (CASE WHEN v_source = 'essai'  AND p_type = 'image_pro'      THEN 1 ELSE 0 END),
+    essai_parties  = essai_parties  - (CASE WHEN v_source = 'essai'  AND p_type = 'partie_ia'      THEN 1 ELSE 0 END),
+    essai_lectures = essai_lectures - (CASE WHEN v_source = 'essai'  AND p_type = 'lecture_dessin' THEN 1 ELSE 0 END),
+    flacon_images  = flacon_images  - (CASE WHEN v_source = 'flacon'                               THEN 1 ELSE 0 END),
+    ration_parties = ration_parties - (CASE WHEN v_source = 'ration'                               THEN 1 ELSE 0 END),
     updated_at     = NOW()
   WHERE user_id = p_user;
 
-  INSERT INTO usage_events (user_id, type, reference, sur_essai, detail)
-  VALUES (p_user, p_type, p_reference, TRUE, p_detail)
+  INSERT INTO usage_events (user_id, type, reference, source, detail)
+  VALUES (p_user, p_type, p_reference, v_source, p_detail)
   RETURNING id INTO v_event;
 
   RETURN jsonb_build_object(
-    'autorise', TRUE, 'abonne', FALSE, 'essai_restant', v_reste - 1, 'event', v_event
+    'autorise', TRUE, 'abonne', FALSE, 'source', v_source,
+    -- `essai_restant` reste ce qu'il a toujours été : ce qu'il reste dans
+    -- l'ESSAI. Il ne compte ni la ration ni le flacon, sans quoi le solde
+    -- affiché sous le bouton mélangerait trois choses qui ne se
+    -- renouvellent pas de la même manière.
+    'essai_restant', v_reste - (CASE WHEN v_source = 'essai' THEN 1 ELSE 0 END),
+    'event', v_event
   );
 END;
 $$;
@@ -223,22 +357,80 @@ $$;
 CREATE OR REPLACE FUNCTION public.rendre_acces(p_user UUID, p_event BIGINT)
 RETURNS VOID
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_type TEXT; v_essai BOOLEAN;
+DECLARE v_type TEXT; v_source TEXT;
 BEGIN
   DELETE FROM usage_events
   WHERE id = p_event AND user_id = p_user
-  RETURNING type, sur_essai INTO v_type, v_essai;
+  RETURNING type, source INTO v_type, v_source;
 
   IF v_type IS NULL THEN RETURN; END IF;
 
-  IF v_essai THEN
-    UPDATE acces SET
-      essai_images   = essai_images   + (CASE WHEN v_type = 'image_pro'      THEN 1 ELSE 0 END),
-      essai_parties  = essai_parties  + (CASE WHEN v_type = 'partie_ia'      THEN 1 ELSE 0 END),
-      essai_lectures = essai_lectures + (CASE WHEN v_type = 'lecture_dessin' THEN 1 ELSE 0 END),
-      updated_at     = NOW()
-    WHERE user_id = p_user;
+  -- On rend au bocal d'où l'on a pris, et à lui seul. Rendre une image de
+  -- flacon à l'essai serait un vol invisible : le joueur retrouverait une
+  -- réserve gratuite à la place de ce qu'il a payé.
+  --
+  -- La ration se rend aussi, bien qu'elle périsse : entre rendre une ration
+  -- qui expirera lundi et ne rien rendre du tout, la première est la seule
+  -- honnête — la génération a échoué, il n'a rien reçu.
+  -- Un acte passé sur l'abonnement n'a rien pris à rendre : l'événement
+  -- supprimé suffit, et il libère au passage une place sous le plafond du
+  -- jour, qui se compte sur ce même journal.
+  IF v_source = 'abonnement' THEN RETURN; END IF;
+
+  UPDATE acces SET
+    essai_images   = essai_images   + (CASE WHEN v_source = 'essai'  AND v_type = 'image_pro'      THEN 1 ELSE 0 END),
+    essai_parties  = essai_parties  + (CASE WHEN v_source = 'essai'  AND v_type = 'partie_ia'      THEN 1 ELSE 0 END),
+    essai_lectures = essai_lectures + (CASE WHEN v_source = 'essai'  AND v_type = 'lecture_dessin' THEN 1 ELSE 0 END),
+    flacon_images  = flacon_images  + (CASE WHEN v_source = 'flacon'                               THEN 1 ELSE 0 END),
+    ration_parties = ration_parties + (CASE WHEN v_source = 'ration'                               THEN 1 ELSE 0 END),
+    updated_at     = NOW()
+  WHERE user_id = p_user;
+END;
+$$;
+
+-- ── Le flacon ───────────────────────────────────────────────────────────
+-- Crédite des illustrations achetées. Appelée UNIQUEMENT par le webhook du
+-- magasin, après vérification de sa signature — exactement comme
+-- `poser_abonnement`. Un achat ne se déclare jamais depuis l'app.
+--
+-- `p_reference` est l'identifiant de la transaction chez le magasin, et
+-- l'index unique sur `usage_events` en fait la garantie d'idempotence : un
+-- webhook rejoué ne crédite pas deux fois. Le magasin REJOUE, c'est son
+-- fonctionnement normal quand il n'a pas reçu notre accusé.
+CREATE OR REPLACE FUNCTION public.crediter_flacon(
+  p_user UUID, p_images INTEGER, p_reference TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_deja BOOLEAN;
+BEGIN
+  IF p_images IS NULL OR p_images <= 0 THEN
+    RETURN jsonb_build_object('credite', FALSE, 'motif', 'quantite');
   END IF;
+
+  INSERT INTO acces (user_id) VALUES (p_user) ON CONFLICT (user_id) DO NOTHING;
+
+  SELECT EXISTS (
+    SELECT 1 FROM usage_events
+    WHERE user_id = p_user AND type = 'flacon_achat' AND reference = p_reference
+  ) INTO v_deja;
+
+  IF v_deja THEN
+    RETURN jsonb_build_object('credite', FALSE, 'motif', 'deja');
+  END IF;
+
+  -- La trace AVANT le crédit : si l'insertion échoue sur l'index unique
+  -- — deux rejeux exactement simultanés — rien n'a encore été crédité.
+  INSERT INTO usage_events (user_id, type, reference, source, detail)
+  VALUES (p_user, 'flacon_achat', p_reference, 'flacon',
+          jsonb_build_object('images', p_images));
+
+  UPDATE acces SET
+    flacon_images = flacon_images + p_images,
+    updated_at    = NOW()
+  WHERE user_id = p_user;
+
+  RETURN jsonb_build_object('credite', TRUE, 'images', p_images);
 END;
 $$;
 
@@ -267,3 +459,6 @@ REVOKE ALL ON FUNCTION public.etat_acces(UUID) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.consommer_acces(UUID, TEXT, TEXT, INTEGER, JSONB) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.rendre_acces(UUID, BIGINT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.poser_abonnement(UUID, TIMESTAMPTZ, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.crediter_flacon(UUID, INTEGER, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.ration_hebdo(TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.semaine_courante() FROM PUBLIC, anon, authenticated;

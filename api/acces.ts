@@ -7,7 +7,10 @@ import { clientAdmin } from './_supabase.js'
 /**
  * État d'accès du joueur, et ouverture d'une partie avec les voix de l'IA.
  *
- * GET  → { abonne, jusqua, essai: { images, parties, lectures }, plafonds }
+ * GET  → { abonne, jusqua, essai, flacon, ration, plafonds }
+ *        essai  — offert une fois, permanent
+ *        flacon — acheté, permanent, images seulement
+ *        ration — rendue chaque lundi UTC, parties seulement
  * POST { partieId } → règle la partie une fois pour toutes ; les fragments
  *        qui suivront sur /api/claude passeront ensuite librement.
  *

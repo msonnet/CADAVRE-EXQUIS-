@@ -490,7 +490,7 @@ export default function Atelier() {
         motif={refus?.motif ?? 'essai_epuise'}
         plafond={refus?.plafond}
         onFermer={() => setRefus(null)}
-        onAbonne={() => { setRefus(null); ouvrirSeance() }}
+        onEncrierRempli={() => { setRefus(null); ouvrirSeance() }}
         accent={accent} encre={encre} bg={bg}
       />
     </PageTransition>

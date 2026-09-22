@@ -3,16 +3,27 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
 import {
-  achatsDisponibles, lireOffres, souscrire, restaurer, type Offre,
+  achatsDisponibles, lireOffres, souscrire, restaurer,
+  lireFlacons, acheterFlacon, type Offre, type OffreFlacon,
 } from '../lib/achats'
-import type { ActePayant, MotifRefus } from '../lib/acces'
+import { lireAcces, type ActePayant, type MotifRefus } from '../lib/acces'
 
 /**
  * Le mur — s'ouvre quand un joueur demande un acte payant qu'il n'a plus.
  *
- * Un seul chemin, et il est honnête : l'abonnement. Pas de compte à rebours,
- * pas de rouge criard, pas d'« OFFRE LIMITÉE ». On énonce ce qui est épuisé,
- * ce que l'abonnement ouvre, le prix — et on laisse choisir.
+ * DEUX portes depuis le 22 septembre, et c'était le manque : l'abonnement
+ * seul obligeait à s'engager pour une seule illustration. Le flacon —
+ * quelques images achetées une fois, sans reconduction — attrape celui qui
+ * ne s'abonnera jamais mais paierait trois euros pour illustrer LE poème
+ * qu'il aime. C'est une population bien plus large que celle des abonnés.
+ *
+ * Le flacon ne paraît que pour les IMAGES : il n'a de sens que si le pack
+ * se vide, et à 0,020 $ la partie avec les voix un pack honnête durerait
+ * des mois. Les voix restent donc l'abonnement, et rien d'autre.
+ *
+ * Pas de compte à rebours, pas de rouge criard, pas d'« OFFRE LIMITÉE ».
+ * On énonce ce qui est épuisé, ce que chaque porte ouvre, le prix — et on
+ * laisse choisir.
  *
  * La mention du prix, de la durée, des conditions et de la restauration
  * n'est pas décorative : Apple l'exige (3.1.2) avant tout achat.
@@ -28,24 +39,31 @@ export interface MurAbonnementProps {
   plafond?: number
   onFermer: () => void
   /** Appelé quand l'abonnement vient d'être ouvert : l'appelant relit son état. */
-  onAbonne: () => void
+  onEncrierRempli: () => void
   accent: string
   encre: string
   bg: string
 }
 
 export default function MurAbonnement({
-  visible, acte, motif, plafond, onFermer, onAbonne, accent, encre, bg,
+  visible, acte, motif, plafond, onFermer, onEncrierRempli, accent, encre, bg,
 }: MurAbonnementProps) {
   const [offres, setOffres] = useState<Offre[]>([])
+  const [flacons, setFlacons] = useState<OffreFlacon[]>([])
   const [enCours, setEnCours] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+
+  // Le flacon ne vaut que pour les images, et n'a rien à dire quand c'est le
+  // plafond de l'abonné qui a fermé la porte : en acheter n'y changerait
+  // rien, elles reviennent demain.
+  const flaconPossible = acte === 'image_pro' && motif !== 'plafond_jour'
 
   useEffect(() => {
     if (!visible) return
     setMessage(null)
     lireOffres().then(setOffres)
-  }, [visible])
+    if (flaconPossible) lireFlacons().then(setFlacons)
+  }, [visible, flaconPossible])
 
   const titre = motif === 'plafond_jour'
     ? tr('L’encrier se remplit à minuit', 'The inkwell refills at midnight')
@@ -67,18 +85,64 @@ export default function MurAbonnement({
     setMessage(null)
     const r = await souscrire(offre)
     setEnCours(null)
-    if (r === 'ok') { onAbonne(); return }
+    if (r === 'ok') { onEncrierRempli(); return }
     if (r === 'annule') return
     setMessage(r === 'indisponible'
       ? tr('Les achats ne sont pas disponibles ici.', 'Purchases aren’t available here.')
       : tr('L’achat n’a pas abouti.', 'The purchase didn’t go through.'))
   }
 
+  /**
+   * Attend que le webhook ait crédité le flacon.
+   *
+   * L'achat rend la main dès qu'Apple a pris l'argent ; les images, elles,
+   * sont écrites par le rappel serveur de RevenueCat, qui arrive une
+   * poignée de secondes plus tard. Rejouer l'illustration tout de suite la
+   * ferait refuser, et le mur se rouvrirait sur un joueur qui vient de
+   * payer — la pire séquence possible.
+   *
+   * On relit donc jusqu'à voir le crédit, une dizaine de secondes au plus.
+   * Au-delà on rend la main quand même : le crédit est acquis en base, il
+   * arrivera, et mieux vaut un message que l'on comprend qu'une attente
+   * sans fin.
+   */
+  async function attendreLeCredit(avant: number): Promise<boolean> {
+    for (let i = 0; i < 12; i++) {
+      await new Promise(r => setTimeout(r, 900))
+      const etat = await lireAcces()
+      if (etat && (etat.flacon?.images ?? 0) > avant) return true
+    }
+    return false
+  }
+
+  async function remplir(f: OffreFlacon) {
+    setEnCours(f.id)
+    setMessage(null)
+    const avant = (await lireAcces())?.flacon?.images ?? 0
+    const r = await acheterFlacon(f)
+    if (r === 'annule') { setEnCours(null); return }
+    if (r !== 'ok') {
+      setEnCours(null)
+      setMessage(r === 'indisponible'
+        ? tr('Les achats ne sont pas disponibles ici.', 'Purchases aren’t available here.')
+        : tr('L’achat n’a pas abouti.', 'The purchase didn’t go through.'))
+      return
+    }
+    setMessage(tr('L’encre arrive…', 'The ink is on its way…'))
+    const credite = await attendreLeCredit(avant)
+    setEnCours(null)
+    if (credite) { onEncrierRempli(); return }
+    setMessage(tr(
+      'Ton achat est enregistré. L’encre apparaîtra d’ici quelques instants.',
+      'Your purchase is recorded. The ink will appear in a moment.',
+    ))
+  }
+
   async function rendreSonDu() {
     setEnCours('restaurer')
     const ok = await restaurer()
     setEnCours(null)
-    if (ok) { onAbonne(); return }
+    if (ok) { onEncrierRempli(); return }
     setMessage(tr('Aucun abonnement à restaurer.', 'No subscription to restore.'))
   }
 
@@ -163,6 +227,45 @@ export default function MurAbonnement({
                   )}
                 </p>
               )
+            )}
+
+            {/*
+              La seconde porte. Elle vient APRÈS l'abonnement et non avant :
+              l'abonnement est la meilleure affaire pour qui reviendra, et
+              c'est la première chose qu'on propose. Le flacon est là pour
+              celui qui a déjà décidé que non.
+
+              Pas de « ou » entre les deux, pas de comparatif, pas de
+              « meilleure valeur » : deux propositions posées l'une sous
+              l'autre, et le joueur sait compter.
+            */}
+            {flaconPossible && achatsDisponibles() && flacons.length > 0 && (
+              <>
+                <div style={{
+                  ...mono, fontSize: 11, letterSpacing: '0.2em', color: encre,
+                  opacity: 0.5, textAlign: 'center', marginTop: 4,
+                }}>
+                  {tr('— OU REMPLIR L’ENCRIER —', '— OR FILL THE INKWELL —')}
+                </div>
+                {flacons.map(f => (
+                  <button
+                    key={f.id}
+                    onClick={() => remplir(f)}
+                    disabled={enCours !== null}
+                    style={{ ...bouton('transparent', encre), opacity: enCours !== null ? 0.5 : 1 }}
+                  >
+                    {enCours === f.id
+                      ? tr('En cours…', 'In progress…')
+                      : `${f.images} ${tr('illustrations', 'illustrations')} · ${f.prix}`}
+                  </button>
+                ))}
+                <p style={{ ...mono, fontSize: 10, color: encre, opacity: 0.45, lineHeight: 1.6, textAlign: 'center' }}>
+                  {tr(
+                    'Achat unique, sans reconduction. L’encre ne s’évapore pas.',
+                    'One-time purchase, no renewal. The ink does not evaporate.',
+                  )}
+                </p>
+              </>
             )}
 
             {message && (

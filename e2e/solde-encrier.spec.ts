@@ -27,7 +27,15 @@ async function ouvrirAtelier(page: Page) {
   await page.waitForTimeout(700)
 }
 
-const solde = (page: Page) => page.getByText(/ESSAI · \d+ PARTIES? AVEC LES VOIX|TRIAL · \d+ GAMES? WITH THE VOICES|ESSAI ÉPUISÉ|TRIAL USED UP/)
+/**
+ * Le libellé dit « ENCRIER » et non plus « ESSAI » depuis le 22 septembre :
+ * le joueur a désormais jusqu'à trois provisions pour un même acte — l'essai
+ * offert, le flacon acheté, la ration de la semaine — et les additionner
+ * sous le mot « essai » aurait fait mentir le mot.
+ */
+const solde = (page: Page) => page.getByText(
+  /ENCRIER · \d+ PARTIES? (AVEC LES VOIX|CETTE SEMAINE)|INKWELL · \d+ GAMES? (WITH THE VOICES|THIS WEEK)|ENCRIER À SEC|INKWELL DRY/,
+)
 
 test('la préparation de l’Atelier annonce la réserve avant le bouton', async ({ page }) => {
   test.setTimeout(60_000)

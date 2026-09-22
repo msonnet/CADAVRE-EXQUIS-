@@ -670,7 +670,7 @@ export default function FinOnline() {
         motif={refus?.motif ?? 'essai_epuise'}
         plafond={refus?.plafond}
         onFermer={() => setRefus(null)}
-        onAbonne={() => {
+        onEncrierRempli={() => {
           setRefus(null)
           if (refus?.acte === 'image_pro' && styleChoisi) genererIllus(styleChoisi)
           else reessayerVision()
