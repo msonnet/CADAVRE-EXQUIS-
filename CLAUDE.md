@@ -134,7 +134,7 @@ pour l'acte qu'on comprend dès la première. Les **parties de 5 à 8**
 (+0,06 $) : les voix demandent d'y revenir pour se faire aimer. La
 générosité s'est donc DÉPLACÉE des images vers les voix, elle n'a pas
 seulement diminué — et elle l'a fait là où la dépense est **unique**, la
-ration hebdomadaire étant, elle, ce qu'on a gardé bas.
+goutte hebdomadaire de l'encrier étant, elle, ce qu'on a gardé bas.
 
 Et **l'essai n'est pas attaché à une personne mais à une identité
 anonyme** : une réinstallation, un effacement des données du site, un
@@ -144,14 +144,14 @@ pour qu'elle soit petite.
 
 **Quatre sources, et l'ordre où l'on y puise est une décision.**
 
-| source | ce qu'elle donne | renouvelée ? |
+| source | ce qu'elle donne | se renouvelle ? |
 |---|---|---|
-| **ration** | 1 partie avec les voix / semaine | lundi UTC, perdue si non bue |
+| **encrier** | 1 partie avec les voix / semaine | lundi UTC, perdue si non bue |
 | **essai** | 2 images, 8 parties, 3 lectures | jamais — offert une fois |
 | **flacon** | des images achetées (4 ou 12) | jamais — permanent |
 | **abonnement** | sans compter, sous plafonds | mensuel ou annuel |
 
-- **Parties : ration d'abord, essai ensuite.** La ration périt le lundi,
+- **Parties : l'encrier d'abord, l'essai ensuite.** Son fond périt le lundi,
   l'essai ne périt pas ; on boit ce qui va se perdre.
 - **Images : essai d'abord, flacon ensuite.** Ni l'un ni l'autre ne périt,
   donc on dépense ce qui est offert avant ce qui est acheté. Brûler un
@@ -160,15 +160,27 @@ pour qu'elle soit petite.
   à l'essai serait un vol invisible — d'où `usage_events.source`, qui a
   remplacé le booléen `sur_essai`.
 
-**La ration, et pourquoi elle est à UNE.** Un mur qu'on franchit une fois
-s'oublie : le joueur part au lieu de s'abonner, d'autant qu'une porte
-gratuite est juste à côté — le poème du jour, qui lui donne de vraies
-autres mains tous les jours. Une ration se ressent chaque semaine.
-Elle coûte **1,04 $ par an** et par actif non abonné, et s'autofinance dès
-**1,9 %** d'abonnés parmi eux ; à deux par semaine il en faudrait 3,6 %, à
-trois **5,4 %** — au-dessus de ce que le freemium obtient d'ordinaire, et le
-coût y monte AVEC le succès. **Une ration se relève, jamais ne se baisse** :
-la reprendre fabrique les notes à une étoile. On part donc bas.
+**Ce que l'encrier rend chaque semaine, et pourquoi c'est UNE partie.** Un
+mur qu'on franchit une fois s'oublie : le joueur part au lieu de s'abonner,
+d'autant qu'une porte gratuite est juste à côté — le poème du jour, qui lui
+donne de vraies autres mains tous les jours. Un encrier qui se remplit, lui,
+se ressent chaque semaine.
+
+Ce fond coûte **1,04 $ par an** et par actif non abonné, et s'autofinance
+dès **1,9 %** d'abonnés parmi eux ; à deux parties par semaine il en
+faudrait 3,6 %, à trois **5,4 %** — au-dessus de ce que le freemium obtient
+d'ordinaire, et le coût y monte AVEC le succès. **Ce qu'on rend se relève,
+jamais ne se baisse** : le reprendre fabrique les notes à une étoile. On
+part donc bas.
+
+**Le mot « encrier » porte trois choses** — la source hebdomadaire, le
+dispositif entier, l'abonnement — et c'est assumé : l'encrier EST le
+récipient, ce qu'il contient de base est la goutte qui revient, l'essai et
+le flacon sont ce qu'on y verse en plus. Le nom précédent était « la
+ration », juste comptablement et faux de ton : un mot de pénurie dans une
+application qui parle de feuillets et de coutures. Dans les Règles, la
+ligne s'écrit donc **« L'ENCRIER SE REMPLIT »** et non « L'ENCRIER » — une
+action, pour qu'elle ne répète pas le titre de sa propre section.
 
 **Le flacon, et pourquoi il ne vaut que pour les images.** Un flacon n'a de
 sens que s'il se vide. À 0,020 $ la partie, un pack honnête à 2,99 € en
@@ -209,7 +221,7 @@ phases restantes, les valeurs exactes à recopier, les points de contrôle.
   Éprouvée le 22 septembre sur un Postgres 16 jetable : onze scénarios
   joués — ordre des sources, idempotence, semaine qui tourne, webhook
   rejoué, restitution au bon bocal, plafond de l'abonné.
-- `src/lib/reserves.ts` — `ESSAI_OFFERT` et `RATION_HEBDO`, **sans une
+- `src/lib/reserves.ts` — `ESSAI_OFFERT` et `ENCRIER_HEBDO`, **sans une
   seule importation** : les mesures unitaires ET les tests de bout en bout
   sous Node doivent pouvoir les lire sans entraîner le client Supabase.
 - `api/_acces.ts` — les plafonds journaliers (`PLAFOND_JOUR`) et le point de
@@ -782,7 +794,7 @@ tait. `annoncerScellement` dans `src/utils/notifications.ts`.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (440 tests unitaires) + Playwright (68 tests E2E, FR et EN)
+- Tests : Vitest (440 tests unitaires) + Playwright (64 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

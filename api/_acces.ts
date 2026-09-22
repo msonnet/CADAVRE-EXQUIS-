@@ -72,7 +72,7 @@ export interface EtatAcces {
   /** Acheté, permanent. Les images seulement. */
   flacon: { images: number }
   /** Rendue chaque lundi UTC ; ce qui n'a pas été bu est perdu. */
-  ration: { parties: number }
+  encrier: { parties: number }
 }
 
 export interface Verdict {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { ESSAI_OFFERT, RATION_HEBDO } from '../lib/reserves'
+import { ESSAI_OFFERT, ENCRIER_HEBDO } from '../lib/reserves'
 
 /**
  * L'essai offert — la dépense d'acquisition, mesurée.
@@ -31,7 +31,7 @@ import { ESSAI_OFFERT, RATION_HEBDO } from '../lib/reserves'
  *
  * Ce déplacement est délibéré : une illustration se comprend dès la
  * première, une partie avec les voix demande d'y revenir. Et surtout, c'est
- * une dépense UNIQUE — la ration hebdomadaire, elle, court pour toujours,
+ * une dépense UNIQUE — le fond d'encrier hebdomadaire, lui, court pour toujours,
  * et c'est elle qu'on a gardée basse.
  *
  * Le plafond laisse un peu d'air au-dessus de la valeur actuelle, et se
@@ -54,11 +54,11 @@ function coutDeLEssai(essai: typeof ESSAI_OFFERT): number {
     + essai.lectures * COUT.lectures
 }
 
-/** Ce que coûte un an de ration hebdomadaire, jamais reprise. */
-function coutDeLaRation(ration: typeof RATION_HEBDO): number {
-  return 52 * (ration.images * COUT.images
-    + ration.parties * COUT.parties
-    + ration.lectures * COUT.lectures)
+/** Ce que coûte un an de fond d'encrier hebdomadaire, jamais repris. */
+function coutDeLEncrier(hebdo: typeof ENCRIER_HEBDO): number {
+  return 52 * (hebdo.images * COUT.images
+    + hebdo.parties * COUT.parties
+    + hebdo.lectures * COUT.lectures)
 }
 
 describe('la dépense d’acquisition reste bornée', () => {
@@ -86,17 +86,17 @@ describe('la dépense d’acquisition reste bornée', () => {
   })
 })
 
-describe('la ration hebdomadaire, elle, court pour toujours', () => {
+describe('l’encrier se remplit chaque semaine, et cela court pour toujours', () => {
   it('coûte 1,04 $ par an et par joueur actif non abonné', () => {
-    expect(coutDeLaRation(RATION_HEBDO)).toBeCloseTo(1.04, 2)
+    expect(coutDeLEncrier(ENCRIER_HEBDO)).toBeCloseTo(1.04, 2)
   })
 
   it('s’autofinance sous 2 % d’abonnés parmi les actifs hebdomadaires', () => {
     /*
-      La mesure qui décide de la ration, et la seule.
+      La mesure qui décide de ce qu'on rend chaque semaine, et la seule.
 
       Un abonné rapporte 54,96 $ par an (4,58 × 12). Pour une part `x`
-      d'abonnés parmi les actifs, la ration est payée quand
+      d'abonnés parmi les actifs, ce qu'on rend est payé quand
       `x × 54,96 ≥ (1 − x) × coût annuel`.
 
       À une partie par semaine il faut 1,9 % ; à deux 3,6 % ; à trois
@@ -104,23 +104,23 @@ describe('la ration hebdomadaire, elle, court pour toujours', () => {
       coût y monte AVEC le succès. C'est pourquoi on part à une.
     */
     const NET_ABONNE_AN = 4.58 * 12
-    const c = coutDeLaRation(RATION_HEBDO)
+    const c = coutDeLEncrier(ENCRIER_HEBDO)
     expect(c / (NET_ABONNE_AN + c)).toBeLessThan(0.02)
   })
 
-  it('ne rend que des parties — les images sont le flacon, pas la ration', () => {
+  it('ne rend que des parties — les images sont le flacon, pas l’encrier', () => {
     // Un flacon n'a de sens que s'il se vide, et à 0,020 $ la partie un pack
     // honnête ne se viderait jamais. La séparation est structurelle.
-    expect(RATION_HEBDO.parties).toBeGreaterThan(0)
-    expect(RATION_HEBDO.images).toBe(0)
+    expect(ENCRIER_HEBDO.parties).toBeGreaterThan(0)
+    expect(ENCRIER_HEBDO.images).toBe(0)
   })
 
   it('dit la même chose que la migration', () => {
     const sql = readFileSync('supabase/migrations/20260730000010_abonnement.sql', 'utf8')
     const m = /CASE p_type WHEN 'partie_ia' THEN (\d+) ELSE (\d+) END/.exec(sql)
-    expect(m, 'ration_hebdo() introuvable dans la migration').not.toBeNull()
-    expect(Number(m![1]), 'parties').toBe(RATION_HEBDO.parties)
-    expect(Number(m![2]), 'tout le reste').toBe(RATION_HEBDO.images)
+    expect(m, 'encrier_hebdo() introuvable dans la migration').not.toBeNull()
+    expect(Number(m![1]), 'parties').toBe(ENCRIER_HEBDO.parties)
+    expect(Number(m![2]), 'tout le reste').toBe(ENCRIER_HEBDO.images)
   })
 })
 

@@ -21,7 +21,7 @@ export interface EtatAcces {
   /** Acheté, permanent. Les images seulement — voir `FLACONS` côté serveur. */
   flacon: { images: number }
   /** Rendue chaque lundi UTC ; ce qui n'a pas été bu est perdu. */
-  ration: { parties: number }
+  encrier: { parties: number }
   plafonds: { image_pro: number; partie_ia: number; lecture_dessin: number }
 }
 
@@ -65,7 +65,7 @@ export async function identiteOuverte(): Promise<boolean> {
   entraîner le client Supabase. On les ré-exporte ici pour que les appelants
   n'aient qu'une porte à connaître.
 */
-export { ESSAI_OFFERT, RATION_HEBDO } from './reserves'
+export { ESSAI_OFFERT, ENCRIER_HEBDO } from './reserves'
 
 /**
  * Lit l'état d'accès. Par défaut sans rien créer : afficher un écran de

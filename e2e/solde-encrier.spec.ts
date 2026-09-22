@@ -30,7 +30,7 @@ async function ouvrirAtelier(page: Page) {
 /**
  * Le libellé dit « ENCRIER » et non plus « ESSAI » depuis le 22 septembre :
  * le joueur a désormais jusqu'à trois provisions pour un même acte — l'essai
- * offert, le flacon acheté, la ration de la semaine — et les additionner
+ * offert, le flacon acheté, le fond d'encrier de la semaine — et les additionner
  * sous le mot « essai » aurait fait mentir le mot.
  */
 const solde = (page: Page) => page.getByText(

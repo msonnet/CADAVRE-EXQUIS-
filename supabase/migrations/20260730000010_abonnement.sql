@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════════
--- L'encrier : essai, ration, flacon, abonnement
+-- L'encrier : ce qu'il rend, l'essai, le flacon, l'abonnement
 --
 -- Le jeu est gratuit et entier. Seuls trois actes appellent un serveur qui
 -- me facture — une illustration grand format, une partie où l'IA écrit, la
@@ -7,8 +7,8 @@
 --
 -- QUATRE SOURCES, et l'ordre dans lequel on y puise est une décision :
 --
---   · ration   — une partie avec les voix par SEMAINE, gratuite, pour
---                toujours. Elle se recharge le lundi et ce qui n'a pas été
+--   · encrier  — une partie avec les voix par SEMAINE, gratuite, pour
+--                toujours. Il se remplit le lundi et ce qui n'a pas été
 --                bu est perdu.
 --   · essai    — offert une seule fois à la création de l'identité.
 --                Permanent : ce qui reste reste.
@@ -17,7 +17,14 @@
 --   · abonnement — sans compter, sous des plafonds journaliers qui ne sont
 --                pas des règles de jeu mais des pare-feu.
 --
--- ── Pourquoi une ration plutôt qu'un mur ────────────────────────────────
+-- Le mot « encrier » nomme à la fois la source hebdomadaire, le dispositif
+-- entier et l'abonnement. C'est assumé : l'encrier EST le récipient, et ce
+-- qu'il contient de base est cette goutte qui revient ; l'essai et le
+-- flacon sont ce qu'on y VERSE en plus. La colonne s'appelait d'abord
+-- `ration_parties` — juste comptablement, faux de ton : une ration est un
+-- mot de pénurie, et un encrier n'est jamais vide, il est bas.
+--
+-- ── Pourquoi une goutte hebdomadaire plutôt qu'un mur ───────────────────
 --
 -- L'essai seul faisait un mur : cinq parties, puis plus rien, pour
 -- toujours. Un mur qu'on franchit une fois s'oublie, et le joueur part au
@@ -25,11 +32,11 @@
 -- poème du jour, qui lui donne de vraies autres mains tous les jours.
 --
 -- Une partie par semaine coûte 1,04 $ par an et par joueur actif non
--- abonné. La ration s'autofinance dès 1,9 % d'abonnés parmi les actifs
+-- abonné. Elle s'autofinance dès 1,9 % d'abonnés parmi les actifs
 -- hebdomadaires ; à deux par semaine il en faudrait 3,6 %, à trois 5,4 % —
--- au-dessus de ce que le freemium obtient d'ordinaire. Et une ration se
--- RELÈVE, jamais ne se baisse : la reprendre est ce qui fabrique les notes
--- à une étoile. On part donc bas.
+-- au-dessus de ce que le freemium obtient d'ordinaire. Et ce qu'on rend
+-- chaque semaine se RELÈVE, jamais ne se baisse : le reprendre est ce qui
+-- fabrique les notes à une étoile. On part donc bas.
 --
 -- ── Pourquoi le flacon ne vaut que pour les images ──────────────────────
 --
@@ -61,12 +68,15 @@ CREATE TABLE IF NOT EXISTS public.acces (
   user_id        UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Réserve d'essai, offerte une seule fois. Les valeurs par défaut sont LE
-  -- cadran d'acquisition : 2 × 0,040 $ + 5 × 0,020 $ + 3 × 0,008 $ ≈ 0,20 $
+  -- cadran d'acquisition : 2 × 0,040 $ + 8 × 0,020 $ + 3 × 0,008 $ = 0,264 $
   -- par joueur au maximum, une fois. C'est ce qui lui montre ce qu'il achète.
   --
-  -- Les illustrations sont passées de 5 à 2. Elles coûtaient à elles seules
-  -- 0,20 $ des 0,32 $ — les deux tiers de la dépense d'acquisition pour un
-  -- acte qu'on découvre à la première. Et l'essai n'est attaché qu'à une
+  -- Deux mouvements en sens contraire. Les illustrations de 5 à 2 : elles
+  -- coûtaient à elles seules 0,20 $ des 0,32 $ — les deux tiers de la
+  -- dépense, pour l'acte qu'on découvre à la première. Les parties de 5 à
+  -- 8 : les voix demandent d'y revenir pour se faire aimer, et c'est une
+  -- dépense UNIQUE, là où le fond d'encrier hebdomadaire court pour
+  -- toujours. Et l'essai n'est attaché qu'à une
   -- identité ANONYME : une réinstallation en rouvre un. Ce n'est donc pas
   -- une dépense par joueur, c'est une dépense par remise à zéro, et elle ne
   -- se contrôle pas — raison de plus pour qu'elle soit petite.
@@ -83,16 +93,16 @@ CREATE TABLE IF NOT EXISTS public.acces (
   -- magasin — comme l'abonnement, un achat ne se déclare pas depuis l'app.
   flacon_images  INTEGER NOT NULL DEFAULT 0 CHECK (flacon_images >= 0),
 
-  -- La ration hebdomadaire. `ration_semaine` porte le lundi UTC de la
-  -- semaine en cours : si elle diffère, la ration est rechargée avant
-  -- d'être lue. Ce qui n'a pas été bu la semaine passée est perdu — c'est
-  -- ce qui en fait une ration et non une cagnotte.
+  -- Ce que l'encrier rend chaque semaine. `encrier_semaine` porte le
+  -- lundi UTC de la semaine en cours : si elle diffère, l'encrier est
+  -- rempli avant d'être lu. Ce qui n'a pas été bu la semaine passée est
+  -- perdu — c'est ce qui en fait un fond d'encrier et non une cagnotte.
   --
   -- NULL au départ, et c'est voulu : la toute première consommation
   -- déclenche la recharge, si bien qu'une identité créée un dimanche soir
   -- n'est pas privée de sa semaine.
-  ration_parties INTEGER NOT NULL DEFAULT 0 CHECK (ration_parties >= 0),
-  ration_semaine DATE,
+  encrier_parties INTEGER NOT NULL DEFAULT 0 CHECK (encrier_parties >= 0),
+  encrier_semaine DATE,
 
   -- Abonnement. Écrit exclusivement par le webhook du magasin : l'app ne
   -- décide jamais si elle a été payée.
@@ -125,7 +135,7 @@ CREATE TABLE IF NOT EXISTS public.usage_events (
   -- que `rendre_acces` sache à quel bocal rendre une génération ratée — et
   -- rendre une image de flacon à l'essai serait un vol silencieux.
   source     TEXT NOT NULL DEFAULT 'essai'
-             CHECK (source IN ('abonnement', 'flacon', 'ration', 'essai')),
+             CHECK (source IN ('abonnement', 'flacon', 'encrier', 'essai')),
   detail     JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -154,9 +164,9 @@ CREATE POLICY "Lire sa consommation" ON public.usage_events
 -- Combien d'actes de ce type sont rendus chaque semaine, gratuitement.
 -- Seules les parties en ont une : à 0,008 $ la lecture de dessin le geste
 -- serait presque gratuit, mais le mur y est rare et l'essai de trois suffit
--- pour l'instant. Passer les lectures à une ration, c'est changer ce seul
+-- pour l'instant. Donner un fond hebdomadaire aux lectures, c'est changer ce seul
 -- CASE.
-CREATE OR REPLACE FUNCTION public.ration_hebdo(p_type TEXT)
+CREATE OR REPLACE FUNCTION public.encrier_hebdo(p_type TEXT)
 RETURNS INTEGER LANGUAGE sql IMMUTABLE AS $$
   SELECT CASE p_type WHEN 'partie_ia' THEN 1 ELSE 0 END;
 $$;
@@ -193,14 +203,14 @@ BEGIN
       'lectures', v_row.essai_lectures
     ),
     'flacon', jsonb_build_object('images', v_row.flacon_images),
-    -- La ration est CALCULÉE et non rechargée ici : lire son état ne doit
-    -- rien écrire. Si la semaine a tourné, on annonce la ration pleine ;
+    -- Le fond hebdomadaire est CALCULÉ et non rempli ici : lire son état
+    -- ne doit rien écrire. Si la semaine a tourné, on l'annonce plein ;
     -- `consommer_acces` la posera réellement au premier acte.
-    'ration', jsonb_build_object(
+    'encrier', jsonb_build_object(
       'parties', CASE
-        WHEN v_row.ration_semaine IS DISTINCT FROM semaine_courante()
-          THEN ration_hebdo('partie_ia')
-        ELSE v_row.ration_parties
+        WHEN v_row.encrier_semaine IS DISTINCT FROM semaine_courante()
+          THEN encrier_hebdo('partie_ia')
+        ELSE v_row.encrier_parties
       END
     )
   );
@@ -247,17 +257,17 @@ BEGIN
     RETURN jsonb_build_object('autorise', TRUE, 'deja', TRUE, 'abonne', v_abonne);
   END IF;
 
-  -- La semaine a tourné : on recharge la ration avant de lire quoi que ce
+  -- La semaine a tourné : on remplit l'encrier avant de lire quoi que ce
   -- soit. Sous le verrou, donc une seule fois même à deux requêtes de front.
   v_semaine := semaine_courante();
-  IF v_row.ration_semaine IS DISTINCT FROM v_semaine THEN
+  IF v_row.encrier_semaine IS DISTINCT FROM v_semaine THEN
     UPDATE acces SET
-      ration_parties = ration_hebdo('partie_ia'),
-      ration_semaine = v_semaine,
+      encrier_parties = encrier_hebdo('partie_ia'),
+      encrier_semaine = v_semaine,
       updated_at     = NOW()
     WHERE user_id = p_user;
-    v_row.ration_parties := ration_hebdo('partie_ia');
-    v_row.ration_semaine := v_semaine;
+    v_row.encrier_parties := encrier_hebdo('partie_ia');
+    v_row.encrier_semaine := v_semaine;
   END IF;
 
   v_reste := CASE p_type
@@ -297,9 +307,9 @@ BEGIN
   /*
     Non abonné : l'ORDRE des sources, et il se justifie source par source.
 
-    · Les parties : la RATION d'abord, l'essai ensuite. La ration périt le
+    · Les parties : l'ENCRIER d'abord, l'essai ensuite. Son fond périt le
       lundi, l'essai ne périt pas — on boit toujours ce qui va se perdre.
-      Puiser dans l'essai en laissant filer la ration reviendrait à faire
+      Puiser dans l'essai en laissant filer ce fond reviendrait à faire
       payer au joueur une réserve qu'on lui avait donnée.
 
     · Les images : l'ESSAI d'abord, le flacon ensuite. Ni l'un ni l'autre ne
@@ -308,7 +318,7 @@ BEGIN
       comme un tour de passe-passe, et il le serait.
   */
   v_source := CASE
-    WHEN p_type = 'partie_ia' AND v_row.ration_parties > 0 THEN 'ration'
+    WHEN p_type = 'partie_ia' AND v_row.encrier_parties > 0 THEN 'encrier'
     WHEN v_reste > 0                                       THEN 'essai'
     WHEN p_type = 'image_pro' AND v_row.flacon_images > 0  THEN 'flacon'
     ELSE NULL
@@ -329,7 +339,7 @@ BEGIN
     essai_parties  = essai_parties  - (CASE WHEN v_source = 'essai'  AND p_type = 'partie_ia'      THEN 1 ELSE 0 END),
     essai_lectures = essai_lectures - (CASE WHEN v_source = 'essai'  AND p_type = 'lecture_dessin' THEN 1 ELSE 0 END),
     flacon_images  = flacon_images  - (CASE WHEN v_source = 'flacon'                               THEN 1 ELSE 0 END),
-    ration_parties = ration_parties - (CASE WHEN v_source = 'ration'                               THEN 1 ELSE 0 END),
+    encrier_parties = encrier_parties - (CASE WHEN v_source = 'encrier'                               THEN 1 ELSE 0 END),
     updated_at     = NOW()
   WHERE user_id = p_user;
 
@@ -340,7 +350,7 @@ BEGIN
   RETURN jsonb_build_object(
     'autorise', TRUE, 'abonne', FALSE, 'source', v_source,
     -- `essai_restant` reste ce qu'il a toujours été : ce qu'il reste dans
-    -- l'ESSAI. Il ne compte ni la ration ni le flacon, sans quoi le solde
+    -- l'ESSAI. Il ne compte ni l'encrier ni le flacon, sans quoi le solde
     -- affiché sous le bouton mélangerait trois choses qui ne se
     -- renouvellent pas de la même manière.
     'essai_restant', v_reste - (CASE WHEN v_source = 'essai' THEN 1 ELSE 0 END),
@@ -369,7 +379,7 @@ BEGIN
   -- flacon à l'essai serait un vol invisible : le joueur retrouverait une
   -- réserve gratuite à la place de ce qu'il a payé.
   --
-  -- La ration se rend aussi, bien qu'elle périsse : entre rendre une ration
+  -- Le fond d'encrier se rend aussi, bien qu'il périsse : entre rendre une part
   -- qui expirera lundi et ne rien rendre du tout, la première est la seule
   -- honnête — la génération a échoué, il n'a rien reçu.
   -- Un acte passé sur l'abonnement n'a rien pris à rendre : l'événement
@@ -382,7 +392,7 @@ BEGIN
     essai_parties  = essai_parties  + (CASE WHEN v_source = 'essai'  AND v_type = 'partie_ia'      THEN 1 ELSE 0 END),
     essai_lectures = essai_lectures + (CASE WHEN v_source = 'essai'  AND v_type = 'lecture_dessin' THEN 1 ELSE 0 END),
     flacon_images  = flacon_images  + (CASE WHEN v_source = 'flacon'                               THEN 1 ELSE 0 END),
-    ration_parties = ration_parties + (CASE WHEN v_source = 'ration'                               THEN 1 ELSE 0 END),
+    encrier_parties = encrier_parties + (CASE WHEN v_source = 'encrier'                               THEN 1 ELSE 0 END),
     updated_at     = NOW()
   WHERE user_id = p_user;
 END;
@@ -460,5 +470,5 @@ REVOKE ALL ON FUNCTION public.consommer_acces(UUID, TEXT, TEXT, INTEGER, JSONB) 
 REVOKE ALL ON FUNCTION public.rendre_acces(UUID, BIGINT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.poser_abonnement(UUID, TIMESTAMPTZ, TEXT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.crediter_flacon(UUID, INTEGER, TEXT) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.ration_hebdo(TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.encrier_hebdo(TEXT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.semaine_courante() FROM PUBLIC, anon, authenticated;

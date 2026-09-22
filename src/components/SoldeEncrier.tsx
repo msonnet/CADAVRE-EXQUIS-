@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { mono } from '../lib/typo'
 import { libelleSolde, caseDEssai, resteTotal, type Reserve } from '../lib/solde'
-import { lireAcces, identiteOuverte, ESSAI_OFFERT, RATION_HEBDO, type ActePayant } from '../lib/acces'
+import { lireAcces, identiteOuverte, ESSAI_OFFERT, ENCRIER_HEBDO, type ActePayant } from '../lib/acces'
 
 /**
  * Le solde de l'encrier, au point de choix — lot 13 de l'audit du
@@ -47,9 +47,9 @@ export default function SoldeEncrier({ acte, encre, accent, relire = 0, style }:
       const cle = caseDEssai(acte)
       if (!(await identiteOuverte())) {
         // Aucune identité : la réserve est intacte par définition, et la
-        // ration de la première semaine est pleine puisqu'elle n'a jamais
+        // part hebdomadaire de la première semaine est pleine puisqu'elle n'a jamais
         // été entamée. On l'annonce sans rien ouvrir.
-        if (vivant) setReserve({ essai: ESSAI_OFFERT[cle], flacon: 0, ration: RATION_HEBDO[cle] })
+        if (vivant) setReserve({ essai: ESSAI_OFFERT[cle], flacon: 0, encrier: ENCRIER_HEBDO[cle] })
         return
       }
       const etat = await lireAcces()
@@ -59,7 +59,7 @@ export default function SoldeEncrier({ acte, encre, accent, relire = 0, style }:
       setReserve({
         essai: etat.essai[cle],
         flacon: cle === 'images' ? (etat.flacon?.images ?? 0) : 0,
-        ration: cle === 'parties' ? (etat.ration?.parties ?? 0) : 0,
+        encrier: cle === 'parties' ? (etat.encrier?.parties ?? 0) : 0,
       })
     })()
     return () => { vivant = false }

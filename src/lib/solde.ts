@@ -3,7 +3,7 @@ import { tr } from '../i18n'
 
 /**
  * Le libellé du solde de l'encrier — lot 13 de l'audit du 10 septembre,
- * étendu au flacon et à la ration le 22 septembre.
+ * étendu au flacon et à l'encrier hebdomadaire le 22 septembre.
  *
  * Séparé du composant pour une seule raison : il se mesure. Un compte qui
  * ment est exactement la faute que le lot 9 vient de corriger ailleurs, et
@@ -14,16 +14,17 @@ import { tr } from '../i18n'
  *
  * ── Trois réserves, un seul nombre ────────────────────────────────────────
  *
- * Le joueur a désormais jusqu'à trois provisions pour un même acte —
- * l'essai offert, le flacon acheté, la ration de la semaine. Les énumérer
- * sous un bouton serait illisible, et personne n'a besoin de savoir dans
- * quel ordre on y puise avant d'appuyer : ce qu'il veut savoir, c'est
- * COMBIEN DE FOIS ENCORE. On additionne donc, et on ne dit qu'un nombre.
+ * Le joueur a désormais jusqu'à trois provisions pour un même acte — le
+ * fond d'encrier de la semaine, l'essai offert, le flacon acheté. Les
+ * énumérer sous un bouton serait illisible, et personne n'a besoin de
+ * savoir dans quel ordre on y puise avant d'appuyer : ce qu'il veut savoir,
+ * c'est COMBIEN DE FOIS ENCORE. On additionne donc, et on ne dit qu'un
+ * nombre.
  *
  * Une exception, et elle est la seule qui apprenne quelque chose : quand il
- * ne reste QUE la ration, on nomme la semaine. C'est le moment où le joueur
- * découvre que la chose revient — et c'est la seule occasion de le lui dire
- * sans lui faire un cours.
+ * ne reste QUE le fond hebdomadaire, on nomme la semaine. C'est le moment
+ * où le joueur découvre que la chose revient — et c'est la seule occasion
+ * de le lui dire sans lui faire un cours.
  */
 
 /** La case de la réserve que chaque acte entame. */
@@ -42,17 +43,20 @@ export interface Reserve {
   essai: number
   /** Illustrations achetées. Nul pour les autres actes. */
   flacon: number
-  /** Rendue chaque lundi. Nulle pour les actes qui n'en ont pas. */
-  ration: number
+  /**
+   * Ce que l'encrier rend chaque lundi. Nul pour les actes qui n'en
+   * reçoivent pas — les images sont le flacon, pas l'encrier.
+   */
+  encrier: number
 }
 
 export function resteTotal(r: Reserve): number {
-  return r.essai + r.flacon + r.ration
+  return r.essai + r.flacon + r.encrier
 }
 
-/** N'a-t-il plus que sa ration de la semaine ? */
-function surLaSeuleRation(r: Reserve): boolean {
-  return r.ration > 0 && r.essai === 0 && r.flacon === 0
+/** N'a-t-il plus que le fond d'encrier de la semaine ? */
+function surLeSeulEncrier(r: Reserve): boolean {
+  return r.encrier > 0 && r.essai === 0 && r.flacon === 0
 }
 
 /**
@@ -66,7 +70,7 @@ export function libelleSolde(acte: ActePayant, r: Reserve): string {
   const reste = resteTotal(r)
   if (reste <= 0) return tr('ENCRIER À SEC', 'INKWELL DRY')
 
-  if (surLaSeuleRation(r)) {
+  if (surLeSeulEncrier(r)) {
     const s = reste > 1 ? 'S' : ''
     return acte === 'partie_ia'
       ? tr(`ENCRIER · ${reste} PARTIE${s} CETTE SEMAINE`, `INKWELL · ${reste} GAME${s} THIS WEEK`)

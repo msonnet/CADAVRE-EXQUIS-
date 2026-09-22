@@ -24,27 +24,40 @@
  * Deux illustrations et non cinq : à cinq elles pesaient les deux tiers de
  * la dépense, pour l'acte qu'on comprend dès la première. Huit parties et
  * non cinq : les voix demandent d'y revenir pour se faire aimer, et c'est
- * une dépense UNIQUE — c'est la ration, récurrente, qu'on garde basse.
+ * une dépense UNIQUE — c'est l'encrier hebdomadaire, récurrent, qu'on garde
+ * bas.
  */
 export const ESSAI_OFFERT = { images: 2, parties: 8, lectures: 3 } as const
 
 /**
- * La ration rendue chaque semaine, gratuitement et sans fin.
+ * L'ENCRIER — ce qui revient chaque semaine, gratuitement et sans fin.
+ *
+ * ── Un mot, deux portées, et c'est assumé ─────────────────────────────────
+ *
+ * « L'Encrier » nomme aussi l'abonnement, et le dispositif entier. Ce n'est
+ * pas une négligence : l'encrier EST le récipient, et ce qu'il contient de
+ * base est précisément cette goutte qui revient. L'essai et le flacon sont
+ * ce qu'on y VERSE en plus — l'un offert une fois, l'autre acheté.
+ *
+ * Le nom précédent était « la ration ». Juste comptablement, faux de ton :
+ * une ration est militaire, c'est un mot de pénurie, et il jurait dans une
+ * application qui parle de feuillets et de coutures. Un encrier n'est jamais
+ * vide, il est bas — et c'est exactement ce qu'on veut faire sentir.
  *
  * Elle ne remplace pas l'essai, elle lui succède : le nouveau joueur reçoit
  * huit parties d'un coup pour découvrir, puis une par semaine, pour
  * toujours.
  *
- * Pourquoi une ration et pas un mur : un mur qu'on franchit une fois
- * s'oublie, et le joueur part au lieu de s'abonner — d'autant qu'une porte
- * gratuite est juste à côté, le poème du jour. Une ration se ressent chaque
- * semaine, et rappelle chaque semaine ce dont on voudrait plus.
+ * Pourquoi cela plutôt qu'un mur : un mur qu'on franchit une fois s'oublie,
+ * et le joueur part au lieu de s'abonner — d'autant qu'une porte gratuite
+ * est juste à côté, le poème du jour. Un encrier qui se remplit se ressent
+ * chaque semaine, et rappelle chaque semaine ce dont on voudrait plus.
  *
  * Pourquoi UNE et pas trois : à trois par semaine il faudrait 5,4 %
- * d'abonnés parmi les actifs hebdomadaires rien que pour la financer, et
- * treize parties par mois ne laisseraient plus rien à vendre. Une ration se
- * relève, jamais ne se baisse — on part donc bas.
+ * d'abonnés parmi les actifs hebdomadaires rien que pour le financer, et
+ * treize parties par mois ne laisseraient plus rien à vendre. Ce qu'on donne
+ * chaque semaine se relève, jamais ne se baisse — on part donc bas.
  *
- * Doit rester d'accord avec `ration_hebdo()` dans la migration.
+ * Doit rester d'accord avec `encrier_hebdo()` dans la migration.
  */
-export const RATION_HEBDO = { images: 0, parties: 1, lectures: 0 } as const
+export const ENCRIER_HEBDO = { images: 0, parties: 1, lectures: 0 } as const

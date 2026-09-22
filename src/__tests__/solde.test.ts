@@ -4,7 +4,7 @@ import type { ActePayant } from '../lib/acces'
 
 /**
  * Le solde de l'encrier — lot 13 de l'audit du 10 septembre, étendu au
- * flacon et à la ration le 22 septembre.
+ * flacon et au fond d'encrier hebdomadaire le 22 septembre.
  *
  * La réserve d'essai n'était lisible que dans les Réglages : le joueur
  * découvrait la limite au moment du refus. Elle s'écrit maintenant sous le
@@ -17,9 +17,9 @@ import type { ActePayant } from '../lib/acces'
 
 const ACTES: ActePayant[] = ['image_pro', 'partie_ia', 'lecture_dessin']
 
-/** Une réserve d'essai seule — le cas d'avant le flacon et la ration. */
+/** Une réserve d'essai seule — le cas d'avant le flacon et l'encrier. */
 function essai(n: number): Reserve {
-  return { essai: n, flacon: 0, ration: 0 }
+  return { essai: n, flacon: 0, encrier: 0 }
 }
 
 describe('libelleSolde', () => {
@@ -36,25 +36,25 @@ describe('libelleSolde', () => {
     // Les énumérer sous un bouton serait illisible, et l'ordre dans lequel
     // on y puise n'intéresse personne avant d'appuyer. Ce que le joueur veut
     // savoir, c'est combien de fois encore.
-    expect(libelleSolde('image_pro', { essai: 2, flacon: 12, ration: 0 }))
+    expect(libelleSolde('image_pro', { essai: 2, flacon: 12, encrier: 0 }))
       .toBe('ENCRIER · 14 ILLUSTRATIONS')
-    expect(libelleSolde('partie_ia', { essai: 8, flacon: 0, ration: 1 }))
+    expect(libelleSolde('partie_ia', { essai: 8, flacon: 0, encrier: 1 }))
       .toBe('ENCRIER · 9 PARTIES AVEC LES VOIX')
-    expect(resteTotal({ essai: 2, flacon: 12, ration: 1 })).toBe(15)
+    expect(resteTotal({ essai: 2, flacon: 12, encrier: 1 })).toBe(15)
   })
 
-  it('nomme la semaine quand il ne reste QUE la ration', () => {
+  it('nomme la semaine quand il ne reste QUE le fond d’encrier', () => {
     // C'est la seule exception, et la seule qui apprenne quelque chose : le
     // moment où le joueur découvre que la réserve revient toute seule.
-    expect(libelleSolde('partie_ia', { essai: 0, flacon: 0, ration: 1 }))
+    expect(libelleSolde('partie_ia', { essai: 0, flacon: 0, encrier: 1 }))
       .toBe('ENCRIER · 1 PARTIE CETTE SEMAINE')
   })
 
   it('ne parle pas de semaine tant qu’il reste autre chose', () => {
     // Sinon le libellé annoncerait « 1 cette semaine » à qui en a neuf.
-    expect(libelleSolde('partie_ia', { essai: 8, flacon: 0, ration: 1 }))
+    expect(libelleSolde('partie_ia', { essai: 8, flacon: 0, encrier: 1 }))
       .not.toMatch(/SEMAINE/)
-    expect(libelleSolde('image_pro', { essai: 0, flacon: 3, ration: 0 }))
+    expect(libelleSolde('image_pro', { essai: 0, flacon: 3, encrier: 0 }))
       .not.toMatch(/SEMAINE/)
   })
 
@@ -64,7 +64,7 @@ describe('libelleSolde', () => {
     // c'est seulement que l'appui ne passera pas.
     for (const acte of ACTES) {
       expect(libelleSolde(acte, essai(0))).toBe('ENCRIER À SEC')
-      expect(libelleSolde(acte, { essai: -1, flacon: 0, ration: 0 }),
+      expect(libelleSolde(acte, { essai: -1, flacon: 0, encrier: 0 }),
         'un solde négatif reste un solde vide').toBe('ENCRIER À SEC')
     }
   })
@@ -73,8 +73,8 @@ describe('libelleSolde', () => {
     for (const acte of ACTES) {
       for (const r of [
         essai(0), essai(1), essai(5),
-        { essai: 0, flacon: 0, ration: 1 },
-        { essai: 2, flacon: 12, ration: 1 },
+        { essai: 0, flacon: 0, encrier: 1 },
+        { essai: 2, flacon: 12, encrier: 1 },
       ]) {
         const l = libelleSolde(acte, r)
         expect(l, l).toBe(l.toUpperCase())

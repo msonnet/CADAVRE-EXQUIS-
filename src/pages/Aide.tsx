@@ -5,7 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
-import { ESSAI_OFFERT, RATION_HEBDO } from '../lib/reserves'
+import { ESSAI_OFFERT, ENCRIER_HEBDO } from '../lib/reserves'
 
 const STRUCTURES = [
   { romain: 'I',   label: tr('Phrase courte', 'Short sentence'),  detail: tr('3 cases · sujet, verbe, complément', '3 slots · subject, verb, complement'), exemple: tr("L'ombre / glisse / dans la nuit froide", 'The shadow / slides / through the cold night') },
@@ -83,10 +83,18 @@ const ENCRIER = [
     ),
   },
   {
-    label: tr('LA RATION, CHAQUE SEMAINE', 'THE RATION, EVERY WEEK'),
+    /*
+      « L'ENCRIER SE REMPLIT » et non « L'ENCRIER » tout court : la section
+      entière porte déjà ce nom, et une ligne « L'ENCRIER » à l'intérieur
+      d'une section « L'ENCRIER » ne dirait rien. Formulée en ACTION, elle
+      se lit sans ambiguïté et reprend mot pour mot ce que le mur annonce
+      déjà quand le plafond du jour tombe : « L'encrier se remplit à
+      minuit ».
+    */
+    label: tr('L’ENCRIER SE REMPLIT', 'THE INKWELL REFILLS'),
     detail: tr(
-      `Puis, ${RATION_HEBDO.parties} partie avec les voix te revient chaque semaine, gratuitement et sans fin. L'encrier n'est jamais vraiment sec.`,
-      `Then ${RATION_HEBDO.parties} game with the voices comes back to you every week, free and without end. The inkwell is never truly dry.`,
+      `Puis, ${ENCRIER_HEBDO.parties} partie avec les voix te revient chaque semaine, gratuitement et sans fin. L'encrier n'est jamais vraiment sec.`,
+      `Then ${ENCRIER_HEBDO.parties} game with the voices comes back to you every week, free and without end. The inkwell is never truly dry.`,
     ),
   },
   {

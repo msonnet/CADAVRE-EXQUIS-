@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { ESSAI_OFFERT, RATION_HEBDO } from '../src/lib/reserves'
+import { ESSAI_OFFERT, ENCRIER_HEBDO } from '../src/lib/reserves'
 
 /**
  * L'encrier, expliqué avant le refus et non pendant.
@@ -7,7 +7,7 @@ import { ESSAI_OFFERT, RATION_HEBDO } from '../src/lib/reserves'
  * Ce que ces tests gardent : qu'un joueur puisse apprendre CE QUI EST
  * COMPTÉ sans avoir à se le faire refuser. La réserve d'essai n'était
  * lisible que dans les Réglages (lot 13, corrigé sous les boutons) ; le
- * dispositif entier — essai, ration, flacon, abonnement — ne l'était nulle
+ * dispositif entier — l'encrier, l'essai, le flacon, l'abonnement — ne l'était nulle
  * part.
  *
  * Et une chose qu'aucun autre test ne peut garder : que les nombres
@@ -46,7 +46,7 @@ test('les quatre réserves y sont, et le flacon avec', async ({ page }) => {
   // L'apostrophe est DROITE dans la source et typographique ailleurs dans
   // l'app : on accepte les deux plutôt que de figer un caractère qui se
   // corrigera un jour.
-  for (const titre of [/L['’]ESSAI, UNE FOIS/, /LA RATION, CHAQUE SEMAINE/, /LE FLACON/, /L['’]ABONNEMENT/]) {
+  for (const titre of [/L['’]ESSAI, UNE FOIS/, /L['’]ENCRIER SE REMPLIT/, /LE FLACON/, /L['’]ABONNEMENT/]) {
     await expect(page.getByText(titre)).toBeVisible()
   }
 })
@@ -58,7 +58,7 @@ test('les nombres annoncés sont ceux du code', async ({ page }) => {
   expect(vu).toContain(
     `${ESSAI_OFFERT.images} illustrations, ${ESSAI_OFFERT.parties} parties avec les voix, ${ESSAI_OFFERT.lectures} lectures`,
   )
-  expect(vu).toContain(`${RATION_HEBDO.parties} partie avec les voix te revient chaque semaine`)
+  expect(vu).toContain(`${ENCRIER_HEBDO.parties} partie avec les voix te revient chaque semaine`)
 })
 
 test('aucun prix n’est cité — le magasin seul les connaît', async ({ page }) => {
