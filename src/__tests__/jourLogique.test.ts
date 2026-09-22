@@ -171,12 +171,18 @@ describe('une journée simulée — c’est la mesure qui compte', () => {
   })
 
   it('le coût des voix est borné par le plancher, jamais par la foule', () => {
-    // Quatre appels par jour au maximum, zéro dès cinq joueurs.
+    // CINQ appels par langue et par jour au maximum, zéro dès cinq joueurs.
+    // On a longtemps écrit quatre : le chiffre supposait qu'au moins une main
+    // humaine soit passée. Une journée entièrement déserte en demande cinq,
+    // et il y a une chaîne par langue — dix appels dans le pire des cas.
     for (const n of [0, 1, 2, 3, 4, 5, 50]) {
       const voix = journee(n).vers.filter(v => v.voix).length
       expect(voix, `${n} mains`).toBe(Math.max(0, PLANCHER_VERS - n))
       expect(voix).toBeLessThanOrEqual(PLANCHER_VERS)
     }
+    // Le pire cas nommé, pour qu'il ne se redécouvre pas en production.
+    expect(journee(0).vers.filter(v => v.voix)).toHaveLength(5)
+    expect(2 * PLANCHER_VERS, 'deux langues, deux chaînes').toBe(10)
   })
 
   it('chaque main n’apparaît qu’une fois', () => {

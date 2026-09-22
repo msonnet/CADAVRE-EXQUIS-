@@ -32,9 +32,11 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
       le 21 septembre 2026 ; `GET /api/jour?langue=fr` répond en production
 - [x] **Le cron quotidien** — `/api/cleanup` à 00 h 30 UTC, un seul déclenchement
       (plan Hobby), qui nettoie les salons puis scelle les jours écoulés
-- [ ] **Poser `CRON_SECRET` chez Vercel** — sans lui la production refuse son
-      propre cron et **aucun poème ne se scelle** (`portailOuvert`, `api/cleanup.ts`)
-- [ ] **Voir un scellement réel** — il n'a encore jamais tourné
+- [x] **`CRON_SECRET` posé chez Vercel** — le 22 septembre 2026 ; vérifié en
+      production : 200 avec le secret, 401 sans et 401 avec un faux
+- [ ] **Voir un scellement réel** — il n'a encore jamais tourné. Premier
+      passage attendu le 23 septembre à 00 h 30 UTC, sur les chaînes du 22
+      (fr : 2 mains → 3 voix ; en : 0 main → 5 voix)
 
 #### Abonnement — reste à faire hors du code
 - [ ] Appliquer `supabase/migrations/20260730000010_abonnement.sql`
@@ -576,8 +578,12 @@ du papier**, et il est posé à trois endroits.
 
 Elles complètent au **plancher de cinq vers, au scellement seulement**. Au-delà,
 aucune voix n'intervient — la longueur doit rester la mesure de la journée.
-Quatre appels par jour au maximum, zéro dès cinq joueurs : **l'encrier n'est
-pas concerné**, le rendez-vous ne décompte rien à personne. Chaque voix reçoit
+**Cinq appels par langue et par jour au maximum, donc dix en tout**, et zéro
+dès cinq joueurs dans chaque langue : **l'encrier n'est pas concerné**, le
+rendez-vous ne décompte rien à personne. (On a longtemps écrit « quatre » :
+le chiffre supposait qu'au moins une main humaine soit passée, et oubliait
+qu'il y a une chaîne par langue. Une journée entièrement déserte en anglais
+est l'état ordinaire d'un jeu qui commence.) Chaque voix reçoit
 l'écho comme tout le monde ; une voix qui verrait le poème écrirait une chute.
 
 ### Le jour est UTC, et c'est une conséquence

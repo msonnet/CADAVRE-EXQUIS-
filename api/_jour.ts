@@ -29,8 +29,14 @@ export const CARACTERES_MAX = 100
  * Les voix n'interviennent QUE là, et QU'AU scellement : en dessous de cinq
  * vers un poème n'a pas eu le temps d'en devenir un. Au-dessus, on n'ajoute
  * rien — la longueur doit rester la mesure de la journée. Le coût des voix
- * est donc borné par le plancher et jamais par la foule : quatre appels par
- * jour au maximum, zéro dès cinq joueurs.
+ * est donc borné par le plancher et jamais par la foule.
+ *
+ * Le plafond exact : CINQ appels par langue et par jour, donc DIX en tout,
+ * et zéro dès cinq joueurs dans chaque langue. On a longtemps écrit quatre —
+ * le chiffre supposait qu'au moins une main humaine soit passée, et oubliait
+ * qu'il y a une chaîne par langue. Une journée entièrement déserte en anglais
+ * n'est pas une hypothèse d'école : c'est l'état ordinaire d'un jeu qui
+ * commence.
  */
 export const PLANCHER_VERS = 5
 

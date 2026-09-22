@@ -37,9 +37,10 @@
  *
  * Elles ne comblent plus des sièges toute la journée : elles garantissent un
  * PLANCHER, et seulement au scellement. Moins de cinq mains sont venues ? on
- * complète à cinq. Au-delà, aucune voix n'intervient. Quatre appels par jour
- * au maximum, zéro dès qu'il y a cinq joueurs — l'encrier n'est plus
- * concerné.
+ * complète à cinq. Au-delà, aucune voix n'intervient. Cinq appels par langue
+ * et par jour au maximum, donc dix en tout, et zéro dès qu'il y a cinq
+ * joueurs — l'encrier n'est pas concerné, le rendez-vous ne décompte rien à
+ * personne.
  *
  * ── Ce module ne fait que décider ─────────────────────────────────────────
  *
