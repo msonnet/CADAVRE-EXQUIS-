@@ -810,13 +810,90 @@ joueur qui pose son premier vers n'a pas à recevoir une demande dans la
 foulée. S'il a déjà armé le rappel du soir, il est d'accord ; sinon on se
 tait. `annoncerScellement` dans `src/utils/notifications.ts`.
 
+## La conformité — 22 septembre 2026
+
+Trois textes s'appliquent, et **aucun ne dépend de la taille de l'éditeur**.
+Vérifiés dans la source, pas dans les récapitulatifs qui circulent.
+
+**Apple n'a AUCUNE clause sur l'IA.** Les App Review Guidelines ont été
+lues : rien sur l'IA générative, la divulgation ou l'étiquetage. Les
+récapitulatifs 2026 qui l'affirment se trompent. En revanche le
+**questionnaire de classification d'âge**, lui, demande explicitement
+comment les assistants IA influencent la fréquence de contenu sensible —
+et c'est un chantier **hors du code**.
+
+### `/conditions` — ce qui manquait le plus
+
+Le jeu n'avait que `/privacy`, plus un lien vers l'**EULA standard
+d'Apple**, qui est une licence LOGICIELLE et ne dit rien du contenu. Or :
+
+- **Apple 1.2** exige, pour toute app hébergeant du contenu de ses joueurs,
+  des conditions disant qu'**aucun contenu répréhensible n'est toléré** et
+  que les auteurs abusifs sont exclus. Motif de rejet courant.
+- **DSA article 14** exige des conditions claires, et **article 16** un
+  canal de notification ouvert. L'exemption micro-entreprise ne couvre que
+  la **section 3** : 14 et 16 valent pour tout hébergeur.
+
+Douze paragraphes, bilingues, au registre de `/privacy`. Liés depuis les
+Réglages à côté de la confidentialité, et depuis le mur — où l'EULA d'Apple
+reste, sous le nom de « Licence », parce que la 3.1.2 l'attend et qu'elle ne
+remplace pas les conditions.
+
+**Trois paragraphes demandent un juriste** et ne sont pas des descriptions
+du code : la licence de publication (§4), la limitation de responsabilité
+(§11), le droit applicable (§12).
+
+### Le canal « illicite » — DSA art. 16
+
+`api/signaler-vers.ts` exigeait un compte. Le DSA veut que **toute
+personne** puisse notifier un contenu illicite. Les deux tiennent ensemble
+parce qu'ils ne portent pas sur la même chose :
+
+- `motif: 'illicite'` — **ouvert, sans identité**, traité AVANT le contrôle
+  du jeton. Il ne retire **rien** : il écrit au modérateur. Un canal anonyme
+  capable de faire tomber un vers serait une arme, et le texte demande que
+  la notification PARVIENNE, pas qu'elle exécute.
+- tous les autres motifs — un compte, deux signalements pour retirer.
+
+`jour_signalements` exige `main_id NOT NULL` et la migration est en
+production : le canal ouvert n'est donc **pas persisté**. Conséquence
+assumée et traitée — `prevenirModerateur` rend désormais un booléen, et un
+courriel qui n'est pas parti répond **503** au lieu de 200. Une notification
+perdue ne doit pas passer pour reçue ; les conditions donnent l'adresse de
+contact comme second chemin.
+
+### Le marquage des textes de synthèse — AI Act art. 50
+
+Applicable **depuis le 2 août 2026**. L'obligation de marquer les sorties
+**ne remonte pas au fournisseur du modèle** : elle est portée par qui met le
+système sur le marché sous son nom.
+
+- La sauvegarde `.json` portait **déjà** `cases[].auteur` — le lisible par
+  machine existait.
+- Le `.txt`, lui, sortait nu. `mentionIA()` (`src/lib/attribution.ts`) s'y
+  ajoute, **seulement quand une voix a écrit** : l'apposer partout la
+  viderait de son sens et mentirait dans l'autre sens.
+- **L'image partagée ne porte encore rien.** Elle est composée au canvas et
+  y poser une mention touche à l'identité visuelle — décision en attente.
+
+### Ce qui reste hors du code
+
+- [ ] **Le questionnaire d'âge**, et la décision 4+ / 13+. Un jeu 4+ où un
+      modèle écrit du texte libre ET où des inconnus écrivent ensemble : le
+      4+ a peu de chances de tenir. **C'est ce qui peut faire recaler la
+      soumission**, et « le 4+ est conservé sans discussion » est écrit à
+      plusieurs endroits de ce fichier — à réécrire le jour où il bouge.
+- [ ] **Faire relire `/conditions` par un juriste.**
+- [ ] Trancher **fournisseur ou déployeur** au sens de l'AI Act : pas de
+      fine-tuning, mais mise sur le marché sous son nom.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (440 tests unitaires) + Playwright (67 tests E2E, FR et EN)
+- Tests : Vitest (447 tests unitaires) + Playwright (73 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

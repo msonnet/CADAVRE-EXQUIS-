@@ -439,12 +439,29 @@ export default function Reglages() {
           CADAVRE EXQUIS · v1.0<br />
           {tr('AUCUN TRACKING · AUCUNE DONNÉE VENDUE', 'NO TRACKING · NO DATA SOLD')}
         </div>
-        <div style={{ textAlign: 'center', paddingBottom: 8 }}>
+        {/*
+          Les deux textes côte à côte. Les conditions manquaient : Apple 1.2
+          les exige pour toute app qui héberge du contenu de ses joueurs, et
+          l'article 14 du DSA les exige quelle que soit la taille de
+          l'éditeur. L'EULA standard d'Apple, lié depuis le mur, est une
+          licence logicielle — elle ne dit rien du contenu.
+        */}
+        <div style={{
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          gap: 10, flexWrap: 'wrap', paddingBottom: 8,
+        }}>
+          <Link
+            to="/conditions"
+            style={{ ...mono, fontSize: 13, color: accent, opacity: 0.75, textDecoration: 'underline', textUnderlineOffset: 3 }}
+          >
+            {tr('Conditions d’utilisation', 'Terms of use')}
+          </Link>
+          <span style={{ ...mono, fontSize: 13, color: `${encre}40` }}>·</span>
           <Link
             to="/privacy"
             style={{ ...mono, fontSize: 13, color: accent, opacity: 0.75, textDecoration: 'underline', textUnderlineOffset: 3 }}
           >
-            {tr('Politique de confidentialité', 'Privacy policy')} →
+            {tr('Confidentialité', 'Privacy')}
           </Link>
         </div>
 

@@ -334,8 +334,19 @@ export default function MurAbonnement({
                   'Abonnement reconductible. Il se renouvelle sauf résiliation au moins 24 h avant la fin de la période en cours, depuis les réglages de ton compte. ',
                   'Auto-renewing subscription. It renews unless cancelled at least 24 h before the end of the current period, from your account settings. ',
                 )}
+                {/*
+                  Trois liens et non deux. L'EULA d'Apple est une licence
+                  LOGICIELLE — c'est elle que la guideline 3.1.2 attend
+                  auprès d'un abonnement. Elle ne dit rien du contenu, et
+                  c'est la 1.2 qui exige l'autre texte. Les deux sont
+                  nécessaires et ne se remplacent pas.
+                */}
+                <a href="/conditions" style={{ color: accent, textDecoration: 'underline' }}>
+                  {tr('Conditions d’utilisation', 'Terms of use')}
+                </a>
+                {' · '}
                 <a href={EULA} target="_blank" rel="noreferrer" style={{ color: accent, textDecoration: 'underline' }}>
-                  {tr('Conditions', 'Terms')}
+                  {tr('Licence', 'Licence')}
                 </a>
                 {' · '}
                 <a href="/privacy" style={{ color: accent, textDecoration: 'underline' }}>

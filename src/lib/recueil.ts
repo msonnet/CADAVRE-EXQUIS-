@@ -1,6 +1,7 @@
 import type { Poeme } from '../types'
 import type { VersRecolte } from '../db'
 import { getStructure, reconstruirePoeme } from '../structures'
+import { contientDeLIA, mentionIA } from './attribution'
 import { tr } from '../i18n'
 
 /**
@@ -57,6 +58,11 @@ export function composerTexte(poemes: Poeme[], recolte: VersRecolte[] = []): str
     blocs.push(`${p.titre ?? tr('Sans titre', 'Untitled')} · ${dateLisible(p.dateCreation)}`)
     blocs.push('')
     blocs.push(reconstruirePoeme(p.cases, structure))
+    // Un poème qui SORT de l'application doit dire si une machine y a
+    // écrit : dans l'app les coutures le nomment, dans un fichier rien ne
+    // le disait. Seulement quand c'est vrai — la mention partout la
+    // viderait de son sens.
+    if (contientDeLIA(p.cases)) { blocs.push(''); blocs.push(mentionIA()) }
     blocs.push('')
   }
 

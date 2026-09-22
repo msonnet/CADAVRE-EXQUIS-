@@ -36,7 +36,9 @@ Deux modérées restent, dans `react-router` : elles exigent un passage en
 
 | Règle | Où |
 |---|---|
-| **1.2 — contenu généré par les utilisateurs** | signalement (`⚑` sur chaque publication → `api/report.ts`), blocage d'auteur (`⊘ Masquer l'auteur`, réinitialisable dans Réglages), suppression de ses propres publications |
+| **1.2 — contenu généré par les utilisateurs** | signalement (`⚑` sur chaque publication → `api/report.ts`), blocage d'auteur (`⊘ Masquer l'auteur`, réinitialisable dans Réglages), suppression de ses propres publications, **et conditions d'utilisation à tolérance zéro** (`/conditions`, §5) |
+| **DSA art. 14 et 16** | `/conditions` + point de contact + canal « contenu illicite » ouvert sans compte (`api/signaler-vers.ts`, `motif: 'illicite'`) |
+| **AI Act art. 50** | `/conditions` §8 nomme le modèle ; l'export `.txt` porte `mentionIA()` quand une voix a écrit ; la sauvegarde `.json` porte `cases[].auteur` |
 | **5.1.1 (v) — suppression de compte** | Profil → « SUPPRIMER MON COMPTE » → `api/delete-account.ts` (jeton vérifié, publications anonymisées, profil et compte auth supprimés) |
 | **5.1.1 — politique de confidentialité** | page `/privacy`, bilingue FR/EN, RGPD |
 | **2.3 — pas de contenu de debug** | gestionnaire retiré, écran d'erreur au registre du jeu |
@@ -61,6 +63,10 @@ Données **non liées** : adresse IP conservée ≤ 60 s pour le rate limiting.
 - **Version** : 1.0.0 · **iOS minimum** : 16.0
 - **Catégorie** : Games → Word Games · **Âge** : 4+
 - **Politique de confidentialité** : `https://cadavre-exquis-beta.vercel.app/privacy`
+- **Conditions d'utilisation** : `https://cadavre-exquis-beta.vercel.app/conditions`
+  (à renseigner dans le champ « EULA » d'App Store Connect — la guideline 1.2
+  attend des conditions sur le CONTENU, que l'EULA standard d'Apple ne
+  couvre pas)
 - **Support** : `https://cadavre-exquis-beta.vercel.app`
 - **Textes anglais** prêts à coller : [`docs/app-store-en.md`](./app-store-en.md)
 

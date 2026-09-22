@@ -92,6 +92,48 @@ export function libelleMains(n: number): string {
 }
 
 /**
+ * Une machine a-t-elle écrit dans ce poème ?
+ *
+ * `auteur` vaut 'humain', 'ia' ou 'mixte' — 'mixte' désigne un vers
+ * d'atelier où le médium et une voix se sont partagé la ligne. Les deux
+ * derniers comptent.
+ */
+export function contientDeLIA(cases: { auteur?: string }[]): boolean {
+  return cases.some(c => c.auteur === 'ia' || c.auteur === 'mixte')
+}
+
+/**
+ * La mention portée par un poème qui SORT de l'application.
+ *
+ * ── Pourquoi elle existe ──────────────────────────────────────────────────
+ *
+ * L'article 50 du règlement européen sur l'intelligence artificielle,
+ * applicable depuis le 2 août 2026, demande que les sorties d'un système
+ * générant du texte de synthèse soient identifiables comme telles. Cette
+ * obligation ne remonte PAS au fournisseur du modèle : elle est portée par
+ * qui met le système sur le marché sous son nom.
+ *
+ * Dans l'app, la chose est déjà dite — les coutures nomment chaque voix à
+ * la fin d'une partie, et c'est le meilleur écran du produit. Mais un poème
+ * exporté en `.txt` sortait nu : rien, dans le fichier, ne disait qu'une
+ * machine y avait écrit. La sauvegarde `.json`, elle, portait déjà
+ * `cases[].auteur` — le marquage lisible par machine existait, le lisible
+ * par un humain manquait.
+ *
+ * ── Pourquoi seulement quand c'est vrai ───────────────────────────────────
+ *
+ * Un poème écrit par des mains humaines seules ne porte rien. Apposer la
+ * mention partout la viderait de son sens, et mentirait dans l'autre
+ * sens — le jeu se joue très bien sans aucune voix.
+ */
+export function mentionIA(): string {
+  return tr(
+    '✦ Des fragments de ce poème ont été écrits par une intelligence artificielle (Claude, Anthropic).',
+    '✦ Fragments of this poem were written by an artificial intelligence (Claude, Anthropic).',
+  )
+}
+
+/**
  * La série — combien de nuits d'affilée on est venu.
  *
  * Deux défauts corrigés d'un coup, et le second était le plus grave.

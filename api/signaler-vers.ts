@@ -33,6 +33,23 @@ export const config = { maxDuration: 30 }
  * l'autre. À deux, il faut deux comptes d'accord. Et le modérateur est
  * prévenu dès le premier : c'est lui le vrai chemin tant que le rendez-vous
  * est petit.
+ *
+ * ── DEUX canaux, et ils ne font pas la même chose ─────────────────────────
+ *
+ * Le règlement européen sur les services numériques (DSA, article 16)
+ * demande que **toute personne** puisse notifier un contenu ILLICITE, sans
+ * condition de compte. Or exiger deux comptes d'accord est précisément ce
+ * qui protège le poème du vandalisme. Les deux tiennent ensemble parce
+ * qu'ils ne portent pas sur la même chose :
+ *
+ *   · `motif: 'illicite'` — ouvert à tous, sans identité. Il ne retire
+ *     RIEN tout seul : il écrit au modérateur, immédiatement. Un canal
+ *     anonyme capable de faire tomber un vers serait une arme, et le texte
+ *     demande que la notification PARVIENNE, pas qu'elle exécute.
+ *
+ *   · tous les autres motifs — un compte, un seul signalement par vers,
+ *     retrait automatique au second. C'est le jugement de goût de la
+ *     communauté, et il reste tenu par des comptes.
  */
 export default async function handler(req: any, res: any): Promise<void> {
   if (cors(req, res)) return
@@ -43,15 +60,33 @@ export default async function handler(req: any, res: any): Promise<void> {
     return
   }
 
-  const main = await utilisateurDuJeton(req)
-  if (!main) { res.status(401).json({ error: 'auth_requise' }); return }
-
   const versId = String(req.body?.versId ?? '')
   if (!/^[0-9a-f-]{36}$/i.test(versId)) { res.status(400).json({ motif: 'introuvable' }); return }
   const motif = String(req.body?.motif ?? 'autre').slice(0, 24)
 
   const admin = clientAdmin()
   if (!admin) { res.status(503).json({ motif: 'indisponible' }); return }
+
+  // ── Le canal ouvert : notification de contenu illicite ──
+  // Avant l'exigence d'identité, et volontairement : c'est tout son objet.
+  if (motif === 'illicite') {
+    const { data: signale } = await admin
+      .from('jour_vers').select('texte').eq('id', versId).maybeSingle()
+    const t = (signale as { texte?: string } | null)?.texte
+    if (!t) { res.status(404).json({ motif: 'introuvable' }); return }
+    // Le détail libre aide le modérateur à trancher sans ouvrir la base.
+    const detail = String(req.body?.detail ?? '').slice(0, 500)
+    const parti = await prevenirModerateur(versId, t, detail ? `illicite — ${detail}` : 'illicite')
+    // Rien ne garde trace de ce canal en base : un courriel qui n'est pas
+    // parti est une notification perdue, et répondre 200 la ferait croire
+    // reçue. L'écran renvoie alors vers l'adresse des conditions.
+    if (!parti) { res.status(503).json({ motif: 'courriel_indisponible' }); return }
+    res.status(200).json({ signale: true, retire: false, canal: 'illicite' })
+    return
+  }
+
+  const main = await utilisateurDuJeton(req)
+  if (!main) { res.status(401).json({ error: 'auth_requise' }); return }
 
   const { data: vers } = await admin
     .from('jour_vers')
@@ -128,35 +163,59 @@ async function versDeVoix(voix: any, echo: string, langue: string): Promise<stri
   } catch { return null }
 }
 
-/** Courriel au modérateur — meilleur effort, jamais bloquant. */
-async function prevenirModerateur(versId: string, texte: string, motif: string): Promise<void> {
+/**
+ * Courriel au modérateur. Rend `true` s'il est réellement parti.
+ *
+ * Le retour compte pour le canal « illicite » et pour lui seul : rien
+ * d'autre ne garde trace de cette notification-là. `jour_signalements`
+ * exige un `main_id NOT NULL` et la migration est en production, donc on ne
+ * peut pas y écrire sans identité. Si le courriel ne part pas, la
+ * notification n'existe nulle part — et le dire est la seule réponse
+ * honnête : l'écran renvoie alors vers l'adresse de contact des conditions,
+ * qui est le second chemin exigé de toute façon.
+ *
+ * Pour les autres motifs il reste au meilleur effort : le signalement est
+ * inscrit en base, le courriel n'est qu'une commodité.
+ */
+async function prevenirModerateur(versId: string, texte: string, motif: string): Promise<boolean> {
   const cle = (process.env.RESEND_API_KEY ?? '').trim()
   const dest = (process.env.REPORT_EMAIL ?? '').trim()
-  if (!cle || !dest) return
+  if (!cle || !dest) return false
   const ref = (() => {
     try { return new URL(urlProjet() ?? '').hostname.split('.')[0] } catch { return '' }
   })()
   const lien = ref ? `https://supabase.com/dashboard/project/${ref}/editor` : ''
+  const illicite = motif.startsWith('illicite')
   try {
-    await fetch('https://api.resend.com/emails', {
+    const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${cle}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'Cadavre Exquis <onboarding@resend.dev>',
         to: [dest],
-        subject: `Vers signalé — poème du jour`,
+        subject: illicite
+          ? `CONTENU ILLICITE signalé — poème du jour`
+          : `Vers signalé — poème du jour`,
         text: [
-          `Un vers du poème du jour a été signalé.`,
+          illicite
+            ? `Un vers du poème du jour est signalé comme ILLICITE (DSA art. 16).`
+            : `Un vers du poème du jour a été signalé.`,
           ``,
           `Vers : « ${texte} »`,
           `Motif : ${motif}`,
           `Identifiant : ${versId}`,
           ``,
-          `Il sera retiré automatiquement à ${SEUIL_RETRAIT} signalements —`,
-          `remplacé par un vers de voix, jamais effacé.`,
+          illicite
+            // Ce canal ne retire rien : il faut le dire, sinon le modérateur
+            // croit qu'une mécanique s'en occupe et n'agit pas.
+            ? `Ce signalement N'A DÉCLENCHÉ AUCUN RETRAIT : le canal ouvert ne\nretire jamais de lui-même. Il attend une décision humaine.`
+            : `Il sera retiré automatiquement à ${SEUIL_RETRAIT} signalements —\nremplacé par un vers de voix, jamais effacé.`,
           lien ? `\n${lien}` : '',
         ].join('\n'),
       }),
     })
-  } catch { /* le signalement compte quand même */ }
+    return r.ok
+  } catch {
+    return false
+  }
 }
