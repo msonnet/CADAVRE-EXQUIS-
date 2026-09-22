@@ -10,9 +10,23 @@ export const config = { maxDuration: 60 }
 /**
  * Scelle les poèmes du jour écoulé.
  *
- * Appelé par le cron toutes les heures. Il ne touche JAMAIS à la journée en
- * cours : une chaîne appartient à sa journée jusqu'à son dernier instant, et
- * une chaîne scellée ne se rouvre pas.
+ * Appelé par le cron à 00 h 30 UTC, une demi-heure après la fermeture de la
+ * journée. Il ne touche JAMAIS à la journée en cours : une chaîne appartient
+ * à sa journée jusqu'à son dernier instant, et une chaîne scellée ne se
+ * rouvre pas.
+ *
+ * ── Pourquoi une fois par jour et non toutes les heures ───────────────────
+ *
+ * Premier jet : `5 * * * *`. Le plan Hobby de Vercel n'autorise qu'un
+ * déclenchement quotidien et REJETTE la configuration avant même de
+ * construire — tous les déploiements ont échoué en six secondes, sans logs,
+ * pendant que l'ancien restait servi. La panne ne se voyait donc que depuis
+ * GitHub, où le statut du commit portait « Deployment failed ».
+ *
+ * Une fois par jour suffit : cette route ne ferme que des journées écoulées.
+ * Le seul effet du rythme est le délai avant qu'un poème devienne lisible,
+ * et une demi-heure après minuit est plus proche du rendez-vous que ne
+ * l'était le cron horaire dans le pire des cas.
  *
  * ── Ce que les voix font, et c'est peu ────────────────────────────────────
  *

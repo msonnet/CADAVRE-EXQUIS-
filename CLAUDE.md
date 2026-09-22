@@ -579,7 +579,13 @@ s'asseoir à la même table qu'un joueur à Paris. Minuit UTC, soit 01 h ou 02 h
   d'écart (0,17 % des retours, deux fois l'an). Mesuré : min 5, médiane 41.
 - `api/_jour.ts` · `api/jour.ts` — l'état, la pose d'un vers, la collision de
   rang tranchée par la base puis rejouée.
-- `api/sceller-jour.ts` — le cron horaire. Ne scelle jamais le jour en cours.
+- `api/sceller-jour.ts` — le cron **quotidien**, à 00 h 30 UTC. Ne scelle
+  jamais le jour en cours. Il était horaire au départ : le plan Hobby de
+  Vercel n'autorise qu'un déclenchement par jour et **rejette la
+  configuration avant de construire** — quatre déploiements ont échoué en six
+  secondes, sans logs, pendant que l'ancien restait servi. La panne ne se
+  voyait que depuis GitHub, où le statut du commit portait « Deployment
+  failed » et pointait vers la page de tarification des crons.
 - `src/lib/jourLogique.ts` — les règles côté client. **Elles sont en double
   avec le serveur, et c'est voulu** : le client anticipe pour refuser un vers
   de douze mots sans aller-retour, le serveur TRANCHE. Onze mesures tiennent

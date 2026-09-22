@@ -16,7 +16,7 @@
     },
     {
       "path": "/api/sceller-jour",
-      "schedule": "5 * * * *"
+      "schedule": "30 0 * * *"
     }
   ]
 }
