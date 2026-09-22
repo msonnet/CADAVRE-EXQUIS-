@@ -27,8 +27,14 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [x] **Pas de contenu de debug livré** — gestionnaire d'erreurs retiré d'`index.html`, écran de secours au registre du carnet
 - [x] **Illustrations au format Instagram** — 3:4 vertical, 1080 × 1440 px
 
-#### Le poème du jour — reste à faire
-- [ ] Appliquer `supabase/migrations/20260917000010_cadavre_du_jour.sql` — **rien ne marche sans elle**
+#### Le poème du jour
+- [x] **Migration appliquée** — `supabase/migrations/20260917000010_cadavre_du_jour.sql`,
+      le 21 septembre 2026 ; `GET /api/jour?langue=fr` répond en production
+- [x] **Le cron quotidien** — `/api/cleanup` à 00 h 30 UTC, un seul déclenchement
+      (plan Hobby), qui nettoie les salons puis scelle les jours écoulés
+- [ ] **Poser `CRON_SECRET` chez Vercel** — sans lui la production refuse son
+      propre cron et **aucun poème ne se scelle** (`portailOuvert`, `api/cleanup.ts`)
+- [ ] **Voir un scellement réel** — il n'a encore jamais tourné
 
 #### Abonnement — reste à faire hors du code
 - [ ] Appliquer `supabase/migrations/20260730000010_abonnement.sql`
@@ -592,14 +598,27 @@ s'asseoir à la même table qu'un joueur à Paris. Minuit UTC, soit 01 h ou 02 h
   rang tranchée par la base puis rejouée.
 - `api/cleanup.ts` — le cron **quotidien**, à 00 h 30 UTC : il nettoie les
   salons expirés PUIS scelle les poèmes des jours écoulés. Ne scelle jamais
-  le jour en cours.
+  le jour en cours. `portailOuvert` en garde la porte : sans secret elle
+  n'ouvre plus **qu'en dehors de la production**, depuis que le scellement
+  appelle le modèle. Le prix est assumé — tant que `CRON_SECRET` n'est pas
+  posé chez Vercel, rien ne se scelle, et c'est une panne qui se voit.
 - `src/lib/jourLogique.ts` — les règles côté client. **Elles sont en double
   avec le serveur, et c'est voulu** : le client anticipe pour refuser un vers
   de douze mots sans aller-retour, le serveur TRANCHE. Onze mesures tiennent
   les deux copies d'accord, parce qu'une duplication qui dérive serait pire
   qu'une duplication assumée.
 - `src/lib/jour.ts` · `src/pages/PoemeDuJour.tsx` — le côté joueur.
-- `supabase/migrations/20260917000010_cadavre_du_jour.sql` — **à appliquer.**
+- `supabase/migrations/20260917000010_cadavre_du_jour.sql` — **appliquée** le
+  21 septembre 2026.
+
+### L'amorce se donne entière — et la règle ne vit plus qu'à un endroit
+
+La première main reçoit la graine complète, « la cire » et non « cire » ; les
+suivantes ne voient qu'un mot. La règle était écrite **trois fois** côté
+serveur, et la correction n'en avait touché qu'une : restaient la première
+voix d'une journée déserte et le vers qui remplace un rang 1 retiré, qui
+rendaient tous deux « cire ». `echoPour(amorce, versPrecedent)` la porte
+désormais seule, et deux mesures la tiennent d'accord avec `echoDe` du client.
 
 ### Deux limites du plan Hobby, apprises à la dure
 

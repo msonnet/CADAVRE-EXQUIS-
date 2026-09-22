@@ -90,3 +90,27 @@ export function libelleMorceaux(structureId: string, n: number): string {
 export function libelleMains(n: number): string {
   return `${n} ${n === 1 ? tr('MAIN', 'HAND') : tr('MAINS', 'HANDS')}`
 }
+
+/**
+ * La série — combien de nuits d'affilée on est venu.
+ *
+ * Deux défauts corrigés d'un coup, et le second était le plus grave.
+ *
+ * Les CHIFFRES ROMAINS d'abord. Ils sont justes ailleurs : l'année de
+ * l'en-tête (« N° 1.42 · MMXXVI ») et les actes d'une partie (« Acte III »)
+ * sont des numéros de revue et de scène, et ils ne dépassent jamais quelques
+ * unités. Une série, elle, compte sans borne — « ✦ Cᵉ nuit de suite » au
+ * centième jour, ce qui ne se lit pas. Les vers et les mains sont déjà
+ * passés en chiffres arabes ; la série leur revient.
+ *
+ * La LANGUE ensuite : la phrase était écrite en français dans le code, sans
+ * `tr()`. L'interface anglaise affichait « nuit de suite » depuis toujours.
+ *
+ * L'anglais évite l'ordinal — « 2nd », « 3rd », « 21st » demanderaient une
+ * table de suffixes pour un gain nul. « 2 nights running » dit la même chose
+ * et se lit mieux. Le français garde son ordinal : la série commence à deux,
+ * « ᵉ » y est donc toujours la bonne terminaison.
+ */
+export function libelleSerie(n: number): string {
+  return tr(`✦ ${n}ᵉ nuit de suite`, `✦ ${n} nights running`)
+}

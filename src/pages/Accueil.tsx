@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { lireSerie, type Serie } from '../utils/streak'
 import { rearmerRappelSiActif } from '../utils/notifications'
+import { libelleSerie } from '../lib/attribution'
 import { tr } from '../i18n'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
@@ -122,7 +123,7 @@ export default function Accueil() {
           color: accent, opacity: 0.5,
         }}>
           <span>
-            {serie.compte >= 2 ? `✦ ${toRomain(serie.compte)}ᵉ nuit de suite` : ''}
+            {serie.compte >= 2 ? libelleSerie(serie.compte) : ''}
           </span>
           {seance?.heure && <span>{tr('rêvé à', 'dreamt at')} {seance.heure}</span>}
         </div>
@@ -308,7 +309,7 @@ export default function Accueil() {
               l'en-tête que parce que le mot « N° » l'accompagne.
               Le mot d'abord, donc. L'état tient dans la marque : ✧ en
               attente, ✦ une fois écrit — c'est déjà le vocabulaire de la
-              série, « ✦ IIᵉ nuit de suite ». */}
+              série, « ✦ 2ᵉ nuit de suite ». */}
           <button
             onClick={() => nav('/poeme-du-jour')}
             aria-label={tr('Le poème du jour', 'The poem of the day')}

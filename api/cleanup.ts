@@ -8,6 +8,39 @@ import {
 import { choisirVoixAleatoire, promptSysteme } from './_voices.js'
 
 /**
+ * Qui a le droit d'appeler le ménage.
+ *
+ * Vercel joint `CRON_SECRET` en jeton porteur à ses propres déclenchements ;
+ * à la main, on le passe en paramètre.
+ *
+ * ── Ce qui change, et pourquoi ────────────────────────────────────────────
+ *
+ * Le premier jet ouvrait la porte quand AUCUN secret n'était configuré, pour
+ * qu'un poste de développement n'ait rien à poser. C'était défendable tant
+ * que la route n'appelait qu'une fonction SQL idempotente : au pire, on
+ * nettoyait deux fois des salons déjà expirés.
+ *
+ * Elle scelle désormais les poèmes du jour, et le scellement appelle le
+ * modèle — jusqu'à quatre fois par journée déserte. Une porte ouverte n'y
+ * coûte plus rien à la base, elle coûte de l'argent réel, et à un inconnu.
+ *
+ * On garde donc l'ouverture SANS secret, mais hors production seulement.
+ * Le prix est dit : tant que `CRON_SECRET` n'est pas posé chez Vercel, la
+ * production refuse son propre cron et les poèmes ne se scellent pas. C'est
+ * une panne visible — les poèmes d'hier restent fermés — là où une porte
+ * ouverte ne se voit sur aucun écran.
+ */
+export function portailOuvert(
+  secret: string | undefined,
+  env: string | undefined,
+  enTete: unknown,
+  enParametre: unknown,
+): boolean {
+  if (secret) return enTete === `Bearer ${secret}` || enParametre === secret
+  return env !== 'production'
+}
+
+/**
  * Le ménage quotidien — les salons expirés, puis les poèmes du jour écoulé.
  *
  * ── Pourquoi DEUX travaux dans une seule route ────────────────────────────
@@ -26,17 +59,12 @@ import { choisirVoixAleatoire, promptSysteme } from './_voices.js'
  * Appelable à la main : GET /api/cleanup?secret=<CRON_SECRET>
  */
 export default async function handler(req: any, res: any): Promise<void> {
-  const secret = process.env.CRON_SECRET
-  const authHeader = req.headers['authorization']
-  const querySecret = req.query?.secret
-
-  // Allow Vercel Cron (sends Bearer token) or manual call with ?secret=
-  const authorized =
-    (secret && authHeader === `Bearer ${secret}`) ||
-    (secret && querySecret === secret) ||
-    (!secret) // no secret configured → open (dev mode)
-
-  if (!authorized) {
+  if (!portailOuvert(
+    process.env.CRON_SECRET,
+    process.env.VERCEL_ENV,
+    req.headers['authorization'],
+    req.query?.secret,
+  )) {
     res.status(401).json({ error: 'Unauthorized' })
     return
   }
@@ -110,7 +138,9 @@ async function scellerLesChainesDues() {
   const compte: { jour: string; langue: string; voix: number; scelle: boolean }[] = []
 
   for (const c of dues) {
-    let echo = dernierMot(c.dernier)
+    // `chainesAsceller` a déjà appliqué la règle de l'amorce : sur une
+    // journée déserte, la première voix reçoit la graine entière.
+    let echo = c.echo
     let posees = 0
     for (let i = 0; i < c.manque; i++) {
       const rang = PLANCHER_VERS - c.manque + i + 1

@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import {
-  dernierMot, refusDuVers, langueValide, refusDeSignalement,
+  dernierMot, refusDuVers, langueValide, refusDeSignalement, echoPour,
   MOTS_MAX, CARACTERES_MAX, PLANCHER_VERS, SEUIL_RETRAIT,
 } from '../../api/_jour.js'
-import { nettoyerVersDeVoix } from '../../api/cleanup.js'
+import { nettoyerVersDeVoix, portailOuvert } from '../../api/cleanup.js'
 import {
   dernierMot as dernierMotClient,
+  echoDe as echoDeClient,
   refusDuVers as refusDuVersClient,
   MOTS_MAX as MOTS_MAX_CLIENT,
   CARACTERES_MAX as CARACTERES_MAX_CLIENT,
@@ -41,6 +42,26 @@ describe('les deux copies de la règle disent la même chose', () => {
       '   ',
     ]) {
       expect(dernierMot(t), t).toBe(dernierMotClient(t))
+    }
+  })
+
+  it('même écho au premier rang : la graine entière, des deux côtés', () => {
+    // La règle était écrite trois fois côté serveur, et la correction de
+    // l'amorce entière n'en avait touché qu'une. Restaient la première voix
+    // d'une journée déserte et le remplacement d'un vers de rang 1 : tous
+    // deux rendaient « cire » pour « la cire ».
+    for (const amorce of ['la cire', 'une horloge', 'une balance penche']) {
+      expect(echoPour(amorce, null), amorce).toBe(amorce)
+      expect(echoPour(amorce, null), amorce)
+        .toBe(echoDeClient({ jour: 'j', amorce, vers: [] }))
+    }
+  })
+
+  it('même écho aux rangs suivants : un seul mot', () => {
+    const amorce = 'la cire'
+    for (const precedent of ['le sel monte lentement', '« une valise »', 'il descend jusqu’au sous-sol —']) {
+      expect(echoPour(amorce, precedent), precedent).toBe(dernierMotClient(precedent))
+      expect(echoPour(amorce, precedent), precedent).not.toBe(amorce)
     }
   })
 
@@ -111,6 +132,39 @@ describe('ce qu’on garde de la réponse d’une voix', () => {
       expect(v, brut).not.toBeNull()
       expect(refusDuVers(v as string), brut).toBeNull()
     }
+  })
+})
+
+describe('qui peut appeler le ménage quotidien', () => {
+  const SECRET = 'abc123'
+
+  it('refuse la production quand aucun secret n’est posé', () => {
+    // C'est la mesure de ce lot. Auparavant l'absence de secret OUVRAIT la
+    // porte, partout : n'importe qui pouvait déclencher le scellement, donc
+    // quatre appels au modèle, depuis une barre d'adresse.
+    expect(portailOuvert(undefined, 'production', undefined, undefined)).toBe(false)
+    expect(portailOuvert('', 'production', undefined, undefined)).toBe(false)
+  })
+
+  it('laisse passer hors production — un poste de travail ne pose rien', () => {
+    for (const env of [undefined, 'development', 'preview']) {
+      expect(portailOuvert(undefined, env, undefined, undefined), String(env)).toBe(true)
+    }
+  })
+
+  it('reconnaît le jeton porteur de Vercel, et le paramètre à la main', () => {
+    expect(portailOuvert(SECRET, 'production', `Bearer ${SECRET}`, undefined)).toBe(true)
+    expect(portailOuvert(SECRET, 'production', undefined, SECRET)).toBe(true)
+  })
+
+  it('refuse un secret faux, ou absent, dès qu’un secret existe', () => {
+    expect(portailOuvert(SECRET, 'production', 'Bearer autre', undefined)).toBe(false)
+    expect(portailOuvert(SECRET, 'production', SECRET, undefined), 'sans « Bearer »').toBe(false)
+    expect(portailOuvert(SECRET, 'production', undefined, 'autre')).toBe(false)
+    expect(portailOuvert(SECRET, 'production', undefined, undefined)).toBe(false)
+    // Et le secret posé ferme aussi le développement : une fois qu'il existe,
+    // il vaut partout, sinon un aperçu Vercel resterait ouvert.
+    expect(portailOuvert(SECRET, 'development', undefined, undefined)).toBe(false)
   })
 })
 

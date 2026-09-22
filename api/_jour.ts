@@ -99,6 +99,26 @@ export function dernierMot(texte: string): string {
   return ''
 }
 
+/**
+ * Ce que reçoit la main qui écrit après ce vers-là.
+ *
+ * Le dernier mot du vers précédent — mais l'amorce ENTIÈRE quand il n'y a
+ * pas de vers précédent. Une amorce n'est pas un vers dont on prend la
+ * queue : c'est une graine, et une graine se donne entière ; le déterminant
+ * en fait partie, il oriente le genre et le nombre de ce qui suivra.
+ *
+ * ── Pourquoi une fonction et non trois lignes ─────────────────────────────
+ *
+ * La règle était écrite TROIS fois — l'état du jour, le scellement, le
+ * remplacement d'un vers retiré — et la correction de l'amorce entière n'en
+ * avait touché qu'une. Les deux autres rendaient encore « cire » pour
+ * « la cire » : la première voix d'une journée déserte, et le vers de
+ * remplacement du tout premier rang. Écrite ici, elle ne peut plus dériver.
+ */
+export function echoPour(amorce: string, versPrecedent: string | null | undefined): string {
+  return versPrecedent ? dernierMot(versPrecedent) : amorce
+}
+
 export type RefusVers = 'vide' | 'trop-long' | 'trop-de-mots' | 'plusieurs-lignes'
 
 /** Ce vers est-il recevable ? Le serveur tranche, le client anticipe. */
@@ -173,19 +193,8 @@ export async function etatDuJour(langue: Langue, mainId: string | null, quand = 
   const tous = (vers ?? []) as { rang: number; texte: string; main_id: string | null }[]
   const mien = mainId ? tous.find(v => v.main_id === mainId) : undefined
 
-  /*
-    La première main reçoit l'amorce ENTIÈRE, les suivantes un seul mot.
-
-    Premier jet : l'écho valait `dernierMot(amorce)` quand la chaîne était
-    vide, par symétrie avec les autres tours. « la cire » devenait « cire » —
-    et l'on jetait justement ce qui avait été donné. Une amorce n'est pas un
-    vers dont on prend la queue : c'est une graine, et une graine se donne
-    entière. Le déterminant en fait partie, il oriente le genre et le nombre
-    de ce qui suivra.
-  */
-  const echo = tous.length
-    ? dernierMot(tous[tous.length - 1].texte)
-    : chaine.amorce
+  // La première main reçoit l'amorce ENTIÈRE, les suivantes un seul mot.
+  const echo = echoPour(chaine.amorce, tous.length ? tous[tous.length - 1].texte : null)
 
   return {
     jour: chaine.jour,
@@ -262,7 +271,7 @@ export async function poserVers(
  * sait pas parler au modèle, il sait seulement combien de vers manquent et
  * quel écho chacun reçoit.
  */
-export async function chainesAsceller(quand = new Date()): Promise<{ id: string; jour: string; langue: Langue; amorce: string; manque: number; dernier: string }[]> {
+export async function chainesAsceller(quand = new Date()): Promise<{ id: string; jour: string; langue: Langue; amorce: string; manque: number; echo: string }[]> {
   const admin = clientAdmin()
   if (!admin) return []
   const aujourdhui = jourUTC(quand)
@@ -275,7 +284,7 @@ export async function chainesAsceller(quand = new Date()): Promise<{ id: string;
     .order('jour', { ascending: true })
     .limit(20)
 
-  const dues: { id: string; jour: string; langue: Langue; amorce: string; manque: number; dernier: string }[] = []
+  const dues: { id: string; jour: string; langue: Langue; amorce: string; manque: number; echo: string }[] = []
   for (const c of (data ?? []) as { id: string; jour: string; langue: Langue; amorce: string }[]) {
     const { data: vers } = await admin
       .from('jour_vers').select('rang,texte')
@@ -284,7 +293,9 @@ export async function chainesAsceller(quand = new Date()): Promise<{ id: string;
     dues.push({
       ...c,
       manque: Math.max(0, PLANCHER_VERS - tous.length),
-      dernier: tous.length ? tous[tous.length - 1].texte : c.amorce,
+      // Une journée déserte : la première voix est la première main, elle
+      // reçoit donc l'amorce entière comme l'aurait reçue un joueur.
+      echo: echoPour(c.amorce, tous.length ? tous[tous.length - 1].texte : null),
     })
   }
   return dues
@@ -349,12 +360,12 @@ export async function retirerVers(versId: string, remplacement: string | null, v
 
 /** L'écho qu'avait reçu le vers de ce rang — celui du vers précédent. */
 export async function echoDuRang(chaineId: string, rang: number, amorce: string): Promise<string> {
-  if (rang <= 1) return dernierMot(amorce)
+  if (rang <= 1) return echoPour(amorce, null)
   const admin = clientAdmin()
-  if (!admin) return dernierMot(amorce)
+  if (!admin) return echoPour(amorce, null)
   const { data } = await admin
     .from('jour_vers').select('texte')
     .eq('chaine_id', chaineId).eq('rang', rang - 1)
     .maybeSingle()
-  return dernierMot((data as { texte?: string } | null)?.texte ?? amorce)
+  return echoPour(amorce, (data as { texte?: string } | null)?.texte ?? null)
 }

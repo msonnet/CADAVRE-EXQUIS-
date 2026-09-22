@@ -1,5 +1,17 @@
-import { describe, it, expect } from 'vitest'
-import { libelleMorceaux, libelleMains } from '../lib/attribution'
+import { describe, it, expect, afterEach } from 'vitest'
+import { libelleMorceaux, libelleMains, libelleSerie } from '../lib/attribution'
+
+/** Force la langue de l'interface le temps d'une mesure. */
+function enLangue<T>(l: 'fr' | 'en', f: () => T): T {
+  const avant = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: { getItem: () => l }, configurable: true, writable: true,
+  })
+  try { return f() } finally {
+    if (avant) Object.defineProperty(globalThis, 'localStorage', avant)
+    else delete (globalThis as Record<string, unknown>).localStorage
+  }
+}
 
 /**
  * Les libellés de compte — lot 9 de l'audit du 10 septembre.
@@ -50,5 +62,30 @@ describe('libelleMains', () => {
 
   it('ne dit jamais « voix » non plus', () => {
     for (const n of [1, 2, 6]) expect(libelleMains(n)).not.toMatch(/VOIX|VOICE/i)
+  })
+})
+
+describe('libelleSerie — la dernière poche de chiffres romains', () => {
+  afterEach(() => { delete (globalThis as Record<string, unknown>).localStorage })
+
+  it('écrit la série en chiffres arabes, à toute longueur', () => {
+    // « ✦ IIᵉ nuit de suite » passait encore ; au centième jour on lisait
+    // « ✦ Cᵉ nuit de suite ». Les romains restent justes là où ils comptent
+    // une revue ou une scène — l'année de l'en-tête, les actes — parce que
+    // ceux-là sont bornés.
+    expect(enLangue('fr', () => libelleSerie(2))).toBe('✦ 2ᵉ nuit de suite')
+    expect(enLangue('fr', () => libelleSerie(100))).toBe('✦ 100ᵉ nuit de suite')
+    for (const n of [2, 7, 40, 100, 365]) {
+      expect(enLangue('fr', () => libelleSerie(n)), String(n)).not.toMatch(/[IVXLCDM]{2,}/)
+    }
+  })
+
+  it('parle anglais — elle ne le faisait pas du tout', () => {
+    // La phrase était écrite en français dans le code, sans `tr()` : toute
+    // l'interface anglaise affichait « nuit de suite ».
+    expect(enLangue('en', () => libelleSerie(2))).toBe('✦ 2 nights running')
+    for (const n of [2, 7, 100]) {
+      expect(enLangue('en', () => libelleSerie(n)), String(n)).not.toMatch(/nuit/)
+    }
   })
 })

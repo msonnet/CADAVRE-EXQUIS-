@@ -256,10 +256,22 @@ export default function FinDePartie() {
 
   const structLabel = STRUCT_LABELS[poeme.structureId] ?? poeme.structureId
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString(tr('fr-FR', 'en-GB'), { hour: '2-digit', minute: '2-digit' })
-  // `voixCount` est le nombre de CASES du poème, pas un numéro de feuillet :
-  // le compte s'écrit donc en chiffres, comme les vers et les mains partout
-  // ailleurs. Le mot « FEUILLET » posé sur un compte reste discutable.
-  const feuilletLabel = `${tr('FEUILLET', 'FOLIO')} ${voixCount} · ${tr('FIN', 'END')}`
+  /*
+    « FEUILLET 5 · FIN » comptait des CASES sous un mot qui désigne une
+    feuille. Dans une revue « FEUILLET 5 » se lit « feuillet numéro 5 » : le
+    libellé annonçait un rang là où il donnait un total, et il annonçait un
+    rang qui n'existe pas — il n'y a qu'un feuillet.
+
+    On ôte le nombre plutôt que de le corriger. `libelleMorceaux` l'annonce
+    déjà, juste, quelques lignes plus bas et sur le même écran — « 5
+    FRAGMENTS · PHRASE ÉTOFFÉE · 21:04 ». Le porter aussi dans le bouton de
+    retour le dirait deux fois pour n'en rendre vrai qu'une.
+
+    Le mot « FEUILLET » reste, car sans nombre il redevient ce qu'il est :
+    le titre de la feuille, et non son rang. C'est déjà son emploi au détail
+    du poème, où il ne compte rien.
+  */
+  const feuilletLabel = `${tr('FEUILLET', 'FOLIO')} · ${tr('FIN', 'END')}`
   const labelStyle = STYLES.find(s => s.id === styleChoisi)?.label
 
   return (
