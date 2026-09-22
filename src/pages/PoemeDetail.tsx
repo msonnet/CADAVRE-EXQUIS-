@@ -78,12 +78,9 @@ export default function PoemeDetail() {
     if (tutActif && tutEtape === T_DETAIL && published) tutAvancer()
   }, [published]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Célébration de fin de guide — se referme seule
-  useEffect(() => {
-    if (!tutFete) return
-    const t = setTimeout(tutTerminer, 2600)
-    return () => clearTimeout(t)
-  }, [tutFete]) // eslint-disable-line react-hooks/exhaustive-deps
+  // La célébration attend désormais un geste : elle porte le rendez-vous
+  // quotidien, et un message qui s'efface avant d'être lu n'est pas un
+  // message. Voir `TutorielFete`.
 
   useEffect(() => {
     if (!id) return
@@ -677,7 +674,11 @@ export default function PoemeDetail() {
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={fond}
       />
-      <TutorielFete visible={tutFete} accent={accent} encre={encre} bg={fond} />
+      <TutorielFete
+        visible={tutFete} accent={accent} encre={encre} bg={fond}
+        onJour={() => { tutTerminer(); navigate('/poeme-du-jour') }}
+        onFermer={tutTerminer}
+      />
     </PageTransition>
   )
 }

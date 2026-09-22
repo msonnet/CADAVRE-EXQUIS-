@@ -540,6 +540,17 @@ longueur EST le nombre de gens venus — un joueur cinq vers, deux cents
 joueurs deux cents vers. Rendements croissants : le poème à deux cents mains
 ne pouvait pas exister à six.
 
+### La première main reçoit l'amorce ENTIÈRE
+
+Premier jet : l'écho valait `dernierMot(amorce)` même quand la chaîne était
+vide, par symétrie avec les autres tours. « la cire » devenait « cire » — et
+l'on jetait justement ce qui avait été donné. Une amorce n'est pas un vers
+dont on prend la queue : c'est une graine, et une graine se donne entière.
+Le déterminant en fait partie, il oriente le genre et le nombre de ce qui
+suivra.
+
+Les mains suivantes, elles, ne voient toujours qu'un mot.
+
 ### L'écho, et non l'aveuglement total
 
 Voir le vers entier qui précède, c'est du **renga** : chacun répond, le texte
@@ -634,6 +645,19 @@ On ne signale **jamais le sien** : ce serait un moyen de récrire le poème des
 autres après coup. Ni celui d'une **voix** : elle n'a pas de main à protéger,
 et un vers de voix qui déplaît est un défaut de gabarit, qui se corrige à la
 source. `api/signaler-vers.ts`, table `jour_signalements`.
+
+### Le rendez-vous est inscrit dans le tutoriel, à deux endroits
+
+- **Les Règles** (`/aide`) portent une quatrième entrée, « Le poème du
+  jour », à côté du cadavre écrit, du dessiné et de l'Atelier. Quatre
+  points — une main un vers, l'amorce, l'écho, le scellement — et un bouton
+  qui y mène.
+- **Le dernier écran du guide** se refermait seul en 2,6 s. C'était bien tant
+  qu'il ne disait qu'« au revoir » ; ça ne l'est plus depuis qu'il porte la
+  seule chose qu'on veut qu'un joueur retienne. **Un message qui s'efface
+  avant d'être lu n'est pas un message** : il attend maintenant un geste, et
+  propose le poème du jour. C'est le moment où le joueur vient de finir
+  quelque chose et cherche la suite.
 
 ### La notification du scellement — locale, et pourtant juste
 

@@ -159,7 +159,25 @@ export default function TutorielCoach({
 }
 
 /** Panneau de célébration — fin du guide. La page appelle onFin après ~2,4 s. */
-export function TutorielFete({ visible, accent, encre, bg }: { visible: boolean; accent: string; encre: string; bg: string }) {
+/**
+ * Le dernier écran du guide — et le passage de relais.
+ *
+ * Il se refermait seul en 2,6 s. C'était bien tant qu'il ne disait qu'« au
+ * revoir » ; ça ne l'est plus depuis qu'il porte la seule chose qu'on veut
+ * qu'un joueur retienne : il existe un rendez-vous chaque jour, et on peut
+ * y ajouter sa main. Un message qui s'efface avant d'être lu n'est pas un
+ * message.
+ *
+ * Il attend donc un geste. Un seul, à la toute fin d'un parcours de neuf
+ * étapes — c'est le moment où le joueur vient précisément de finir quelque
+ * chose et cherche la suite.
+ */
+export function TutorielFete({ visible, accent, encre, bg, onJour, onFermer }: {
+  visible: boolean; accent: string; encre: string; bg: string
+  /** Mène au poème du jour. */
+  onJour: () => void
+  onFermer: () => void
+}) {
   return (
     <AnimatePresence>
       {visible && (
@@ -193,12 +211,32 @@ export function TutorielFete({ visible, accent, encre, bg }: { visible: boolean;
           >
             {tr('Guide terminé', 'Guide complete')}
           </div>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.8 }}>
-            {tr('Le jeu est à toi — bonne écriture.', 'The game is yours — happy writing.')}
+          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, color: encre, opacity: 0.8, marginBottom: 16 }}>
+            {tr(
+              'Il reste une chose : chaque jour, un poème s’écrit à plusieurs mains. Tu peux y mettre la tienne.',
+              'One thing remains: each day, a poem is written by many hands. You can add yours.',
+            )}
           </p>
-          <div style={{ ...mono, fontSize: 10, color: accent, opacity: 0.7, marginTop: 10, letterSpacing: '0.24em' }}>
-            ✦ ✦ ✦
-          </div>
+
+          <button
+            onClick={onJour}
+            style={{
+              width: '100%', background: encre, color: bg,
+              ...mono, fontSize: 15, letterSpacing: '0.12em', textTransform: 'uppercase',
+              padding: '0.85em 1em', border: 'none', borderRadius: 3, cursor: 'pointer',
+            }}
+          >
+            {tr('Le poème du jour', 'The poem of the day')} ✧
+          </button>
+          <button
+            onClick={onFermer}
+            style={{
+              ...mono, fontSize: 12, letterSpacing: '0.1em', marginTop: 10,
+              background: 'none', border: 'none', color: encre, opacity: 0.55, cursor: 'pointer',
+            }}
+          >
+            {tr('PLUS TARD', 'LATER')}
+          </button>
         </motion.div>
       )}
     </AnimatePresence>

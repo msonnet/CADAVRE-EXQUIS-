@@ -107,15 +107,19 @@ export function dernierMot(texte: string): string {
 }
 
 /**
- * L'écho que verra la prochaine main.
+ * Ce que verra la prochaine main.
  *
- * Le dernier mot du dernier vers — ou celui de l'amorce quand la chaîne est
- * encore vide. La première main n'est donc pas plus démunie que les autres :
- * elle aussi répond à un mot, simplement il vient du calendrier.
+ * Le dernier mot du dernier vers — mais l'amorce ENTIÈRE quand la chaîne est
+ * encore vide.
+ *
+ * Premier jet : `dernierMot(amorce)` dans les deux cas, par symétrie.
+ * « la cire » devenait « cire », et l'on jetait justement ce qui avait été
+ * donné. Une amorce n'est pas un vers dont on prend la queue : c'est une
+ * graine, et une graine se donne entière — le déterminant en fait partie,
+ * il oriente le genre et le nombre de ce qui suivra.
  */
 export function echoDe(c: Chaine): string {
-  const dernier = c.vers.length ? c.vers[c.vers.length - 1].texte : c.amorce
-  return dernierMot(dernier)
+  return c.vers.length ? dernierMot(c.vers[c.vers.length - 1].texte) : c.amorce
 }
 
 /** Une main n'écrit qu'un vers par jour : c'est ce qui fait que la longueur

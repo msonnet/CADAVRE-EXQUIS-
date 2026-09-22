@@ -104,12 +104,35 @@ test('on ne voit qu’un mot — jamais le poème en cours', async ({ page }) =>
   expect(vu).not.toContain('Nadja')
 })
 
-test('la première main reçoit l’amorce du jour, et on le lui dit', async ({ page }) => {
-  await poser(page, { etat: { mains: 0, rang: 1, echo: 'horloge' } })
+test('la première main reçoit l’amorce ENTIÈRE, déterminant compris', async ({ page }) => {
+  // Premier jet : le serveur rendait `dernierMot(amorce)`, donc « cire »
+  // pour « la cire ». On jetait justement ce qui avait été donné — une
+  // graine se donne entière, et le déterminant oriente le genre et le
+  // nombre de ce qui suivra.
+  await poser(page, { etat: { mains: 0, rang: 1, echo: 'une balance penche', amorce: 'une balance penche' } })
   await ouvrir(page)
 
   await expect(page.getByText(/— L’AMORCE DU JOUR —|— TODAY’S SEED —/)).toBeVisible()
+  await expect(page.getByText('une balance penche', { exact: true })).toBeVisible()
   await expect(page.getByText(/TU OUVRES LE POÈME|YOU OPEN THE POEM/)).toBeVisible()
+})
+
+test('les Règles décrivent le rendez-vous, et y mènent', async ({ page }) => {
+  // « Inscrit dans le tutoriel » : la quatrième entrée des Règles, à côté du
+  // cadavre écrit, du dessiné et de l'Atelier.
+  await poser(page)
+  await ouvrir(page, '/aide')
+
+  await page.getByRole('button', { name: /poème du jour|poem of the day/i }).first().click()
+  await page.waitForTimeout(700)
+
+  await expect(page.getByText(/UNE MAIN, UN VERS|ONE HAND, ONE LINE/)).toBeVisible()
+  await expect(page.getByText(/L’AMORCE|THE SEED/).first()).toBeVisible()
+  await expect(page.getByText(/L’ÉCHO|THE ECHO/).first()).toBeVisible()
+  await expect(page.getByText(/LE SCELLEMENT|THE SEALING/)).toBeVisible()
+
+  await page.getByRole('button', { name: /Donner ma main aujourd’hui|Give my hand today/ }).click()
+  await expect(page).toHaveURL(/\/poeme-du-jour$/, { timeout: 5000 })
 })
 
 test('un vers posé change l’écran, et le champ disparaît', async ({ page }) => {

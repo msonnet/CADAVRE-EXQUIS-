@@ -32,6 +32,10 @@ const SECTIONS = [
   { id: 'ecrit',    label: tr('CADAVRE ÉCRIT', 'WRITTEN CADAVRE') },
   { id: 'dessine',  label: tr('CADAVRE DESSINÉ', 'DRAWN CADAVRE') },
   { id: 'atelier',  label: tr("L'ATELIER", 'THE WORKSHOP') },
+  // Le rendez-vous quotidien. Il ferme la liste parce qu'il ne se joue pas
+  // comme les trois autres : on n'y ouvre pas une partie, on ajoute une main
+  // à celle de tout le monde.
+  { id: 'jour',     label: tr('LE POÈME DU JOUR', 'THE POEM OF THE DAY') },
 ]
 
 export default function Aide() {
@@ -98,7 +102,8 @@ export default function Aide() {
           const isOpen = ouvert.includes(section.id)
           const isEcrit = section.id === 'ecrit'
           const isAtelier = section.id === 'atelier'
-          const col = isEcrit ? accent : isAtelier ? encre : second
+          const isJour = section.id === 'jour'
+          const col = isEcrit ? accent : isAtelier || isJour ? encre : second
 
           return (
             <motion.div
@@ -121,7 +126,10 @@ export default function Aide() {
                     className="font-fraunces font-black"
                     style={{ fontSize: 'clamp(1.3rem, 5.5vw, 1.8rem)', color: col, lineHeight: 1 }}
                   >
-                    {isEcrit ? tr('Cadavre Écrit', 'Written Cadavre') : isAtelier ? tr("L'Atelier", 'The Workshop') : tr('Cadavre Dessiné', 'Drawn Cadavre')}
+                    {isEcrit ? tr('Cadavre Écrit', 'Written Cadavre')
+                      : isAtelier ? tr("L'Atelier", 'The Workshop')
+                      : isJour ? tr('Le poème du jour', 'The poem of the day')
+                      : tr('Cadavre Dessiné', 'Drawn Cadavre')}
                   </div>
                 </div>
                 <span style={{
@@ -222,7 +230,46 @@ export default function Aide() {
                         </>
                       )}
 
-                      {!isEcrit && !isAtelier && (
+                      {isJour && (
+                        <>
+                          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
+                            {tr(
+                              'Chaque jour, un seul poème, écrit par toutes les mains qui passent. Tu en écris UN vers — et du vers précédent, tu ne vois que son dernier mot. Le poème se referme à minuit et se dévoile : tu découvres alors entre qui le sort t’a mis.',
+                              'Each day, a single poem, written by every hand that passes. You write ONE line of it — and of the line before, you see only its last word. The poem closes at midnight and is revealed: you then discover between whom chance placed you.',
+                            )}
+                          </p>
+
+                          <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+                            {tr('— LA RÈGLE —', '— THE RULE —')}
+                          </div>
+                          {[
+                            { label: tr('UNE MAIN, UN VERS', 'ONE HAND, ONE LINE'), detail: tr('Tu n’écris qu’une fois par jour. C’est ce qui fait que la longueur du poème compte les gens venus, et non les bavards.', 'You write only once a day. That is what makes the poem’s length count the people who came, not the talkative ones.') },
+                            { label: tr('L’AMORCE', 'THE SEED'), detail: tr('Le premier à passer reçoit trois mots donnés par le jour — les mêmes pour tout le monde. Il ouvre le poème.', 'The first to pass receives three words given by the day — the same for everyone. They open the poem.') },
+                            { label: tr('L’ÉCHO', 'THE ECHO'), detail: tr('Ensuite, chaque main ne voit que le dernier mot de celle qui précède. Assez pour s’accrocher, jamais assez pour diriger.', 'After that, each hand sees only the last word of the one before. Enough to hold on to, never enough to steer.') },
+                            { label: tr('LE SCELLEMENT', 'THE SEALING'), detail: tr('À minuit le poème se ferme. S’il a reçu moins de cinq vers, des voix le complètent — elles aussi n’ont vu qu’un mot.', 'At midnight the poem closes. If it received fewer than five lines, voices complete it — they too saw only one word.') },
+                          ].map(v => (
+                            <div key={v.label} style={{ paddingBottom: 10, borderBottom: `0.5px solid ${encre}10`, marginBottom: 10 }}>
+                              <div style={{ ...mono, fontSize: 13, color: encre, fontWeight: 700, marginBottom: 3 }}>{v.label}</div>
+                              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.85 }}>{v.detail}</div>
+                            </div>
+                          ))}
+
+                          <button
+                            onClick={() => navigate('/poeme-du-jour')}
+                            style={{
+                              width: '100%', marginTop: 18,
+                              ...mono, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase',
+                              background: 'transparent', color: encre,
+                              border: `0.5px solid ${encre}40`, borderRadius: 3,
+                              padding: '0.85em 1em', cursor: 'pointer',
+                            }}
+                          >
+                            {tr('Donner ma main aujourd’hui', 'Give my hand today')} →
+                          </button>
+                        </>
+                      )}
+
+                      {!isEcrit && !isAtelier && !isJour && (
                         <>
                           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65, opacity: 0.88, marginBottom: 20 }}>
                             {tr('La variante graphique. Chaque joueur dessine une portion du corps sur une bande horizontale, sans voir les fragments voisins. Le monstre révélé à la fin est interprété par une intelligence artificielle en vers surréalistes.', 'The graphic variant. Each player draws a portion of the body on a horizontal band, without seeing the neighbouring fragments. The monster revealed at the end is interpreted by an artificial intelligence in surrealist verse.')}

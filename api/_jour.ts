@@ -171,13 +171,26 @@ export async function etatDuJour(langue: Langue, mainId: string | null, quand = 
     .order('rang', { ascending: true })
 
   const tous = (vers ?? []) as { rang: number; texte: string; main_id: string | null }[]
-  const dernier = tous.length ? tous[tous.length - 1].texte : chaine.amorce
   const mien = mainId ? tous.find(v => v.main_id === mainId) : undefined
+
+  /*
+    La première main reçoit l'amorce ENTIÈRE, les suivantes un seul mot.
+
+    Premier jet : l'écho valait `dernierMot(amorce)` quand la chaîne était
+    vide, par symétrie avec les autres tours. « la cire » devenait « cire » —
+    et l'on jetait justement ce qui avait été donné. Une amorce n'est pas un
+    vers dont on prend la queue : c'est une graine, et une graine se donne
+    entière. Le déterminant en fait partie, il oriente le genre et le nombre
+    de ce qui suivra.
+  */
+  const echo = tous.length
+    ? dernierMot(tous[tous.length - 1].texte)
+    : chaine.amorce
 
   return {
     jour: chaine.jour,
     amorce: chaine.amorce,
-    echo: dernierMot(dernier),
+    echo,
     rang: tous.length + 1,
     mains: tous.length,
     monVers: mien ? { rang: mien.rang, texte: mien.texte } : null,

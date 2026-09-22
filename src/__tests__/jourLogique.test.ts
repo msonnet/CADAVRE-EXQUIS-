@@ -42,10 +42,13 @@ describe('l’écho — le dernier mot, et rien de plus', () => {
     expect(dernierMot('   ')).toBe('')
   })
 
-  it('vient de l’amorce quand la chaîne est vide', () => {
-    // La première main n'est pas plus démunie que les autres : elle répond
-    // elle aussi à un mot, simplement il vient du calendrier.
-    expect(echoDe(chaine('une horloge'))).toBe('horloge')
+  it('rend l’amorce ENTIÈRE à la première main', () => {
+    // Premier jet : « la cire » devenait « cire ». On jetait justement ce
+    // qui avait été donné — une graine se donne entière, déterminant
+    // compris, puisqu'il oriente le genre et le nombre de ce qui suivra.
+    expect(echoDe(chaine('une horloge'))).toBe('une horloge')
+    expect(echoDe(chaine('la cire'))).toBe('la cire')
+    expect(echoDe(chaine('une balance penche'))).toBe('une balance penche')
   })
 
   it('vient du dernier vers dès qu’il y en a un', () => {
