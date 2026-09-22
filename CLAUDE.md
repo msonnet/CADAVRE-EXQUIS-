@@ -238,6 +238,28 @@ phases restantes, les valeurs exactes à recopier, les points de contrôle.
 - `src/lib/acces.ts` · `src/lib/achats.ts` · `src/hooks/useAcces.ts` ·
   `src/components/MurAbonnement.tsx` — le côté joueur.
 
+### Deux portes, et l'une se pousse volontairement
+
+Le mur ne s'ouvrait que sur un REFUS : pour acheter un flacon, il fallait
+d'abord se voir refuser une illustration. Personne ne pouvait remplir son
+encrier à l'avance — et, depuis que les Règles annoncent « LE FLACON », le
+jeu promettait un objet introuvable dans toute l'application.
+
+**« REMPLIR L'ENCRIER » vit donc dans les Réglages**, sous le solde, visible
+tant qu'on n'est pas abonné. Il ouvre le même panneau avec le motif
+`'visite'` — un troisième cas qui n'élargit PAS `MotifRefus` : ce type dit
+« pourquoi on a dit non », et une visite volontaire n'est pas un non. Le
+panneau change alors de titre (« Remplir l'encrier ») et ne prétend plus que
+la réserve est épuisée.
+
+**Le bouton s'affiche même hors natif**, où aucun achat n'est possible : le
+panneau dit alors où les achats vivent. Mieux vaut un chemin qui explique
+qu'un mot promis dans les Règles et qu'on ne trouve jamais.
+
+Corrigé au passage : le solde des Réglages n'annonçait que l'ESSAI. Il
+cachait donc au joueur les images qu'il venait d'acheter. Il additionne
+maintenant les trois réserves, comme le libellé sous les boutons.
+
 ### Principes tenus
 
 - Le statut d'abonné ne vient **jamais** du client : il est écrit par le
@@ -794,7 +816,7 @@ tait. `annoncerScellement` dans `src/utils/notifications.ts`.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (440 tests unitaires) + Playwright (64 tests E2E, FR et EN)
+- Tests : Vitest (440 tests unitaires) + Playwright (67 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

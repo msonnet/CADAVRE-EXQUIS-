@@ -31,10 +31,22 @@ import { lireAcces, type ActePayant, type MotifRefus } from '../lib/acces'
 
 const EULA = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
 
+/**
+ * Pourquoi le mur est ouvert.
+ *
+ * Les deux premiers sont des REFUS — le joueur a demandé quelque chose et
+ * ne l'a pas eu. Le troisième n'en est pas un : il vient des Réglages, où
+ * l'on peut remplir son encrier sans rien s'être vu refuser.
+ *
+ * `MotifRefus` n'est pas élargi pour autant : ce type dit « pourquoi on a
+ * dit non », et une visite volontaire n'est pas un non.
+ */
+export type MotifMur = MotifRefus | 'visite'
+
 export interface MurAbonnementProps {
   visible: boolean
   acte: ActePayant
-  motif: MotifRefus
+  motif: MotifMur
   /** Plafond journalier atteint, quand c'est lui qui a fermé la porte. */
   plafond?: number
   onFermer: () => void
@@ -67,13 +79,20 @@ export default function MurAbonnement({
 
   const titre = motif === 'plafond_jour'
     ? tr('L’encrier se remplit à minuit', 'The inkwell refills at midnight')
-    : tr('L’encrier est sec', 'The inkwell is dry')
+    : motif === 'visite'
+      ? tr('Remplir l’encrier', 'Fill the inkwell')
+      : tr('L’encrier est sec', 'The inkwell is dry')
 
   const corps = motif === 'plafond_jour'
     ? tr(
         `Tu as tiré ${plafond ?? 2} grands formats aujourd’hui — c’est le maximum quotidien. Ils reviennent demain, et tout le reste du jeu t’attend d’ici là.`,
         `You’ve drawn ${plafond ?? 2} large formats today — that’s the daily maximum. They come back tomorrow, and the rest of the game is waiting until then.`,
       )
+    : motif === 'visite'
+      ? tr(
+          'Deux façons de remplir, et aucune n’est obligatoire : un flacon d’illustrations, acheté une fois et qui ne s’évapore pas, ou l’abonnement pour qui écrit souvent.',
+          'Two ways to fill it, and neither is required: a flask of illustrations, bought once and which does not evaporate, or the subscription for those who write often.',
+        )
     : acte === 'image_pro'
       ? tr('Tes illustrations d’essai sont épuisées.', 'Your trial illustrations are used up.')
       : acte === 'partie_ia'
@@ -221,10 +240,21 @@ export default function MurAbonnement({
                 )
               ) : (
                 <p style={{ ...mono, fontSize: 12, color: encre, opacity: 0.6, lineHeight: 1.6 }}>
-                  {tr(
-                    'L’abonnement s’ouvre depuis l’application iPhone ou Android.',
-                    'The subscription opens from the iPhone or Android app.',
-                  )}
+                  {/*
+                    Le repli du web nommait le seul abonnement. Depuis que le
+                    flacon existe, taire l'un des deux revient à annoncer
+                    dans les Règles une chose dont on ne dit jamais où elle
+                    se trouve.
+                  */}
+                  {flaconPossible
+                    ? tr(
+                        'Les flacons et l’abonnement s’ouvrent depuis l’application iPhone ou Android.',
+                        'Flasks and the subscription open from the iPhone or Android app.',
+                      )
+                    : tr(
+                        'L’abonnement s’ouvre depuis l’application iPhone ou Android.',
+                        'The subscription opens from the iPhone or Android app.',
+                      )}
                 </p>
               )
             )}

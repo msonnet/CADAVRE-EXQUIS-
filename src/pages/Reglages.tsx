@@ -14,6 +14,7 @@ import { tr, langueActuelle, changerLangue } from '../i18n'
 import { useAcces } from '../hooks/useAcces'
 import { ESSAI_OFFERT } from '../lib/acces'
 import { achatsDisponibles, restaurer } from '../lib/achats'
+import MurAbonnement from '../components/MurAbonnement'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
   { id: 'stricte', label: tr('Stricte', 'Strict'), desc: tr('Avertit si le fragment ne correspond pas à la consigne.', 'Warns when the fragment does not match the prompt.') },
@@ -32,6 +33,8 @@ export default function Reglages() {
   const [rappelBusy, setRappelBusy] = useState(false)
   const { etat: acces, chargement: accesEnCours, rafraichir: relireAcces } = useAcces()
   const [restauration, setRestauration] = useState<'idle' | 'cours' | 'vide'>('idle')
+  /** Le mur ouvert depuis les Réglages — une visite, pas un refus. */
+  const [murVisible, setMurVisible] = useState(false)
   const [rappelRefuse, setRappelRefuse] = useState(false)
   const [nbMasques, setNbMasques] = useState<number>(() => {
     try { return (JSON.parse(localStorage.getItem('auteurs-masques') ?? '[]') as string[]).length }
@@ -53,6 +56,8 @@ export default function Reglages() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
 
   function changerValidation(niveau: NiveauValidation) {
@@ -208,10 +213,23 @@ export default function Reglages() {
                     'Subscription active: unlimited AI voices and drawing readings, two large-format illustrations a day.',
                   )
                 : acces
-                  ? tr(
-                      `Il te reste ${acces.essai.images} illustration${acces.essai.images > 1 ? 's' : ''}, ${acces.essai.parties} partie${acces.essai.parties > 1 ? 's' : ''} avec les voix de l’IA et ${acces.essai.lectures} lecture${acces.essai.lectures > 1 ? 's' : ''} de dessin. Écrire à plusieurs, dessiner et publier restent sans limite.`,
-                      `You have ${acces.essai.images} illustration${acces.essai.images > 1 ? 's' : ''}, ${acces.essai.parties} game${acces.essai.parties > 1 ? 's' : ''} with the AI voices and ${acces.essai.lectures} drawing reading${acces.essai.lectures > 1 ? 's' : ''} left. Writing together, drawing and publishing stay unlimited.`,
-                    )
+                  ? (() => {
+                      /*
+                        Le solde additionne les TROIS réserves, comme sous les
+                        boutons : l'essai, le flacon acheté, et ce que
+                        l'encrier rend chaque semaine. N'annoncer que l'essai
+                        — ce que faisait cette phrase — revenait à cacher au
+                        joueur les images qu'il venait de payer.
+                      */
+                      const img = acces.essai.images + (acces.flacon?.images ?? 0)
+                      const par = acces.essai.parties + (acces.encrier?.parties ?? 0)
+                      const lec = acces.essai.lectures
+                      const s = (n: number) => (n > 1 ? 's' : '')
+                      return tr(
+                        `Il te reste ${img} illustration${s(img)}, ${par} partie${s(par)} avec les voix de l’IA et ${lec} lecture${s(lec)} de dessin. Une partie avec les voix te revient chaque semaine. Écrire à plusieurs, dessiner et publier restent sans limite.`,
+                        `You have ${img} illustration${s(img)}, ${par} game${s(par)} with the AI voices and ${lec} drawing reading${s(lec)} left. One game with the voices comes back to you every week. Writing together, drawing and publishing stay unlimited.`,
+                      )
+                    })()
                   : tr(
                       // Les nombres viennent de `ESSAI_OFFERT` et non de la
                       // phrase : écrits à la main ils annonçaient encore cinq
@@ -220,6 +238,32 @@ export default function Reglages() {
                       `Your trial is untouched: ${ESSAI_OFFERT.images} illustrations, ${ESSAI_OFFERT.parties} games with the AI voices, ${ESSAI_OFFERT.lectures} drawing readings. Writing together, drawing and publishing to the gallery stay unlimited.`,
                     )}
           </div>
+          {/*
+            La porte volontaire, et c'était le manque.
+
+            Le flacon et l'abonnement ne vivaient que dans le mur de REFUS :
+            il fallait se faire refuser une illustration pour pouvoir en
+            acheter. Un joueur qui veut remplir son encrier à l'avance ne le
+            pouvait pas, et surtout les Règles annonçaient « LE FLACON »
+            pour une chose introuvable dans toute l'application.
+
+            Le bouton s'affiche même hors natif : le panneau dit alors où
+            les achats vivent. Mieux vaut un chemin qui explique qu'un mot
+            promis dans les Règles et qu'on ne trouve jamais.
+          */}
+          {!acces?.abonne && (
+            <button
+              onClick={() => setMurVisible(true)}
+              style={{
+                ...mono, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.12em',
+                color: btnText, background: accent,
+                border: 'none', borderRadius: 3,
+                padding: '12px 0', cursor: 'pointer', width: '100%', marginBottom: 10,
+              }}
+            >
+              {tr('REMPLIR L’ENCRIER', 'FILL THE INKWELL')}
+            </button>
+          )}
           {achatsDisponibles() && (
             <button
               onClick={async () => {
@@ -405,6 +449,17 @@ export default function Reglages() {
         </div>
 
       </div>
+
+      <MurAbonnement
+        visible={murVisible}
+        acte="image_pro"
+        motif="visite"
+        onFermer={() => setMurVisible(false)}
+        onEncrierRempli={() => { setMurVisible(false); relireAcces() }}
+        accent={accent}
+        encre={encre}
+        bg={bg}
+      />
     </PageTransition>
   )
 }

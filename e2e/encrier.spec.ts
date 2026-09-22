@@ -76,3 +76,51 @@ test('la voix de la revue tient — pas d’emoji, pas d’exclamation', async (
   const section = vu.slice(vu.indexOf('CE QUI NE COÛTE RIEN'))
   expect(section).not.toMatch(/[!\u{1F300}-\u{1FAFF}]/u)
 })
+
+/**
+ * La porte volontaire — et c'est la mesure qui manquait.
+ *
+ * Le flacon et l'abonnement ne vivaient que dans le mur de REFUS : il
+ * fallait se faire refuser une illustration pour pouvoir en acheter. Les
+ * Règles, elles, annonçaient « LE FLACON » depuis le 22 septembre. Le jeu
+ * promettait donc un objet introuvable dans toute l'application.
+ */
+async function ouvrirReglages(page: Page) {
+  await page.addInitScript(() => localStorage.setItem('cadavre-onboarding-done', '1'))
+  await page.route('**/supabase.co/**', r => r.fulfill({
+    status: 200, contentType: 'application/json', body: '[]',
+  }))
+  await page.goto('/reglages')
+  await page.waitForLoadState('networkidle')
+  const s = page.getByLabel(/Entrer dans le jeu|Enter the game/)
+  await s.click({ timeout: 4000 }).catch(() => {})
+  await s.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {})
+  await page.waitForTimeout(900)
+}
+
+test('on peut remplir son encrier sans s’être fait refuser', async ({ page }) => {
+  await ouvrirReglages(page)
+  await expect(page.getByRole('button', { name: /REMPLIR L’ENCRIER|FILL THE INKWELL/ })).toBeVisible()
+})
+
+test('le panneau ouvert depuis les Réglages n’annonce aucun refus', async ({ page }) => {
+  // Une visite volontaire n'est pas un non : le mur ne doit pas prétendre
+  // que la réserve est épuisée alors qu'elle est pleine.
+  await ouvrirReglages(page)
+  await page.getByRole('button', { name: /REMPLIR L’ENCRIER|FILL THE INKWELL/ }).click()
+  await page.waitForTimeout(700)
+
+  const vu = await page.evaluate(() => document.body.innerText)
+  expect(vu).toMatch(/Remplir l’encrier|Fill the inkwell/)
+  expect(vu, 'pas de « épuisé » sur une visite').not.toMatch(/épuisé|used up|est sec|is dry/)
+  expect(vu, 'les deux portes sont nommées').toMatch(/flacon|flask/i)
+})
+
+test('hors natif, le panneau dit OÙ les achats vivent', async ({ page }) => {
+  // Sur le web aucun achat n'est possible. Se taire laisserait le joueur
+  // chercher indéfiniment ce que les Règles lui ont promis.
+  await ouvrirReglages(page)
+  await page.getByRole('button', { name: /REMPLIR L’ENCRIER|FILL THE INKWELL/ }).click()
+  await page.waitForTimeout(700)
+  await expect(page.getByText(/Les flacons et l’abonnement s’ouvrent depuis l’application/)).toBeVisible()
+})
