@@ -12,10 +12,6 @@
   "crons": [
     {
       "path": "/api/cleanup",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/sceller-jour",
       "schedule": "30 0 * * *"
     }
   ]

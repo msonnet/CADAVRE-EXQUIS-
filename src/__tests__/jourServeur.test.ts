@@ -3,7 +3,7 @@ import {
   dernierMot, refusDuVers, langueValide, refusDeSignalement,
   MOTS_MAX, CARACTERES_MAX, PLANCHER_VERS, SEUIL_RETRAIT,
 } from '../../api/_jour.js'
-import { nettoyerVersDeVoix } from '../../api/sceller-jour.js'
+import { nettoyerVersDeVoix } from '../../api/cleanup.js'
 import {
   dernierMot as dernierMotClient,
   refusDuVers as refusDuVersClient,

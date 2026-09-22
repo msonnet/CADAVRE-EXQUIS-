@@ -19,7 +19,7 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [x] **Politique de confidentialité** — page `/privacy` (RGPD) depuis Réglages
 - [x] **Packaging natif** — Capacitor configuré, scripts `cap:ios` / `cap:android`, resources/ prêts (icon.png 1024, splash.png 2732, adaptive icons)
 - [x] **Icônes app** — générées (icon-192, icon-512, icon-512-maskable, apple-touch-icon, icon-1024, resources/)
-- [x] **Nettoyage rooms** — cron Vercel toutes les heures (`/api/cleanup`, `vercel.json`)
+- [x] **Nettoyage rooms** — cron Vercel quotidien (`/api/cleanup`, `vercel.json`) ; il scelle aussi les poèmes du jour
 - [x] **Analytics** — Vercel Analytics (`@vercel/analytics`) intégré dans `main.tsx`
 - [x] **Dessins Supabase Storage** — `gallery-images` bucket, upload via `uploaderImageGalerie()`
 - [x] **Bilingue FR / EN** — interface, moteur grammatical, galerie et salons filtrés par langue
@@ -579,13 +579,9 @@ s'asseoir à la même table qu'un joueur à Paris. Minuit UTC, soit 01 h ou 02 h
   d'écart (0,17 % des retours, deux fois l'an). Mesuré : min 5, médiane 41.
 - `api/_jour.ts` · `api/jour.ts` — l'état, la pose d'un vers, la collision de
   rang tranchée par la base puis rejouée.
-- `api/sceller-jour.ts` — le cron **quotidien**, à 00 h 30 UTC. Ne scelle
-  jamais le jour en cours. Il était horaire au départ : le plan Hobby de
-  Vercel n'autorise qu'un déclenchement par jour et **rejette la
-  configuration avant de construire** — quatre déploiements ont échoué en six
-  secondes, sans logs, pendant que l'ancien restait servi. La panne ne se
-  voyait que depuis GitHub, où le statut du commit portait « Deployment
-  failed » et pointait vers la page de tarification des crons.
+- `api/cleanup.ts` — le cron **quotidien**, à 00 h 30 UTC : il nettoie les
+  salons expirés PUIS scelle les poèmes des jours écoulés. Ne scelle jamais
+  le jour en cours.
 - `src/lib/jourLogique.ts` — les règles côté client. **Elles sont en double
   avec le serveur, et c'est voulu** : le client anticipe pour refuser un vers
   de douze mots sans aller-retour, le serveur TRANCHE. Onze mesures tiennent
@@ -593,6 +589,22 @@ s'asseoir à la même table qu'un joueur à Paris. Minuit UTC, soit 01 h ou 02 h
   qu'une duplication assumée.
 - `src/lib/jour.ts` · `src/pages/PoemeDuJour.tsx` — le côté joueur.
 - `supabase/migrations/20260917000010_cadavre_du_jour.sql` — **à appliquer.**
+
+### Deux limites du plan Hobby, apprises à la dure
+
+Elles ne se voient pas depuis l'application : le build échoue, et le
+déploiement PRÉCÉDENT reste servi. Les anciennes routes répondent
+normalement pendant que les nouvelles sont en 404, et rien ne dit qu'une
+version d'il y a une semaine tourne. **Le seul endroit où la panne est
+visible est le statut du commit sur GitHub.**
+
+- **Un déclenchement de cron par jour.** Un `5 * * * *` est rejeté AVANT la
+  construction : échec en six secondes, aucun log, et un lien générique vers
+  la page de tarification au lieu d'un lien vers un déploiement.
+- **Douze fonctions serverless par déploiement.** Le projet en comptait dix ;
+  le poème du jour en ajoutait trois. C'est pourquoi le scellement vit dans
+  `cleanup.ts` plutôt que dans sa propre route — deux travaux de fin de
+  journée, un seul cron, aucun des deux ne répond à un joueur.
 
 ### Bornes du vers
 
