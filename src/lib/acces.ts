@@ -59,8 +59,15 @@ export async function identiteOuverte(): Promise<boolean> {
  * `acces`. Tant qu'aucune identité n'existe, elle est intacte par
  * définition : c'est ce qu'on peut annoncer sans rien créer ni rien
  * consommer.
+ *
+ * Ces trois nombres SONT la dépense d'acquisition du jeu. Ils doivent rester
+ * identiques aux valeurs par défaut de
+ * `supabase/migrations/20260730000010_abonnement.sql` — une mesure les tient
+ * d'accord, et la même mesure plafonne le coût total de l'essai. Deux
+ * illustrations et non cinq : elles pesaient les deux tiers de la dépense,
+ * et l'essai se rouvre à chaque réinstallation.
  */
-export const ESSAI_OFFERT = { images: 5, parties: 5, lectures: 3 } as const
+export const ESSAI_OFFERT = { images: 2, parties: 5, lectures: 3 } as const
 
 /**
  * Lit l'état d'accès. Par défaut sans rien créer : afficher un écran de

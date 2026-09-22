@@ -115,10 +115,19 @@ facturé, rien n'est compté.
 | Lecture surréaliste d'un dessin | Sonnet 4.6 + vision | ~0,008 $ |
 | *(photo de profil)* | FLUX schnell | 0,003 $ |
 
-**Essai offert une fois**, à la création de l'identité : 5 illustrations,
-5 parties avec les voix, 3 lectures de dessin — soit 0,32 $ au maximum par
-joueur. C'est la dépense d'acquisition, et elle montre exactement ce que
-l'abonnement ouvre.
+**Essai offert une fois**, à la création de l'identité : **2 illustrations**,
+5 parties avec les voix, 3 lectures de dessin — soit **0,204 $** au maximum.
+C'est la dépense d'acquisition, et elle montre exactement ce que l'abonnement
+ouvre. `src/__tests__/essaiOffert.test.ts` la **mesure** : plafond à 0,25 $,
+et les valeurs du client doivent égaler les `DEFAULT` de la migration.
+
+Les illustrations sont passées de 5 à 2 le 22 septembre. À cinq, elles
+pesaient 0,20 $ des 0,32 $ — les deux tiers de l'acquisition pour l'acte
+qu'on comprend dès la première. Et **l'essai n'est pas attaché à une
+personne mais à une identité anonyme** : une réinstallation, un effacement
+des données du site, un nouveau téléphone, et il se rouvre. Ce n'est pas une
+dépense par joueur, c'est une dépense par remise à zéro, et rien ne la
+borne — raison de plus pour qu'elle soit petite.
 
 **Abonnement** : 4,99 €/mois ou 39,99 €/an. Voix de l'IA et lectures de
 dessins illimitées, 2 illustrations grand format par jour.
@@ -128,7 +137,14 @@ dessins illimitées, 2 illustrations grand format par jour.
 | Revenu net mensuel | 4,58 $ (après les 15 % Apple) |
 | Coût d'un abonné moyen | ~0,80 $/mois → marge 83 % |
 | Coût de l'abonné qui sature tous les plafonds | ~2,70 $/mois → marge 41 % |
-| Point mort | ~3,5 % des installations abonnées un mois |
+| Point mort, essai consommé à FOND | **4,5 %** des installations abonnées un mois (7,1 % avant le passage à 2 illustrations) |
+| Point mort, essai consommé à moitié | ~2,2 % |
+
+Le point mort ci-dessus ne couvre que l'**inférence**. Il ignore les coûts
+fixes — Vercel Pro, Supabase Pro, les 99 $/an d'Apple — soit de l'ordre de
+45 $/mois, c'est-à-dire **une dizaine d'abonnés avant le premier euro**. Et
+le taux de consommation de l'essai est le paramètre dont tout dépend : on ne
+le connaîtra pas avant le lancement.
 
 Aucune publicité, aucun identifiant publicitaire, aucun bandeau de
 consentement : le 4+ est conservé sans discussion.

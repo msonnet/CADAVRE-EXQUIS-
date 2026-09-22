@@ -147,7 +147,7 @@ pseudo de test et cette note :
 > mode", enter any pen name, then "Create a game". Solo play (Written Cadavre,
 > Drawn Cadavre, The Workshop) needs no account at all.
 >
-> The game is free. A one-time trial (5 illustrations, 5 games with the AI
+> The game is free. A one-time trial (2 illustrations, 5 games with the AI
 > voices, 3 drawing readings) is granted automatically on first use — no
 > account, no purchase needed, so the reviewer can exercise every paid
 > feature without subscribing. The "Inkwell" subscription only unlocks

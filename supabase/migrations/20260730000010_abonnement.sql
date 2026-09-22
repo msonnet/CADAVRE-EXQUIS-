@@ -34,9 +34,20 @@ CREATE TABLE IF NOT EXISTS public.acces (
   user_id        UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Réserve d'essai, offerte une seule fois. Les valeurs par défaut sont LE
-  -- cadran d'acquisition : 5 × 0,040 $ + 5 × 0,020 $ + 3 × 0,008 $ ≈ 0,32 $
+  -- cadran d'acquisition : 2 × 0,040 $ + 5 × 0,020 $ + 3 × 0,008 $ ≈ 0,20 $
   -- par joueur au maximum, une fois. C'est ce qui lui montre ce qu'il achète.
-  essai_images   INTEGER NOT NULL DEFAULT 5 CHECK (essai_images  >= 0),
+  --
+  -- Les illustrations sont passées de 5 à 2. Elles coûtaient à elles seules
+  -- 0,20 $ des 0,32 $ — les deux tiers de la dépense d'acquisition pour un
+  -- acte qu'on découvre à la première. Et l'essai n'est attaché qu'à une
+  -- identité ANONYME : une réinstallation en rouvre un. Ce n'est donc pas
+  -- une dépense par joueur, c'est une dépense par remise à zéro, et elle ne
+  -- se contrôle pas — raison de plus pour qu'elle soit petite.
+  --
+  -- Si cette migration a déjà été appliquée quelque part, changer la valeur
+  -- par défaut ne touche AUCUNE ligne existante :
+  --   ALTER TABLE public.acces ALTER COLUMN essai_images SET DEFAULT 2;
+  essai_images   INTEGER NOT NULL DEFAULT 2 CHECK (essai_images  >= 0),
   essai_parties  INTEGER NOT NULL DEFAULT 5 CHECK (essai_parties >= 0),
   essai_lectures INTEGER NOT NULL DEFAULT 3 CHECK (essai_lectures >= 0),
 

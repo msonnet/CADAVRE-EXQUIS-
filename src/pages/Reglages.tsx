@@ -12,6 +12,7 @@ import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr, langueActuelle, changerLangue } from '../i18n'
 import { useAcces } from '../hooks/useAcces'
+import { ESSAI_OFFERT } from '../lib/acces'
 import { achatsDisponibles, restaurer } from '../lib/achats'
 
 const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
@@ -212,8 +213,11 @@ export default function Reglages() {
                       `You have ${acces.essai.images} illustration${acces.essai.images > 1 ? 's' : ''}, ${acces.essai.parties} game${acces.essai.parties > 1 ? 's' : ''} with the AI voices and ${acces.essai.lectures} drawing reading${acces.essai.lectures > 1 ? 's' : ''} left. Writing together, drawing and publishing stay unlimited.`,
                     )
                   : tr(
-                      'Ton essai est intact : 5 illustrations, 5 parties avec les voix de l’IA, 3 lectures de dessin. Écrire à plusieurs, dessiner et publier en galerie restent sans limite.',
-                      'Your trial is untouched: 5 illustrations, 5 games with the AI voices, 3 drawing readings. Writing together, drawing and publishing to the gallery stay unlimited.',
+                      // Les nombres viennent de `ESSAI_OFFERT` et non de la
+                      // phrase : écrits à la main ils annonçaient encore cinq
+                      // illustrations le jour où la réserve est passée à deux.
+                      `Ton essai est intact : ${ESSAI_OFFERT.images} illustrations, ${ESSAI_OFFERT.parties} parties avec les voix de l’IA, ${ESSAI_OFFERT.lectures} lectures de dessin. Écrire à plusieurs, dessiner et publier en galerie restent sans limite.`,
+                      `Your trial is untouched: ${ESSAI_OFFERT.images} illustrations, ${ESSAI_OFFERT.parties} games with the AI voices, ${ESSAI_OFFERT.lectures} drawing readings. Writing together, drawing and publishing to the gallery stay unlimited.`,
                     )}
           </div>
           {achatsDisponibles() && (
