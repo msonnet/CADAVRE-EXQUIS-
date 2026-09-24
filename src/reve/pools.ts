@@ -216,6 +216,19 @@ export const MARGINALIA: MargEntry[] = [
 ]
 
 // ─── Type legacy (compat) ───────────────────────────────────
+/**
+ * Les couleurs du jour, telles que les écrans les lisent.
+ *
+ * `hex` et `second` sont les deux accents historiques — ceux des deux
+ * boutons de jeu. `tierce` et `quarte` sont les deux autres accents de la
+ * MÊME ambiance, exposés le 24 septembre : la page des Règles distingue
+ * cinq rubriques et n'avait que trois couleurs, si bien que deux paires
+ * portaient la même.
+ *
+ * Toutes passent par `garantirContraste` contre le fond : il n'y a pas de
+ * couleur de second rang qu'on aurait le droit de rendre illisible.
+ */
 export interface ColorSchema {
-  name: string; bg: string; encre: string; hex: string; second: string
+  name: string; bg: string; encre: string
+  hex: string; second: string; tierce: string; quarte: string
 }

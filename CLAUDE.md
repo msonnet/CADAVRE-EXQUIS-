@@ -810,6 +810,45 @@ joueur qui pose son premier vers n'a pas à recevoir une demande dans la
 foulée. S'il a déjà armé le rappel du soir, il est d'accord ; sinon on se
 tait. `annoncerScellement` dans `src/utils/notifications.ts`.
 
+## Les couleurs des rubriques, et la place de l'Atelier — 24 septembre
+
+**Cinq rubriques, trois couleurs.** La page des Règles distingue le cadavre
+écrit, le dessiné, l'Atelier, le poème du jour et l'Encrier — et n'avait que
+l'accent, le second et l'encre. L'Atelier et le poème du jour étaient tous
+deux en encre, l'Encrier et le cadavre écrit tous deux en accent : deux
+paires jumelles qui n'ont rien à voir.
+
+Chaque ambiance porte **quatre** accents ; on n'en exposait que deux.
+`ColorSchema` gagne `tierce` et `quarte`, pris dans le MÊME pool et à la
+suite — la page reste dans la palette du jour au lieu d'emprunter ailleurs.
+
+L'attribution veut dire quelque chose : les deux premières rubriques
+reprennent **la couleur du bouton de leur mode** sur l'accueil, on les
+reconnaît avant de lire. L'**Encrier garde l'encre**, et c'est le seul choix
+qui n'est pas arbitraire — c'est son nom.
+
+**Le piège, trouvé par la mesure et pas à l'œil.** Sur les trois ambiances
+SOMBRES — minuit, encre, argile — le quatrième accent **est** la couleur de
+l'encre : le crème du papier y joue les deux rôles. Quatre couleurs pour
+cinq rubriques. Plutôt qu'inventer une teinte — ce serait décider de
+l'identité visuelle à la place de son auteur — `horsEncre()` prend le
+**`hover`** de cet accent, une couleur écrite dans la palette, conçue comme
+sa voisine claire. La règle vaut pour les quatre accents et non pour le
+dernier seulement : l'indice de départ est tiré au sort, la collision tombe
+n'importe où dans la file.
+
+`src/__tests__/couleursRubriques.test.ts` balaie **les sept ambiances × les
+quatre points de départ** : cinq couleurs distinctes, toutes au-dessus de
+4,4:1 sur le fond. Deux captures d'écran n'auraient prouvé que deux tirages.
+
+**L'Atelier remonte sur l'accueil.** Il vivait sous le pied de page, en
+11 px à 35 % d'opacité — donc **moins visible que « RÉGLAGES »**. Un
+quatrième mode de jeu ne peut pas être plus discret qu'un lien utilitaire :
+le code décrivait son ambition (« entrée discrète ») et non sa place dans la
+hiérarchie. Il passe sous « Mode en ligne », cerné plutôt que plein, d'un
+point plus petit — c'est le mode solo et expérimental, il se propose sans se
+réclamer. Sa couleur est la `tierce`, celle que les Règles lui donnent.
+
 ## La conformité — 22 septembre 2026
 
 Trois textes s'appliquent, et **aucun ne dépend de la taille de l'éditeur**.
@@ -893,7 +932,7 @@ système sur le marché sous son nom.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (447 tests unitaires) + Playwright (73 tests E2E, FR et EN)
+- Tests : Vitest (450 tests unitaires) + Playwright (73 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

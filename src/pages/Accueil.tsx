@@ -60,6 +60,9 @@ export default function Accueil() {
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
   const second = c?.second ?? '#1d3a8c'
+  // Le troisième accent de l'ambiance — celui que les Règles donnent aussi
+  // à l'Atelier, pour qu'on le reconnaisse d'un écran à l'autre.
+  const tierce = c?.tierce ?? '#1d3a8c'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -265,6 +268,33 @@ export default function Accueil() {
           >
             <span>{tr('Mode en ligne', 'Online mode')}</span>
           </button>
+
+          {/*
+            L'ATELIER remonte ici — c'est un MODE DE JEU.
+
+            Il vivait sous le pied de page, en 11 px à 35 % d'opacité, donc
+            moins visible que « RÉGLAGES ». Un quatrième mode de jeu ne peut
+            pas être plus discret qu'un lien utilitaire : l'entrée décrivait
+            son ambition (« discrète »), pas sa place dans la hiérarchie.
+
+            Il garde pourtant un rang en dessous des trois autres, et c'est
+            voulu : cerné plutôt que plein, un point plus petit que le mode
+            en ligne. C'est le mode solo et expérimental, il se propose sans
+            se réclamer. La couleur est celle que les Règles lui donnent.
+          */}
+          <button
+            onClick={() => nav('/atelier')}
+            style={{
+              width: '100%', marginTop: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              background: 'transparent', color: tierce,
+              ...ui, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase',
+              padding: '0.5em 1em', border: `1px solid ${tierce}55`, cursor: 'pointer',
+              borderRadius: 3,
+            }}
+          >
+            <span>✧ {tr("L'Atelier", 'The Workshop')} ✧</span>
+          </button>
         </div>
 
         {/* ── FOOTER ──
@@ -332,18 +362,6 @@ export default function Accueil() {
             }}>
               {tr('JOUR', 'DAY')}
             </span>
-          </button>
-          {/* Entrée discrète — l'atelier du recueil */}
-          <button
-            onClick={() => nav('/atelier')}
-            style={{
-              ...ui, gridColumn: '1 / -1', gridRow: 3, fontSize: 11, letterSpacing: '0.3em',
-              textTransform: 'uppercase', color: encre, opacity: 0.35,
-              background: 'none', border: 'none', cursor: 'pointer',
-              textAlign: 'center', padding: '7px 0 2px',
-            }}
-          >
-            ✧ l'atelier ✧
           </button>
         </div>
 

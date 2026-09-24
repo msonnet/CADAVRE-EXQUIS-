@@ -124,6 +124,29 @@ export default function Aide() {
   const second = c?.second ?? '#1d3a8c'
   const colorLabel = c?.name.toUpperCase() ?? ''
 
+  /*
+    UNE COULEUR PAR RUBRIQUE, et elle veut dire quelque chose.
+
+    Avant : trois couleurs pour cinq rubriques. L'Atelier et le poème du
+    jour étaient tous deux en encre, l'Encrier et le cadavre écrit tous deux
+    en accent — à l'écran, deux paires jumelles qui n'ont rien à voir.
+
+    Les deux premières reprennent la couleur du BOUTON de leur mode sur
+    l'accueil : le rouge du cadavre écrit, le bleu du dessiné. On reconnaît
+    la rubrique avant de lire son nom. Les deux accents suivants de
+    l'ambiance vont aux deux modes qui n'ont pas de bouton coloré.
+
+    L'ENCRIER garde l'encre, et c'est le seul choix qui n'est pas arbitraire :
+    c'est son nom.
+  */
+  const COULEURS: Record<string, string> = {
+    ecrit:   accent,
+    dessine: second,
+    atelier: c?.tierce ?? encre,
+    jour:    c?.quarte ?? second,
+    encrier: encre,
+  }
+
   const [ouvert, setOuvert] = useState<string[]>([])
   function toggle(id: string) {
     setOuvert(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
@@ -179,9 +202,7 @@ export default function Aide() {
           const isAtelier = section.id === 'atelier'
           const isJour = section.id === 'jour'
           const isEncrier = section.id === 'encrier'
-          // L'accent, comme le bandeau du mur : c'est le même objet, il doit
-          // se reconnaître d'un écran à l'autre.
-          const col = isEcrit || isEncrier ? accent : isAtelier || isJour ? encre : second
+          const col = COULEURS[section.id]
 
           return (
             <motion.div

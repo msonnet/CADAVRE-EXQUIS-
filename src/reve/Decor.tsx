@@ -13,6 +13,28 @@ import { garantirContraste } from './contraste'
 // SÉANCE — composition unique par seed
 // ════════════════════════════════════════════════
 
+/**
+ * Un accent qui ne se confond pas avec l'encre.
+ *
+ * Sur les trois ambiances SOMBRES — minuit, encre, argile — le quatrième
+ * accent EST la couleur de l'encre : le crème du papier, qui sur un fond
+ * noir joue le rôle des deux. La palette n'offre donc que quatre couleurs
+ * distinctes là où la page des Règles en distingue cinq.
+ *
+ * Plutôt que d'inventer une teinte — ce serait décider de l'identité
+ * visuelle à la place de son auteur —, on prend le `hover` de cet accent.
+ * C'est une couleur ÉCRITE dans la palette, conçue comme sa voisine claire,
+ * et elle est distincte de l'encre sur les trois ambiances concernées.
+ *
+ * La règle vaut pour les quatre accents et pas seulement pour le dernier :
+ * l'indice de départ est tiré au sort, la collision peut tomber n'importe
+ * où dans la file.
+ */
+function horsEncre(a: Accent, ink: string, bg: string): string {
+  const brut = a.hex.toLowerCase() === ink.toLowerCase() ? a.hover : a.hex
+  return garantirContraste(brut, bg, 4.5)
+}
+
 export interface SeanceReve {
   seed: number
   ambiance: Ambiance
@@ -40,10 +62,24 @@ function composerSeance(seed: number): SeanceReve {
   const ambianceKey = pickOne(rng, AMBIANCE_POOL) as AmbianceKey
   const ambianceBrute = AMBIANCES[ambianceKey]
 
-  // Deux accents distincts pour les boutons et variantes
-  const accentIdx = Math.floor(rng() * ambianceBrute.accents.length)
-  const accentBrut = ambianceBrute.accents[accentIdx]
-  const accent2Brut = ambianceBrute.accents[(accentIdx + 1) % ambianceBrute.accents.length]
+  /*
+    QUATRE accents distincts, et non deux.
+
+    Chaque ambiance en porte quatre ; on n'en exposait que deux, si bien que
+    tout écran ayant plus de deux rubriques à distinguer retombait sur
+    l'encre. La page des Règles en compte cinq — cadavre écrit, dessiné,
+    Atelier, poème du jour, encrier — et deux paires y portaient la même
+    couleur.
+
+    Les deux suivants sont pris dans le MÊME pool et à la suite : la page
+    reste dans la palette du jour, elle ne se met pas à emprunter des
+    teintes à une autre ambiance.
+  */
+  const nbAccents = ambianceBrute.accents.length
+  const accentIdx = Math.floor(rng() * nbAccents)
+  const accentA = (i: number) => ambianceBrute.accents[(accentIdx + i) % nbAccents]
+  const accentBrut = accentA(0)
+  const accent2Brut = accentA(1)
 
   // Plancher de contraste : quel que soit le tirage, l'encre tient 4.5:1
   // sur le fond (corps de texte), les accents et l'encre douce 4.5/3.2,
@@ -83,7 +119,11 @@ function composerSeance(seed: number): SeanceReve {
       hex: accent.hex,
       bg: ambiance.bg,
       encre: ambiance.ink,
-      second: accent2.hex,
+      second: horsEncre(accent2Brut, ambiance.ink, bg),
+      // Le même plancher de contraste que les deux premiers : une rubrique
+      // ne devient pas illisible parce qu'elle est la troisième.
+      tierce: horsEncre(accentA(2), ambiance.ink, bg),
+      quarte: horsEncre(accentA(3), ambiance.ink, bg),
     },
   }
 }
