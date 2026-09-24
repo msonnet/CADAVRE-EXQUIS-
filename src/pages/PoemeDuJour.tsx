@@ -8,6 +8,9 @@ import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import { CLAVIER_VERS } from '../lib/clavier'
 import { zoneVivante } from '../lib/a11y'
+import { vibrer } from '../utils/haptics'
+import FeuilletPlie from '../components/FeuilletPlie'
+import PoemeDevoile from '../components/PoemeDevoile'
 import { nomDeVoix } from '../data/voiceIds'
 import { refusDuVers, MOTS_MAX, type RefusVers } from '../lib/jourLogique'
 import {
@@ -70,6 +73,33 @@ export default function PoemeDuJour() {
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
   const [toutVoir, setToutVoir] = useState(false)
+
+  /*
+    LE DÉPLI DU POÈME SCELLÉ.
+
+    Trois états, et non deux : le feuillet fermé, le dépli en cours, le
+    feuillet ouvert avec ses coutures.
+
+    ── Pourquoi il ne se rejoue pas ──────────────────────────────────────
+
+    « Une belle animation qu'on subit une deuxième fois est pire qu'une
+    animation bancale » — c'est la règle du dévoilement de fin de partie et
+    elle vaut ici. On retient donc LE JOUR déjà déplié : revenir sur la page
+    dans la même journée rouvre le poème à plat, sans rien redemander.
+
+    On retient le jour et non un booléen, pour que le poème du lendemain
+    retrouve son feuillet fermé tout seul. C'est le même motif que la graine
+    d'ambiance et que la série.
+  */
+  const CLE_DEPLI = 'cadavre-jour-deplie'
+  const dejaDeplie = (jour: string) => {
+    try { return localStorage.getItem(CLE_DEPLI) === jour } catch { return false }
+  }
+  const [deplie, setDeplie] = useState(false)
+  /** Le mouvement réduit coupe la pose des noms comme il coupe le dépli. */
+  const reduit = typeof window !== 'undefined' &&
+    !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const [revele, setRevele] = useState(false)
   // Les vers qu'on vient de signaler, le temps de la visite : le serveur ne
   // dit pas « déjà signalé » deux fois de suite, et griser le drapeau évite
   // d'appuyer en boucle sans retour.
@@ -82,6 +112,9 @@ export default function PoemeDuJour() {
       const [e, h] = await Promise.all([lireJour(), dernierPoemeScelle()])
       if (!vivant) return
       setEtat(e); setHier(h); setChargement(false)
+      // Déjà déplié aujourd'hui : le feuillet s'ouvre à plat, sans
+      // redemander le geste ni rejouer la séquence.
+      if (h && dejaDeplie(h.jour)) { setDeplie(true); setRevele(true) }
     })()
     return () => { vivant = false }
   }, [])
@@ -294,21 +327,107 @@ export default function PoemeDuJour() {
                     ? hier.vers
                     : hier.vers.slice(Math.max(0, i - 1), Math.min(hier.vers.length, i + 2))
                   const partiel = !toutVoir && hier.monRang !== null && fenetre.length < hier.vers.length
+
+                  /*
+                    LE FEUILLET FERMÉ — tant qu'on n'a pas touché.
+
+                    Il porte l'amorce et les comptes, jamais un vers : le
+                    poème se découvre en se dépliant, l'annoncer sur la
+                    couverture viderait le geste.
+                  */
+                  if (!deplie) {
+                    return (
+                      <FeuilletPlie
+                        vers={fenetre.length}
+                        accent={accent}
+                        encre={encre}
+                        libelle={tr('Déplier le poème', 'Unfold the poem')}
+                        onOuvrir={() => { jouer('clic'); vibrer('devoilement'); setDeplie(true) }}
+                      >
+                        <div style={{
+                          ...mono, fontSize: 11, color: encre, opacity: 0.5,
+                          letterSpacing: '0.14em', textAlign: 'center',
+                          padding: '22px 0 20px',
+                        }}>
+                          {tr('TOUCHER POUR DÉPLIER', 'TOUCH TO UNFOLD')}
+                        </div>
+                      </FeuilletPlie>
+                    )
+                  }
+
+                  /*
+                    LE DÉPLI — la même séquence que la fin d'une partie.
+
+                    On ne réécrit pas une seconde animation de papier : celle
+                    de `PoemeDevoile` est mesurée (toute longueur en 10,7 s),
+                    interruptible d'un appui, et elle honore déjà
+                    `prefers-reduced-motion`. Réutiliser, c'est aussi garantir
+                    que le poème du jour se dévoile EXACTEMENT comme un poème
+                    de fin de partie — c'est le même objet.
+
+                    Le style des vers est celui des coutures, au pixel près :
+                    quand le dévoilement cède la place aux attributions, le
+                    texte ne bouge pas d'une ligne.
+                  */
+                  if (!revele) {
+                    return (
+                      <div style={{ borderLeft: `1px solid ${accent}40`, paddingLeft: 12, marginLeft: 3 }}>
+                        <PoemeDevoile
+                          lignes={fenetre.map(v => v.texte)}
+                          accent={accent}
+                          actif
+                          style={{
+                            fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
+                            fontSize: 18, color: encre, opacity: 0.9, lineHeight: 1.5,
+                            marginBottom: 28,
+                          }}
+                          onFini={() => {
+                            setRevele(true)
+                            try { localStorage.setItem(CLE_DEPLI, hier.jour) } catch { /* mode privé */ }
+                          }}
+                        />
+                      </div>
+                    )
+                  }
+
                   return (
                     <>
                       <div style={{ borderLeft: `1px solid ${accent}40`, paddingLeft: 12, marginLeft: 3 }}>
-                        {fenetre.map(v => (
+                        {fenetre.map((v, idx) => (
                           <div key={v.rang} style={{ marginBottom: 10 }}>
+                            {/*
+                              La MÊME taille pour tous, y compris le tien.
+
+                              Il était à 19 contre 18 : d'un pixel, mais ce
+                              pixel arrive juste après le dépli, qui vient
+                              d'écrire la ligne à 18. Le vers sautait donc au
+                              moment précis où l'on cesse de le regarder
+                              s'écrire. Ton vers se marque par la COULEUR,
+                              qui se fond sans rien déplacer.
+                            */}
                             <div style={{
                               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-                              fontSize: v.aMoi ? 19 : 18,
+                              fontSize: 18,
                               color: v.aMoi ? accent : encre,
                               opacity: v.aMoi ? 1 : 0.9,
                               lineHeight: 1.5,
+                              transition: 'color 0.6s ease',
                             }}>
                               {v.texte}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 2 }}>
+                            {/*
+                              Les noms viennent APRÈS l'encre, et c'est la
+                              promesse du jeu tenue à la lettre : « leurs noms
+                              ne te seront rendus qu'au dernier vers ». Ils se
+                              posent l'un après l'autre, dans l'ordre des
+                              rangs, une fois la feuille ouverte.
+                            */}
+                            <motion.div
+                              initial={reduit ? false : { opacity: 0, y: -2 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.12 + idx * 0.07, duration: 0.45, ease: 'easeOut' }}
+                              style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 2 }}
+                            >
                               <span style={{ ...mono, fontSize: 10, color: encre, opacity: 0.45, letterSpacing: '0.1em' }}>
                                 {v.rang} · {v.aMoi
                                   ? tr('TOI', 'YOU')
@@ -341,13 +460,24 @@ export default function PoemeDuJour() {
                                   {signales.has(v.id) ? tr('⚑ SIGNALÉ', '⚑ REPORTED') : '⚑'}
                                 </button>
                               )}
-                            </div>
+                            </motion.div>
                           </div>
                         ))}
                       </div>
                       {partiel && (
                         <button
-                          onClick={() => { jouer('clic'); setToutVoir(true) }}
+                          onClick={() => {
+                            jouer('clic')
+                            setToutVoir(true)
+                            /*
+                              La feuille s'ouvre DAVANTAGE, elle ne saute
+                              pas à plat. Rejouer ici ne contredit pas la
+                              règle « on ne subit pas deux fois » : le
+                              joueur vient de demander à voir plus, la
+                              séquence est la réponse à son geste.
+                            */
+                            setRevele(false)
+                          }}
                           style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0' }}
                         >
                           {tr(`LIRE LE POÈME ENTIER — ${hier.vers.length} VERS`, `READ THE WHOLE POEM — ${hier.vers.length} LINES`)} →

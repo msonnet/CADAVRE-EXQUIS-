@@ -34,9 +34,9 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
       (plan Hobby), qui nettoie les salons puis scelle les jours écoulés
 - [x] **`CRON_SECRET` posé chez Vercel** — le 22 septembre 2026 ; vérifié en
       production : 200 avec le secret, 401 sans et 401 avec un faux
-- [ ] **Voir un scellement réel** — il n'a encore jamais tourné. Premier
-      passage attendu le 23 septembre à 00 h 30 UTC, sur les chaînes du 22
-      (fr : 2 mains → 3 voix ; en : 0 main → 5 voix)
+- [x] **Scellement vu en vrai** — le 23 septembre à 00 h 30 UTC, sur la
+      chaîne du 22 : « 5 VERS · 2 MAINS », deux anonymes et trois voix (le
+      greffier, le géologue, le météorologue). Exactement le cas prévu.
 
 #### Abonnement — reste à faire hors du code
 - [ ] Appliquer `supabase/migrations/20260730000010_abonnement.sql`
@@ -792,6 +792,48 @@ source. `api/signaler-vers.ts`, table `jour_signalements`.
   propose le poème du jour. C'est le moment où le joueur vient de finir
   quelque chose et cherche la suite.
 
+### Le poème scellé arrive PLIÉ — 24 septembre
+
+Le poème d'hier s'affichait à plat, tout de suite : on lisait la chose la
+plus attendue du rendez-vous comme on lit une liste. Trois états désormais —
+le feuillet fermé, le dépli, le feuillet ouvert avec ses coutures.
+
+**On n'a pas écrit une seconde animation de papier.** Celle de
+`PoemeDevoile` est mesurée (toute longueur en 10,7 s), interruptible d'un
+appui, et elle honore déjà `prefers-reduced-motion`. La réutiliser garantit
+aussi que le poème du jour se dévoile **exactement** comme un poème de fin
+de partie — c'est le même objet.
+
+**`FeuilletPlie` — l'image qui était fausse au premier jet.** Les pliures
+étaient étalées en travers d'un grand rectangle, une bande par volet. Mais
+une feuille PLIÉE est courte : c'est ce que plier veut dire. Cinq bandes
+vides de dix-neuf pixels donnaient la réglure d'un cahier, et le fond
+transparent achevait de faire des traits dans le vide.
+
+Ce qu'on voit d'un paquet fermé, ce sont les **tranches** des épaisseurs
+empilées sous la face du dessus, chacune plus courte et plus pâle — la
+perspective les raccourcit, l'ombre les mange. Trois pixels de retrait par
+épaisseur : au-delà c'est un escalier, en deçà un bord épais. Et la feuille
+a maintenant une **surface** (`${encre}09`), dérivée de l'encre pour
+s'éclaircir sur les ambiances sombres et s'assombrir sur les claires.
+
+**Le nombre de plis n'est pas décoratif** : il vaut exactement celui que
+`plierEnPanneaux` ouvrira. Une feuille qui montre trois épaisseurs et
+s'ouvre en cinq volets se dénonce comme un décor.
+
+**Les coutures viennent après l'encre**, et c'est la promesse du jeu tenue à
+la lettre — « leurs noms ne te seront rendus qu'au dernier vers ». Elles se
+posent l'une après l'autre, dans l'ordre des rangs. Corrigé au passage : ton
+vers était à 19 px contre 18, donc il SAUTAIT d'un pixel à l'instant précis
+où le dépli cesse de l'écrire. Il se marque par la couleur, qui se fond sans
+rien déplacer.
+
+**Le feuillet ne se replie pas dans la même journée** (`cadavre-jour-deplie`,
+qui retient LE JOUR et non un booléen, comme la graine d'ambiance). La règle
+du dévoilement vaut ici : une belle animation qu'on subit deux fois est pire
+qu'une animation bancale. Seul « lire le poème entier » la rejoue — le joueur
+vient de demander à voir plus, la séquence est la réponse à son geste.
+
 ### La notification du scellement — locale, et pourtant juste
 
 Une notification locale est planifiée à l'avance : elle ne peut pas savoir
@@ -932,7 +974,7 @@ système sur le marché sous son nom.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (450 tests unitaires) + Playwright (73 tests E2E, FR et EN)
+- Tests : Vitest (450 tests unitaires) + Playwright (74 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

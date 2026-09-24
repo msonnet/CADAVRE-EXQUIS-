@@ -188,7 +188,33 @@ test('le poème achevé s’ouvre sur ton vers et ses voisins', async ({ page })
   // Cinq vers, quatre mains : la voix est comptée à part et annoncée telle.
   await expect(page.getByText(/5 VERS|5 LINES/)).toBeVisible()
   await expect(page.getByText(/4 MAINS|4 HANDS/)).toBeVisible()
+
+  /*
+    Le poème scellé arrive PLIÉ depuis le 24 septembre : aucun vers n'est
+    lisible avant le geste. C'est le cœur du dispositif — l'annoncer sur la
+    couverture viderait le dépli — et c'est ce que cette mesure garde.
+  */
+  const ferme = await page.evaluate(() => document.body.innerText)
+  expect(ferme, 'la couverture ne montre aucun vers').not.toContain('le cuivre chante')
+  expect(ferme).toMatch(/TOUCHER POUR DÉPLIER|TOUCH TO UNFOLD/)
+
+  await page.getByRole('button', { name: /Déplier le poème|Unfold the poem/ }).click()
+  await expect(page.getByText('le cuivre chante quand on l’oublie')).toBeVisible({ timeout: 15000 })
+})
+
+test('le feuillet ne se replie pas dans la même journée', async ({ page }) => {
+  // « Une belle animation qu'on subit une deuxième fois est pire qu'une
+  // animation bancale » : le jour déjà déplié rouvre le poème à plat.
+  await page.addInitScript(() => {
+    localStorage.setItem('sb-test-auth', JSON.stringify({ user: { id: 'moi' } }))
+    localStorage.setItem('cadavre-jour-deplie', '2026-09-20')
+  })
+  await poser(page, { hier: true })
+  await ouvrir(page)
+
   await expect(page.getByText('le cuivre chante quand on l’oublie')).toBeVisible()
+  const vu = await page.evaluate(() => document.body.innerText)
+  expect(vu, 'plus de couverture à toucher').not.toMatch(/TOUCHER POUR DÉPLIER|TOUCH TO UNFOLD/)
 })
 
 test('l’accueil mène au poème du jour', async ({ page }) => {
