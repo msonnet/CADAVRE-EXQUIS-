@@ -217,6 +217,39 @@ test('le feuillet ne se replie pas dans la même journée', async ({ page }) => 
   expect(vu, 'plus de couverture à toucher').not.toMatch(/TOUCHER POUR DÉPLIER|TOUCH TO UNFOLD/)
 })
 
+test('le poème déplié se lit nu, et se partage', async ({ page }) => {
+  /*
+    Trois choses qui manquaient une fois la feuille ouverte : le poème
+    n'était plus touchable, on ne pouvait pas le lire sans les noms, et rien
+    ne permettait de l'emporter.
+
+    Les coutures s'affichent d'abord — c'est la récompense annoncée, « leurs
+    noms ne te seront rendus qu'au dernier vers ». On les retire pour LIRE,
+    ce qui est l'autre usage d'un poème.
+  */
+  await page.addInitScript(() => {
+    localStorage.setItem('sb-test-auth', JSON.stringify({ user: { id: 'moi' } }))
+    localStorage.setItem('cadavre-jour-deplie', '2026-09-20')
+  })
+  await poser(page, { hier: true })
+  await ouvrir(page)
+
+  const couture = page.getByText(/3 · MOI|3 · TOI|3 · YOU/)
+  await expect(couture, 'les noms sont là d’abord').toBeVisible()
+
+  // Toucher le poème les retire — la commodité au pointeur.
+  await page.getByText('le cuivre chante quand on l’oublie').click()
+  await page.waitForTimeout(600)
+  await expect(couture, 'démontées, pas seulement masquées').toHaveCount(0)
+  await expect(page.getByText('le cuivre chante quand on l’oublie')).toBeVisible()
+
+  // Et la commande accessible fait exactement la même chose.
+  await page.getByRole('button', { name: /COUTURES|SEAMS/ }).click()
+  await expect(couture).toBeVisible()
+
+  await expect(page.getByRole('button', { name: /PARTAGER|SHARE/ })).toBeVisible()
+})
+
 test('l’accueil mène au poème du jour', async ({ page }) => {
   await poser(page)
   await ouvrir(page, '/')

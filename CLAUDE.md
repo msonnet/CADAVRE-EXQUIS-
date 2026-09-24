@@ -828,6 +828,32 @@ vers était à 19 px contre 18, donc il SAUTAIT d'un pixel à l'instant précis
 où le dépli cesse de l'écrire. Il se marque par la couleur, qui se fond sans
 rien déplacer.
 
+**Une fois ouvert, le poème reste touchable.** Il ne l'était plus : la
+feuille s'ouvrait et devenait un bloc inerte. Le toucher masque désormais
+les coutures — on lit le poème NU, ce qui est l'autre usage d'un poème —
+et le retoucher les rend.
+
+Le conteneur n'est PAS un bouton, et c'est délibéré : les ⚑ en sont, et un
+bouton dans un bouton n'est pas du HTML valide. C'est un simple
+gestionnaire de clic, une commodité au pointeur ; **la commande accessible
+est « ⟡ COUTURES »**, qui fait exactement la même chose et que le clavier
+atteint.
+
+**Les coutures se DÉMONTENT**, elles ne se replient pas à hauteur nulle.
+Premier jet : `height: 0` et `overflow: hidden` — le texte restait dans le
+document, clippé et non absent, donc encore lu par un lecteur d'écran,
+encore trouvé par la recherche de page, et le drapeau encore pressable.
+Masquer n'est pas retirer, et ici c'est retirer qu'on veut. C'est la mesure
+qui l'a dit : `innerText` contenait toujours « LE GREFFIER ».
+
+**Le partage** passe par `usePartage`, le même crochet que la fin de partie
+— une seule machine d'état plutôt que quatre qui dérivent. Le texte porte
+la **mention des voix** dès qu'une machine a écrit, comme l'export du
+recueil ; ce n'est pas décoratif ici, le plancher de cinq vers fait qu'un
+poème peu fréquenté en contient presque toujours. Le JOUR sert de graine :
+deux personnes qui partagent le même poème obtiennent la même affiche, ce
+qui est la moindre des choses pour un texte écrit ensemble.
+
 **Le feuillet ne se replie pas dans la même journée** (`cadavre-jour-deplie`,
 qui retient LE JOUR et non un booléen, comme la graine d'ambiance). La règle
 du dévoilement vaut ici : une belle animation qu'on subit deux fois est pire
@@ -974,7 +1000,7 @@ système sur le marché sous son nom.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (450 tests unitaires) + Playwright (74 tests E2E, FR et EN)
+- Tests : Vitest (450 tests unitaires) + Playwright (75 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

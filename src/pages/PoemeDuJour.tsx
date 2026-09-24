@@ -11,6 +11,8 @@ import { zoneVivante } from '../lib/a11y'
 import { vibrer } from '../utils/haptics'
 import FeuilletPlie from '../components/FeuilletPlie'
 import PoemeDevoile from '../components/PoemeDevoile'
+import { usePartage } from '../hooks/usePartage'
+import { mentionIA } from '../lib/attribution'
 import { nomDeVoix } from '../data/voiceIds'
 import { refusDuVers, MOTS_MAX, type RefusVers } from '../lib/jourLogique'
 import {
@@ -96,6 +98,12 @@ export default function PoemeDuJour() {
     try { return localStorage.getItem(CLE_DEPLI) === jour } catch { return false }
   }
   const [deplie, setDeplie] = useState(false)
+  /**
+   * Les coutures s'affichent d'abord — c'est la récompense annoncée.
+   * On les retire pour LIRE, ce qui est l'autre usage d'un poème, et le
+   * geste est le poème lui-même : on le touche.
+   */
+  const [coutures, setCoutures] = useState(true)
   /** Le mouvement réduit coupe la pose des noms comme il coupe le dépli. */
   const reduit = typeof window !== 'undefined' &&
     !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -150,6 +158,33 @@ export default function PoemeDuJour() {
     // Retiré sur-le-champ : le vers a atteint le seuil, on relit le poème
     // plutôt que de laisser le texte signalé à l'écran.
     if (r.ok && r.retire) setHier(await dernierPoemeScelle())
+  }
+
+  const partage = usePartage({ libelleCopie: tr('✓ POÈME COPIÉ', '✓ POEM COPIED') })
+
+  /**
+   * Partager le poème du jour.
+   *
+   * Le texte porte la MENTION DES VOIX dès qu'une machine y a écrit —
+   * article 50 de l'AI Act, et la même règle que l'export du recueil. Elle
+   * n'est pas décorative ici : le plancher de cinq vers fait qu'un poème
+   * peu fréquenté en contient presque toujours.
+   *
+   * Le jour sert de graine : deux personnes qui partagent le même poème
+   * obtiennent la même affiche, ce qui est la moindre des choses pour un
+   * texte qu'elles ont écrit ensemble.
+   */
+  async function partagerLePoeme() {
+    if (!hier || partage.enCours) return
+    const lignes = hier.vers.map(v => v.texte)
+    const mention = hier.vers.some(v => v.voix) ? `\n\n${mentionIA()}` : ''
+    await partage.partager({
+      type: 'poeme',
+      titre: tr(`Le poème du ${hier.jour}`, `The poem of ${hier.jour}`),
+      texte: lignes.join('\n') + mention,
+      accent, bg, ink: encre,
+      seed: hier.jour,
+    })
   }
 
   const aEcrit = !!etat?.monVers
@@ -392,7 +427,24 @@ export default function PoemeDuJour() {
 
                   return (
                     <>
-                      <div style={{ borderLeft: `1px solid ${accent}40`, paddingLeft: 12, marginLeft: 3 }}>
+                      {/*
+                        LE POÈME RESTE TOUCHABLE une fois déplié.
+
+                        Ce conteneur n'est PAS un bouton, et c'est délibéré :
+                        les ⚑ en sont, et un bouton dans un bouton n'est pas
+                        du HTML valide — le clavier n'y arrive jamais. C'est
+                        donc un simple gestionnaire de clic, une commodité au
+                        pointeur ; la commande accessible est « ⟡ COUTURES »
+                        juste en dessous, qui fait exactement la même chose
+                        et que le clavier atteint.
+                      */}
+                      <div
+                        onClick={() => { jouer('clic'); setCoutures(c => !c) }}
+                        style={{
+                          borderLeft: `1px solid ${accent}40`, paddingLeft: 12, marginLeft: 3,
+                          cursor: 'pointer',
+                        }}
+                      >
                         {fenetre.map((v, idx) => (
                           <div key={v.rang} style={{ marginBottom: 10 }}>
                             {/*
@@ -422,9 +474,25 @@ export default function PoemeDuJour() {
                               posent l'un après l'autre, dans l'ordre des
                               rangs, une fois la feuille ouverte.
                             */}
+                            {/*
+                              Les coutures se DÉMONTENT, elles ne se replient
+                              pas à hauteur nulle.
+
+                              Premier jet : `height: 0` et `overflow: hidden`.
+                              Le texte restait dans le document — clippé,
+                              pas absent — donc encore lu par un lecteur
+                              d'écran, encore trouvé par la recherche de la
+                              page, et le drapeau encore pressable. Masquer
+                              n'est pas retirer, et ici c'est retirer qu'on
+                              veut : on a demandé à lire le poème nu.
+                            */}
+                            <AnimatePresence initial={false}>
+                            {coutures && (
                             <motion.div
+                              key="coutures"
                               initial={reduit ? false : { opacity: 0, y: -2 }}
                               animate={{ opacity: 1, y: 0 }}
+                              exit={reduit ? undefined : { opacity: 0, transition: { duration: 0.2 } }}
                               transition={{ delay: 0.12 + idx * 0.07, duration: 0.45, ease: 'easeOut' }}
                               style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 2 }}
                             >
@@ -461,9 +529,49 @@ export default function PoemeDuJour() {
                                 </button>
                               )}
                             </motion.div>
+                            )}
+                            </AnimatePresence>
                           </div>
                         ))}
                       </div>
+                      {/*
+                        Deux gestes sous le poème, et pas un de plus. Les
+                        coutures sont la récompense annoncée — « leurs noms
+                        ne te seront rendus qu'au dernier vers » — donc elles
+                        s'affichent d'abord ; on les retire pour LIRE, ce qui
+                        est l'autre usage d'un poème.
+                      */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        gap: 12, marginTop: 4, borderTop: `0.5px solid ${encre}12`, paddingTop: 2,
+                      }}>
+                        <button
+                          onClick={() => { jouer('clic'); setCoutures(c => !c) }}
+                          aria-pressed={coutures}
+                          style={{
+                            ...mono, fontSize: 12, letterSpacing: '0.1em',
+                            color: coutures ? accent : encre, opacity: coutures ? 0.9 : 0.6,
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            padding: '12px 0', minHeight: 44,
+                          }}
+                        >
+                          ⟡ {tr('COUTURES', 'SEAMS')}
+                        </button>
+                        <button
+                          onClick={partagerLePoeme}
+                          disabled={partage.enCours}
+                          style={{
+                            ...mono, fontSize: 12, letterSpacing: '0.1em',
+                            color: partage.actif ? accent : encre, opacity: partage.actif ? 0.9 : 0.6,
+                            background: 'none', border: 'none',
+                            cursor: partage.enCours ? 'default' : 'pointer',
+                            padding: '12px 0', minHeight: 44,
+                          }}
+                        >
+                          {partage.libelle(tr('PARTAGER', 'SHARE'))}
+                        </button>
+                      </div>
+
                       {partiel && (
                         <button
                           onClick={() => {
