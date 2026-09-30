@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { partieTerminee } from '../lib/tablee'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -252,11 +253,10 @@ export default function JeuOnline() {
   }, [code, user, navigate])
 
   useEffect(() => {
-    if (!room || !nbTotal) return
-    // Guard: nbTotal must be at least nb_joueurs to prevent premature navigation
-    // when players haven't all loaded yet or nb_cases is wrong
-    if (room.nb_joueurs && nbTotal < room.nb_joueurs) return
-    if (contributions.length >= nbTotal) {
+    if (!room) return
+    // La garde « au moins une case par joueur » ne vaut qu'au dessin : à
+    // l'écrit, une phrase courte à quatre mains ne finissait jamais.
+    if (partieTerminee({ mode: room.mode === 'dessin' ? 'dessin' : 'ecrit', cases: nbTotal, posees: contributions.length, joueurs: room.nb_joueurs })) {
       // Any player can try — claim_host handles the race; only the rightful host wins
       if (room.status === 'playing') {
         if (room.host_id === user?.id) {
@@ -393,7 +393,7 @@ export default function JeuOnline() {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
-          <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
+          <div style={{ position: 'fixed', top: 'max(8px,var(--sa-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
             {connectionStatus === 'disconnected' ? tr('⚠ HORS LIGNE — RECONNEXION…', '⚠ OFFLINE — RECONNECTING…') : tr('⟳ RECONNEXION…', '⟳ RECONNECTING…')}
           </div>
         )}
@@ -448,7 +448,7 @@ export default function JeuOnline() {
 
   // ── Connection banner (reused in multiple views) ──────────────────────────
   const connBanner = connectionStatus !== 'connected' ? (
-    <div style={{ position: 'fixed', top: 'max(8px,env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
+    <div style={{ position: 'fixed', top: 'max(8px,var(--sa-top))', left: '50%', transform: 'translateX(-50%)', padding: '8px 14px', borderRadius: 3, background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)', color: '#fff', fontFamily: "'Raleway',sans-serif", letterSpacing: '0.16em', fontSize: 13, zIndex: 100 }}>
       {connectionStatus === 'disconnected' ? tr('⚠ HORS LIGNE — RECONNEXION…', '⚠ OFFLINE — RECONNECTING…') : tr('⟳ RECONNEXION…', '⟳ RECONNECTING…')}
     </div>
   ) : null

@@ -738,7 +738,7 @@ export default function JeuDessin() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      style={{ position: 'fixed', inset: 0, background: CANVAS_BG_ACTUEL, display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ position: 'fixed', inset: 0, background: CANVAS_BG_ACTUEL, display: 'flex', flexDirection: 'column', paddingTop: 'var(--sa-top)' }}
     >
       {/* ── MINI-GUIDE (première partie dessinée uniquement) ── */}
       <MiniCoach
@@ -758,7 +758,7 @@ export default function JeuDessin() {
       {/* ── ÉCHEC D'ENREGISTREMENT — la partie reste ouverte, on peut réessayer ── */}
       {erreurEnregistrement && (
         <div role="alert" style={{
-          position: 'fixed', top: 'max(10px, env(safe-area-inset-top))', left: 12, right: 12, zIndex: 60,
+          position: 'fixed', top: 'max(10px, var(--sa-top))', left: 12, right: 12, zIndex: 60,
           background: TB_BG, border: `1px solid ${TB_ACCENT}`, borderRadius: 3,
           padding: '10px 14px', ...mono, fontSize: 13, color: TB_INK,
         }}>
@@ -869,12 +869,12 @@ export default function JeuDessin() {
 
       {/* ── TOOLBAR ── */}
       <div style={{
-        height: `calc(${TOOLBAR_H}px + max(0px, env(safe-area-inset-bottom) - 10px))`,
+        height: `calc(${TOOLBAR_H}px + max(0px, var(--sa-bottom) - 10px))`,
         flexShrink: 0, zIndex: 20,
         background: TB_BG,
         boxShadow: '0 -2px 20px rgba(15,8,5,0.10)',
         borderRadius: '18px 18px 0 0',
-        padding: `12px 16px max(10px, env(safe-area-inset-bottom))`,
+        padding: `12px 16px max(10px, var(--sa-bottom))`,
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
 

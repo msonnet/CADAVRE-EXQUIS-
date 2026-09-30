@@ -6,7 +6,8 @@ import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
-import { STRUCTURES, getStructure, nombreCasesEffectif } from '../structures'
+import { STRUCTURES, getStructure } from '../structures'
+import { casesDeLaPartie, mainsSansCase } from '../lib/tablee'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
@@ -61,6 +62,7 @@ export default function Salon() {
 
   const isHost = room?.host_id === user?.id
   const mePlayer = players.find(p => p.player_id === user?.id)
+  const sansCase = room ? mainsSansCase(room.mode, getStructure(room.structure_id), players.length) : 0
   const allReady = players.length >= 2 && players.every(p => p.is_ready)
 
   // ── Join room on mount ────────────────────────────────
@@ -221,9 +223,7 @@ export default function Salon() {
       }
 
       // Fix the total number of cases ONCE at game start so every client agrees.
-      const nbCases = room.mode === 'dessin'
-        ? players.length
-        : nombreCasesEffectif(getStructure(room.structure_id))
+      const nbCases = casesDeLaPartie(room.mode, getStructure(room.structure_id), players.length)
 
       await supabase.from('rooms').update({
         status: 'playing',
@@ -269,7 +269,7 @@ export default function Salon() {
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
         {connectionStatus !== 'connected' && (
           <div style={{
-            position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
+            position: 'fixed', top: 'max(8px, var(--sa-top))',
             left: '50%', transform: 'translateX(-50%)',
             padding: '8px 14px', borderRadius: 3,
             background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
@@ -311,7 +311,7 @@ export default function Salon() {
 
       {connectionStatus !== 'connected' && (
         <div style={{
-          position: 'fixed', top: 'max(8px, env(safe-area-inset-top))',
+          position: 'fixed', top: 'max(8px, var(--sa-top))',
           left: '50%', transform: 'translateX(-50%)',
           padding: '8px 14px', borderRadius: 3,
           background: connectionStatus === 'disconnected' ? 'rgba(178,44,32,0.95)' : 'rgba(212,168,56,0.95)',
@@ -532,6 +532,16 @@ export default function Salon() {
                   </button>
                 ))}
               </div>
+              {sansCase > 0 && (
+                // Dit AVANT le lancement : une structure fixe ne s'allonge
+                // pas, et découvrir en pleine partie qu'on ne jouera pas est
+                // pire que de le lire ici.
+                <p role="status" style={{ ...mono, fontSize: 12, letterSpacing: '0.08em', color: accent, marginTop: 8, lineHeight: 1.5 }}>
+                  {sansCase === 1
+                    ? tr(`${players.length} MAINS POUR ${players.length - 1} CASES — UNE MAIN N'ÉCRIRA PAS`, `${players.length} HANDS FOR ${players.length - 1} SLOTS — ONE HAND WILL NOT WRITE`)
+                    : tr(`${players.length} MAINS POUR ${players.length - sansCase} CASES — ${sansCase} MAINS N'ÉCRIRONT PAS`, `${players.length} HANDS FOR ${players.length - sansCase} SLOTS — ${sansCase} HANDS WILL NOT WRITE`)}
+                </p>
+              )}
             </div>
           )}
 

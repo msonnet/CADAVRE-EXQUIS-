@@ -190,7 +190,7 @@ export default function MurAbonnement({
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', background: bg, borderTop: `1.5px solid ${accent}55`,
-              padding: '24px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
+              padding: '24px 20px calc(24px + var(--sa-bottom))',
               display: 'flex', flexDirection: 'column', gap: 14,
               maxHeight: '92dvh', overflowY: 'auto',
             }}

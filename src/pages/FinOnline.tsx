@@ -686,7 +686,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={imageAssemblee} alt={tr('Cadavre exquis — plein écran', 'Exquisite corpse — full screen')} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranDessin(false)} aria-label={tr('Fermer', 'Close')}
-              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, var(--sa-top))', right: 'max(16px, var(--sa-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ {tr('FERMER', 'CLOSE')}
             </button>
           </motion.div>
@@ -701,7 +701,7 @@ export default function FinOnline() {
             style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,8,5,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <img src={illustrationUrl} alt={tr('Illustration — plein écran', 'Illustration — full screen')} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
             <button onClick={() => setPleinEcranIllus(false)} aria-label={tr('Fermer', 'Close')}
-              style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
+              style={{ position: 'absolute', top: 'max(16px, var(--sa-top))', right: 'max(16px, var(--sa-right))', background: 'none', border: '0.5px solid rgba(232,212,184,0.4)', borderRadius: 3, color: '#e8d4b8', ...mono, fontSize: 13, padding: '8px 12px', cursor: 'pointer' }}>
               ✕ {tr('FERMER', 'CLOSE')}
             </button>
           </motion.div>

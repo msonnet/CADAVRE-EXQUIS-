@@ -12,6 +12,7 @@ import type { Poeme } from '../types'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partager'
+import { estNatif } from '../lib/emporter'
 import { useAuth } from '../hooks/useAuth'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import { publierPoeme } from '../lib/publier'
@@ -164,8 +165,8 @@ export default function PoemeDetail() {
     }
     try {
       const ok = await partagerVideoStory(opts)
-      if (ok === 'annule') return // feuille fermée par l'utilisateur : ni repli ni « ✓ »
-      if (!ok) await partagerStory(opts)
+      const issue = ok ? ok : await partagerStory(opts)
+      if (issue === 'annule') return // feuille fermée par l'utilisateur : ni repli ni « ✓ »
       setPartageOk(true)
       setTimeout(() => setPartageOk(false), 2200)
     } catch (e) {
@@ -199,6 +200,10 @@ export default function PoemeDetail() {
 
   function imprimerPoeme() {
     if (!poeme) return
+    // Dans l'application installée, une fenêtre `blob:` ne s'ouvre pas et
+    // `window.print` n'existe pas. Le PDF, lui, part dans la feuille de
+    // partage du système — qui propose « Imprimer » sur iOS comme sur Android.
+    if (estNatif()) { void exporterPoemePDF(); return }
     const titre = poeme.titre ?? 'Cadavre Exquis'
     const struct = getStructure(poeme.structureId)
     const texte = texteCorrige ?? reconstruirePoeme(poeme.cases, struct)
@@ -299,7 +304,7 @@ export default function PoemeDetail() {
             <button
               aria-label="Fermer le plein écran"
               onClick={() => setPleinEcran(false)}
-              style={{ position: 'absolute', top: 'max(20px, env(safe-area-inset-top))', right: 'max(20px, env(safe-area-inset-right))', ...mono, fontSize: 13, color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
+              style={{ position: 'absolute', top: 'max(20px, var(--sa-top))', right: 'max(20px, var(--sa-right))', ...mono, fontSize: 13, color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
             >
               ✕ FERMER
             </button>

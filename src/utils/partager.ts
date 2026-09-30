@@ -1,43 +1,27 @@
 import { garantirContraste } from '../reve/contraste'
+import { emporterFichier, partagerTexteSeul, blobDe, type Issue } from '../lib/emporter'
 import { langueActuelle } from '../i18n'
+// Toutes les sorties passent par `emporterFichier` : en natif, la feuille
+// de partage du système ; dans un navigateur, `navigator.share` ou le
+// téléchargement. Voir `lib/emporter.ts` — c'est là qu'est la panne corrigée.
+
 export async function partagerImage(
   dataUrl: string,
   nomFichier: string,
   texte?: string,
-): Promise<void> {
-  try {
-    const blob = await (await fetch(dataUrl)).blob()
-    const file = new File([blob], `${nomFichier}.png`, { type: 'image/png' })
-    const shareData: ShareData = { files: [file], title: nomFichier }
-    if (texte) shareData.text = texte
-    if (navigator.canShare?.(shareData)) {
-      await navigator.share(shareData)
-      return
-    }
-  } catch (e) {
-    if ((e as Error).name === 'AbortError') return // annulé par l'utilisateur
-    /* fall through to download */
-  }
-  // Fallback : téléchargement + copie du texte si disponible
-  const a = document.createElement('a')
-  a.href = dataUrl
-  a.download = `${nomFichier}.png`
-  a.click()
-  if (texte) {
+): Promise<Issue> {
+  const issue = await emporterFichier({ nom: `${nomFichier}.png`, blob: await blobDe(dataUrl), titre: nomFichier, texte })
+  // Téléchargé plutôt que partagé : le texte n'a pas voyagé avec l'image,
+  // on le met au moins dans le presse-papiers.
+  if (issue === 'telecharge' && texte) {
     try { await navigator.clipboard.writeText(texte) } catch { /* ignore */ }
   }
+  return issue
 }
 
 export async function partagerTexte(texte: string, titre: string): Promise<void> {
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: titre, text: texte })
-      return
-    }
-  } catch (e) {
-    if ((e as Error).name === 'AbortError') return // annulé par l'utilisateur
-    /* fall through */
-  }
+  const issue = await partagerTexteSeul(texte, titre)
+  if (issue) return
   try {
     await navigator.clipboard.writeText(texte)
   } catch { /* ignore */ }
@@ -50,16 +34,11 @@ export async function partagerImageDistante(
   titre: string,
 ): Promise<void> {
   try {
-    const resp = await fetch(imageUrl)
-    const blob = await resp.blob()
+    const blob = await blobDe(imageUrl)
     const ext = blob.type.includes('png') ? 'png' : 'jpg'
-    const file = new File([blob], `${nomFichier}.${ext}`, { type: blob.type })
-    const shareData: ShareData = { files: [file], title: titre, text: texte }
-    if (navigator.canShare?.(shareData)) {
-      await navigator.share(shareData)
-      return
-    }
-  } catch { /* fall through to text-only */ }
+    const issue = await emporterFichier({ nom: `${nomFichier}.${ext}`, blob, titre, texte })
+    if (issue !== 'telecharge') return
+  } catch { /* image injoignable : le texte seul */ }
   await partagerTexte(texte, titre)
 }
 
@@ -640,12 +619,7 @@ function passePartout(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
 }
 
 export async function telechargerStory(dataUrl: string, nom: string): Promise<void> {
-  const a = document.createElement('a')
-  a.href = dataUrl
-  a.download = `cadavre-${nom}-story.png`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
+  await emporterFichier({ nom: `cadavre-${nom}-story.png`, blob: await blobDe(dataUrl), titre: 'Cadavre Exquis' })
 }
 
 // Génère l'affiche 9:16 puis la partage via la feuille native (ou la télécharge en repli).
@@ -660,9 +634,9 @@ export async function partagerStory(opts: {
   date?: number
   invitation?: string
   seed?: string
-}, nomFichier = 'cadavre-exquis'): Promise<void> {
+}, nomFichier = 'cadavre-exquis'): Promise<Issue> {
   const url = await genererImageStory(opts)
-  await partagerImage(url, nomFichier)
+  return partagerImage(url, nomFichier)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1433,24 +1407,10 @@ export async function partagerVideoStory(opts: {
   try { blob = await genererVideoStory(opts) } catch { blob = null }
   if (!blob || blob.size < 2000) return false
   const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
-  const file = new File([blob], `${nomFichier}.${ext}`, { type: blob.type })
-  try {
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Cadavre Exquis' })
-      return true
-    }
-  } catch (e) {
-    // L'utilisateur a fermé la feuille de partage : ce n'est ni un échec
-    // ni un partage — pas de téléchargement forcé, pas de « ✓ Partagé ».
-    if ((e as Error).name === 'AbortError') return 'annule'
-    /* autre erreur : repli téléchargement */
-  }
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = file.name
-  document.body.appendChild(a); a.click(); document.body.removeChild(a)
-  setTimeout(() => URL.revokeObjectURL(url), 4000)
-  return true
+  // Feuille refermée : ni un échec ni un partage — pas de téléchargement
+  // forcé, pas de « ✓ PARTAGÉ ».
+  const issue = await emporterFichier({ nom: `${nomFichier}.${ext}`, blob, titre: 'Cadavre Exquis' })
+  return issue === 'annule' ? 'annule' : true
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1604,7 +1564,7 @@ export async function exporterPDF(opts: {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 60) || 'sans-titre'
-    doc.save(`cadavre-${slug}.pdf`)
+    await emporterFichier({ nom: `cadavre-${slug}.pdf`, blob: doc.output('blob'), titre: opts.titre || 'Cadavre Exquis' })
   } catch (e) {
     console.error('Failed to export PDF', e)
   }

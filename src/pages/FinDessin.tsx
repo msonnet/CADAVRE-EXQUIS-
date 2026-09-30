@@ -427,7 +427,7 @@ export default function FinDessin() {
               onClick={() => setPleinEcran(false)}
               aria-label={tr('Fermer le plein écran', 'Close full screen')}
               style={{
-                position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 'max(16px, env(safe-area-inset-right))',
+                position: 'absolute', top: 'max(16px, var(--sa-top))', right: 'max(16px, var(--sa-right))',
                 background: 'none', border: `0.5px solid rgba(232,212,184,0.4)`,
                 borderRadius: 3,
                 color: '#e8d4b8',

@@ -159,7 +159,7 @@ export default function SplashScreen() {
             transition={{ delay: 1.2, duration: 0.8 }}
             style={{
               position: 'absolute',
-              bottom: 'max(48px, env(safe-area-inset-bottom, 48px))',
+              bottom: 'max(48px, var(--sa-bottom))',
               fontFamily: "'Raleway', sans-serif", fontSize: 12,
               letterSpacing: '0.26em', textTransform: 'uppercase',
               color: encre,

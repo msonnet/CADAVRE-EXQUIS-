@@ -421,7 +421,10 @@ function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: 
       writingMode: 'vertical-rl',
       fontFamily: "'Fraunces', 'Bodoni Moda', serif",
       fontWeight: 900, fontStyle: 'italic',
-      fontSize: 'clamp(3.5rem, 17vw, 6.5rem)',
+      // Bornée par la HAUTEUR autant que par la largeur : le mot court sur
+      // la verticale, et sur un écran 16:9 (360 × 640, les Android d'entrée
+      // de gamme) ou en grand texte, il descendait jusque dans la citation.
+      fontSize: 'clamp(2.8rem, min(17vw, 7.5dvh), 6.5rem)',
       lineHeight: 0.88, letterSpacing: '-0.03em',
       color: 'var(--reve-ink)',
       textTransform: 'uppercase',

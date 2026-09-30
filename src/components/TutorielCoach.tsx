@@ -65,8 +65,8 @@ export default function TutorielCoach({
             position: 'fixed',
             left: 0, right: 0,
             ...(isTop
-              ? { top: 0, borderBottom: `2px solid ${accent}`, paddingTop: 'max(18px, env(safe-area-inset-top))', paddingBottom: 16, paddingLeft: 20, paddingRight: 20, boxShadow: `0 12px 48px ${encre}20` }
-              : { bottom: 0, borderTop: `2px solid ${accent}`, padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', boxShadow: `0 -12px 48px ${encre}20` }),
+              ? { top: 0, borderBottom: `2px solid ${accent}`, paddingTop: 'max(18px, var(--sa-top))', paddingBottom: 16, paddingLeft: 20, paddingRight: 20, boxShadow: `0 12px 48px ${encre}20` }
+              : { bottom: 0, borderTop: `2px solid ${accent}`, padding: '14px 20px', paddingBottom: 'max(18px, var(--sa-bottom))', boxShadow: `0 -12px 48px ${encre}20` }),
             zIndex: 500,
             background: bg,
           }}
@@ -187,7 +187,7 @@ export function TutorielFete({ visible, accent, encre, bg, onJour, onFermer }: {
           style={{
             position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 500,
             background: bg, borderTop: `2px solid ${accent}`,
-            padding: '22px 20px', paddingBottom: 'max(26px, env(safe-area-inset-bottom))',
+            padding: '22px 20px', paddingBottom: 'max(26px, var(--sa-bottom))',
             boxShadow: `0 -12px 48px ${encre}20`,
             textAlign: 'center',
           }}

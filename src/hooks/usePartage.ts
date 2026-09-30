@@ -80,14 +80,14 @@ export function usePartage(opts: { libelleCopie?: string; libelleTravail?: strin
       // Vidéo animée ; repli automatique sur l'affiche fixe si l'encodage
       // est indisponible.
       const ok = await partagerVideoStory(donnees, nomFichier)
-      if (ok === 'annule') {
+      const issue = ok ? ok : await partagerStory(donnees, nomFichier)
+      if (issue === 'annule') {
         // Feuille refermée par l'utilisateur : ce n'est pas un partage, et
         // le prétendre serait mentir.
         setPhase('repos')
         setCopie(false)
         return
       }
-      if (!ok) await partagerStory(donnees, nomFichier)
       setPhase('fait')
       setTimeout(() => { setPhase('repos'); setCopie(false) }, TENUE)
     } catch (e) {

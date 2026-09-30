@@ -79,7 +79,11 @@ export default function Accueil() {
     : { paddingLeft: 'clamp(2.8rem, 14vw, 5rem)', alignSelf: 'flex-start', textAlign: 'left' }
 
   return (
-    <PageTransition className="page-carnet relative flex flex-col h-dvh overflow-hidden safe-top safe-bottom">
+    // `min-h-dvh` et non `h-dvh` : l'accueil tient dans un écran, mais sur un
+    // Samsung réglé en grand texte, ou un téléphone de 320 points, un écran
+    // FIXE coupait le pied de page — RÈGLES et RÉGLAGES devenaient
+    // inatteignables. La page grandit plutôt que de couper.
+    <PageTransition className="page-carnet relative flex flex-col min-h-dvh overflow-hidden safe-top safe-bottom">
 
       <Decor variant="accueil" hideCitation hideSignature />
 
@@ -168,7 +172,11 @@ export default function Accueil() {
           <div
             className="font-fraunces font-black"
             style={{
-              fontSize: 'clamp(5rem, 22vw, 9rem)',
+              // Plancher à 4rem et mot insécable : à 320 points de large — un
+              // Samsung en « grande taille d'affichage » y tombe — le
+              // plancher de 5rem faisait passer le « s » à la ligne.
+              fontSize: 'clamp(4rem, 22vw, 9rem)',
+              whiteSpace: 'nowrap',
               lineHeight: 0.9,
               letterSpacing: '-0.02em',
               color: accent,

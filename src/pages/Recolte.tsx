@@ -9,6 +9,7 @@ import {
   type VersRecolte,
 } from '../db'
 import { mono } from '../lib/typo'
+import { emporterFichier } from '../lib/emporter'
 import { tr, langueActuelle } from '../i18n'
 
 /**
@@ -87,14 +88,10 @@ export default function Recolte() {
   /** Le fichier que le médium emporte pour écrire ailleurs. */
   function telecharger() {
     const blob = new Blob([enTexte(vers)], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${tr('recolte', 'harvest')}-${new Date().toISOString().slice(0, 10)}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    return emporterFichier({
+      nom: `${tr('recolte', 'harvest')}-${new Date().toISOString().slice(0, 10)}.txt`,
+      blob, titre: tr('La récolte', 'The harvest'),
+    })
   }
 
   const boutonPlat = {

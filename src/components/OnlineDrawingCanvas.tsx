@@ -459,7 +459,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
-      style={{ position: 'fixed', inset: 0, background: CANVAS_BG_ACTUEL, display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
+      style={{ position: 'fixed', inset: 0, background: CANVAS_BG_ACTUEL, display: 'flex', flexDirection: 'column', paddingTop: 'var(--sa-top)' }}>
 
       {/* Canvas */}
       <div ref={containerRef}
@@ -501,10 +501,10 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
 
       {/* Toolbar */}
       <div style={{
-        height: `calc(${TOOLBAR_H}px + max(0px, env(safe-area-inset-bottom) - 10px))`,
+        height: `calc(${TOOLBAR_H}px + max(0px, var(--sa-bottom) - 10px))`,
         flexShrink: 0, zIndex: 20, background: '#f0e9df',
         boxShadow: '0 -2px 20px rgba(15,8,5,0.10)', borderRadius: '18px 18px 0 0',
-        padding: `12px 16px max(10px, env(safe-area-inset-bottom))`,
+        padding: `12px 16px max(10px, var(--sa-bottom))`,
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
         {/* Tools row */}

@@ -13,6 +13,7 @@ import { getStructure, reconstruirePoeme } from '../structures'
 import { libelleMorceaux } from '../lib/attribution'
 import { composerTexte, composerSauvegarde, lireSauvegarde, nomDeFichier } from '../lib/recueil'
 import { tr } from '../i18n'
+import { emporterFichier } from '../lib/emporter'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -63,22 +64,19 @@ export default function Bibliotheque() {
   const fichierRef = useRef<HTMLInputElement>(null)
   const aQuelqueChose = poemes.length > 0 || dessins.length > 0
 
+  // En natif, un lien `download` ne produit rien : la sauvegarde passe par
+  // la feuille de partage du système (Fichiers, Drive, AirDrop…).
   function emporter(ext: 'txt' | 'json', contenu: string) {
     const blob = new Blob([contenu], { type: ext === 'txt' ? 'text/plain;charset=utf-8' : 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = nomDeFichier(ext)
-    document.body.appendChild(a); a.click(); document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 4000)
+    return emporterFichier({ nom: nomDeFichier(ext), blob, titre: tr('Le recueil', 'The collection') })
   }
 
   async function emporterLisible() {
-    emporter('txt', composerTexte(await chargerPoemes(), await chargerRecolte()))
+    await emporter('txt', composerTexte(await chargerPoemes(), await chargerRecolte()))
   }
 
   async function emporterSauvegarde() {
-    emporter('json', composerSauvegarde(await chargerPoemes(), await chargerRecolte()))
+    await emporter('json', composerSauvegarde(await chargerPoemes(), await chargerRecolte()))
   }
 
   async function restaurer(f: File) {

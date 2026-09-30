@@ -42,6 +42,23 @@
   html { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
   /*
+    Les zones sûres — encoche, île, barre de geste, sur tout téléphone.
+
+    Chaque retrait passe par ces quatre variables, jamais par `env()`
+    directement. Sur iOS elles valent `env()`. Sur Android, les webviews
+    antérieures à la 140 rendent `env(safe-area-inset-*)` FAUX (bogue
+    Chromium 40699457) : Capacitor 8 injecte alors les bonnes valeurs dans
+    `--safe-area-inset-*`, qu'on lit en premier. Dans un navigateur, les
+    deux manquent et tout vaut zéro — la mise en page web ne bouge pas.
+  */
+  :root {
+    --sa-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+    --sa-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+    --sa-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+    --sa-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  }
+
+  /*
     Le rebond — lot 18 de l'audit du 10 septembre.
 
     Tiré trop loin, le document rebondit et découvre le fond de la webvue,
@@ -308,11 +325,11 @@
 
 /* ── Utilities ─────────────────────────────────── */
 @layer utilities {
-  .safe-top { padding-top: env(safe-area-inset-top); }
-  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
+  .safe-top { padding-top: var(--sa-top); }
+  .safe-bottom { padding-bottom: max(var(--sa-bottom), 1rem); }
   .safe-x {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding-left: var(--sa-left);
+    padding-right: var(--sa-right);
   }
 }
 

@@ -402,7 +402,7 @@ export default function Galerie() {
                 width: '100%',
                 background: bg,
                 borderTop: `1.5px solid ${accent}55`,
-                padding: '24px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
+                padding: '24px 20px calc(24px + var(--sa-bottom))',
                 display: 'flex', flexDirection: 'column', gap: 16,
               }}
             >
@@ -522,7 +522,7 @@ export default function Galerie() {
             <button
               onClick={e => { e.stopPropagation(); setLightboxSrc(null) }}
               style={{
-                position: 'absolute', top: 'max(18px, env(safe-area-inset-top))', right: 'max(18px, env(safe-area-inset-right))',
+                position: 'absolute', top: 'max(18px, var(--sa-top))', right: 'max(18px, var(--sa-right))',
                 fontFamily: "'Raleway', sans-serif", letterSpacing: '0.16em',
                 fontSize: 17, color: '#e8d4b8', opacity: 0.85,
                 background: 'none', border: 'none', cursor: 'pointer', padding: '8px',

@@ -341,7 +341,7 @@ export default function FinDePartie() {
             <button
               aria-label="Fermer le plein écran"
               onClick={e => { e.stopPropagation(); setPleinEcran(false) }}
-              style={{ position: 'absolute', top: 'max(20px, env(safe-area-inset-top))', right: 'max(20px, env(safe-area-inset-right))', fontFamily: "'Raleway', sans-serif", fontSize: 13, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
+              style={{ position: 'absolute', top: 'max(20px, var(--sa-top))', right: 'max(20px, var(--sa-right))', fontFamily: "'Raleway', sans-serif", fontSize: 13, letterSpacing: '0.18em', color: '#e8d4b8', opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
             >
               ✕ {tr('FERMER', 'CLOSE')}
             </button>
