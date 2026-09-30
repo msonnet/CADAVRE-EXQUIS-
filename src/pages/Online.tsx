@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
@@ -8,6 +8,7 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import { codeDeSalon, CLE_SALON_ATTENDU } from '../lib/invitation'
 
 function genCode(): string {
   const adj = ['LOUP', 'CYGNE', 'CRABE', 'OURS', 'VACHE', 'TIGRE', 'AIGLE', 'SINGE', 'VIPÈRE', 'LAPIN', 'RENARD', 'HIBOU']
@@ -58,6 +59,22 @@ export default function Online() {
   const { jouer } = useSound()
 
   const [pseudo, setPseudo] = useState('')
+
+  // Arrivé par une invitation : le code est dans l'URL, ou retenu le temps
+  // de passer par le profil. Dès que l'identité existe, le salon s'ouvre.
+  const [params] = useSearchParams()
+  const [salonAttendu] = useState<string | null>(() => {
+    const c = codeDeSalon(params.get('salon'))
+    try {
+      if (c) sessionStorage.setItem(CLE_SALON_ATTENDU, c)
+      return c ?? codeDeSalon(sessionStorage.getItem(CLE_SALON_ATTENDU))
+    } catch { return c }
+  })
+  useEffect(() => {
+    if (!salonAttendu || !user || !profile) return
+    try { sessionStorage.removeItem(CLE_SALON_ATTENDU) } catch { /* ignore */ }
+    navigate(`/salon/${salonAttendu}`, { replace: true })
+  }, [salonAttendu, user, profile, navigate])
   const [joinError2, setJoinError2] = useState<string | null>(null)
   const [signingIn, setSigningIn] = useState(false)
   const [joinCode, setJoinCode] = useState('')
@@ -238,6 +255,11 @@ export default function Online() {
       {/* ── NOT LOGGED IN ── */}
       {!user && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          {salonAttendu && (
+            <p role="status" style={{ ...mono, fontSize: 13, letterSpacing: '0.14em', color: accent, marginBottom: 14 }}>
+              {tr(`ON T'ATTEND AU SALON ${salonAttendu}`, `YOU ARE EXPECTED AT ROOM ${salonAttendu}`)}
+            </p>
+          )}
           <div
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 12 }}

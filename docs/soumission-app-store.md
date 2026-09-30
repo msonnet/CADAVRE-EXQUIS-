@@ -96,9 +96,23 @@ npm run cap:android    # Android Studio → Generate Signed Bundle
 Le fond passe au **noir pur** : l'Œil cousu est composé sur noir, l'ancien
 `#0f0805` laisserait un liseré visible autour du sceau.
 
+**Portrait, téléphone.** `cap:add:*`, `cap:ios` et `cap:android` appellent
+`npm run cap:telephone` (`scripts/natif-telephone.mjs`), qui retouche les
+projets engendrés : portrait seul, **iPhone seulement**
+(`TARGETED_DEVICE_FAMILY = 1`), iOS 16 minimum, et
+`screenOrientation="portrait"` sur Android. Rien à cocher dans Xcode. Un iPad
+installera quand même l'app en mode compatibilité — c'est le rendu voulu —
+donc **pas de captures iPad** à fournir.
+
+**À vérifier sur l'appareil**, parce que cet environnement n'a ni iOS ni
+Android : que les préparatifs défilent jusqu'à « Commencer la séance »
+(`scrollEnabled` était à `false`), que rien ne passe sous l'encoche ni sous
+la barre de geste, et que PARTAGER ouvre la feuille du système.
+
 ### b. Captures d'écran
 
-Obligatoires en **6,7"** et **6,5"** (plus iPad si tu coches le support iPad).
+Obligatoires en **6,7"** et **6,5"**. L'app est iPhone seulement : pas de
+captures iPad.
 
 Écrans conseillés, dans cet ordre : la révélation d'un poème (l'écran qui vend
 le jeu), l'écran d'écriture avec sa consigne, les COUTURES nommant les voix,

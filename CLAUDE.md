@@ -78,7 +78,8 @@ npm run cap:add:android
 # fond NOIR PUR : l'Œil cousu est composé sur noir, #0f0805 laisserait un liseré
 npx @capacitor/assets generate --iconBackgroundColor '#000000' --splashBackgroundColor '#000000'
 
-# 4. Sync et ouvrir
+# 4. Sync et ouvrir — `cap:telephone` passe automatiquement :
+#    portrait seul, iPhone seulement, iOS 16 minimum
 npm run cap:ios        # ouvre Xcode → Archive → App Store Connect
 npm run cap:android    # ouvre Android Studio → Generate Signed Bundle
 ```
@@ -993,6 +994,54 @@ système sur le marché sous son nom.
 - [ ] **Faire relire `/conditions` par un juriste.**
 - [ ] Trancher **fournisseur ou déployeur** au sens de l'AI Act : pas de
       fine-tuning, mais mise sur le marché sous son nom.
+
+## L'audit du 30 septembre — le lot bloquant
+
+Cinq défauts qui auraient fait échouer le jeu dans les mains d'un joueur,
+et que ni les tests ni le web ne voyaient : ils n'existent que dans
+l'application installée, ou qu'à plusieurs.
+
+**iOS ne défilait pas.** `ios.scrollEnabled: false` figeait le document :
+les préparatifs, dont le bouton « Commencer la séance » tombe sous le pli
+sur un iPhone, étaient inatteignables. La webvue défile ; le rebond reste
+coupé en CSS. `contentInset: 'never'` : c'est la page qui pose ses retraits.
+
+**Les zones sûres passent par `--sa-*`** (`index.css`). Les webviews Android
+antérieures à la 140 rendent `env(safe-area-inset-*)` faux ; Capacitor 8
+injecte les vraies valeurs dans `--safe-area-inset-*`, lues en premier.
+`telephone.test.ts` interdit tout `env()` direct ailleurs.
+
+**Tout téléphone.** Mesuré de 320 à 430 points, FR et EN, seize routes :
+aucun débordement horizontal. L'accueil n'a plus de hauteur FIXE — un
+Samsung en « grande taille d'affichage » descend vers 320 points et perdait
+son pied de page. « Exquis » est insécable, le « CADAVRE » vertical est
+borné par la hauteur (écrans 16:9). Limite assumée : à 320 × 568, le seul
+premier iPhone SE — hors iOS 16 — le mot frôle encore la citation.
+
+**Les fichiers sortent** (`lib/emporter.ts`). `<a download>`,
+`jsPDF.save()` et `window.open(blob:)` ne font RIEN dans une webvue, et
+Android n'a pas `navigator.share` : PARTAGER affichait « ✓ PARTAGÉ » sans
+rien envoyer, et l'export du recueil — la seule sauvegarde — ne créait
+aucun fichier. En natif, le fichier est écrit dans le cache (le seul
+dossier que le FileProvider d'Android expose) et confié à la feuille du
+système. Imprimer, en natif, passe par le PDF — la feuille propose
+« Imprimer ». `emporter.test.ts` interdit tout contournement.
+
+**Une partie en ligne finissait toujours** (`lib/tablee.ts`). Une garde
+« au moins une case par joueur » protégeait le dessin, mais valait aussi à
+l'écrit : une phrase courte à quatre mains s'arrêtait à la troisième case
+et ne finissait jamais. Le salon annonce désormais les mains qui n'auront
+pas de case, et le vers libre en donne au moins une à chacune.
+
+**Le salon et le poème du jour entrent au recueil** (`lib/versRecueil.ts`),
+avec les NOMS des mains. Identifiant par salon ou par jour, jamais de
+doublon. Le poème du jour n'entre que chez qui y a posé un vers, et sans
+geste : « deux gestes sous le poème, et pas un de plus ».
+
+**Le lien d'un salon garde son code** (`lib/invitation.ts`). « INVITER À LA
+TABLE » envoie un lien ; un invité sans identité passe par
+`/online?salon=KX7Q`, qui le lui dit et le ramène au salon dès qu'il a un
+nom de plume. Avant, le code se perdait en route.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)

@@ -8,6 +8,9 @@ import { useSound } from '../hooks/useSound'
 import { supabase } from '../lib/supabase'
 import { STRUCTURES, getStructure } from '../structures'
 import { casesDeLaPartie, mainsSansCase } from '../lib/tablee'
+import { arriveeSansIdentite, texteInvitation } from '../lib/invitation'
+import { partagerTexteSeul } from '../lib/emporter'
+import { lienPublic } from '../lib/apiBase'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
@@ -107,8 +110,9 @@ export default function Salon() {
   }, [code, navigate])
 
   useEffect(() => {
-    if (!authLoading && !user) { navigate('/online'); return }
-    if (!authLoading && user && !profile) { navigate('/profil'); return }
+    // Sans identité, le code voyage avec l'invité : il choisit un nom de
+    // plume, puis revient ici. Avant, `/online` tout court le perdait.
+    if (!authLoading && (!user || !profile) && code) { navigate(arriveeSansIdentite(code), { replace: true }); return }
     if (!authLoading && user && profile) {
       loadRoom().then(() => joinRoom())
     }
@@ -238,6 +242,23 @@ export default function Salon() {
     }
   }
 
+  // ── Inviter ───────────────────────────────────────────
+  // Un lien qui porte le code, par la feuille de partage — en natif comme
+  // sur un téléphone. Sans feuille (un ordinateur), le lien est copié.
+  const [invite, setInvite] = useState<'repos' | 'partage' | 'copie'>('repos')
+  async function inviter() {
+    if (!code || !room) return
+    jouer('clic')
+    const texte = texteInvitation(code, lienPublic(`/salon/${code}`), langueSalon(room))
+    const issue = await partagerTexteSeul(texte, 'Cadavre Exquis')
+    if (issue === 'annule') return
+    if (issue === 'partage') { setInvite('partage') }
+    else {
+      try { await navigator.clipboard.writeText(texte); setInvite('copie') } catch { return }
+    }
+    setTimeout(() => setInvite('repos'), 2400)
+  }
+
   // ── Copy code ─────────────────────────────────────────
   function copyCode() {
     if (!code) return
@@ -303,7 +324,7 @@ export default function Salon() {
         accent={accent} encre={encre} bg={seance?.ambiance.bg ?? '#f0e4cc'}
         etapes={[
           { titre: tr('Le salon d’attente.', 'The waiting room.'),
-            corps: tr('Partage le code en haut pour inviter — ou laisse le salon public, et des inconnus pourront s’asseoir.', 'Share the code at the top to invite — or leave the room public, and strangers may take a seat.') },
+            corps: tr('« Inviter à la table » envoie un lien qui mène ici — ou laisse le salon public, et des inconnus pourront s’asseoir.', '“Invite to the table” sends a link that leads here — or leave the room public, and strangers may take a seat.') },
           { titre: tr('Prêt ?', 'Ready?'),
             corps: tr('Quand chaque joueur s’est déclaré prêt, l’hôte lance la partie.', 'Once every player says they’re ready, the host starts the game.') },
         ]}
@@ -370,6 +391,20 @@ export default function Salon() {
       <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 16 }}>
         {code}
       </div>
+      <button
+        onClick={inviter}
+        className="appui"
+        style={{
+          ...mono, fontSize: 13, letterSpacing: '0.12em', alignSelf: 'flex-start',
+          color: invite === 'repos' ? encre : accent, background: 'none',
+          border: `1px solid ${invite === 'repos' ? `${encre}40` : accent}`, borderRadius: 3,
+          padding: '10px 16px', minHeight: 44, cursor: 'pointer', marginTop: -6, marginBottom: 22,
+        }}
+      >
+        {invite === 'partage' ? tr('✓ INVITATION ENVOYÉE', '✓ INVITATION SENT')
+          : invite === 'copie' ? tr('✓ LIEN COPIÉ', '✓ LINK COPIED')
+          : tr('INVITER À LA TABLE →', 'INVITE TO THE TABLE →')}
+      </button>
 
       {/* ── Joueurs ── */}
       <div style={{ marginBottom: 24 }}>
