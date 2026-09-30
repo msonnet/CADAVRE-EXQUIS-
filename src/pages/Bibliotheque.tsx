@@ -10,7 +10,8 @@ import type { Poeme, DessinCadavre } from '../types'
 import { useSound } from '../hooks/useSound'
 import { mono } from '../lib/typo'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { libelleMorceaux } from '../lib/attribution'
+import { libelleMorceaux, libelleMains } from '../lib/attribution'
+import { mainsDuPoeme } from '../lib/versRecueil'
 import { composerTexte, composerSauvegarde, lireSauvegarde, nomDeFichier } from '../lib/recueil'
 import { tr } from '../i18n'
 import { emporterFichier } from '../lib/emporter'
@@ -332,8 +333,11 @@ export default function Bibliotheque() {
                           {poeme.titre || premierVers(poeme) || tr('Sans titre', 'Untitled')}
                         </p>
                         <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
-                          {(NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
+                          {poeme.origine === 'jour'
+                            ? tr('POÈME DU JOUR', 'POEM OF THE DAY')
+                            : (NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
                           {' · '}{libelleMorceaux(poeme.structureId, poeme.cases.length)}
+                          {mainsDuPoeme(poeme) !== null && <>{' · '}{libelleMains(mainsDuPoeme(poeme)!)}</>}
                           {' · '}{formatDate(poeme.dateCreation).toUpperCase()}
                         </p>
                       </button>

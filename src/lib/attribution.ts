@@ -44,6 +44,11 @@ export function attribution(c: Case, iaNum?: number): string {
     return `${tr('voix', 'voice')}${num}${noms}`
   }
   if (c.joueurNumero) return `${tr('joueur', 'player')} ${c.joueurNumero}`
+  // Salon et poème du jour : une vraie personne, nommée. Une main restée
+  // anonyme n'est pas « toi » pour autant — c'était le repli d'avant.
+  if (c.moi) return tr('toi', 'you')
+  if (c.pseudo) return c.pseudo
+  if ('moi' in c || 'pseudo' in c) return tr('une main', 'a hand')
   return tr('toi', 'you')
 }
 

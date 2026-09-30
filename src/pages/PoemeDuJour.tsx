@@ -6,6 +6,8 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import { garderSiAbsent } from '../db'
+import { poemeDuJour } from '../lib/versRecueil'
 import { CLAVIER_VERS } from '../lib/clavier'
 import { zoneVivante } from '../lib/a11y'
 import { vibrer } from '../utils/haptics'
@@ -120,6 +122,13 @@ export default function PoemeDuJour() {
       const [e, h] = await Promise.all([lireJour(), dernierPoemeScelle()])
       if (!vivant) return
       setEtat(e); setHier(h); setChargement(false)
+      // Qui a posé un vers garde le poème : il entre au recueil, avec les
+      // noms des mains. Sans geste — les deux boutons sous le poème restent
+      // deux. Un visiteur qui n'a rien écrit ne s'en voit rien ajouter.
+      if (h && h.monRang !== null) {
+        garderSiAbsent(poemeDuJour({ langue: langueActuelle(), jour: h.jour, vers: h.vers }))
+          .catch(() => { /* stockage refusé : le poème reste lisible ici */ })
+      }
       // Déjà déplié aujourd'hui : le feuillet s'ouvre à plat, sans
       // redemander le geste ni rejouer la séquence.
       if (h && dejaDeplie(h.jour)) { setDeplie(true); setRevele(true) }

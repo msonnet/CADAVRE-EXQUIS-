@@ -80,6 +80,20 @@ async function poser(page: Page, opts: {
   await page.route('**/supabase.co/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
 }
 
+/**
+ * Une identité déjà ouverte — celle qui a posé un vers la veille. C'est la
+ * clé où le client Supabase de la version de test range sa session.
+ */
+async function sessionDe(page: Page, id: string) {
+  await page.addInitScript(i => {
+    localStorage.setItem('sb-placeholder-auth-token', JSON.stringify({
+      access_token: 'jeton-test', token_type: 'bearer', expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'r',
+      user: { id: i, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() },
+    }))
+  }, id)
+}
+
 async function ouvrir(page: Page, url = '/poeme-du-jour') {
   await page.goto(url)
   await page.waitForLoadState('networkidle')
@@ -178,9 +192,9 @@ test('« déjà écrit » n’est pas une erreur de saisie mais un état du jour
 test('le poème achevé s’ouvre sur ton vers et ses voisins', async ({ page }) => {
   // Sur un poème long, ouvrir au premier vers reviendrait à cacher la seule
   // chose qu'on vient chercher.
-  await page.addInitScript(() => {
-    localStorage.setItem('sb-test-auth', JSON.stringify({ user: { id: 'moi' } }))
-  })
+  // La clé d'origine (`sb-test-auth`) n'était pas celle du client : la
+  // mesure ne voyait jamais « ton vers », elle ne s'en apercevait pas.
+  await sessionDe(page, 'moi')
   await poser(page, { hier: true })
   await ouvrir(page)
 
@@ -205,8 +219,8 @@ test('le poème achevé s’ouvre sur ton vers et ses voisins', async ({ page })
 test('le feuillet ne se replie pas dans la même journée', async ({ page }) => {
   // « Une belle animation qu'on subit une deuxième fois est pire qu'une
   // animation bancale » : le jour déjà déplié rouvre le poème à plat.
+  await sessionDe(page, 'moi')
   await page.addInitScript(() => {
-    localStorage.setItem('sb-test-auth', JSON.stringify({ user: { id: 'moi' } }))
     localStorage.setItem('cadavre-jour-deplie', '2026-09-20')
   })
   await poser(page, { hier: true })
@@ -227,8 +241,8 @@ test('le poème déplié se lit nu, et se partage', async ({ page }) => {
     noms ne te seront rendus qu'au dernier vers ». On les retire pour LIRE,
     ce qui est l'autre usage d'un poème.
   */
+  await sessionDe(page, 'moi')
   await page.addInitScript(() => {
-    localStorage.setItem('sb-test-auth', JSON.stringify({ user: { id: 'moi' } }))
     localStorage.setItem('cadavre-jour-deplie', '2026-09-20')
   })
   await poser(page, { hier: true })
@@ -255,4 +269,46 @@ test('l’accueil mène au poème du jour', async ({ page }) => {
   await ouvrir(page, '/')
   await page.getByRole('button', { name: /poème du jour|poem of the day/i }).click()
   await expect(page).toHaveURL(/\/poeme-du-jour$/, { timeout: 5000 })
+})
+
+test('qui a écrit garde le poème : il entre au recueil, avec ses mains', async ({ page }) => {
+  // Avant, le poème du jour ne se relisait que la veille : le lendemain,
+  // plus rien. C'était le seul poème écrit avec de vraies autres mains, et
+  // le seul qu'on ne pouvait pas garder.
+  await sessionDe(page, 'moi')
+  await poser(page, { hier: true })
+  await ouvrir(page)
+  await page.waitForTimeout(600)
+
+  await page.goto('/bibliotheque')
+  await page.waitForLoadState('networkidle')
+  await franchir(page)
+  await page.waitForTimeout(900)
+
+  const vu = await page.evaluate(() => document.body.innerText)
+  expect(vu).toContain('la porte bat dans le grenier')
+  expect(vu).toMatch(/POÈME DU JOUR · 5 VERS · 4 MAINS|POEM OF THE DAY · 5 LINES · 4 HANDS/)
+
+  // Rouvrir la page ne le duplique pas.
+  await ouvrir(page)
+  await page.goto('/bibliotheque')
+  await page.waitForLoadState('networkidle')
+  await page.waitForTimeout(900)
+  const cartes = await page.getByText('la porte bat dans le grenier').count()
+  expect(cartes).toBe(1)
+})
+
+test('un visiteur qui n’a rien écrit ne s’en voit rien ajouter', async ({ page }) => {
+  await sessionDe(page, 'moi')
+  await poser(page, { hier: true })
+  // Le même poème, sans aucun vers à soi.
+  await page.route('**/rest/v1/jour_vers**', r => r.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify(VERS_SCELLES.map(v => ({ ...v, main_id: v.main_id === 'moi' ? 'autre-4' : v.main_id }))),
+  }))
+  await ouvrir(page)
+  await page.goto('/bibliotheque')
+  await page.waitForLoadState('networkidle')
+  await page.waitForTimeout(900)
+  expect(await page.getByText('la porte bat dans le grenier').count()).toBe(0)
 })

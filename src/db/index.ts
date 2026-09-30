@@ -91,6 +91,19 @@ export async function sauvegarderPoeme(poeme: Poeme): Promise<void> {
   await db.poemes.put(poeme)
 }
 
+/**
+ * Entre au recueil un poème venu d'ailleurs — salon, poème du jour — s'il
+ * n'y est pas déjà. Rouvrir la page de fin ne doit ni dupliquer le poème ni
+ * écraser le titre ou l'illustration qu'on lui a donnés depuis.
+ */
+export async function garderSiAbsent(poeme: Poeme): Promise<boolean> {
+  return db.transaction('rw', db.poemes, async () => {
+    if (await db.poemes.get(poeme.id)) return false
+    await db.poemes.add(poeme)
+    return true
+  })
+}
+
 export async function chargerPoemes(): Promise<Poeme[]> {
   return db.poemes.orderBy('dateCreation').reverse().toArray()
 }

@@ -42,6 +42,8 @@ export interface Case {
   texte: string
   ts: number
   fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)
+  pseudo?: string         // salon ou poème du jour : la personne qui a posé la case
+  moi?: boolean           // salon ou poème du jour : la case est la tienne
 }
 
 export interface Illustration {
@@ -60,6 +62,10 @@ export interface Poeme {
   visibilite: Visibilite
   cases: Case[]
   illustration?: Illustration
+  /** D'où vient le poème, quand ce n'est pas d'une partie sur ce téléphone. */
+  origine?: 'salon' | 'jour'
+  /** Poème du jour : la journée UTC qu'il a occupée, AAAA-MM-JJ. */
+  jour?: string
   dateCreation: number
   dateModification: number
 }

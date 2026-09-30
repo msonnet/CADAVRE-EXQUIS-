@@ -18,7 +18,8 @@ import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import PoemeDevoile from '../components/PoemeDevoile'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
-import { sauvegarderDessin } from '../db'
+import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration } from '../db'
+import { poemeDuSalon, idSalon } from '../lib/versRecueil'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
 import { libelleMains } from '../lib/attribution'
@@ -154,6 +155,13 @@ export default function FinOnline() {
       }))
       const brut = reconstruirePoeme(fakeCases, structure)
       setTexteAssemble(brut)
+      // Le salon s'efface la nuit venue ; le poème, lui, reste au recueil,
+      // avec les noms des mains qui l'ont écrit.
+      garderSiAbsent(poemeDuSalon({
+        code, structureId: r.structure_id, contributions: cList,
+        pseudos: new Map(((ps ?? []) as RoomPlayer[]).map(p => [p.player_id, p.pseudo])),
+        moi: user.id, fonctions: structure.cases.map(d => d.fonction),
+      })).catch(() => { /* stockage refusé : la page de fin reste lisible */ })
       let cancelled = false
       const blocs = structure.cases.map((def, i) => ({
         texte: caseMap.get(i) ?? '',
@@ -299,7 +307,12 @@ export default function FinOnline() {
     setErreurIllus(null)
     const { url, refus: refuse } = await genererIllustration(texteAssemble, style)
     if (refuse) { setRefus(refuse); setStyleChoisi(null) }
-    else if (url) { setIllustrationUrl(url) }
+    else if (url) {
+      setIllustrationUrl(url)
+      if (code) sauvegarderIllustration(idSalon(code), {
+        url, style, promptUtilise: texteAssemble, dateGeneration: Date.now(),
+      }).catch(() => {})
+    }
     else { setErreurIllus(tr('Génération indisponible — réessaie dans un instant', 'Generation unavailable — try again in a moment')); setStyleChoisi(null) }
     setGeneratingIllus(false)
   }
