@@ -18,8 +18,12 @@ import type { Refus } from '../lib/acces'
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
 
-async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
-  if (bandes.length === 0) return ''
+/**
+ * Assemble les bandes, et dit où tombent les coutures — là où finissait ce
+ * qu'avait dessiné la bande d'au-dessus. Le dévoilement s'y arrête.
+ */
+async function assemblerDessin(bandes: BandeDessin[]): Promise<{ url: string; coutures: number[] }> {
+  if (bandes.length === 0) return { url: '', coutures: [] }
   const w = bandes[0].width
   const dpr = bandes[0].dpr ?? 1
   const RACCORD_H_phys = RACCORD_H * dpr
@@ -44,9 +48,11 @@ async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
   ctx.fillRect(0, 0, w, totalH)
 
   let assembledY = 0
+  const coutures: number[] = []
   for (let i = 0; i < bandes.length; i++) {
     const bande = bandes[i]
     const cropH = lowestYs[i]
+    if (i > 0) coutures.push(assembledY / totalH)
     await new Promise<void>(res => {
       const img = new Image()
       img.onload = () => {
@@ -60,7 +66,7 @@ async function assemblerDessin(bandes: BandeDessin[]): Promise<string> {
     })
   }
 
-  return canvas.toDataURL('image/png')
+  return { url: canvas.toDataURL('image/png'), coutures }
 }
 
 type Phase = 'assemblage' | 'vision' | 'revele' | 'sauvegarde'
@@ -78,6 +84,8 @@ export default function FinDessin() {
   const [erreurVision, setErreurVision] = useState(false)
   const [refus, setRefus] = useState<Refus | null>(null)
   const [revealJoue, setRevealJoue] = useState(false)
+  const [coutures, setCoutures] = useState<number[]>([])
+  const [lectureEnCours, setLectureEnCours] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
   const { jouer } = useSound()
   const revelationPlayedRef = useRef(false)
@@ -105,17 +113,22 @@ export default function FinDessin() {
       setNbBandes(bandes.length)
 
       setPhase('assemblage')
-      const img = await assemblerDessin(bandes)
+      const { url: img, coutures: c } = await assemblerDessin(bandes)
       if (cancelled) return
       setImageAssemblee(img)
+      setCoutures(c)
 
-      setPhase('vision')
+      // Le dessin se découvre DÈS qu'il est assemblé. La lecture suit, quand
+      // elle arrive : on attendait sa réponse — jusqu'à vingt secondes —
+      // avant de montrer un dessin déjà prêt.
+      setPhase('revele')
+      setLectureEnCours(true)
       const { texte, refus: refuse } = await lireLeDessin(img)
       if (cancelled) return
+      setLectureEnCours(false)
       if (refuse) setRefus(refuse)
       else if (!texte) setErreurVision(true)
       setTexteVision(texte)
-      setPhase('revele')
     }
     run()
     return () => { cancelled = true }
@@ -195,6 +208,9 @@ export default function FinDessin() {
           <RevealDessin
             imageUrl={imageAssemblee}
             texte={texteVision || null}
+            lectureAttendue={lectureEnCours}
+            coutures={coutures}
+            nbBandes={nbBandes}
             accent={accent}
             encre={encre}
             bg={bg}
@@ -330,6 +346,10 @@ export default function FinDessin() {
                 >
                   ↺ {tr('RÉESSAYER', 'RETRY')}
                 </button>
+              </div>
+            ) : lectureEnCours ? (
+              <div style={{ ...mono, fontSize: 12, letterSpacing: '0.22em', color: encre, opacity: 0.6 }}>
+                {tr('— LA LECTURE SE FAIT —', '— THE READING IS UNDER WAY —')}
               </div>
             ) : (
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75 }}>

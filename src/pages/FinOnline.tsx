@@ -39,8 +39,9 @@ type BandeData = { imageDataUrl: string; lowestDrawnFraction: number; width: num
 const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
 
-async function assemblerDessin(bandes: BandeData[]): Promise<string> {
-  if (bandes.length === 0) return ''
+// Rend aussi les coutures — le dévoilement s'y arrête (`devoilementDessin.ts`).
+async function assemblerDessin(bandes: BandeData[]): Promise<{ url: string; coutures: number[] }> {
+  if (bandes.length === 0) return { url: '', coutures: [] }
   const w = bandes[0].width
   const dpr = bandes[0].dpr ?? 1
   const RACCORD_H_phys = RACCORD_H * dpr
@@ -62,9 +63,11 @@ async function assemblerDessin(bandes: BandeData[]): Promise<string> {
   ctx.fillRect(0, 0, w, totalH)
 
   let assembledY = 0
+  const coutures: number[] = []
   for (let i = 0; i < bandes.length; i++) {
     const bande = bandes[i]
     const cropH = lowestYs[i]
+    if (i > 0) coutures.push(assembledY / totalH)
     await new Promise<void>(res => {
       const img = new Image()
       img.onload = () => {
@@ -76,7 +79,7 @@ async function assemblerDessin(bandes: BandeData[]): Promise<string> {
       img.src = bande.imageDataUrl
     })
   }
-  return canvas.toDataURL('image/png')
+  return { url: canvas.toDataURL('image/png'), coutures }
 }
 
 const STYLES = [
@@ -122,6 +125,8 @@ export default function FinOnline() {
   const [imageAssemblee, setImageAssemblee] = useState<string>('')
   const [texteVision, setTexteVision] = useState<string>('')
   const [loadingDessin, setLoadingDessin] = useState(false)
+  const [lectureEnCours, setLectureEnCours] = useState(false)
+  const [couturesDessin, setCouturesDessin] = useState<number[]>([])
   const [erreurVision, setErreurVision] = useState(false)
   const [refus, setRefus] = useState<Refus | null>(null)
   const [pleinEcranDessin, setPleinEcranDessin] = useState(false)
@@ -181,13 +186,17 @@ export default function FinOnline() {
           try { return JSON.parse(c.texte) as BandeData }
           catch { return { imageDataUrl: c.texte, lowestDrawnFraction: 0.9, width: 600, height: 400, dpr: 1 } }
         })
-      const img = await assemblerDessin(bandes)
+      const { url: img, coutures: c } = await assemblerDessin(bandes)
       setImageAssemblee(img)
+      setCouturesDessin(c)
+      // Le dessin se montre dès qu'il est assemblé ; la lecture suit.
+      setLoadingDessin(false)
+      setLectureEnCours(true)
       const { texte, refus: refuse } = await lireLeDessin(img)
+      setLectureEnCours(false)
       if (refuse) setRefus(refuse)
       else if (!texte) setErreurVision(true)
       setTexteVision(texte)
-      setLoadingDessin(false)
     }
   }, [code, user, navigate])
 
@@ -423,6 +432,9 @@ export default function FinOnline() {
           <RevealDessin
             imageUrl={imageAssemblee}
             texte={texteVision || null}
+            lectureAttendue={lectureEnCours}
+            coutures={couturesDessin}
+            nbBandes={contributions.length}
             accent={accent}
             encre={encre}
             bg={bg}
@@ -487,6 +499,10 @@ export default function FinOnline() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.8 }}>{tr("La lecture surréaliste n'a pas pu avoir lieu.", 'The surrealist reading could not take place.')}</p>
                         <button onClick={reessayerVision} style={{ alignSelf: 'flex-start', ...mono, fontSize: 13, background: 'transparent', color: accent, border: `0.5px solid ${accent}50`, borderRadius: 3, padding: '7px 14px', cursor: 'pointer' }}>↺ {tr('RÉESSAYER', 'RETRY')}</button>
+                      </div>
+                    ) : lectureEnCours ? (
+                      <div style={{ ...mono, fontSize: 12, letterSpacing: '0.22em', color: encre, opacity: 0.6, marginBottom: 16 }}>
+                        {tr('— LA LECTURE SE FAIT —', '— THE READING IS UNDER WAY —')}
                       </div>
                     ) : null}
 
