@@ -1,15 +1,20 @@
 import { useState, useCallback } from 'react'
+import { sonsActifs, reglerSons } from '../audio/papier'
 
-// Ambiance sonore désactivée (silence total sur demande utilisateur).
-// L'interface reste intacte pour compatibilité avec les pages existantes.
+/**
+ * L'ambiance sonore reste coupée — silence total, sur demande. Mais le
+ * bouton son de l'écran de jeu et du studio ne coupait RIEN : il basculait
+ * un état que personne ne lisait. Il règle désormais les effets sonores,
+ * pour de vrai, et le choix se retrouve d'un écran à l'autre.
+ */
 export function useAmbiance() {
-  const [muted, setMuted] = useState(true)
+  const [muted, setMuted] = useState(() => !sonsActifs())
   const start = useCallback(() => {}, [])
   const stop = useCallback(() => {}, [])
   const toggleMute = useCallback(() => {
     setMuted(prev => {
       const next = !prev
-      localStorage.setItem('ambiance-muted', String(next))
+      reglerSons(!next)
       return next
     })
   }, [])

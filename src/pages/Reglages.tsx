@@ -10,6 +10,7 @@ import {
 } from '../utils/notifications'
 import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
+import { sonsActifs, reglerSons } from '../audio/papier'
 import { tr, langueActuelle, changerLangue } from '../i18n'
 import { useAcces } from '../hooks/useAcces'
 import { ESSAI_OFFERT } from '../lib/acces'
@@ -24,9 +25,11 @@ const NIVEAUX: { id: NiveauValidation; label: string; desc: string }[] = [
 export default function Reglages() {
   const navigate = useNavigate()
   const seance = useReve()
+  const { jouer } = useSound()
   const [validation, setValidation] = useState<NiveauValidation>(
     () => (localStorage.getItem('validation-niveau') as NiveauValidation) ?? 'souple'
   )
+  const [sons, setSons] = useState<boolean>(sonsActifs)
   const [rappelActif, setRappelActif] = useState<boolean>(
     () => localStorage.getItem(RAPPEL_KEY) === '1'
   )
@@ -383,6 +386,48 @@ export default function Reglages() {
             </button>
           </motion.div>
         )}
+
+        {/* ── SONS ──
+            Le bruit du papier — plis, feuilles, plume. Un réglage qu'on
+            trouve ici, et non seulement sur l'écran de jeu où il se cachait
+            sous le nom de l'ambiance. */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.55 }}
+          style={{ marginBottom: 28 }}
+        >
+          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+            {tr('— SONS —', '— SOUNDS —')}
+          </div>
+          <div className="flex gap-2 mb-3" {...groupeRadio(tr('Sons', 'Sounds'))}>
+            {[
+              { actif: true,  label: tr('LE PAPIER', 'PAPER') },
+              { actif: false, label: tr('SILENCE', 'SILENCE') },
+            ].map(opt => {
+              const active = sons === opt.actif
+              return (
+                <button
+                  key={String(opt.actif)}
+                  {...optionRadio(active)}
+                  onClick={() => { reglerSons(opt.actif); setSons(opt.actif); if (opt.actif) jouer('pli') }}
+                  style={{
+                    flex: 1, padding: '8px 4px',
+                    border: `0.5px solid ${active ? accent : `${encre}20`}`,
+                    borderBottom: `2px solid ${active ? accent : 'transparent'}`,
+                    borderRadius: 3,
+                    background: 'transparent', cursor: 'pointer',
+                    ...mono, fontSize: 13,
+                    color: active ? accent : `${encre}60`,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </motion.div>
 
         {/* ── RAPPEL QUOTIDIEN (app installée uniquement) ── */}
         {rappelDisponible() && (

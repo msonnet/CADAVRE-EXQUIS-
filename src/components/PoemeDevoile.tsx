@@ -38,6 +38,8 @@ interface Props {
   onLettrine?: () => void
   /** Appelé une fois le dernier mot posé, ou dès que le dévoilement est sauté. */
   onFini?: () => void
+  /** Appelé à l'ouverture de chaque volet — le son du pli. */
+  onVolet?: (indice: number) => void
   /** Le style typographique des vers. */
   style?: React.CSSProperties
   /** La taille de la lettrine. */
@@ -52,7 +54,7 @@ const mouvementReduit = () =>
 const OUVRANTS = /^[«»"'“”‘’]+/
 
 export default function PoemeDevoile({
-  lignes, accent, actif, lettrine, onLettrine, onFini, style,
+  lignes, accent, actif, lettrine, onLettrine, onFini, onVolet, style,
   tailleLettrine = 'clamp(2.8rem, 10vw, 3.4rem)',
 }: Props) {
   const [saute, setSaute] = useState(false)
@@ -89,6 +91,16 @@ export default function PoemeDevoile({
   useEffect(() => {
     if (actif && immediat) onFini?.()
   }, [actif, immediat]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Chaque volet s'annonce à l'instant où il commence à tomber — le premier
+  // compris, qui n'a pas de pli au-dessus mais ouvre le feuillet. Un appui
+  // qui pose le poème coupe les suivants : on n'entend pas un dépli qu'on a
+  // sauté.
+  useEffect(() => {
+    if (!actif || immediat || !onVolet) return
+    const minuteurs = partition.panneaux.map((p, i) => setTimeout(() => onVolet(i), p.ouverture))
+    return () => minuteurs.forEach(clearTimeout)
+  }, [actif, immediat, partition]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!actif) return null
 

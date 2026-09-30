@@ -386,7 +386,7 @@ export default function PoemeDuJour() {
                         accent={accent}
                         encre={encre}
                         libelle={tr('Déplier le poème', 'Unfold the poem')}
-                        onOuvrir={() => { jouer('clic'); vibrer('devoilement'); setDeplie(true) }}
+                        onOuvrir={() => { jouer('feuille'); vibrer('devoilement'); setDeplie(true) }}
                       >
                         <div style={{
                           ...mono, fontSize: 11, color: encre, opacity: 0.5,
@@ -420,6 +420,7 @@ export default function PoemeDuJour() {
                           lignes={fenetre.map(v => v.texte)}
                           accent={accent}
                           actif
+                          onVolet={() => jouer('pli')}
                           style={{
                             fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
                             fontSize: 18, color: encre, opacity: 0.9, lineHeight: 1.5,
