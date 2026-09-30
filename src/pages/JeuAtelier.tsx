@@ -188,10 +188,20 @@ const ADJ_APPOSE: RoleFragment = {
 // lézarde » et « c'est frictionné un relais » — deux fautes, parce que « il y
 // a » réclame un groupe nominal nu et que « c'est » ne prend pas d'attribut
 // avant son sujet. « Il est court le temps de l'amour », si.
-const TETES_DISLOCATION = ['il est', 'elle est', 'il reste', 'il demeure',
-                           'il paraît', 'il semble', 'il devient', 'elle demeure']
-const TETES_SYNTAGME = ['dans', 'sous', 'contre', 'depuis', 'derrière', 'entre',
-                        'par-dessus', 'à même', 'vers', 'sans', 'au travers', 'auprès de']
+const TETES_DISLOCATION_FR = ['il est', 'elle est', 'il reste', 'il demeure',
+                              'il paraît', 'il semble', 'il devient', 'elle demeure']
+const TETES_SYNTAGME_FR = ['dans', 'sous', 'contre', 'depuis', 'derrière', 'entre',
+                           'par-dessus', 'à même', 'vers', 'sans', 'au travers', 'auprès de']
+// L'anglais n'a pas de dislocation à accorder, et les têtes françaises
+// passaient TELLES QUELLES dans un atelier anglais : « il est pale the
+// lamp ». Sa forme sœur est l'exclamative poétique — « how grand the
+// silence of the seasons » — même ordre (attelage, adjectif, groupe
+// nominal), ni virgule ni accord. Les prépositions, elles, se traduisent.
+const TETES_DISLOCATION_EN = ['how', 'so', 'too', 'how very', 'ever so', 'still']
+const TETES_SYNTAGME_EN = ['in', 'under', 'against', 'since', 'behind', 'between',
+                           'over', 'along', 'toward', 'without', 'through', 'beside']
+const TETES_DISLOCATION = langueActuelle() === 'en' ? TETES_DISLOCATION_EN : TETES_DISLOCATION_FR
+const TETES_SYNTAGME = langueActuelle() === 'en' ? TETES_SYNTAGME_EN : TETES_SYNTAGME_FR
 /**
  * Le mot d'attelage, en évitant ceux qui viennent de servir.
  *

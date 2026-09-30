@@ -8,7 +8,8 @@ import { useSound } from '../hooks/useSound'
 import type { ConfigDessin } from '../types'
 import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
+import { silhouette } from '../lib/corps'
 import { effacerBandesDessin } from '../db'
 
 const CONFIG_PAR_DEFAUT: ConfigDessin = {
@@ -119,7 +120,6 @@ export default function ConfigurationDessin() {
           <div className="flex gap-2">
             {[2, 3, 4, 5].map(n => {
               const active = config.nbBandes === n
-              const labels = ['', '', 'tête · corps', 'tête · corps · jambes', 'tête · corps · taille · jambes', 'tête · buste · ventre · hanches · jambes']
               return (
                 <button
                   key={n}
@@ -140,6 +140,11 @@ export default function ConfigurationDessin() {
               )
             })}
           </div>
+          {/* Ce que chaque bande dessinera — le joueur le retrouve sur son
+              écran de passage. */}
+          <p style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', color: encre, opacity: 0.7, marginTop: 8 }}>
+            {silhouette(config.nbBandes, langueActuelle()).toUpperCase()}
+          </p>
         </motion.div>
 
         {/* ── AUTOUR DE LA TABLE ── */}

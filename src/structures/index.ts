@@ -78,16 +78,23 @@ export const STRUCTURES_EN: Structure[] = [
 
   // 2. Full sentence — Breton's canonical form (5 cases)
   //    « The exquisite corpse shall drink the new wine »
+  //
+  //    L'ordre est celui de l'ANGLAIS, pas celui du français. La première
+  //    version recopiait « nom · adjectif · verbe · nom · adjectif » et la
+  //    phrase canonique elle-même sortait fautive : « the corpse exquisite
+  //    shall drink the wine new ». L'adjectif anglais précède le nom : la
+  //    case « article + adjectif » (« the exquisite ») puis le nom seul
+  //    (« corpse ») — cinq cases, comme en français, et la phrase de 1925.
   {
     id: 'phrase-etoffee',
     nom: 'Full sentence',
     description: "5 parts — Breton's canonical form",
     cases: [
-      { fonction: 'subject', consigne: 'article + noun — ex: "the corpse", "a shadow", "a knife"', type: 'groupe-nominal' },
-      { fonction: 'subject adjective', consigne: "a single adjective — ex: 'exquisite', 'nocturnal', 'broken'", type: 'adjectif' },
+      { fonction: 'subject adjective', consigne: 'article + adjective — ex: "the exquisite", "a nocturnal", "a broken"', type: 'article-adj' },
+      { fonction: 'subject', consigne: "a single noun — ex: 'corpse', 'shadow', 'knife'", type: 'nom' },
       { fonction: 'verb', consigne: "a conjugated verb — ex: 'drinks', 'devours', 'haunts'", type: 'verbe' },
-      { fonction: 'object', consigne: 'article + noun — ex: "the wine", "the flame", "a mirror"', type: 'groupe-nominal' },
-      { fonction: 'object adjective', consigne: "a single adjective — ex: 'new', 'opaque', 'hollow'", type: 'adjectif' },
+      { fonction: 'object adjective', consigne: 'article + adjective — ex: "the new", "an opaque", "a hollow"', type: 'article-adj' },
+      { fonction: 'object', consigne: "a single noun — ex: 'wine', 'flame', 'mirror'", type: 'nom' },
     ],
   },
 

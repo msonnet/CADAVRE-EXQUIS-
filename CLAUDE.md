@@ -1043,13 +1043,42 @@ TABLE » envoie un lien ; un invité sans identité passe par
 `/online?salon=KX7Q`, qui le lui dit et le ramène au salon dès qu'il a un
 nom de plume. Avant, le code se perdait en route.
 
+## Le lot des petits gains — 30 septembre
+
+**Les voix du poème du jour écrivent comme celles de l'Atelier**
+(`api/_vers.ts`). Deux copies d'une consigne générique — « Écris UN vers
+de poésie surréaliste » — sur le modèle des fragments, une réponse prise
+telle quelle. C'est ce que l'Atelier a abandonné. Désormais : le modèle
+des vers entiers, la persona avec son cadran (45 % métier), l'empreinte,
+trois propositions et `choisirProposition`, la longueur tirée de 3 à 8
+mots. `claude.ts` n'est PAS touché — on importe ses deux fonctions de
+sortie. `versDeVoix.test.ts` tient l'empreinte mot pour mot d'accord avec
+l'Atelier. **Non essayé avec une vraie clé** : le premier scellement après
+déploiement sera la mesure.
+
+**Chaque bande sait quelle partie du corps elle dessine** (`lib/corps.ts`).
+Les libellés dormaient dans un tableau que rien n'affichait. De deux à
+sept bandes — le salon va jusqu'à sept mains.
+
+**La Découverte donne la parole à deux voix** (`lib/decouverte.ts`). Le
+commentaire annonçait deux voix, la configuration une : le joueur écrivait
+deux fragments sur trois et la voix un seul mot. Le guide suit le nouvel
+ordre — « LA VOIX SUIVANTE », puis « Une seconde voix » qui écrit la fin,
+et le panneau porte le bouton qu'il recouvrirait.
+
+**L'anglais.** L'Atelier anglais attelait ses vers en français (« il est
+pale the lamp ») : la dislocation y devient l'exclamative poétique — « how
+grand the silence » — et les prépositions se traduisent. La phrase de
+Breton sortait « the corpse exquisite shall drink the wine new » : l'ordre
+anglais passe par la case `article-adj` (« the exquisite ») puis le nom.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (450 tests unitaires) + Playwright (75 tests E2E, FR et EN)
+- Tests : Vitest (510 tests unitaires) + Playwright (78 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

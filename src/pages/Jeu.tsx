@@ -21,10 +21,10 @@ import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
 import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { tr, langueActuelle } from '../i18n'
+import { buildSequence, type Participant } from '../lib/sequence'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
-type Participant = { type: 'humain'; num: number } | { type: 'ia' }
 type BrouillonActuel = { poemeId: string; config: ConfigPartie; cases: Case[]; caseIndex: number; voixParSlot?: Record<number, string>; total?: number }
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -42,46 +42,6 @@ const DUREE_HYPNOTIQUE = 30
 
 // ─── Fonctions pures ─────────────────────────────────────────────────────────
 
-/**
- * Construit la séquence de participants qui se répète sur toute la partie.
- * H et IA sont entrelacés autant que possible : H1, IA, H2, IA, H3…
- * En solo, premierJoueur détermine si H ou IA ouvre.
- */
-function buildSequence(
-  joueursHumains: number,
-  voixIA: number,
-  premierJoueur: 'humain' | 'ia'
-): Participant[] {
-  const nb = Math.max(1, joueursHumains)
-  const H: Participant[] = Array.from({ length: nb }, (_, i) => ({ type: 'humain' as const, num: i + 1 }))
-  const I: Participant[] = Array.from({ length: voixIA }, () => ({ type: 'ia' as const }))
-
-  if (I.length === 0) return H
-
-  // Entrelacement : le tableau le plus court s'intercale dans le plus long
-  const first  = nb >= I.length ? H : I
-  const second = nb >= I.length ? I : H
-  const seq: Participant[] = []
-  for (let i = 0; i < first.length; i++) {
-    seq.push(first[i])
-    if (i < second.length) seq.push(second[i])
-  }
-
-  // Rotation : garantir que le bon type ouvre la séquence.
-  // Uniquement en solo — en multijoueur elle inverserait l'ordre des joueurs
-  // (Joueur 2 avant Joueur 1) et casserait l'entrelacement.
-  if (nb === 1) {
-    if (premierJoueur === 'humain' && seq[0].type !== 'humain') {
-      const idx = seq.findIndex(p => p.type === 'humain')
-      if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
-    } else if (premierJoueur === 'ia' && seq[0].type !== 'ia') {
-      const idx = seq.findIndex(p => p.type === 'ia')
-      if (idx > 0) return [...seq.slice(idx), ...seq.slice(0, idx)]
-    }
-  }
-
-  return seq
-}
 
 /**
  * Combien de temps le rideau d'acte tient, en solo.
@@ -199,6 +159,7 @@ function normaliserCle(t: string): string {
 // ─── Fallbacks client ────────────────────────────────────────────────────────
 
 const FALLBACKS_CLIENT_EN: Record<string, string[]> = {
+  'article-adj': ['a dark', 'an old', 'the cold', 'a pale', 'the heavy', 'a slow', 'the black', 'a strange', 'the hollow', 'a broken', 'the mute', 'a deep'],
   nom: ['shadow', 'silence', 'night', 'ash', 'void', 'stone', 'mist', 'cold', 'dust', 'wind', 'rain', 'echo', 'flame', 'threshold'],
   verbe: ['slips', 'burns', 'falls', 'trembles', 'remains', 'vanishes', 'weighs', 'drifts', 'haunts', 'grazes', 'resists', 'murmurs', 'wavers', 'sinks'],
   adjectif: ['motionless', 'pale', 'deep', 'strange', 'broken', 'nocturnal', 'hollow', 'heavy', 'cold', 'bitter', 'veiled', 'opaque', 'slow', 'mute'],
@@ -397,6 +358,14 @@ export default function Jeu() {
   // ─── Dérivés ───────────────────────────────────────────────────────────────
 
   const participantActuel: Participant | undefined = participants[caseIndex]
+  // Ce qui vient après la voix — le bouton le dit. « Écrire la suite »
+  // devant une seconde voix promettait au joueur une case qui n'était pas
+  // la sienne : la Découverte en enchaîne deux.
+  const apresLaVoix = caseIndex + 1 >= total
+    ? tr('Dévoiler le poème', 'Reveal the poem')
+    : participants[caseIndex + 1]?.type === 'ia'
+      ? tr('La voix suivante', 'The next voice')
+      : tr('Écrire la suite', 'Write what follows')
   const defActuelle: DefinitionCase | undefined    = caseDefs[caseIndex]
   const modeHypnotique = config.mode === 'hypnotique'
   const multiJoueurs   = config.joueursHumains > 1
@@ -968,7 +937,7 @@ export default function Jeu() {
                   gap: 2, borderRadius: 3,
                 }}
               >
-                <span>{tr('Écrire la suite', 'Write what follows')}&nbsp;→</span>
+                <span>{apresLaVoix}&nbsp;→</span>
               </button>
             </motion.div>
           )}
@@ -1002,7 +971,25 @@ export default function Jeu() {
               iaAvancePendingRef.current = null
             }
           }}
-          labelCompris={tr('Écrire la suite →', 'Write what follows →')}
+          labelCompris={`${apresLaVoix} →`}
+          onPasser={tutTerminer}
+          accent={accent} encre={encre} bg={bg}
+        />
+        {/* La seconde voix de la Découverte : c'est elle qui écrit la fin. */}
+        <TutorielCoach
+          visible={tutActif && tutEtape === T_JEU_2}
+          etape={T_JEU_2} total={TUTORIEL_TOTAL}
+          titre={tr('Une seconde voix', 'A second voice')}
+          corps={tr('Elle ne sait rien de la première, ni de toi. C’est elle qui écrit la fin.', 'It knows nothing of the first voice, nor of you. It writes the ending.')}
+          // Le panneau couvre le bas de l'écran, où vit le bouton de
+          // passage : c'est donc lui qui le porte, comme à l'étape d'avant.
+          onCompris={() => {
+            if (iaAvancePendingRef.current) {
+              iaAvancePendingRef.current()
+              iaAvancePendingRef.current = null
+            }
+          }}
+          labelCompris={`${apresLaVoix} →`}
           onPasser={tutTerminer}
           accent={accent} encre={encre} bg={bg}
         />

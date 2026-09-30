@@ -20,7 +20,7 @@ const STRUCTURES_UI_FR: { id: StructureId; romain: string; label: string; descri
 ]
 const STRUCTURES_UI_EN: typeof STRUCTURES_UI_FR = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Short sentence', description: '3 parts · subject, verb, object', detail: 'The most direct form — one surrealist sentence in three fragments.' },
-  { id: 'phrase-etoffee', romain: 'II',  label: 'Full sentence',  description: "5 parts · Breton's canonical form", detail: 'The original 1925 structure: "The exquisite corpse shall drink the new wine" — article+noun · adjective · verb · article+noun · adjective.' },
+  { id: 'phrase-etoffee', romain: 'II',  label: 'Full sentence',  description: "5 parts · Breton's canonical form", detail: 'The original 1925 structure: "The exquisite corpse shall drink the new wine" — article+adjective · noun · verb · article+adjective · noun.' },
   { id: 'vers-libre',     romain: 'III', label: 'Free verse',     description: '4 to 12 lines · no constraint',   detail: 'Each player writes a whole line. The poem assembles with no grammatical rule.' },
 ]
 const STRUCTURES = langueActuelle() === 'en' ? STRUCTURES_UI_EN : STRUCTURES_UI_FR

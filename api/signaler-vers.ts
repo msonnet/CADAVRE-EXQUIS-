@@ -4,9 +4,9 @@ import { utilisateurDuJeton } from './_acces.js'
 import { clientAdmin, urlProjet } from './_supabase.js'
 import {
   refusDeSignalement, retirerVers, echoDuRang, SEUIL_RETRAIT,
-  MOTS_MAX, CARACTERES_MAX, dernierMot,
 } from './_jour.js'
-import { choisirVoixAleatoire, promptSysteme } from './_voices.js'
+import { choisirVoixAleatoire } from './_voices.js'
+import { ecrireVersDeVoix } from './_vers.js'
 
 export const config = { maxDuration: 30 }
 
@@ -130,38 +130,14 @@ export default async function handler(req: any, res: any): Promise<void> {
   const c = chaine as { amorce: string; langue: string } | null
   const echo = await echoDuRang(v!.chaine_id, v!.rang, c?.amorce ?? '')
   const voix = choisirVoixAleatoire()
-  const remplacement = await versDeVoix(voix, echo, c?.langue ?? 'fr')
+  // Un vers de remplacement, écrit sur le même écho que celui qu'il
+  // remplace, et comme tout vers de voix (`_vers.ts`).
+  const remplacement = await ecrireVersDeVoix(voix, echo, c?.langue ?? 'fr')
 
   const ok = await retirerVers(versId, remplacement, voix.id)
   res.status(ok ? 200 : 503).json({ signale: true, retire: ok })
 }
 
-/** Un vers de remplacement, écrit sur le même écho que celui qu'il remplace. */
-async function versDeVoix(voix: any, echo: string, langue: string): Promise<string | null> {
-  const cle = process.env.ANTHROPIC_API_KEY
-  if (!cle) return null
-  const consigne = langue === 'en'
-    ? `Write ONE line of surrealist free verse, 3 to 8 words, no final full stop. The previous line ended on the word "${echo}" — that is all you know of the poem. Answer with the line alone.`
-    : `Écris UN vers de poésie surréaliste, 3 à 8 mots, sans point final. Le vers précédent finissait sur le mot « ${echo} » — c'est tout ce que tu sais du poème. Réponds par le seul vers.`
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': cle, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6', max_tokens: 60,
-        system: promptSysteme(voix),
-        messages: [{ role: 'user', content: consigne }],
-      }),
-    })
-    if (!r.ok) return null
-    const data = await r.json()
-    const ligne = String(data?.content?.[0]?.text ?? '').split('\n').map(s => s.trim()).filter(Boolean)[0] ?? ''
-    const propre = ligne.replace(/^[«»"'\s]+|[«»"'\s.,;:!?]+$/g, '').trim()
-    if (!propre || propre.length > CARACTERES_MAX) return null
-    if (propre.split(/\s+/).filter(Boolean).length > MOTS_MAX) return null
-    return propre
-  } catch { return null }
-}
 
 /**
  * Courriel au modérateur. Rend `true` s'il est réellement parti.

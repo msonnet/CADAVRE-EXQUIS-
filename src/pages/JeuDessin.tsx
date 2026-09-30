@@ -7,7 +7,8 @@ import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
 import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
+import { partieDuCorps, partieNue } from '../lib/corps'
 import MiniCoach from '../components/MiniCoach'
 import { sauvegarderBandesDessin } from '../db'
 
@@ -824,6 +825,7 @@ export default function JeuDessin() {
           border: `0.5px solid ${TB_INK}25`, borderRadius: 3, pointerEvents: 'none',
         }}>
           {tr('JOUEUR', 'PLAYER')} {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
+          {partieNue(bandeIdx, config.nbBandes, langueActuelle()) && <> · {partieNue(bandeIdx, config.nbBandes, langueActuelle())!.toUpperCase()}</>}
         </div>
 
         {/* Quitter la partie — seule sortie sans passer par le geste OS */}
@@ -1198,13 +1200,15 @@ export default function JeuDessin() {
               style={{ textAlign: 'center' }}
             >
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
-                {tr('— BANDE', '— BAND')} 1/{config.nbBandes} —
+                {tr('— BANDE', '— BAND')} 1/{config.nbBandes} · {(partieNue(0, config.nbBandes, langueActuelle()) ?? '').toUpperCase()} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 {tr('Joueur', 'Player')} 1
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
-                {tr('Dessine la première bande.', 'Draw the first band.')}
+                {partieDuCorps(0, config.nbBandes, langueActuelle())
+                  ? tr(`Dessine ${partieDuCorps(0, config.nbBandes, 'fr')}.`, `Draw ${partieDuCorps(0, config.nbBandes, 'en')}.`)
+                  : tr('Dessine la première bande.', 'Draw the first band.')}
               </div>
             </motion.div>
 
@@ -1267,7 +1271,7 @@ export default function JeuDessin() {
               style={{ textAlign: 'center' }}
             >
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
-                {tr('— BANDE', '— BAND')} {bandeIdx + 2}/{config.nbBandes} —
+                {tr('— BANDE', '— BAND')} {bandeIdx + 2}/{config.nbBandes} · {(partieNue(bandeIdx + 1, config.nbBandes, langueActuelle()) ?? '').toUpperCase()} —
               </div>
               <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
                 {tr('Joueur', 'Player')} {nextPlayerNum}.

@@ -3,9 +3,10 @@ export const config = { maxDuration: 60 }
 import { cors } from './_cors.js'
 import {
   chainesAsceller, poserVersDeVoix, sceller, dernierMot,
-  PLANCHER_VERS, MOTS_MAX, CARACTERES_MAX,
+  PLANCHER_VERS,
 } from './_jour.js'
-import { choisirVoixAleatoire, promptSysteme } from './_voices.js'
+import { choisirVoixAleatoire } from './_voices.js'
+import { ecrireVersDeVoix } from './_vers.js'
 
 /**
  * Qui a le droit d'appeler le ménage.
@@ -145,7 +146,7 @@ async function scellerLesChainesDues() {
     for (let i = 0; i < c.manque; i++) {
       const rang = PLANCHER_VERS - c.manque + i + 1
       const voix = choisirVoixAleatoire()
-      const texte = await versDeVoix(voix, echo, c.langue)
+      const texte = await ecrireVersDeVoix(voix, echo, c.langue)
       if (!texte) break
       // On stocke l'IDENTIFIANT de la voix, pas son nom : les libellés
       // bilingues vivent dans `src/data/voiceIds.ts`, et un poème d'hier ne
@@ -161,52 +162,7 @@ async function scellerLesChainesDues() {
 }
 
 
-/**
- * Ce qu'on garde de la réponse du modèle.
- *
- * Il rend parfois plusieurs lignes, des guillemets, un point final, ou une
- * strophe entière quand la consigne l'inspire trop. Un vers de voix qui
- * déborderait casserait la règle que les mains humaines subissent — et la
- * chaîne serait injuste avant d'être belle. Sorti de l'appel réseau pour
- * être mesurable.
- */
-export function nettoyerVersDeVoix(brut: string): string | null {
-  const ligne = String(brut ?? '').split('\n').map(s => s.trim()).filter(Boolean)[0] ?? ''
-  const propre = ligne.replace(/^[«»"'\s]+|[«»"'\s.,;:!?]+$/g, '').trim()
-  if (!propre) return null
-  if (propre.length > CARACTERES_MAX) return null
-  if (propre.split(/\s+/).filter(Boolean).length > MOTS_MAX) return null
-  return propre
-}
-
-/** Un vers de voix, écrit sur le seul écho. */
-async function versDeVoix(voix: any, echo: string, langue: string): Promise<string | null> {
-  const cle = process.env.ANTHROPIC_API_KEY
-  if (!cle) return null
-
-  const consigne = langue === 'en'
-    ? `Write ONE line of surrealist free verse, 3 to 8 words, no final full stop. The previous line ended on the word "${echo}" — that is all you know of the poem. Answer with the line alone.`
-    : `Écris UN vers de poésie surréaliste, 3 à 8 mots, sans point final. Le vers précédent finissait sur le mot « ${echo} » — c'est tout ce que tu sais du poème. Réponds par le seul vers.`
-
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': cle,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 60,
-        system: promptSysteme(voix),
-        messages: [{ role: 'user', content: consigne }],
-      }),
-    })
-    if (!r.ok) return null
-    const data = await r.json()
-    return nettoyerVersDeVoix(String(data?.content?.[0]?.text ?? ''))
-  } catch {
-    return null
-  }
-}
+// `nettoyerVersDeVoix` et l'écriture du vers vivent dans `_vers.ts` : le
+// scellement et le remplacement d'un vers retiré écrivent de la même façon,
+// et comme l'Atelier écrit un vers entier.
+export { nettoyerVersDeVoix } from './_vers.js'

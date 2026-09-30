@@ -5,24 +5,11 @@ import PageTransition from '../components/PageTransition'
 import { useSound } from '../hooks/useSound'
 import { Decor, useReve } from '../reve'
 import { activerTutoriel } from '../hooks/useTutoriel'
-import type { ConfigPartie } from '../types'
 import { tr } from '../i18n'
 import { ouvrirPartieIA, nouvellePartieId, deposerRecu } from '../lib/acces'
+import { CONFIG_DECOUVERTE } from '../lib/decouverte'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
-
-// Partie Découverte : la plus courte possible (phrase courte = 3 fragments),
-// le joueur écrit le premier fragment, deux voix IA complètent à l'aveugle, puis
-// la révélation. But : faire VIVRE un cadavre exquis complet en ~30 s, sans une
-// seule décision de configuration — c'est la révélation qui fait comprendre le jeu.
-const CONFIG_DECOUVERTE: ConfigPartie = {
-  structureId: 'phrase-simple',
-  visibilite: 'aveugle',
-  premierJoueur: 'humain',
-  mode: 'standard',
-  joueursHumains: 1,
-  voixIA: 1,
-}
 
 export default function Decouverte() {
   const navigate = useNavigate()

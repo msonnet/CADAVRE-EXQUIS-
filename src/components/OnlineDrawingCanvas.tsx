@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { mono } from '../lib/typo'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
+import { partieNue } from '../lib/corps'
 
 type Tool = 'pencil' | 'pen' | 'marker' | 'brush' | 'crayon' | 'airbrush' | 'eraser'
 const TOOL_ORDER: Tool[] = ['pencil', 'pen', 'marker', 'brush', 'crayon', 'airbrush', 'eraser']
@@ -489,6 +490,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
         {/* Band badge — couleurs liées au papier pour rester lisible sur tout fond */}
         <div style={{ position: 'absolute', top: 10, left: 10, ...mono, fontSize: 13, color: paperDef.ink, background: `${paperDef.bg}ee`, padding: '4px 10px', border: `0.5px solid ${paperDef.ink}30`, borderRadius: 3, pointerEvents: 'none' }}>
           {tr('BANDE', 'BAND')} {bandeNum}/{totalBandes}
+          {partieNue(bandeNum - 1, totalBandes, langueActuelle()) && <> · {partieNue(bandeNum - 1, totalBandes, langueActuelle())!.toUpperCase()}</>}
         </div>
 
         {zoom > 1.05 && (

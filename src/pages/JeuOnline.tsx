@@ -13,6 +13,7 @@ import { mono } from '../lib/typo'
 import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { api } from '../lib/apiBase'
 import { tr } from '../i18n'
+import { partieNue } from '../lib/corps'
 import MiniCoach from '../components/MiniCoach'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -413,7 +414,8 @@ export default function JeuOnline() {
           style={{ position: 'fixed', inset: 0, zIndex: 50, background: encre, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, cursor: 'pointer', textAlign: 'center', padding: '0 28px' }}
         >
           <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em' }}>
-            {tr('— BANDE', '— BAND')} {(myEffectiveIndex ?? 0) + 1} {tr('SUR', 'OF')} {nbTotal} —
+            {tr('— BANDE', '— BAND')} {(myEffectiveIndex ?? 0) + 1} {tr('SUR', 'OF')} {nbTotal}
+            {partieNue(myEffectiveIndex ?? 0, nbTotal, langueRoom) && <> · {partieNue(myEffectiveIndex ?? 0, nbTotal, langueRoom)!.toUpperCase()}</>} —
           </div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 'clamp(2rem,9vw,3rem)', color: bg, lineHeight: 1.25 }}>
             {tr('À toi', 'Your turn')}<br />{tr('de dessiner', 'to draw')}
