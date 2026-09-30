@@ -258,7 +258,7 @@ export default function PoemeDetail() {
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
   const lignes = texteAffiche.split('\n')
-  const lettrine = lignes[0]?.trim().charAt(0) ?? ''
+  const lettrine = (lignes[0]?.trim().charAt(0) ?? '').toLocaleUpperCase()
   const resteLigne0 = lignes[0]?.trim().slice(1) ?? ''
   const voixCount = poeme.cases.length
   const structLabel = NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId

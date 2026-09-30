@@ -23,6 +23,7 @@ import { poemeDuSalon, idSalon } from '../lib/versRecueil'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
 import { libelleMains } from '../lib/attribution'
+import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
 import { api } from '../lib/apiBase'
 import { tr, langueActuelle } from '../i18n'
 
@@ -384,7 +385,10 @@ export default function FinOnline() {
   }
 
   const texteAffiche = texteCorrige ?? texteAssemble
-  const lignes = texteAffiche.split('\n')
+  // Un pli par main (`lib/plis.ts`) : chaque personne de la table a sa bande.
+  const lignes = (room && SE_PLIE_PAR_MAIN.has(room.structure_id)
+    ? bandesParMain([...contributions].sort((a, b) => a.case_index - b.case_index).map(c => c.texte), texteCorrige)
+    : null) ?? texteAffiche.split('\n')
 
   return (
     <>

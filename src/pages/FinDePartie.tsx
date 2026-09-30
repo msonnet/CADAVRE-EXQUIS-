@@ -19,6 +19,7 @@ import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import SoldeEncrier from '../components/SoldeEncrier'
 import { attribution, libelleMorceaux } from '../lib/attribution'
+import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
 import MainsDuVers from '../components/MainsDuVers'
 import { usePartage } from '../hooks/usePartage'
 import BoutonRecolte from '../components/BoutonRecolte'
@@ -237,7 +238,11 @@ export default function FinDePartie() {
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
-  const lignes = texteAffiche.split('\n')
+  // Une phrase se déplie un fragment par bande — un pli par main
+  // (`lib/plis.ts`). Les vers, eux, sont déjà une main par ligne.
+  const lignes = (SE_PLIE_PAR_MAIN.has(poeme.structureId)
+    ? bandesParMain(poeme.cases.map(c => c.texte), texteCorrige)
+    : null) ?? texteAffiche.split('\n')
   const voixCount = poeme.cases.length
 
   async function partager() {

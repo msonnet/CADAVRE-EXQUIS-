@@ -62,7 +62,10 @@ export default function PoemeDevoile({
 
   // Le premier vers cède sa première lettre à la lettrine.
   const ligne0 = (lignes[0]?.trim() ?? '').replace(OUVRANTS, '')
-  const capitale = lettrine ? ligne0.charAt(0) : ''
+  // Une lettrine est une CAPITALE. Les fragments se cousent en minuscule, et
+  // un « l » bas-de-casse en Bodoni, à cette taille, se lisait comme un
+  // trait rouge — « | a balance rouillée ».
+  const capitale = lettrine ? ligne0.charAt(0).toLocaleUpperCase() : ''
   const affichees = useMemo(
     () => (capitale ? [ligne0.slice(1), ...lignes.slice(1)] : lignes),
     [lignes, capitale, ligne0],
