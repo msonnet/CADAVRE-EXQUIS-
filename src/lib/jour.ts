@@ -116,11 +116,46 @@ export async function dernierPoemeScelle(): Promise<PoemeScelle | null> {
       .limit(1)
       .maybeSingle()
     if (!chaine) return null
+    return await lirePoemeScelle(chaine as ChaineScellee)
+  } catch {
+    return null
+  }
+}
 
+/** Une journée scellée, telle que l'almanach la liste. */
+export interface ChaineScellee { id: string; jour: string; amorce: string }
+
+/**
+ * L'almanach — les poèmes scellés des jours passés, du plus récent au plus
+ * ancien.
+ *
+ * Avant, seul le poème de la veille se relisait : un jour manqué, et le
+ * poème d'avant-hier n'existait plus nulle part pour personne. Les droits
+ * le permettaient déjà — un vers scellé se lit par tous — seule la page
+ * n'allait pas le chercher.
+ */
+export async function almanach(limite = 30): Promise<ChaineScellee[]> {
+  try {
+    const { data } = await supabase
+      .from('jour_chaines')
+      .select('id,jour,amorce')
+      .eq('langue', langueActuelle())
+      .not('scelle_le', 'is', null)
+      .order('jour', { ascending: false })
+      .limit(limite)
+    return Array.isArray(data) ? (data as ChaineScellee[]) : []
+  } catch {
+    return []
+  }
+}
+
+/** Les vers d'une journée scellée, et ta place parmi eux. */
+export async function lirePoemeScelle(c: ChaineScellee): Promise<PoemeScelle | null> {
+  try {
     const { data: vers } = await supabase
       .from('jour_vers')
       .select('id,rang,texte,pseudo,voix,voix_nom,main_id,retire')
-      .eq('chaine_id', (chaine as { id: string }).id)
+      .eq('chaine_id', c.id)
       .order('rang', { ascending: true })
 
     const { data: { session } } = await supabase.auth.getSession()
@@ -131,7 +166,6 @@ export async function dernierPoemeScelle(): Promise<PoemeScelle | null> {
       voix: boolean; voix_nom: string | null; main_id: string | null; retire: boolean
     }[]
 
-    const c = chaine as { jour: string; amorce: string }
     return {
       jour: c.jour,
       amorce: c.amorce,

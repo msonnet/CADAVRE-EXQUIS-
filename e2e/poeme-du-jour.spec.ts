@@ -312,3 +312,47 @@ test('un visiteur qui n’a rien écrit ne s’en voit rien ajouter', async ({ p
   await page.waitForTimeout(900)
   expect(await page.getByText('la porte bat dans le grenier').count()).toBe(0)
 })
+
+test('l’almanach garde les jours d’avant, et chacun s’ouvre plié', async ({ page }) => {
+  // Avant, seul le poème de la veille se relisait : un jour manqué, et le
+  // poème d'avant-hier n'existait plus nulle part.
+  await poser(page, { hier: true })
+  const CHAINES = [
+    CHAINE_SCELLEE,
+    { id: 'c0', jour: '2026-09-19', amorce: 'une échelle' },
+    { id: 'c-1', jour: '2026-09-18', amorce: 'le givre' },
+  ]
+  await page.route('**/rest/v1/jour_chaines**', r => {
+    // Le dernier poème se demande avec `limit=1` ; l'almanach, avec trente.
+    const dernier = r.request().url().includes('limit=1&') || r.request().url().endsWith('limit=1')
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dernier ? CHAINES[0] : CHAINES) })
+  })
+  await page.route('**/rest/v1/jour_vers**', r => {
+    const ancien = r.request().url().includes('chaine_id=eq.c0')
+    return r.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify(ancien
+        ? [{ rang: 1, texte: 'une échelle monte dans le puits', pseudo: 'Nadja', voix: false, voix_nom: null, main_id: 'x', retire: false, id: 'a1' }]
+        : VERS_SCELLES),
+    })
+  })
+  await ouvrir(page)
+
+  const almanach = page.getByRole('navigation', { name: /Almanach|Almanac/ })
+  await expect(almanach).toBeVisible()
+  await expect(almanach.getByText('une échelle')).toBeVisible()
+  await expect(almanach.getByText('le givre')).toBeVisible()
+  // Le poème affiché n'y figure pas deux fois.
+  await expect(almanach.getByText('le sel')).toHaveCount(0)
+
+  await almanach.getByRole('button', { name: /une échelle/ }).click()
+  await expect(page.getByText(/— DANS L’ALMANACH —|— FROM THE ALMANAC —/)).toBeVisible()
+  // Il arrive plié : rien du poème avant le geste.
+  expect(await page.evaluate(() => document.body.innerText)).not.toContain('une échelle monte')
+  await page.getByRole('button', { name: /Déplier le poème|Unfold the poem/ }).click()
+  await expect(page.getByText('une échelle monte dans le puits')).toBeVisible({ timeout: 15000 })
+
+  // Et l'on revient au dernier.
+  await page.getByRole('button', { name: /LE DERNIER|THE LATEST/ }).click()
+  await expect(page.getByText(/— LE POÈME ACHEVÉ —|— THE FINISHED POEM —/)).toBeVisible()
+})

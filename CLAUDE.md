@@ -54,7 +54,6 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 #### Non bloquants (v1.1)
 - [ ] React Router v7 (2 vulnérabilités modérées non atteignables — voir le dossier de soumission)
 - [ ] Haptique iOS : brancher `@capacitor/haptics` (`navigator.vibrate` est ignoré par le WKWebView)
-- [ ] `useAmbiance` est un moignon : le bouton son du mode dessin ne coupe rien
 - [ ] Minuteur de tour en ligne côté serveur (une partie attend si le joueur ferme l'app)
 - [ ] Mode spectateur codé mais sans point d'entrée
 - [ ] Réactions et vues de la galerie invisibles pour l'auteur
@@ -1072,13 +1071,46 @@ grand the silence » — et les prépositions se traduisent. La phrase de
 Breton sortait « the corpse exquisite shall drink the wine new » : l'ordre
 anglais passe par la case `article-adj` (« the exquisite ») puis le nom.
 
+## Le lot des grands gains — 30 septembre
+
+**Le dessin se découvre entier, couture par couture** (`RevealDessin`,
+`lib/devoilementDessin.ts`). `objectFit: cover` rognait la tête ou les
+pieds d'un dessin plus haut que l'écran ; le balayage suivait trois tiers
+fixes quel que soit le nombre de bandes ; et l'écran n'ouvrait qu'après la
+lecture du modèle — jusqu'à vingt secondes d'attente. Le dessin est
+contenu, le balayage s'arrête sur les vraies coutures (l'assemblage les
+rend), la lecture arrive quand elle arrive et prend la place que le dessin
+lui cède en remontant. De deux à sept bandes, sous cinq secondes.
+
+**Un pli par main** (`lib/plis.ts`). Une phrase courte ou étoffée se
+recomposait en UNE ligne : le dépli n'ouvrait qu'un volet. Elle se déplie
+désormais un fragment par bande, comme la feuille dépliée ; la correction
+d'accord retrouve ses bandes en comptant les mots. Le recueil, le partage
+et l'export gardent la phrase d'un seul tenant. **C'est un changement
+d'apparence du feuillet de fin de partie** — réversible en une ligne.
+La lettrine est une capitale : un « l » en Bodoni se lisait comme un trait.
+
+**Le papier s'entend** (`audio/papier.ts`). Des sinusoïdes de 110 à 330 Hz
+derrière un passe-bas : la bande qu'un téléphone ne rend pas. Bruit filtré
+entre 1 et 6 kHz — pli, feuille, plume — tiré à chaque appel ; chaque volet
+du dépli s'annonce. Lettrine mesurée derrière un haut-parleur simulé :
+−32,7 → −21,4 dB de pic. Le bouton son coupe enfin quelque chose, et une
+ligne SONS vit dans les Réglages. L'ambiance reste coupée.
+
+**L'almanach** (`almanach()`, `lirePoemeScelle()`). Seul le poème de la
+veille se relisait. Les trente derniers jours scellés se listent sous le
+poème, chacun s'ouvre plié, avec son dépli et ses coutures ; « ← LE
+DERNIER » ramène. La clé `cadavre-jour-deplie` retient désormais plusieurs
+jours (l'ancienne valeur, un jour seul, se lit encore). Un poème ancien où
+l'on a écrit entre aussi au recueil.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (510 tests unitaires) + Playwright (78 tests E2E, FR et EN)
+- Tests : Vitest (535 tests unitaires) + Playwright (79 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

@@ -18,8 +18,8 @@ import { mentionIA } from '../lib/attribution'
 import { nomDeVoix } from '../data/voiceIds'
 import { refusDuVers, MOTS_MAX, type RefusVers } from '../lib/jourLogique'
 import {
-  lireJour, poserVers, dernierPoemeScelle, signalerVers,
-  type EtatDuJour, type PoemeScelle, type MotifRefus,
+  lireJour, poserVers, dernierPoemeScelle, signalerVers, almanach, lirePoemeScelle,
+  type EtatDuJour, type PoemeScelle, type MotifRefus, type ChaineScellee,
 } from '../lib/jour'
 import { pointerSerie } from '../utils/streak'
 import { annoncerScellement } from '../utils/notifications'
@@ -61,6 +61,12 @@ function libelleRefus(m: MotifRefus | RefusVers): string {
   }
 }
 
+/** « 22 sept. » — le jour UTC d'une chaîne, dans la langue du joueur. */
+function dateAlmanach(jour: string): string {
+  const d = new Date(`${jour}T12:00:00Z`)
+  return d.toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'short', timeZone: 'UTC' })
+}
+
 export default function PoemeDuJour() {
   const navigate = useNavigate()
   const seance = useReve()
@@ -72,6 +78,11 @@ export default function PoemeDuJour() {
 
   const [etat, setEtat] = useState<EtatDuJour | null>(null)
   const [hier, setHier] = useState<PoemeScelle | null>(null)
+  /** L'almanach — les journées scellées, et laquelle est la dernière. */
+  const [jours, setJours] = useState<ChaineScellee[]>([])
+  const [dernier, setDernier] = useState<string | null>(null)
+  const [ouverture, setOuverture] = useState<string | null>(null)
+  const haut = useRef<HTMLDivElement>(null)
   const [chargement, setChargement] = useState(true)
   const [texte, setTexte] = useState('')
   const [envoi, setEnvoi] = useState(false)
@@ -96,8 +107,21 @@ export default function PoemeDuJour() {
     d'ambiance et que la série.
   */
   const CLE_DEPLI = 'cadavre-jour-deplie'
-  const dejaDeplie = (jour: string) => {
-    try { return localStorage.getItem(CLE_DEPLI) === jour } catch { return false }
+  // Plusieurs jours, depuis l'almanach : ouvrir un poème ancien ne doit pas
+  // faire rejouer le dépli du dernier. L'ancienne valeur — un jour seul —
+  // se lit encore.
+  const joursDeplies = (): string[] => {
+    try {
+      const v = localStorage.getItem(CLE_DEPLI) ?? ''
+      return v.startsWith('[') ? JSON.parse(v) : v ? [v] : []
+    } catch { return [] }
+  }
+  const dejaDeplie = (jour: string) => joursDeplies().includes(jour)
+  const marquerDeplie = (jour: string) => {
+    try {
+      const l = [jour, ...joursDeplies().filter(j => j !== jour)].slice(0, 20)
+      localStorage.setItem(CLE_DEPLI, JSON.stringify(l))
+    } catch { /* mode privé */ }
   }
   const [deplie, setDeplie] = useState(false)
   /**
@@ -119,22 +143,43 @@ export default function PoemeDuJour() {
   useEffect(() => {
     let vivant = true
     ;(async () => {
-      const [e, h] = await Promise.all([lireJour(), dernierPoemeScelle()])
+      const [e, h, a] = await Promise.all([lireJour(), dernierPoemeScelle(), almanach()])
       if (!vivant) return
-      setEtat(e); setHier(h); setChargement(false)
-      // Qui a posé un vers garde le poème : il entre au recueil, avec les
-      // noms des mains. Sans geste — les deux boutons sous le poème restent
-      // deux. Un visiteur qui n'a rien écrit ne s'en voit rien ajouter.
-      if (h && h.monRang !== null) {
-        garderSiAbsent(poemeDuJour({ langue: langueActuelle(), jour: h.jour, vers: h.vers }))
-          .catch(() => { /* stockage refusé : le poème reste lisible ici */ })
-      }
-      // Déjà déplié aujourd'hui : le feuillet s'ouvre à plat, sans
-      // redemander le geste ni rejouer la séquence.
-      if (h && dejaDeplie(h.jour)) { setDeplie(true); setRevele(true) }
+      setEtat(e); setChargement(false); setJours(a)
+      montrer(h)
+      if (h) setDernier(h.jour)
     })()
     return () => { vivant = false }
   }, [])
+
+  /** Montrer un poème scellé — le dernier, ou un jour de l'almanach. */
+  function montrer(h: PoemeScelle | null) {
+    setHier(h)
+    setToutVoir(false)
+    setCoutures(true)
+    // Qui a posé un vers garde le poème : il entre au recueil, avec les
+    // noms des mains. Sans geste — les deux boutons sous le poème restent
+    // deux. Un visiteur qui n'a rien écrit ne s'en voit rien ajouter.
+    if (h && h.monRang !== null) {
+      garderSiAbsent(poemeDuJour({ langue: langueActuelle(), jour: h.jour, vers: h.vers }))
+        .catch(() => { /* stockage refusé : le poème reste lisible ici */ })
+    }
+    // Déjà déplié : le feuillet s'ouvre à plat, sans redemander le geste ni
+    // rejouer la séquence. Sinon il arrive plié.
+    const ouvert = !!h && dejaDeplie(h.jour)
+    setDeplie(ouvert); setRevele(ouvert)
+  }
+
+  async function ouvrirJour(c: ChaineScellee) {
+    if (ouverture || c.jour === hier?.jour) return
+    jouer('feuille')
+    setOuverture(c.jour)
+    const p = await lirePoemeScelle(c)
+    setOuverture(null)
+    if (!p) return
+    montrer(p)
+    haut.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   async function envoyer() {
     if (envoi) return
@@ -342,15 +387,29 @@ export default function PoemeDuJour() {
             {/* ── LE POÈME D'HIER, SCELLÉ ── */}
             {hier && (
               <motion.div
+                key={hier.jour}
+                ref={haut}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                style={{ marginTop: 20 }}
+                style={{ marginTop: 20, scrollMarginTop: 16 }}
               >
                 <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.14, marginBottom: 14 }} />
-                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 4 }}>
-                  {tr('— LE POÈME ACHEVÉ —', '— THE FINISHED POEM —')}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
+                  <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+                    {hier.jour === dernier
+                      ? tr('— LE POÈME ACHEVÉ —', '— THE FINISHED POEM —')
+                      : tr('— DANS L’ALMANACH —', '— FROM THE ALMANAC —')}
+                  </div>
+                  {dernier && hier.jour !== dernier && (
+                    <button
+                      onClick={() => { const c = jours.find(j => j.jour === dernier); if (c) void ouvrirJour(c) }}
+                      style={{ ...mono, fontSize: 12, letterSpacing: '0.12em', color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0' }}
+                    >
+                      ← {tr('LE DERNIER', 'THE LATEST')}
+                    </button>
+                  )}
                 </div>
                 <div style={{ ...mono, fontSize: 11, color: encre, opacity: 0.5, letterSpacing: '0.12em', marginBottom: 14 }}>
-                  {hier.jour} · {hier.vers.length} {hier.vers.length > 1 ? tr('VERS', 'LINES') : tr('VERS', 'LINE')}
+                  {dateAlmanach(hier.jour).toUpperCase()} · {hier.vers.length} {hier.vers.length > 1 ? tr('VERS', 'LINES') : tr('VERS', 'LINE')}
                   {' · '}
                   {hier.vers.filter(v => !v.voix).length} {tr('MAINS', 'HANDS')}
                 </div>
@@ -428,7 +487,7 @@ export default function PoemeDuJour() {
                           }}
                           onFini={() => {
                             setRevele(true)
-                            try { localStorage.setItem(CLE_DEPLI, hier.jour) } catch { /* mode privé */ }
+                            marquerDeplie(hier.jour)
                           }}
                         />
                       </div>
@@ -605,6 +664,40 @@ export default function PoemeDuJour() {
                   )
                 })()}
               </motion.div>
+            )}
+
+            {/* ── L'ALMANACH ──
+                Les journées d'avant. Un jour manqué ne fait plus disparaître
+                un poème : il reste ici, plié, jusqu'à ce qu'on l'ouvre. */}
+            {jours.filter(j => j.jour !== hier?.jour).length > 0 && (
+              <nav aria-label={tr('Almanach des poèmes du jour', 'Almanac of daily poems')} style={{ marginTop: 28 }}>
+                <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.14, marginBottom: 14 }} />
+                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
+                  {tr('— L’ALMANACH —', '— THE ALMANAC —')}
+                </div>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {jours.filter(j => j.jour !== hier?.jour).map(j => (
+                    <li key={j.id} style={{ borderBottom: `0.5px solid ${encre}10` }}>
+                      <button
+                        onClick={() => void ouvrirJour(j)}
+                        disabled={!!ouverture}
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'baseline', gap: 14, textAlign: 'left',
+                          background: 'none', border: 'none', cursor: ouverture ? 'wait' : 'pointer',
+                          padding: '12px 0', minHeight: 44, color: encre,
+                        }}
+                      >
+                        <span style={{ ...mono, fontSize: 12, letterSpacing: '0.12em', opacity: 0.6, flexShrink: 0, minWidth: '7.5em' }}>
+                          {dateAlmanach(j.jour).toUpperCase()}
+                        </span>
+                        <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 16, opacity: ouverture === j.jour ? 0.45 : 0.85 }}>
+                          {j.amorce}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
             )}
           </>
         )}
