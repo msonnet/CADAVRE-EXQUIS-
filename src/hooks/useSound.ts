@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import { getAudioContext, notifyContextRunning } from '../audio/sharedCtx'
-import { pli, feuille, plume, sonsActifs } from '../audio/papier'
+import { sonsActifs } from '../audio/reglageSons'
 
 export type SoundName =
   | 'demarrage'
@@ -12,8 +12,6 @@ export type SoundName =
   | 'abandon'
   | 'fin'
   | 'glisser'
-  | 'pli'
-  | 'feuille'
 
 function note(
   ctx: AudioContext,
@@ -41,6 +39,7 @@ export function useSound() {
   const filterRef = useRef<BiquadFilterNode | null>(null)
 
   const jouer = useCallback((son: SoundName) => {
+    // Le réglage SONS : le silence choisi vaut pour tous les sons.
     if (!sonsActifs()) return
     try {
       const ctx = getAudioContext()
@@ -54,9 +53,6 @@ export function useSound() {
           filterRef.current = f
         }
         const dest = filterRef.current
-        // Le papier ne passe pas par le passe-bas : il vit au-dessus de
-        // 1 kHz, là où le haut-parleur d'un téléphone rend quelque chose.
-        const brut = ctx.destination
         const t = ctx.currentTime
 
         switch (son) {
@@ -67,11 +63,9 @@ export function useSound() {
             break
           }
           case 'soumettre': {
-            // Deux notes — le fragment se scelle — et la plume qui gratte,
-            // seule audible sur un téléphone.
+            // Deux notes — le fragment se scelle
             note(ctx, dest, 330, t, 0.55, 0.06)
             note(ctx, dest, 440, t + 0.06, 0.45, 0.04)
-            plume(ctx, brut, t)
             break
           }
           case 'revelation': {
@@ -92,13 +86,9 @@ export function useSound() {
             break
           }
           case 'lettrine': {
-            // Impact grave — la grande lettre tombe sur la page. Le grave
-            // reste pour les casques ; la feuille et l'octave le font
-            // entendre sur un haut-parleur, qui ne rend rien à 110 Hz.
+            // Impact grave — la grande lettre tombe sur la page
             note(ctx, dest, 110, t, 1.0, 0.09)
             note(ctx, dest, 165.4, t + 0.06, 0.8, 0.045)
-            note(ctx, dest, 440, t + 0.02, 0.9, 0.03, 'triangle')
-            feuille(ctx, brut, t)
             break
           }
           case 'abandon': {
@@ -114,16 +104,6 @@ export function useSound() {
             note(ctx, dest, 220, t + 0.14, 1.0, 0.055)
             note(ctx, dest, 261.6, t + 0.30, 1.8, 0.065)
             note(ctx, dest, 329.6, t + 0.50, 2.5, 0.045)
-            break
-          }
-          case 'pli': {
-            // Un volet du feuillet se déplie
-            pli(ctx, brut, t)
-            break
-          }
-          case 'feuille': {
-            // Une feuille posée — le feuillet fermé, l'écran de passage
-            feuille(ctx, brut, t)
             break
           }
           case 'glisser': {
