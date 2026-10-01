@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -12,6 +12,7 @@ import { mono } from '../lib/typo'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { libelleMorceaux, libelleMains } from '../lib/attribution'
 import { mainsDuPoeme } from '../lib/versRecueil'
+import { registreDesVoix } from '../lib/registreVoix'
 import { composerTexte, composerSauvegarde, lireSauvegarde, nomDeFichier } from '../lib/recueil'
 import { tr } from '../i18n'
 import { emporterFichier } from '../lib/emporter'
@@ -95,6 +96,9 @@ export default function Bibliotheque() {
   const seance = useReve()
   const { jouer } = useSound()
   const [nRecolte, setNRecolte] = useState(0)
+  // Combien de voix ont écrit dans le recueil : relu des poèmes déjà
+  // chargés, aucune lecture de plus.
+  const nVoix = useMemo(() => registreDesVoix(poemes).size, [poemes])
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -186,6 +190,28 @@ export default function Bibliotheque() {
             ◆ {tr('LE CARNET', 'THE NOTEBOOK')}
             <span style={{ color: encre, opacity: 0.45, marginLeft: 10 }}>
               {nRecolte} {tr('vers gardé', 'line kept')}{nRecolte > 1 ? tr('s', 's') : ''}
+            </span>
+          </button>
+        )}
+
+        {/* ── LE REGISTRE DES VOIX ── */}
+        {/* Même règle que le carnet : l'entrée n'existe que si une voix a
+            écrit dans un poème du recueil. Un registre vide n'apprendrait
+            rien, sinon qu'il reste quarante-six places à remplir — et le
+            registre n'est pas une collection. */}
+        {!chargement && nVoix > 0 && (
+          <button
+            onClick={() => { jouer('clic'); navigate('/voix') }}
+            style={{
+              ...mono, fontSize: 12, letterSpacing: '0.15em', color: accent,
+              background: 'none', border: `1px solid ${accent}44`, borderRadius: 3,
+              cursor: 'pointer', padding: '10px 14px', marginBottom: 14, minHeight: 44,
+              textAlign: 'left', width: '100%',
+            }}
+          >
+            ✦ {tr('LE REGISTRE DES VOIX', 'THE REGISTER OF VOICES')}
+            <span style={{ color: encre, opacity: 0.45, marginLeft: 10 }}>
+              {nVoix === 1 ? tr('une voix', 'one voice') : tr(`${nVoix} voix`, `${nVoix} voices`)}
             </span>
           </button>
         )}

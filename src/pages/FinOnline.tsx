@@ -22,7 +22,7 @@ import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration } from '../d
 import { poemeDuSalon, idSalon } from '../lib/versRecueil'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
-import { libelleMains } from '../lib/attribution'
+import { libelleMains, nomAffiche } from '../lib/attribution'
 import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
 import { api } from '../lib/apiBase'
 import { tr, langueActuelle } from '../i18n'
@@ -604,7 +604,9 @@ export default function FinOnline() {
                               <span style={{ ...mono, fontSize: 13, color: accent }}>{p?.pseudo ?? '?'}</span>
                               {c.voice_name && (
                                 <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
-                                  via {c.voice_name}
+                                  {/* Le salon garde l'identifiant de la voix : « via meteorologue »
+                                      s'affichait tel quel. Le nom, en minuscule après « via ». */}
+                                  via {nomAffiche(c.voice_name).replace(/^./, l => l.toLowerCase())}
                                 </span>
                               )}
                             </div>

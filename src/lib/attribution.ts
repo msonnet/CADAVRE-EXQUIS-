@@ -1,5 +1,6 @@
 import type { Case } from '../types'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
+import { NOMS_VOIX, nomDeVoix, nomsDeVoix } from '../data/voiceIds'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -22,9 +23,36 @@ function toRomain(n: number): string {
  * lectures. Le nombre passe devant les noms — sur une table de quarante-six,
  * savoir qu'un vers a été écrit par cinq mains dit quelque chose que la liste
  * des cinq noms ne dit pas.
+ *
+ * ── L'identifiant qui s'affichait nu ──────────────────────────────────────
+ *
+ * Le cadavre écrit, le salon et le poème du jour gardent l'IDENTIFIANT de la
+ * voix que le serveur renvoie, et l'Atelier son nom. Les coutures du cadavre
+ * écrit annonçaient donc « voix · meteorologue », sans article ni accent.
+ * `nomAffiche` rend le nom quand il reçoit un identifiant, et laisse tel
+ * quel un nom déjà écrit — y compris la langue où la séance s'est jouée.
  */
 export function attribution(c: Case, iaNum?: number): string {
-  const noms = c.voixNom ? ` · ${c.voixNom}` : ''
+  const { texte, voix } = attributionEnMorceaux(c, iaNum)
+  return voix.length ? `${texte} · ${voix.map(nomAffiche).join(' · ')}` : texte
+}
+
+/** Le nom d'une voix tel que les coutures l'impriment. */
+export function nomAffiche(nom: string): string {
+  return Object.prototype.hasOwnProperty.call(NOMS_VOIX, nom) ? nomDeVoix(nom, langueActuelle()) : nom
+}
+
+/**
+ * La même phrase, coupée en deux : ce qui précède les noms, et les noms.
+ *
+ * Les coutures du recueil font de chaque nom un lien vers la fiche de la
+ * voix ; elles ont besoin des noms À PART pour les poser un par un. Une
+ * seule fonction décide quand les noms suivent — l'autre ne fait que coller.
+ */
+export function attributionEnMorceaux(c: Case, iaNum?: number): { texte: string; voix: string[] } {
+  const noms = nomsDeVoix(c.voixNom)
+  const avec = (texte: string) => ({ texte, voix: noms })
+  const seul = (texte: string) => ({ texte, voix: [] as string[] })
 
   // ── Vers d'atelier : le nombre de mains d'abord ──────────────────────
   if (typeof c.nbVoix === 'number') {
@@ -33,23 +61,23 @@ export function attribution(c: Case, iaNum?: number): string {
       ? tr('une voix', 'one voice')
       : `${n} ${tr('voix', 'voices')}`
 
-    if (c.auteur === 'humain' || n === 0) return tr('toi seul', 'you alone')
-    if (c.auteur === 'mixte') return `${tr('toi et', 'you and')} ${compte}${noms}`
-    return `${compte}${noms}`
+    if (c.auteur === 'humain' || n === 0) return seul(tr('toi seul', 'you alone'))
+    if (c.auteur === 'mixte') return avec(`${tr('toi et', 'you and')} ${compte}`)
+    return avec(compte)
   }
 
   // ── Cadavre écrit : une seule main par case ──────────────────────────
   if (c.auteur === 'ia') {
     const num = iaNum !== undefined ? ` ${iaNum}` : ''
-    return `${tr('voix', 'voice')}${num}${noms}`
+    return avec(`${tr('voix', 'voice')}${num}`)
   }
-  if (c.joueurNumero) return `${tr('joueur', 'player')} ${c.joueurNumero}`
+  if (c.joueurNumero) return seul(`${tr('joueur', 'player')} ${c.joueurNumero}`)
   // Salon et poème du jour : une vraie personne, nommée. Une main restée
   // anonyme n'est pas « toi » pour autant — c'était le repli d'avant.
-  if (c.moi) return tr('toi', 'you')
-  if (c.pseudo) return c.pseudo
-  if ('moi' in c || 'pseudo' in c) return tr('une main', 'a hand')
-  return tr('toi', 'you')
+  if (c.moi) return seul(tr('toi', 'you'))
+  if (c.pseudo) return seul(c.pseudo)
+  if ('moi' in c || 'pseudo' in c) return seul(tr('une main', 'a hand'))
+  return seul(tr('toi', 'you'))
 }
 
 /**

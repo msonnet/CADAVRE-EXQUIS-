@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { attribution, libelleMorceaux } from '../lib/attribution'
+import { attribution, attributionEnMorceaux, libelleMorceaux } from '../lib/attribution'
 import MainsDuVers from '../components/MainsDuVers'
+import LienVoix from '../components/LienVoix'
 import BoutonRecolte from '../components/BoutonRecolte'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
 import { corrigerAccords } from '../api/corriger'
@@ -583,13 +584,19 @@ export default function PoemeDetail() {
                     {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
                     <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
                     <span style={{ fontFamily: "'Playfair Display', serif", textTransform: 'none', letterSpacing: 0 }}>
-                      {attribution(cas)}
+                      {/* Chaque nom de voix mène à sa fiche du registre : c'est
+                          ici qu'on rencontre le vers aimé, c'est d'ici qu'on
+                          doit pouvoir retrouver qui l'a écrit. */}
+                      {(() => {
+                        const { texte, voix } = attributionEnMorceaux(cas)
+                        return <>{texte}{voix.map((v, k) => <React.Fragment key={k}> · <LienVoix nom={v} /></React.Fragment>)}</>
+                      })()}
                     </span>
                   </div>
                   <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                     {cas.texte}
                   </p>
-                  {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} /> : null}
+                  {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} liens /> : null}
                   <BoutonRecolte
                     texte={cas.texte}
                     accent={accent}

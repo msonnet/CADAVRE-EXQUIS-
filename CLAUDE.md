@@ -1104,13 +1104,56 @@ DERNIER » ramène. La clé `cadavre-jour-deplie` retient désormais plusieurs
 jours (l'ancienne valeur, un jour seul, se lit encore). Un poème ancien où
 l'on a écrit entre aussi au recueil.
 
+## Le registre des voix — 1ᵉʳ octobre
+
+Les voix n'avaient ni visage ni mémoire : un nom en italique dans les
+coutures, puis plus rien. Aucune page ne les recensait, `/voix` retombait
+sur l'accueil, et l'on ne pouvait pas retrouver celle qui avait écrit le
+vers qu'on aimait.
+
+**`/voix` — l'index des contributeurs, à la manière d'une revue.** Les
+quarante-six places sont imprimées, numérotées dans l'ordre fixe de
+`VOICE_IDS` (« N° 03 ») ; celles qu'on n'a pas rencontrées restent en
+blanc, une cote et un filet, sans nom. Une voix rencontrée porte sa
+lettrine — sa capitale en Bodoni, à l'accent, à côté du nom entier —, son
+épigraphe et le nombre de séances. **Ce n'est pas une collection** : aucun
+« sur 46 », aucune rareté, aucun badge. **`/voix/:id`** — la fiche : la
+date de la première séance, et ce qu'elle a écrit dans tes poèmes, chaque
+ligne menant au poème, coutures ouvertes.
+
+- **Tout est relu du recueil local** (`lib/registreVoix.ts`, sans Dexie) :
+  rien ne part au serveur, rien n'est écrit. Une voix ne reçoit que ce
+  qu'elle a ÉCRIT — à l'Atelier sa case, posée dans son vers à l'accent ;
+  la réserve n'est à personne.
+- **La même voix sous trois écritures.** Le cadavre écrit, le salon et le
+  poème du jour gardent l'IDENTIFIANT (« meteorologue »), l'Atelier le NOM
+  affiché, dans la langue de la séance. `idDeVoix` les réunit, casse et
+  apostrophe ignorées.
+- **Les épigraphes** (`data/epigraphes.ts`) sont écrites à la main : un
+  métier, un lieu, un objet. Elles ne paraphrasent JAMAIS l'enjeu, qui est
+  le non-dit de la voix — `epigraphes.test.ts` le vérifie mot à mot contre
+  `api/_voices.ts`. Les personas ne sont pas touchées.
+- **L'entrée** vit dans la bibliothèque sous celle du carnet, et comme elle
+  n'apparaît que si une voix a écrit dans un poème du recueil.
+- **Les coutures du recueil** (`PoemeDetail`, `LienVoix`) font de chaque nom
+  de voix un lien vers sa fiche. Pas en fin de partie : c'est encore le
+  moment du dévoilement.
+- **Pas de choix de voix à la table.** Le tirage et la fenêtre de vingt
+  parties restent la règle, l'anonymat de l'Atelier jusqu'au dernier vers
+  aussi.
+
+**Corrigé au passage :** les coutures du cadavre écrit annonçaient
+« voix · meteorologue » — l'identifiant nu, sans article ni accent — et la
+fin d'un salon « via chimiste ». `nomAffiche` rend le nom ; un nom déjà
+écrit reste tel quel.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (535 tests unitaires) + Playwright (79 tests E2E, FR et EN)
+- Tests : Vitest (553 tests unitaires) + Playwright (83 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

@@ -79,3 +79,40 @@ export function nomDeVoix(id: string | undefined, langue: 'fr' | 'en'): string {
   if (!n) return langue === 'en' ? 'The voice' : 'La voix'
   return langue === 'en' ? n.en : n.fr
 }
+
+/**
+ * Retrouve l'identifiant d'une voix depuis ce que le recueil a gardé d'elle.
+ *
+ * Le recueil n'écrit pas la voix d'une seule façon. Le cadavre écrit, le
+ * salon et le poème du jour gardent l'identifiant que le serveur renvoie
+ * (« meteorologue ») ; l'Atelier garde le NOM affiché à la fin de la séance,
+ * dans la langue du moment (« Le météorologue », « The meteorologist »), et
+ * parfois plusieurs noms joints par « · ». Le registre des voix doit
+ * reconnaître la même voix sous ces trois écritures, sinon une voix
+ * rencontrée à l'Atelier et au cadavre écrit y aurait deux fiches.
+ *
+ * La casse et l'apostrophe typographique sont ignorées : des poèmes anciens
+ * gardent « le fossoyeur » en minuscules. Un nom inconnu rend `null` — on
+ * ne devine pas.
+ */
+const cle = (s: string) => s.toLocaleLowerCase('fr').replace(/[’ʼ]/g, "'").trim()
+const PAR_NOM: Map<string, string> = (() => {
+  const m = new Map<string, string>()
+  for (const id of VOICE_IDS) {
+    m.set(cle(id), id)
+    m.set(cle(NOMS_VOIX[id].fr), id)
+    m.set(cle(NOMS_VOIX[id].en), id)
+  }
+  return m
+})()
+
+export function idDeVoix(nom: string | undefined | null): string | null {
+  if (!nom) return null
+  return PAR_NOM.get(cle(nom)) ?? null
+}
+
+/** Les voix nommées par un `voixNom` de case — un seul nom, ou plusieurs joints par « · ». */
+export function nomsDeVoix(voixNom: string | undefined | null): string[] {
+  if (!voixNom) return []
+  return voixNom.split(' · ').map(s => s.trim()).filter(Boolean)
+}

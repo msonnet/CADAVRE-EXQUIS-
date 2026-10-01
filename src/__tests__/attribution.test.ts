@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { attribution } from '../lib/attribution'
+import { attribution, attributionEnMorceaux } from '../lib/attribution'
 import type { Case } from '../types'
 
 const base = { numero: 1, fonction: 'vers 1', consigne: '', texte: 'x', ts: 0 }
@@ -47,5 +47,28 @@ describe('attribution — cadavre écrit', () => {
     // `auteur: 'mixte'` n'était traité nulle part et retombait sur « toi ».
     expect(attribution({ ...base, auteur: 'mixte', nbVoix: 1, voixNom: 'le rêveur' }))
       .not.toBe('toi')
+  })
+})
+
+describe("attribution — l'identifiant qui s'affichait nu", () => {
+  // Le cadavre écrit, le salon et le poème du jour gardent l'identifiant de
+  // la voix. Les coutures annonçaient « voix 2 · meteorologue ».
+  it("rend le nom d'une voix gardée par son identifiant", () => {
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'meteorologue' }, 2))
+      .toBe('voix 2 · Le météorologue')
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'souffleur de verre' }))
+      .toBe('voix · Le souffleur de verre')
+  })
+
+  it('laisse tel quel un nom déjà écrit, ou inconnu', () => {
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'Écho' }, 1)).toBe('voix 1 · Écho')
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'constructor' })).toBe('voix · constructor')
+  })
+
+  it('sépare la phrase et les noms, pour que les coutures les lient un à un', () => {
+    expect(attributionEnMorceaux({ ...base, auteur: 'mixte', nbVoix: 2, voixNom: 'le marin · le graveur' }))
+      .toEqual({ texte: 'toi et 2 voix', voix: ['le marin', 'le graveur'] })
+    expect(attributionEnMorceaux({ ...base, auteur: 'humain', nbVoix: 0, voixNom: 'le marin' }))
+      .toEqual({ texte: 'toi seul', voix: [] })
   })
 })

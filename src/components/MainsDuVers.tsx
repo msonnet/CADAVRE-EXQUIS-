@@ -2,6 +2,7 @@ import React from 'react'
 import type { MainCase } from '../types'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
+import LienVoix from './LienVoix'
 
 /**
  * Le détail d'un vers d'atelier : quelle main a rempli quelle case.
@@ -14,10 +15,14 @@ import { tr } from '../i18n'
  * échoue, un mot en conserve prend la place d'une voix, et rien ne le
  * distinguait. Publier un vers en croyant qu'une voix l'a signé était possible.
  */
-export default function MainsDuVers({ mains, accent, encre }: {
+export default function MainsDuVers({ mains, accent, encre, liens }: {
   mains: MainCase[]
   accent: string
   encre: string
+  /** Le nom de chaque voix mène à sa fiche. Au recueil seulement : la fin
+   *  de partie est encore le moment du dévoilement, on ne l'ouvre pas sur
+   *  un détour. */
+  liens?: boolean
 }) {
   if (!mains.length) return null
   return (
@@ -31,7 +36,9 @@ export default function MainsDuVers({ mains, accent, encre }: {
           {m.reserve ? (
             <span style={{ color: accent, letterSpacing: '0.14em' }}>{tr('RÉSERVE', 'RESERVE')}</span>
           ) : m.voixNom ? (
-            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, fontStyle: 'italic' }}>{m.voixNom}</span>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, fontStyle: 'italic' }}>
+              {liens ? <LienVoix nom={m.voixNom} /> : m.voixNom}
+            </span>
           ) : (
             <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, fontStyle: 'italic' }}>{tr('toi', 'you')}</span>
           )}
