@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { sonsActifs, reglerSons } from '../audio/papier'
+import { sonsActifs, reglerSons } from '../audio/reglageSons'
 
 /**
  * L'ambiance sonore reste coupée — silence total, sur demande. Mais le
