@@ -10,6 +10,29 @@
     <meta name="description" content="Jeu surréaliste pour une voix humaine et quarante inconnus" />
     <meta name="keywords" content="cadavre exquis, jeu surréaliste, poésie, écriture, multijoueur" />
     <meta name="author" content="nathansonnet" />
+    <!--
+      L'aperçu d'un lien partagé. Sans ces balises, un lien collé dans une
+      conversation s'affichait en adresse nue : ni nom, ni image, rien qui
+      donne envie d'appuyer. Les robots des messageries ne lisent pas le
+      JavaScript, donc tout est ici, en dur, et l'image a une adresse
+      ABSOLUE. Le domaine est celui de PROD_API (src/lib/apiBase.ts) : le
+      jour où il change, il change aussi ici.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cadavre Exquis" />
+    <meta property="og:title" content="Cadavre Exquis" />
+    <meta property="og:description" content="Un jeu de poésie surréaliste à plusieurs mains. Chaque jour, un poème que tout le monde écrit : une main, un vers." />
+    <meta property="og:url" content="https://cadavre-exquis-beta.vercel.app/" />
+    <meta property="og:image" content="https://cadavre-exquis-beta.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="L'Œil cousu, emblème de Cadavre Exquis" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cadavre Exquis" />
+    <meta name="twitter:description" content="Un jeu de poésie surréaliste à plusieurs mains. Chaque jour, un poème que tout le monde écrit : une main, un vers." />
+    <meta name="twitter:image" content="https://cadavre-exquis-beta.vercel.app/og-image.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />

@@ -1275,13 +1275,87 @@ lecture publique de `gallery` existent depuis le 27 mai.
   (`idDessinSalon`) ; publié, il entre au recueil avec son lien, comme le
   poème du salon y entre sans geste.
 
+## Le partage — une porte, et une affiche qui tient — 1ᵉʳ octobre
+
+Le partage est le seul objet du jeu vu HORS du jeu, et il ne menait nulle
+part. Mesuré en générant pour de vrai l'affiche et la vidéo dans Chromium :
+la vidéo calculait l'invitation et ne la dessinait jamais ; la feuille de
+partage ne recevait qu'un fichier et un titre — sur une messagerie, rien sur
+quoi appuyer ; l'invitation, « Ajoute ta main au cadavre. », était en dur en
+français et sortait telle quelle sur l'affiche anglaise ; et un lien collé
+dans une conversation s'affichait en adresse nue.
+
+- **L'invitation mène au poème du jour** — « Ajoute ta main au poème du
+  jour. » / « Add your hand to today's poem. » : le seul lieu où un inconnu
+  peut ajouter sa main le jour même, sans compte ni salon. Elle se pose dans
+  la dernière seconde et demie de la vidéo, une fois le dernier vers écrit :
+  la miniature reste au poème.
+- **La feuille emporte un texte** (`texteAccompagnant`) : l'invitation et
+  `lienPublic('/poeme-du-jour')`. Sans feuille de partage, le presse-papiers
+  reçoit le poème PUIS l'invitation et le lien. `partagerStory` passe
+  directement par `emporterFichier` : `partagerImage` aurait récrit le
+  presse-papiers derrière `usePartage`.
+- **L'adresse imprimée vient de `PROD_API`**, et non plus d'une seconde
+  copie du domaine dans `partager.ts`. Les balises de `index.html`, qui ne
+  peuvent pas l'importer, sont tenues d'accord avec elle par un test.
+- **L'aperçu du lien** : `og:*` et `twitter:*` en dur dans `index.html` —
+  les robots ne lisent pas le JavaScript —, image ABSOLUE,
+  `public/og-image.png` en 1 200 × 630 : l'Œil cousu et le nom, sur noir pur,
+  centrés, parce que WhatsApp recadre au carré. Écartée du précache.
+- **L'écran d'entrée annonce la destination** (`destinationEntree`). Arrivé
+  par `/poeme-du-jour`, `/salon/KX7Q` ou `/online?salon=KX7Q`, le rideau dit
+  « LE POÈME DU JOUR » ou « SALON KX7Q » au lieu de « TOUCHER POUR ENTRER »,
+  et se lève en 3 s au lieu de 4,2. On ne le saute pas : c'est la première
+  seconde d'un nouveau venu, et elle porte l'identité.
+
+**L'affiche se recompose sur une grille** (`lib/affiche.ts`). Avant : le
+poème illustré posé dans 520–820, l'image SOUS lui jusqu'à 1860 — un poème
+de trois vers entrait dans le passe-partout, la marque s'imprimait sur
+l'illustration, l'invitation (1888) sur l'adresse (1882), toutes deux sur le
+filet du cadre. Et l'en-tête à 192, la marque dans 1770–1882 : exactement ce
+qu'une story recouvre, barre de progression en haut, champ de réponse en
+bas, environ 250 px de chaque côté.
+
+- **Tout ce qui se lit tient dans 250–1670.** Le cadre reste au bord : c'est
+  un ornement. En-tête, invitation et marque à des ordonnées fixes (`Y`),
+  les mêmes pour l'affiche et la vidéo.
+- **Le poème illustré est une planche et sa légende** : l'image d'abord, le
+  poème dessous. Le poème se mesure en premier, l'image prend le reste et
+  jamais moins de 460 px ; au-delà le corps diminue, puis se coupe sur
+  « […] ». La lettrine cède sa place à l'image — voir plus bas.
+- **Le contenu se pose au tiers optique**, pas au centre : un vers seul ne
+  flotte plus au milieu de 700 px de papier.
+- **Le filet de pli passe dans le blanc** entre deux lignes. Il était posé à
+  une demi-interligne sous la ligne de base, donc dans les hampes de la
+  ligne suivante — il barrait le « p » de « paupière », sur l'affiche comme
+  dans la vidéo.
+- Le libellé « — LECTURE — » de l'affiche d'un dessin restait en français ;
+  la vidéo le traduisait déjà.
+
+`affiche.test.ts` balaie huit poèmes × trois titres × cinq images (aucune
+boîte ne se recouvre, toutes dans la zone sûre), la vidéo et sa
+surimpression comme l'affiche. `partage-affiche.spec.ts` relève chaque
+`fillText` réellement tracé, avec sa boîte d'encre, et chaque image posée —
+pour l'affiche, et pour la DERNIÈRE image de la vidéo. Ses six mesures
+échouent sur l'ancien code. `apercuLien.test.ts` lit `index.html`.
+
+**Décision d'identité, prudente et réversible** : sur une affiche illustrée,
+plus de lettrine — sous une planche, une capitale de 240 px ferait un second
+titre et coûterait 200 px d'image. Sans illustration elle reste. Le domaine
+`-beta.vercel.app` reste aussi : il n'y en a pas d'autre, mais le jour où il
+change, c'est `PROD_API` et les balises Open Graph.
+
+**Non mesuré** : sur iOS, une feuille de partage qui reçoit un fichier ET un
+texte peut proposer moins de destinations (« Enregistrer la vidéo »). C'est
+l'appareil qui le dira.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (589 tests unitaires) + Playwright (93 tests E2E, FR et EN)
+- Tests : Vitest (610 tests unitaires) + Playwright (99 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

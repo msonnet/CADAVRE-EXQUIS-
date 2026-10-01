@@ -31,3 +31,31 @@ export function texteInvitation(code: string, lien: string, langue: 'fr' | 'en')
     ? `Join me at the table — room ${code}, Cadavre Exquis.\n${lien}`
     : `Rejoins-moi à la table — salon ${code}, Cadavre Exquis.\n${lien}`
 }
+
+/**
+ * Où mène le lien par lequel on arrive — ce que l'écran d'entrée annonce.
+ *
+ * Un lien partagé (`/poeme-du-jour`, `/salon/KX7Q`, `/online?salon=KX7Q`)
+ * tombait sur le même rideau que tout le monde : « TOUCHER POUR ENTRER »,
+ * quatre secondes, sans rien dire de ce qui attendait derrière. On ne
+ * supprime pas le rideau — il porte l'identité, et c'est la première
+ * seconde d'un nouveau venu — mais il dit où il ouvre, et il s'ouvre plus
+ * vite.
+ */
+export type Destination = { genre: 'jour' } | { genre: 'salon'; code: string }
+
+export function destinationEntree(chemin: string, recherche = ''): Destination | null {
+  if (/^\/poeme-du-jour\/?$/.test(chemin)) return { genre: 'jour' }
+  const salon = /^\/salon\/([^/]+)\/?$/.exec(chemin)
+  if (salon) {
+    let brut = salon[1]
+    try { brut = decodeURIComponent(brut) } catch { /* code mal formé : lu tel quel */ }
+    const code = codeDeSalon(brut)
+    return code ? { genre: 'salon', code } : null
+  }
+  if (/^\/online\/?$/.test(chemin)) {
+    const code = codeDeSalon(new URLSearchParams(recherche).get('salon'))
+    if (code) return { genre: 'salon', code }
+  }
+  return null
+}
