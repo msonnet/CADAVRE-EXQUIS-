@@ -1195,13 +1195,63 @@ pendant l'attente réseau de la voix, le focus se pose sur son nom au lieu de
 BODY ; le siège reprend son carré — l'initiale ne départageait pas
 « Marie-Christine » et « Maximilien ».
 
+## Le pli à l'écriture — 1er octobre
+
+Le geste central du jeu — écrire sans voir, sur une feuille pliée — se
+jouait sur un formulaire, et « sceller » ne scellait rien. La consigne
+grammaticale était le héros de l'écran (2,4 rem de Bodoni), l'écho des
+autres mains une citation de 17 px, la case une boîte à cadre d'accent
+arrondie — ce cadre était l'anneau de focus global, qu'un champ de texte
+porte toujours. SCELLER écrasait la case (`scaleY: 0`,
+`filter: brightness(0.7)`) puis coupait l'écran, même sous
+`prefers-reduced-motion`. Le pli n'existait qu'au dévoilement.
+
+**Le papier, en pièces réutilisables** (`components/Papier.tsx`) — celles de
+`FeuilletPlie`, sorties de lui : `Tranches`, `FaceFermee`, `Feuillet`,
+`Bande`, `EchoDuPli`. `FeuilletPlie` et `Depli` les emploient désormais ;
+`JeuOnline` les posera à son tour. Mêmes règles et aucune autre : tranches
+d'un pixel, surface `${encre}09`, ombre noire très faible, aucune texture.
+
+**L'écran d'écriture est le feuillet en cours.** Au-dessus, une tranche par
+case scellée — trois tours, trois épaisseurs (`tranchesDuFeuillet`, retrait
+ramené à 2 px au-delà de huit : le vers libre va jusqu'à douze). Sur la
+lèvre du dernier pli, l'écho en Bodoni d'accent, comme au poème du jour ; en
+aveugle, le pli sans mot. La consigne descend en rubrique — « — VERBE
+CONJUGUÉ — » en petites capitales — avec ses exemples en italique lisible.
+La case devient la bande : plus de cadre, un filet d'écriture qui prend
+l'accent au focus. Le champ cite l'écho dans `aria-describedby`.
+
+**SCELLER rabat la bande** (`components/Rabat.tsx`, `lib/pli.ts`). Le dépli
+joué à l'envers : charnière haute, `rotateX` jusqu'à −92°, l'ombre noire qui
+monte, `transform` et `opacity` seulement. Sur la tranche reste exactement
+ce que la visibilité transmet — rien, le dernier mot, la case — et c'est
+`resteDuPli`, la MÊME fonction que lisent l'écran suivant et la voix.
+Premier jet : la courbe du dépli rembobinée à la lettre ; mesuré, 16 % de
+l'angle à 70 % du temps — la bande semblait ne pas répondre à l'appui.
+
+**Mesuré, de l'appui à l'écran suivant** (`mesure-sceau`, sans bridage /
+CPU ×4) : avant 458–476 ms / 500–604 ms, **même sous mouvement réduit** ;
+après 445–455 / 507–530 ms, et **56–63 ms** sous mouvement réduit. La suite
+part à 0,4 s de l'appui sans attendre la dernière trame — attendre ajoutait
+50 à 70 ms par tour. Un appui ou une touche abrège le rabat. Aucun son
+ajouté.
+
+**L'écran de passage à plusieurs montre la feuille qu'on se passe** :
+`FaceFermee`, une tranche par case scellée, et sur la face « 3 FRAGMENTS
+SOUS LE PLI » — jamais un mot de ce qui est dessous. Le libellé reste
+« Passe le téléphone à » : c'est le geste réel.
+
+**Pas fait, et c'est délibéré** : la voix IA écrit toujours derrière ses
+trois points ; le salon et le poème du jour n'ont pas encore leur rabat. Les
+pièces sont prêtes ; ce lot s'en tenait au cadavre écrit local.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (564 tests unitaires) + Playwright (85 tests E2E, FR et EN)
+- Tests : Vitest (578 tests unitaires) + Playwright (92 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

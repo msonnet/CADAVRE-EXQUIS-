@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -24,8 +24,11 @@ import { tr, langueActuelle } from '../i18n'
 import { buildSequence, type Participant } from '../lib/sequence'
 import { nomDeMain, corpsDuNom } from '../lib/table'
 import { puiserReserve } from '../lib/reserveVoix'
-import { libelleReserve } from '../lib/attribution'
+import { libelleReserve, libelleMorceaux } from '../lib/attribution'
 import { zoneVivante } from '../lib/a11y'
+import { resteDuPli, COURBE_DEPLI } from '../lib/pli'
+import { Feuillet, Bande, EchoDuPli, FaceFermee } from '../components/Papier'
+import Rabat from '../components/Rabat'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -240,15 +243,31 @@ function pickUnused(type: string, used: Set<string>): string {
   return source[Math.floor(Math.random() * source.length)]
 }
 
+// Ce que le dernier pli laisse voir — à la main suivante comme à la voix.
+// La règle vit dans `resteDuPli`, que le rabat lit aussi : le mot qui reste
+// sur la tranche est celui que le tour suivant affiche.
 function getContexteVisible(cases: Case[], visibilite: Visibilite): string | null {
   if (cases.length === 0) return null
-  const derniere = cases[cases.length - 1]
-  if (visibilite === 'dernier-mot') {
-    const mots = derniere.texte.trim().split(/\s+/).filter(Boolean)
-    return mots[mots.length - 1] ?? null
-  }
-  if (visibilite === 'derniere-case') return derniere.texte.trim()
-  return null
+  return resteDuPli(cases[cases.length - 1].texte, visibilite)
+}
+
+/**
+ * La consigne, en rubrique.
+ *
+ * Elle était le héros de l'écran — « Article · nom » en Bodoni de 2,4 rem —
+ * au-dessus d'un écho de 17 px : l'étiquette grammaticale écrasait la seule
+ * trace des autres mains. Elle descend en petites capitales, sur la bande,
+ * comme la fonction qu'on inscrivait en marge du papier plié ; ses exemples
+ * restent en italique lisible, pour qui joue sa première partie.
+ *
+ * Le vers libre porte sa précision après un tiret (« un vers de 3 à 6 mots —
+ * une image physique et inattendue ») : en capitales, les deux tirets se
+ * seraient confondus avec ceux de la rubrique. La précision rejoint donc la
+ * ligne d'exemples.
+ */
+function scinderRubrique(titre: string): { rubrique: string; precision: string | null } {
+  const m = titre.match(/^(.*?)\s+—\s+(.+)$/)
+  return m ? { rubrique: m[1], precision: m[2] } : { rubrique: titre, precision: null }
 }
 
 // ─── Composant ───────────────────────────────────────────────────────────────
@@ -360,6 +379,8 @@ export default function Jeu() {
   const { jouer } = useSound()
   const clavierOuvert = useClavierOuvert()
   const seance = useReve()
+  const reduit = useMemo(() =>
+    typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   // ─── Dérivés ───────────────────────────────────────────────────────────────
@@ -750,6 +771,13 @@ export default function Jeu() {
         : `${acteParle} ${multiJoueurs ? tr(`À ${appelMain} d'écrire.`, `${appelMain}'s turn to write.`) : tr("À toi d'écrire.", 'Your turn to write.')}`
   const zoneAnnonce = <p className="sr-only" {...zoneVivante}>{annonce}</p>
 
+  const sc = seance?.colorSchema
+  const accent = sc?.hex ?? '#b22c20'
+  const encre = sc?.encre ?? '#0f0805'
+  const bg = seance?.ambiance.bg ?? '#f0e4cc'
+  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
+  const colorLabel = sc?.name.toUpperCase() ?? ''
+
   // Écran de fin / transition
   if (!defActuelle || cases.length >= total) {
     return (
@@ -807,9 +835,29 @@ export default function Jeu() {
             ? appelMain.replace(/-/g, '\u2010')
             : `${tr('Acte', 'Act')} ${toRomain(caseIndex + 1)}`}
         </motion.p>
+        {/* La feuille qu'on se passe. L'écran n'était que du texte : rien
+            ne montrait que la feuille s'épaississait d'une main à l'autre.
+            Une tranche par case scellée, et la face ne dit que leur nombre —
+            jamais un mot de ce qui est dessous. */}
+        {multiJoueurs && (
+          <motion.div
+            initial={reduit ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5, ease: COURBE_DEPLI }}
+            style={{ width: 'min(240px, 72vw)', marginTop: 36 }}
+          >
+            <FaceFermee tranches={cases.length} accent={accent} encre={encre}>
+              <div style={{ ...mono, fontSize: 11, letterSpacing: '0.22em', color: encre, opacity: 0.75, textAlign: 'center', lineHeight: 1.6 }}>
+                {cases.length === 0
+                  ? tr('FEUILLET VIERGE', 'BLANK SHEET')
+                  : `${libelleMorceaux(config.structureId, cases.length)} ${tr('SOUS LE PLI', 'UNDER THE FOLD')}`}
+              </div>
+            </FaceFermee>
+          </motion.div>
+        )}
         {multiJoueurs ? (
           <motion.div
-            className="mt-16"
+            className="mt-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
@@ -842,17 +890,16 @@ export default function Jeu() {
     inputValue.length > 0 &&
     !inputValue.includes('?')
 
-  const sc = seance?.colorSchema
-  const accent = sc?.hex ?? '#b22c20'
-  const encre = sc?.encre ?? '#0f0805'
-  const bg = seance?.ambiance.bg ?? '#f0e4cc'
-  const btnText = seance?.ambiance.buttonText ?? '#0f0805'
-  const colorLabel = sc?.name.toUpperCase() ?? ''
   const acteLabel = `${tr('ACTE', 'ACT')} ${toRomain(caseIndex + 1)} / ${toRomain(total)}`
   // Une seule série d'exemples : ceux de la consigne (spécifiques à la case)
   // quand elle en contient, sinon les génériques du type.
   const { titre: consigneTitre, exemples: exemplesInline } = separerConsigne(defActuelle?.consigne ?? '')
   const example  = exemplesInline ?? TYPE_EXAMPLE[defActuelle?.type ?? ''] ?? null
+  const { rubrique, precision } = scinderRubrique(consigneTitre)
+  const precisionLigne = example ?? precision
+  // Ce que la bande laissera dépasser une fois rabattue — lu au moment même
+  // du rabat, sur le texte qu'on scelle.
+  const resteScelle = sealing ? resteDuPli(inputValue, config.visibilite) : null
 
   // ── IA screen ──────────────────────────────────────────────────────────────
   if (participantActuel?.type === 'ia' && (iaChargement || iaTexteRevele !== null)) {
@@ -1134,59 +1181,10 @@ export default function Jeu() {
             transition={{ duration: 0.35 }}
             className="flex flex-col flex-1"
           >
-            {/* Previous voice */}
-            {contexteVisible && (
-              <motion.div
-                style={{ borderLeft: `3px solid ${accent}`, paddingLeft: 12, marginTop: 20, marginBottom: 18 }}
-                initial={{ opacity: 0, x: -4 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
-                  {tr('— VOIX PRÉCÉDENTE —', '— PREVIOUS VOICE —')}
-                </div>
-                <p style={{
-                  fontFamily: "'Playfair Display', serif", fontSize: 17,
-                  color: encre, lineHeight: 1.5,
-                }}>
-                  « {contexteVisible} »
-                </p>
-              </motion.div>
-            )}
-
-            {/* Consigne section */}
-            <motion.div
-              style={{ marginTop: contexteVisible ? 8 : 24, marginBottom: 16 }}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              {/* L'acte, dit pour l'oreille : le champ le cite en description. */}
-              <span id="jeu-acte" className="sr-only">{acteParle}</span>
-              <div
-                id="jeu-consigne"
-                className="font-fraunces font-black"
-                style={{
-                  fontSize: 'clamp(1.6rem, 7vw, 2.4rem)',
-                  lineHeight: 1.05,
-                  letterSpacing: '-0.01em',
-                  color: encre,
-                  marginBottom: example ? 8 : 14,
-                }}
-              >
-                {renderConsigneTitre(consigneTitre, accent)}
-              </div>
-              {example && (
-                <div id="jeu-exemple" style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: encre, opacity: 0.9, marginBottom: 14, lineHeight: 1.55 }}>
-                  <span className="sr-only">{tr('par exemple :', 'for example:')} </span>{example}
-                </div>
-              )}
-            </motion.div>
-
             {/* Timer */}
             {modeHypnotique && tempsRestant !== null && (
               <motion.div
-                className="flex items-center justify-end mb-2 gap-1"
+                className="flex items-center justify-end mt-2 gap-1"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
@@ -1202,57 +1200,95 @@ export default function Jeu() {
               </motion.div>
             )}
 
-            {/* Textarea section */}
+            {/* ── LE FEUILLET EN COURS ──
+                En haut, les bandes déjà rabattues — une tranche par case
+                scellée. Sur la lèvre du dernier pli, ce qu'il laisse voir,
+                en vedette. Dessous, la bande où l'on écrit, qui se rabat à
+                son tour quand on la scelle. */}
             <motion.div
-              animate={sealing ? { scaleY: 0, opacity: 0.4, filter: 'brightness(0.7)' } : { scaleY: 1, opacity: 1, filter: 'brightness(1)' }}
-              style={{ transformOrigin: 'top center' }}
-              transition={{ duration: 0.4, ease: [0.7, 0, 0.84, 0] }}
-              onAnimationComplete={() => { if (sealing) vraimentSoumettre() }}
+              style={{ marginTop: modeHypnotique ? 6 : 22 }}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
             >
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.35 }}
+              <Feuillet
+                plis={cases.length}
+                encre={encre}
+                levre={contexteVisible ? (
+                  <>
+                    <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 8 }}>
+                      {tr('— VOIX PRÉCÉDENTE —', '— PREVIOUS VOICE —')}
+                    </div>
+                    <EchoDuPli id="jeu-echo" texte={contexteVisible} visibilite={config.visibilite} accent={accent} />
+                  </>
+                ) : null}
               >
-                {/* Encre qui transperce le papier — reflet renversé du texte en cours */}
-                <div
-                  aria-hidden
-                  style={{
-                    fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-                    fontSize: '1.35rem', lineHeight: 1.55, padding: '0 16px',
-                    transform: 'scaleY(-1)', filter: 'blur(2.5px)',
-                    opacity: inputValue ? 0.10 : 0, color: encre,
-                    maxHeight: 48, overflow: 'hidden', pointerEvents: 'none',
-                    transition: 'opacity 0.6s', userSelect: 'none',
-                  }}
-                >{inputValue}</div>
-                <textarea
-                  className="champ-carnet w-full min-h-[96px] resize-none"
-                  style={{ borderLeftColor: accent }}
-                  value={inputValue}
-                  onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
-                  onKeyDown={handleKeyDown}
-                  placeholder={tr('Écris ici — toi seul le verras…', 'Write here — only you will see it…')}
-                  aria-label={tr('Ta contribution', 'Your contribution')}
-                  // Le champ ne disait que son nom : « Ta contribution, zone
-                  // de texte ». La consigne vivait au-dessus, isolée — une
-                  // main aveugle ne savait pas ce qu'on lui demandait.
-                  aria-describedby={['jeu-acte', 'jeu-consigne', ...(example ? ['jeu-exemple'] : [])].join(' ')}
-                  {...CLAVIER_FRAGMENT}
-                  autoFocus
-                  rows={3}
-                />
-                {hintQuestion && (
-                  <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginTop: 4 }}>
-                    {tr('LES QUESTIONS SE TERMINENT PAR UN ?', 'QUESTIONS END WITH A ?')}
-                  </p>
-                )}
-                {erreur && (
-                  <p role="alert" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, marginTop: 6 }}>
-                    {erreur}
-                  </p>
-                )}
-              </motion.div>
+                <Rabat
+                  plie={sealing}
+                  reste={resteScelle ? <EchoDuPli texte={resteScelle} visibilite={config.visibilite} accent={accent} /> : null}
+                  onRabattu={vraimentSoumettre}
+                >
+                  <Bande encre={encre} accent={accent} sousUnPli={cases.length > 0}>
+                    {/* L'acte, dit pour l'oreille : le champ le cite en description. */}
+                    <span id="jeu-acte" className="sr-only">{acteParle}</span>
+                    <div
+                      id="jeu-consigne"
+                      style={{
+                        ...mono, fontSize: 13, letterSpacing: '0.2em', textTransform: 'uppercase',
+                        color: encre, lineHeight: 1.5, marginBottom: precisionLigne ? 4 : 8,
+                      }}
+                    >
+                      <span aria-hidden style={{ opacity: 0.5 }}>— </span>
+                      {renderConsigneTitre(rubrique, accent)}
+                      <span aria-hidden style={{ opacity: 0.5 }}> —</span>
+                    </div>
+                    {precisionLigne && (
+                      <div id="jeu-exemple" style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: encre, opacity: 0.9, marginBottom: 6, lineHeight: 1.5 }}>
+                        {example && <span className="sr-only">{tr('par exemple :', 'for example:')} </span>}{precisionLigne}
+                      </div>
+                    )}
+                    {/* Encre qui transperce le papier — reflet renversé du texte en cours */}
+                    <div
+                      aria-hidden
+                      style={{
+                        fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
+                        fontSize: '1.35rem', lineHeight: 1.55, padding: '0 2px',
+                        transform: 'scaleY(-1)', filter: 'blur(2.5px)',
+                        opacity: inputValue ? 0.10 : 0, color: encre,
+                        maxHeight: 48, overflow: 'hidden', pointerEvents: 'none',
+                        transition: 'opacity 0.6s', userSelect: 'none',
+                      }}
+                    >{inputValue}</div>
+                    <textarea
+                      className="champ-carnet champ-bande w-full min-h-[96px] resize-none"
+                      value={inputValue}
+                      readOnly={sealing}
+                      onChange={(e) => { setInputValue(e.target.value); setErreur(null) }}
+                      onKeyDown={handleKeyDown}
+                      placeholder={tr('Écris ici — toi seul le verras…', 'Write here — only you will see it…')}
+                      aria-label={tr('Ta contribution', 'Your contribution')}
+                      // Le champ ne disait que son nom : « Ta contribution, zone
+                      // de texte ». La consigne vivait au-dessus, isolée — une
+                      // main aveugle ne savait pas ce qu'on lui demandait. Le
+                      // pli s'y ajoute : ce qu'on voit de la main d'avant.
+                      aria-describedby={['jeu-acte', ...(contexteVisible ? ['jeu-echo'] : []), 'jeu-consigne', ...(precisionLigne ? ['jeu-exemple'] : [])].join(' ')}
+                      {...CLAVIER_FRAGMENT}
+                      autoFocus
+                      rows={3}
+                    />
+                  </Bande>
+                </Rabat>
+              </Feuillet>
+              {hintQuestion && (
+                <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.9, marginTop: 6 }}>
+                  {tr('LES QUESTIONS SE TERMINENT PAR UN ?', 'QUESTIONS END WITH A ?')}
+                </p>
+              )}
+              {erreur && (
+                <p role="alert" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: accent, marginTop: 6 }}>
+                  {erreur}
+                </p>
+              )}
             </motion.div>
 
             {/* L'espaceur se replie quand le clavier iOS est ouvert : le CTA
@@ -1269,7 +1305,7 @@ export default function Jeu() {
             >
               <button
                 onClick={soumettre}
-                disabled={!inputValue.trim()}
+                disabled={!inputValue.trim() || sealing}
                 aria-label={tr('Sceller cette voix et passer à la suivante', 'Seal this voice and move on')}
                 className={`w-full flex items-center justify-center${tutActif && (tutEtape === T_JEU_1 || tutEtape === T_JEU_2) && inputValue.trim() ? ' tut-cible' : ''}`}
                 style={{

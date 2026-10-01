@@ -270,6 +270,25 @@
   }
   .champ-carnet::placeholder { color: var(--reve-ink-faint); opacity: 0.55; font-style: italic; }
   .champ-carnet:focus { border-left-color: var(--reve-accent); }
+  /* La case du cadavre écrit, posée sur la bande de papier : plus de boîte
+     dans la boîte. Le « cadre rouge arrondi » relevé par l'audit était
+     l'anneau de focus global — un champ de texte le porte toujours, même
+     focalisé par le script. Sur la bande, le focus se dit autrement : le
+     filet d'écriture s'épaissit et prend l'accent, là où le texte ira. Le
+     padding compense le pixel gagné, pour que rien ne saute. */
+  .champ-carnet.champ-bande {
+    background: transparent;
+    border-left: none;
+    border-bottom: 1px solid var(--reve-rule);
+    border-radius: 0;
+    padding: 6px 2px 10px;
+  }
+  .champ-carnet.champ-bande:focus,
+  .champ-carnet.champ-bande:focus-visible {
+    outline: none;
+    border-bottom: 2px solid var(--reve-accent);
+    padding-bottom: 9px;
+  }
 
   /* Filets typographiques */
   .filet-double {

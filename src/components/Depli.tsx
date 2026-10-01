@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import { PLIURE, PLIURE_RESTE } from './Papier'
 
 /**
  * Un volet de papier qui s'ouvre.
@@ -69,10 +70,10 @@ const OMBRE_PORTEE = '42%'
  * Deux traits plutôt qu'un, parce qu'un seul trait noir disparaît sur les
  * ambiances sombres. Un creux sombre au-dessus, une arête claire en dessous :
  * ça se lit sur du papier crème comme sur de l'encre de nuit.
+ *
+ * Elle vit dans `Papier.tsx` (`PLIURE`, `PLIURE_RESTE`) : le feuillet en
+ * cours de l'écran d'écriture et le rabat la posent aussi.
  */
-const PLIURE = 'linear-gradient(to bottom, rgba(0,0,0,0.26) 0 1px, rgba(255,255,255,0.34) 1px 2px)'
-/** Ce qu'il reste de la pliure une fois le volet à plat. */
-const PLIURE_RESTE = 0.4
 
 export default function Depli({ children, delai, duree, immediat, pli }: Props) {
   const transition = immediat

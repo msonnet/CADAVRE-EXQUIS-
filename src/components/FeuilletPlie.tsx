@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { PANNEAUX_MAX } from '../lib/rythme'
+import { FaceFermee } from './Papier'
 
 /**
  * Le feuillet plié — l'état d'avant le dépli.
@@ -43,8 +44,10 @@ import { PANNEAUX_MAX } from '../lib/rythme'
  * pliure est serrée contre la pliure), et surtout la feuille n'avait
  * AUCUNE SURFACE. On ne voyait pas du papier marqué, on voyait des traits
  * dans le vide.
+ *
+ * (Ces règles vivent désormais dans `Papier.tsx` : l'écran d'écriture les
+ * emploie aussi, et deux copies d'un même papier finiraient par différer.)
  */
-const OMBRE_PLI = 'linear-gradient(to bottom, rgba(0,0,0,0.055), rgba(0,0,0,0) 70%)'
 
 /**
  * La surface du papier.
@@ -54,9 +57,8 @@ const OMBRE_PLI = 'linear-gradient(to bottom, rgba(0,0,0,0.055), rgba(0,0,0,0) 7
  * d'une couleur fixe : sur les ambiances claires elle assombrit d'un rien,
  * sur les sombres — où l'encre est une crème — elle éclaircit. Dans les
  * deux cas la feuille se détache de son fond, ce qu'une couleur figée ne
- * ferait que dans un sens.
+ * ferait que dans un sens. → `surfacePapier`, dans `Papier.tsx`.
  */
-const surface = (encre: string) => `${encre}09`
 
 const mouvementReduit = () =>
   typeof window !== 'undefined' &&
@@ -72,52 +74,6 @@ interface Props {
   onOuvrir: () => void
   /** Le nom accessible du bouton — il dit ce qui va se passer. */
   libelle: string
-}
-
-export default function FeuilletPlie({ vers, accent, encre, children, onOuvrir, libelle }: Props) {
-  const reduit = useMemo(mouvementReduit, [])
-  // Le même compte que `plierEnPanneaux` : un volet par vers tant qu'ils
-  // sont peu nombreux, jamais plus de cinq — au-delà ce serait un accordéon.
-  const plis = Math.max(1, Math.min(vers, PANNEAUX_MAX))
-
-  return (
-    <motion.button
-      type="button"
-      onClick={onOuvrir}
-      aria-label={libelle}
-      initial={reduit ? false : { opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 0.84, 0.24, 1] }}
-      whileTap={reduit ? undefined : { scale: 0.994 }}
-      style={{
-        width: '100%', display: 'block', textAlign: 'left',
-        cursor: 'pointer', background: 'none', border: 'none', padding: 0,
-      }}
-    >
-      {/* LA FACE DU DESSUS — la seule qu'on lise. */}
-      <div style={{
-        position: 'relative',
-        background: surface(encre),
-        // Un trait plein plutôt qu'une ombre portée : sur les ambiances
-        // sombres une ombre ne se voit pas, un bord se voit toujours. Le
-        // bord HAUT prend l'accent : c'est le seul bord d'une feuille
-        // pliée qui ne soit pas un pli, et il mérite d'être nommé.
-        border: `0.5px solid ${encre}22`,
-        borderTop: `1.5px solid ${accent}55`,
-        borderRadius: 2,
-        padding: '18px 14px 16px',
-      }}>
-        {/* L'ombre du premier pli, serrée sous le bord bas de la face. */}
-        <div aria-hidden style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, height: 10,
-          background: OMBRE_PLI, transform: 'scaleY(-1)', pointerEvents: 'none',
-        }} />
-        <div style={{ position: 'relative' }}>{children}</div>
-      </div>
-
-      <Tranches n={plis - 1} encre={encre} />
-    </motion.button>
-  )
 }
 
 /**
@@ -140,24 +96,32 @@ export default function FeuilletPlie({ vers, accent, encre, children, onOuvrir, 
  *
  * Leur nombre reste celui des volets à venir. Une feuille qui montre trois
  * épaisseurs et s'ouvre en cinq se dénonce comme un décor.
+ *
+ * Elles sont dessinées par `Tranches` (`Papier.tsx`), qui sert aussi au
+ * feuillet en cours de l'écran d'écriture.
  */
-function Tranches({ n, encre }: { n: number; encre: string }) {
+export default function FeuilletPlie({ vers, accent, encre, children, onOuvrir, libelle }: Props) {
+  const reduit = useMemo(mouvementReduit, [])
+  // Le même compte que `plierEnPanneaux` : un volet par vers tant qu'ils
+  // sont peu nombreux, jamais plus de cinq — au-delà ce serait un accordéon.
+  const plis = Math.max(1, Math.min(vers, PANNEAUX_MAX))
+
   return (
-    <div aria-hidden style={{ position: 'relative', pointerEvents: 'none' }}>
-      {Array.from({ length: n }, (_, i) => (
-        <div
-          key={i}
-          style={{
-            height: 1,
-            margin: `2px ${3 + i * 3}px 0`,
-            background: encre,
-            // Chaque épaisseur plus loin est plus pâle : ce dégradé fait la
-            // profondeur à lui seul, sans une seule ombre portée.
-            opacity: 0.16 * (1 - i / (n + 1)),
-            borderRadius: 1,
-          }}
-        />
-      ))}
-    </div>
+    <motion.button
+      type="button"
+      onClick={onOuvrir}
+      aria-label={libelle}
+      initial={reduit ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 0.84, 0.24, 1] }}
+      whileTap={reduit ? undefined : { scale: 0.994 }}
+      style={{
+        width: '100%', display: 'block', textAlign: 'left',
+        cursor: 'pointer', background: 'none', border: 'none', padding: 0,
+      }}
+    >
+      {/* LA FACE DU DESSUS — la seule qu'on lise — et les tranches dessous. */}
+      <FaceFermee tranches={plis - 1} accent={accent} encre={encre}>{children}</FaceFermee>
+    </motion.button>
   )
 }
