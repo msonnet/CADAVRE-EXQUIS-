@@ -8,8 +8,8 @@ import { mono } from '../lib/typo'
 import { tr } from '../i18n'
 import { useAuth } from '../hooks/useAuth'
 import { useReactionsGalerie } from '../hooks/useReactionsGalerie'
-import EntreeGalerie, { PlancheGalerie } from '../components/EntreeGalerie'
-import { type Publication, estAnonyme, motifExact } from '../lib/galerie'
+import EntreeGalerie, { Planches } from '../components/EntreeGalerie'
+import { type Publication, estAnonyme, motifExact, memePseudo } from '../lib/galerie'
 
 /**
  * La page d'un auteur — `/u/:pseudo`.
@@ -23,7 +23,8 @@ import { type Publication, estAnonyme, motifExact } from '../lib/galerie'
  * - `/u/Anonyme` rassemblait tous ceux qui avaient publié sans compte sous
  *   un même nom. Un anonyme n'a pas de page : c'est ce qu'anonyme veut dire.
  * - le pseudo partait tel quel dans un `ilike`, où `%` et `_` sont des
- *   jokers : « M_reille » ouvrait la page de Mireille.
+ *   jokers : « M_reille » ouvrait la page de Mireille. `*` aussi, que
+ *   PostgREST change en `%` : d'où le tri par `memePseudo` au retour.
  */
 export default function ProfilPublic() {
   const navigate = useNavigate()
@@ -85,7 +86,10 @@ export default function ProfilPublic() {
           setChargement(false)
           return
         }
-        const rows = (data ?? []) as Publication[]
+        // Le motif ramène large (`*` y devient `_`, un caractère quelconque) ;
+        // l'égalité trie. Sans elle, l'auteur « M* » verrait sa page
+        // rassembler Mo, Mu et Ma.
+        const rows = ((data ?? []) as Publication[]).filter(r => memePseudo(r.author_pseudo, pseudoParam))
         setItems(rows)
         setChargement(false)
         if (rows.length > 0) chargerReactions(rows.map(r => r.id))
@@ -256,9 +260,7 @@ export default function ProfilPublic() {
             <h2 id="titre-planches" style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', margin: '0 0 10px' }}>
               {tr('— PLANCHES —', '— PLATES —')}
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: '18px 12px', alignItems: 'start' }}>
-              {dessins.map((item, i) => <PlancheGalerie key={item.id} numero={i + 1} {...props(item)} />)}
-            </div>
+            <Planches items={dessins} propsDe={props} />
           </section>
         )}
 

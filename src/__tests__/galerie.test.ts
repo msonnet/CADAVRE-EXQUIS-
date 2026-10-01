@@ -5,7 +5,7 @@ import { join } from 'node:path'
 vi.mock('../i18n', () => ({ tr: (fr: string) => fr, langueActuelle: () => 'fr' }))
 
 import {
-  versPublies, incipit, tetePublication, estAnonyme, motifExact, attributionPubliee,
+  versPublies, incipit, tetePublication, estAnonyme, motifExact, memePseudo, attributionPubliee,
   aDesCoutures, REACTIONS, libelleEchos, libelleLectures, retenusDeLaSemaine,
   nouvelles, phraseNouvelles, phraseCourrier, extraitCourt, correspond, dateSignature,
   type Publication, type PoemePublie,
@@ -166,6 +166,15 @@ describe('la signature', () => {
     expect(motifExact('M_reille%')).toBe('M\\_reille\\%')
   })
 
+  it('« * », que PostgREST change en %, ne rattrape plus les autres pseudos', () => {
+    // `M*` partait tel quel : la page de « M* » rassemblait tous les M.
+    expect(motifExact('M*')).not.toContain('*')
+    expect(motifExact('M*')).toBe('M_')
+    // Le motif ramène large, l'égalité trie au retour.
+    expect(['M*', 'Mo', 'Mireille', 'm*'].filter(p => memePseudo(p, 'M*'))).toEqual(['M*', 'm*'])
+    expect(lire('pages/ProfilPublic.tsx')).toMatch(/memePseudo\(/)
+  })
+
   it('la date tait l’année quand c’est celle-ci', () => {
     expect(dateSignature('2026-09-29T10:00:00Z', new Date('2026-10-01T00:00:00Z'))).toBe('29 SEPTEMBRE')
     expect(dateSignature('2025-09-29T10:00:00Z', new Date('2026-10-01T00:00:00Z'))).toBe('29 SEPTEMBRE 2025')
@@ -178,15 +187,41 @@ describe('la semaine des lecteurs', () => {
 
   it('retient les plus lus des sept derniers jours, sans les plus anciens', () => {
     const rows = [
-      { gallery_id: 'a', created_at: il(1) }, { gallery_id: 'a', created_at: il(2) },
-      { gallery_id: 'b', created_at: il(3) },
-      { gallery_id: 'c', created_at: il(24 * 8) }, { gallery_id: 'c', created_at: il(24 * 9) }, { gallery_id: 'c', created_at: il(24 * 10) },
+      { gallery_id: 'a', emoji: '🌙', reactor_key: 'k1', created_at: il(1) }, { gallery_id: 'a', emoji: '✦', reactor_key: 'k2', created_at: il(2) },
+      { gallery_id: 'b', emoji: '❀', reactor_key: 'k1', created_at: il(3) },
+      { gallery_id: 'c', emoji: '🌙', reactor_key: 'k1', created_at: il(24 * 8) }, { gallery_id: 'c', emoji: '🌙', reactor_key: 'k2', created_at: il(24 * 9) }, { gallery_id: 'c', emoji: '🌙', reactor_key: 'k3', created_at: il(24 * 10) },
     ]
     expect(retenusDeLaSemaine(rows, t0)).toEqual(['a', 'b'])
   })
 
   it('à égalité, la réaction la plus récente l’emporte', () => {
-    expect(retenusDeLaSemaine([{ gallery_id: 'x', created_at: il(5) }, { gallery_id: 'y', created_at: il(1) }], t0)).toEqual(['y', 'x'])
+    expect(retenusDeLaSemaine([
+      { gallery_id: 'x', emoji: '🌙', reactor_key: 'k', created_at: il(5) },
+      { gallery_id: 'y', emoji: '🌙', reactor_key: 'k', created_at: il(1) },
+    ], t0)).toEqual(['y', 'x'])
+  })
+
+  // L'insertion est ouverte à tous, `emoji` est un texte libre : compter
+  // les lignes brutes laissait hisser son poème en tête à coups de lignes.
+  it('ne compte que les quatre réactions du jeu', () => {
+    const fausses = Array.from({ length: 50 }, (_, i) => ({ gallery_id: 'triche', emoji: 'x', reactor_key: `f${i}`, created_at: il(1) }))
+    const vraies = [{ gallery_id: 'lu', emoji: '✦', reactor_key: 'k', created_at: il(2) }]
+    expect(retenusDeLaSemaine([...fausses, ...vraies], t0)).toEqual(['lu'])
+  })
+
+  it('un lecteur compte une fois par publication, quelles que soient ses réactions', () => {
+    const un = REACTIONS.map(r => ({ gallery_id: 'seul', emoji: r.cle, reactor_key: 'k', created_at: il(1) }))
+    const deux = [
+      { gallery_id: 'deux', emoji: '🌙', reactor_key: 'k1', created_at: il(3) },
+      { gallery_id: 'deux', emoji: '🌙', reactor_key: 'k2', created_at: il(3) },
+    ]
+    expect(retenusDeLaSemaine([...un, ...deux], t0)).toEqual(['deux', 'seul'])
+  })
+
+  it('une publication supprimée quitte aussi le sommaire de la semaine', () => {
+    const s = lire('pages/Galerie.tsx')
+    const corps = s.slice(s.indexOf('const supprimerItem'), s.indexOf('const chargerItems'))
+    expect(corps).toMatch(/setRetenus\(prev => prev\.filter/)
   })
 })
 
@@ -234,6 +269,16 @@ describe('le feuillet garde sa publication', () => {
       expect(s, f).not.toMatch(/setPublished\(false\)/)
       expect(s, f).toMatch(/marquer(Dessin)?Publie\(/)
     }
+  })
+
+  // Recharger la page de fin d'un salon rendait « ✦ GALERIE » : l'état
+  // repartait de `false` sans lire le feuillet, et le poème repartait.
+  it('la page de fin d’un salon relit la publication de son feuillet', () => {
+    const s = lire('pages/FinOnline.tsx')
+    expect(s).toMatch(/chargerPoeme\(idSalon\(code\)\)/)
+    expect(s).toMatch(/chargerDessin\(idDessinSalon\(code\)\)/)
+    // Le dessin a un feuillet par salon, et non un par appui.
+    expect(s).not.toMatch(/dessin-online-\$\{Date\.now\(\)/)
   })
 
   it('la salle publie les noms des mains, pas des cases nues', () => {

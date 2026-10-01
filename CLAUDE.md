@@ -1194,7 +1194,8 @@ s'affichaient nulle part.
   des trois familles : le repli système en faisait « ⊖ », un signe moins.
   Les vues deviennent « 14 LECTURES », et zéro se tait.
 - **Les dessins en planche** : deux colonnes à hauteur entière, légendées
-  « PL. III — MIREILLE » ; ouverte, la planche prend toute la largeur.
+  « PL. III — MIREILLE ». Ouverte, la planche **ne bouge pas** : ses
+  détails s'ouvrent sous la rangée (voir plus bas).
 - **La semaine des lecteurs** : trois poèmes retenus par les réactions des
   sept derniers jours, en tête, sans afficher de compte — un classement
   chiffré ferait un palmarès. Une panne n'affiche rien.
@@ -1238,13 +1239,40 @@ lu. **Aucune migration** : `views_count`, `gallery_reactions` et la
 lecture publique de `gallery` existent depuis le 27 mai.
 `galerie.test.ts` et `e2e/galerie.spec.ts` le tiennent.
 
+### Ce que la relecture a trouvé
+
+- **Le nom volait le bas du titre.** La zone d'appui de 44 px, centrée sur
+  une signature posée à 4 px sous le titre, remontait de treize pixels sur
+  lui et l'emportait — elle vient après dans le document. Mesuré à 390 :
+  toucher le bas de l'incipit ouvrait `/u/Mireille`, quatre entrées sur
+  cinq. `a.lien-signature::after` s'étend vers le BAS seulement ; le poème
+  ouvert et les détails de planche, positionnés, passent au-dessus d'elle.
+- **La planche se réordonnait sous le doigt.** Pleine largeur à
+  l'ouverture et `row dense` : toucher PL. II la faisait quitter sa case,
+  PL. III y remontait, et le dessin revenait dessous à 860 px de haut.
+  `Planches` insère les détails APRÈS la rangée, sans `dense` ;
+  l'agrandissement passe par la visionneuse.
+- **La semaine des lecteurs ne compte que ce qui compte** : les quatre
+  réactions du jeu, une fois par lecteur et par publication. L'insertion
+  est ouverte et `emoji` est un texte libre — cent lignes inventées
+  hissaient un poème en tête. Cela borne la fraude sans l'empêcher (voir
+  hors du code). Une publication supprimée quitte aussi ce sommaire.
+- **`*` est un joker chez PostgREST** dans `ilike`, et aucun échappement
+  ne l'en empêche : `/u/M*` rassemblait les M. Il devient `_`, et la page
+  relit chaque ligne par `memePseudo`.
+- **La fin d'un salon relit son feuillet.** `publishedGallery` repartait de
+  faux à chaque montage : recharger rendait « ✦ GALERIE », et le poème
+  repartait. Le dessin a désormais un feuillet par salon
+  (`idDessinSalon`) ; publié, il entre au recueil avec son lien, comme le
+  poème du salon y entre sans geste.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (587 tests unitaires) + Playwright (89 tests E2E, FR et EN)
+- Tests : Vitest (592 tests unitaires) + Playwright (91 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

@@ -18,10 +18,10 @@ import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import PoemeDevoile from '../components/PoemeDevoile'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
-import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration, marquerPublie } from '../db'
+import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration, marquerPublie, chargerPoeme, chargerDessin } from '../db'
 import { publierPoeme, publierDessin } from '../lib/publier'
-import { poemeDuSalon, idSalon } from '../lib/versRecueil'
-import type { DessinCadavre } from '../types'
+import { poemeDuSalon, idSalon, idDessinSalon } from '../lib/versRecueil'
+import type { DessinCadavre, LienPublication } from '../types'
 import { mono } from '../lib/typo'
 import { libelleMains, nomAffiche } from '../lib/attribution'
 import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
@@ -138,6 +138,7 @@ export default function FinOnline() {
   const [revealDessinJoue, setRevealDessinJoue] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
+  const [lienDessin, setLienDessin] = useState<LienPublication | null>(null)
   const [partageEnCours, setPartageEnCours] = useState(false)
 
   const load = useCallback(async () => {
@@ -168,7 +169,14 @@ export default function FinOnline() {
         code, structureId: r.structure_id, contributions: cList,
         pseudos: new Map(((ps ?? []) as RoomPlayer[]).map(p => [p.player_id, p.pseudo])),
         moi: user.id, fonctions: structure.cases.map(d => d.fonction),
-      })).catch(() => { /* stockage refusé : la page de fin reste lisible */ })
+      }))
+        // Le feuillet SAIT s'il a été publié : `publishedGallery` repartait
+        // de `false` à chaque montage, si bien que recharger la page de fin,
+        // ou y revenir par l'historique, rendait « ✦ GALERIE » — et le poème
+        // du salon repartait en galerie une seconde fois.
+        .then(() => chargerPoeme(idSalon(code)))
+        .then(f => { if (f?.publication) setPublishedGallery(true) })
+        .catch(() => { /* stockage refusé : la page de fin reste lisible */ })
       let cancelled = false
       const blocs = structure.cases.map((def, i) => ({
         texte: caseMap.get(i) ?? '',
@@ -182,6 +190,12 @@ export default function FinOnline() {
 
     if (r.mode === 'dessin' && cList.length > 0) {
       setLoadingDessin(true)
+      // Même mémoire pour le dessin, par son feuillet à identifiant stable.
+      chargerDessin(idDessinSalon(code)).then(f => {
+        if (!f) return
+        setSauvegardeDessin(true)
+        if (f.publication) { setPublishedGallery(true); setLienDessin(f.publication) }
+      }).catch(() => {})
       const bandes: BandeData[] = cList
         .sort((a, b) => a.case_index - b.case_index)
         .map(c => {
@@ -285,8 +299,17 @@ export default function FinOnline() {
         { imageDataUrl: imageAssemblee, texteVision: texteVision || null, nbBandes: contributions.length },
         { pseudo, avatar_url: null, id: user.id },
         'dessin-online',
+        langueSalon(room),
       )
-      if (lien) { setPublishedGallery(true); jouer('soumettre') }
+      if (lien) {
+        // Le dessin publié entre au recueil avec son lien. Il n'y entrait
+        // que par SAUVEGARDER, sans rien savoir de sa publication : son
+        // feuillet la proposait de nouveau, et une page de fin rechargée
+        // aussi. Comme le poème du salon, qui entre au recueil sans geste.
+        setLienDessin(lien)
+        sauvegarderDessinLocal(lien).catch(() => {})
+        setPublishedGallery(true); jouer('soumettre')
+      }
     } catch { /* ignore */ }
     setPublishingGallery(false)
   }
@@ -363,13 +386,19 @@ export default function FinOnline() {
     finally { setPartageEnCours(false) }
   }
 
-  async function sauvegarderDessinLocal() {
-    if (!imageAssemblee) return
-    const id = `dessin-online-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  // Un identifiant par salon, comme le poème (`idSalon`) : sauvegarder deux
+  // fois, ou publier après avoir sauvegardé, réécrit LE MÊME feuillet au lieu
+  // d'en créer un second. Le titre donné depuis au recueil est gardé.
+  async function sauvegarderDessinLocal(lien: LienPublication | null = lienDessin) {
+    if (!imageAssemblee || !code) return
+    const id = idDessinSalon(code)
+    const avant = await chargerDessin(id).catch(() => undefined)
+    const publication = lien ?? avant?.publication
     const dessin: DessinCadavre = {
-      id, titre: null, nbBandes: contributions.length,
+      id, titre: avant?.titre ?? null, nbBandes: contributions.length,
       imageDataUrl: imageAssemblee, texteVision: texteVision || undefined,
-      dateCreation: Date.now(), dateModification: Date.now(),
+      dateCreation: avant?.dateCreation ?? Date.now(), dateModification: Date.now(),
+      ...(publication ? { publication } : {}),
     }
     await sauvegarderDessin(dessin)
     setSauvegardeDessin(true)
@@ -520,7 +549,7 @@ export default function FinOnline() {
 
                     {/* Actions dessin */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button onClick={sauvegarderDessinLocal} disabled={sauvegardeDessin_}
+                      <button onClick={() => { sauvegarderDessinLocal().catch(() => {}) }} disabled={sauvegardeDessin_}
                         style={{ flex: 1, ...mono, fontSize: 17, background: sauvegardeDessin_ ? `${accent}20` : accent, color: sauvegardeDessin_ ? accent : btnText, border: `0.5px solid ${accent}`, borderRadius: 3, padding: '10px 8px', cursor: sauvegardeDessin_ ? 'default' : 'pointer' }}>
                         {sauvegardeDessin_ ? tr('✓ SAUVEGARDÉ', '✓ SAVED') : tr('↓ MA GALERIE', '↓ MY COLLECTION')}
                       </button>

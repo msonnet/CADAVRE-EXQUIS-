@@ -30,6 +30,21 @@ const VERNIS = {
   ] }),
 }
 
+// Deux autres poèmes signés, pour que chaque titre ait une signature-lien
+// sous lui ; et quatre dessins de hauteurs inégales pour la planche.
+const SIGNE = (id: string, pseudo: string, texte: string) => ({
+  ...VERNIS, id, author_pseudo: pseudo, author_id: `u-${id}`, views_count: 0,
+  payload: JSON.stringify({ structureId: 'vers-libre', titre: null, langue: 'fr', cases: [c(texte)] }),
+})
+const svg = (h: number) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="${h}"><rect width="300" height="${h}" fill="#eee"/></svg>`)
+const DESSIN = (i: number, h: number) => ({
+  id: `d-${i}`, type: 'dessin', titre: null, image_url: svg(h),
+  author_pseudo: `Main${i}`, author_avatar: null, author_id: `u-d${i}`,
+  created_at: '2026-09-29T10:00:00Z', views_count: 2,
+  payload: JSON.stringify({ texteVision: `une lecture ${i}`, nbBandes: 3, langue: 'fr' }),
+})
+
 const REACTIONS = [
   { gallery_id: 'g-vernis', emoji: '🌙', reactor_key: 'a', created_at: new Date().toISOString() },
   { gallery_id: 'g-vernis', emoji: '🜔', reactor_key: 'b', created_at: new Date().toISOString() },
@@ -91,6 +106,62 @@ test.describe('le sommaire', () => {
     expect(texte).not.toMatch(/\p{Emoji_Presentation}|[\u{10000}-\u{10FFFF}]/u)
     expect(texte).toMatch(/LECTURES/)
     expect(texte).toMatch(/☾/)
+  })
+
+  // La zone d'appui du nom, centrée sur une ligne posée à 4 px sous le
+  // titre, remontait de treize pixels sur lui et l'emportait : toucher le
+  // bas de l'incipit ouvrait /u/Mireille au lieu du poème.
+  test('le bas du titre ouvre le poème, pas la page de l’auteur', async ({ page }) => {
+    await bouchonner(page, () => [VERNIS, SIGNE('g-2', 'Hyacinthe', 'la rampe du sommeil'), SIGNE('g-3', 'Ondine', 'un pouce de brume')])
+    await page.goto('/galerie')
+    await page.waitForLoadState('networkidle')
+    await franchir(page)
+    const liste = page.locator('section[aria-label="Publications"]')
+    await expect(liste.locator('article')).toHaveCount(3, { timeout: 5000 })
+    const touches = await liste.evaluate(sec => [...sec.querySelectorAll('article button[aria-expanded]')].map(b => {
+      const r = b.getBoundingClientRect()
+      return [2, 5, 8, 12].map(d => {
+        const el = document.elementFromPoint(r.left + 30, r.bottom - d)
+        return el?.closest('a, button') === b ? 'titre' : (el?.closest('a, button')?.textContent ?? '—')
+      })
+    }))
+    for (const t of touches) expect(t).toEqual(['titre', 'titre', 'titre', 'titre'])
+    // Et le nom reste touchable : sous lui, sa zone d'appui tient.
+    const lien = liste.getByRole('link', { name: 'HYACINTHE' })
+    const r = (await lien.boundingBox())!
+    const sous = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.closest('a')?.textContent ?? null, [r.x + 10, r.y + r.height + 12])
+    expect(sous).toBe('HYACINTHE')
+  })
+
+  // Ouverte, la planche passait en pleine largeur et `row dense` comblait le
+  // trou : PL. II quittait sa case, PL. III remontait à sa place.
+  test('une planche ouverte reste à sa place', async ({ page }) => {
+    await bouchonner(page, url => url.includes('type=eq.dessin') ? [DESSIN(1, 380), DESSIN(2, 420), DESSIN(3, 460), DESSIN(4, 500)] : [])
+    await page.setViewportSize({ width: 320, height: 700 })
+    await page.goto('/galerie')
+    await page.waitForLoadState('networkidle')
+    await franchir(page)
+    await page.getByRole('button', { name: 'DESSINS' }).click()
+    const planches = page.locator('figure')
+    await expect(planches).toHaveCount(4, { timeout: 5000 })
+    const places = () => planches.evaluateAll(fs => fs.map(f => { const r = f.querySelector('button')!.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width)] }))
+    const avant = await places()
+    await planches.nth(1).locator('button').first().click()
+    const details = page.locator('#pub-d-2')
+    await expect(details).toBeVisible()
+    const apres = await places()
+    // PL. I et PL. II ne bougent pas ; la rangée suivante descend, d'un bloc.
+    expect(apres.slice(0, 2)).toEqual(avant.slice(0, 2))
+    expect(apres[2][0]).toBe(avant[2][0])
+    expect(apres[3][0]).toBe(avant[3][0])
+    // Les détails viennent juste sous la rangée, et dans l'ordre du document.
+    const ordre = await page.evaluate(() => [...document.querySelectorAll('figure[data-planche], [data-details-planche]')].map(e => e.getAttribute('data-planche') ?? `d${e.getAttribute('data-details-planche')}`))
+    expect(ordre).toEqual(['1', '2', 'd2', '3', '4'])
+    const bas = await planches.nth(1).evaluate(f => f.getBoundingClientRect().bottom)
+    const haut = await details.evaluate(d => d.getBoundingClientRect().top)
+    expect(haut - bas).toBeLessThan(24)
+    await expect(details.getByRole('button', { name: /Signaler/ })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
   })
 
   test('« Anonyme » n’a pas de page', async ({ page }) => {

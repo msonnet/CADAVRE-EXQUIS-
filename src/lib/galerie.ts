@@ -258,17 +258,31 @@ export function libelleEchos(e: Echos): string {
  * lecteurs. Le sommaire en garde trois, sans afficher le compte — un
  * classement chiffré ferait un palmarès, et la revue n'en tient pas.
  * À égalité, la réaction la plus récente l'emporte.
+ *
+ * Ce compte donne une PLACE, et non plus un ornement : il se lit donc avec
+ * méfiance. L'insertion dans `gallery_reactions` est ouverte à tous, sous
+ * une clé de lecteur libre et un `emoji` de n'importe quel texte — compter
+ * les lignes brutes laissait n'importe qui hisser son poème en tête en en
+ * insérant cent. On ne compte que les quatre réactions du jeu, et UNE fois
+ * par lecteur et par publication. Cela borne la fraude sans l'empêcher
+ * (cent clés inventées restent cent lecteurs) : le vrai verrou est une
+ * fonction côté base, signalée hors du code.
  */
 export function retenusDeLaSemaine(
-  rows: { gallery_id: string; created_at?: string | null }[],
+  rows: { gallery_id: string; emoji: string; reactor_key?: string | null; created_at?: string | null }[],
   maintenant: number,
   n = 3,
 ): string[] {
   const depuis = maintenant - 7 * 86_400_000
   const parId = new Map<string, { total: number; dernier: number }>()
+  const vus = new Set<string>()
   for (const r of rows) {
+    if (!estCleReaction(r.emoji)) continue
     const t = r.created_at ? Date.parse(r.created_at) : NaN
     if (!Number.isFinite(t) || t < depuis || t > maintenant + 60_000) continue
+    const lecteur = `${r.gallery_id}\u0000${r.reactor_key ?? ''}`
+    if (vus.has(lecteur)) continue
+    vus.add(lecteur)
     const e = parId.get(r.gallery_id) ?? { total: 0, dernier: 0 }
     e.total += 1
     e.dernier = Math.max(e.dernier, t)
@@ -367,8 +381,21 @@ export function correspond(it: Publication, q: string): boolean {
   return termes.every(t => hay.includes(t))
 }
 
-/** Échappe `%`, `_` et `\` pour un `ilike` qui doit valoir une égalité. */
+/**
+ * Un motif `ilike` qui ne rattrape aucun AUTRE pseudo.
+ *
+ * `%`, `_` et `\` s'échappent. `*`, non : PostgREST le traduit en `%` dans
+ * `like` et `ilike` avant même que la base le voie, et aucun échappement ne
+ * l'en empêche — `/u/M*` ouvrait la page de tous les pseudos en M. Il
+ * devient donc `_`, qui ne vaut qu'UN caractère, et la page relit chaque
+ * ligne par `memePseudo` : le motif sert à ramener, l'égalité à trier.
+ */
 export function motifExact(s: string): string {
-  return s.replace(/[\\%_]/g, c => `\\${c}`)
+  return s.replace(/[\\%_]/g, c => `\\${c}`).replace(/\*/g, '_')
+}
+
+/** L'égalité que `ilike` promettait : même pseudo, casse mise à part. */
+export function memePseudo(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase()
 }
 

@@ -58,6 +58,7 @@ function NomAuteur({ item, encre, sansLien }: { item: Publication; encre: string
   return (
     <Link
       to={`/u/${encodeURIComponent(item.author_pseudo)}`}
+      className="lien-signature"
       style={{ color: encre, textDecoration: 'none', borderBottom: `0.5px dotted ${encre}66` }}
     >
       {nom}
@@ -200,7 +201,11 @@ export default function EntreeGalerie(props: Commun) {
           {/* Le poème entier. Chaque vers est un paragraphe à retrait
               négatif : ce qui déborde se range sous le vers, en retrait,
               comme dans un recueil imprimé. */}
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.55, color: encre }}>
+          {/* `relative` : positionné et placé après la signature, le poème
+              passe au-dessus de la zone d'appui du lien auteur qui descend
+              jusqu'ici quand l'entrée n'a pas encore d'échos — toucher le
+              premier vers ne doit mener nulle part. */}
+          <div style={{ position: 'relative', fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.55, color: encre }}>
             {corps.map((v, i) => (
               <p key={i} style={{ margin: 0, paddingLeft: '1.4em', textIndent: '-1.4em' }}>{v}</p>
             ))}
@@ -248,17 +253,27 @@ export default function EntreeGalerie(props: Commun) {
  * Les dessins étaient des vignettes de 120 px de haut, centrées dans un
  * cadre blanc pleine largeur : un dessin vertical de trois mains n'en
  * montrait que la tête. Ils se rangent maintenant deux par deux, à leur
- * hauteur entière ; ouverte, la planche prend toute la largeur.
+ * hauteur entière.
+ *
+ * Ouverte, la planche ne bouge PAS. Premier jet : elle passait en pleine
+ * largeur, et `row dense` remplissait le trou — toucher PL. II la faisait
+ * quitter sa case, PL. III remontait à sa place, et le dessin réapparaissait
+ * dessous à 860 px de haut, la légende et ⚑ ⊘ loin sous le pli. On touchait
+ * une image et une autre venait sous le doigt. Les détails s'ouvrent donc
+ * sous la RANGÉE, en pleine largeur, et l'agrandissement passe par la
+ * visionneuse — l'ordre du document est celui de l'écran.
  */
 export function PlancheGalerie(props: Commun & { numero: number }) {
-  const { item, ouvert, onBasculer, reactions, accent, encre, actions, sansLienAuteur, domId, onAgrandir, numero } = props
+  const { item, ouvert, onBasculer, accent, encre, sansLienAuteur, domId, numero } = props
   const d = lireDessinPublie(item.payload)
   const src = item.image_url ?? d?.imageDataUrl ?? null
   const tete = tetePublication(item)
-  const echos = libelleEchos({ lectures: item.views_count ?? 0, reactions })
   const pl = `${tr('PL.', 'PL.')} ${toRomain(numero)}`
+  // La planche ouverte se marque par un filet d'accent : ses détails sont
+  // sous la rangée, il faut savoir de laquelle des deux ils parlent.
+  const cadre = ouvert ? `1px solid ${accent}` : `0.5px solid ${encre}25`
   return (
-    <figure style={{ margin: 0, gridColumn: ouvert ? '1 / -1' : undefined, minWidth: 0 }}>
+    <figure data-planche={numero} style={{ margin: 0, minWidth: 0 }}>
       <button
         onClick={onBasculer}
         aria-expanded={ouvert}
@@ -267,33 +282,72 @@ export function PlancheGalerie(props: Commun & { numero: number }) {
         style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}
       >
         {src
-          ? <img src={src} alt="" loading="lazy" style={{ width: '100%', height: 'auto', display: 'block', background: '#fff', border: `0.5px solid ${encre}25` }} />
-          : <span style={{ display: 'block', aspectRatio: '3 / 4', border: `0.5px solid ${encre}25` }} />}
+          ? <img src={src} alt="" loading="lazy" style={{ width: '100%', height: 'auto', display: 'block', background: '#fff', border: cadre }} />
+          : <span style={{ display: 'block', aspectRatio: '3 / 4', border: cadre }} />}
       </button>
       <figcaption style={{ ...mono, fontSize: 11, letterSpacing: '0.16em', color: encre, marginTop: 6 }}>
         <span style={{ color: accent }}>{pl}</span>
         <span style={{ opacity: 0.75 }}> — <NomAuteur item={item} encre={encre} sansLien={sansLienAuteur} /></span>
       </figcaption>
-      {ouvert && (
-        <div id={domId} style={{ marginTop: 8, paddingBottom: 12, borderBottom: `0.5px solid ${encre}22` }}>
-          {d?.texteVision && (
-            <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, lineHeight: 1.5, color: encre, whiteSpace: 'pre-wrap', margin: '4px 0 0' }}>
-              {d.texteVision}
-            </p>
-          )}
-          <Signature item={item} encre={encre} echos={echos} sansLien={sansLienAuteur} />
-          {src && (
-            <button
-              onClick={() => onAgrandir(src)}
-              style={{ ...mono, fontSize: 11, letterSpacing: '0.16em', color: accent, background: 'none', border: 'none', cursor: 'zoom-in', padding: '10px 0 0' }}
-            >
-              ⤢ {tr('AGRANDIR', 'ENLARGE')}
-            </button>
-          )}
-          <RangeeReactions {...props} />
-          {actions && <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>{actions}</div>}
-        </div>
-      )}
     </figure>
+  )
+}
+
+/** Ce qu'une planche ouverte dit d'elle, sous sa rangée. */
+function DetailsPlanche(props: Commun & { numero: number }) {
+  const { item, reactions, accent, encre, actions, sansLienAuteur, domId, onAgrandir, numero } = props
+  const d = lireDessinPublie(item.payload)
+  const src = item.image_url ?? d?.imageDataUrl ?? null
+  const echos = libelleEchos({ lectures: item.views_count ?? 0, reactions })
+  return (
+    // `relative`, comme le poème ouvert : la zone d'appui du nom, dans la
+    // légende juste au-dessus, descend jusqu'ici et ne doit rien y prendre.
+    <div id={domId} data-details-planche={numero} style={{ position: 'relative', gridColumn: '1 / -1', minWidth: 0, paddingBottom: 12, borderBottom: `0.5px solid ${encre}22`, marginTop: -6 }}>
+      <div style={{ ...mono, fontSize: 11, letterSpacing: '0.16em', color: accent }}>
+        {tr('PL.', 'PL.')} {toRomain(numero)}
+      </div>
+      {d?.texteVision && (
+        <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, lineHeight: 1.5, color: encre, whiteSpace: 'pre-wrap', margin: '4px 0 0' }}>
+          {d.texteVision}
+        </p>
+      )}
+      <Signature item={item} encre={encre} echos={echos} sansLien={sansLienAuteur} />
+      {src && (
+        <button
+          onClick={() => onAgrandir(src)}
+          style={{ ...mono, fontSize: 11, letterSpacing: '0.16em', color: accent, background: 'none', border: 'none', cursor: 'zoom-in', padding: '10px 0 0' }}
+        >
+          ⤢ {tr('AGRANDIR', 'ENLARGE')}
+        </button>
+      )}
+      <RangeeReactions {...props} />
+      {actions && <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>{actions}</div>}
+    </div>
+  )
+}
+
+/**
+ * La planche entière : deux colonnes, et les détails de la planche ouverte
+ * insérés APRÈS sa rangée. Sans `dense`, rien ne se réordonne : une planche
+ * garde sa case, qu'elle soit ouverte ou non.
+ */
+export function Planches({ items, propsDe }: { items: Publication[]; propsDe: (item: Publication) => Commun }) {
+  const enfants: React.ReactNode[] = []
+  let ouverte: { p: Commun; numero: number } | null = null
+  items.forEach((item, i) => {
+    const p = propsDe(item)
+    enfants.push(<PlancheGalerie key={item.id} numero={i + 1} {...p} />)
+    if (p.ouvert) ouverte = { p, numero: i + 1 }
+    const finDeRangee = i % 2 === 1 || i === items.length - 1
+    if (finDeRangee && ouverte) {
+      const o: { p: Commun; numero: number } = ouverte
+      enfants.push(<DetailsPlanche key={`details-${o.p.item.id}`} numero={o.numero} {...o.p} />)
+      ouverte = null
+    }
+  })
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '18px 12px', alignItems: 'start' }}>
+      {enfants}
+    </div>
   )
 }

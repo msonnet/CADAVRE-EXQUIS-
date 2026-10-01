@@ -25,6 +25,8 @@ import type { Case, Poeme } from '../types'
  */
 
 export const idSalon = (code: string) => `salon-${code}`
+/** Le dessin d'un salon : même règle, dans la table des dessins. */
+export const idDessinSalon = (code: string) => `dessin-salon-${code}`
 export const idJour = (langue: string, jour: string) => `jour-${langue}-${jour}`
 
 /** Une main de salon : qui a posé la case. */

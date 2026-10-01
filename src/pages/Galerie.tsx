@@ -11,7 +11,7 @@ import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
 import { tr, langueActuelle } from '../i18n'
 import { chargerPoemes, chargerDessins } from '../db'
-import EntreeGalerie, { PlancheGalerie } from '../components/EntreeGalerie'
+import EntreeGalerie, { Planches } from '../components/EntreeGalerie'
 import {
   type Publication, type TypePublication,
   languePublication, correspond, retenusDeLaSemaine,
@@ -163,7 +163,12 @@ export default function Galerie() {
     setDeletingId(id)
     try {
       const { error } = await supabase.from('gallery').delete().eq('id', id)
-      if (!error) setItems(prev => prev.filter(it => it.id !== id))
+      // Retirée aussi du sommaire de la semaine : elle y restait jusqu'au
+      // rechargement, sous les yeux de l'auteur qui venait de la supprimer.
+      if (!error) {
+        setItems(prev => prev.filter(it => it.id !== id))
+        setRetenus(prev => prev.filter(it => it.id !== id))
+      }
     } catch { /* ignore */ } finally {
       setDeletingId(null)
     }
@@ -246,13 +251,13 @@ export default function Galerie() {
         const maintenant = Date.now()
         const { data, error } = await supabase
           .from('gallery_reactions')
-          .select('gallery_id, created_at')
+          .select('gallery_id, emoji, reactor_key, created_at')
           .gte('created_at', new Date(maintenant - 7 * 86_400_000).toISOString())
           .limit(2000)
         if (error || !data?.length) return
         // On en prend plus que trois : la langue et le type ne se filtrent
         // qu'une fois les publications lues.
-        const ids = retenusDeLaSemaine(data as { gallery_id: string; created_at: string }[], maintenant, 12)
+        const ids = retenusDeLaSemaine(data as { gallery_id: string; emoji: string; reactor_key: string; created_at: string }[], maintenant, 12)
         if (!ids.length) return
         const { data: rows, error: e2 } = await supabase.from('gallery').select(COLONNES).in('id', ids)
         if (e2 || !rows || annule) return
@@ -695,19 +700,8 @@ export default function Galerie() {
           }
           if (onglet === 'dessin') {
             // La planche : deux colonnes, chaque dessin à sa hauteur
-            // entière. `dense` remplit le trou qu'une planche ouverte,
-            // passée en pleine largeur, laisserait à sa gauche.
-            return (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: '18px 12px', alignItems: 'start' }}>
-                {itemsFiltres.map((item, i) => (
-                  <PlancheGalerie
-                    key={item.id}
-                    numero={i + 1}
-                    {...propsEntree(item, item.id, `pub-${item.id}`)}
-                  />
-                ))}
-              </div>
-            )
+            // entière, et les détails sous la rangée (`Planches`).
+            return <Planches items={itemsFiltres} propsDe={item => propsEntree(item, item.id, `pub-${item.id}`)} />
           }
           return (
             <section aria-label={tr('Publications', 'Publications')}>
