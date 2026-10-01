@@ -1201,7 +1201,7 @@ BODY ; le siège reprend son carré — l'initiale ne départageait pas
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (567 tests unitaires) + Playwright (85 tests E2E, FR et EN)
+- Tests : Vitest (564 tests unitaires) + Playwright (85 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
