@@ -5,6 +5,7 @@ import { useReve, garantirContraste } from '../reve'
 import { useAmbiance } from '../hooks/useAmbiance'
 import { useSound } from '../hooks/useSound'
 import type { ConfigDessin, BandeDessin } from '../types'
+import { nomDeMain, corpsDuNom } from '../lib/table'
 import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr, langueActuelle } from '../i18n'
@@ -274,6 +275,15 @@ export default function JeuDessin() {
   const UNDO_MAX = 20
 
   const joueurActuel = (bandeIdx % config.joueurs) + 1
+  // Le prénom quand les préparatifs l'ont donné, le numéro sinon — comme au
+  // cadavre écrit. Le trait d'union ASCII n'a pas de dessin dans la Bodoni
+  // auto-hébergée : on pose le typographique.
+  const appel = (num: number) =>
+    (nomDeMain(config.noms, num) ?? `${tr('Joueur', 'Player')} ${num}`).replace(/-/g, '\u2010')
+  const corpsAppel = (num: number) => {
+    const n = nomDeMain(config.noms, num)
+    return n ? corpsDuNom(n) : 'clamp(2.6rem, 12vw, 4.5rem)'
+  }
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
   // Accent de la séance ramené au contraste minimal sur la barre papier
@@ -824,7 +834,7 @@ export default function JeuDessin() {
           background: `${paperDef.bg}e0`, padding: '4px 10px',
           border: `0.5px solid ${TB_INK}25`, borderRadius: 3, pointerEvents: 'none',
         }}>
-          {tr('JOUEUR', 'PLAYER')} {joueurActuel} · {bandeIdx + 1}/{config.nbBandes}
+          {appel(joueurActuel).toUpperCase()} · {bandeIdx + 1}/{config.nbBandes}
           {partieNue(bandeIdx, config.nbBandes, langueActuelle()) && <> · {partieNue(bandeIdx, config.nbBandes, langueActuelle())!.toUpperCase()}</>}
         </div>
 
@@ -1202,8 +1212,8 @@ export default function JeuDessin() {
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 {tr('— BANDE', '— BAND')} 1/{config.nbBandes} · {(partieNue(0, config.nbBandes, langueActuelle()) ?? '').toUpperCase()} —
               </div>
-              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
-                {tr('Joueur', 'Player')} 1
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: corpsAppel(1), color: bg, lineHeight: 1.1, overflowWrap: 'anywhere', padding: '0 16px' }}>
+                {appel(1)}
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
                 {partieDuCorps(0, config.nbBandes, langueActuelle())
@@ -1273,8 +1283,8 @@ export default function JeuDessin() {
               <div style={{ ...mono, fontSize: 13, color: accent, letterSpacing: '0.28em', marginBottom: 16, opacity: 0.8 }}>
                 {tr('— BANDE', '— BAND')} {bandeIdx + 2}/{config.nbBandes} · {(partieNue(bandeIdx + 1, config.nbBandes, langueActuelle()) ?? '').toUpperCase()} —
               </div>
-              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 'clamp(2.6rem, 12vw, 4.5rem)', color: bg, lineHeight: 1.1 }}>
-                {tr('Joueur', 'Player')} {nextPlayerNum}.
+              <div style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: corpsAppel(nextPlayerNum), color: bg, lineHeight: 1.1, overflowWrap: 'anywhere', padding: '0 16px' }}>
+                {appel(nextPlayerNum)}.
               </div>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: bg, opacity: 0.8, marginTop: 12 }}>
                 {tr("Passe l'écran. Ne regarde pas.", "Pass the screen. Don't look.")}

@@ -1104,13 +1104,60 @@ DERNIER » ramène. La clé `cadavre-jour-deplie` retient désormais plusieurs
 jours (l'ancienne valeur, un jour seul, se lit encore). Un poème ancien où
 l'on a écrit entre aussi au recueil.
 
+## La table locale — 1er octobre
+
+Plusieurs mains sur un seul téléphone. Relevé avant : « Passe le téléphone
+à Joueur 2 », des coutures signées « joueur 1 » — et « joueur 1 » même en
+solo, où il n'y a que toi —, et des préparatifs revenus à « 1 main, 1 voix »
+après chaque partie à trois.
+
+**Les mains ont des prénoms** (`lib/table.ts`, `components/NomsDesMains.tsx`).
+Facultatifs, une ligne par siège humain dès deux mains ; vide, la main garde
+son numéro. Ils ne créent aucun champ : `Case.pseudo` (et `moi` en solo)
+existaient pour le salon, et `attribution` les lit — le prénom passe
+désormais AVANT le numéro. Le rideau appelle « Nadja », son corps se réduit
+avec la longueur (à 18vw, « Christophe » sortait de l'écran à 320 points).
+L'export `.txt` du recueil porte « Mains : Nadja, Léa ». Le dessiné reçoit
+le même champ et le même rideau.
+
+**La dernière table est retenue** (`derniere-table`, `localStorage`) :
+sièges, prénoms, structure, visibilité, mode. Un prénom PAR SIÈGE et non par
+main — un siège qui devient voix puis redevient main retrouve le sien.
+
+**« UNE AUTRE, À LA MÊME TABLE »** (`lib/lancerTable.ts`). À plusieurs, c'est
+le bouton principal de fin de partie : « Sceller au recueil » ne faisait que
+mener à la bibliothèque, le poème y était déjà. Seul, il reste ce qu'il
+était — le guide le désigne — et la relance est un lien. Les deux portes
+passent par `ouvrirTable` : une table où une voix écrit se règle à son
+ouverture, le raccourci ne contourne pas l'encrier.
+
+**Chaque voix a sa réserve** (`data/reserveVoix.ts`). Hors ligne, toutes
+les cases d'une partie tombaient dans un stock commun — « chavire »,
+« vacille », « la nuit garde tout » — sous « Le cartographe écrit… ». Trois
+fragments par famille et par voix, tirés à la main du lexique et des gestes
+de `_voices.ts`, cinq familles (celles des grilles), deux langues. Le
+commun ne sert plus que quand la voix n'a rien, et l'étiquette le dit :
+« RÉSERVE DU CARTOGRAPHE », ou RÉSERVE nue. Corrigé au passage : les
+coutures écrivaient « voix 2 · meteorologue » — l'identifiant brut.
+
+**Au lecteur d'écran, la case dit ce qu'elle demande** : `aria-describedby`
+vers l'acte et la consigne. Une zone vivante, posée en premier enfant des
+quatre écrans du jeu pour que React la garde, annonce le rideau, la voix qui
+écrit et la main qui reprend. « TOUCHER POUR CONTINUER » est un vrai bouton,
+et le focus s'y pose.
+
+**Trouvé en route, non corrigé** : le trait d'union ASCII n'a pas de dessin
+dans la Bodoni auto-hébergée (« Marie-Christine » s'affichait « Marie
+Christine »). Contourné pour les prénoms par le trait d'union typographique ;
+la police elle-même n'est pas touchée.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (535 tests unitaires) + Playwright (79 tests E2E, FR et EN)
+- Tests : Vitest (562 tests unitaires) + Playwright (84 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

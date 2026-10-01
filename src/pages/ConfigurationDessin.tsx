@@ -11,6 +11,11 @@ import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr, langueActuelle } from '../i18n'
 import { silhouette } from '../lib/corps'
 import { effacerBandesDessin } from '../db'
+import NomsDesMains from '../components/NomsDesMains'
+import { lireTable, nomsDesMains, nettoyerNom, type Siege } from '../lib/table'
+
+/** La dernière table du dessiné — à part de celle du cadavre écrit, qui a des voix. */
+const CLE_TABLE_DESSIN = 'derniere-table-dessin'
 
 const CONFIG_PAR_DEFAUT: ConfigDessin = {
   nbBandes: 3,
@@ -26,11 +31,19 @@ export default function ConfigurationDessin() {
   const { jouer } = useSound()
   const [config, setConfig] = useState<ConfigDessin>(CONFIG_PAR_DEFAUT)
 
+  // La table se retrouve, prénoms compris : la même famille enchaîne les
+  // dessins comme elle enchaîne les poèmes.
+  const [retenue] = useState(() => {
+    try { return lireTable(localStorage.getItem(CLE_TABLE_DESSIN)) } catch { return null }
+  })
   const [slots, setSlots] = useState<SlotType[]>(() => {
+    if (retenue && retenue.sieges.every(s => s !== 'ia')) return retenue.sieges as SlotType[]
     const result: SlotType[] = Array(6).fill('vide') as SlotType[]
     for (let i = 0; i < CONFIG_PAR_DEFAUT.joueurs && i < 6; i++) result[i] = 'humain'
     return result
   })
+  const [noms, setNoms] = useState<string[]>(() => retenue?.noms ?? Array(6).fill(''))
+  const siegesHumains = slots.flatMap((s, i) => (s === 'humain' ? [i] : []))
 
   const joueurs = Math.max(1, slots.filter(s => s === 'humain').length)
 
@@ -62,7 +75,13 @@ export default function ConfigurationDessin() {
 
   function demarrer() {
     jouer('demarrage')
-    sessionStorage.setItem('config-dessin', JSON.stringify(config))
+    try {
+      localStorage.setItem(CLE_TABLE_DESSIN, JSON.stringify({ sieges: slots, noms: noms.map(nettoyerNom) }))
+    } catch { /* stockage indisponible : la partie se joue quand même */ }
+    const avecNoms: ConfigDessin = joueurs > 1
+      ? { ...config, noms: nomsDesMains(slots as Siege[], noms) }
+      : config
+    sessionStorage.setItem('config-dessin', JSON.stringify(avecNoms))
     // Le brouillon de reprise était laissé en place : la nouvelle partie
     // repartait au milieu de l'ancienne.
     sessionStorage.removeItem('dessin-brouillon')
@@ -152,7 +171,9 @@ export default function ConfigurationDessin() {
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             {tr('— AUTOUR DE LA TABLE —', '— AROUND THE TABLE —')}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          {/* Six sièges de 44 et cinq écarts de 8 : 304 points, plus que
+              les 288 d'un écran de 320. Les écarts se resserrent au besoin. */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', maxWidth: 304, gap: 4, marginBottom: 12 }}>
             {slots.map((slot, i) => (
               <button
                 key={i}
@@ -187,6 +208,15 @@ export default function ConfigurationDessin() {
             <div style={{ ...mono, fontSize: 12, color: encre, opacity: 0.5, marginTop: 7, lineHeight: 1.55 }}>
               {tr("Passe l'appareil de main en main — chaque dessinateur replie l'écran avant de passer.", 'Pass the device from hand to hand — each artist hides the screen before passing it on.')}
             </div>
+          )}
+          {/* Les prénoms : l'écran de passage appelle « Léa » au lieu de
+              « Joueur 2 ». Le même champ qu'au cadavre écrit. */}
+          {joueurs > 1 && (
+            <NomsDesMains
+              sieges={siegesHumains} noms={noms}
+              onNom={(siege, v) => setNoms(prev => prev.map((n, j) => (j === siege ? v : n)))}
+              encre={encre} accent={accent}
+            />
           )}
         </motion.div>
 

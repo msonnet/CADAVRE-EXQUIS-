@@ -1,5 +1,6 @@
 import type { Case } from '../types'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
+import { NOMS_VOIX, nomDeVoix } from '../data/voiceIds'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -24,7 +25,18 @@ function toRomain(n: number): string {
  * des cinq noms ne dit pas.
  */
 export function attribution(c: Case, iaNum?: number): string {
-  const noms = c.voixNom ? ` · ${c.voixNom}` : ''
+  // Le cadavre écrit range l'IDENTIFIANT de la voix (« meteorologue »), que
+  // les coutures affichaient tel quel, sans accent ni article : « voix 2 ·
+  // meteorologue ». L'atelier, lui, range déjà le nom. On traduit ici, au
+  // seul endroit qui lit les deux, et les poèmes déjà au recueil en profitent.
+  //
+  // Un fragment de RÉSERVE ne porte pas le nom dans la signature : il n'a pas
+  // été écrit à l'instant par la voix. Le nom passe dans l'étiquette, qui dit
+  // honnêtement d'où il vient — voir `libelleReserve`.
+  const nom = c.voixNom && !c.fallback
+    ? (NOMS_VOIX[c.voixNom] ? nomDeVoix(c.voixNom, langueActuelle()) : c.voixNom)
+    : ''
+  const noms = nom ? ` · ${nom}` : ''
 
   // ── Vers d'atelier : le nombre de mains d'abord ──────────────────────
   if (typeof c.nbVoix === 'number') {
@@ -43,13 +55,38 @@ export function attribution(c: Case, iaNum?: number): string {
     const num = iaNum !== undefined ? ` ${iaNum}` : ''
     return `${tr('voix', 'voice')}${num}${noms}`
   }
-  if (c.joueurNumero) return `${tr('joueur', 'player')} ${c.joueurNumero}`
-  // Salon et poème du jour : une vraie personne, nommée. Une main restée
-  // anonyme n'est pas « toi » pour autant — c'était le repli d'avant.
+  // Une vraie personne, nommée : au salon, au poème du jour, et depuis la
+  // table locale autour d'un seul téléphone. Le prénom passe AVANT le
+  // numéro — c'était l'inverse, et une main qui s'appelait Nadja signait
+  // « joueur 1 ». Seul, la main est la tienne : « toi », et non « joueur 1 ».
   if (c.moi) return tr('toi', 'you')
   if (c.pseudo) return c.pseudo
+  if (c.joueurNumero) return `${tr('joueur', 'player')} ${c.joueurNumero}`
+  // Une main restée anonyme n'est pas « toi » pour autant.
   if ('moi' in c || 'pseudo' in c) return tr('une main', 'a hand')
   return tr('toi', 'you')
+}
+
+/**
+ * L'étiquette d'un fragment venu de la réserve.
+ *
+ * Hors ligne, la réserve parlait la langue commune — « chavire », « la nuit
+ * garde tout » — sous le nom d'une voix. Chaque voix a maintenant la sienne
+ * (`data/reserveVoix.ts`), et l'étiquette peut le dire : « RÉSERVE DU
+ * CARTOGRAPHE ». Le mot RÉSERVE reste : une conserve ne se fait pas passer
+ * pour une voix vivante. Sans nom connu — la réserve commune, ou un poème
+ * d'avant — l'étiquette reste nue.
+ */
+export function libelleReserve(voixId?: string): string {
+  const n = voixId ? NOMS_VOIX[voixId] : undefined
+  if (!n) return tr('RÉSERVE', 'RESERVE')
+  // « de » se contracte avec l'article : du cartographe, de la notice, de
+  // l'herboriste. Les noms portent leur article en dur, c'est lui qu'on lit.
+  const fr = n.fr.startsWith('Le ') ? `du ${n.fr.slice(3)}`
+    : n.fr.startsWith('La ') ? `de la ${n.fr.slice(3)}`
+    : n.fr.startsWith("L'") ? `de l'${n.fr.slice(2)}`
+    : `de ${n.fr}`
+  return tr(`RÉSERVE ${fr}`.toUpperCase(), `${n.en}'s reserve`.toUpperCase())
 }
 
 /**

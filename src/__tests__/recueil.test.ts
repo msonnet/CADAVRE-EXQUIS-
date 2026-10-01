@@ -23,6 +23,14 @@ const poeme = (id: string, textes: string[]): Poeme => ({
 })
 
 describe('composerTexte', () => {
+  it('nomme les mains d’une table, qu’un fichier ne montre pas autrement', () => {
+    const p = poeme('t', ['le vernis craquelé', 'avale', 'une lampe sourde'])
+    p.cases[0].pseudo = 'Nadja'; p.cases[1].pseudo = 'Léa'; p.cases[2].pseudo = 'Nadja'
+    expect(composerTexte([p])).toContain('Mains : Nadja, Léa')
+    // Un poème écrit seul ne porte aucune ligne de mains.
+    expect(composerTexte([poeme('s', ['un vers'])])).not.toContain('Mains')
+  })
+
   it('rend les poèmes lisibles, dans l’ordre', () => {
     const t = composerTexte([
       poeme('a', ['le vernis craque', 'sous la lampe']),

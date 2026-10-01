@@ -19,6 +19,8 @@ export interface ConfigPartie {
   mode: ModeJeu
   joueursHumains: number  // 1–4
   voixIA: number          // 0–4
+  /** Table locale : le prénom de chaque main, dans l'ordre où elles jouent ('' = son numéro). */
+  noms?: string[]
 }
 
 /** Une case d'un vers d'atelier, et la main qui l'a remplie. */
@@ -94,6 +96,8 @@ export interface ConfigDessin {
   nbBandes: number                    // 2–5 : nombre de fragments
   joueurs: number                     // 1–5 : nombre de joueurs (peut différer des bandes)
   visibilite: 'aveugle' | 'raccord'
+  /** Le prénom de chaque dessinateur, dans l'ordre de passage ('' = son numéro). */
+  noms?: string[]
 }
 
 export interface BandeDessin {

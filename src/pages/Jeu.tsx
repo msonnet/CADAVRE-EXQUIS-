@@ -22,6 +22,10 @@ import { mono } from '../lib/typo'
 import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { tr, langueActuelle } from '../i18n'
 import { buildSequence, type Participant } from '../lib/sequence'
+import { nomDeMain, corpsDuNom } from '../lib/table'
+import { puiserReserve } from '../lib/reserveVoix'
+import { libelleReserve } from '../lib/attribution'
+import { zoneVivante } from '../lib/a11y'
 
 // ─── Types internes ──────────────────────────────────────────────────────────
 
@@ -315,6 +319,9 @@ export default function Jeu() {
   const [iaChargement, setIaChargement] = useState(false)
   const [iaTexteRevele, setIaTexteRevele] = useState<string | null>(null)
   const [iaFallbackRevele, setIaFallbackRevele] = useState(false)
+  // La voix dont la réserve a parlé : l'étiquette dit « RÉSERVE DU
+  // CARTOGRAPHE » au lieu d'un RÉSERVE anonyme sous « Le cartographe écrit… ».
+  const [iaReserveDe, setIaReserveDe] = useState<string | undefined>(undefined)
   const [iaAttendValidation, setIaAttendValidation] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
   const [attendPassage, setAttendPassage] = useState(false)
@@ -385,7 +392,7 @@ export default function Jeu() {
 
   // ─── Fonctions utilitaires ─────────────────────────────────────────────────
 
-  function choisirSansDuplique(texte: string, type: string): { texte: string; remplace: boolean } {
+  function choisirSansDuplique(texte: string, type: string, voiceId?: string): { texte: string; remplace: boolean; reserveDe?: string } {
     const key = normaliserCle(texte)
     // Le remplacement ne s'applique qu'aux doublons de la PARTIE EN COURS.
     // Vérifier aussi les parties précédentes (textesSession) rejetait des
@@ -396,20 +403,29 @@ export default function Jeu() {
     // remplace = true quand on a dû puiser dans la réserve (FALLBACKS) car le texte
     // était vide (échec API) ou déjà employé dans la partie.
     let remplace: boolean
+    // La voix dont la réserve a fourni le fragment — absente quand c'est le
+    // stock commun qui a parlé, pour que l'étiquette ne mente pas.
+    let reserveDe: string | undefined
     if (texte && !textesUtilises.current.has(key)) {
       final = texte
       remplace = false
     } else {
-      // La réserve, elle, évite aussi les mots des parties précédentes
+      // La réserve, elle, évite aussi les mots des parties précédentes.
+      // Celle de LA VOIX d'abord : hors ligne, toutes les cases d'une partie
+      // y tombent, et le stock commun en faisait une partie générique sous
+      // quarante-six noms. Le commun ne sert plus que quand la voix n'a rien.
       const totalUsed = new Set([...textesUtilises.current, ...textesSession.current])
-      final = pickUnused(type, totalUsed)
+      const propre = puiserReserve(voiceId, type, langueActuelle(), totalUsed, normaliserCle)
+        ?? puiserReserve(voiceId, type, langueActuelle(), textesUtilises.current, normaliserCle)
+      final = propre ?? pickUnused(type, totalUsed)
+      reserveDe = propre ? voiceId : undefined
       remplace = true
     }
     const finalKey = normaliserCle(final)
     textesUtilises.current.add(finalKey)
     textesSession.current.add(finalKey)
     sessionStorage.setItem('textes-session', JSON.stringify([...textesSession.current]))
-    return { texte: final, remplace }
+    return { texte: final, remplace, reserveDe }
   }
 
   function sauvegarderBrouillon(newCases: Case[], newIndex: number) {
@@ -463,19 +479,24 @@ export default function Jeu() {
     const slotNum = iaSlotNums[seqPos]
 
     const finaliser = (brut: string, sourceServeur: 'ia' | 'fallback', voixNom?: string) => {
-      const { texte, remplace } = choisirSansDuplique(brut, def.type)
+      // Le serveur, quand il échoue, rend un mot de SON stock commun — le
+      // même que celui qu'on quitte ici. On le remplace par la réserve de la
+      // voix, comme hors ligne : une réponse de secours n'a pas à être plus
+      // générique selon l'endroit où l'échec s'est produit.
+      const { texte, remplace, reserveDe } = choisirSansDuplique(sourceServeur === 'fallback' ? '' : brut, def.type, voiceId)
       // Fallback si le serveur a renvoyé un mot de réserve OU si on a remplacé un doublon localement
       const estFallback = sourceServeur === 'fallback' || remplace
       memoriserMotsIa(texte)
       setIaChargement(false)
       setIaTexteRevele(texte)
       setIaFallbackRevele(estFallback)
+      setIaReserveDe(estFallback ? reserveDe : undefined)
       // En partie découverte OU pendant le coach tutoriel T_JEU_IA :
       // le passage est toujours manuel — jamais de timer auto.
       if (estDecouverte || (tutActif && tutEtape === T_JEU_IA)) {
         setIaAttendValidation(true)
         iaAvancePendingRef.current = () => {
-          avancer(idx, def, texte, slotNum, estFallback, voixNom)
+          avancer(idx, def, texte, slotNum, estFallback, voixNom, reserveDe)
           setIaTexteRevele(null)
           setIaFallbackRevele(false)
           setIaAttendValidation(false)
@@ -485,7 +506,7 @@ export default function Jeu() {
         // subie — un tap l'abrège. Le tap ne dévoile rien de plus (le fragment
         // de la voix reste scellé), il ne fait que passer à la suite.
         const poursuivre = () => {
-          avancer(idx, def, texte, slotNum, estFallback, voixNom)
+          avancer(idx, def, texte, slotNum, estFallback, voixNom, reserveDe)
           setIaTexteRevele(null)
           setIaFallbackRevele(false)
         }
@@ -588,22 +609,27 @@ export default function Jeu() {
         // La partie découverte est finie : les parties suivantes retrouvent
         // l'auto-avance normale des tours IA.
         sessionStorage.removeItem('decouverte')
-        navigate('/fin', { state: { poeme } })
+        // La table voyage avec le poème : c'est elle que « UNE AUTRE, À LA
+        // MÊME TABLE » relancera. Pas celle de la Découverte, qui n'est la
+        // table de personne.
+        navigate('/fin', { state: { poeme, table: estDecouverte ? undefined : config } })
       })
   }, [cases.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Fonctions de jeu ─────────────────────────────────────────────────────
 
-  function avancer(idx: number, def: DefinitionCase, texte: string, slotNum?: number, isFallback?: boolean, voixNom?: string) {
+  function avancer(idx: number, def: DefinitionCase, texte: string, slotNum?: number, isFallback?: boolean, voixNom?: string, reserveDe?: string) {
     const c: Case = {
       numero: idx + 1,
       fonction: def.fonction,
       consigne: def.consigne,
       auteur: 'ia',
       voixSlot: slotNum,
-      // Attribuée seulement si le fragment vient bien de la voix : un texte de
-      // réserve signé « l'apiculteur » serait un mensonge.
-      voixNom: isFallback ? undefined : voixNom,
+      // Un texte du stock commun signé « l'apiculteur » serait un mensonge :
+      // il ne porte aucun nom. Un fragment de la réserve PROPRE de la voix
+      // porte le sien, avec `fallback` — les coutures ne le signent pas,
+      // elles l'étiquettent « RÉSERVE DE L'APICULTEUR ».
+      voixNom: isFallback ? reserveDe : voixNom,
       texte,
       ts: Date.now(),
       fallback: isFallback || undefined,
@@ -621,12 +647,18 @@ export default function Jeu() {
     if (!defActuelle || caseIndex === caseIndexSoumis.current) return
     caseIndexSoumis.current = caseIndex
     textesUtilises.current.add(normaliserCle(texte))
+    // La main se nomme dans les coutures : seule, c'est « toi » — elle
+    // signait « joueur 1 » ; à plusieurs, son prénom quand la table le lui a
+    // donné, son numéro sinon. `pseudo` et `moi` sont ceux du salon :
+    // `attribution` les lit déjà.
+    const nom = multiJoueurs ? nomDeMain(config.noms, joueurNum ?? 0) : undefined
     const c: Case = {
       numero: caseIndex + 1,
       fonction: defActuelle.fonction,
       consigne: defActuelle.consigne,
       auteur: 'humain',
       joueurNumero: joueurNum,
+      ...(multiJoueurs ? (nom ? { pseudo: nom } : {}) : { moi: true }),
       texte,
       ts: Date.now(),
     }
@@ -676,10 +708,53 @@ export default function Jeu() {
 
   // ─── Rendu ─────────────────────────────────────────────────────────────────
 
+  // La main qui a la parole, nommée quand la table l'a nommée.
+  const nomMainActuelle = participantActuel?.type === 'humain' && multiJoueurs
+    ? nomDeMain(config.noms, participantActuel.num)
+    : undefined
+  const appelMain = participantActuel?.type === 'humain'
+    ? nomMainActuelle ?? `${tr('Joueur', 'Player')} ${participantActuel.num}`
+    : ''
+  const nomVoixActuelle = participantActuel?.type === 'ia'
+    ? nomDeVoix(voixParSlot[caseIndex % seq.length], langueActuelle())
+    : ''
+  // En chiffres arabes pour l'oreille : un lecteur d'écran lit « V » comme
+  // une lettre, et l'acte n'est plus un nombre.
+  const acteParle = tr(`Acte ${caseIndex + 1} sur ${total}.`, `Act ${caseIndex + 1} of ${total}.`)
+
+  /*
+    Ce qu'un lecteur d'écran entend quand le tour change.
+
+    Relevé avant : pendant le tour de la voix, le focus tombait sur BODY, et
+    ni « Le géologue écrit… » ni « ACTE II / V » n'étaient des zones
+    vivantes. Le tour passait en silence ; quand la main revenait, le
+    lecteur disait « Ta contribution, zone de texte » et rien d'autre.
+
+    UNE zone, posée en premier enfant de chacun des écrans du jeu : le
+    rideau, la voix, la case. Les quatre écrans ont la même racine, donc
+    React garde ce nœud d'un écran à l'autre et n'en change que le texte —
+    c'est ce changement que le lecteur annonce. Une zone montée avec son
+    contenu, elle, se tait le plus souvent : posée dans chaque écran à une
+    place différente, elle n'aurait rien dit.
+  */
+  const annonce = !defActuelle || cases.length >= total
+    ? tr('Le poème se referme.', 'The poem is closing.')
+    : participantActuel?.type === 'ia'
+      ? iaTexteRevele !== null
+        ? `${nomVoixActuelle} ${tr('a déposé son fragment.', 'has laid down its fragment.')}${iaFallbackRevele ? ` ${libelleReserve(iaReserveDe).toLowerCase()}.` : ''}`
+        : `${acteParle} ${nomVoixActuelle} ${tr('écrit.', 'writes.')}`
+      : attendPassage
+        ? multiJoueurs
+          ? `${tr('Passe le téléphone à', 'Pass the phone to')} ${appelMain}.`
+          : acteParle
+        : `${acteParle} ${multiJoueurs ? tr(`À ${appelMain} d'écrire.`, `${appelMain}'s turn to write.`) : tr("À toi d'écrire.", 'Your turn to write.')}`
+  const zoneAnnonce = <p className="sr-only" {...zoneVivante}>{annonce}</p>
+
   // Écran de fin / transition
   if (!defActuelle || cases.length >= total) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh">
+        {zoneAnnonce}
         <motion.span
           className="text-or text-3xl"
           animate={{ opacity: [0.3, 1, 0.3] }}
@@ -698,6 +773,7 @@ export default function Jeu() {
   if (attendPassage && participantActuel?.type === 'humain') {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
+        {zoneAnnonce}
         {multiJoueurs && (
           <motion.p
             className="nav-discrete mb-4"
@@ -712,15 +788,23 @@ export default function Jeu() {
           className="text-encre"
           style={{
             fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
-            fontSize: 'clamp(4rem, 18vw, 7rem)',
+            // Un prénom est plus long qu'un numéro : à 18vw, « Christophe »
+            // sortait de l'écran à 320 points. Il se réduit avec sa longueur.
+            fontSize: nomMainActuelle ? corpsDuNom(nomMainActuelle) : 'clamp(4rem, 18vw, 7rem)',
             lineHeight: 0.95, letterSpacing: '-0.02em',
+            textAlign: 'center', maxWidth: '100%', overflowWrap: 'anywhere', textWrap: 'balance',
           }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: multiJoueurs ? 0.4 : 0.2 }}
         >
+          {/* Le prénom quand la table l'a donné : « Joueur 2 », personne
+              autour de la table ne savait plus qui c'était. */}
+          {/* Le trait d'union ASCII n'a pas de dessin dans la Bodoni
+              auto-hébergée : « Marie-Christine » s'affichait « Marie
+              Christine ». Le trait d'union typographique, lui, en a un. */}
           {multiJoueurs
-            ? `${tr('Joueur', 'Player')} ${participantActuel.num}`
+            ? appelMain.replace(/-/g, '\u2010')
             : `${tr('Acte', 'Act')} ${toRomain(caseIndex + 1)}`}
         </motion.p>
         {multiJoueurs ? (
@@ -784,6 +868,7 @@ export default function Jeu() {
     }
     return (
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
+        {zoneAnnonce}
         <Decor variant="jeu-ia" />
         <div
           style={{ position: 'relative', zIndex: 10, cursor: tapAbrege ? 'pointer' : 'default' }}
@@ -823,7 +908,7 @@ export default function Jeu() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
             >
-              {nomDeVoix(voixParSlot[caseIndex % seq.length], langueActuelle())}
+              {nomVoixActuelle}
             </motion.div>
 
             <motion.div
@@ -900,9 +985,14 @@ export default function Jeu() {
                           border: `1px solid ${accent}55`,
                           padding: '2px 8px',
                           borderRadius: 3,
+                          // « RÉSERVE DU SOUFFLEUR DE VERRE » : le badge se
+                          // replie plutôt que de sortir d'un écran étroit.
+                          maxWidth: 'calc(100vw - 48px)',
+                          textAlign: 'center',
+                          textWrap: 'balance',
                         }}
                       >
-                        {tr('RÉSERVE', 'RESERVE')}
+                        {libelleReserve(iaReserveDe)}
                       </motion.div>
                     )}
                   </>
@@ -942,16 +1032,23 @@ export default function Jeu() {
             </motion.div>
           )}
 
-          {/* Invite d'abrègement — discrète, seulement quand le tap sert */}
+          {/* Invite d'abrègement — discrète, seulement quand le tap sert.
+              C'était un texte qui clignotait : au clavier et au lecteur
+              d'écran il n'existait pas, et le focus tombait dans le vide
+              pendant tout le tour de la voix. C'est maintenant la commande
+              qu'il annonçait, au même dessin, et le focus s'y pose. */}
           {tapAbrege && (
-            <motion.div
-              style={{ ...mono, fontSize: 13, color: accent, textAlign: 'center', paddingBottom: 6, letterSpacing: '0.18em' }}
+            <motion.button
+              type="button"
+              autoFocus
+              onClick={e => { e.stopPropagation(); abreger() }}
+              style={{ ...mono, fontSize: 13, color: accent, textAlign: 'center', paddingBottom: 6, letterSpacing: '0.18em', background: 'none', border: 'none', cursor: 'pointer', alignSelf: 'center' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
             >
               {tr('TOUCHER POUR CONTINUER', 'TAP TO CONTINUE')}
-            </motion.div>
+            </motion.button>
           )}
 
           {/* Footer */}
@@ -1000,6 +1097,7 @@ export default function Jeu() {
   // ── Human turn screen ──────────────────────────────────────────────────────
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
+      {zoneAnnonce}
       <Decor variant="jeu" />
       <div style={{ position: 'relative', zIndex: 10, paddingBottom: tutActif ? 230 : 0 }} className="flex flex-col flex-1">
 
@@ -1053,7 +1151,10 @@ export default function Jeu() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
+              {/* L'acte, dit pour l'oreille : le champ le cite en description. */}
+              <span id="jeu-acte" className="sr-only">{acteParle}</span>
               <div
+                id="jeu-consigne"
                 className="font-fraunces font-black"
                 style={{
                   fontSize: 'clamp(1.6rem, 7vw, 2.4rem)',
@@ -1066,8 +1167,8 @@ export default function Jeu() {
                 {renderConsigneTitre(consigneTitre, accent)}
               </div>
               {example && (
-                <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: encre, opacity: 0.9, marginBottom: 14, lineHeight: 1.55 }}>
-                  {example}
+                <div id="jeu-exemple" style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: encre, opacity: 0.9, marginBottom: 14, lineHeight: 1.55 }}>
+                  <span className="sr-only">{tr('par exemple :', 'for example:')} </span>{example}
                 </div>
               )}
             </motion.div>
@@ -1123,6 +1224,10 @@ export default function Jeu() {
                   onKeyDown={handleKeyDown}
                   placeholder={tr('Écris ici — toi seul le verras…', 'Write here — only you will see it…')}
                   aria-label={tr('Ta contribution', 'Your contribution')}
+                  // Le champ ne disait que son nom : « Ta contribution, zone
+                  // de texte ». La consigne vivait au-dessus, isolée — une
+                  // main aveugle ne savait pas ce qu'on lui demandait.
+                  aria-describedby={['jeu-acte', 'jeu-consigne', ...(example ? ['jeu-exemple'] : [])].join(' ')}
                   {...CLAVIER_FRAGMENT}
                   autoFocus
                   rows={3}

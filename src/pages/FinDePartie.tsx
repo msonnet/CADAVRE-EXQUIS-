@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoemes, sauvegarderIllustration } from '../db'
-import type { Poeme } from '../types'
+import type { ConfigPartie, Poeme } from '../types'
 import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 import { corrigerAccords } from '../api/corriger'
@@ -18,7 +18,8 @@ import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import SoldeEncrier from '../components/SoldeEncrier'
-import { attribution, libelleMorceaux } from '../lib/attribution'
+import { attribution, libelleMorceaux, libelleReserve } from '../lib/attribution'
+import { ouvrirTable } from '../lib/lancerTable'
 import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
 import MainsDuVers from '../components/MainsDuVers'
 import { usePartage } from '../hooks/usePartage'
@@ -73,6 +74,11 @@ export default function FinDePartie() {
   const [poeme, setPoeme] = useState<Poeme | null>(
     (location.state as { poeme?: Poeme } | null)?.poeme ?? null
   )
+  // La table qui vient de jouer — absente après la Découverte et l'Atelier,
+  // qui ne se rejouent pas « à la même table ».
+  const table = (location.state as { table?: ConfigPartie } | null)?.table ?? null
+  const aPlusieurs = !!table && table.joueursHumains > 1
+  const [relance, setRelance] = useState(false)
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
   const [revealReady, setRevealReady] = useState(false)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
@@ -219,6 +225,25 @@ export default function FinDePartie() {
     if (style) choisirStyle(style)
   }
 
+  /**
+   * Une autre partie, à la même table.
+   *
+   * La soirée se joue par parties successives, et le geste qui la continuait
+   * était un lien de 13 px vers des préparatifs remis à zéro. Les mêmes
+   * mains, les mêmes prénoms, les mêmes règles — et la même porte que les
+   * préparatifs : une table où une voix écrit se règle à son ouverture, le
+   * raccourci ne contourne pas l'encrier.
+   */
+  async function memeTable() {
+    if (!table || relance) return
+    jouer('demarrage')
+    setRelance(true)
+    const refuse = await ouvrirTable(table)
+    setRelance(false)
+    if (refuse) { setRefus(refuse); return }
+    navigate('/jeu')
+  }
+
   if (!poeme) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
@@ -307,7 +332,9 @@ export default function FinDePartie() {
         plafond={refus?.plafond}
         onFermer={() => setRefus(null)}
         onEncrierRempli={() => {
+          const acte = refus?.acte
           setRefus(null)
+          if (acte === 'partie_ia') { memeTable(); return }
           if (styleChoisiRef.current) choisirStyle(styleChoisiRef.current)
         }}
         accent={accent} encre={encre} bg={bg}
@@ -535,7 +562,12 @@ export default function FinDePartie() {
           )}
         </AnimatePresence>
 
-        {/* ── SCELLER CTA ── */}
+        {/* ── SCELLER CTA ──
+            À plusieurs, le bouton principal est la partie suivante : le
+            poème est déjà au recueil depuis la dernière case, « sceller »
+            ne faisait que mener à la bibliothèque — et c'est la relance que
+            la table attend. Seul, rien ne change : le guide des premiers
+            pas désigne ce bouton. */}
         <motion.div
           className="mb-3 mt-2"
           initial={{ opacity: 0, y: 6 }}
@@ -543,6 +575,25 @@ export default function FinDePartie() {
           transition={{ delay: 1.2, duration: 0.4 }}
           whileTap={{ scale: 0.98 }}
         >
+          {aPlusieurs ? (
+            <button
+              onClick={memeTable}
+              disabled={relance}
+              className="w-full flex items-center justify-center"
+              style={{
+                background: accent, color: btnText,
+                ...mono, fontSize: 17,
+                textTransform: 'uppercase',
+                padding: '1.15em 1em',
+                border: 'none', cursor: relance ? 'default' : 'pointer',
+                gap: 2,
+                borderRadius: 3,
+                opacity: relance ? 0.7 : 1,
+              }}
+            >
+              <span>{tr('Une autre, à la même table', 'Another, at the same table')}&nbsp;→</span>
+            </button>
+          ) : (
           <button
             onClick={() => { if (tutActif && tutEtape === T_FIN_RECUEIL) tutAvancer(); navigate('/bibliotheque') }}
             className={`w-full flex items-center justify-center${tutActif && tutEtape === T_FIN_RECUEIL ? ' tut-cible' : ''}`}
@@ -559,6 +610,7 @@ export default function FinDePartie() {
           >
             <span>{tr('Sceller au recueil', 'Seal into the collection')}&nbsp;→</span>
           </button>
+          )}
 
         </motion.div>
 
@@ -646,8 +698,11 @@ export default function FinDePartie() {
                           marginLeft: 7,
                           fontFamily: "'Raleway', sans-serif",
                           verticalAlign: 'middle',
+                          // Nommée, l'étiquette s'allonge : elle passe à la
+                          // ligne d'un bloc au lieu de se couper en deux.
+                          display: 'inline-block',
                         }}>
-                          {tr('RÉSERVE', 'RESERVE')}
+                          {libelleReserve(c.voixNom)}
                         </span>
                       )}
                     </p>
@@ -783,18 +838,41 @@ export default function FinDePartie() {
           )}
         </AnimatePresence>
 
-        {/* ── NOUVELLE PARTIE ── */}
+        {/* ── NOUVELLE PARTIE ──
+            Quand une table a joué, il y a deux suites et elles ne se
+            confondent pas : la même table, d'un geste, ou une autre table,
+            par les préparatifs — qui se souviennent désormais de la
+            dernière. À plusieurs, la première est déjà le bouton principal,
+            et c'est le recueil qui descend ici. */}
         <motion.div
-          className="flex justify-center mt-4 pb-2"
+          className="flex flex-col items-center mt-4 pb-2"
+          style={{ gap: 4 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.8 }}
         >
+          {table && !aPlusieurs && (
+            <button
+              onClick={memeTable}
+              disabled={relance}
+              style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: relance ? 'default' : 'pointer', textAlign: 'center' }}
+            >
+              {tr('— UNE AUTRE, À LA MÊME TABLE —', '— ANOTHER, AT THE SAME TABLE —')}
+            </button>
+          )}
+          {aPlusieurs && (
+            <button
+              onClick={() => navigate('/bibliotheque')}
+              style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+            >
+              {tr('— VOIR AU RECUEIL —', '— SEE IN THE COLLECTION —')}
+            </button>
+          )}
           <button
             onClick={() => navigate('/config')}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center' }}
           >
-            {tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
+            {table ? tr('— CHANGER DE TABLE —', '— CHANGE THE TABLE —') : tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
           </button>
         </motion.div>
 
