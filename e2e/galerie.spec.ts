@@ -173,6 +173,71 @@ test.describe('le sommaire', () => {
   })
 })
 
+// Le sommaire de l'audit en avait deux : la semaine des lecteurs, et les
+// numéros du poème du jour. Le second manquait — la galerie ne menait au
+// rendez-vous que par un lien d'en-tête, jamais à un poème scellé.
+test.describe('les numéros du poème du jour', () => {
+  const CHAINES = [
+    { id: 'c2', jour: '2026-09-29', amorce: 'le sel' },
+    { id: 'c1', jour: '2026-09-28', amorce: 'une échelle' },
+    { id: 'c0', jour: '2026-09-27', amorce: 'le givre' },
+    { id: 'c-1', jour: '2026-09-26', amorce: 'la cire' },
+  ]
+  async function chaines(page: Page, panne = false) {
+    await page.route('**/api/jour**', r => r.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ jour: '2026-09-30', amorce: 'une horloge', echo: 'poches', rang: 3, mains: 2, monVers: null, scelle: false }),
+    }))
+    await page.route('**/rest/v1/jour_chaines**', r => {
+      if (panne) return r.fulfill({ status: 500, contentType: 'application/json', body: '{}' })
+      const url = r.request().url()
+      const un = url.includes('limit=1&') || url.endsWith('limit=1')
+      const lim = Number(/limit=(\d+)/.exec(url)?.[1] ?? 30)
+      return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(un ? CHAINES[0] : CHAINES.slice(0, lim)) })
+    })
+    await page.route('**/rest/v1/jour_vers**', r => {
+      const c1 = r.request().url().includes('chaine_id=eq.c1')
+      return r.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify([{ id: 'v1', rang: 1, texte: c1 ? 'une échelle monte dans le puits' : 'le sel dort sous la langue', pseudo: 'Nadja', voix: false, voix_nom: null, main_id: 'x', retire: false }]),
+      })
+    })
+  }
+
+  test('trois numéros en tête, et chacun ouvre SON jour', async ({ page }) => {
+    test.setTimeout(60_000)
+    await bouchonner(page, () => [VERNIS])
+    await chaines(page)
+    await page.goto('/galerie')
+    await page.waitForLoadState('networkidle')
+    await franchir(page)
+
+    const numeros = page.getByRole('navigation', { name: /Numéros du poème du jour|Poem of the day/ })
+    await expect(numeros).toBeVisible({ timeout: 5000 })
+    await expect(numeros.getByRole('link')).toHaveCount(3)
+    // Pas un palmarès : aucun chiffre de vers ni de mains.
+    expect(await numeros.innerText()).not.toMatch(/VERS|MAINS/)
+
+    await numeros.getByRole('link', { name: /une échelle/ }).click()
+    await expect(page).toHaveURL(/\/poeme-du-jour\?jour=2026-09-28/)
+    await franchir(page)
+    // C'est bien ce jour-là qui s'ouvre, plié, et non le dernier.
+    await expect(page.getByText(/— DANS L’ALMANACH —/)).toBeVisible({ timeout: 5000 })
+    await page.getByRole('button', { name: /Déplier le poème/ }).click()
+    await expect(page.getByText('une échelle monte dans le puits')).toBeVisible({ timeout: 15000 })
+  })
+
+  test('une panne du registre ne montre rien', async ({ page }) => {
+    await bouchonner(page, () => [VERNIS])
+    await chaines(page, true)
+    await page.goto('/galerie')
+    await page.waitForLoadState('networkidle')
+    await franchir(page)
+    await expect(page.locator('section[aria-label="Publications"] article')).toHaveCount(1, { timeout: 5000 })
+    await expect(page.getByRole('navigation', { name: /Numéros du poème du jour/ })).toHaveCount(0)
+  })
+})
+
 async function poserFeuillet(page: Page, publication: { id: string; date: number } | null) {
   await page.goto('/bibliotheque')
   await page.waitForLoadState('networkidle')

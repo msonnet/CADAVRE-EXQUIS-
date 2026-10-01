@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
@@ -16,6 +16,7 @@ import {
   type Publication, type TypePublication,
   languePublication, correspond, retenusDeLaSemaine,
 } from '../lib/galerie'
+import { almanach, type ChaineScellee } from '../lib/jour'
 
 const PAGE_SIZE = 20
 const COLONNES = 'id, type, titre, payload, image_url, author_pseudo, author_avatar, author_id, created_at, views_count'
@@ -41,6 +42,12 @@ export function cleAuteur(item: { author_id?: string | null; author_pseudo: stri
 function lireMasques(): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(MASQUES_KEY) ?? '[]')) }
   catch { return new Set() }
+}
+
+/** « 28 SEPT. » — le jour UTC d'une chaîne scellée, comme l'almanach l'écrit. */
+function dateNumero(jour: string): string {
+  const d = new Date(`${jour}T12:00:00Z`)
+  return d.toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'short', timeZone: 'UTC' }).toUpperCase()
 }
 
 export default function Galerie() {
@@ -76,6 +83,7 @@ export default function Galerie() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [masques, setMasques] = useState<Set<string>>(lireMasques)
   const [retenus, setRetenus] = useState<GalleryItem[]>([])
+  const [numeros, setNumeros] = useState<ChaineScellee[]>([])
   // Les publications de ce téléphone : les rouvrir ne compte pas une
   // lecture. Un auteur qui relit son poème dix fois se serait annoncé dix
   // lecteurs — et c'est exactement le chiffre qu'on lui montre désormais.
@@ -272,6 +280,22 @@ export default function Galerie() {
     })()
     return () => { annule = true }
   }, [onglet, chargerReactions])
+
+  // ── Les numéros du poème du jour ──
+  //
+  // Le second titre du sommaire. La galerie ne menait au rendez-vous que
+  // par un lien d'en-tête, vers la journée en cours : les poèmes scellés,
+  // les seuls de tout le jeu écrits par une foule, n'y figuraient nulle
+  // part. Les trois derniers, dans la langue active — `almanach` filtre
+  // déjà — et rien de plus que leur date et leur amorce : un nombre de vers
+  // ou de mains ferait un palmarès. Une panne rend une liste vide, donc
+  // rien.
+  useEffect(() => {
+    if (onglet !== 'poeme') { setNumeros([]); return }
+    let annule = false
+    almanach(3).then(a => { if (!annule) setNumeros(a) })
+    return () => { annule = true }
+  }, [onglet])
 
   // ── Les actions de modération, dans l'état déplié seulement ──
   function actionsDe(item: GalleryItem): React.ReactNode {
@@ -685,6 +709,36 @@ export default function Galerie() {
           )
         })()}
 
+        {/* ── LES NUMÉROS DU POÈME DU JOUR ── */}
+        {!chargement && !erreur && onglet === 'poeme' && !recherche.trim() && numeros.length > 0 && (
+          <nav aria-label={tr('Numéros du poème du jour', 'Past issues of the poem of the day')} style={{ marginBottom: 22 }}>
+            <h2 style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', margin: '0 0 2px' }}>
+              {tr('— LES POÈMES DU JOUR —', '— POEMS OF THE DAY —')}
+            </h2>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {numeros.map(n => (
+                <li key={n.id} style={{ borderBottom: `0.5px solid ${encre}18` }}>
+                  <Link
+                    to={`/poeme-du-jour?jour=${n.jour}`}
+                    onClick={() => jouer('clic')}
+                    style={{
+                      display: 'flex', alignItems: 'baseline', gap: 14, minHeight: 44,
+                      padding: '11px 0', color: encre, textDecoration: 'none',
+                    }}
+                  >
+                    <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 18, opacity: 0.9, minWidth: 0, overflowWrap: 'anywhere' }}>
+                      {n.amorce}
+                    </span>
+                    <span style={{ ...mono, fontSize: 11, letterSpacing: '0.14em', opacity: 0.6, marginLeft: 'auto', flexShrink: 0 }}>
+                      {dateNumero(n.jour)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
         {/* ── LISTE ── */}
         {!chargement && !erreur && items.length > 0 && (() => {
           const visibles = items.filter(it => !masques.has(cleAuteur(it)))
@@ -705,7 +759,7 @@ export default function Galerie() {
           }
           return (
             <section aria-label={tr('Publications', 'Publications')}>
-              {recherche.trim() === '' && retenus.some(r => !masques.has(cleAuteur(r))) && (
+              {recherche.trim() === '' && (numeros.length > 0 || retenus.some(r => !masques.has(cleAuteur(r)))) && (
                 <h2 style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', margin: '0 0 2px' }}>
                   {tr('— AU FIL DES JOURS —', '— DAY BY DAY —')}
                 </h2>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
@@ -69,6 +69,7 @@ function dateAlmanach(jour: string): string {
 
 export default function PoemeDuJour() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
   const seance = useReve()
   const { jouer } = useSound()
   const c = seance?.colorSchema
@@ -144,9 +145,16 @@ export default function PoemeDuJour() {
     let vivant = true
     ;(async () => {
       const [e, h, a] = await Promise.all([lireJour(), dernierPoemeScelle(), almanach()])
+      // `?jour=` — un numéro touché au sommaire de la galerie. Il ouvre CE
+      // jour, plié comme depuis l'almanach ; sans lui on aurait mené le
+      // lecteur au dernier poème et laissé le sien à chercher plus bas. Un
+      // jour inconnu ou illisible retombe sur le dernier, sans bruit.
+      const voulu = params.get('jour')
+      const cible = voulu && voulu !== h?.jour ? a.find(j => j.jour === voulu) : undefined
+      const choisi = cible ? (await lirePoemeScelle(cible)) ?? h : h
       if (!vivant) return
       setEtat(e); setChargement(false); setJours(a)
-      montrer(h)
+      montrer(choisi)
       if (h) setDernier(h.jour)
     })()
     return () => { vivant = false }

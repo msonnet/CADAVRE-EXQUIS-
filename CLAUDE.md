@@ -1201,6 +1201,13 @@ s'affichaient nulle part.
 - **La semaine des lecteurs** : trois poèmes retenus par les réactions des
   sept derniers jours, en tête, sans afficher de compte — un classement
   chiffré ferait un palmarès. Une panne n'affiche rien.
+- **Les poèmes du jour**, second titre du sommaire, ajouté après coup —
+  le premier passage s'était arrêté à la semaine. Les trois derniers
+  numéros scellés, dans la langue active : leur amorce en italique et leur
+  date, ni vers ni mains comptés. Chacun mène à `/poeme-du-jour?jour=…`,
+  qui ouvre CE jour plié, comme l'almanach ; un jour inconnu retombe sur le
+  dernier. Avant, la galerie ne menait qu'à la journée en cours, et les
+  seuls poèmes du jeu écrits par une foule n'y figuraient nulle part.
 - **`/u/Anonyme` n'existe plus** : la page cherchait par `ilike` et
   rassemblait tous ceux qui avaient publié sans compte. Le pseudo est
   échappé (`motifExact`) : « M_reille » ouvrait la page de Mireille.
@@ -1274,7 +1281,7 @@ lecture publique de `gallery` existent depuis le 27 mai.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (592 tests unitaires) + Playwright (91 tests E2E, FR et EN)
+- Tests : Vitest (589 tests unitaires) + Playwright (93 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
