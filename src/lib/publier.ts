@@ -24,9 +24,23 @@ export interface AuteurPublication {
   id?: string | null
 }
 
+/**
+ * Les cases telles qu'elles partent en galerie : sans les noms des mains.
+ *
+ * Une case de la table locale porte le prénom tapé aux préparatifs
+ * (« Nadja », « Léa »), souvent celui d'un enfant ; une case de salon, le
+ * pseudo d'un inconnu. `publierPoeme` les envoyait telles quelles, dans une
+ * table que la clé anonyme lit : des prénoms devenaient une donnée publique
+ * sans que personne l'ait voulu. Or la galerie ne montre AUCUNE couture —
+ * elle n'en a jamais eu besoin. On ne garde donc que le numéro de la main.
+ */
+export function casesPourGalerie(cases: Poeme['cases']): Poeme['cases'] {
+  return cases.map(({ pseudo, moi, ...c }) => c)
+}
+
 export async function publierPoeme(poeme: Poeme, auteur: AuteurPublication | null): Promise<void> {
   const payload = JSON.stringify({
-    cases: poeme.cases,
+    cases: casesPourGalerie(poeme.cases),
     structureId: poeme.structureId,
     titre: poeme.titre,
     langue: langueActuelle(),

@@ -18,7 +18,9 @@ import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import SoldeEncrier from '../components/SoldeEncrier'
-import { attribution, libelleMorceaux, libelleReserve } from '../lib/attribution'
+import { attribution, libelleMorceaux } from '../lib/attribution'
+import EtiquetteReserve from '../components/EtiquetteReserve'
+import { zoneVivante } from '../lib/a11y'
 import { ouvrirTable } from '../lib/lancerTable'
 import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
 import MainsDuVers from '../components/MainsDuVers'
@@ -67,6 +69,10 @@ const STRUCT_LABELS: Record<string, string> = langueActuelle() === 'en' ? {
   'atelier': "L'Atelier",
 }
 
+// Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 export default function FinDePartie() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -80,6 +86,13 @@ export default function FinDePartie() {
   const aPlusieurs = !!table && table.joueursHumains > 1
   const [relance, setRelance] = useState(false)
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
+  // À plusieurs mains, les coutures se dévoilent une à une, au toucher et
+  // dans l'ordre des cases — on devine avant de savoir. Elles s'ouvraient
+  // d'un bloc : autour de la table, la question « qui a écrit ça ? » était
+  // tranchée avant d'avoir été posée. Seul, il n'y a rien à deviner.
+  const [devoilees, setDevoilees] = useState(0)
+  const voiles = useRef<(HTMLElement | null)[]>([])
+  const focusApres = useRef<number | null>(null)
   const [revealReady, setRevealReady] = useState(false)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
@@ -103,6 +116,14 @@ export default function FinDePartie() {
   const { profile } = useAuth()
   const { jouer } = useSound()
 
+  // Le geste qui dévoile une couture rend le focus à la suivante ; sans
+  // cela il tombait sur BODY, le bouton venant de disparaître.
+  useEffect(() => {
+    if (focusApres.current === null) return
+    voiles.current[focusApres.current]?.focus()
+    focusApres.current = null
+  }, [devoilees])
+
   useEffect(() => {
     if (!pleinEcran) return
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setPleinEcran(false) }
@@ -116,6 +137,11 @@ export default function FinDePartie() {
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
+  // Les liens empilés du bas : une boîte de 44 px chacun (voir plus bas).
+  const lienBas: React.CSSProperties = {
+    ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', textAlign: 'center',
+    minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
@@ -676,35 +702,64 @@ export default function FinDePartie() {
               className="space-y-4 mb-6"
             >
               <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.15 }} />
+              {/* La dernière couture dévoilée, dite au lecteur d'écran. */}
+              {aPlusieurs && (
+                <p className="sr-only" {...zoneVivante}>
+                  {devoilees > 0 && devoilees <= poeme.cases.length
+                    ? (() => {
+                        const k = devoilees - 1
+                        const ck = poeme.cases[k]
+                        const n = ck.voixSlot ?? poeme.cases.slice(0, k).filter(x => x.auteur === 'ia').length + 1
+                        return `${ck.fonction} — ${attribution(ck, n)}`
+                      })()
+                    : ''}
+                </p>
+              )}
+              {aPlusieurs && devoilees < poeme.cases.length && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setDevoilees(poeme.cases.length)}
+                    style={{ ...mono, fontSize: 11, letterSpacing: '0.15em', color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    {tr('TOUT DÉVOILER', 'REVEAL ALL')}
+                  </button>
+                </div>
+              )}
               {poeme.cases.map((c, i) => {
                 const iaNum = c.voixSlot ?? poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
+                // Voilée tant que la table ne l'a pas demandée ; seule la
+                // SUIVANTE se touche, pour que l'ordre des cases tienne.
+                const voilee = aPlusieurs && i >= devoilees
+                const suivante = voilee && i === devoilees
                 return (
                   <div key={i} style={{ borderLeft: `2px solid ${accent}30`, paddingLeft: 12, paddingTop: 2, paddingBottom: 2 }}>
                     <p style={{ ...mono, fontSize: 13, color: accent, opacity: 0.7, marginBottom: 3 }}>
                       {c.fonction.toUpperCase()}
                       <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
-                      <span style={{ fontFamily: "'Playfair Display', serif" }}>
-                        {attribution(c, iaNum)}
-                      </span>
-                      {c.fallback && (
-                        <span style={{
-                          fontSize: 11,
-                          letterSpacing: '0.2em',
-                          border: `1px solid ${accent}55`,
-                          color: accent,
-                          opacity: 0.55,
-                          padding: '1px 5px',
-                          borderRadius: 3,
-                          marginLeft: 7,
-                          fontFamily: "'Raleway', sans-serif",
-                          verticalAlign: 'middle',
-                          // Nommée, l'étiquette s'allonge : elle passe à la
-                          // ligne d'un bloc au lieu de se couper en deux.
-                          display: 'inline-block',
-                        }}>
-                          {libelleReserve(c.voixNom)}
-                        </span>
+                      {suivante ? (
+                        <button
+                          ref={el => { voiles.current[i] = el }}
+                          onClick={() => { focusApres.current = i + 1; setDevoilees(i + 1) }}
+                          aria-label={tr(`Dévoiler qui a écrit le fragment ${i + 1}`, `Reveal who wrote fragment ${i + 1}`)}
+                          style={{ ...mono, fontSize: 13, letterSpacing: '0.15em', color: accent, background: 'none', border: 'none', borderBottom: `1px dotted ${accent}`, padding: 0, cursor: 'pointer' }}
+                        >
+                          {tr('QUI ?', 'WHO?')}
+                        </button>
+                      ) : voilee ? (
+                        <span aria-hidden="true" style={{ color: encre, opacity: 0.35, letterSpacing: '0.3em' }}>· · ·</span>
+                      ) : (
+                        <motion.span
+                          ref={el => { voiles.current[i] = el }}
+                          tabIndex={-1}
+                          initial={aPlusieurs && !mouvementReduit() ? { opacity: 0 } : false}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.35 }}
+                          style={{ fontFamily: "'Playfair Display', serif", outline: 'none' }}
+                        >
+                          {attribution(c, iaNum)}
+                        </motion.span>
                       )}
+                      {c.fallback && !voilee && <EtiquetteReserve voixNom={c.voixNom} accent={accent} />}
                     </p>
                     <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                       {c.texte}
@@ -843,10 +898,16 @@ export default function FinDePartie() {
             confondent pas : la même table, d'un geste, ou une autre table,
             par les préparatifs — qui se souviennent désormais de la
             dernière. À plusieurs, la première est déjà le bouton principal,
-            et c'est le recueil qui descend ici. */}
+            et c'est le recueil qui descend ici.
+
+            Chaque lien a une boîte RÉELLE de 44 px. Ils étaient hauts de
+            20 px à 4 px d'écart : la zone d'appui globale (le ::after de
+            44 px) débordait sur le voisin, et le suivant dans le DOM
+            gagnait — la moitié basse de « VOIR AU RECUEIL » menait aux
+            préparatifs. La taille était juste, c'est le recouvrement qui
+            mentait. */}
         <motion.div
           className="flex flex-col items-center mt-4 pb-2"
-          style={{ gap: 4 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.8 }}
@@ -855,7 +916,7 @@ export default function FinDePartie() {
             <button
               onClick={memeTable}
               disabled={relance}
-              style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: relance ? 'default' : 'pointer', textAlign: 'center' }}
+              style={{ ...lienBas, cursor: relance ? 'default' : 'pointer' }}
             >
               {tr('— UNE AUTRE, À LA MÊME TABLE —', '— ANOTHER, AT THE SAME TABLE —')}
             </button>
@@ -863,14 +924,14 @@ export default function FinDePartie() {
           {aPlusieurs && (
             <button
               onClick={() => navigate('/bibliotheque')}
-              style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+              style={{ ...lienBas, cursor: 'pointer' }}
             >
               {tr('— VOIR AU RECUEIL —', '— SEE IN THE COLLECTION —')}
             </button>
           )}
           <button
             onClick={() => navigate('/config')}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+            style={{ ...lienBas, cursor: 'pointer' }}
           >
             {table ? tr('— CHANGER DE TABLE —', '— CHANGE THE TABLE —') : tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
           </button>

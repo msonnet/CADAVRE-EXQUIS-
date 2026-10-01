@@ -127,9 +127,37 @@ export function mainsNommees(cases: { pseudo?: string }[]): string[] {
  * corps en Bodoni noir, sortait de l'écran à 320 points. On réduit avec la
  * longueur, sans descendre sous deux rems : un prénom se lit de l'autre bout
  * de la table.
+ *
+ * Sauf quand un seul MOT ne tient plus à deux rems. « Bartholomäusberger »
+ * se coupait au milieu à 320 points (« Bartholomäusber / ger ») : la ligne
+ * se casse proprement à une espace ou à un trait d'union, jamais au milieu
+ * d'un mot. C'est donc le plus long mot qui borne le corps — mesuré en
+ * Bodoni Moda 900, 0,56 à 0,61 em par lettre ; on compte 0,6 sur les 288
+ * points utiles d'un écran de 320. Le plancher ne descend qu'alors, et
+ * jamais sous 1,4 rem.
  */
+export const EM_PAR_LETTRE = 0.6
+export const LARGEUR_UTILE_320 = 288
+
 export function corpsDuNom(nom: string): string {
   const l = Math.max(1, [...nom].length)
-  const vw = Math.min(18, Math.round(150 / l))
-  return `clamp(2rem, ${vw}vw, 7rem)`
+  const mot = Math.max(1, ...nom.split(/[\s\-\u2010]+/).map(m => [...m].length))
+  // 90vw : la largeur utile, gouttières de 16 points déduites, à 320.
+  const vw = Math.min(18, Math.round(150 / l), Math.floor(90 / (EM_PAR_LETTRE * mot)))
+  const plancher = Math.min(2, Math.max(1.4, Math.floor(10 * LARGEUR_UTILE_320 / (EM_PAR_LETTRE * mot * 16)) / 10))
+  return `clamp(${plancher}rem, ${vw}vw, 7rem)`
+}
+
+/**
+ * Le nom de chaque bande d'un dessin, pour l'écran de fin.
+ *
+ * Le dessiné nommait la main à l'intro, au rideau et sur le badge, puis
+ * l'écran de fin n'en disait plus rien : autour de la table, on ne savait
+ * plus qui avait fait la tête et qui les pieds. Rien n'est rendu quand
+ * aucune main n'a de prénom — la ligne « joueur 1, joueur 2 » n'apprendrait
+ * rien à personne. Une main sans prénom garde son numéro (`null`).
+ */
+export function nomsDesBandes(bandes: { joueurNumero: number; nom?: string }[]): Array<string | null> | null {
+  const noms = bandes.map(b => (b.nom ? nettoyerNom(b.nom) || null : null))
+  return noms.some(Boolean) ? noms : null
 }

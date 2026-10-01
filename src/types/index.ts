@@ -103,6 +103,7 @@ export interface ConfigDessin {
 export interface BandeDessin {
   joueurIdx: number
   joueurNumero: number                // 1-based, cyclique si joueurs < nbBandes
+  nom?: string                        // le prénom de cette main, quand la table l'a donné
   imageDataUrl: string                // data:image/png;base64,...
   width: number
   height: number

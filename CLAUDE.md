@@ -62,6 +62,9 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
       ne le lisent toujours pas
 - [ ] Monitoring erreurs Sentry (optionnel — Vercel Analytics couvre les Web Vitals)
 - [ ] Nettoyage galerie ancienne (images orphelines dans Storage)
+- [ ] La voix intérieure du mode hypnotique puise encore dans le stock commun
+      (« chavire », « la nuit garde tout ») : une réserve « du médium » reste
+      à écrire, comme celles des voix (`data/reserveVoix.ts`)
 
 ## Procédure de soumission (sur Mac avec Xcode / Android Studio)
 
@@ -1151,13 +1154,52 @@ dans la Bodoni auto-hébergée (« Marie-Christine » s'affichait « Marie
 Christine »). Contourné pour les prénoms par le trait d'union typographique ;
 la police elle-même n'est pas touchée.
 
+### La relecture — ce que la première passe avait laissé
+
+**Les prénoms ne partent pas en galerie** (`casesPourGalerie`,
+`lib/publier.ts`). Une case de la table locale porte désormais « Nadja » ;
+`publierPoeme` envoyait les cases telles quelles dans une table que la clé
+anonyme lit. Des prénoms d'enfants devenaient une donnée publique. La
+galerie ne montre aucune couture : `pseudo` et `moi` sont retirés, le
+numéro de la main reste.
+
+**À plusieurs, les coutures se dévoilent une à une** — le point 3 de la
+proposition, d'abord oublié. Elles s'ouvraient d'un bloc : la question
+« qui a écrit ça ? » était tranchée avant d'avoir été posée. Chaque
+signature est voilée ; seule la SUIVANTE se touche (« QUI ? »), dans
+l'ordre des cases, et le focus passe à la suivante. « TOUT DÉVOILER »
+abrège. Le fondu est coupé sous `prefers-reduced-motion`. Seul, rien n'est
+voilé : il n'y a rien à deviner.
+
+**Les liens du bas ne se volent plus leurs appuis.** Hauts de 20 px à 4 px
+d'écart, leurs zones de 44 px se chevauchaient, et la moitié basse de
+« VOIR AU RECUEIL » menait aux préparatifs. Chacun a maintenant une boîte
+réelle de 44 px. `cibles-tactiles` mesure les tailles, pas les
+recouvrements : `table-locale.spec.ts` demande à `elementFromPoint` qui
+reçoit l'appui, ligne par ligne.
+
+**L'écran de fin du dessiné nomme les bandes** — « TÊTE — Nadja ». Le
+prénom voyage avec la bande (`BandeDessin.nom`) ; rien ne s'affiche quand
+personne n'en a donné. **Corrigé au passage, et c'était une perte de
+dessin** : le rideau de passage restait touchable pendant son fondu de
+sortie, si bien qu'un joueur qui posait aussitôt le crayon le relevait une
+seconde fois. L'indice sautait une bande — celle de Léa disparaissait.
+
+Et quatre retouches : un prénom d'un seul mot long (« Bartholomäusberger »)
+ne se coupe plus au milieu du rideau — c'est le plus long MOT qui borne le
+corps, mesuré à 0,6 em par lettre en Bodoni noir ; le recueil porte
+l'étiquette « RÉSERVE DU … » comme la fin de partie (`EtiquetteReserve`) ;
+pendant l'attente réseau de la voix, le focus se pose sur son nom au lieu de
+BODY ; le siège reprend son carré — l'initiale ne départageait pas
+« Marie-Christine » et « Maximilien ».
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (562 tests unitaires) + Playwright (84 tests E2E, FR et EN)
+- Tests : Vitest (567 tests unitaires) + Playwright (85 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

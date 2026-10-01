@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { attribution, libelleMorceaux } from '../lib/attribution'
+import EtiquetteReserve from '../components/EtiquetteReserve'
 import MainsDuVers from '../components/MainsDuVers'
 import BoutonRecolte from '../components/BoutonRecolte'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
@@ -585,6 +586,7 @@ export default function PoemeDetail() {
                     <span style={{ fontFamily: "'Playfair Display', serif", textTransform: 'none', letterSpacing: 0 }}>
                       {attribution(cas)}
                     </span>
+                    {cas.fallback && <EtiquetteReserve voixNom={cas.voixNom} accent={accent} />}
                   </div>
                   <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
                     {cas.texte}

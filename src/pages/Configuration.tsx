@@ -304,13 +304,13 @@ export default function Configuration() {
                 {slot === 'vide' && (
                   <span style={{ color: `${encre}20`, fontSize: 14 }}>·</span>
                 )}
-                {/* Une main nommée porte son initiale : c'est ainsi qu'on
-                    relie le siège à la ligne de son prénom, plus bas. */}
-                {slot === 'humain' && joueursHumains > 1 && nettoyerNom(noms[i] ?? '') ? (
-                  <span aria-hidden style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 700, fontSize: 19, lineHeight: 1, color: encre }}>
-                    {[...nettoyerNom(noms[i])][0].toUpperCase()}
-                  </span>
-                ) : slot === 'humain' && (
+                {/* Le siège garde son carré, nommé ou non. Une initiale y
+                    avait été posée pour relier le siège à sa ligne de
+                    prénom ; mais « Marie-Christine » et « Maximilien »
+                    portaient toutes deux « M », et un repère qui ne
+                    départage pas ne relie rien. Les lignes de prénoms
+                    suivent l'ordre des sièges, « MAIN I », « MAIN II ». */}
+                {slot === 'humain' && (
                   <span style={{
                     display: 'block', width: 10, height: 10,
                     background: encre, borderRadius: 1,

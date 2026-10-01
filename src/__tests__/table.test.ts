@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   nomsDesMains, nomDeMain, lireTable, mainsNommees, corpsDuNom, nettoyerNom, NOM_MAX,
+  nomsDesBandes, EM_PAR_LETTRE, LARGEUR_UTILE_320,
   type Siege,
 } from '../lib/table'
 import { buildSequence } from '../lib/sequence'
@@ -77,5 +78,36 @@ describe('corpsDuNom', () => {
     expect(corpsDuNom('Léa')).toBe('clamp(2rem, 18vw, 7rem)')
     // Dix lettres à 15vw : à 320 points, 48 px — la ligne tient.
     expect(corpsDuNom('Christophe')).toBe('clamp(2rem, 15vw, 7rem)')
+  })
+
+  /** Le corps rendu à 320 points, en pixels : clamp(plancher, vw, 7rem). */
+  function aTroisCentVingt(corps: string): number {
+    const m = /clamp\(([\d.]+)rem, (\d+)vw, 7rem\)/.exec(corps)
+    if (!m) throw new Error(corps)
+    return Math.min(112, Math.max(Number(m[1]) * 16, Number(m[2]) * 3.2))
+  }
+
+  it("un seul mot long tient sur la ligne à 320 points, sans se couper au milieu", () => {
+    // Relevé avant : « Bartholomäusberger » à 2rem, 32 px — 18 lettres
+    // font 343 px pour 288 utiles, et la ligne cassait le mot en deux.
+    for (const nom of ['Bartholomäusberger', 'Abcdefghijklmnopqrst', 'Maximilien-Alexandre', 'Marie Christine']) {
+      const mot = Math.max(...nom.split(/[\s-]+/).map(m => [...m].length))
+      expect(aTroisCentVingt(corpsDuNom(nom)) * EM_PAR_LETTRE * mot, nom).toBeLessThanOrEqual(LARGEUR_UTILE_320)
+    }
+    // Et le plancher ne descend que pour eux : un prénom ordinaire se lit
+    // toujours de l'autre bout de la table.
+    expect(corpsDuNom('Marie-Christine')).toMatch(/^clamp\(2rem/)
+    expect(aTroisCentVingt(corpsDuNom('Bartholomäusberger'))).toBeGreaterThanOrEqual(1.4 * 16)
+  })
+})
+
+describe('nomsDesBandes', () => {
+  it("nomme chaque bande, et garde le numéro d'une main sans prénom", () => {
+    expect(nomsDesBandes([
+      { joueurNumero: 1, nom: 'Nadja' }, { joueurNumero: 2, nom: '' }, { joueurNumero: 1, nom: 'Nadja' },
+    ])).toEqual(['Nadja', null, 'Nadja'])
+  })
+  it("ne rend rien quand personne n'a de prénom", () => {
+    expect(nomsDesBandes([{ joueurNumero: 1 }, { joueurNumero: 2 }])).toBeNull()
   })
 })

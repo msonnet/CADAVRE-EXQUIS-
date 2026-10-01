@@ -894,7 +894,16 @@ export default function Jeu() {
                 apprend à reconnaître le fossoyeur ou l'apiculteur — d'autant
                 plus en mode aveugle, où le nom est la seule chose qu'il voit
                 du tour de l'IA. */}
+            {/* Le focus s'y pose dès l'attente : le bouton « TOUCHER POUR
+                CONTINUER » n'existe qu'une fois le fragment révélé, et
+                pendant l'appel au réseau — jusqu'à douze secondes — le
+                focus tombait sur BODY. On ne le prend qu'à BODY : le bouton,
+                lui, le reprend en apparaissant. */}
             <motion.div
+              ref={el => {
+                if (el && (!document.activeElement || document.activeElement === document.body)) el.focus({ preventScroll: true })
+              }}
+              tabIndex={-1}
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontStyle: 'italic',
@@ -903,6 +912,7 @@ export default function Jeu() {
                 lineHeight: 1.15,
                 letterSpacing: '-0.01em',
                 textWrap: 'balance',
+                outline: 'none',
               }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}

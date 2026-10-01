@@ -241,6 +241,7 @@ export default function JeuDessin() {
   const bumpHistory = useCallback(() => setHistoryTick(t => t + 1), [])
   const [panMode, setPanMode] = useState(false)
   const [showTransition, setShowTransition] = useState(() => !!brouillonDessin)
+  const rideauOuvert = useRef(!!brouillonDessin)
   const [showIntro, setShowIntro] = useState(() => !brouillonDessin)
   const [nextPlayerNum, setNextPlayerNum] = useState(() =>
     brouillonDessin ? (brouillonDessin.bandes.length % config.joueurs) + 1 : 2
@@ -692,6 +693,8 @@ export default function JeuDessin() {
     const dpr = window.devicePixelRatio || 1
     const bande: BandeDessin = {
       joueurIdx: bandeIdx, joueurNumero: joueurActuel,
+      // Le prénom voyage avec la bande : l'écran de fin la nomme.
+      ...(nomDeMain(config.noms, joueurActuel) ? { nom: nomDeMain(config.noms, joueurActuel) } : {}),
       imageDataUrl: canvas.toDataURL('image/png'),
       width: canvas.width, height: canvas.height,
       lowestDrawnFraction, dpr, ts: Date.now(),
@@ -720,11 +723,19 @@ export default function JeuDessin() {
       catch { /* quota dépassé : la reprise sera partielle, la partie continue */ }
       setNextPlayerNum(((bandeIdx + 1) % config.joueurs) + 1)
       setPendingBandes(nouvellesBandes)
+      rideauOuvert.current = true
       setShowTransition(true)
     }
   }
 
+  // Le rideau reste touchable pendant son fondu de sortie (0,5 s) : un
+  // joueur qui le touche puis pose aussitôt le crayon le relevait une
+  // SECONDE fois. L'indice sautait une bande — la bande de Léa disparaissait
+  // du dessin et la suivante revenait à Nadja. Vu en mesurant les noms de
+  // l'écran de fin : « TÊTE — Nadja, CORPS — Nadja », deux bandes sur trois.
   function demarrerProchainJoueur() {
+    if (!rideauOuvert.current) return
+    rideauOuvert.current = false
     setShowTransition(false); setBandes(pendingBandes)
     setBandeIdx(idx => idx + 1); setCanvasReady(false)
   }
