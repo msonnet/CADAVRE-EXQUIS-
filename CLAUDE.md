@@ -1093,12 +1093,14 @@ et l'export gardent la phrase d'un seul tenant. **C'est un changement
 d'apparence du feuillet de fin de partie** — réversible en une ligne.
 La lettrine est une capitale : un « l » en Bodoni se lisait comme un trait.
 
-**Le papier s'entend** (`audio/papier.ts`). Des sinusoïdes de 110 à 330 Hz
-derrière un passe-bas : la bande qu'un téléphone ne rend pas. Bruit filtré
-entre 1 et 6 kHz — pli, feuille, plume — tiré à chaque appel ; chaque volet
-du dépli s'annonce. Lettrine mesurée derrière un haut-parleur simulé :
-−32,7 → −21,4 dB de pic. Le bouton son coupe enfin quelque chose, et une
-ligne SONS vit dans les Réglages. L'ambiance reste coupée.
+**Les sons de papier — retirés le 1er octobre, à la demande de l'auteur.**
+Un essai de bruit filtré (pli, feuille, plume, un son par volet du dépli)
+avait remplacé le silence du dépli ; il sonnait mal et il est retiré en
+entier. Les sons du jeu sont revenus à leur état d'origine. **Ne pas
+réintroduire de son sans l'accord de l'auteur.** Reste le réglage : le
+bouton son de l'écran de jeu et du studio ne coupait rien ; il coupe
+désormais tous les sons (`audio/reglageSons.ts`, lu par `useSound`), et
+une ligne SONS — ACTIVÉS / SILENCE — vit dans les Réglages.
 
 **L'almanach** (`almanach()`, `lirePoemeScelle()`). Seul le poème de la
 veille se relisait. Les trente derniers jours scellés se listent sous le

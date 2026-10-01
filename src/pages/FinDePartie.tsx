@@ -470,7 +470,6 @@ export default function FinDePartie() {
             actif={revealReady}
             lettrine
             onLettrine={() => { jouer('lettrine'); vibrer('devoilement') }}
-            onVolet={() => jouer('pli')}
             style={{
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
               color: encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,

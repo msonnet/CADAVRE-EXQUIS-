@@ -575,7 +575,6 @@ export default function FinOnline() {
                   lettrine
                   tailleLettrine="3.6rem"
                   onLettrine={() => jouer('lettrine')}
-                  onVolet={() => jouer('pli')}
                   style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6 }}
                 />
               </div>

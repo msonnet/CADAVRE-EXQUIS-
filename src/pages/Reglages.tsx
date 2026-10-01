@@ -10,7 +10,7 @@ import {
 } from '../utils/notifications'
 import { mono } from '../lib/typo'
 import { groupeRadio, optionRadio } from '../lib/a11y'
-import { sonsActifs, reglerSons } from '../audio/papier'
+import { sonsActifs, reglerSons } from '../audio/reglageSons'
 import { tr, langueActuelle, changerLangue } from '../i18n'
 import { useAcces } from '../hooks/useAcces'
 import { ESSAI_OFFERT } from '../lib/acces'
@@ -388,9 +388,9 @@ export default function Reglages() {
         )}
 
         {/* ── SONS ──
-            Le bruit du papier — plis, feuilles, plume. Un réglage qu'on
-            trouve ici, et non seulement sur l'écran de jeu où il se cachait
-            sous le nom de l'ambiance. */}
+            Couper les sons du jeu. Un réglage qu'on trouve ici, et non
+            seulement sur l'écran de jeu où il se cachait sous le nom de
+            l'ambiance. */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -402,7 +402,7 @@ export default function Reglages() {
           </div>
           <div className="flex gap-2 mb-3" {...groupeRadio(tr('Sons', 'Sounds'))}>
             {[
-              { actif: true,  label: tr('LE PAPIER', 'PAPER') },
+              { actif: true,  label: tr('ACTIVÉS', 'ON') },
               { actif: false, label: tr('SILENCE', 'SILENCE') },
             ].map(opt => {
               const active = sons === opt.actif
@@ -410,7 +410,7 @@ export default function Reglages() {
                 <button
                   key={String(opt.actif)}
                   {...optionRadio(active)}
-                  onClick={() => { reglerSons(opt.actif); setSons(opt.actif); if (opt.actif) jouer('pli') }}
+                  onClick={() => { reglerSons(opt.actif); setSons(opt.actif); if (opt.actif) jouer('clic') }}
                   style={{
                     flex: 1, padding: '8px 4px',
                     border: `0.5px solid ${active ? accent : `${encre}20`}`,
