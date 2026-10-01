@@ -1,6 +1,6 @@
 import type { Case } from '../types'
 import { tr, langueActuelle } from '../i18n'
-import { NOMS_VOIX, nomDeVoix, nomsDeVoix } from '../data/voiceIds'
+import { NOMS_VOIX, idDeVoix, nomDeVoix, nomsDeVoix } from '../data/voiceIds'
 
 function toRomain(n: number): string {
   const map: [number, string][] = [
@@ -29,8 +29,17 @@ function toRomain(n: number): string {
  * Le cadavre écrit, le salon et le poème du jour gardent l'IDENTIFIANT de la
  * voix que le serveur renvoie, et l'Atelier son nom. Les coutures du cadavre
  * écrit annonçaient donc « voix · meteorologue », sans article ni accent.
- * `nomAffiche` rend le nom quand il reçoit un identifiant, et laisse tel
- * quel un nom déjà écrit — y compris la langue où la séance s'est jouée.
+ * `nomAffiche` rend le nom quand il reçoit un identifiant.
+ *
+ * ── Le nom dans la langue de la séance ────────────────────────────────────
+ *
+ * Premier jet : un nom déjà écrit restait tel quel, « y compris la langue
+ * où la séance s'est jouée ». En anglais, les coutures d'un Atelier joué en
+ * français imprimaient donc « Le météorologue », et le lien ouvrait une fiche
+ * titrée « The meteorologist » — deux noms pour la même voix, sur deux
+ * écrans voisins. Un nom reconnu est désormais rendu dans la langue
+ * COURANTE ; écrit déjà dans cette langue, il est gardé tel qu'il fut écrit
+ * (les minuscules des poèmes anciens comprises). Un nom inconnu ne bouge pas.
  */
 export function attribution(c: Case, iaNum?: number): string {
   const { texte, voix } = attributionEnMorceaux(c, iaNum)
@@ -39,8 +48,15 @@ export function attribution(c: Case, iaNum?: number): string {
 
 /** Le nom d'une voix tel que les coutures l'impriment. */
 export function nomAffiche(nom: string): string {
-  return Object.prototype.hasOwnProperty.call(NOMS_VOIX, nom) ? nomDeVoix(nom, langueActuelle()) : nom
+  const langue = langueActuelle()
+  if (Object.prototype.hasOwnProperty.call(NOMS_VOIX, nom)) return nomDeVoix(nom, langue)
+  const id = idDeVoix(nom)
+  if (!id) return nom
+  const courant = nomDeVoix(id, langue)
+  return cle(courant) === cle(nom) ? nom : courant
 }
+
+const cle = (s: string) => s.toLocaleLowerCase('fr').replace(/[’ʼ]/g, "'").trim()
 
 /**
  * La même phrase, coupée en deux : ce qui précède les noms, et les noms.

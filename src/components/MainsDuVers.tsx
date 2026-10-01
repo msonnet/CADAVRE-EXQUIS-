@@ -25,10 +25,16 @@ export default function MainsDuVers({ mains, accent, encre, liens }: {
   liens?: boolean
 }) {
   if (!mains.length) return null
+  // Avec les liens, chaque ligne a la hauteur d'une cible (44 px) : le nom
+  // y tient sa zone d'appui sans mordre sur la ligne voisine (voir
+  // `LienVoix`). Les lignes sans lien — « toi », RÉSERVE — prennent la même
+  // hauteur, pour que la liste se lise d'un seul pas.
+  const ligne: React.CSSProperties = liens ? { minHeight: 44, display: 'flex', alignItems: 'center' } : {}
   return (
-    <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: liens ? 0 : 3 }}>
       {mains.map((m, i) => (
-        <div key={i} style={{ ...mono, fontSize: 11, lineHeight: 1.5, color: encre, opacity: 0.75 }}>
+        <div key={i} style={{ ...mono, fontSize: 11, lineHeight: 1.5, color: encre, opacity: 0.75, ...ligne }}>
+          <span>
           <span style={{ color: accent, opacity: 0.75, letterSpacing: '0.1em' }}>{m.role}</span>
           <span style={{ opacity: 0.35, margin: '0 6px' }}>·</span>
           <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13 }}>{m.texte}</span>
@@ -42,6 +48,7 @@ export default function MainsDuVers({ mains, accent, encre, liens }: {
           ) : (
             <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, fontStyle: 'italic' }}>{tr('toi', 'you')}</span>
           )}
+          </span>
         </div>
       ))}
     </div>

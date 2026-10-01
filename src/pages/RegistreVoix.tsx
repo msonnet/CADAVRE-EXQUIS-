@@ -64,25 +64,28 @@ function libelleSeances(n: number): string {
  * elle et où elle l'a cousu — c'est la signature d'une voix d'atelier.
  */
 function VersSigne({ v, encre, accent }: { v: VersDeVoix; encre: string; accent: string }) {
-  if (v.ligne) {
-    const i = v.ligne.toLowerCase().indexOf(v.texte.toLowerCase())
-    if (i >= 0) {
-      return (
-        <>
-          <span style={{ opacity: 0.55 }}>{v.ligne.slice(0, i)}</span>
-          <span style={{ color: accent }}>{v.ligne.slice(i, i + v.texte.length)}</span>
-          <span style={{ opacity: 0.55 }}>{v.ligne.slice(i + v.texte.length)}</span>
-        </>
-      )
-    }
+  // La place vient du registre, qui suit l'ordre des mains : chercher le
+  // texte ici soulignait sa première occurrence, parfois écrite par une
+  // autre main. Sans place connue, on montre la part seule.
+  if (v.ligne && v.debut !== undefined) {
+    const i = v.debut, fin = i + v.texte.trim().length
+    return (
+      <>
+        <span style={{ opacity: 0.55 }}>{v.ligne.slice(0, i)}</span>
+        <span style={{ color: accent }}>{v.ligne.slice(i, fin)}</span>
+        <span style={{ opacity: 0.55 }}>{v.ligne.slice(fin)}</span>
+      </>
+    )
   }
   return <span style={{ color: encre }}>{v.texte}</span>
 }
 
 export default function RegistreVoix() {
   const navigate = useNavigate()
-  const { id: brut } = useParams<{ id?: string }>()
-  const id = brut ? decodeURIComponent(brut) : undefined
+  // Le paramètre arrive DÉJÀ décodé par le routeur. Le décoder une seconde
+  // fois faisait planter la page sur /voix/%25 (« % » seul n'est pas une
+  // séquence valide) : le carnet se déchirait sur une adresse mal tapée.
+  const { id } = useParams<{ id?: string }>()
   const seance = useReve()
   const { jouer } = useSound()
   const [poemes, setPoemes] = useState<Poeme[]>([])
@@ -130,7 +133,10 @@ export default function RegistreVoix() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="biblio" />
-      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+      {/* La marge basse est un pied de page : la signature du décor (« rêvé
+          à … ») est posée au bas de la page, et la dernière place du
+          registre venait s'écrire dessous. */}
+      <div style={{ position: 'relative', zIndex: 10, paddingBottom: 48 }} className="flex flex-col flex-1">
         {entete}
         {chargement
           ? <p style={{ ...mono, fontSize: 12, color: encre, opacity: 0.4 }}>…</p>

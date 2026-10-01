@@ -114,6 +114,37 @@ describe('registreDesVoix', () => {
     expect(nomDuPoeme(recueil[1])).toBe('Le givre')
   })
 
+  it("situe la case de la voix à SA place dans le vers, pas à la première occurrence", () => {
+    // « le le le » : la case du graveur est la deuxième. L'écran soulignait
+    // le premier « le », écrit par une autre main.
+    const reg = registreDesVoix([poeme('p', t0, [{
+      auteur: 'ia', nbVoix: 3, texte: 'le le le',
+      mains: [
+        { role: 'A', texte: 'le', voixNom: 'Le météorologue' },
+        { role: 'B', texte: 'le', voixNom: 'Le graveur' },
+        { role: 'C', texte: 'le', voixNom: 'Le souffleur de verre' },
+      ],
+    }], { structureId: 'atelier' })])
+    expect(reg.get('meteorologue')!.vers[0].debut).toBe(0)
+    expect(reg.get('graveur')!.vers[0].debut).toBe(3)
+    expect(reg.get('souffleur de verre')!.vers[0].debut).toBe(6)
+    // Et dans le vers ordinaire du recueil ci-dessus.
+    expect(r.get('meteorologue')!.vers[1].debut).toBe('la pluie grave trois lettres '.length)
+  })
+
+  it("une case introuvable dans son vers n'a pas de place, plutôt qu'une fausse", () => {
+    const reg = registreDesVoix([poeme('p', t0, [{
+      auteur: 'ia', nbVoix: 2, texte: 'la rue devient obscure',
+      mains: [
+        { role: 'A', texte: 'la rue devient' },
+        { role: 'B', texte: 'sombre', voixNom: 'Le graveur' },
+      ],
+    }], { structureId: 'atelier' })])
+    const v = reg.get('graveur')!.vers[0]
+    expect(v.ligne).toBe('la rue devient obscure')
+    expect(v.debut).toBeUndefined()
+  })
+
   it('un recueil sans voix donne un registre vide', () => {
     expect(registreDesVoix([poeme('seul', t0, [{ texte: 'rien que moi' }])]).size).toBe(0)
   })

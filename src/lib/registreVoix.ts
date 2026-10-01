@@ -38,6 +38,8 @@ export interface VersDeVoix {
   texte: string
   /** Le vers entier où il a été cousu, quand il diffère du texte. */
   ligne?: string
+  /** Où sa case commence dans `ligne`, quand on a pu la retrouver. */
+  debut?: number
   /** Vers ancien sans détail des cases : combien de voix se le partagent. */
   partage?: number
   poemeId: string
@@ -94,13 +96,27 @@ export function registreDesVoix(poemes: Poeme[]): Map<string, FicheVoix> {
       if (c.fallback) continue
 
       if (c.mains?.length) {
+        // La place de chaque case dans le vers. Premier jet : l'écran
+        // cherchait le texte de la voix dans le vers entier, et soulignait la
+        // PREMIÈRE occurrence — sur « le le le », la case du graveur, la
+        // deuxième, était montrée sur le premier « le », écrit par une autre
+        // main. Les mains sont rangées dans l'ordre du vers : on cherche donc
+        // chacune APRÈS la fin de la précédente. Une case introuvable (un
+        // accord l'a récrite) n'a pas de place, et l'écran ne souligne rien
+        // plutôt que de souligner au hasard.
+        const ligne = c.texte.toLowerCase()
+        let curseur = 0
         for (const m of c.mains) {
+          const t = m.texte.trim().toLowerCase()
+          const i = t ? ligne.indexOf(t, curseur) : -1
+          if (i >= 0) curseur = i + t.length
           if (m.reserve) continue
           const id = idDeVoix(m.voixNom)
           if (!id) continue
+          const entier = m.texte.trim() !== c.texte.trim()
           inscrire(id, {
             texte: m.texte,
-            ...(m.texte.trim() !== c.texte.trim() ? { ligne: c.texte } : {}),
+            ...(entier ? { ligne: c.texte, ...(i >= 0 ? { debut: i } : {}) } : {}),
             poemeId: p.id, poeme: nomPoeme(), date: p.dateCreation,
           })
         }

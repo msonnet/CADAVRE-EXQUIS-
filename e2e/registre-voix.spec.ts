@@ -169,3 +169,63 @@ test('aucune cible sous 44 px au registre ni dans les coutures liées', async ({
   }
   expect(fautes.join('\n'), 'cibles sous le seuil').toBe('')
 })
+
+/** Chaque point visible d'un nom de voix doit mener à CETTE voix. La taille
+ *  des zones ne suffisait pas : deux zones de 44 px empilées à vingt-quatre
+ *  pixels se recouvraient, et un appui dans « Le météorologue » ouvrait la
+ *  fiche du graveur. */
+test('un appui sur un nom de voix ouvre cette voix, pas la voisine', async ({ page }) => {
+  const POEME = { id: 'p-trois', titre: null, structureId: 'atelier', mode: 'standard', visibilite: 'aveugle',
+    dateCreation: t0, dateModification: t0, cases: [
+      { numero: 1, fonction: 'vers 1', consigne: '', auteur: 'ia', nbVoix: 3, ts: t0,
+        voixNom: 'Le météorologue · Le graveur · Le souffleur de verre', texte: 'le le le',
+        mains: [
+          { role: 'A', texte: 'le', voixNom: 'Le météorologue' },
+          { role: 'B', texte: 'le', voixNom: 'Le graveur' },
+          { role: 'C', texte: 'le', voixNom: 'Le souffleur de verre' },
+        ] },
+    ] }
+  await page.goto('/bibliotheque')
+  await page.waitForLoadState('networkidle')
+  await entrer(page)
+  await semer(page, [POEME])
+  const fautes: string[] = []
+  for (const largeur of [320, 390]) {
+    await page.setViewportSize({ width: largeur, height: 800 })
+    await page.goto('/bibliotheque/p-trois?coutures')
+    await page.waitForLoadState('networkidle')
+    await entrer(page)
+    await page.waitForTimeout(500)
+    const r = await page.evaluate(() => [...document.querySelectorAll('a[href^="/voix/"]')].map(a => {
+      // Hors de l'écran, `elementFromPoint` ne rend rien : on amène le nom.
+      a.scrollIntoView({ block: 'center' })
+      let ok = 0, tot = 0
+      const autres = new Set<string>()
+      for (const b of a.getClientRects()) {
+        for (let x = b.left + 1; x < b.right - 1; x += 3) {
+          for (let y = b.top + 1; y < b.bottom - 1; y += 2) {
+            tot++
+            const h = document.elementFromPoint(x, y)?.closest('a')
+            if (h === a) ok++
+            else autres.add(h?.textContent ?? '—')
+          }
+        }
+      }
+      return { t: a.textContent, ok, tot, autres: [...autres] }
+    }))
+    expect(r.length).toBe(6)
+    for (const z of r) if (z.ok < z.tot) fautes.push(`${largeur} · ${z.t} : ${z.tot - z.ok}/${z.tot} → ${z.autres.join(', ')}`)
+  }
+  expect(fautes.join('\n'), 'zones qui mènent à la voisine').toBe('')
+})
+
+test('une adresse mal tapée ne déchire pas le carnet', async ({ page }) => {
+  // Le paramètre était décodé deux fois : « % » seul levait une URIError.
+  const erreurs: string[] = []
+  page.on('pageerror', e => erreurs.push(String(e)))
+  await page.goto('/voix/%25')
+  await page.waitForLoadState('networkidle')
+  await entrer(page)
+  await expect(page.getByText(/encore en blanc|still blank/)).toBeVisible()
+  expect(erreurs).toEqual([])
+})

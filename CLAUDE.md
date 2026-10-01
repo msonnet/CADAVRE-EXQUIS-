@@ -1144,8 +1144,27 @@ ligne menant au poème, coutures ouvertes.
 
 **Corrigé au passage :** les coutures du cadavre écrit annonçaient
 « voix · meteorologue » — l'identifiant nu, sans article ni accent — et la
-fin d'un salon « via chimiste ». `nomAffiche` rend le nom ; un nom déjà
-écrit reste tel quel.
+fin d'un salon « via chimiste ». `nomAffiche` rend le nom, **dans la langue
+courante** : en anglais, les coutures d'un Atelier joué en français disaient
+« Le météorologue » et la fiche voisine « The meteorologist ». Un nom déjà
+écrit dans la bonne langue garde sa graphie.
+
+**Le contradicteur, et ce qu'il a mesuré au doigt.**
+- **Deux noms empilés se volaient leurs appuis.** La zone de 44 px venait
+  du `::after` global, centré sur un nom haut de 17 px : à 24 px d'écart,
+  la zone du nom suivant couvrait la moitié basse du précédent — 28 % de
+  « Le météorologue » ouvrait la fiche du graveur. `LienVoix` porte
+  désormais ses 44 px dans sa propre boîte (bloc en ligne, douze pixels
+  de marge intérieure, sans coupure), et les lignes de `MainsDuVers`
+  prennent la hauteur d'une cible. **Mesurer la TAILLE des zones ne
+  suffisait pas** : `registre-voix.spec.ts` balaie maintenant chaque nom
+  par `elementFromPoint` et exige que chaque point mène à ce nom-là.
+- La fiche soulignait la PREMIÈRE occurrence du texte de la voix — sur
+  « le le le », le mot d'une autre main. Le registre calcule `debut` en
+  suivant l'ordre des mains ; une case introuvable n'est pas soulignée.
+- `/voix/%25` déchirait le carnet : le paramètre était décodé deux fois.
+- La dernière place du registre s'écrivait sous « rêvé à … » : une marge
+  basse de 48 px sert de pied de page.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
@@ -1153,7 +1172,7 @@ fin d'un salon « via chimiste ». `nomAffiche` rend le nom ; un nom déjà
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (553 tests unitaires) + Playwright (83 tests E2E, FR et EN)
+- Tests : Vitest (556 tests unitaires) + Playwright (85 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
