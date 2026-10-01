@@ -46,6 +46,20 @@ export interface Case {
   moi?: boolean           // salon ou poème du jour : la case est la tienne
 }
 
+/**
+ * Le fil qui relie un feuillet du recueil à sa publication en galerie.
+ *
+ * Le feuillet ignorait qu'il avait été publié : le bouton redevenait actif
+ * deux secondes après « ✓ PUBLIÉ », on pouvait publier trois fois le même
+ * poème, et aucune lecture ne pouvait remonter jusqu'à son auteur. `id` est
+ * celui de la ligne `gallery` ; il peut manquer si la base n'a pas rendu la
+ * ligne écrite — le poème reste alors marqué publié, sans compteurs.
+ */
+export interface LienPublication {
+  id?: string
+  date: number
+}
+
 export interface Illustration {
   url: string
   style: string
@@ -66,6 +80,8 @@ export interface Poeme {
   origine?: 'salon' | 'jour'
   /** Poème du jour : la journée UTC qu'il a occupée, AAAA-MM-JJ. */
   jour?: string
+  /** Sa publication en galerie, s'il en a une — voir `LienPublication`. */
+  publication?: LienPublication
   dateCreation: number
   dateModification: number
 }
@@ -113,6 +129,7 @@ export interface DessinCadavre {
   nbBandes: number
   imageDataUrl: string  // dessin assemblé final
   texteVision?: string  // texte généré par Claude Vision
+  publication?: LienPublication
   dateCreation: number
   dateModification: number
 }

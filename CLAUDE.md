@@ -56,7 +56,7 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] Haptique iOS : brancher `@capacitor/haptics` (`navigator.vibrate` est ignoré par le WKWebView)
 - [ ] Minuteur de tour en ligne côté serveur (une partie attend si le joueur ferme l'app)
 - [ ] Mode spectateur codé mais sans point d'entrée
-- [ ] Réactions et vues de la galerie invisibles pour l'auteur
+- [x] Réactions et vues de la galerie visibles pour l'auteur — sur son feuillet, au recueil, au Profil (voir « La galerie, une revue »)
 - [ ] `prefers-reduced-motion` : le dévoilement du poème l'honore (et le plantage
       de la page de fin est corrigé), mais les autres animations framer-motion
       ne le lisent toujours pas
@@ -1166,13 +1166,85 @@ courante** : en anglais, les coutures d'un Atelier joué en français disaient
 - La dernière place du registre s'écrivait sous « rêvé à … » : une marge
   basse de 48 px sert de pied de page.
 
+## La galerie, une revue — 1ᵉʳ octobre
+
+La vitrine publique se lisait comme un fil de réseau social. Relevé avant :
+un titre de repli fait des cases collées par « · » et coupé à 48 signes
+(« le vernis · craquelé · avale · une lampe… »), un corps à UN FRAGMENT PAR
+LIGNE — le défaut que le lot 11 avait corrigé au recueil, resté entier
+ici —, des boîtes à filet avec un « + », des réactions 🌙 et un œil 👁 qui
+sortent en pictogrammes jaunes sur iOS, et des dessins en vignettes de
+120 px dans un cadre blanc. Les coutures étaient dans la publication et ne
+s'affichaient nulle part.
+
+- **Un sommaire** (`components/EntreeGalerie.tsx`). Le titre, ou faute de
+  titre l'incipit ENTIER, en Playfair italique ; la signature en petites
+  capitales, « — MIREILLE · 29 SEPTEMBRE » ; un filet fin. Toucher le titre
+  ouvre le poème recousu par `reconstruirePoeme`, débords en retrait. Un
+  poème d'une seule ligne n'est pas écrit deux fois.
+- **Les coutures, lues par un inconnu** (`attributionPubliee`). Au recueil
+  une case humaine dit « toi » ; en galerie « toi » désignerait le LECTEUR.
+  La main qui publie reprend donc son nom, les voix et les mains de salon
+  se disent comme au recueil. Une case sans auteur (les anciennes
+  publications de salon) dit « une main » : l'attribuer serait inventer.
+- **Des signes, pas des emoji.** ☾ ✦ ❀ ⁂, chacun avec son mot en petites
+  capitales ; la légende d'en tête est retirée. **Les clés en base ne
+  changent pas** — « 🌙 » reste la valeur écrite, seul l'imprimé change, et
+  les réactions passées restent comptées. « 🜔 » n'est dessiné par aucune
+  des trois familles : le repli système en faisait « ⊖ », un signe moins.
+  Les vues deviennent « 14 LECTURES », et zéro se tait.
+- **Les dessins en planche** : deux colonnes à hauteur entière, légendées
+  « PL. III — MIREILLE » ; ouverte, la planche prend toute la largeur.
+- **La semaine des lecteurs** : trois poèmes retenus par les réactions des
+  sept derniers jours, en tête, sans afficher de compte — un classement
+  chiffré ferait un palmarès. Une panne n'affiche rien.
+- **`/u/Anonyme` n'existe plus** : la page cherchait par `ilike` et
+  rassemblait tous ceux qui avaient publié sans compte. Le pseudo est
+  échappé (`motifExact`) : « M_reille » ouvrait la page de Mireille.
+- ⚑ et ⊘ restent dans l'état déplié ; le filtre de langue ne bouge pas. La
+  recherche lit aussi le poème — chercher « baleine » ne trouvait pas « la
+  baleine infirme », faute de titre.
+
+### Le feuillet sait qu'il a été publié
+
+La cause était plus basse que « réactions invisibles » : `publierPoeme` ne
+rendait rien, `PoemeDetail` remettait `published` à faux au bout de deux
+secondes, et le même poème pouvait partir trois fois en galerie.
+
+- `publierPoeme` / `publierDessin` rendent un `LienPublication` (`id`,
+  `date`), rangé dans le feuillet Dexie (`marquerPublie`). Le bouton cède la
+  place à « ✓ PUBLIÉ EN GALERIE LE 22 SEPTEMBRE » et à ce que la publication
+  a reçu (`MentionPublication`). Une publication que la base n'a plus —
+  retirée par son auteur ou par la modération — détache le feuillet, et le
+  bouton revient.
+- **Le recueil** porte « ☾ 3 · 12 LECTURES » sous chaque carte publiée, et
+  une ligne **LE COURRIER** dit ce qui est NOUVEAU depuis le dernier
+  passage (relevé local `courrier-releve`). « depuis ton dernier passage »
+  seulement s'il y a eu un passage relevé. Deux requêtes, quel que soit le
+  nombre de feuillets.
+- **Le Profil** liste ses publications — par `author_id`, un pseudo se
+  change — et mène enfin à sa propre page `/u/…`.
+- Rouvrir sa propre publication ne compte plus une lecture : c'est
+  exactement le chiffre qu'on montre désormais à l'auteur.
+- **Le salon publie ses coutures** : les cases partaient réduites à leur
+  texte, un poème à quatre mains paraissait écrit par qui l'avait publié. Il
+  part tel que le recueil le garde (`poemeDuSalon`), noms de plume compris,
+  dans la langue de la table. Le dessin publié porte enfin `author_id` : son
+  auteur ne pouvait pas le retirer.
+
+**Trois silences, comme le solde de l'encrier** : registre muet, aucun
+identifiant rendu, rien reçu — on ne montre jamais un chiffre qu'on n'a pas
+lu. **Aucune migration** : `views_count`, `gallery_reactions` et la
+lecture publique de `gallery` existent depuis le 27 mai.
+`galerie.test.ts` et `e2e/galerie.spec.ts` le tiennent.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (556 tests unitaires) + Playwright (85 tests E2E, FR et EN)
+- Tests : Vitest (587 tests unitaires) + Playwright (89 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

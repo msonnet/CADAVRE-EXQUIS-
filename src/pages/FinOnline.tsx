@@ -5,7 +5,7 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
-import { supabase, uploaderImageGalerie } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { corrigerAccords } from '../api/corriger'
 import { genererIllustration } from '../api/illustration'
@@ -18,14 +18,15 @@ import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import PoemeDevoile from '../components/PoemeDevoile'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
-import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration } from '../db'
+import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration, marquerPublie } from '../db'
+import { publierPoeme, publierDessin } from '../lib/publier'
 import { poemeDuSalon, idSalon } from '../lib/versRecueil'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
 import { libelleMains, nomAffiche } from '../lib/attribution'
 import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
 import { api } from '../lib/apiBase'
-import { tr, langueActuelle } from '../i18n'
+import { tr } from '../i18n'
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; langue?: string | null }
 
@@ -245,23 +246,32 @@ export default function FinOnline() {
   }, [])
 
   async function publierDansGalerieEcrit() {
-    if (!room || !user || publishingGallery || !texteAssemble) return
+    if (!room || !user || publishingGallery || !texteAssemble || !code) return
     setPublishingGallery(true)
     try {
-      const sortedContribs = [...contributions].sort((a, b) => a.case_index - b.case_index)
-      const cases = sortedContribs.map(c => ({ texte: c.texte }))
-      const payload = JSON.stringify({ cases, structureId: room.structure_id, titre: null, langue: langueSalon(room) })
-      const pseudo = profile?.pseudo ?? players.find(p => p.player_id === user.id)?.pseudo ?? 'Anonyme'
-      let imageUrl = illustrationUrl ?? null
-      if (imageUrl?.startsWith('data:')) {
-        imageUrl = await uploaderImageGalerie(imageUrl, 'illustration')
-      }
-      const { error } = await supabase.from('gallery').insert({
-        type: 'poeme', titre: null, payload,
-        image_url: imageUrl,
-        author_pseudo: pseudo, author_avatar: null,
+      // Les cases partaient réduites à leur texte : la galerie ne pouvait
+      // donc montrer ni coutures ni noms — un poème écrit à quatre mains y
+      // paraissait écrit par celui qui l'avait publié. On publie le poème
+      // tel que le recueil le garde, avec les noms de plume des mains et des
+      // voix ; la langue est celle de la table, pas celle du téléphone.
+      const structure = getStructure(room.structure_id, langueSalon(room))
+      const poeme = poemeDuSalon({
+        code, structureId: room.structure_id as Parameters<typeof poemeDuSalon>[0]['structureId'], contributions,
+        pseudos: new Map(players.map(p => [p.player_id, p.pseudo])),
+        moi: user.id, fonctions: structure.cases.map(d => d.fonction),
       })
-      if (!error) { setPublishedGallery(true); jouer('soumettre') }
+      const pseudo = profile?.pseudo ?? players.find(p => p.player_id === user.id)?.pseudo ?? 'Anonyme'
+      const lien = await publierPoeme(
+        illustrationUrl
+          ? { ...poeme, illustration: { url: illustrationUrl, style: styleChoisi ?? '', promptUtilise: texteAssemble, dateGeneration: Date.now() } }
+          : poeme,
+        { pseudo, avatar_url: profile?.avatar_url ?? null, id: user.id },
+        langueSalon(room),
+      )
+      // Le feuillet du recueil apprend qu'il est publié : son auteur y lira
+      // ce que la publication reçoit, et ne la republiera pas.
+      marquerPublie(idSalon(code), lien).catch(() => {})
+      setPublishedGallery(true); jouer('soumettre')
     } catch { /* ignore */ }
     setPublishingGallery(false)
   }
@@ -270,15 +280,13 @@ export default function FinOnline() {
     if (!room || !user || publishingGallery || !imageAssemblee) return
     setPublishingGallery(true)
     try {
-      const url = await uploaderImageGalerie(imageAssemblee, 'dessin-online')
-      if (!url) { setPublishingGallery(false); return }
-      const payload = JSON.stringify({ texteVision: texteVision || null, nbBandes: contributions.length, langue: langueActuelle() })
       const pseudo = profile?.pseudo ?? players.find(p => p.player_id === user.id)?.pseudo ?? 'Anonyme'
-      const { error } = await supabase.from('gallery').insert({
-        type: 'dessin', titre: null, payload, image_url: url,
-        author_pseudo: pseudo, author_avatar: null,
-      })
-      if (!error) { setPublishedGallery(true); jouer('soumettre') }
+      const lien = await publierDessin(
+        { imageDataUrl: imageAssemblee, texteVision: texteVision || null, nbBandes: contributions.length },
+        { pseudo, avatar_url: null, id: user.id },
+        'dessin-online',
+      )
+      if (lien) { setPublishedGallery(true); jouer('soumettre') }
     } catch { /* ignore */ }
     setPublishingGallery(false)
   }

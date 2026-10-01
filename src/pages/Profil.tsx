@@ -8,6 +8,8 @@ import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
 import { jetonOuIdentite } from '../lib/acces'
 import { tr } from '../i18n'
+import { lireEchos, publicationsDe } from '../lib/echos'
+import { tetePublication, dateSignature, libelleEchos, estAnonyme, type Publication, type Echos } from '../lib/galerie'
 
 const AVATAR_STYLES = [
   { id: 'surrealiste',     label: tr('Surréaliste', 'Surrealist') },
@@ -101,6 +103,26 @@ export default function Profil() {
     if (err) { setError(err); return }
     navigate('/online')
   }
+
+  // ── Tes publications ──
+  //
+  // Le Profil ne montrait qu'un portrait, un nom et la suppression : rien de
+  // ce qu'on avait publié, et sa propre page `/u/…` n'était liée nulle part
+  // sauf depuis une carte de la galerie. Lues par `author_id` — un pseudo
+  // se change. Registre muet : la section ne s'affiche pas.
+  const [publications, setPublications] = useState<Publication[] | null>(null)
+  const [echosPub, setEchosPub] = useState<Record<string, Echos>>({})
+  useEffect(() => {
+    if (!user) return
+    let annule = false
+    publicationsDe(user.id).then(async rows => {
+      if (annule || !rows) return
+      setPublications(rows)
+      const r = await lireEchos(rows.map(x => x.id))
+      if (!annule && r) setEchosPub(r.echos)
+    })
+    return () => { annule = true }
+  }, [user])
 
   if (loading) return null
 
@@ -252,6 +274,45 @@ export default function Profil() {
         >
           {saving ? tr('ENREGISTREMENT…', 'SAVING…') : profile ? tr('SAUVEGARDER', 'SAVE') : tr('CRÉER MON PROFIL →', 'CREATE MY PROFILE →')}
         </button>
+
+        {profile && publications && (publications.length > 0 || !estAnonyme(profile.pseudo)) && (
+          <section aria-labelledby="titre-publications">
+            <h2 id="titre-publications" style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 6 }}>
+              {tr('— TES PUBLICATIONS —', '— YOUR PUBLICATIONS —')}
+            </h2>
+            {publications.length === 0 && (
+              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, color: encre, opacity: 0.7, lineHeight: 1.5 }}>
+                {tr('Rien encore en galerie. Un poème se publie depuis son feuillet, au recueil.', 'Nothing in the gallery yet. A poem is published from its page, in the collection.')}
+              </p>
+            )}
+            {publications.map(it => {
+              const e = echosPub[it.id] ?? { lectures: it.views_count ?? 0, reactions: {} }
+              const l = libelleEchos(e)
+              return (
+                <div key={it.id} data-publication style={{ borderBottom: `0.5px solid ${encre}18`, padding: '9px 0' }}>
+                  <p style={{
+                    fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 17, lineHeight: 1.35, color: encre,
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  } as React.CSSProperties}>
+                    {tetePublication(it)}
+                  </p>
+                  <p style={{ ...mono, fontSize: 11, letterSpacing: '0.16em', color: encre, opacity: 0.6, marginTop: 2 }}>
+                    {dateSignature(it.created_at)}{l ? ` · ${l}` : ''}
+                  </p>
+                </div>
+              )
+            })}
+            {!estAnonyme(profile.pseudo) && (
+              <button
+                type="button"
+                onClick={() => navigate(`/u/${encodeURIComponent(profile.pseudo)}`)}
+                style={{ ...mono, fontSize: 13, letterSpacing: '0.16em', color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', minHeight: 44 }}
+              >
+                {tr('TA PAGE EN GALERIE →', 'YOUR GALLERY PAGE →')}
+              </button>
+            )}
+          </section>
+        )}
 
         {/* ── SUPPRESSION DE COMPTE (exigence App Store 5.1.1) ── */}
         {profile && (

@@ -3,15 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
-import { chargerDessin, supprimerDessin, mettreAJourTitreDessin } from '../db'
+import { chargerDessin, supprimerDessin, mettreAJourTitreDessin, marquerDessinPublie } from '../db'
+import { publierDessin } from '../lib/publier'
+import MentionPublication from '../components/MentionPublication'
 import { exporterPDF } from '../utils/partager'
 import { usePartage } from '../hooks/usePartage'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
-import { supabase, uploaderImageGalerie } from '../lib/supabase'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
-import { tr, langueActuelle } from '../i18n'
+import { tr } from '../i18n'
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString(tr('fr-FR', 'en-GB'), {
@@ -31,7 +32,6 @@ export default function DessinDetail() {
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppr, setConfirmSuppr] = useState(false)
   const [publishing, setPublishing] = useState(false)
-  const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const partage = usePartage({ libelleTravail: tr('✦ COMPOSITION…', '✦ COMPOSING…') })
@@ -80,29 +80,17 @@ export default function DessinDetail() {
     setPublishing(true)
     setPublishError(false)
     try {
-      const url = await uploaderImageGalerie(dessin.imageDataUrl, 'dessin')
-      if (!url) {
+      // Même fil que le poème : le lien est gardé dans le feuillet, pour ne
+      // plus republier et pour lire ce que la planche a reçu.
+      const lien = await publierDessin(dessin, profile)
+      if (!lien) {
         setPublishError(true)
         setTimeout(() => setPublishError(false), 2000)
         return
       }
-      const payload = JSON.stringify({
-        texteVision: dessin.texteVision,
-        nbBandes: dessin.nbBandes,
-        langue: langueActuelle(),
-      })
-      const { error } = await supabase.from('gallery').insert({
-        type: 'dessin',
-        titre: dessin.titre,
-        payload,
-        image_url: url,
-        author_pseudo: profile?.pseudo ?? 'Anonyme',
-        author_avatar: profile?.avatar_url ?? null,
-      })
-      if (error) throw error
+      await marquerDessinPublie(dessin.id, lien).catch(() => { /* stockage refusé */ })
+      setDessin(prev => prev ? { ...prev, publication: lien } : prev)
       jouer('soumettre')
-      setPublished(true)
-      setTimeout(() => setPublished(false), 2000)
     } catch (e) {
       console.error('publish error', e)
       setPublishError(true)
@@ -335,29 +323,38 @@ export default function DessinDetail() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.47 }}
         >
+          {dessin.publication ? (
+            <MentionPublication
+              lien={dessin.publication}
+              accent={accent} encre={encre}
+              onRetiree={() => {
+                marquerDessinPublie(dessin.id, null).catch(() => {})
+                setDessin(prev => prev ? { ...prev, publication: undefined } : prev)
+              }}
+            />
+          ) : (
           <button
             onClick={publierDansGalerie}
-            disabled={publishing || published}
+            disabled={publishing}
             aria-label={tr('Publier ce dessin dans la galerie', 'Publish this drawing to the gallery')}
             style={{
               width: '100%', padding: '0.85em',
               background: 'transparent',
-              color: publishError ? accent : (published ? accent : encre),
+              color: publishError ? accent : encre,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               borderRadius: 3,
-              cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
-              opacity: publishing ? 0.55 : (published ? 1 : 0.75),
+              cursor: publishing ? 'wait' : 'pointer',
+              opacity: publishing ? 0.55 : 0.75,
             }}
           >
             {publishError
               ? tr('ERREUR', 'ERROR')
-              : published
-                ? tr('✓ PUBLIÉ', '✓ PUBLISHED')
-                : publishing
-                  ? tr('✦ Publication…', '✦ Publishing…')
-                  : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
+              : publishing
+                ? tr('✦ Publication…', '✦ Publishing…')
+                : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
           </button>
+          )}
         </motion.div>
 
         {/* ── SUPPRIMER ── */}

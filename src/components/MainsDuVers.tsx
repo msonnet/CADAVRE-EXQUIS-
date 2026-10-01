@@ -15,10 +15,13 @@ import LienVoix from './LienVoix'
  * échoue, un mot en conserve prend la place d'une voix, et rien ne le
  * distinguait. Publier un vers en croyant qu'une voix l'a signé était possible.
  */
-export default function MainsDuVers({ mains, accent, encre, liens }: {
+export default function MainsDuVers({ mains, accent, encre, liens, main }: {
   mains: MainCase[]
   accent: string
   encre: string
+  /** Le nom de la main humaine. Absent, c'est « toi » — le recueil parle à
+   *  son auteur ; la galerie, lue par un inconnu, nomme celui qui publie. */
+  main?: string
   /** Le nom de chaque voix mène à sa fiche. Au recueil seulement : la fin
    *  de partie est encore le moment du dévoilement, on ne l'ouvre pas sur
    *  un détour. */
@@ -46,7 +49,7 @@ export default function MainsDuVers({ mains, accent, encre, liens }: {
               {liens ? <LienVoix nom={m.voixNom} /> : m.voixNom}
             </span>
           ) : (
-            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, fontStyle: 'italic' }}>{tr('toi', 'you')}</span>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, fontStyle: 'italic' }}>{main ?? tr('toi', 'you')}</span>
           )}
           </span>
         </div>

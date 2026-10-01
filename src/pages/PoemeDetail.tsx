@@ -7,7 +7,8 @@ import { attribution, attributionEnMorceaux, libelleMorceaux } from '../lib/attr
 import MainsDuVers from '../components/MainsDuVers'
 import LienVoix from '../components/LienVoix'
 import BoutonRecolte from '../components/BoutonRecolte'
-import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
+import MentionPublication from '../components/MentionPublication'
+import { chargerPoeme, supprimerPoeme, mettreAJourTitre, marquerPublie } from '../db'
 import { corrigerAccords } from '../api/corriger'
 import type { Poeme } from '../types'
 import { useSound } from '../hooks/useSound'
@@ -77,8 +78,10 @@ export default function PoemeDetail() {
   const { etape: tutEtape, actif: tutActif, fete: tutFete, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
-    if (tutActif && tutEtape === T_DETAIL && published) tutAvancer()
-  }, [published]) // eslint-disable-line react-hooks/exhaustive-deps
+    // Un feuillet déjà publié a déjà fait ce que l'étape demande : le guide
+    // ne doit pas désigner un bouton qui n'est plus là.
+    if (tutActif && tutEtape === T_DETAIL && (published || poeme?.publication)) tutAvancer()
+  }, [published, !!poeme?.publication]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // La célébration attend désormais un geste : elle porte le rendez-vous
   // quotidien, et un message qui s'efface avant d'être lu n'est pas un
@@ -137,10 +140,14 @@ export default function PoemeDetail() {
     setPublishing(true)
     setPublishError(false)
     try {
-      await publierPoeme(poeme, profile)
+      // Le lien est GARDÉ dans le feuillet : le bouton redevenait actif deux
+      // secondes après « ✓ PUBLIÉ », et le même poème pouvait partir trois
+      // fois en galerie. C'est aussi par ce lien que les lectures remontent.
+      const lien = await publierPoeme(poeme, profile)
+      await marquerPublie(poeme.id, lien).catch(() => { /* stockage refusé : la mention tient jusqu'à la sortie */ })
+      setPoeme(p => p ? { ...p, publication: lien } : p)
       jouer('soumettre')
       setPublished(true)
-      setTimeout(() => setPublished(false), 2000)
     } catch (e) {
       console.error('publish error', e)
       setPublishError(true)
@@ -533,31 +540,40 @@ export default function PoemeDetail() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.55 }}
         >
+          {poeme.publication ? (
+            <MentionPublication
+              lien={poeme.publication}
+              accent={accent} encre={encre}
+              onRetiree={() => {
+                marquerPublie(poeme.id, null).catch(() => {})
+                setPoeme(p => p ? { ...p, publication: undefined } : p)
+              }}
+            />
+          ) : (
           <button
             onClick={publierDansGalerie}
-            disabled={publishing || published}
+            disabled={publishing}
             aria-label="Publier ce poème dans la galerie"
             className={tutActif && tutEtape === T_DETAIL ? 'tut-cible' : undefined}
             style={{
               ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
               width: '100%', padding: '0.85em',
               background: 'transparent',
-              color: publishError ? accent : (published ? accent : encre),
+              color: publishError ? accent : encre,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               borderRadius: 3,
-              cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
-              opacity: publishing ? 0.55 : (published ? 1 : 0.75),
+              cursor: publishing ? 'wait' : 'pointer',
+              opacity: publishing ? 0.55 : 0.75,
             }}
           >
             {publishError
               ? tr('ERREUR', 'ERROR')
-              : published
-                ? tr('✓ PUBLIÉ', '✓ PUBLISHED')
-                : publishing
-                  ? tr('✦ Publication…', '✦ Publishing…')
-                  : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
+              : publishing
+                ? tr('✦ Publication…', '✦ Publishing…')
+                : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
           </button>
+          )}
         </motion.div>
 
         {/* ── COUTURES ── */}

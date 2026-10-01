@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { Poeme, DessinCadavre, BandeDessin } from '../types'
+import type { Poeme, DessinCadavre, BandeDessin, LienPublication } from '../types'
 
 /** Bandes d'une partie dessinée en cours — trop lourdes pour sessionStorage
  *  (quelques PNG plein écran suffisaient à dépasser le quota, et l'écriture
@@ -120,6 +120,19 @@ export async function mettreAJourTitre(id: string, titre: string | null): Promis
   // null (et non '') : les affichages testent `titre ?? extrait` — une chaîne
   // vide passerait le ?? et rendrait une ligne blanche dans la bibliothèque.
   await db.poemes.update(id, { titre: titre || null, dateModification: Date.now() })
+}
+
+/**
+ * Relie le feuillet à sa publication, ou l'en détache (`null`) quand la
+ * galerie ne l'a plus. Aucun index : on ne cherche jamais un poème par sa
+ * publication, on lit la publication d'un poème qu'on tient déjà.
+ */
+export async function marquerPublie(id: string, lien: LienPublication | null): Promise<void> {
+  await db.poemes.update(id, { publication: lien ?? undefined })
+}
+
+export async function marquerDessinPublie(id: string, lien: LienPublication | null): Promise<void> {
+  await db.dessins.update(id, { publication: lien ?? undefined })
 }
 
 export async function sauvegarderIllustration(id: string, illustration: import('../types').Illustration): Promise<void> {
