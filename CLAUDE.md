@@ -1331,6 +1331,11 @@ bas, environ 250 px de chaque côté.
   dans la vidéo.
 - Le libellé « — LECTURE — » de l'affiche d'un dessin restait en français ;
   la vidéo le traduisait déjà.
+- **La lettrine garde son blanc** (`LETTRINE_ECART = 60`). La grille pose
+  un vers à la hauteur de ses hampes, l'ancienne mise en page une
+  interligne plus bas : au premier passage, 23 px seulement séparaient le
+  pied du « L » de « la cire », qui semblait posé dessus. Vu sur l'affiche
+  générée, pas déduit.
 
 `affiche.test.ts` balaie huit poèmes × trois titres × cinq images (aucune
 boîte ne se recouvre, toutes dans la zone sûre), la vidéo et sa
@@ -1355,7 +1360,7 @@ l'appareil qui le dira.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (610 tests unitaires) + Playwright (99 tests E2E, FR et EN)
+- Tests : Vitest (611 tests unitaires) + Playwright (99 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

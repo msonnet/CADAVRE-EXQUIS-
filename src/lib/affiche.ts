@@ -83,7 +83,11 @@ export const policeCorps = (s: number) => `italic ${s}px 'Playfair Display', Geo
 export const policeLecture = "italic 36px 'Playfair Display', Georgia, serif"
 const LETTRINE = 240
 const LETTRINE_VISUEL = LETTRINE * 0.72
-const LETTRINE_ECART = 28
+// Le blanc sous la lettrine, jusqu'au haut des hampes du premier vers.
+// L'ancienne mise en page comptait 28 px PLUS une interligne entière ; la
+// grille, qui pose le vers à la hauteur de ses hampes, n'en gardait que 28,
+// et le « L » semblait posé sur « la cire ». 60 rend le blanc d'origine.
+const LETTRINE_ECART = 60
 
 export function couper(texte: string, max: number, police: string, mesurer: Mesure): string[] {
   const lignes: string[] = []

@@ -90,6 +90,20 @@ describe("l'affiche d'un poème", () => {
     expect(composerAffichePoeme({ texte: MOYEN }, mesurer).lettrine?.char).toBe('L')
   })
 
+  it('la lettrine garde son blanc au-dessus du premier vers', () => {
+    // Relevé dans Chromium au premier passage de la grille : 23 px entre le
+    // pied du « L » et la hampe de « la cire », contre une soixantaine avant —
+    // la lettrine semblait posée sur le vers. On mesure jusqu'au haut des
+    // hampes (0,8 corps au-dessus de la ligne de base).
+    for (const texte of [COURT, MOYEN, long(4)]) {
+      const a = composerAffichePoeme({ texte }, mesurer)
+      expect(a.lettrine, `« ${texte.slice(0, 20)} »`).not.toBeNull()
+      const premier = a.corps.lignes[0]
+      const blanc = premier.y - a.corps.taille * 0.8 - a.lettrine!.baseline
+      expect(blanc, `« ${texte.slice(0, 20)} »`).toBeGreaterThanOrEqual(48)
+    }
+  })
+
   it('le pli passe dans le blanc entre deux lignes, jamais dans leurs lettres', () => {
     // Hauteur visible d'une ligne : 0,8 corps au-dessus de la ligne de base
     // (capitales, hampes), 0,3 en dessous (jambages). Le pli était posé à une
