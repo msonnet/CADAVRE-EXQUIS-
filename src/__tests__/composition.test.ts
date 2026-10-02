@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import 'fake-indexeddb/auto'
 import {
   PLANCHER_FEUILLET, auteurDuVers, basculerChoix, deplacerChoix, poemeDuCarnet, provenanceDuVers,
+  fonctionDeCase, mettreEnTete,
 } from '../lib/composition'
+import { attributionPubliee } from '../lib/galerie'
 import { attribution, attributionEnMorceaux, contientDeLIA } from '../lib/attribution'
 import { mainsDuPoeme } from '../lib/versRecueil'
 import { getStructure, reconstruirePoeme } from '../structures'
@@ -41,6 +43,13 @@ describe('le choix — l’ordre du toucher fait l’ordre du feuillet', () => {
     expect(deplacerChoix(['a', 'b', 'c'], 'a', 1)).toEqual(['b', 'a', 'c'])
     expect(deplacerChoix(['a', 'b', 'c'], 'a', -1)).toEqual(['a', 'b', 'c'])
     expect(deplacerChoix(['a', 'b', 'c'], 'c', 1)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('met un vers en tête d’un seul appui — trente vers, pas vingt-neuf flèches', () => {
+    const trente = Array.from({ length: 30 }, (_, i) => `v${i + 1}`)
+    expect(mettreEnTete(trente, 'v30')).toEqual(['v30', ...trente.slice(0, 29)])
+    expect(mettreEnTete(['a', 'b'], 'a')).toEqual(['a', 'b'])
+    expect(mettreEnTete(['a', 'b'], 'z')).toEqual(['a', 'b'])
   })
 
   it('un seul vers ne fait pas un feuillet', () => {
@@ -161,5 +170,57 @@ describe('relier, au recueil', () => {
     const b = await recolter({ texte: 'à moi', signature: 'toi' })
     const p = await relierEnFeuillet([b.id, a.id])
     expect(p.cases.map(x => x.auteur)).toEqual(['humain', 'ia'])
+  })
+})
+
+// ── Relu par un autre, relu dans l'autre langue ─────────────────────────
+//
+// La couture d'un feuillet relié était FIGÉE au moment où l'on gardait le
+// vers : « toi » restait « toi » en galerie, où il désigne le lecteur, et la
+// date restait française sous l'interface anglaise.
+
+describe('le feuillet relié, publié en galerie', () => {
+  const sig = (signature: string, extra: Partial<VersRecolte> = {}) =>
+    poemeDuCarnet({ vers: [vers('r', 'x', { signature, ...extra })], date: T }).cases[0]
+
+  it('« toi » devient le nom de celui qui publie', () => {
+    expect(attributionPubliee(sig('toi', { auteur: 'humain' }), 'Nathan')).toEqual({ texte: 'Nathan', voix: [] })
+    expect(attributionPubliee(sig('you', { auteur: 'humain' }), 'Nathan')).toEqual({ texte: 'Nathan', voix: [] })
+    expect(attributionPubliee(sig('toi seul', { auteur: 'humain' }), 'Nathan')).toEqual({ texte: 'Nathan', voix: [] })
+  })
+
+  it('« toi et 3 voix » garde ses voix, sous le nom de celui qui publie', () => {
+    expect(attributionPubliee(sig('toi et 3 voix · Le boucher · Le géologue', { auteur: 'mixte' }), 'Nathan'))
+      .toEqual({ texte: 'Nathan et 3 voix', voix: ['Le boucher', 'Le géologue'] })
+  })
+
+  it('les autres mains restent les leurs', () => {
+    expect(attributionPubliee(sig('Desnos', { auteur: 'humain' }), 'Nathan')).toEqual({ texte: 'Desnos', voix: [] })
+    expect(attributionPubliee(sig("voix 2 · L'enlumineur", { auteur: 'ia' }), 'Nathan'))
+      .toEqual({ texte: 'voix 2', voix: ["L'enlumineur"] })
+  })
+})
+
+describe('le feuillet relié, relu dans l’autre langue', () => {
+  const changerLangue = (l: 'fr' | 'en') => vi.stubGlobal('localStorage', { getItem: () => l, setItem: () => {} })
+  afterEach(() => vi.unstubAllGlobals())
+  const a = vers('r1', 'x', { poemeTitre: 'Le vernis', datePoeme: T, signature: "voix 2 · L'enlumineur", auteur: 'ia' })
+
+  it('la couture suit la langue courante — date, tête et noms', () => {
+    const p = poemeDuCarnet({ vers: [a], date: T })
+    changerLangue('en')
+    expect(fonctionDeCase(p.cases[0])).toBe('14 September 2026 · Le vernis')
+    expect(attribution(p.cases[0])).toBe('voice 2 · The illuminator')
+    expect(attribution(poemeDuCarnet({ vers: [vers('r', 'x', { signature: 'toi' })] }).cases[0])).toBe('you')
+    expect(attribution(poemeDuCarnet({ vers: [vers('r', 'x', { signature: 'toi et une voix · Le boucher' })] }).cases[0]))
+      .toBe('you and one voice · The butcher')
+  })
+
+  it('et revient en français', () => {
+    changerLangue('en')
+    const p = poemeDuCarnet({ vers: [vers('r', 'x', { poemeTitre: 'Poem of the day', datePoeme: T, signature: 'player 3' })], date: T })
+    changerLangue('fr')
+    expect(fonctionDeCase(p.cases[0])).toBe('14 septembre 2026 · Poème du jour')
+    expect(attribution(p.cases[0])).toBe('joueur 3')
   })
 })

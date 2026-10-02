@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import MainsDuVers from './MainsDuVers'
+import BoutonRecolte from './BoutonRecolte'
+import { fonctionDeCase } from '../lib/composition'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
 import { toRomain } from '../lib/attribution'
@@ -109,11 +111,12 @@ export function CouturesPubliees({ item, accent, encre, id }: { item: Publicatio
   const p = lirePoemePublie(item.payload)
   if (!p) return null
   const unVers = p.structureId === 'atelier' || p.structureId === 'vers-libre'
+  const titre = tetePublication(item)
   return (
     <div id={id} style={{ marginTop: 10 }}>
       {p.cases.map((cas, i) => {
         const { texte, voix } = attributionPubliee(cas, item.author_pseudo)
-        const fonction = cas.fonction?.trim()
+        const fonction = fonctionDeCase(cas)?.trim()
           || (unVers ? `${tr('vers', 'line')} ${i + 1}` : `${tr('fragment', 'fragment')} ${i + 1}`)
         return (
           <div key={i} style={{ borderLeft: `2px solid ${accent}35`, paddingLeft: 12, paddingTop: 4, paddingBottom: 4, marginBottom: 8 }}>
@@ -128,6 +131,26 @@ export function CouturesPubliees({ item, accent, encre, id }: { item: Publicatio
               {cas.texte}
             </p>
             {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} main={item.author_pseudo} /> : null}
+            {/* Garder le vers d'un autre auteur. Le carnet ne récoltait que
+                ses propres coutures et, depuis peu, celles du poème du jour :
+                la galerie, où se lisent les vers qu'on n'a pas écrits, n'en
+                laissait emporter aucun. La signature est celle que la ligne
+                imprime — le nom de l'auteur, jamais « toi ». */}
+            {cas.texte?.trim() && (
+              <div style={{ marginTop: 4 }}>
+                <BoutonRecolte
+                  compact
+                  texte={cas.texte.trim()}
+                  accent={accent}
+                  encre={encre}
+                  poemeTitre={titre}
+                  datePoeme={Date.parse(item.created_at) || undefined}
+                  signature={[texte, ...voix].join(' · ')}
+                  nbVoix={cas.nbVoix}
+                  auteur={cas.auteur}
+                />
+              </div>
+            )}
           </div>
         )
       })}

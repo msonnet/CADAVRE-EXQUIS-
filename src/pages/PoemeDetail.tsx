@@ -7,6 +7,7 @@ import { attribution, attributionEnMorceaux, libelleMorceaux } from '../lib/attr
 import MainsDuVers from '../components/MainsDuVers'
 import LienVoix from '../components/LienVoix'
 import BoutonRecolte from '../components/BoutonRecolte'
+import { fonctionDeCase } from '../lib/composition'
 import MentionPublication from '../components/MentionPublication'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre, marquerPublie } from '../db'
 import { corrigerAccords } from '../api/corriger'
@@ -601,7 +602,7 @@ export default function PoemeDetail() {
                   }}
                 >
                   <div style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8, marginBottom: 3 }}>
-                    {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
+                    {fonctionDeCase(cas)?.toUpperCase() ?? `CASE ${i + 1}`}
                     <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
                     <span style={{ fontFamily: "'Playfair Display', serif", textTransform: 'none', letterSpacing: 0 }}>
                       {/* Chaque nom de voix mène à sa fiche du registre : c'est
@@ -617,17 +618,24 @@ export default function PoemeDetail() {
                     {cas.texte}
                   </p>
                   {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} liens /> : null}
-                  <BoutonRecolte
-                    texte={cas.texte}
-                    accent={accent}
-                    encre={encre}
-                    poemeId={poeme.id}
-                    poemeTitre={poeme.titre}
-                    datePoeme={poeme.dateCreation}
-                    signature={attribution(cas)}
-                    nbVoix={cas.nbVoix}
-                    auteur={cas.auteur}
-                  />
+                  {/* Un feuillet relié ne propose pas de garder ses vers : ils
+                      viennent du carnet et y sont encore. Le bouton y disait
+                      « ◆ GARDÉ » partout, et deux appuis distraits — retirer,
+                      regarder — réécrivaient le vers sous la date du feuillet,
+                      sans titre : la provenance qu'il imprime était perdue. */}
+                  {poeme.origine !== 'carnet' && (
+                    <BoutonRecolte
+                      texte={cas.texte}
+                      accent={accent}
+                      encre={encre}
+                      poemeId={poeme.id}
+                      poemeTitre={poeme.titre}
+                      datePoeme={poeme.dateCreation}
+                      signature={attribution(cas)}
+                      nbVoix={cas.nbVoix}
+                      auteur={cas.auteur}
+                    />
+                  )}
                 </div>
               ))}
             </motion.div>

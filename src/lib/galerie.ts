@@ -1,6 +1,6 @@
 import type { Case } from '../types'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { attributionEnMorceaux, nomAffiche } from './attribution'
+import { attributionEnMorceaux, attributionSignee, nomAffiche } from './attribution'
 import { tr } from '../i18n'
 
 /**
@@ -158,6 +158,12 @@ export function attributionPubliee(c: Partial<Case>, auteur: string): { texte: s
   // inventer.
   if (!c.auteur) return { texte: tr('une main', 'a hand'), voix: [] }
   const cas = caseComplete(c, 0)
+  // Un feuillet relié au carnet : la signature gardée avec le vers. Son
+  // « toi » désignait celui qui a gardé le vers — celui qui publie.
+  if (typeof cas.signature === 'string') {
+    const { texte, voix } = attributionSignee(cas.signature, auteur)
+    return { texte, voix: voix.map(nomAffiche) }
+  }
   if (typeof cas.nbVoix === 'number') {
     const { texte, voix } = attributionEnMorceaux(cas)
     if (cas.auteur === 'humain' || cas.nbVoix === 0) return { texte: auteur, voix: [] }

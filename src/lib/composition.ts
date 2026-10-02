@@ -59,12 +59,41 @@ export function deplacerChoix(choix: readonly string[], id: string, sens: -1 | 1
   return r
 }
 
+/** Mettre un vers en tête du feuillet, d'un seul appui. */
+export function mettreEnTete(choix: readonly string[], id: string): string[] {
+  return choix.includes(id) ? [id, ...choix.filter(x => x !== id)] : [...choix]
+}
+
 /** D'où vient le vers — ce que la couture du feuillet imprime à la place de la fonction. */
 export function provenanceDuVers(v: Pick<VersRecolte, 'datePoeme' | 'dateRecolte' | 'poemeTitre'>): string {
   const date = new Date(v.datePoeme ?? v.dateRecolte).toLocaleDateString(tr('fr-FR', 'en-GB'), {
     day: 'numeric', month: 'long', year: 'numeric',
   })
-  return v.poemeTitre ? `${date} · ${v.poemeTitre}` : date
+  return v.poemeTitre ? `${date} · ${titreTraduit(v.poemeTitre)}` : date
+}
+
+// Le seul titre que l'application donne elle-même à un poème : celui-là se
+// traduit. Un titre écrit par le joueur ne se traduit jamais.
+const TITRES_MAISON: [string, string][] = [['Poème du jour', 'Poem of the day']]
+export function titreTraduit(t: string): string {
+  const paire = TITRES_MAISON.find(p => p.includes(t))
+  return paire ? tr(paire[0], paire[1]) : t
+}
+
+/**
+ * La fonction d'une case telle que les coutures l'impriment.
+ *
+ * Premier jet : la provenance d'un feuillet relié était ÉCRITE dans
+ * `fonction` au moment de la reliure, date localisée comprise. Sous
+ * l'interface anglaise, la couture disait encore « 14 SEPTEMBRE 2026 ». La
+ * case garde désormais la date et le titre, et la phrase se compose ici, à
+ * chaque lecture. `fonction` reste écrite, en repli pour qui la lirait seule.
+ */
+export function fonctionDeCase(c: Partial<Pick<Case, 'fonction' | 'provenance'>>): string | undefined {
+  if (c.provenance) {
+    return provenanceDuVers({ datePoeme: c.provenance.date, dateRecolte: c.provenance.date, poemeTitre: c.provenance.titre })
+  }
+  return c.fonction
 }
 
 const SIGNATURES_SEULES = new Set(['toi', 'you', 'toi seul', 'you alone'])
@@ -120,6 +149,7 @@ export function poemeDuCarnet(o: {
     // Une chaîne vide plutôt que l'absence : c'est la présence du champ qui
     // dit à `attribution` qu'il lit une couture de carnet.
     signature: v.signature ?? '',
+    provenance: { date: v.datePoeme ?? v.dateRecolte, titre: v.poemeTitre ?? null },
   }))
   return {
     id: o.id ?? idFeuilletCarnet(date),

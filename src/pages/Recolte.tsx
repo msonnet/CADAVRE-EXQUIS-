@@ -9,7 +9,8 @@ import {
   type VersRecolte,
 } from '../db'
 import { mono } from '../lib/typo'
-import { PLANCHER_FEUILLET, basculerChoix, deplacerChoix, provenanceDuVers } from '../lib/composition'
+import { PLANCHER_FEUILLET, basculerChoix, deplacerChoix, mettreEnTete, provenanceDuVers, titreTraduit } from '../lib/composition'
+import { attributionSignee, nomAffiche } from '../lib/attribution'
 import { emporterFichier } from '../lib/emporter'
 import { tr, langueActuelle } from '../i18n'
 
@@ -41,6 +42,12 @@ function formatDate(ts: number): string {
   })
 }
 
+/** La signature gardée, relue dans la langue courante — comme le feuillet la relira. */
+function signatureLue(signature: string): string {
+  const { texte, voix } = attributionSignee(signature)
+  return [texte, ...voix.map(nomAffiche)].join(' · ')
+}
+
 /** Le carnet en texte nu — un vers par ligne, rien d'autre. */
 function enTexte(vers: VersRecolte[]): string {
   return vers.map(v => v.texte).join('\n')
@@ -59,6 +66,7 @@ export default function Recolte() {
   const [regime, setRegime] = useState<'carnet' | 'choix' | 'relecture'>('carnet')
   const [choix, setChoix] = useState<string[]>([])
   const [reliure, setReliure] = useState(false)
+  const [echecReliure, setEchecReliure] = useState(false)
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -107,12 +115,16 @@ export default function Recolte() {
   async function relier() {
     if (reliure || choix.length < PLANCHER_FEUILLET) return
     setReliure(true)
+    setEchecReliure(false)
     jouer('clic')
     try {
       const poeme = await relierEnFeuillet(choix)
       navigate(`/bibliotheque/${poeme.id}`)
     } catch (e) {
+      // Le bouton se rallumait sans un mot : le joueur retouchait RELIER
+      // sans savoir que la première fois n'avait rien relié.
       console.error(e)
+      setEchecReliure(true)
       setReliure(false)
     }
   }
@@ -265,9 +277,9 @@ export default function Recolte() {
                 {provenances && (
                   <p style={{ ...mono, fontSize: 11, color: accent, opacity: 0.6, marginTop: 4 }}>
                     {[
-                      v.signature,
+                      v.signature ? signatureLue(v.signature) : null,
                       v.datePoeme ? formatDate(v.datePoeme) : null,
-                      v.poemeTitre || null,
+                      v.poemeTitre ? titreTraduit(v.poemeTitre) : null,
                     ].filter(Boolean).join(' · ')}
                   </p>
                 )}
@@ -326,7 +338,9 @@ export default function Recolte() {
                   </p>
                   {/* Ce qui deviendra la couture du vers : on la lit avant de relier. */}
                   <p style={{ ...mono, fontSize: 11, color: accent, opacity: 0.6, marginTop: 2 }}>
-                    {[provenanceDuVers(v), v.signature].filter(Boolean).join(' — ')}
+                    {/* La signature relue comme le feuillet la relira — dans la
+                        langue courante, et non telle qu'elle fut écrite. */}
+                    {[provenanceDuVers(v), v.signature && signatureLue(v.signature)].filter(Boolean).join(' — ')}
                   </p>
                   <div className="flex items-center" style={{ gap: 14, marginTop: 2 }}>
                     <button
@@ -341,6 +355,15 @@ export default function Recolte() {
                       aria-label={tr('Descendre ce vers dans le feuillet', 'Move this line down the page')}
                       style={{ ...mono, fontSize: 15, color: encre, opacity: i === choix.length - 1 ? 0.15 : 0.55, background: 'none', border: 'none', cursor: i === choix.length - 1 ? 'default' : 'pointer', minHeight: 40, minWidth: 32 }}
                     >↓</button>
+                    {/* Les flèches ne déplacent que d'un rang : sur un feuillet de
+                        trente vers, remonter le dernier coûtait vingt-neuf appuis
+                        — le travers même que le mode COMPOSER venait corriger. */}
+                    <button
+                      onClick={() => { jouer('clic'); setChoix(ch => mettreEnTete(ch, id)) }}
+                      disabled={i === 0}
+                      aria-label={tr('Mettre ce vers en tête du feuillet', 'Move this line to the top of the page')}
+                      style={{ ...mono, fontSize: 11, letterSpacing: '0.15em', color: encre, opacity: i === 0 ? 0.15 : 0.45, background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', minHeight: 40 }}
+                    >{tr('EN TÊTE', 'TO THE TOP')}</button>
                     <button
                       onClick={() => {
                         jouer('clic')
@@ -376,6 +399,11 @@ export default function Recolte() {
             >
               {tr('RELIER EN FEUILLET', 'BIND INTO A PAGE')}
             </button>
+            {echecReliure && (
+              <p role="alert" style={{ ...mono, fontSize: 11, color: accent, marginTop: 8, textAlign: 'center' }}>
+                {tr('Le feuillet n’a pas pu être relié.', 'The page could not be bound.')}
+              </p>
+            )}
             <button
               onClick={() => { jouer('clic'); setRegime('choix') }}
               style={{ ...boutonPlat, display: 'block', margin: '6px auto 0' }}

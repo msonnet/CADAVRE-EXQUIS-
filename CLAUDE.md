@@ -306,7 +306,8 @@ puis assemblés à la main. Le moteur produisait dix-huit vers gardables par
 séance et il n'existait aucun moyen de les garder.
 
 - `◇ GARDER` sous chaque ligne des coutures, en fin de partie, dans la
-  bibliothèque et au poème du jour (`src/components/BoutonRecolte.tsx`).
+  bibliothèque, au poème du jour et en galerie
+  (`src/components/BoutonRecolte.tsx`).
 - `/recolte` — le carnet : les vers de toutes les séances, réordonnables à la
   flèche, avec leur provenance, copiables et exportables en `.txt` — et,
   depuis le 2 octobre, reliés en feuillet du recueil (« Le carnet compose »).
@@ -1396,15 +1397,43 @@ publication. Relevé avant : aucun chemin du carnet vers le recueil.
   Le bouton arrête son clic : sans cela, toucher ◇ touchait aussi la
   feuille, qui démontait les coutures — et le bouton avec.
 
-**Pas fait, et pourquoi.** ◇ GARDER dans la **galerie** : une publication
-y est l'objet entier d'un autre auteur, présenté en planche ; poser un
-bouton par ligne change la planche, que le lot de la galerie vient de
-stabiliser. Les flèches du carnet lui-même restent d'un rang : composer
-passe désormais par le toucher, qui ne connaît pas la distance.
+### La reprise — ce que la relecture contradictoire a trouvé
 
-`composition.test.ts` (16 mesures, dont la reliure sous Dexie) et deux
-parcours (`carnet.spec.ts`, `poeme-du-jour.spec.ts`) échouent sur l'ancien
-code.
+- **« toi » imprimé à chaque visiteur.** Un feuillet relié publié en galerie
+  disait « 14 SEPTEMBRE 2026 — toi » à qui le lisait : la branche de la
+  signature, posée en tête d'`attributionEnMorceaux`, court-circuitait
+  `attributionPubliee`, qui remplace « toi » par le nom de celui qui publie.
+  Mesuré : `{ texte: 'toi' }` pour un vers signé « toi », « toi et 3 voix »
+  pour un vers d'Atelier.
+- **La couture figée dans la langue de la reliure.** `fonction` portait la
+  date déjà écrite en français, la signature « toi » ou « voix 2 ». La case
+  garde désormais `provenance` en DONNÉES (date, titre), composée à
+  l'affichage par `fonctionDeCase` ; la tête de signature se relit
+  (`attributionSignee`) et se récrit dans la langue courante — `moi`, quand
+  il est donné, prend la place de « toi ». Seuls les titres que l'app donne
+  elle-même (« Poème du jour ») se traduisent ; un pseudo ne se traduit
+  jamais.
+- **◇ GARDER en galerie**, sous chaque ligne des coutures, forme compacte.
+  Le bouton ne touche pas la planche : `CouturesPubliees` rendait déjà une
+  ligne par vers. La signature gardée est celle que la ligne imprime — le
+  nom de l'auteur, jamais « toi ».
+- **Un feuillet relié ne propose plus de garder ses vers** : ils sont au
+  carnet par construction. « ◆ GARDÉ » partout invitait à les retirer, et
+  le second appui les réécrivait sous la date du feuillet, sans titre.
+- **« EN TÊTE »** à la relecture, à côté de ↑ ↓ : sur trente vers, remonter
+  le dernier coûtait vingt-neuf appuis. Une reliure ratée le dit
+  maintenant, au lieu de rallumer le bouton en silence.
+- **Le parcours du poème du jour gardait l'ajout du bouton, pas la
+  non-propagation** : la sortie animée des coutures dure 0,2 s, et
+  l'assertion passait pendant. Il attend désormais au-delà, et lit
+  `aria-pressed` de « ⟡ COUTURES ».
+
+Les flèches du carnet lui-même restent d'un rang : composer passe par le
+toucher, qui ne connaît pas la distance, et la relecture a son « EN TÊTE ».
+
+`composition.test.ts` (22 mesures, dont la reliure sous Dexie, la galerie
+et l'autre langue) et trois parcours (`carnet.spec.ts`, `galerie.spec.ts`,
+`poeme-du-jour.spec.ts`) échouent sur l'ancien code.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
@@ -1412,7 +1441,7 @@ code.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (611 tests unitaires) + Playwright (99 tests E2E, FR et EN)
+- Tests : Vitest (633 tests unitaires) + Playwright (102 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

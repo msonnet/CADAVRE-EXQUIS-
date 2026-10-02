@@ -332,7 +332,11 @@ test('un vers d’une autre main se garde au carnet', async ({ page }) => {
   const garder = page.getByRole('button', { name: /Garder ce vers dans le carnet|Keep this line in the notebook/ })
   await expect(garder).toHaveCount(5)
   await garder.nth(3).click()
-  // Le geste ne touche pas la feuille : les coutures restent montées.
+  // Le geste ne touche pas la feuille : les coutures restent montées. On le
+  // lit APRÈS leur sortie animée (0,2 s) — lu pendant, le texte est encore
+  // là et l'assertion passait même quand le clic les avait démontées.
+  await page.waitForTimeout(600)
+  await expect(page.getByRole('button', { name: /COUTURES|SEAMS/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText(/4 · DESNOS/)).toBeVisible()
   await expect(page.getByRole('button', { name: /Retirer ce vers du carnet|Remove this line from the notebook/ })).toHaveCount(1)
 

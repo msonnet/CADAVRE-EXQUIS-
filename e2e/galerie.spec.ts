@@ -164,6 +164,46 @@ test.describe('le sommaire', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
   })
 
+  // Un feuillet relié au carnet, publié par Mireille. Ses coutures disaient
+  // « toi » à chaque visiteur — la signature gardée avec le vers court-
+  // circuitait le remplacement par le nom de qui publie. Et la galerie ne
+  // laissait garder aucun vers : le carnet ne récoltait que les siens.
+  test('un vers publié se garde au carnet, signé du nom de son auteur', async ({ page }) => {
+    test.setTimeout(60_000)
+    const t = Date.UTC(2026, 8, 14, 12)
+    const RELIE = {
+      ...VERNIS, id: 'g-relie',
+      payload: JSON.stringify({ structureId: 'vers-libre', titre: null, langue: 'fr', cases: [
+        // `fonction` telle que la reliure l'écrit aussi, en repli.
+        c('un drap glisse le long du couloir', { fonction: '14 septembre 2026 · Le vernis', signature: 'toi', provenance: { date: t, titre: 'Le vernis' } }),
+        c("l'abbé presse ma main", { fonction: '14 septembre 2026', auteur: 'ia', signature: "voix 2 · L'enlumineur", provenance: { date: t, titre: null } }),
+      ] }),
+    }
+    await bouchonner(page, () => [RELIE])
+    await page.goto('/galerie')
+    await page.waitForLoadState('networkidle')
+    await franchir(page)
+
+    const liste = page.locator('section[aria-label="Publications"]')
+    await liste.getByRole('button', { name: /un drap glisse le long du couloir/ }).click()
+    await liste.getByRole('button', { name: /COUTURES/ }).click()
+    await expect(liste.getByText(/14 SEPTEMBRE 2026 · LE VERNIS/)).toBeVisible()
+    await expect(liste.getByText('Mireille', { exact: true })).toBeVisible()
+    await expect(liste.getByText('toi', { exact: true })).toHaveCount(0)
+
+    const garder = liste.getByRole('button', { name: /Garder ce vers dans le carnet/ })
+    await expect(garder).toHaveCount(2)
+    await garder.first().click()
+    await expect(liste.getByRole('button', { name: /Retirer ce vers du carnet/ })).toHaveCount(1)
+
+    await page.goto('/recolte')
+    await page.waitForLoadState('networkidle')
+    await franchir(page)
+    await expect(page.getByText('un drap glisse le long du couloir')).toBeVisible()
+    await page.getByRole('button', { name: /SOURCES/ }).click()
+    await expect(page.getByText(/^Mireille · 29 septembre 2026 · un drap glisse le long du couloir$/)).toBeVisible()
+  })
+
   test('« Anonyme » n’a pas de page', async ({ page }) => {
     await bouchonner(page, () => [VERNIS])
     await page.goto('/u/Anonyme')

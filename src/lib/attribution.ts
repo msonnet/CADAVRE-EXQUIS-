@@ -71,18 +71,7 @@ export function attributionEnMorceaux(c: Case, iaNum?: number): { texte: string;
   const seul = (texte: string) => ({ texte, voix: [] as string[] })
 
   // ── Feuillet relié au carnet : la signature d'origine ────────────────
-  // Elle a été écrite par cette même fonction quand le vers a été gardé —
-  // « 3 voix · Le boucher · Le géologue ». On la recoupe aux mêmes « · »
-  // pour que les noms redeviennent des liens et suivent la langue courante,
-  // mais seulement si TOUS sont des voix connues : un pseudo de salon peut
-  // contenir le séparateur, et le prendre pour une voix inventerait un lien.
-  if (c.signature !== undefined) {
-    const [tete, ...suite] = c.signature.split(' · ').map(s => s.trim())
-    if (suite.length && suite.every(n => idDeVoix(n) || Object.prototype.hasOwnProperty.call(NOMS_VOIX, n))) {
-      return { texte: tete, voix: suite }
-    }
-    return seul(c.signature || tr('une main', 'a hand'))
-  }
+  if (c.signature !== undefined) return attributionSignee(c.signature)
 
   // ── Vers d'atelier : le nombre de mains d'abord ──────────────────────
   if (typeof c.nbVoix === 'number') {
@@ -108,6 +97,82 @@ export function attributionEnMorceaux(c: Case, iaNum?: number): { texte: string;
   if (c.pseudo) return seul(c.pseudo)
   if ('moi' in c || 'pseudo' in c) return seul(tr('une main', 'a hand'))
   return seul(tr('toi', 'you'))
+}
+
+/**
+ * La signature d'un vers gardé au carnet, relue au moment où on la lit.
+ *
+ * Elle a été écrite par `attribution` quand le vers a été gardé —
+ * « 3 voix · Le boucher · Le géologue ». On la recoupe aux mêmes « · »
+ * pour que les noms redeviennent des liens, mais seulement si TOUS sont des
+ * voix connues : un pseudo de salon peut contenir le séparateur, et le
+ * prendre pour une voix inventerait un lien.
+ *
+ * ── La tête figée ─────────────────────────────────────────────────────────
+ *
+ * Premier jet : la tête restait telle qu'elle fut écrite. Deux défauts.
+ * Sous l'interface anglaise, un feuillet relié en français disait « toi »
+ * et « voix 2 » à côté de « The illuminator ». Et publié en galerie, il
+ * disait « toi » à CHAQUE visiteur — comme si le lecteur avait écrit le
+ * vers lui-même ; la branche court-circuitait `attributionPubliee`, qui
+ * remplace « toi » par le nom de celui qui publie.
+ *
+ * Les têtes que l'application écrit elle-même se relisent donc en données
+ * (`lireTete`) et se récrivent dans la langue courante ; `moi`, quand il est
+ * donné, prend la place de « toi ». Tout le reste — un pseudo — est le nom
+ * d'une personne et ne se traduit pas.
+ */
+export function attributionSignee(signature: string, moi?: string): { texte: string; voix: string[] } {
+  const [brute, ...suite] = signature.split(' · ').map(s => s.trim())
+  const noms = suite.length > 0 && suite.every(n => idDeVoix(n) || Object.prototype.hasOwnProperty.call(NOMS_VOIX, n))
+  const tete = noms ? brute : signature.trim()
+  return { texte: tete ? ecrireTete(lireTete(tete), moi) : tr('une main', 'a hand'), voix: noms ? suite : [] }
+}
+
+type Tete =
+  | { k: 'moi'; seul: boolean }
+  | { k: 'moi-et'; n: number }
+  | { k: 'voix'; num?: number }
+  | { k: 'compte'; n: number }
+  | { k: 'joueur'; num: number }
+  | { k: 'main' }
+  | { k: 'nom'; nom: string }
+
+/** Le compte de voix d'une tête — « une voix », « 3 voices » — ou null. */
+function lireCompte(t: string): number | null {
+  if (/^(une voix|one voice)$/.test(t)) return 1
+  const m = /^(\d+) (voix|voices)$/.exec(t)
+  return m ? Number(m[1]) : null
+}
+
+/** Les têtes qu'`attributionEnMorceaux` écrit, dans les deux langues. */
+function lireTete(t: string): Tete {
+  if (/^(toi|you)$/.test(t)) return { k: 'moi', seul: false }
+  if (/^(toi seul|you alone)$/.test(t)) return { k: 'moi', seul: true }
+  const et = /^(?:toi et|you and) (.+)$/.exec(t)
+  const n = et ? lireCompte(et[1]) : null
+  if (n !== null) return { k: 'moi-et', n }
+  const compte = lireCompte(t)
+  if (compte !== null) return { k: 'compte', n: compte }
+  const voix = /^(?:voix|voice)(?: (\d+))?$/.exec(t)
+  if (voix) return voix[1] ? { k: 'voix', num: Number(voix[1]) } : { k: 'voix' }
+  const joueur = /^(?:joueur|player) (\d+)$/.exec(t)
+  if (joueur) return { k: 'joueur', num: Number(joueur[1]) }
+  if (/^(une main|a hand)$/.test(t)) return { k: 'main' }
+  return { k: 'nom', nom: t }
+}
+
+function ecrireTete(t: Tete, moi?: string): string {
+  const compte = (n: number) => n === 1 ? tr('une voix', 'one voice') : `${n} ${tr('voix', 'voices')}`
+  switch (t.k) {
+    case 'moi': return moi ?? (t.seul ? tr('toi seul', 'you alone') : tr('toi', 'you'))
+    case 'moi-et': return `${moi ?? tr('toi', 'you')} ${tr('et', 'and')} ${compte(t.n)}`
+    case 'compte': return compte(t.n)
+    case 'voix': return t.num !== undefined ? `${tr('voix', 'voice')} ${t.num}` : tr('voix', 'voice')
+    case 'joueur': return `${tr('joueur', 'player')} ${t.num}`
+    case 'main': return tr('une main', 'a hand')
+    case 'nom': return t.nom
+  }
 }
 
 /**

@@ -47,6 +47,9 @@ export interface Case {
   /** Feuillet relié au carnet : la signature du vers telle que les coutures
    *  de son poème d'origine l'annonçaient quand on l'a gardé. */
   signature?: string
+  /** Feuillet relié au carnet : d'où vient le vers, gardé en DONNÉES et non
+   *  en phrase — la date se compose à l'affichage, dans la langue courante. */
+  provenance?: { date: number; titre?: string | null }
 }
 
 /**
