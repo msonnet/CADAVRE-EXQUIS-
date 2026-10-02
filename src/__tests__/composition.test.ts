@@ -1,0 +1,165 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import 'fake-indexeddb/auto'
+import {
+  PLANCHER_FEUILLET, auteurDuVers, basculerChoix, deplacerChoix, poemeDuCarnet, provenanceDuVers,
+} from '../lib/composition'
+import { attribution, attributionEnMorceaux, contientDeLIA } from '../lib/attribution'
+import { mainsDuPoeme } from '../lib/versRecueil'
+import { getStructure, reconstruirePoeme } from '../structures'
+import {
+  chargerPoeme, chargerRecolte, db, recolter, relierEnFeuillet, sauvegarderPoeme, viderLaRecolte,
+  type VersRecolte,
+} from '../db'
+import type { Poeme } from '../types'
+
+// Le carnet ramassait des vers et ne permettait pas d'en faire un poème : deux
+// flèches qui déplacent d'un rang, et un .txt pour toute sortie. Ces mesures
+// tiennent le geste qui manquait — choisir, ordonner, relier en feuillet.
+
+const T = Date.UTC(2026, 8, 14, 12)
+
+const vers = (id: string, texte: string, extra: Partial<VersRecolte> = {}): VersRecolte => ({
+  id, texte, ordre: 1, dateRecolte: T, ...extra,
+})
+
+describe('le choix — l’ordre du toucher fait l’ordre du feuillet', () => {
+  it('ajoute à la fin, dans l’ordre où l’on touche', () => {
+    let c: string[] = []
+    c = basculerChoix(c, 'r280')
+    c = basculerChoix(c, 'r1')
+    c = basculerChoix(c, 'r42')
+    // Le 280e vers ouvre le poème sans un seul déplacement — il en fallait 279.
+    expect(c).toEqual(['r280', 'r1', 'r42'])
+  })
+
+  it('retoucher un vers le retire du feuillet', () => {
+    expect(basculerChoix(['a', 'b', 'c'], 'b')).toEqual(['a', 'c'])
+  })
+
+  it('monte et descend dans le feuillet, sans sortir des bornes', () => {
+    expect(deplacerChoix(['a', 'b', 'c'], 'c', -1)).toEqual(['a', 'c', 'b'])
+    expect(deplacerChoix(['a', 'b', 'c'], 'a', 1)).toEqual(['b', 'a', 'c'])
+    expect(deplacerChoix(['a', 'b', 'c'], 'a', -1)).toEqual(['a', 'b', 'c'])
+    expect(deplacerChoix(['a', 'b', 'c'], 'c', 1)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('un seul vers ne fait pas un feuillet', () => {
+    expect(PLANCHER_FEUILLET).toBe(2)
+  })
+})
+
+describe('le feuillet relié', () => {
+  const a = vers('r1', "l'abbé presse ma main", {
+    poemeId: 'p1', poemeTitre: 'Le vernis', datePoeme: T, signature: "voix 2 · L'enlumineur", auteur: 'ia',
+  })
+  const b = vers('r2', 'un sel de cuisine dort dans la gorge', { datePoeme: T + 5 * 86400000, signature: 'toi', auteur: 'humain' })
+
+  it('est un vers libre du recueil, dans l’ordre donné', () => {
+    const p = poemeDuCarnet({ vers: [b, a], date: T })
+    expect(p.structureId).toBe('vers-libre')
+    expect(p.origine).toBe('carnet')
+    expect(p.titre).toBeNull()
+    expect(reconstruirePoeme(p.cases, getStructure(p.structureId)))
+      .toBe("un sel de cuisine dort dans la gorge\nl'abbé presse ma main")
+    expect(p.cases.map(c => c.numero)).toEqual([1, 2])
+  })
+
+  it('ses coutures sont les provenances', () => {
+    const p = poemeDuCarnet({ vers: [a, b], date: T })
+    expect(p.cases[0].fonction).toBe('14 septembre 2026 · Le vernis')
+    expect(p.cases[1].fonction).toBe(provenanceDuVers(b))
+    expect(p.cases[1].fonction).toBe('19 septembre 2026')
+    expect(attribution(p.cases[1])).toBe('toi')
+  })
+
+  it('les voix de la signature redeviennent des noms de voix', () => {
+    const p = poemeDuCarnet({ vers: [a], date: T })
+    expect(attributionEnMorceaux(p.cases[0])).toEqual({ texte: 'voix 2', voix: ["L'enlumineur"] })
+    // Un pseudo de salon qui contient le séparateur n'est pas une voix.
+    const pseudo = poemeDuCarnet({ vers: [vers('r9', 'x', { signature: 'Lou · Martin' })] })
+    expect(attributionEnMorceaux(pseudo.cases[0])).toEqual({ texte: 'Lou · Martin', voix: [] })
+  })
+
+  it('ne compte pas de mains : ses vers ne se sont jamais assis à la même table', () => {
+    expect(mainsDuPoeme(poemeDuCarnet({ vers: [a, b] }))).toBeNull()
+  })
+
+  it('porte la mention de l’IA quand une voix y a écrit, et seulement alors', () => {
+    expect(contientDeLIA(poemeDuCarnet({ vers: [a, b] }).cases)).toBe(true)
+    expect(contientDeLIA(poemeDuCarnet({ vers: [b] }).cases)).toBe(false)
+  })
+})
+
+describe('l’auteur des vers gardés avant qu’on le note', () => {
+  const source: Poeme = {
+    id: 'p1', titre: null, structureId: 'phrase-simple', mode: 'standard', visibilite: 'aveugle',
+    dateCreation: T, dateModification: T,
+    cases: [
+      { numero: 1, fonction: 'sujet', consigne: '', auteur: 'humain', texte: 'le chien', ts: T },
+      { numero: 2, fonction: 'verbe', consigne: '', auteur: 'ia', texte: 'dort encore ', ts: T },
+    ],
+  }
+
+  it('se retrouve dans le poème d’origine', () => {
+    expect(auteurDuVers(vers('r', 'dort encore', { poemeId: 'p1' }), source)).toBe('ia')
+    expect(auteurDuVers(vers('r', 'le chien', { poemeId: 'p1' }), source)).toBe('humain')
+  })
+
+  it('puis par le compte de voix de l’Atelier', () => {
+    expect(auteurDuVers(vers('r', 'x', { nbVoix: 0 }))).toBe('humain')
+    expect(auteurDuVers(vers('r', 'x', { nbVoix: 3 }))).toBe('mixte')
+  })
+
+  it('dans le doute, la mention est due', () => {
+    expect(auteurDuVers(vers('r', 'x', { signature: 'toi' }))).toBe('humain')
+    expect(auteurDuVers(vers('r', 'x', { signature: 'Le géologue' }))).toBe('mixte')
+    expect(auteurDuVers(vers('r', 'x'))).toBe('mixte')
+  })
+})
+
+describe('relier, au recueil', () => {
+  beforeEach(async () => {
+    await viderLaRecolte()
+    await db.poemes.clear()
+  })
+
+  it('le carnet garde l’auteur du vers', async () => {
+    await recolter({ texte: 'la lampe reste allumée', auteur: 'ia', signature: 'voix' })
+    const [v] = await chargerRecolte()
+    expect(v.auteur).toBe('ia')
+  })
+
+  it('entre au recueil sans rien ôter du carnet', async () => {
+    const a = await recolter({ texte: 'premier vers', signature: 'toi', auteur: 'humain' })
+    const b = await recolter({ texte: 'deuxième vers', signature: 'toi', auteur: 'humain' })
+    const c = await recolter({ texte: 'troisième vers', signature: 'toi', auteur: 'humain' })
+
+    const p = await relierEnFeuillet([c.id, a.id])
+    const relu = await chargerPoeme(p.id)
+    expect(relu?.cases.map(x => x.texte)).toEqual(['troisième vers', 'premier vers'])
+    expect(relu?.origine).toBe('carnet')
+    expect((await chargerRecolte()).map(v => v.id)).toEqual([a.id, b.id, c.id])
+  })
+
+  it('deux reliures font deux feuillets — un vers sert à deux poèmes', async () => {
+    const a = await recolter({ texte: 'un', signature: 'toi' })
+    const b = await recolter({ texte: 'deux', signature: 'toi' })
+    const p1 = await relierEnFeuillet([a.id, b.id])
+    const p2 = await relierEnFeuillet([b.id, a.id])
+    expect(p1.id).not.toBe(p2.id)
+    expect(await db.poemes.count()).toBe(2)
+  })
+
+  it('retrouve l’auteur d’un vers ancien dans son poème d’origine', async () => {
+    await sauvegarderPoeme({
+      id: 'p-ancien', titre: null, structureId: 'vers-libre', mode: 'standard', visibilite: 'aveugle',
+      dateCreation: T, dateModification: T,
+      cases: [{ numero: 1, fonction: '', consigne: '', auteur: 'ia', texte: 'le vernis craquelé', ts: T }],
+    })
+    // Gardé avant ce lot : ni auteur ni compte de voix, une signature ambiguë.
+    const a = await recolter({ texte: 'le vernis craquelé', poemeId: 'p-ancien', signature: 'voix' })
+    const b = await recolter({ texte: 'à moi', signature: 'toi' })
+    const p = await relierEnFeuillet([b.id, a.id])
+    expect(p.cases.map(x => x.auteur)).toEqual(['humain', 'ia'])
+  })
+})

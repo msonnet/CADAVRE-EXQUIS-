@@ -134,7 +134,10 @@ export function poemeDuJour(o: {
  * une. En salon, une main écrit plusieurs cases, et on compte les noms.
  */
 export function mainsDuPoeme(p: Pick<Poeme, 'origine' | 'cases'>): number | null {
-  if (!p.origine) return null
+  // Un feuillet relié au carnet n'a pas de table : ses vers viennent de
+  // poèmes différents, et compter leurs signatures additionnerait des mains
+  // qui ne se sont jamais assises ensemble.
+  if (!p.origine || p.origine === 'carnet') return null
   const humaines = p.cases.filter(c => c.auteur === 'humain')
   if (p.origine === 'jour') return humaines.length
   return new Set(humaines.map(c => (c.moi ? '\u0000moi' : c.pseudo ?? ''))).size

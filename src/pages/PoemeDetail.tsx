@@ -269,7 +269,11 @@ export default function PoemeDetail() {
   const lettrine = (lignes[0]?.trim().charAt(0) ?? '').toLocaleUpperCase()
   const resteLigne0 = lignes[0]?.trim().slice(1) ?? ''
   const voixCount = poeme.cases.length
-  const structLabel = NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId
+  // Un feuillet relié au carnet est un vers libre par sa forme, pas par son
+  // geste : personne n'y a joué, quelqu'un l'a recueilli.
+  const structLabel = poeme.origine === 'carnet'
+    ? tr('Recueilli par toi', 'Gathered by you')
+    : NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId
   const dateStr = new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString(tr('fr-FR', 'en-GB'), { hour: '2-digit', minute: '2-digit' })
   const illustrationLabel = poeme.illustration ? (MEDIUMS[poeme.illustration.style] ?? poeme.illustration.style) : null
@@ -622,6 +626,7 @@ export default function PoemeDetail() {
                     datePoeme={poeme.dateCreation}
                     signature={attribution(cas)}
                     nbVoix={cas.nbVoix}
+                    auteur={cas.auteur}
                   />
                 </div>
               ))}

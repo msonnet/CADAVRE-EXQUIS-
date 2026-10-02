@@ -305,10 +305,11 @@ Un recueil n'est pas vingt poèmes générés : c'est trois cents vers récolté
 puis assemblés à la main. Le moteur produisait dix-huit vers gardables par
 séance et il n'existait aucun moyen de les garder.
 
-- `◇ GARDER` sous chaque ligne des coutures, en fin de partie et dans la
-  bibliothèque (`src/components/BoutonRecolte.tsx`).
+- `◇ GARDER` sous chaque ligne des coutures, en fin de partie, dans la
+  bibliothèque et au poème du jour (`src/components/BoutonRecolte.tsx`).
 - `/recolte` — le carnet : les vers de toutes les séances, réordonnables à la
-  flèche, avec leur provenance, copiables et exportables en `.txt`.
+  flèche, avec leur provenance, copiables et exportables en `.txt` — et,
+  depuis le 2 octobre, reliés en feuillet du recueil (« Le carnet compose »).
 - Table Dexie `recolte` (version 4), API dans `src/db/index.ts`. L'ordre est
   celui du médium, pas celui des dates : un recueil se compose.
 
@@ -1353,6 +1354,57 @@ change, c'est `PROD_API` et les balises Open Graph.
 **Non mesuré** : sur iOS, une feuille de partage qui reçoit un fichier ET un
 texte peut proposer moins de destinations (« Enregistrer la vidéo »). C'est
 l'appareil qui le dira.
+
+## Le carnet compose — 2 octobre
+
+Le carnet portait l'ambition du recueil — « trois cents vers récoltés puis
+assemblés à la main » — et ne l'outillait pas. Deux flèches d'un rang :
+remonter le 280ᵉ vers en tête coûtait 279 appuis. Une seule sortie, un
+`.txt` : le vers assemblé ne devenait ni feuillet, ni affiche, ni
+publication. Relevé avant : aucun chemin du carnet vers le recueil.
+
+- **« COMPOSER »** (`Recolte.tsx`, cerné et non plein) ouvre un second
+  régime. On touche les vers **dans l'ordre du poème** : l'ordre du toucher
+  fait l'ordre du feuillet, le rang s'écrit dans la marge. Le vers du fond
+  du carnet touché en premier ouvre le poème, sans un déplacement. La barre
+  ANNULER / RELIRE est fixe — sur trois cents vers, elle doit rester sous
+  le pouce.
+- **Deux temps, pas un.** La relecture montre le feuillet d'un seul tenant,
+  avec sous chaque vers la couture qu'il portera ; ↑ ↓ pour corriger
+  l'ordre, ÔTER pour l'écarter. Un feuillet compte **deux vers au moins**
+  (`PLANCHER_FEUILLET`) : un seul n'est que ce vers.
+- **« RELIER EN FEUILLET »** (`relierEnFeuillet`, `lib/composition.ts`)
+  crée un **vers libre** du recueil, `origine: 'carnet'`. Il hérite de tout :
+  dépli, affiche, illustration, galerie. La carte et l'en-tête disent
+  **« RECUEILLI PAR TOI »** à la place de la structure.
+- **Les coutures sont les provenances** : la date et le titre du poème
+  d'origine à la place de la fonction, la signature gardée avec le vers à
+  la place de l'auteur (`Case.signature`). `attributionEnMorceaux` la
+  recoupe aux « · » : les noms de voix redeviennent des liens, mais
+  seulement si TOUS en sont — un pseudo peut contenir le séparateur.
+- **Relier copie.** Le carnet n'est pas touché ; un vers sert à deux
+  feuillets, et deux reliures font deux poèmes.
+- **Le carnet garde l'auteur** (`VersRecolte.auteur`), parce que le `.txt`
+  du recueil appose la mention de l'IA d'après lui. Pour les vers gardés
+  avant, `auteurDuVers` le retrouve dans le poème d'origine, puis par le
+  compte de voix de l'Atelier ; faute de tout, seul un vers signé « toi »
+  passe pour humain. Dans le doute la mention est due.
+- **◇ GARDER au poème du jour**, dans la ligne des coutures, en petites
+  capitales sans cadre (`BoutonRecolte compact`). Le carnet ne récoltait que
+  ses propres coutures, alors que les vers des AUTRES font les meilleurs
+  assemblages — et un visiteur qui n'a rien écrit n'emporte pas le poème.
+  Le bouton arrête son clic : sans cela, toucher ◇ touchait aussi la
+  feuille, qui démontait les coutures — et le bouton avec.
+
+**Pas fait, et pourquoi.** ◇ GARDER dans la **galerie** : une publication
+y est l'objet entier d'un autre auteur, présenté en planche ; poser un
+bouton par ligne change la planche, que le lot de la galerie vient de
+stabiliser. Les flèches du carnet lui-même restent d'un rang : composer
+passe désormais par le toucher, qui ne connaît pas la distance.
+
+`composition.test.ts` (16 mesures, dont la reliure sous Dexie) et deux
+parcours (`carnet.spec.ts`, `poeme-du-jour.spec.ts`) échouent sur l'ancien
+code.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)

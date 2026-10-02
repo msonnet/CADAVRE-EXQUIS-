@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
-import type { Poeme, DessinCadavre, BandeDessin, LienPublication } from '../types'
+import type { Poeme, Case, DessinCadavre, BandeDessin, LienPublication } from '../types'
+import { poemeDuCarnet } from '../lib/composition'
 
 /** Bandes d'une partie dessinée en cours — trop lourdes pour sessionStorage
  *  (quelques PNG plein écran suffisaient à dépasser le quota, et l'écriture
@@ -35,6 +36,9 @@ export interface VersRecolte {
   /** « toi », ou les noms des voix — tel que les coutures l'annoncent. */
   signature?: string
   nbVoix?: number
+  /** Qui a écrit la ligne. Noté depuis qu'un vers peut être relié en
+   *  feuillet : le feuillet doit savoir s'il porte une voix (`auteurDuVers`). */
+  auteur?: Case['auteur']
 }
 
 class CadavreExquisDB extends Dexie {
@@ -216,6 +220,27 @@ export async function deplacerDansLaRecolte(id: string, sens: -1 | 1): Promise<v
     await db.recolte.update(a.id, { ordre: b.ordre })
     await db.recolte.update(b.id, { ordre: a.ordre })
   })
+}
+
+/**
+ * Relie des vers du carnet en un feuillet du recueil, dans l'ordre donné.
+ *
+ * Le carnet n'est pas touché : relier copie, et un vers peut servir à deux
+ * feuillets. Les poèmes d'origine ne sont lus que pour les vers gardés
+ * avant qu'on note leur auteur — voir `auteurDuVers`.
+ */
+export async function relierEnFeuillet(ids: string[]): Promise<Poeme> {
+  const lus = await db.recolte.bulkGet(ids)
+  const vers = lus.filter((v): v is VersRecolte => Boolean(v))
+  const sources = new Map<string, Poeme>()
+  for (const v of vers) {
+    if (v.auteur || !v.poemeId || sources.has(v.poemeId)) continue
+    const p = await db.poemes.get(v.poemeId)
+    if (p) sources.set(v.poemeId, p)
+  }
+  const poeme = poemeDuCarnet({ vers, sources })
+  await db.poemes.add(poeme)
+  return poeme
 }
 
 /** Vide le carnet. Sans retour. */

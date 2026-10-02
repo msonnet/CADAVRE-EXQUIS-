@@ -70,6 +70,20 @@ export function attributionEnMorceaux(c: Case, iaNum?: number): { texte: string;
   const avec = (texte: string) => ({ texte, voix: noms })
   const seul = (texte: string) => ({ texte, voix: [] as string[] })
 
+  // ── Feuillet relié au carnet : la signature d'origine ────────────────
+  // Elle a été écrite par cette même fonction quand le vers a été gardé —
+  // « 3 voix · Le boucher · Le géologue ». On la recoupe aux mêmes « · »
+  // pour que les noms redeviennent des liens et suivent la langue courante,
+  // mais seulement si TOUS sont des voix connues : un pseudo de salon peut
+  // contenir le séparateur, et le prendre pour une voix inventerait un lien.
+  if (c.signature !== undefined) {
+    const [tete, ...suite] = c.signature.split(' · ').map(s => s.trim())
+    if (suite.length && suite.every(n => idDeVoix(n) || Object.prototype.hasOwnProperty.call(NOMS_VOIX, n))) {
+      return { texte: tete, voix: suite }
+    }
+    return seul(c.signature || tr('une main', 'a hand'))
+  }
+
   // ── Vers d'atelier : le nombre de mains d'abord ──────────────────────
   if (typeof c.nbVoix === 'number') {
     const n = c.nbVoix

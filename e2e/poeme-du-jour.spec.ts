@@ -313,6 +313,37 @@ test('un visiteur qui n’a rien écrit ne s’en voit rien ajouter', async ({ p
   expect(await page.getByText('la porte bat dans le grenier').count()).toBe(0)
 })
 
+test('un vers d’une autre main se garde au carnet', async ({ page }) => {
+  // Le carnet ne récoltait que ses propres coutures — fin de partie et
+  // recueil. Or ce sont les vers des autres qui font les meilleurs
+  // assemblages, et un visiteur qui n'a rien écrit n'emporte pas le poème.
+  await sessionDe(page, 'moi')
+  await page.addInitScript(() => {
+    localStorage.setItem('cadavre-jour-deplie', '2026-09-20')
+  })
+  await poser(page, { hier: true })
+  await page.route('**/rest/v1/jour_vers**', r => r.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify(VERS_SCELLES.map(v => ({ ...v, main_id: v.main_id === 'moi' ? 'autre-4' : v.main_id }))),
+  }))
+  await ouvrir(page)
+  await expect(page.getByText('un drap glisse le long du couloir')).toBeVisible()
+
+  const garder = page.getByRole('button', { name: /Garder ce vers dans le carnet|Keep this line in the notebook/ })
+  await expect(garder).toHaveCount(5)
+  await garder.nth(3).click()
+  // Le geste ne touche pas la feuille : les coutures restent montées.
+  await expect(page.getByText(/4 · DESNOS/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Retirer ce vers du carnet|Remove this line from the notebook/ })).toHaveCount(1)
+
+  await page.goto('/recolte')
+  await page.waitForLoadState('networkidle')
+  await franchir(page)
+  await expect(page.getByText('un drap glisse le long du couloir')).toBeVisible()
+  await page.getByRole('button', { name: /SOURCES/ }).click()
+  await expect(page.getByText(/Desnos · 20 septembre 2026 · Poème du jour|Desnos · 20 September 2026 · Poem of the day/)).toBeVisible()
+})
+
 test('l’almanach garde les jours d’avant, et chacun s’ouvre plié', async ({ page }) => {
   // Avant, seul le poème de la veille se relisait : un jour manqué, et le
   // poème d'avant-hier n'existait plus nulle part.

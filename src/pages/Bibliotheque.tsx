@@ -434,6 +434,8 @@ export default function Bibliotheque() {
                         <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
                           {poeme.origine === 'jour'
                             ? tr('POÈME DU JOUR', 'POEM OF THE DAY')
+                            : poeme.origine === 'carnet'
+                            ? tr('RECUEILLI PAR TOI', 'GATHERED BY YOU')
                             : (NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
                           {' · '}{libelleMorceaux(poeme.structureId, poeme.cases.length)}
                           {mainsDuPoeme(poeme) !== null && <>{' · '}{libelleMains(mainsDuPoeme(poeme)!)}</>}

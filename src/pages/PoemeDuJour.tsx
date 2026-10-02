@@ -7,7 +7,8 @@ import { useSound } from '../hooks/useSound'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import { garderSiAbsent } from '../db'
-import { poemeDuJour } from '../lib/versRecueil'
+import { poemeDuJour, idJour } from '../lib/versRecueil'
+import BoutonRecolte from '../components/BoutonRecolte'
 import { CLAVIER_VERS } from '../lib/clavier'
 import { zoneVivante } from '../lib/a11y'
 import { vibrer } from '../utils/haptics'
@@ -580,6 +581,31 @@ export default function PoemeDuJour() {
                                     : (v.pseudo ?? tr('ANONYME', 'ANONYMOUS')).toUpperCase()}
                                 {v.retire && ` · ${tr('VERS RETIRÉ', 'LINE WITHDRAWN')}`}
                               </span>
+                              {/*
+                                Garder le vers d'une autre main. Le carnet ne
+                                récoltait que ses propres coutures, alors que ce
+                                sont les vers des autres qui font les meilleurs
+                                assemblages — et qu'un visiteur qui n'a rien
+                                écrit n'emporte pas le poème au recueil. Le lien
+                                vers le poème n'est posé que s'il y est entré.
+                              */}
+                              <BoutonRecolte
+                                compact
+                                texte={v.texte}
+                                accent={accent}
+                                encre={encre}
+                                poemeId={hier.monRang !== null ? idJour(langueActuelle(), hier.jour) : undefined}
+                                poemeTitre={tr('Poème du jour', 'Poem of the day')}
+                                datePoeme={Date.parse(`${hier.jour}T12:00:00Z`)}
+                                signature={v.aMoi
+                                  ? tr('toi', 'you')
+                                  : v.voix
+                                    // La forme d'`attribution` pour une voix : « voix · Le
+                                    // géologue ». Recousu en feuillet, le nom y redevient un lien.
+                                    ? (v.voixNom ? `${tr('voix', 'voice')} · ${nomDeVoix(v.voixNom, langueActuelle())}` : tr('voix', 'voice'))
+                                    : (v.pseudo || tr('une main', 'a hand'))}
+                                auteur={v.voix ? 'ia' : 'humain'}
+                              />
                               {/*
                                 Le drapeau ne s'offre que sur le vers d'une
                                 autre main : on ne signale pas le sien — ce

@@ -44,6 +44,9 @@ export interface Case {
   fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)
   pseudo?: string         // salon ou poème du jour : la personne qui a posé la case
   moi?: boolean           // salon ou poème du jour : la case est la tienne
+  /** Feuillet relié au carnet : la signature du vers telle que les coutures
+   *  de son poème d'origine l'annonçaient quand on l'a gardé. */
+  signature?: string
 }
 
 /**
@@ -76,8 +79,9 @@ export interface Poeme {
   visibilite: Visibilite
   cases: Case[]
   illustration?: Illustration
-  /** D'où vient le poème, quand ce n'est pas d'une partie sur ce téléphone. */
-  origine?: 'salon' | 'jour'
+  /** D'où vient le poème, quand ce n'est pas d'une partie sur ce téléphone.
+   *  'carnet' : relié à la main depuis les vers gardés (`lib/composition.ts`). */
+  origine?: 'salon' | 'jour' | 'carnet'
   /** Poème du jour : la journée UTC qu'il a occupée, AAAA-MM-JJ. */
   jour?: string
   /** Sa publication en galerie, s'il en a une — voir `LienPublication`. */
