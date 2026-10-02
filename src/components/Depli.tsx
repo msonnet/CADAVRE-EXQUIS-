@@ -57,23 +57,8 @@ const OMBRE = 'rgba(0,0,0,0.3)'
 /** Sur quelle part de la hauteur du volet l'ombre s'éteint. */
 const OMBRE_PORTEE = '42%'
 
-/**
- * La pliure : un creux et une arête, un pixel chacun.
- *
- * Sans elle le dépli ne se voyait pas. Un volet est transparent — c'est le
- * fond de la carte qu'on voit au travers — donc sa rotation n'avait aucune
- * surface pour l'attester : il ne restait que le dégradé d'ombre, qu'on prend
- * pour un fondu. La pliure donne au volet un bord, et surtout elle SUBSISTE :
- * une fois le poème posé, les traits restent, faibles. Le feuillet garde la
- * marque d'avoir été plié, ce qui est exactement l'objet dont il s'agit.
- *
- * Deux traits plutôt qu'un, parce qu'un seul trait noir disparaît sur les
- * ambiances sombres. Un creux sombre au-dessus, une arête claire en dessous :
- * ça se lit sur du papier crème comme sur de l'encre de nuit.
- *
- * Elle vit dans `Papier.tsx` (`PLIURE`, `PLIURE_RESTE`) : le feuillet en
- * cours de l'écran d'écriture et le rabat la posent aussi.
- */
+// La pliure en haut de chaque volet (`PLIURE`, `PLIURE_RESTE`) vit dans
+// `Papier.tsx` : le feuillet en cours et le rabat la posent aussi.
 
 export default function Depli({ children, delai, duree, immediat, pli }: Props) {
   const transition = immediat

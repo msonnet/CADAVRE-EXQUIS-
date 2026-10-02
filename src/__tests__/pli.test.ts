@@ -16,6 +16,54 @@ import {
  * selon quelle courbe, et combien d'épaisseurs.
  */
 
+/**
+ * Deux mesures lisent le source. Elles le lisent par sa STRUCTURE et non par
+ * son voisinage : la fonction jusqu'à son accolade fermante, et chaque
+ * `animate={…}` jusqu'à l'accolade qui l'équilibre. Premier jet : un
+ * découpage entre deux fonctions voisines, que le moindre réordonnancement
+ * cassait, et une regex `[^}]*` qui s'arrêtait à la première accolade d'un
+ * objet imbriqué. L'e2e (`rabat.spec.ts`) les double à l'écran : le mot
+ * resté sur la tranche est celui de la lèvre suivante, la bande tourne, et
+ * aucun filtre n'y est calculé.
+ */
+function equilibre(source: string, ouverture: number): string {
+  let profondeur = 0
+  for (let i = ouverture; i < source.length; i++) {
+    if (source[i] === '{') profondeur++
+    else if (source[i] === '}' && --profondeur === 0) return source.slice(ouverture, i + 1)
+  }
+  throw new Error('accolade non refermée')
+}
+
+function corpsDeFonction(source: string, nom: string): string {
+  const debut = source.indexOf(`function ${nom}(`)
+  if (debut < 0) throw new Error(`fonction ${nom} introuvable`)
+  // Les paramètres, parenthèses équilibrées ; puis la première accolade qui
+  // n'ouvre pas un type de retour (« ): { … } {» en a deux).
+  let i = source.indexOf('(', debut), profondeur = 0
+  for (; i < source.length; i++) {
+    if (source[i] === '(') profondeur++
+    else if (source[i] === ')' && --profondeur === 0) break
+  }
+  for (i++; i < source.length; i++) {
+    if (source[i] !== '{') continue
+    const avant = source.slice(0, i).trimEnd().slice(-1)
+    if (avant === ':' || avant === '|' || avant === '&') { i += equilibre(source, i).length - 1; continue }
+    return equilibre(source, i)
+  }
+  throw new Error(`corps de ${nom} introuvable`)
+}
+
+function attributs(source: string, nom: string): string[] {
+  const trouves: string[] = []
+  let i = source.indexOf(`${nom}={`)
+  while (i >= 0) {
+    trouves.push(equilibre(source, i + nom.length + 1))
+    i = source.indexOf(`${nom}={`, i + 1)
+  }
+  return trouves
+}
+
 describe('ce que le pli laisse voir', () => {
   it('aveugle : rien', () => {
     expect(resteDuPli('le vin rouge', 'aveugle')).toBeNull()
@@ -41,7 +89,7 @@ describe('ce que le pli laisse voir', () => {
     // Le mot resté sur la tranche doit être celui que lit le tour suivant,
     // et celui que reçoit la voix : une seule fonction pour les trois.
     const jeu = readFileSync(resolve(__dirname, '../pages/Jeu.tsx'), 'utf8')
-    const corps = jeu.slice(jeu.indexOf('function getContexteVisible'), jeu.indexOf('function scinderRubrique'))
+    const corps = corpsDeFonction(jeu, 'getContexteVisible')
     expect(corps).toContain('resteDuPli(')
     expect(corps).not.toMatch(/split\(/)
   })
@@ -77,7 +125,7 @@ describe('le rabat', () => {
     expect(jeu).not.toMatch(/brightness\(/)
     expect(jeu).toContain('<Rabat')
     const rabat = readFileSync(resolve(__dirname, '../components/Rabat.tsx'), 'utf8')
-    const anime = rabat.match(/animate=\{[^}]*\}/g) ?? []
+    const anime = attributs(rabat, 'animate')
     expect(anime.length).toBeGreaterThan(0)
     for (const a of anime) expect(a).not.toMatch(/filter|height|scaleY/)
   })

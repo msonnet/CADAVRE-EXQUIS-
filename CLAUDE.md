@@ -1241,9 +1241,25 @@ ajouté.
 SOUS LE PLI » — jamais un mot de ce qui est dessous. Le libellé reste
 « Passe le téléphone à » : c'est le geste réel.
 
+**L'appui qui abrège ne traverse pas l'écran de passage** — trouvé par le
+contradicteur, au doigt seulement. On abrégeait sur `pointerdown` : l'écran
+changeait entre le toucher et le relâcher, et le clic que le navigateur
+synthétise après `touchend` tombait sur « C'EST À MOI → », déjà sous le
+doigt. La main qui venait d'écrire ouvrait la case de la suivante — trois
+fois sur trois, à 0, 100 et 250 ms. À la souris rien ne se voyait : la cible
+d'un clic y est l'ancêtre commun du presser et du relâcher. On abrège donc
+sur le CLIC, consommé en capture ; et un doigt posé pendant le rabat arme un
+avaleur du clic suivant qui survit au composant, parce que l'horloge de
+0,4 s peut passer la main pendant que le doigt est encore posé (posé à
+330 ms, relâché à 480 : traversé sans l'avaleur). `rabat.spec.ts` le
+mesure au toucher par CDP, le doigt tenu 80 ms — `touchscreen.tap` relâche
+dans la même trame et ne voit rien.
+
 **Pas fait, et c'est délibéré** : la voix IA écrit toujours derrière ses
-trois points ; le salon et le poème du jour n'ont pas encore leur rabat. Les
-pièces sont prêtes ; ce lot s'en tenait au cadavre écrit local.
+trois points ; le salon et le poème du jour n'ont pas encore leur rabat, ni
+le salon son feuillet en cours. Les pièces sont prêtes ; ce lot s'en tenait
+au cadavre écrit local. Le salon revient au groupe « en ligne » (l'écran de
+tour en ligne), le poème du jour à la voie qui tient `PoemeDuJour.tsx`.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
@@ -1251,7 +1267,7 @@ pièces sont prêtes ; ce lot s'en tenait au cadavre écrit local.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (578 tests unitaires) + Playwright (92 tests E2E, FR et EN)
+- Tests : Vitest (578 tests unitaires) + Playwright (95 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

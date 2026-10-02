@@ -22,9 +22,22 @@ import { PLIURE } from './Papier'
  * Le geste revient à chaque tour. Il dure donc 0,4 s, autant que
  * l'écrasement qu'il remplace, et pas une trame de plus : rien n'arrive plus
  * tard qu'avant. Un appui n'importe où, ou une touche, l'abrège et passe à
- * la suite tout de suite — on écoute le geste en phase de capture, sans
- * l'arrêter. `prefers-reduced-motion` le supprime : la suite vient au même
- * instant que l'appui sur SCELLER.
+ * la suite tout de suite. `prefers-reduced-motion` le supprime : la suite
+ * vient au même instant que l'appui sur SCELLER.
+ *
+ * L'appui qui abrège est CONSOMMÉ, et c'est le clic qui abrège, pas le
+ * toucher. Premier jet : on abrégeait sur `pointerdown`. Au doigt, l'écran
+ * changeait donc entre le toucher et le relâcher, et le clic que le
+ * navigateur synthétise après `touchend` visait ce qui se trouvait ALORS
+ * sous le doigt — souvent « C'EST À MOI → » de l'écran de passage. La main
+ * qui venait d'écrire ouvrait la case de la suivante : la garantie même de
+ * cet écran tombait. À la souris rien ne se voyait, la cible d'un clic
+ * étant l'ancêtre commun du presser et du relâcher.
+ *
+ * Un doigt posé pendant le rabat arme en plus un avaleur de clic qui
+ * survit au composant (`avalerLeClicQuiSuit`) : si l'horloge de 0,4 s
+ * change l'écran pendant que le doigt est encore posé, le clic qui suit
+ * n'atteint pas davantage l'écran d'après.
  *
  * La suite part à 0,4 s de l'appui, que l'animation ait fini ou non. Deux
  * raisons. L'animation démarre une trame ou deux après l'appui : attendre
@@ -38,6 +51,26 @@ import { PLIURE } from './Papier'
 const reduitParLeSysteme = () =>
   typeof window !== 'undefined' &&
   !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+/** Le clic qu'un toucher synthétise arrive au relâcher : au-delà d'une
+ *  seconde, ce n'était plus un appui mais un appui long, qui n'en produit
+ *  pas — l'avaleur se retire seul, pour ne jamais manger un geste suivant. */
+const ATTENTE_DU_CLIC = 1000
+
+/**
+ * Avale le prochain clic, où qu'il tombe, puis se retire. Hors du composant
+ * à dessein : le clic peut arriver après que le rabat a passé la main et
+ * que l'écran de passage l'a remplacé.
+ */
+function avalerLeClicQuiSuit() {
+  const avaler = (e: Event) => { e.stopPropagation(); e.preventDefault(); retirer() }
+  const retirer = () => {
+    window.removeEventListener('click', avaler, true)
+    clearTimeout(t)
+  }
+  window.addEventListener('click', avaler, true)
+  const t = setTimeout(retirer, ATTENTE_DU_CLIC)
+}
 
 /** L'ombre au plus fort du rabat — celle de `Depli`, qui s'y éteignait. */
 const OMBRE = 'rgba(0,0,0,0.3)'
@@ -73,12 +106,17 @@ export default function Rabat({ children, plie, reste, onRabattu }: Props) {
   useEffect(() => {
     if (!plie) { fait.current = false; return }
     if (reduit) { finir(); return }
+    let arme = false
+    const poser = () => { if (!arme) { arme = true; avalerLeClicQuiSuit() } }
+    const cliquer = (e: Event) => { e.stopPropagation(); e.preventDefault(); finir() }
     const abreger = () => finir()
-    window.addEventListener('pointerdown', abreger, true)
+    window.addEventListener('pointerdown', poser, true)
+    window.addEventListener('click', cliquer, true)
     window.addEventListener('keydown', abreger, true)
     const filet = setTimeout(finir, DUREE_RABAT * 1000)
     return () => {
-      window.removeEventListener('pointerdown', abreger, true)
+      window.removeEventListener('pointerdown', poser, true)
+      window.removeEventListener('click', cliquer, true)
       window.removeEventListener('keydown', abreger, true)
       clearTimeout(filet)
     }

@@ -174,3 +174,71 @@ test('à plusieurs, on se passe une feuille pliée, une tranche par case', async
   // Et jamais un mot de ce qui est dessous.
   await expect(feuille).not.toContainText('rouge')
 })
+
+/** Un vrai toucher : le doigt reste posé quelques dizaines de millisecondes.
+ *  `touchscreen.tap` envoie le toucher et le relâcher d'un seul tenant, si
+ *  bien que l'écran n'a pas le temps de changer entre les deux — et le
+ *  défaut qu'on cherche vit exactement dans cet intervalle. */
+async function toucher(page: Page, x: number, y: number, tenue = 80) {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+  await page.waitForTimeout(tenue)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await cdp.detach()
+}
+
+test.describe('au doigt', () => {
+  test.use({ hasTouch: true })
+
+  // L'appui qui abrège le rabat ne doit pas traverser l'écran de passage.
+  // On l'abrégeait sur `pointerdown` : l'écran changeait entre le toucher et
+  // le relâcher, et le clic que le navigateur synthétise ensuite tombait sur
+  // « C'EST À MOI → », déjà sous le doigt. La main qui venait d'écrire
+  // ouvrait la case de la suivante. À la souris rien de tel — la cible du
+  // clic est alors l'ancêtre commun —, d'où ce test au toucher.
+  /** Deux tours à deux mains ; au second, on touche là où « C'EST À MOI »
+   *  va paraître, `apres` ms après SCELLER, le doigt posé `tenue` ms. */
+  async function toucherLePassage(page: Page, apres: number, tenue: number) {
+    const champ = await reprendre(page, 'aveugle', 2)
+    await champ.fill('le vin rouge')
+    await page.locator('button[aria-label^="Sceller"]').click()
+    const passage = page.getByText('Passe le téléphone à', { exact: true })
+    await expect(passage).toBeVisible({ timeout: 4000 })
+    const moi = page.getByRole('button', { name: /C'est à moi/ })
+    await page.waitForTimeout(900)
+    const box = (await moi.boundingBox())!
+    await moi.click()
+    await expect(page.locator('textarea')).toBeVisible({ timeout: 4000 })
+    await page.waitForTimeout(700)
+
+    await page.locator('textarea').fill('la cire tiède')
+    await page.locator('button[aria-label^="Sceller"]').click()
+    await page.waitForTimeout(apres)
+    await toucher(page, box.x + box.width / 2, box.y + box.height / 2, tenue)
+    await expect(passage).toBeVisible({ timeout: 4000 })
+    await page.waitForTimeout(1200)
+    await expect(passage).toBeVisible()
+    await expect(page.locator('textarea')).toHaveCount(0)
+  }
+
+  test('un appui qui abrège le rabat ne saute pas l’écran de passage', async ({ page }) => {
+    await toucherLePassage(page, 80, 80)
+  })
+
+  // Le doigt posé à 330 ms et relâché après l'horloge de 0,4 s : l'écran a
+  // changé SANS l'appui, et le clic du relâcher tombait quand même sur le
+  // bouton de la main suivante.
+  test('ni un doigt resté posé quand l’horloge passe la main', async ({ page }) => {
+    await toucherLePassage(page, 330, 150)
+  })
+
+  test('un appui abrège toujours le rabat', async ({ page }) => {
+    const champ = await reprendre(page, 'dernier-mot')
+    await champ.fill('le vin rouge')
+    await page.locator('button[aria-label^="Sceller"]').click()
+    await toucher(page, 20, 600)
+    await expect(page.getByText('Acte IV', { exact: true })).toBeVisible({ timeout: 4000 })
+    const r = await sonde(page)
+    expect(r.suivant!).toBeLessThan(250)
+  })
+})

@@ -26,6 +26,7 @@ import type { Visibilite } from '../types'
 /**
  * La surface du papier : une teinte d'encre à peine posée.
  *
+ * C'est ce qui fait la différence entre une feuille et quatre traits.
  * Dérivée de l'ENCRE et non d'une couleur fixe : sur les ambiances claires
  * elle assombrit d'un rien, sur les sombres — où l'encre est une crème —
  * elle éclaircit. Dans les deux cas la feuille se détache de son fond.
@@ -34,6 +35,13 @@ export const surfacePapier = (encre: string) => `${encre}09`
 
 /**
  * La pliure : un creux et une arête, un pixel chacun.
+ *
+ * Sans elle le dépli ne se voyait pas. Un volet est transparent — c'est le
+ * fond de la carte qu'on voit au travers — donc sa rotation n'avait aucune
+ * surface pour l'attester : il ne restait que le dégradé d'ombre, qu'on prend
+ * pour un fondu. La pliure donne au volet un bord, et surtout elle SUBSISTE :
+ * une fois le poème posé, les traits restent, faibles. Le feuillet garde la
+ * marque d'avoir été plié.
  *
  * Deux traits plutôt qu'un, parce qu'un seul trait noir disparaît sur les
  * ambiances sombres. `Depli` la pose en haut de chaque volet ; le feuillet en
@@ -45,12 +53,31 @@ export const PLIURE_RESTE = 0.4
 
 /**
  * L'ombre qu'un pli porte sur ce qui est dessous : serrée contre la pliure,
- * et très faible — la feuille est POSÉE, pas dressée.
+ * et très faible — la feuille est POSÉE, pas dressée. Dans `Depli` l'ombre
+ * monte à 0,3 parce qu'un volet presque debout ne prend pas la lumière ;
+ * ici tout est à plat et la même valeur donnerait des bandes grises.
+ *
+ * Premier jet du feuillet plié : 0,10 sur 18 px, et la pliure à 0,55. Il se
+ * lisait comme des BARRES EMPILÉES, un tableau plutôt qu'une feuille. Deux
+ * causes, et la seconde comptait plus que la première : l'ombre était trop
+ * large, et surtout la feuille n'avait AUCUNE SURFACE — des traits dans le
+ * vide (d'où `surfacePapier`).
  */
 export const OMBRE_PLI = 'linear-gradient(to bottom, rgba(0,0,0,0.055), rgba(0,0,0,0) 70%)'
 
 /**
  * Les tranches des épaisseurs pliées.
+ *
+ * Premier jet du feuillet plié : les pliures étalées en travers d'un grand
+ * rectangle, une bande par volet. Mais une feuille PLIÉE est courte — c'est
+ * ce que plier veut dire. Cinq bandes vides de dix-neuf pixels donnaient la
+ * réglure d'un cahier. Ce qu'on voit d'un paquet fermé, ce sont les
+ * TRANCHES des épaisseurs, chacune un peu plus courte et plus pâle que la
+ * précédente — la perspective les raccourcit, l'ombre les mange. Trois
+ * pixels de retrait par épaisseur (`tranchesDuFeuillet`) : au-delà un
+ * escalier, en deçà un bord épais. Leur nombre est celui des volets à
+ * venir : une feuille qui montre trois épaisseurs et s'ouvre en cinq se
+ * dénonce comme un décor.
  *
  * `dessous` : celles d'un feuillet fermé, empilées sous la face du dessus —
  * la plus proche est la plus large et la plus marquée.
