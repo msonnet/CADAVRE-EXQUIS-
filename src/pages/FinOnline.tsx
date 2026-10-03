@@ -21,9 +21,10 @@ import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration, marquerPublie, chargerPoeme, chargerDessin } from '../db'
 import { publierPoeme, publierDessin } from '../lib/publier'
 import { poemeDuSalon, idSalon, idDessinSalon } from '../lib/versRecueil'
-import type { DessinCadavre, LienPublication } from '../types'
+import type { DessinCadavre, LienPublication, Poeme } from '../types'
+import BoutonRecolte from '../components/BoutonRecolte'
 import { mono } from '../lib/typo'
-import { libelleMains, nomAffiche } from '../lib/attribution'
+import { attribution, libelleMains, nomAffiche } from '../lib/attribution'
 import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
 import { api } from '../lib/apiBase'
 import { tr } from '../i18n'
@@ -121,6 +122,10 @@ export default function FinOnline() {
   const [generatingIllus, setGeneratingIllus] = useState(false)
   const [erreurIllus, setErreurIllus] = useState<string | null>(null)
   const [showCoutures, setShowCoutures] = useState(false)
+  // Le feuillet du salon tel que le recueil le garde : c'est lui qui signe
+  // les vers qu'on récolte ici, pour qu'un vers gardé au salon porte la même
+  // couture que s'il l'avait été depuis le recueil.
+  const [feuilletSalon, setFeuilletSalon] = useState<Poeme | null>(null)
   const [pleinEcranIllus, setPleinEcranIllus] = useState(false)
 
   // Dessin mode
@@ -175,7 +180,10 @@ export default function FinOnline() {
         // ou y revenir par l'historique, rendait « ✦ GALERIE » — et le poème
         // du salon repartait en galerie une seconde fois.
         .then(() => chargerPoeme(idSalon(code)))
-        .then(f => { if (f?.publication) setPublishedGallery(true) })
+        .then(f => {
+          if (f) setFeuilletSalon(f)
+          if (f?.publication) setPublishedGallery(true)
+        })
         .catch(() => { /* stockage refusé : la page de fin reste lisible */ })
       let cancelled = false
       const blocs = structure.cases.map((def, i) => ({
@@ -627,8 +635,10 @@ export default function FinOnline() {
                 {showCoutures && (
                   <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.15 }} />
-                    {contributions.sort((a, b) => a.case_index - b.case_index).map(c => {
+                    {contributions.sort((a, b) => a.case_index - b.case_index).map((c, i) => {
                       const p = players.find(pl => pl.player_id === c.player_id)
+                      // Même ordre que `poemeDuSalon` : la i-ème contribution est la i-ème case.
+                      const cas = feuilletSalon?.cases[i]
                       return (
                         <div key={c.case_index} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                           <div style={{ width: 28, height: 28, borderRadius: 3, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30`, marginTop: 2 }}>
@@ -647,6 +657,28 @@ export default function FinOnline() {
                               )}
                             </div>
                             <span style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17 }}>{c.texte}</span>
+                            {/*
+                              Le salon est la table où l'on écrit avec de vraies
+                              autres mains, et le carnet n'y récoltait rien : il
+                              fallait sortir au recueil pour garder un vers lu
+                              ici. Le bouton n'est posé qu'une fois le feuillet
+                              au recueil — le lien vers le poème doit mener
+                              quelque part, et sans stockage le carnet n'existe pas.
+                            */}
+                            {feuilletSalon && cas && cas.texte === c.texte && (
+                              <div>
+                                <BoutonRecolte
+                                  texte={c.texte}
+                                  accent={accent}
+                                  encre={encre}
+                                  poemeId={feuilletSalon.id}
+                                  poemeTitre={feuilletSalon.titre}
+                                  datePoeme={feuilletSalon.dateCreation}
+                                  signature={attribution(cas)}
+                                  auteur={cas.auteur}
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       )

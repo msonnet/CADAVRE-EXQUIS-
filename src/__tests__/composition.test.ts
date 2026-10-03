@@ -9,8 +9,8 @@ import { attribution, attributionEnMorceaux, contientDeLIA } from '../lib/attrib
 import { mainsDuPoeme } from '../lib/versRecueil'
 import { getStructure, reconstruirePoeme } from '../structures'
 import {
-  chargerPoeme, chargerRecolte, db, recolter, relierEnFeuillet, sauvegarderPoeme, viderLaRecolte,
-  type VersRecolte,
+  chargerPoeme, chargerRecolte, db, deplacerDansLaRecolte, mettreEnTeteDeLaRecolte, recolter,
+  relierEnFeuillet, sauvegarderPoeme, viderLaRecolte, type VersRecolte,
 } from '../db'
 import type { Poeme } from '../types'
 
@@ -170,6 +170,39 @@ describe('relier, au recueil', () => {
     const b = await recolter({ texte: 'à moi', signature: 'toi' })
     const p = await relierEnFeuillet([b.id, a.id])
     expect(p.cases.map(x => x.auteur)).toEqual(['humain', 'ia'])
+  })
+})
+
+// ── Le carnet lui-même ────────────────────────────────────────────────
+//
+// Composer a son « EN TÊTE », le carnet n'en avait pas : son ordre est celui
+// que COPIER et FICHIER emportent, et remonter le 280e vers y coûtait encore
+// 279 flèches.
+
+describe('l’ordre du carnet', () => {
+  beforeEach(async () => { await viderLaRecolte() })
+
+  it('le 280e vers passe en tête d’un seul appui', async () => {
+    const ids: string[] = []
+    for (let i = 1; i <= 280; i++) ids.push((await recolter({ texte: `vers ${i}` })).id)
+    await mettreEnTeteDeLaRecolte(ids[279])
+    const apres = await chargerRecolte()
+    expect(apres[0].texte).toBe('vers 280')
+    // Les autres ne bougent pas les uns par rapport aux autres.
+    expect(apres.slice(1).map(v => v.texte)).toEqual(ids.slice(0, 279).map((_, i) => `vers ${i + 1}`))
+  })
+
+  it('les flèches d’un rang suivent encore, et un vers gardé ensuite va au fond', async () => {
+    const a = await recolter({ texte: 'a' })
+    await recolter({ texte: 'b' })
+    const c = await recolter({ texte: 'c' })
+    await mettreEnTeteDeLaRecolte(c.id)
+    await deplacerDansLaRecolte(a.id, -1)
+    await recolter({ texte: 'd' })
+    expect((await chargerRecolte()).map(v => v.texte)).toEqual(['a', 'c', 'b', 'd'])
+    // Le premier n'a nulle part où monter : rien ne change.
+    await mettreEnTeteDeLaRecolte(a.id)
+    expect((await chargerRecolte()).map(v => v.texte)).toEqual(['a', 'c', 'b', 'd'])
   })
 })
 

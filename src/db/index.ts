@@ -223,6 +223,23 @@ export async function deplacerDansLaRecolte(id: string, sens: -1 | 1): Promise<v
 }
 
 /**
+ * Remonte un vers en tête du carnet, d'un seul appui.
+ *
+ * Les flèches d'un cran restaient le seul moyen d'ordonner le carnet : son
+ * ordre est celui que COPIER et FICHIER emportent, et le 280ᵉ vers coûtait
+ * 279 appuis pour ouvrir le texte. Une seule écriture, comme les flèches :
+ * le vers prend un rang sous le plus petit, les autres ne bougent pas — un
+ * rang négatif n'a rien de faux, seul l'ordre relatif compte.
+ */
+export async function mettreEnTeteDeLaRecolte(id: string): Promise<void> {
+  await db.transaction('rw', db.recolte, async () => {
+    const premier = await db.recolte.orderBy('ordre').first()
+    if (!premier || premier.id === id) return
+    await db.recolte.update(id, { ordre: premier.ordre - 1 })
+  })
+}
+
+/**
  * Relie des vers du carnet en un feuillet du recueil, dans l'ordre donné.
  *
  * Le carnet n'est pas touché : relier copie, et un vers peut servir à deux

@@ -1458,12 +1458,30 @@ publication. Relevé avant : aucun chemin du carnet vers le recueil.
   l'assertion passait pendant. Il attend désormais au-delà, et lit
   `aria-pressed` de « ⟡ COUTURES ».
 
-Les flèches du carnet lui-même restent d'un rang : composer passe par le
-toucher, qui ne connaît pas la distance, et la relecture a son « EN TÊTE ».
+### La fin du chantier — 3 octobre
 
-`composition.test.ts` (22 mesures, dont la reliure sous Dexie, la galerie
-et l'autre langue) et trois parcours (`carnet.spec.ts`, `galerie.spec.ts`,
-`poeme-du-jour.spec.ts`) échouent sur l'ancien code.
+- **« EN TÊTE » dans le carnet lui-même.** On l'avait laissé aux flèches
+  d'un cran, au motif que composer passe par le toucher. Mais l'ordre du
+  carnet est celui que COPIER et FICHIER emportent : le 280ᵉ vers y coûtait
+  encore 279 appuis. `mettreEnTeteDeLaRecolte` lui donne un rang sous le
+  plus petit — une seule écriture, comme les flèches, les autres ne bougent
+  pas. La ligne passe à la ligne (`flex-wrap`) : à 320 points, cinq gestes
+  n'y tiennent plus, LE POÈME descend plutôt que de sortir de l'écran.
+- **◇ GARDER au salon** (`FinOnline`, coutures de l'écrit). Le constat
+  nommait trois lieux où les vers des autres se lisent ; le salon était le
+  dernier sans bouton — il fallait sortir au recueil pour garder un vers lu
+  à table. La signature est celle du **feuillet que le recueil garde** du
+  salon (`attribution` de sa case) : un vers gardé à table et le même gardé
+  au recueil portent la même couture. Le bouton n'est posé qu'une fois ce
+  feuillet relu — le lien vers le poème doit mener quelque part.
+
+`composition.test.ts` (24 mesures, dont la reliure sous Dexie, la galerie,
+l'autre langue et l'ordre du carnet) et quatre parcours (`carnet.spec.ts`,
+`galerie.spec.ts`, `poeme-du-jour.spec.ts`, `salon-recolte.spec.ts`)
+échouent sur l'ancien code. Le dernier bouchonne Supabase par un
+**prédicat d'hôte** : le motif `**/supabase.co/**` des autres parcours ne
+prend pas `placeholder.supabase.co` (il exige une barre avant
+« supabase »), il ne bouchonnait donc rien.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
@@ -1471,7 +1489,7 @@ et l'autre langue) et trois parcours (`carnet.spec.ts`, `galerie.spec.ts`,
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (635 tests unitaires) + Playwright (102 tests E2E, FR et EN)
+- Tests : Vitest (637 tests unitaires) + Playwright (103 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

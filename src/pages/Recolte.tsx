@@ -5,8 +5,8 @@ import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import {
-  chargerRecolte, deplacerDansLaRecolte, relierEnFeuillet, retirerDeLaRecolte, viderLaRecolte,
-  type VersRecolte,
+  chargerRecolte, deplacerDansLaRecolte, mettreEnTeteDeLaRecolte, relierEnFeuillet, retirerDeLaRecolte,
+  viderLaRecolte, type VersRecolte,
 } from '../db'
 import { mono } from '../lib/typo'
 import { PLANCHER_FEUILLET, basculerChoix, deplacerChoix, mettreEnTete, provenanceDuVers, titreTraduit } from '../lib/composition'
@@ -85,6 +85,12 @@ export default function Recolte() {
   async function deplacer(id: string, sens: -1 | 1) {
     jouer('clic')
     await deplacerDansLaRecolte(id, sens)
+    setVers(await chargerRecolte())
+  }
+
+  async function enTete(id: string) {
+    jouer('clic')
+    await mettreEnTeteDeLaRecolte(id)
     setVers(await chargerRecolte())
   }
 
@@ -285,7 +291,9 @@ export default function Recolte() {
                 )}
 
                 {regime === 'carnet' && (
-                <div className="flex items-center" style={{ gap: 14, marginTop: 4 }}>
+                // `wrap` : avec un cinquième geste, la ligne ne tient plus à
+                // 320 points — LE POÈME passe dessous plutôt que hors de l'écran.
+                <div className="flex items-center flex-wrap" style={{ columnGap: 14, marginTop: 4 }}>
                   <button
                     onClick={() => deplacer(v.id, -1)}
                     disabled={i === 0}
@@ -298,6 +306,16 @@ export default function Recolte() {
                     aria-label={tr('Descendre ce vers', 'Move this line down')}
                     style={{ ...mono, fontSize: 15, color: encre, opacity: i === vers.length - 1 ? 0.15 : 0.55, background: 'none', border: 'none', cursor: i === vers.length - 1 ? 'default' : 'pointer', minHeight: 40, minWidth: 32 }}
                   >↓</button>
+                  {/* Le carnet avait gardé les flèches d'un cran quand la
+                      relecture gagnait son « EN TÊTE » : son ordre est pourtant
+                      celui que COPIER et FICHIER emportent, et le 280ᵉ vers y
+                      coûtait 279 appuis. */}
+                  <button
+                    onClick={() => enTete(v.id)}
+                    disabled={i === 0}
+                    aria-label={tr('Mettre ce vers en tête du carnet', 'Move this line to the top of the notebook')}
+                    style={{ ...mono, fontSize: 11, letterSpacing: '0.15em', color: encre, opacity: i === 0 ? 0.15 : 0.45, background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', minHeight: 40 }}
+                  >{tr('EN TÊTE', 'TO THE TOP')}</button>
                   <button
                     onClick={() => retirer(v.id)}
                     aria-label={tr('Retirer ce vers du carnet', 'Remove this line from the notebook')}

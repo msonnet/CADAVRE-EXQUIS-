@@ -61,6 +61,17 @@ test('le carnet, de bout en bout', async ({ page }) => {
   expect(ordre[0]).toContain('lampe')
   expect(ordre[1]).toContain('abbé')
 
+  // ── Le dernier en tête, d'un seul appui ──
+  // Le carnet n'avait que les flèches d'un cran : le 280e vers coûtait 279 appuis.
+  await page.getByLabel(/Mettre ce vers en tête du carnet|Move this line to the top of the notebook/).last().click()
+  await page.waitForTimeout(400)
+  expect((await lignes().allInnerTexts())[0]).toContain('tablier')
+  // Et il reste en tête au rechargement : l'ordre est écrit, pas affiché.
+  await page.reload()
+  await page.waitForLoadState('networkidle')
+  await entrer(page)
+  expect((await lignes().allInnerTexts())[0]).toContain('tablier')
+
   // ── Les sources ──
   await page.getByRole('button', { name: /SOURCES/ }).click()
   await expect(page.getByText("L'insomniaque")).toBeVisible()
