@@ -29,11 +29,20 @@
  * bloc centré géométriquement paraît tomber.
  *
  * Avec une illustration, l'image vient d'abord, le poème dessous comme la
- * légende d'une planche. Le poème se mesure en premier et l'image prend le
- * reste, jamais moins de `IMAGE_MIN` : au-delà, le poème passe à un corps
- * plus petit, puis se coupe sur « […] ».
- * La lettrine cède alors sa place à l'image : sous une planche, une
- * capitale de 240 px ferait un second titre, et c'est 200 px d'image en moins.
+ * légende d'une planche. La lettrine cède alors sa place à l'image : sous
+ * une planche, une capitale de 240 px ferait un second titre, et c'est
+ * 200 px d'image en moins.
+ *
+ * L'IMAGE A LA PRIORITÉ, et c'est la seconde version. La première mesurait
+ * le poème d'abord et donnait à l'image le reste, au plancher de 460 px :
+ * titre, trois vers et une image 3:4 sortaient en 418 × 557 — 36 % de la
+ * surface d'avant la grille (693 × 924, qui descendait, elle, sous la
+ * marque). L'illustration, l'objet payé, devenait un timbre au milieu du
+ * papier. Désormais l'image vise `IMAGE_CIBLE` ; le poème prend le plus
+ * grand corps qui la laisse entière, sinon le plus petit, et se coupe sur
+ * « […] » plutôt que de la faire descendre sous `IMAGE_MIN`. Pour lui
+ * faire place, la planche remonte de seize pixels vers l'en-tête et le titre
+ * y perd son filet : le passe-partout, juste dessous, sépare déjà.
  *
  * La vidéo suit la même grille : son poème se compose dans la même zone,
  * sa marque et son invitation tombent aux mêmes ordonnées.
@@ -58,6 +67,8 @@ export const Y = {
   etoile: 300,
   numero: 344,
   contenuHaut: 396,
+  /** Le haut d'une affiche illustrée : titre, ou passe-partout s'il n'y en a pas. */
+  planche: 380,
   contenuBas: 1428,
   invitation: 1500,
   filetMarque: 1546,
@@ -68,8 +79,14 @@ export const Y = {
 
 /** Le passe-partout autour d'une image, de chaque côté. */
 export const PASSE = 28
-/** Une illustration ne descend jamais sous cette hauteur. */
-export const IMAGE_MIN = 460
+/**
+ * La hauteur que vise une illustration, et celle sous laquelle elle ne
+ * descend jamais : à ce plancher le poème se coupe. Une 3:4 à la cible fait
+ * 570 × 760 ; au plancher, 465 × 620. Le plancher était à 460 quand le
+ * poème passait d'abord, soit 345 px de large sur 1080.
+ */
+export const IMAGE_CIBLE = 760
+export const IMAGE_MIN = 620
 /** Part de l'espace libre laissée AU-DESSUS du bloc : le tiers optique. */
 const OPTIQUE = 0.38
 
@@ -112,12 +129,18 @@ export interface TitreAffiche {
   taille: number
   police: string
   baselines: number[]
-  filetY: number
+  /** Le filet orné sous le titre — absent au-dessus d'une planche. */
+  filetY: number | null
   /** Où le contenu peut commencer sous le titre et son filet. */
   bas: number
 }
 
-export function composerTitre(titre: string | undefined, mesurer: Mesure): TitreAffiche | null {
+/** Le blanc entre le titre et le passe-partout, quand le filet n'y est pas. */
+const ECART_TITRE_PLANCHE = 36
+
+export function composerTitre(
+  titre: string | undefined, mesurer: Mesure, planche = false,
+): TitreAffiche | null {
   if (!titre?.trim()) return null
   let taille = 76
   let lignes = couper(titre, ZONE_W, policeTitre(taille), mesurer)
@@ -126,8 +149,13 @@ export function composerTitre(titre: string | undefined, mesurer: Mesure): Titre
     lignes = couper(titre, ZONE_W, policeTitre(taille), mesurer).slice(0, 2)
   }
   const pas = taille + 12
-  const baselines = lignes.map((_, i) => Y.contenuHaut + hautLigne(taille) + i * pas)
-  const filetY = baselines[baselines.length - 1] + 56
+  const haut = planche ? Y.planche : Y.contenuHaut
+  const baselines = lignes.map((_, i) => haut + hautLigne(taille) + i * pas)
+  const derniere = baselines[baselines.length - 1]
+  if (planche) {
+    return { lignes, taille, police: policeTitre(taille), baselines, filetY: null, bas: derniere + basLigne(taille) + ECART_TITRE_PLANCHE }
+  }
+  const filetY = derniere + 56
   return { lignes, taille, police: policeTitre(taille), baselines, filetY, bas: filetY + 15 + 40 }
 }
 
@@ -197,31 +225,38 @@ export interface AffichePoeme {
 
 const TAILLES_SEUL: [number, number][] = [[50, 74], [40, 62], [34, 52]]
 const TAILLES_ILLUSTRE: [number, number][] = [[46, 66], [40, 58], [34, 50]]
-const ECART_IMAGE = 64
+const ECART_IMAGE = 44
 
 export function composerAffichePoeme(
   e: { titre?: string; texte?: string; image?: { w: number; h: number } | null },
   mesurer: Mesure,
 ): AffichePoeme {
-  const titre = composerTitre(e.titre, mesurer)
-  const haut = titre ? titre.bas : Y.contenuHaut
-  const zoneH = Y.contenuBas - haut
   const texte = e.texte ?? ''
   const image = e.image && e.image.w > 0 && e.image.h > 0 ? e.image : null
+  const titre = composerTitre(e.titre, mesurer, !!image)
+  const haut = titre ? titre.bas : image ? Y.planche : Y.contenuHaut
+  const zoneH = Y.contenuBas - haut
 
   let corps!: CorpsMesure
   let lettrine = false
   let imageDispo = 0
 
   if (image) {
-    // Le poème d'abord : l'image prend ce qui reste, jamais moins d'IMAGE_MIN.
+    // L'image d'abord. Une image très large bute sur la largeur avant
+    // d'atteindre la cible : sa cible et son plancher sont alors sa hauteur
+    // pleine largeur. Le poème prend le plus grand corps qui laisse l'image
+    // à sa cible ; sinon le plus petit, qui lui laisse le plus ; et s'il ne
+    // tient pas même ainsi au-dessus du plancher, il se coupe.
+    const pleine = image.h * (ZONE_W - 2 * PASSE) / image.w
+    const cible = Math.min(IMAGE_CIBLE, pleine)
+    const plancher = Math.min(IMAGE_MIN, pleine)
     const reste = (c: CorpsMesure) => zoneH - hauteurCorps(c.lignes.length, c.taille, c.pas) - ECART_IMAGE - 2 * PASSE
     for (const [t, p] of TAILLES_ILLUSTRE) {
       corps = mesurerCorps(texte, t, p, mesurer)
-      if (reste(corps) >= IMAGE_MIN) break
+      if (reste(corps) >= cible) break
     }
-    if (reste(corps) < IMAGE_MIN) {
-      const dispo = zoneH - ECART_IMAGE - 2 * PASSE - IMAGE_MIN - hautLigne(corps.taille) - basLigne(corps.taille)
+    if (reste(corps) < plancher) {
+      const dispo = zoneH - ECART_IMAGE - 2 * PASSE - plancher - hautLigne(corps.taille) - basLigne(corps.taille)
       corps = tronquer(corps, Math.floor(dispo / corps.pas) + 1)
     }
     imageDispo = reste(corps)
@@ -245,7 +280,7 @@ export function composerAffichePoeme(
   const boites: Boite[] = []
   if (titre) {
     boites.push({ nom: 'titre', haut: titre.baselines[0] - hautLigne(titre.taille), bas: titre.baselines[titre.baselines.length - 1] + basLigne(titre.taille) })
-    boites.push({ nom: 'filet du titre', haut: titre.filetY - 15, bas: titre.filetY + 15 })
+    if (titre.filetY !== null) boites.push({ nom: 'filet du titre', haut: titre.filetY - 15, bas: titre.filetY + 15 })
   }
 
   let img: ImageAffiche | null = null
@@ -331,7 +366,7 @@ export function composerCorpsVideo(
   const boites: Boite[] = [...boitesFixes()]
   if (titre) {
     boites.push({ nom: 'titre', haut: titre.baselines[0] - hautLigne(titre.taille), bas: titre.baselines[titre.baselines.length - 1] + basLigne(titre.taille) })
-    boites.push({ nom: 'filet du titre', haut: titre.filetY - 15, bas: titre.filetY + 15 })
+    if (titre.filetY !== null) boites.push({ nom: 'filet du titre', haut: titre.filetY - 15, bas: titre.filetY + 15 })
   }
   boites.push({ nom: 'poème', haut: y0, bas: y0 + h })
   return { titre, corps: poser(c, y0), boites }

@@ -19,6 +19,8 @@ import { test, expect, type Page } from '@playwright/test'
 
 interface Trace { c: number; frame: number; texte: string; alpha: number; x0: number; y0: number; x1: number; y1: number }
 interface Image { c: number; x0: number; y0: number; x1: number; y1: number }
+/** Sous l'invitation : sa couleur de remplissage et le fond moyen relevé AVANT qu'elle soit tracée. */
+interface Fond { c: number; frame: number; fill: string; alpha: number; r: number; g: number; b: number }
 
 const HAUT_SUR = 250
 const BAS_SUR = 1920 - 250
@@ -37,8 +39,10 @@ async function preparer(page: Page, langue: 'fr' | 'en', sansVideo: boolean) {
     if (sansVideo) w.MediaRecorder = undefined
     const traces: unknown[] = []
     const images: unknown[] = []
+    const fonds: unknown[] = []
     w.__traces = traces
     w.__images = images
+    w.__fonds = fonds
     let frame = 0
     const raf = window.requestAnimationFrame.bind(window)
     window.requestAnimationFrame = cb => raf(t => { frame++; cb(t) })
@@ -56,10 +60,17 @@ async function preparer(page: Page, langue: 'fr' | 'en', sansVideo: boolean) {
     CanvasRenderingContext2D.prototype.fillText = function (texte: string, x: number, y: number, max?: number) {
       if (story(this.canvas) && String(texte).trim()) {
         const t = this.measureText(texte)
-        traces.push({
-          c: idDe(this.canvas), frame, texte: String(texte), alpha: this.globalAlpha,
-          ...boite(this, x - t.actualBoundingBoxLeft, y - t.actualBoundingBoxAscent, x + t.actualBoundingBoxRight, y + t.actualBoundingBoxDescent),
-        })
+        const b = boite(this, x - t.actualBoundingBoxLeft, y - t.actualBoundingBoxAscent, x + t.actualBoundingBoxRight, y + t.actualBoundingBoxDescent)
+        traces.push({ c: idDe(this.canvas), frame, texte: String(texte), alpha: this.globalAlpha, ...b })
+        if (/poème du jour|today's poem/.test(String(texte))) {
+          try {
+            const d = this.getImageData(Math.round(b.x0), Math.round(b.y0), Math.max(1, Math.round(b.x1 - b.x0)), Math.max(1, Math.round(b.y1 - b.y0))).data
+            let r = 0, g = 0, bl = 0
+            for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; bl += d[i + 2] }
+            const n = d.length / 4
+            fonds.push({ c: idDe(this.canvas), frame, fill: String(this.fillStyle), alpha: this.globalAlpha, r: r / n, g: g / n, b: bl / n })
+          } catch { /* canevas teinté */ }
+        }
       }
       return max === undefined ? fillText.call(this, texte, x, y) : fillText.call(this, texte, x, y, max)
     }
@@ -123,8 +134,8 @@ async function semerEtPartager(page: Page, p: { titre: string | null; vers: stri
   await page.getByLabel('Partager le poème en vidéo').click()
   await page.waitForFunction(() => !!(window as unknown as { __partage?: unknown }).__partage, null, { timeout: 30_000 })
   return page.evaluate(() => {
-    const w = window as unknown as { __traces: Trace[]; __images: Image[]; __partage: { text?: string; fichiers: string[] } }
-    return { traces: w.__traces, images: w.__images, partage: w.__partage }
+    const w = window as unknown as { __traces: Trace[]; __images: Image[]; __fonds: Fond[]; __partage: { text?: string; fichiers: string[] } }
+    return { traces: w.__traces, images: w.__images, fonds: w.__fonds, partage: w.__partage }
   })
 }
 
@@ -138,6 +149,23 @@ function derniereImage(traces: Trace[]): Trace[] {
   const [c] = [...parCanevas.entries()].sort((a, b) => b[1].size - a[1].size)[0]
   const dernier = Math.max(...traces.filter(t => t.c === c).map(t => t.frame))
   return traces.filter(t => t.c === c && t.frame === dernier && t.alpha > 0.05)
+}
+
+/** Le contraste WCAG de l'invitation telle que l'œil la reçoit : son encre fondue sur le fond relevé. */
+function contrasteInvitation(f: Fond): number {
+  const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(f.fill)
+  const hex = /^#([0-9a-f]{6})$/i.exec(f.fill)
+  const [r, g, b, a] = m
+    ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])]
+    : [parseInt(hex![1].slice(0, 2), 16), parseInt(hex![1].slice(2, 4), 16), parseInt(hex![1].slice(4, 6), 16), 1]
+  const k = a * f.alpha
+  const encre = [r * k + f.r * (1 - k), g * k + f.g * (1 - k), b * k + f.b * (1 - k)]
+  const lum = ([x, y, z]: number[]) => {
+    const l = (v: number) => { const s = v / 255; return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4) }
+    return 0.2126 * l(x) + 0.7152 * l(y) + 0.0722 * l(z)
+  }
+  const [hi, lo] = [lum(encre), lum([f.r, f.g, f.b])].sort((p, q) => q - p)
+  return (hi + 0.05) / (lo + 0.05)
 }
 
 function verifierGeometrie(traces: Trace[], cas: string) {
@@ -205,13 +233,23 @@ test.describe('la vidéo', () => {
     test(cas.nom, async ({ page }) => {
       test.setTimeout(90_000)
       await preparer(page, cas.langue, false)
-      const { traces, partage } = await semerEtPartager(page, cas)
+      const { traces, fonds, partage } = await semerEtPartager(page, cas)
 
       expect(partage.fichiers[0]).toMatch(/\.(webm|mp4)$/)
       const fin = derniereImage(traces)
       // L'invitation était calculée et jamais dessinée.
       expect(fin.map(t => t.texte)).toContain(cas.invitation)
       verifierGeometrie(fin, cas.nom)
+      // Et elle se lit : sur l'illustration sombre, mesurée à 3,0:1 quand
+      // son accent, ramené au contraste sur le voile seul, était encore
+      // fondu à 80 % par-dessus une image que le voile ne couvre qu'à moitié.
+      if (cas.illustre) {
+        const c = fin[0].c
+        const dernier = Math.max(...fonds.filter(f => f.c === c).map(f => f.frame))
+        const f = fonds.find(f => f.c === c && f.frame === dernier)!
+        expect(f, "l'invitation de la dernière image").toBeTruthy()
+        expect(contrasteInvitation(f), `${cas.nom} · contraste de l'invitation`).toBeGreaterThanOrEqual(4.5)
+      }
       expect(partage.text).toContain(cas.invitation)
       expect(partage.text).toMatch(/https?:\/\/\S+\/poeme-du-jour$/)
     })

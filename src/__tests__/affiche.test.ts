@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   composerAffichePoeme, composerAfficheDessin, composerCorpsVideo, composerSurimpression,
-  composerLectureVideo, ZONE_SURE, STORY_W, Y,
+  composerLectureVideo, ZONE_SURE, STORY_W, Y, IMAGE_MIN,
   invitationDuJour, texteDuPartage, type Boite, type Mesure,
 } from '../lib/affiche'
 
@@ -68,6 +68,27 @@ describe("l'affiche d'un poème", () => {
       expect(a.image!.x).toBeGreaterThanOrEqual(96)
       expect(a.image!.x + a.image!.w).toBeLessThanOrEqual(STORY_W - 96)
     }
+  })
+
+  it("sur l'affiche illustrée, l'image passe avant le poème", () => {
+    // Relevé sur les affiches régénérées après la grille : titre, trois vers
+    // et une image 3:4 donnaient une planche de 418 × 557 — un timbre, 36 %
+    // de la surface d'avant (693 × 924), parce que le poème se composait
+    // d'abord et que l'image ne recevait que le reste.
+    const avecTitre = composerAffichePoeme({ titre: 'Le vernis', texte: MOYEN, image: { w: 768, h: 1024 } }, mesurer).image!
+    expect(avecTitre.h).toBeGreaterThanOrEqual(680)
+    expect(avecTitre.w * avecTitre.h).toBeGreaterThanOrEqual(340_000)
+    const sansTitre = composerAffichePoeme({ texte: MOYEN, image: { w: 768, h: 1024 } }, mesurer).image!
+    expect(sansTitre.h).toBeGreaterThanOrEqual(760)
+    // Le poème court garde un corps de lecture, pas une note de bas de page.
+    expect(composerAffichePoeme({ titre: 'Le vernis', texte: COURT, image: { w: 768, h: 1024 } }, mesurer).corps.taille).toBeGreaterThanOrEqual(40)
+    // Un poème long ne fait pas tomber l'image sous son plancher ; il garde
+    // au moins trois vers avant « […] », deux sous un titre de deux lignes.
+    TITRES.forEach((titre, i) => {
+      const a = composerAffichePoeme({ titre, texte: long(22), image: { w: 768, h: 1024 } }, mesurer)
+      expect(a.image!.h, `titre ${titre.length}`).toBeGreaterThanOrEqual(IMAGE_MIN)
+      expect(a.corps.lignes.length, `titre ${titre.length}`).toBeGreaterThanOrEqual(i < 2 ? 4 : 3)
+    })
   })
 
   it('un long poème se coupe sur « […] » plutôt que de déborder', () => {

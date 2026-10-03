@@ -1304,6 +1304,11 @@ dans une conversation s'affichait en adresse nue.
   les robots ne lisent pas le JavaScript —, image ABSOLUE,
   `public/og-image.png` en 1 200 × 630 : l'Œil cousu et le nom, sur noir pur,
   centrés, parce que WhatsApp recadre au carré. Écartée du précache.
+  **Pas d'`og:url`**, et c'est voulu : toutes les routes servent ce même
+  fichier, et Facebook ou LinkedIn prennent `og:url` pour l'adresse de la
+  carte — un lien `/salon/KX7Q` s'y regroupait sous la racine, code perdu.
+  Sans lui, le robot garde l'adresse qu'il a chargée. La description reste
+  en français : un HTML statique n'a qu'une langue.
 - **L'écran d'entrée annonce la destination** (`destinationEntree`). Arrivé
   par `/poeme-du-jour`, `/salon/KX7Q` ou `/online?salon=KX7Q`, le rideau dit
   « LE POÈME DU JOUR » ou « SALON KX7Q » au lieu de « TOUCHER POUR ENTRER »,
@@ -1322,9 +1327,20 @@ bas, environ 250 px de chaque côté.
   un ornement. En-tête, invitation et marque à des ordonnées fixes (`Y`),
   les mêmes pour l'affiche et la vidéo.
 - **Le poème illustré est une planche et sa légende** : l'image d'abord, le
-  poème dessous. Le poème se mesure en premier, l'image prend le reste et
-  jamais moins de 460 px ; au-delà le corps diminue, puis se coupe sur
-  « […] ». La lettrine cède sa place à l'image — voir plus bas.
+  poème dessous, et l'image a la PRIORITÉ. Premier jet : le poème se
+  mesurait d'abord et l'image prenait le reste, au plancher de 460 px —
+  titre, trois vers et une 3:4 sortaient en 418 × 557, un timbre, 36 % de
+  la surface d'avant la grille. Le contradicteur l'a vu sur les affiches
+  régénérées. Désormais l'image vise 760 px (`IMAGE_CIBLE`) et ne descend
+  jamais sous 620 (`IMAGE_MIN`) ; le poème prend le plus grand corps qui la
+  laisse à sa cible (46, 40), sinon 34, et se coupe sur « […] » plutôt que
+  de la rogner. Le titre de la planche perd son filet — le passe-partout,
+  juste dessous, sépare déjà — et la planche remonte de 16 px vers
+  l'en-tête. Mesuré : titre et trois vers **518 × 691** (1,5 fois la
+  surface du premier jet) ; trois vers sans titre 591 × 788 ; un vers seul
+  673 × 897. La contrepartie est assumée : un long poème illustré montre
+  trois à cinq vers avant « […] », deux sous un titre de deux lignes. La
+  lettrine cède sa place à l'image — voir plus bas.
 - **Le contenu se pose au tiers optique**, pas au centre : un vers seul ne
   flotte plus au milieu de 700 px de papier.
 - **Le filet de pli passe dans le blanc** entre deux lignes. Il était posé à
@@ -1333,6 +1349,13 @@ bas, environ 250 px de chaque côté.
   dans la vidéo.
 - Le libellé « — LECTURE — » de l'affiche d'un dessin restait en français ;
   la vidéo le traduisait déjà.
+- **L'invitation se lit sur une image sombre.** Son accent était ramené à
+  4,5:1 sur la couleur du VOILE, puis fondu à 80 % ; or à sa hauteur le voile
+  n'est qu'à moitié opaque et l'image passe à travers : mesuré 3,0:1 sur la
+  dernière image de la vidéo, la ligne la plus terne pour la phrase qu'on
+  veut faire lire. En surimpression elle est tracée pleine, et son accent se
+  règle sur la bande réellement peinte dessous (`accentSurImage`, lue une
+  fois, au neuvième décile) : 4,6:1 au même relevé.
 - **La lettrine garde son blanc** (`LETTRINE_ECART = 60`). La grille pose
   un vers à la hauteur de ses hampes, l'ancienne mise en page une
   interligne plus bas : au premier passage, 23 px seulement séparaient le
@@ -1348,7 +1371,14 @@ pour l'affiche, et pour la DERNIÈRE image de la vidéo. Ses six mesures
 
 **Décision d'identité, prudente et réversible** : sur une affiche illustrée,
 plus de lettrine — sous une planche, une capitale de 240 px ferait un second
-titre et coûterait 200 px d'image. Sans illustration elle reste. Le domaine
+titre et coûterait 200 px d'image. Sans illustration elle reste. Ni de filet
+sous le titre de la planche. Les 800 px demandés AVEC un titre ne tiennent
+pas dans la zone sûre : 1 032 px de contenu, dont le titre en prend 120, le
+passe-partout 56, l'écart 44 et trois vers 137. L'alternative serait de
+donner l'en-tête à la planche — monter l'image à 300 et passer le
+« N° 098 · MMXXVI » dessous, comme le numéro d'une planche de livre :
+environ 730 px au lieu de 691, pour déplacer la seule ligne commune à
+toutes les affiches. Non faite. Le domaine
 `-beta.vercel.app` reste aussi : il n'y en a pas d'autre, mais le jour où il
 change, c'est `PROD_API` et les balises Open Graph.
 
@@ -1441,7 +1471,7 @@ et l'autre langue) et trois parcours (`carnet.spec.ts`, `galerie.spec.ts`,
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (633 tests unitaires) + Playwright (102 tests E2E, FR et EN)
+- Tests : Vitest (635 tests unitaires) + Playwright (102 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

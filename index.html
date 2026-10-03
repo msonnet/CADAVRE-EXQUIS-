@@ -17,12 +17,14 @@
       JavaScript, donc tout est ici, en dur, et l'image a une adresse
       ABSOLUE. Le domaine est celui de PROD_API (src/lib/apiBase.ts) : le
       jour où il change, il change aussi ici.
+      Pas d'og:url : toutes les routes servent ce fichier, et Facebook ou
+      LinkedIn prendraient la racine pour l'adresse de chaque carte — un
+      lien de salon y perdait son code.
     -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Cadavre Exquis" />
     <meta property="og:title" content="Cadavre Exquis" />
     <meta property="og:description" content="Un jeu de poésie surréaliste à plusieurs mains. Chaque jour, un poème que tout le monde écrit : une main, un vers." />
-    <meta property="og:url" content="https://cadavre-exquis-beta.vercel.app/" />
     <meta property="og:image" content="https://cadavre-exquis-beta.vercel.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />

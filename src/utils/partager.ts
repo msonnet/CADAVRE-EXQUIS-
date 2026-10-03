@@ -1,4 +1,4 @@
-import { garantirContraste } from '../reve/contraste'
+import { garantirContraste, ratioContraste } from '../reve/contraste'
 import { emporterFichier, partagerTexteSeul, blobDe, type Issue } from '../lib/emporter'
 import { langueActuelle, tr } from '../i18n'
 import { lienPublic, PROD_API } from '../lib/apiBase'
@@ -359,12 +359,14 @@ function marque(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: s
 
 // L'invitation tient sur une ligne, à la même ordonnée sur toutes les
 // affiches : entre le contenu et la marque, jamais sur l'adresse. L'ombre ne
-// sert qu'en surimpression, quand l'invitation se pose sur une image.
+// sert qu'en surimpression, quand l'invitation se pose sur une image — et
+// là elle est tracée pleine : l'accent y arrive déjà ramené au contraste, et
+// le fondre à 80 % le faisait retomber à 3:1 sur une illustration sombre.
 function invitationLigne(
   ctx: CanvasRenderingContext2D, W: number, accent: string, texte: string, ombre?: string,
 ) {
   ctx.save()
-  ctx.fillStyle = withAlpha(accent, 0.80)
+  ctx.fillStyle = ombre ? accent : withAlpha(accent, 0.80)
   ctx.textAlign = 'center'
   if (ombre) { ctx.shadowColor = withAlpha(ombre, 0.85); ctx.shadowBlur = 18; ctx.shadowOffsetY = 2 }
   let size = 32
@@ -391,6 +393,32 @@ function invitationVideo(
   ctx.globalAlpha = a
   invitationLigne(ctx, W, accent, texte, ombre)
   ctx.restore()
+}
+
+/**
+ * L'accent de l'invitation, ramené au contraste sur ce qu'il y a VRAIMENT
+ * sous elle. Il l'était sur la couleur du voile seule ; or à la hauteur de
+ * l'invitation le voile n'est qu'à moitié opaque et l'image passe à travers :
+ * mesuré 3,0:1 sur une illustration sombre, pour la phrase qu'on veut faire
+ * lire. On lit donc la bande une fois, juste avant que l'invitation
+ * paraisse, et l'on vise le pixel clair du neuvième décile (le sombre, sur un
+ * voile clair) : un point isolé de l'image ne décide pas, un motif répété si.
+ * Canevas teinté (image sans CORS) : on garde le calcul sur le voile.
+ */
+function accentSurImage(ctx: CanvasRenderingContext2D, accent: string, voile: string): string {
+  const repli = garantirContraste(accent, voile, 4.5)
+  try {
+    const x0 = 96, w = ctx.canvas.width - 192
+    const d = ctx.getImageData(x0, Y.invitation - 32, w, 44).data
+    const px: { l: number; i: number }[] = []
+    for (let i = 0; i < d.length; i += 16) px.push({ l: 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2], i })
+    if (!px.length) return repli
+    px.sort((a, b) => a.l - b.l)
+    const voileSombre = ratioContraste(voile, '#000000') < ratioContraste(voile, '#ffffff')
+    const { i } = px[Math.floor((voileSombre ? 0.9 : 0.1) * (px.length - 1))]
+    const hex = '#' + [d[i], d[i + 1], d[i + 2]].map(v => v.toString(16).padStart(2, '0')).join('')
+    return garantirContraste(accent, hex, 4.5)
+  } catch { return repli }
 }
 
 async function prechargerPolices() {
@@ -482,7 +510,7 @@ export async function genererImageStory(opts: {
       ctx.textAlign = 'center'
       ctx.font = a.titre.police
       a.titre.lignes.forEach((line, i) => ctx.fillText(line, W / 2, a.titre!.baselines[i]))
-      filetOrne(ctx, W / 2, a.titre.filetY, accent, bg)
+      if (a.titre.filetY !== null) filetOrne(ctx, W / 2, a.titre.filetY, accent, bg)
     }
 
     // ── Illustration, la planche ──
@@ -840,7 +868,7 @@ export async function genererVideoStory(opts: {
         bx.fillStyle = ink; bx.textAlign = 'center'
         bx.font = titre.police
         titre.lignes.forEach((line, i) => bx.fillText(line, W / 2, titre.baselines[i]))
-        filetOrne(bx, W / 2, titre.filetY, accent, bg)
+        if (titre.filetY !== null) filetOrne(bx, W / 2, titre.filetY, accent, bg)
       }
       if (pleinCadre) {
         // L'image annoncée n'a pas chargé : on rend au fond ses ornements
@@ -933,6 +961,7 @@ export async function genererVideoStory(opts: {
     try { scoreRevelation(audioCtx, audioDest, opts.type) } catch { /* partition silencieuse — la vidéo continue */ }
   }
 
+  let accentInvitation: string | null = null
   await new Promise<void>(resolve => {
     const start = performance.now()
     let fini = false
@@ -953,7 +982,10 @@ export async function genererVideoStory(opts: {
         // Sur une image, l'accent est ramené au contraste et l'invitation
         // prend l'ombre du voile ; sur le papier, la couleur de l'affiche.
         const surImage = (opts.type === 'poeme' && !!poemeIllustImg) || !!img
-        if (surImage) invitationVideo(ctx, W, t, dureeEff, garantirContraste(accent, scrimTexte, 4.5), invitation, scrimTexte)
+        if (surImage && accentInvitation === null && t >= dureeEff - INVITATION_AVANT_FIN) {
+          accentInvitation = accentSurImage(ctx, accent, scrimTexte)
+        }
+        if (surImage) invitationVideo(ctx, W, t, dureeEff, accentInvitation ?? garantirContraste(accent, scrimTexte, 4.5), invitation, scrimTexte)
         else invitationVideo(ctx, W, t, dureeEff, accent, invitation)
         // Voile de boucle — un cillement masque le raccord début/fin sur les réseaux.
         // Sur image plein cadre : couleur du scrim adaptatif (le voile d'ambiance
