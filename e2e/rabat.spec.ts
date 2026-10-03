@@ -175,16 +175,23 @@ test('à plusieurs, on se passe une feuille pliée, une tranche par case', async
   await expect(feuille).not.toContainText('rouge')
 })
 
-/** Un vrai toucher : le doigt reste posé quelques dizaines de millisecondes.
- *  `touchscreen.tap` envoie le toucher et le relâcher d'un seul tenant, si
- *  bien que l'écran n'a pas le temps de changer entre les deux — et le
- *  défaut qu'on cherche vit exactement dans cet intervalle. */
-async function toucher(page: Page, x: number, y: number, tenue = 80) {
+/**
+ * Un vrai toucher : le doigt reste posé quelques dizaines de millisecondes.
+ * `touchscreen.tap` envoie le toucher et le relâcher d'un seul tenant, si
+ * bien que l'écran n'a pas le temps de changer entre les deux — et le défaut
+ * qu'on cherche vit exactement dans cet intervalle.
+ *
+ * Le doigt se prépare AVANT le geste mesuré : ouvrir la session CDP coûte des
+ * dizaines de millisecondes sous charge, et ce retard, compté dans la mesure,
+ * la faussait.
+ */
+async function doigt(page: Page) {
   const cdp = await page.context().newCDPSession(page)
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
-  await page.waitForTimeout(tenue)
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-  await cdp.detach()
+  return async (x: number, y: number, tenue = 80) => {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+    await page.waitForTimeout(tenue)
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  }
 }
 
 test.describe('au doigt', () => {
@@ -197,8 +204,9 @@ test.describe('au doigt', () => {
   // ouvrait la case de la suivante. À la souris rien de tel — la cible du
   // clic est alors l'ancêtre commun —, d'où ce test au toucher.
   /** Deux tours à deux mains ; au second, on touche là où « C'EST À MOI »
-   *  va paraître, `apres` ms après SCELLER, le doigt posé `tenue` ms. */
-  async function toucherLePassage(page: Page, apres: number, tenue: number) {
+   *  va paraître, `apres` ms après SCELLER — ou dès que l'écran de passage
+   *  est monté —, le doigt posé `tenue` ms. */
+  async function toucherLePassage(page: Page, apres: number | 'au-passage', tenue: number) {
     const champ = await reprendre(page, 'aveugle', 2)
     await champ.fill('le vin rouge')
     await page.locator('button[aria-label^="Sceller"]').click()
@@ -212,9 +220,11 @@ test.describe('au doigt', () => {
     await page.waitForTimeout(700)
 
     await page.locator('textarea').fill('la cire tiède')
+    const poser = await doigt(page)
     await page.locator('button[aria-label^="Sceller"]').click()
-    await page.waitForTimeout(apres)
-    await toucher(page, box.x + box.width / 2, box.y + box.height / 2, tenue)
+    if (apres === 'au-passage') await expect(moi).toHaveCount(1, { timeout: 4000 })
+    else await page.waitForTimeout(apres)
+    await poser(box.x + box.width / 2, box.y + box.height / 2, tenue)
     await expect(passage).toBeVisible({ timeout: 4000 })
     await page.waitForTimeout(1200)
     await expect(passage).toBeVisible()
@@ -232,11 +242,23 @@ test.describe('au doigt', () => {
     await toucherLePassage(page, 330, 150)
   })
 
+  // Le doigt posé APRÈS que l'horloge a passé la main : le rabat n'est plus
+  // là pour avaler quoi que ce soit, et « C'EST À MOI → » est déjà monté,
+  // encore invisible (il paraît à 0,7 s). Un joueur qui tape pour abréger
+  // un rabat déjà fini ouvrait la case de la suivante. Sous charge, c'est
+  // aussi ce que devenait le test précédent quand son doigt arrivait tard.
+  test('ni un appui impatient sur le bouton encore invisible', async ({ page }) => {
+    await toucherLePassage(page, 'au-passage', 60)
+  })
+
   test('un appui abrège toujours le rabat', async ({ page }) => {
     const champ = await reprendre(page, 'dernier-mot')
     await champ.fill('le vin rouge')
     await page.locator('button[aria-label^="Sceller"]').click()
-    await toucher(page, 20, 600)
+    // Ici le doigt n'a pas à rester posé : on mesure l'abrègement, pas la
+    // traversée. Un toucher tenu, sous charge, arrivait après l'horloge de
+    // 0,4 s (441 et 531 ms relevés) et ne mesurait plus rien.
+    await page.touchscreen.tap(20, 600)
     await expect(page.getByText('Acte IV', { exact: true })).toBeVisible({ timeout: 4000 })
     const r = await sonde(page)
     expect(r.suivant!).toBeLessThan(250)

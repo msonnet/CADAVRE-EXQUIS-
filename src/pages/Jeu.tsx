@@ -58,6 +58,16 @@ const DUREE_HYPNOTIQUE = 30
  */
 const RIDEAU_SOLO = 1100
 
+/**
+ * Le délai (s) avant que « C'EST À MOI → » ne paraisse sur l'écran de
+ * passage, et avant qu'il ne puisse se presser. Il était pressable dès le
+ * montage, à opacité nulle : un joueur qui tapait pour abréger un rabat que
+ * l'horloge venait de finir touchait le bouton invisible, et la main qui
+ * venait d'écrire ouvrait la case de la suivante. Un bouton qu'on ne voit
+ * pas encore ne doit rien faire.
+ */
+const APPARITION_PASSAGE = 0.7
+
 function toRomain(n: number): string {
   const map: [number, string][] = [
     [1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],
@@ -344,6 +354,8 @@ export default function Jeu() {
   const [iaAttendValidation, setIaAttendValidation] = useState(false)
   const [tempsRestant, setTempsRestant] = useState<number | null>(null)
   const [attendPassage, setAttendPassage] = useState(false)
+  // Vrai quand « C'EST À MOI → » est paru — voir APPARITION_PASSAGE.
+  const [passagePret, setPassagePret] = useState(false)
   const [confirmAbandon, setConfirmAbandon] = useState(false)
   const [sealing, setSealing] = useState(false)
 
@@ -482,6 +494,13 @@ export default function Jeu() {
     const t = setTimeout(() => setAttendPassage(false), RIDEAU_SOLO)
     return () => clearTimeout(t)
   }, [caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setPassagePret(false)
+    if (!attendPassage || !multiJoueurs) return
+    const t = setTimeout(() => setPassagePret(true), APPARITION_PASSAGE * 1000)
+    return () => clearTimeout(t)
+  }, [attendPassage, caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tour IA
   useEffect(() => {
@@ -860,11 +879,14 @@ export default function Jeu() {
             className="mt-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
+            transition={{ delay: APPARITION_PASSAGE }}
             whileTap={{ scale: 0.97 }}
+            // Sans prise tant qu'il n'est pas paru : le toucher passe à la
+            // page, qui n'en fait rien. Un `disabled` l'aurait grisé.
+            style={{ pointerEvents: passagePret ? undefined : 'none' }}
           >
             <button
-              onClick={() => setAttendPassage(false)}
+              onClick={() => { if (passagePret) setAttendPassage(false) }}
               className="btn-primaire"
             >
               {tr("C'est à moi →", 'My turn →')}

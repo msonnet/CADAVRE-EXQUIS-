@@ -1255,6 +1255,13 @@ avaleur du clic suivant qui survit au composant, parce que l'horloge de
 mesure au toucher par CDP, le doigt tenu 80 ms — `touchscreen.tap` relâche
 dans la même trame et ne voit rien.
 
+**Et « C'EST À MOI → » ne se presse pas avant de paraître**
+(`APPARITION_PASSAGE`, 0,7 s). Il était pressable dès le montage, à opacité
+nulle : un doigt posé juste APRÈS l'horloge — plus de rabat pour l'avaler —
+ouvrait encore la case de la main suivante, trois fois sur trois. Sans prise
+tant qu'il n'est pas paru, le toucher tombe sur la page. C'est aussi ce qui
+rendait les tests au doigt instables sous charge : leur doigt arrivait tard.
+
 **Pas fait, et c'est délibéré** : la voix IA écrit toujours derrière ses
 trois points ; le salon et le poème du jour n'ont pas encore leur rabat, ni
 le salon son feuillet en cours. Les pièces sont prêtes ; ce lot s'en tenait
