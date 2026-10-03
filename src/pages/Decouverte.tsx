@@ -18,7 +18,7 @@ export default function Decouverte() {
 
   // Le marqueur se pose au CHOIX du joueur, jamais au simple affichage : un
   // appel entrant pendant ces vingt secondes lui coûtait l'introduction — et
-  // avec elle le guide en 9 étapes, qui n'est armé que depuis cet écran.
+  // avec elle le guide des premiers pas, qui n'est armé que depuis cet écran.
   // Toute sortie doit passer par ici, sinon l'accueil y renvoie en boucle.
   function marquerVue() {
     try { localStorage.setItem(ONBOARDING_KEY, '1') } catch { /* ignore */ }

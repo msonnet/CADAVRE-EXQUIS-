@@ -84,7 +84,7 @@ test('les mains portent leur prénom, et la table se retrouve', async ({ page })
 
   await expect(page).toHaveURL(/\/fin$/, { timeout: 10000 })
   await page.getByRole('button', { name: /^COUTURES$/ }).click()
-  const coutures = page.locator('#panneau-coutures')
+  const coutures = page.locator('#feuillet-fin')
   // À plusieurs, on devine avant de savoir : les coutures sont voilées, et
   // se dévoilent une à une, dans l'ordre des cases.
   await expect(coutures).not.toContainText('Nadja')
@@ -136,7 +136,7 @@ test('seul, la couture dit « toi » et non « joueur 1 »', async ({ page }) =>
   }
   await expect(page).toHaveURL(/\/fin$/, { timeout: 10000 })
   await page.getByRole('button', { name: /^COUTURES$/ }).click()
-  const coutures = page.locator('#panneau-coutures')
+  const coutures = page.locator('#feuillet-fin')
   await expect(coutures).toContainText('toi')
   await expect(coutures).not.toContainText(/joueur 1/)
   await appuisPropres(page, /Une autre, à la même table/i)

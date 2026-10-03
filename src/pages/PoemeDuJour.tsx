@@ -13,6 +13,7 @@ import { zoneVivante } from '../lib/a11y'
 import { vibrer } from '../utils/haptics'
 import FeuilletPlie from '../components/FeuilletPlie'
 import PoemeDevoile from '../components/PoemeDevoile'
+import { styleVers } from '../lib/composition'
 import { usePartage } from '../hooks/usePartage'
 import { mentionIA } from '../lib/attribution'
 import { nomDeVoix } from '../data/voiceIds'
@@ -526,6 +527,11 @@ export default function PoemeDuJour() {
                               qui se fond sans rien déplacer.
                             */}
                             <div style={{
+                              // Le retrait des débords, comme pendant le
+                              // dépli (`VersEncre`) : sans lui, la suite d'un
+                              // vers long sauterait au bord à l'instant où
+                              // le dépli cède la place aux coutures.
+                              ...styleVers(),
                               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
                               fontSize: 18,
                               color: v.aMoi ? accent : encre,

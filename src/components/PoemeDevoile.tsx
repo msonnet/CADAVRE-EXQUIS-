@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import Depli from './Depli'
 import VersEncre from './VersEncre'
@@ -21,8 +21,17 @@ import { partitionDuPoeme, DUREE_DEPLI } from '../lib/rythme'
  *
  * Une belle animation qu'on subit une deuxième fois est pire qu'une animation
  * bancale. Le premier appui n'importe où pose le poème entier d'un coup, sans
- * rien empêcher d'autre — on n'intercepte pas le geste, on l'écoute. Et
- * `prefers-reduced-motion` court-circuite la séquence complète.
+ * rien empêcher d'autre — on n'intercepte pas le geste, on l'écoute. Une
+ * touche du clavier fait de même : l'appui au pointeur laissait le clavier
+ * sans moyen d'abréger. Et `prefers-reduced-motion` court-circuite la
+ * séquence complète.
+ *
+ * ── Ce qui vient après le poème ───────────────────────────────────────────
+ *
+ * `onFini` est le signal que la page attend pour faire monter ses actions.
+ * `apres` rend, sous chaque vers, ce que la page veut y poser — les
+ * coutures : elles se posent SUR le poème au lieu d'en recopier une
+ * seconde liste en dessous.
  */
 
 interface Props {
@@ -42,6 +51,8 @@ interface Props {
   style?: React.CSSProperties
   /** La taille de la lettrine. */
   tailleLettrine?: string
+  /** Rendu sous le vers d'indice i — les coutures, une fois le poème posé. */
+  apres?: (i: number) => React.ReactNode
 }
 
 const mouvementReduit = () =>
@@ -53,7 +64,7 @@ const OUVRANTS = /^[«»"'“”‘’]+/
 
 export default function PoemeDevoile({
   lignes, accent, actif, lettrine, onLettrine, onFini, style,
-  tailleLettrine = 'clamp(2.8rem, 10vw, 3.4rem)',
+  tailleLettrine = 'clamp(2.8rem, 10vw, 3.4rem)', apres,
 }: Props) {
   const [saute, setSaute] = useState(false)
   const [lettrinePosee, setLettrinePosee] = useState(false)
@@ -73,21 +84,55 @@ export default function PoemeDevoile({
 
   const partition = useMemo(() => partitionDuPoeme(affichees), [affichees])
 
+  // L'instant où le rideau s'est levé, gardé une fois pour toutes. Le
+  // minuteur de fin repartait de zéro à chaque nouvelle partition — or la
+  // correction d'accord arrive PENDANT l'écriture et change les lignes :
+  // `onFini` tombait alors en retard d'autant, et avec lui tout ce que la
+  // page fait attendre derrière le poème.
+  const leve = useRef<number | null>(null)
+  if (actif && leve.current === null) leve.current = Date.now()
+  // Abrégé au doigt, et non au clavier — voir plus bas.
+  const parAppui = useRef(false)
+
   // Le premier appui n'importe où pose le poème. On écoute la phase de
   // capture sans rien empêcher : le bouton qu'on visait s'enfonce quand même.
   useEffect(() => {
     if (!actif || immediat) return
-    const sauter = () => setSaute(true)
-    const fin = setTimeout(() => onFini?.(), partition.fin + 240)
+    const sauter = (e: Event) => { parAppui.current = e.type === 'pointerdown'; setSaute(true) }
+    const ecoule = Date.now() - (leve.current ?? Date.now())
+    const fin = setTimeout(() => onFini?.(), Math.max(0, partition.fin + 240 - ecoule))
     window.addEventListener('pointerdown', sauter, { capture: true })
+    window.addEventListener('keydown', sauter, { capture: true })
     return () => {
       clearTimeout(fin)
       window.removeEventListener('pointerdown', sauter, { capture: true })
+      window.removeEventListener('keydown', sauter, { capture: true })
     }
   }, [actif, immediat, partition.fin]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  /*
+    Abrégé AU DOIGT, `onFini` attend que le clic soit passé.
+
+    La page fait monter ses actions à `onFini` — « SCELLER AU RECUEIL » juste
+    sous la carte. Or au toucher, le clic que le navigateur synthétise après
+    `touchend` tombe sur ce qui est SOUS le doigt à cet instant : un appui
+    sous la carte, pour abréger, aurait pressé le bouton apparu entre le
+    toucher et le relâcher (le piège du rabat, `Rabat.tsx`). On laisse donc
+    passer ce clic, puis on prévient. Un geste sans clic — on a fait défiler
+    — ne retient rien plus d'une demi-seconde.
+  */
   useEffect(() => {
-    if (actif && immediat) onFini?.()
+    if (!actif || !immediat) return
+    if (!parAppui.current) { onFini?.(); return }
+    let fait = false
+    const prevenir = () => { if (!fait) { fait = true; onFini?.() } }
+    const apresClic = () => { setTimeout(prevenir, 0) }
+    window.addEventListener('click', apresClic, { capture: true, once: true })
+    const filet = setTimeout(prevenir, 500)
+    return () => {
+      window.removeEventListener('click', apresClic, { capture: true })
+      clearTimeout(filet)
+    }
   }, [actif, immediat]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!actif) return null
@@ -95,7 +140,14 @@ export default function PoemeDevoile({
   const dureeDepli = DUREE_DEPLI / 1000
 
   return (
-    <div style={style}>
+    // La clé change à l'appui qui abrège, et c'est ce qui pose le poème.
+    // Sans elle, un appui EN COURS de séquence ne posait rien : les mots
+    // déjà lancés recevaient une transition nulle et se figeaient à
+    // mi-masque — « il reste du givre sur la v » — et les volets suivants
+    // restaient couchés. Seul un appui avant le premier mot marchait, et
+    // c'est le seul que la mesure faisait. On remonte donc le feuillet
+    // déjà ouvert, d'un coup.
+    <div key={immediat ? 'pose' : 'encre'} style={style}>
       {partition.panneaux.map((panneau, p) => (
         <Depli
           key={p}
@@ -107,9 +159,12 @@ export default function PoemeDevoile({
           {panneau.lignes.map(i => {
             const t = partition.vers[i]
             return (
+              <React.Fragment key={i}>
               <VersEncre
-                key={i}
                 texte={affichees[i] || ''}
+                // Le lecteur d'écran lit le vers ENTIER : sans cela il
+                // entendait la lettrine à part, puis « e marche ».
+                lu={i === 0 && capitale ? ligne0 : undefined}
                 debut={t.debut / 1000}
                 duree={t.duree / 1000}
                 immediat={immediat}
@@ -129,10 +184,15 @@ export default function PoemeDevoile({
                       display: 'inline-block',
                       fontFamily: "'Bodoni Moda', serif",
                       fontWeight: 900,
+                      // Une lettrine est DROITE. Elle héritait de l'italique
+                      // du poème, et un « L » de Bodoni penché se lisait
+                      // comme une barre oblique rouge — « / e vernis ».
+                      fontStyle: 'normal',
                       fontSize: tailleLettrine,
                       lineHeight: 0.85,
                       color: accent,
-                      float: 'left',
+                      // Le flottement est porté par `VersEncre`, qui la loge
+                      // dans le retrait des débords.
                       marginRight: 6,
                       marginTop: 4,
                     }}
@@ -141,6 +201,8 @@ export default function PoemeDevoile({
                   </motion.span>
                 ) : undefined}
               />
+              {apres?.(i)}
+              </React.Fragment>
             )
           })}
         </Depli>

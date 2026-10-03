@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { styleVers, RETRAIT_DEBORD } from '../lib/composition'
 
 /**
  * Un vers qui s'écrit.
@@ -19,6 +20,15 @@ import { motion } from 'framer-motion'
  *
  * Seuls `clip-path` et `opacity` sont animés : le compositeur les prend en
  * charge, la mise en page n'est jamais recalculée.
+ *
+ * ── Ce que l'oreille en reçoit ────────────────────────────────────────────
+ *
+ * Le dessin est fait pour l'œil, et il se lisait mal à l'oreille : la
+ * lettrine, rendue à part, coupait le premier mot — « J… e marche » — et
+ * chaque mot, un bloc à opacité nulle mais présent dans l'arbre, risquait
+ * d'arrêter VoiceOver mot à mot. Le vers dessiné est donc caché au lecteur
+ * d'écran, et doublé d'une copie entière (`lu`), d'un seul tenant, qu'il
+ * reçoit dès le lever du rideau : rien ne change à l'écran.
  */
 
 interface Props {
@@ -31,6 +41,8 @@ interface Props {
   immediat?: boolean
   /** Rendu devant le premier mot : la lettrine. */
   avant?: React.ReactNode
+  /** Le vers tel que le lecteur d'écran le lit — entier, lettrine comprise. */
+  lu?: string
   style?: React.CSSProperties
 }
 
@@ -53,7 +65,7 @@ const MOT_MAX = 0.42
  */
 const CHEVAUCHEMENT = 1.6
 
-export default function VersEncre({ texte, debut, duree, immediat, avant, style }: Props) {
+export default function VersEncre({ texte, debut, duree, immediat, avant, lu, style }: Props) {
   // On garde les espaces dans le découpage — ils ne s'animent pas, mais ils
   // portent le retour à la ligne.
   const jetons = texte.length ? texte.split(/(\s+)/) : []
@@ -64,8 +76,22 @@ export default function VersEncre({ texte, debut, duree, immediat, avant, style 
   let rang = -1
 
   return (
-    <span style={{ display: 'block', minHeight: '1.65em', ...style }}>
-      {avant}
+    // Le retrait des débords (`lib/composition.ts`) : la suite d'un vers trop
+    // long rentre sous son début, on voit où le vers commence.
+    <span style={{ display: 'block', minHeight: '1.65em', ...styleVers(!!avant), ...style }}>
+      <span className="sr-only">{lu ?? texte}</span>
+      <span aria-hidden="true">
+      {/*
+        La lettrine flotte dans le retrait et tient le bord du feuillet. Le
+        flottant est CE conteneur, au corps du vers, et non la lettrine :
+        1,2 em pris au corps de la lettrine reculerait trois fois trop loin.
+        `lineHeight: 0` laisse la lettrine seule décider de sa hauteur.
+      */}
+      {avant && (
+        <span style={{ float: 'left', marginLeft: `-${RETRAIT_DEBORD}`, lineHeight: 0, textIndent: 0 }}>
+          {avant}
+        </span>
+      )}
       {jetons.length === 0 ? ' ' : jetons.map((jeton, i) => {
         if (!jeton.trim()) return <React.Fragment key={i}>{jeton}</React.Fragment>
         rang++
@@ -73,7 +99,10 @@ export default function VersEncre({ texte, debut, duree, immediat, avant, style 
         return (
           <motion.span
             key={i}
-            style={{ display: 'inline-block', willChange: 'clip-path' }}
+            // `textIndent: 0` : le retrait négatif du vers est hérité, et un
+            // bloc en ligne l'appliquerait à son propre mot, qui sortirait
+            // alors de sa boîte vers la gauche.
+            style={{ display: 'inline-block', willChange: 'clip-path', textIndent: 0 }}
             initial={immediat ? false : { clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
             animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
             transition={immediat ? { duration: 0, delay: 0 } : {
@@ -89,6 +118,7 @@ export default function VersEncre({ texte, debut, duree, immediat, avant, style 
           </motion.span>
         )
       })}
+      </span>
     </span>
   )
 }

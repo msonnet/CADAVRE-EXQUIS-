@@ -161,3 +161,23 @@ export function nomsDesBandes(bandes: { joueurNumero: number; nom?: string }[]):
   const noms = bandes.map(b => (b.nom ? nettoyerNom(b.nom) || null : null))
   return noms.some(Boolean) ? noms : null
 }
+
+/**
+ * La table « à plusieurs, sur ce téléphone » — ce que le guide propose après
+ * le premier poème.
+ *
+ * Au moins `n` mains, et aucune voix : c'est la soirée entre amis, et une
+ * table entièrement humaine ne coûte rien, le mur ne peut donc jamais
+ * l'arrêter. Une table qui compte déjà assez de mains est rendue telle
+ * quelle — ce sont celles de la dernière soirée.
+ */
+export function tableAPlusieurs(sieges: Siege[], n = 2): Siege[] {
+  if (sieges.filter(s => s === 'humain').length >= n) return sieges
+  return Array.from({ length: NB_SIEGES }, (_, i) => (i < n ? 'humain' : 'vide'))
+}
+
+/** Le paramètre d'adresse qui demande cette table : `/config?mains=2`. */
+export function mainsDemandees(recherche: string): number {
+  const v = Number(new URLSearchParams(recherche).get('mains'))
+  return Number.isInteger(v) && v >= 2 && v <= NB_SIEGES ? v : 0
+}

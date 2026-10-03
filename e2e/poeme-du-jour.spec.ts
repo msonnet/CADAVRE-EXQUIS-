@@ -213,7 +213,9 @@ test('le poème achevé s’ouvre sur ton vers et ses voisins', async ({ page })
   expect(ferme).toMatch(/TOUCHER POUR DÉPLIER|TOUCH TO UNFOLD/)
 
   await page.getByRole('button', { name: /Déplier le poème|Unfold the poem/ }).click()
-  await expect(page.getByText('le cuivre chante quand on l’oublie')).toBeVisible({ timeout: 15000 })
+  // Pendant le dépli, chaque vers a deux nœuds : le dessin, et sa copie pour
+  // le lecteur d'écran (`.sr-only`, la première). On regarde le dessin.
+  await expect(page.getByText('le cuivre chante quand on l’oublie').last()).toBeVisible({ timeout: 15000 })
 })
 
 test('le feuillet ne se replie pas dans la même journée', async ({ page }) => {
@@ -350,7 +352,7 @@ test('l’almanach garde les jours d’avant, et chacun s’ouvre plié', async 
   // Il arrive plié : rien du poème avant le geste.
   expect(await page.evaluate(() => document.body.innerText)).not.toContain('une échelle monte')
   await page.getByRole('button', { name: /Déplier le poème|Unfold the poem/ }).click()
-  await expect(page.getByText('une échelle monte dans le puits')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText('une échelle monte dans le puits').last()).toBeVisible({ timeout: 15000 })
 
   // Et l'on revient au dernier.
   await page.getByRole('button', { name: /LE DERNIER|THE LATEST/ }).click()

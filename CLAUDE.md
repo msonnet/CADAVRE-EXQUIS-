@@ -1261,6 +1261,75 @@ le salon son feuillet en cours. Les pièces sont prêtes ; ce lot s'en tenait
 au cadavre écrit local. Le salon revient au groupe « en ligne » (l'écran de
 tour en ligne), le poème du jour à la voie qui tient `PoemeDuJour.tsx`.
 
+## La fin de partie — le poème parle d'abord — 2 octobre
+
+**Les délais couraient depuis le montage**, donc sous le rideau
+d'assemblage. Mesuré sur un atelier de onze vers : « SCELLER AU RECUEIL »
+plein à 1,5 s, le rideau levé à 5,5 s, le dernier mot à 15,8 s — et le
+titre du rideau qui traversait la carte pendant 400 ms. Au premier
+lancement, le guide « La révélation » montait au même instant que l'encre.
+
+Trois instants désormais, dans cet ordre : **le rideau SORTI**
+(`onExitComplete`, un filet de 900 ms), **le dernier mot posé** (`onFini`
+de `PoemeDevoile`, enfin branché), **le guide** 600 ms plus tard. Tout ce
+qui suit le poème est ABSENT du document jusque-là, et non transparent :
+un bouton invisible se presse quand même. Après : actions à 16,6 s, guide à
+17,0 s, aucun croisement. Même ordre à `FinOnline`, côté écrit.
+
+**Corrigé au passage, et c'était cassé depuis le dévoilement** : un appui
+EN COURS de séquence ne posait rien. Les mots lancés recevaient une
+transition nulle et se figeaient à mi-masque — « il reste du givre sur la
+v » — et les volets suivants restaient couchés. Seul l'appui avant le
+premier mot marchait, et c'est le seul que la mesure faisait. Le feuillet
+se remonte désormais d'un coup (une clé). Une touche du clavier abrège
+aussi. Et au doigt, `onFini` attend que le clic synthétisé soit passé :
+sinon l'appui qui abrège, sous la carte, pressait « SCELLER » apparu entre
+le toucher et le relâcher — le piège du rabat. Le minuteur de fin ne
+repart plus de zéro quand la correction d'accord arrive en cours d'encre.
+
+**Le guide propose de rejouer** (`useTutoriel`, sept étapes au lieu de
+neuf). Les visites de l'IMAGE, du PARTAGE et du RECUEIL sont remplacées par
+un panneau, « La suite », et deux gestes : ENCORE UNE, et À PLUSIEURS, SUR
+CE TÉLÉPHONE — `/config?mains=2`, deux mains et aucune voix
+(`tableAPlusieurs`), donc une table que le mur n'arrête jamais. Le lien
+discret mène au recueil et à la publication ; choisir de rejouer reprend le
+guide au recueil, si bien que le rendez-vous du poème du jour n'est pas
+perdu.
+
+**La composition** (`lib/composition.ts`). Lettrine droite — elle héritait
+de l'italique, et un « L » de Bodoni penché se lisait « / e vernis ».
+Retrait des débords : la suite d'un vers rentre de 1,2 em, la lettrine
+flotte dans le retrait (le flottant est un conteneur au corps du vers :
+1,2 em au corps de la lettrine reculait trois fois trop). Le corps baisse
+d'un cran au-delà de 28 signes et à l'Atelier — onze vers en dix-sept
+lignes au lieu de vingt et une. La surface de la carte est `${encre}09`,
+comme le feuillet plié : le voile crème fixe grisait minuit et argile.
+La lettrine en deux lignes de haut, convention des revues, n'est PAS faite :
+le flottant déborderait sur le volet suivant du dépli.
+
+**Les coutures se posent sur le poème** (`lignesDuFeuillet`, `lib/plis.ts`).
+La forme du poème du jour : sous chaque vers, le rang et la main en petites
+capitales (par le style, pas par le texte : le lecteur d'écran lit un nom),
+et ◇ dans la marge pour garder le vers (`BoutonRecolte glyphe`). La liste
+qui recopiait onze vers sous la carte est retirée, à la fin de partie, au
+recueil et au salon ; « X — toi » aussi, une fonction de structure brute.
+À plusieurs, « QUI ? » se pose sous le vers, toujours dans l'ordre.
+`aria-controls` désigne la carte. Au recueil, ouvrir les coutures déplie la
+phrase en ses bandes ; fermées, elle reste d'un seul tenant. Un poème sans
+titre s'y nomme par son incipit, et « TOUCHER POUR NOMMER ».
+
+**À l'oreille.** Chaque vers dessiné est caché au lecteur d'écran et doublé
+d'une copie entière (`.sr-only`) : « Je marche » et non « J… e marche », et
+plus de mots à opacité nulle sur lesquels VoiceOver pouvait s'arrêter. Le
+titre est un `h1` qui reçoit le focus au lever du rideau ; la carte est un
+article nommé « Le poème ». **Conséquence pour les mesures** : un vers a
+DEUX nœuds texte pendant le dépli — `getByText(…).last()` est le dessin,
+et un compte d'occurrences retire d'abord les `.sr-only`.
+
+**Pas fait** : les titres d'affiche des autres écrans (préparatifs,
+réglages…) ne sont pas encore des `h1`/`h2` — hors de ce groupe. Le poème
+du jour hérite du doublage et du retrait, pas encore du focus.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)

@@ -44,7 +44,9 @@ describe('les bandes du feuillet', () => {
 
   it('les deux fins de partie écrites plient ainsi', () => {
     for (const f of ['pages/FinDePartie.tsx', 'pages/FinOnline.tsx']) {
-      expect(readFileSync(join(__dirname, '..', f), 'utf8'), f).toMatch(/bandesParMain\(/)
+      // Par `lignesDuFeuillet`, qui plie par main ET dit de quelle case vient
+      // chaque bande — c'est là que se posent les coutures.
+      expect(readFileSync(join(__dirname, '..', f), 'utf8'), f).toMatch(/bandesParMain\(|lignesDuFeuillet\(/)
     }
   })
 })

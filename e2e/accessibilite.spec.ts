@@ -143,18 +143,22 @@ test('chaque bascule dit quel panneau elle ouvre', async ({ page }) => {
   await page.mouse.click(195, 300)
   await page.waitForTimeout(400)
 
+  // Les coutures se posent dans la carte du poème, sous chaque vers : c'est
+  // donc la carte que la bascule désigne.
   const coutures = page.getByRole('button', { name: /^COUTURES$|^SEAMS$/ })
-  await expect(coutures).toHaveAttribute('aria-controls', 'panneau-coutures')
+  await expect(coutures).toHaveAttribute('aria-controls', 'feuillet-fin')
   await expect(coutures).toHaveAttribute('aria-expanded', 'false')
+  const posees = page.locator('#feuillet-fin [data-couture]')
+  await expect(posees).toHaveCount(0)
 
   await coutures.click()
   await expect(coutures).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.locator('#panneau-coutures')).toBeVisible()
+  await expect(posees.first()).toBeVisible()
 
   // Et les deux panneaux restent exclusifs — ce que l'audit croyait cassé.
   const image = page.getByRole('button', { name: /^IMAGE$/ })
   await image.click()
   await expect(page.locator('#panneau-image')).toBeVisible()
-  await expect(page.locator('#panneau-coutures')).toHaveCount(0)
+  await expect(posees).toHaveCount(0)
   await expect(coutures).toHaveAttribute('aria-expanded', 'false')
 })

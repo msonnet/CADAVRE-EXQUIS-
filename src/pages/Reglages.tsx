@@ -44,7 +44,7 @@ export default function Reglages() {
     catch { return 0 }
   })
 
-  // Réarme l'introduction ET le guide en 9 étapes : celui-ci n'est activé
+  // Réarme l'introduction ET le guide des premiers pas : celui-ci n'est activé
   // qu'au bouton « Commencer » de la Découverte — manquée une fois, il était
   // perdu pour de bon.
   function rejouerIntroduction() {

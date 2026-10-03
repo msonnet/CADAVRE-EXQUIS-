@@ -16,6 +16,7 @@ import { ouvrirTable } from '../lib/lancerTable'
 import NomsDesMains from '../components/NomsDesMains'
 import {
   CLE_TABLE, NB_SIEGES, lireTable, nomsDesMains, nettoyerNom,
+  tableAPlusieurs, mainsDemandees,
   type Siege, type TableRetenue,
 } from '../lib/table'
 
@@ -52,6 +53,24 @@ const CONFIG_PAR_DEFAUT: ConfigPartie = {
  * aucune carte n'est cochée.
  */
 function tableDeDepart(): { sieges: SlotType[]; noms: string[]; config: ConfigPartie } {
+  const depart = tableRetenue()
+  // `?mains=2` — « À PLUSIEURS, SUR CE TÉLÉPHONE », proposé par le guide
+  // après le premier poème. Les règles retenues restent ; seuls les sièges
+  // deviennent des mains, et les prénoms de la dernière soirée suivent.
+  const n = typeof window !== 'undefined' ? mainsDemandees(window.location.search) : 0
+  if (!n) return depart
+  const sieges = tableAPlusieurs(depart.sieges, n)
+  return {
+    ...depart, sieges,
+    config: {
+      ...depart.config,
+      joueursHumains: sieges.filter(s => s === 'humain').length,
+      voixIA: sieges.filter(s => s === 'ia').length,
+    },
+  }
+}
+
+function tableRetenue(): { sieges: SlotType[]; noms: string[]; config: ConfigPartie } {
   let t: TableRetenue | null = null
   try { t = lireTable(localStorage.getItem(CLE_TABLE)) } catch { /* stockage indisponible */ }
   const config: ConfigPartie = { ...CONFIG_PAR_DEFAUT }
