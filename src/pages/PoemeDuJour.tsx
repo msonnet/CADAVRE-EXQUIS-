@@ -125,6 +125,16 @@ export default function PoemeDuJour() {
     } catch { /* mode privé */ }
   }
   const [deplie, setDeplie] = useState(false)
+  // Le titre du poème scellé reçoit le focus quand on le déplie : le bouton
+  // « Déplier » disparaît sous le doigt, et le focus tombait sur BODY — le
+  // lecteur d'écran ne disait pas que le poème venait d'arriver.
+  const titrePoeme = useRef<HTMLHeadingElement>(null)
+  const focaliserPoeme = useRef(false)
+  useEffect(() => {
+    if (!deplie || !focaliserPoeme.current) return
+    focaliserPoeme.current = false
+    titrePoeme.current?.focus({ preventScroll: true })
+  }, [deplie])
   /**
    * Les coutures s'affichent d'abord — c'est la récompense annoncée.
    * On les retire pour LIRE, ce qui est l'autre usage d'un poème, et le
@@ -395,11 +405,13 @@ export default function PoemeDuJour() {
               >
                 <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.14, marginBottom: 14 }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
-                  <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em' }}>
+                  {/* Un vrai titre, au style inchangé : le rotor « Titres »
+                      le trouve, et il reçoit le focus au dépli. */}
+                  <h2 ref={titrePoeme} tabIndex={-1} style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', outline: 'none' }}>
                     {hier.jour === dernier
                       ? tr('— LE POÈME ACHEVÉ —', '— THE FINISHED POEM —')
                       : tr('— DANS L’ALMANACH —', '— FROM THE ALMANAC —')}
-                  </div>
+                  </h2>
                   {dernier && hier.jour !== dernier && (
                     <button
                       onClick={() => { const c = jours.find(j => j.jour === dernier); if (c) void ouvrirJour(c) }}
@@ -446,7 +458,7 @@ export default function PoemeDuJour() {
                         accent={accent}
                         encre={encre}
                         libelle={tr('Déplier le poème', 'Unfold the poem')}
-                        onOuvrir={() => { jouer('clic'); vibrer('devoilement'); setDeplie(true) }}
+                        onOuvrir={() => { jouer('clic'); vibrer('devoilement'); focaliserPoeme.current = true; setDeplie(true) }}
                       >
                         <div style={{
                           ...mono, fontSize: 11, color: encre, opacity: 0.5,

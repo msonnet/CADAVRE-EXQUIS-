@@ -24,6 +24,10 @@ import { tr, langueActuelle } from '../i18n'
 import { lignesDuFeuillet } from '../lib/plis'
 import { styleVers, RETRAIT_DEBORD } from '../lib/composition'
 
+// Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 const NOMS_STRUCTURES: Record<string, string> = langueActuelle() === 'en' ? {
   'phrase-simple':  'Short form',
   'phrase-etoffee': 'Full form',
@@ -289,7 +293,8 @@ export default function PoemeDetail() {
     return (
       <motion.div
         data-couture
-        initial={{ opacity: 0, y: -2 }}
+        // Sous mouvement réduit, les coutures se posent sans cascade.
+        initial={mouvementReduit() ? false : { opacity: 0, y: -2 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.06 + Math.min(j, 12) * 0.05, duration: 0.35, ease: 'easeOut' }}
         style={{ paddingLeft: RETRAIT_DEBORD, marginBottom: 6 }}
@@ -515,7 +520,10 @@ export default function PoemeDetail() {
           >
             {lignes.map((ligne, j) => (
               <React.Fragment key={j}>
-                <div style={{ ...styleVers(j === 0 && !!lettrine) }}>
+                {/* `flow-root` : le vers CONTIENT sa lettrine. Plus haute que la
+                    ligne, elle débordait sur le vers suivant, que son retrait
+                    négatif faisait alors partir à mi-chemin du flottant. */}
+                <div style={{ ...styleVers(j === 0 && !!lettrine), display: j === 0 && lettrine ? 'flow-root' : 'block' }}>
                   {j === 0 && lettrine ? (
                     <>
                       {/* La lettrine pour l'œil, le premier mot entier pour l'oreille. */}

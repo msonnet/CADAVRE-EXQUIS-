@@ -100,13 +100,19 @@ export default function PoemeDevoile({
     if (!actif || immediat) return
     const sauter = (e: Event) => { parAppui.current = e.type === 'pointerdown'; setSaute(true) }
     const ecoule = Date.now() - (leve.current ?? Date.now())
-    const fin = setTimeout(() => onFini?.(), Math.max(0, partition.fin + 240 - ecoule))
+    const retirer = () => {
+      window.removeEventListener('pointerdown', sauter, { capture: true })
+      window.removeEventListener('keydown', sauter, { capture: true })
+    }
+    // Le poème posé de lui-même, on cesse d'écouter. L'écoute survivait à la
+    // séquence : le premier appui sur COUTURES ou sur le guide « abrégeait »
+    // un poème déjà écrit, et le feuillet se remontait sous le doigt.
+    const fin = setTimeout(() => { retirer(); onFini?.() }, Math.max(0, partition.fin + 240 - ecoule))
     window.addEventListener('pointerdown', sauter, { capture: true })
     window.addEventListener('keydown', sauter, { capture: true })
     return () => {
       clearTimeout(fin)
-      window.removeEventListener('pointerdown', sauter, { capture: true })
-      window.removeEventListener('keydown', sauter, { capture: true })
+      retirer()
     }
   }, [actif, immediat, partition.fin]) // eslint-disable-line react-hooks/exhaustive-deps
 

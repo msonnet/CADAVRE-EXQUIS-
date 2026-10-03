@@ -213,6 +213,9 @@ test('le poème achevé s’ouvre sur ton vers et ses voisins', async ({ page })
   expect(ferme).toMatch(/TOUCHER POUR DÉPLIER|TOUCH TO UNFOLD/)
 
   await page.getByRole('button', { name: /Déplier le poème|Unfold the poem/ }).click()
+  // Le bouton disparaît sous le doigt : le focus ne tombe plus sur BODY, il
+  // se pose sur le titre du poème, que le lecteur d'écran annonce.
+  await expect(page.getByRole('heading', { level: 2, name: /LE POÈME ACHEVÉ|THE FINISHED POEM/ })).toBeFocused()
   // Pendant le dépli, chaque vers a deux nœuds : le dessin, et sa copie pour
   // le lecteur d'écran (`.sr-only`, la première). On regarde le dessin.
   await expect(page.getByText('le cuivre chante quand on l’oublie').last()).toBeVisible({ timeout: 15000 })

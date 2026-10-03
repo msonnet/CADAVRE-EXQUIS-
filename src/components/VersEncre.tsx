@@ -78,7 +78,9 @@ export default function VersEncre({ texte, debut, duree, immediat, avant, lu, st
   return (
     // Le retrait des débords (`lib/composition.ts`) : la suite d'un vers trop
     // long rentre sous son début, on voit où le vers commence.
-    <span style={{ display: 'block', minHeight: '1.65em', ...styleVers(!!avant), ...style }}>
+    // `flow-root` quand la lettrine y flotte : le vers la contient, au lieu
+    // qu'elle déborde sur le vers suivant et en décale le début.
+    <span style={{ display: avant ? 'flow-root' : 'block', minHeight: '1.65em', ...styleVers(!!avant), ...style }}>
       <span className="sr-only">{lu ?? texte}</span>
       <span aria-hidden="true">
       {/*

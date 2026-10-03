@@ -269,6 +269,60 @@ test('composition : lettrine droite, débords en retrait, surface tirée de l’
   expect(mesure.fond).not.toBe('rgba(240, 228, 204, 0.25)')
 })
 
+test('le poème posé de lui-même, un appui ne remonte plus le feuillet', async ({ page }) => {
+  // L'écoute de l'appui qui abrège survivait à la séquence : toucher
+  // COUTURES, une fois le poème écrit, « abrégeait » un poème déjà posé, et
+  // le feuillet entier se remontait sous le doigt.
+  test.setTimeout(90_000)
+  await preparer(page)
+  await semer(page, { structure: 'vers-libre', vers: VERS.slice(0, 3) })
+
+  await page.goto('/fin')
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  await expect(sceller(page)).toBeVisible({ timeout: 25_000 })
+
+  const marquer = () => page.evaluate(() => {
+    const mot = document.querySelector('#feuillet-fin span[style*="clip-path"]') as (HTMLElement & { __marque?: boolean }) | null
+    if (mot) mot.__marque = true
+  })
+  const intact = () => page.evaluate(() => {
+    const mot = document.querySelector('#feuillet-fin span[style*="clip-path"]') as (HTMLElement & { __marque?: boolean }) | null
+    return mot?.__marque === true
+  })
+  await marquer()
+  await page.getByRole('button', { name: /^COUTURES$/ }).click()
+  await page.waitForTimeout(300)
+  expect(await intact(), 'le feuillet n’est pas remonté').toBe(true)
+  await expect(page.locator('#feuillet-fin [data-couture]')).toHaveCount(3)
+})
+
+test('au recueil, la lettrine reste dans son vers', async ({ page }) => {
+  // Deux lignes de haut au corps du recueil, la lettrine débordait sur le
+  // vers suivant, que son retrait négatif faisait partir à mi-chemin du
+  // flottant : « cave où dorment… » commençait quinze points plus à droite
+  // que les autres vers.
+  test.setTimeout(60_000)
+  await preparer(page)
+  await semer(page, { structure: 'atelier', vers: [VERS[1], VERS[2], VERS[4], VERS[6]] })
+
+  await page.goto('/bibliotheque/fin')
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  await page.waitForTimeout(1200)
+
+  const gauches = await page.evaluate(() => {
+    const vers = [...document.querySelectorAll<HTMLElement>('#poeme-detail > div')].slice(1)
+    return vers.map(v => {
+      const r = document.createRange()
+      r.selectNodeContents(v)
+      return Math.round(r.getClientRects()[0].left)
+    })
+  })
+  expect(gauches.length).toBe(3)
+  expect(new Set(gauches).size, `les vers partent du même bord : ${gauches}`).toBe(1)
+})
+
 test.describe('au doigt', () => {
   test.use({ hasTouch: true })
 

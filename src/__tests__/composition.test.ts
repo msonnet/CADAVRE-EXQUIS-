@@ -92,9 +92,13 @@ describe('la suite que propose le guide', () => {
     expect(t).not.toContain('ia')
   })
 
-  it('la table d’une soirée déjà à plusieurs reste telle quelle', () => {
+  it('la table d’une soirée garde ses mains à leur siège, et perd ses voix', () => {
     const soiree: Siege[] = ['humain', 'ia', 'humain', 'humain', 'vide', 'vide']
-    expect(tableAPlusieurs(soiree)).toBe(soiree)
+    // Les prénoms sont rangés par siège : une main ne change pas de place.
+    expect(tableAPlusieurs(soiree)).toEqual(['humain', 'vide', 'humain', 'humain', 'vide', 'vide'])
+    // Une main et une voix : la voix part, la seconde main s'assoit.
+    expect(tableAPlusieurs(['ia', 'humain', 'vide', 'vide', 'vide', 'vide']))
+      .toEqual(['humain', 'humain', 'vide', 'vide', 'vide', 'vide'])
   })
 
   it('le paramètre d’adresse ne demande qu’un nombre de mains plausible', () => {

@@ -168,12 +168,19 @@ export function nomsDesBandes(bandes: { joueurNumero: number; nom?: string }[]):
  *
  * Au moins `n` mains, et aucune voix : c'est la soirée entre amis, et une
  * table entièrement humaine ne coûte rien, le mur ne peut donc jamais
- * l'arrêter. Une table qui compte déjà assez de mains est rendue telle
- * quelle — ce sont celles de la dernière soirée.
+ * l'arrêter. Les mains déjà assises gardent leur siège — et avec lui leur
+ * prénom, rangé par siège ; on n'ajoute que ce qui manque, aux premières
+ * places libres. Premier jet : une table qui comptait déjà assez de mains
+ * était rendue telle quelle, voix comprises, et la promesse « aucune voix »
+ * ne tenait plus que pour la table par défaut.
  */
 export function tableAPlusieurs(sieges: Siege[], n = 2): Siege[] {
-  if (sieges.filter(s => s === 'humain').length >= n) return sieges
-  return Array.from({ length: NB_SIEGES }, (_, i) => (i < n ? 'humain' : 'vide'))
+  const t: Siege[] = Array.from({ length: NB_SIEGES }, (_, i) => (sieges[i] === 'humain' ? 'humain' : 'vide'))
+  let manque = n - t.filter(s => s === 'humain').length
+  for (let i = 0; i < t.length && manque > 0; i++) {
+    if (t[i] === 'vide') { t[i] = 'humain'; manque-- }
+  }
+  return t
 }
 
 /** Le paramètre d'adresse qui demande cette table : `/config?mains=2`. */

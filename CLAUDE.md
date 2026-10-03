@@ -1293,12 +1293,18 @@ aussi. Et au doigt, `onFini` attend que le clic synthétisé soit passé :
 sinon l'appui qui abrège, sous la carte, pressait « SCELLER » apparu entre
 le toucher et le relâcher — le piège du rabat. Le minuteur de fin ne
 repart plus de zéro quand la correction d'accord arrive en cours d'encre.
+Et l'écoute se retire quand le poème s'est posé seul : elle survivait à la
+séquence, si bien que le premier appui sur COUTURES « abrégeait » un poème
+déjà écrit et remontait le feuillet entier sous le doigt.
 
 **Le guide propose de rejouer** (`useTutoriel`, sept étapes au lieu de
 neuf). Les visites de l'IMAGE, du PARTAGE et du RECUEIL sont remplacées par
 un panneau, « La suite », et deux gestes : ENCORE UNE, et À PLUSIEURS, SUR
 CE TÉLÉPHONE — `/config?mains=2`, deux mains et aucune voix
-(`tableAPlusieurs`), donc une table que le mur n'arrête jamais. Le lien
+(`tableAPlusieurs`), donc une table que le mur n'arrête jamais. Les mains
+d'une soirée précédente gardent leur siège, donc leur prénom ; ses voix,
+elles, partent — le premier jet les gardait, et « aucune voix » ne valait
+plus que pour la table par défaut. Le lien
 discret mène au recueil et à la publication ; choisir de rejouer reprend le
 guide au recueil, si bien que le rendez-vous du poème du jour n'est pas
 perdu.
@@ -1308,11 +1314,18 @@ de l'italique, et un « L » de Bodoni penché se lisait « / e vernis ».
 Retrait des débords : la suite d'un vers rentre de 1,2 em, la lettrine
 flotte dans le retrait (le flottant est un conteneur au corps du vers :
 1,2 em au corps de la lettrine reculait trois fois trop). Le corps baisse
-d'un cran au-delà de 28 signes et à l'Atelier — onze vers en dix-sept
-lignes au lieu de vingt et une. La surface de la carte est `${encre}09`,
-comme le feuillet plié : le voile crème fixe grisait minuit et argile.
-La lettrine en deux lignes de haut, convention des revues, n'est PAS faite :
-le flottant déborderait sur le volet suivant du dépli.
+d'un cran au-delà de 28 signes et à l'Atelier — le poème d'atelier de
+l'audit tient en dix-huit lignes au lieu de vingt et une, et chaque vers se
+voit commencer. La surface de la carte est `${encre}09`, comme le feuillet
+plié : le voile crème fixe grisait minuit et argile.
+
+Le vers qui porte la lettrine la **contient** (`flow-root`). Au recueil,
+où elle fait deux lignes de haut pour un corps de 17 px, elle débordait sur
+le vers suivant, que son retrait négatif faisait partir à mi-chemin du
+flottant — « cave où dorment… » quinze points à droite des autres.
+La lettrine en deux lignes de haut à la fin de partie, convention des
+revues, n'est PAS faite : un premier vers d'une ligne — le cas des phrases
+pliées par main — laisserait un blanc sous lui.
 
 **Les coutures se posent sur le poème** (`lignesDuFeuillet`, `lib/plis.ts`).
 La forme du poème du jour : sous chaque vers, le rang et la main en petites
@@ -1333,9 +1346,14 @@ article nommé « Le poème ». **Conséquence pour les mesures** : un vers a
 DEUX nœuds texte pendant le dépli — `getByText(…).last()` est le dessin,
 et un compte d'occurrences retire d'abord les `.sr-only`.
 
+Le poème du jour hérite du doublage et du retrait ; son titre, « — LE
+POÈME ACHEVÉ — », est un `h2` qui reçoit le focus quand on déplie : le
+bouton « Déplier » disparaissait sous le doigt et le focus tombait sur BODY.
+
 **Pas fait** : les titres d'affiche des autres écrans (préparatifs,
-réglages…) ne sont pas encore des `h1`/`h2` — hors de ce groupe. Le poème
-du jour hérite du doublage et du retrait, pas encore du focus.
+réglages…) ne sont pas encore des `h1`/`h2` — hors des fichiers de ce
+groupe. Et le comportement de VoiceOver sur la copie `.sr-only` pendant le
+dépli reste à écouter sur un iPhone.
 
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
@@ -1343,7 +1361,7 @@ du jour hérite du doublage et du retrait, pas encore du focus.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (578 tests unitaires) + Playwright (95 tests E2E, FR et EN)
+- Tests : Vitest (593 tests unitaires) + Playwright (105 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

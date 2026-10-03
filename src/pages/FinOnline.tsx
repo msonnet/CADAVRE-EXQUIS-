@@ -29,6 +29,10 @@ import { api } from '../lib/apiBase'
 import { NOMS_VOIX, nomDeVoix } from '../data/voiceIds'
 import { tr, langueActuelle } from '../i18n'
 
+// Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; langue?: string | null }
 
 /** Langue d'un salon — l'historique (colonne absente ou NULL) est français. */
@@ -426,7 +430,8 @@ export default function FinOnline() {
     return (
       <motion.div
         data-couture
-        initial={{ opacity: 0, y: -2 }}
+        // Sous mouvement réduit, les coutures se posent sans cascade.
+        initial={mouvementReduit() ? false : { opacity: 0, y: -2 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08 + Math.min(j, 12) * 0.06, duration: 0.4, ease: 'easeOut' }}
         style={{ paddingLeft: RETRAIT_DEBORD, marginTop: -2, marginBottom: 8 }}
