@@ -56,7 +56,7 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] Haptique iOS : brancher `@capacitor/haptics` (`navigator.vibrate` est ignoré par le WKWebView)
 - [ ] Minuteur de tour en ligne côté serveur (une partie attend si le joueur ferme l'app)
 - [ ] Mode spectateur codé mais sans point d'entrée
-- [ ] Réactions et vues de la galerie invisibles pour l'auteur
+- [x] Réactions et vues de la galerie visibles pour l'auteur — sur son feuillet, au recueil, au Profil (voir « La galerie, une revue »)
 - [ ] `prefers-reduced-motion` : le dévoilement du poème l'honore (et le plantage
       de la page de fin est corrigé), mais les autres animations framer-motion
       ne le lisent toujours pas
@@ -308,10 +308,12 @@ Un recueil n'est pas vingt poèmes générés : c'est trois cents vers récolté
 puis assemblés à la main. Le moteur produisait dix-huit vers gardables par
 séance et il n'existait aucun moyen de les garder.
 
-- `◇ GARDER` sous chaque ligne des coutures, en fin de partie et dans la
-  bibliothèque (`src/components/BoutonRecolte.tsx`).
+- `◇ GARDER` sous chaque ligne des coutures, en fin de partie, dans la
+  bibliothèque, au poème du jour et en galerie
+  (`src/components/BoutonRecolte.tsx`).
 - `/recolte` — le carnet : les vers de toutes les séances, réordonnables à la
-  flèche, avec leur provenance, copiables et exportables en `.txt`.
+  flèche, avec leur provenance, copiables et exportables en `.txt` — et,
+  depuis le 2 octobre, reliés en feuillet du recueil (« Le carnet compose »).
 - Table Dexie `recolte` (version 4), API dans `src/db/index.ts`. L'ordre est
   celui du médium, pas celui des dates : un recueil se compose.
 
@@ -1355,13 +1357,423 @@ réglages…) ne sont pas encore des `h1`/`h2` — hors des fichiers de ce
 groupe. Et le comportement de VoiceOver sur la copie `.sr-only` pendant le
 dépli reste à écouter sur un iPhone.
 
+## Le registre des voix — 1ᵉʳ octobre
+
+Les voix n'avaient ni visage ni mémoire : un nom en italique dans les
+coutures, puis plus rien. Aucune page ne les recensait, `/voix` retombait
+sur l'accueil, et l'on ne pouvait pas retrouver celle qui avait écrit le
+vers qu'on aimait.
+
+**`/voix` — l'index des contributeurs, à la manière d'une revue.** Les
+quarante-six places sont imprimées, numérotées dans l'ordre fixe de
+`VOICE_IDS` (« N° 03 ») ; celles qu'on n'a pas rencontrées restent en
+blanc, une cote et un filet, sans nom. Une voix rencontrée porte sa
+lettrine — sa capitale en Bodoni, à l'accent, à côté du nom entier —, son
+épigraphe et le nombre de séances. **Ce n'est pas une collection** : aucun
+« sur 46 », aucune rareté, aucun badge. **`/voix/:id`** — la fiche : la
+date de la première séance, et ce qu'elle a écrit dans tes poèmes, chaque
+ligne menant au poème, coutures ouvertes.
+
+- **Tout est relu du recueil local** (`lib/registreVoix.ts`, sans Dexie) :
+  rien ne part au serveur, rien n'est écrit. Une voix ne reçoit que ce
+  qu'elle a ÉCRIT — à l'Atelier sa case, posée dans son vers à l'accent ;
+  la réserve n'est à personne.
+- **La même voix sous trois écritures.** Le cadavre écrit, le salon et le
+  poème du jour gardent l'IDENTIFIANT (« meteorologue »), l'Atelier le NOM
+  affiché, dans la langue de la séance. `idDeVoix` les réunit, casse et
+  apostrophe ignorées.
+- **Les épigraphes** (`data/epigraphes.ts`) sont écrites à la main : un
+  métier, un lieu, un objet. Elles ne paraphrasent JAMAIS l'enjeu, qui est
+  le non-dit de la voix — `epigraphes.test.ts` le vérifie mot à mot contre
+  `api/_voices.ts`. Les personas ne sont pas touchées.
+- **L'entrée** vit dans la bibliothèque sous celle du carnet, et comme elle
+  n'apparaît que si une voix a écrit dans un poème du recueil.
+- **Les coutures du recueil** (`PoemeDetail`, `LienVoix`) font de chaque nom
+  de voix un lien vers sa fiche. Pas en fin de partie : c'est encore le
+  moment du dévoilement.
+- **Pas de choix de voix à la table.** Le tirage et la fenêtre de vingt
+  parties restent la règle, l'anonymat de l'Atelier jusqu'au dernier vers
+  aussi.
+
+**Corrigé au passage :** les coutures du cadavre écrit annonçaient
+« voix · meteorologue » — l'identifiant nu, sans article ni accent — et la
+fin d'un salon « via chimiste ». `nomAffiche` rend le nom, **dans la langue
+courante** : en anglais, les coutures d'un Atelier joué en français disaient
+« Le météorologue » et la fiche voisine « The meteorologist ». Un nom déjà
+écrit dans la bonne langue garde sa graphie.
+
+**Le contradicteur, et ce qu'il a mesuré au doigt.**
+- **Deux noms empilés se volaient leurs appuis.** La zone de 44 px venait
+  du `::after` global, centré sur un nom haut de 17 px : à 24 px d'écart,
+  la zone du nom suivant couvrait la moitié basse du précédent — 28 % de
+  « Le météorologue » ouvrait la fiche du graveur. `LienVoix` porte
+  désormais ses 44 px dans sa propre boîte (bloc en ligne, douze pixels
+  de marge intérieure, sans coupure), et les lignes de `MainsDuVers`
+  prennent la hauteur d'une cible. **Mesurer la TAILLE des zones ne
+  suffisait pas** : `registre-voix.spec.ts` balaie maintenant chaque nom
+  par `elementFromPoint` et exige que chaque point mène à ce nom-là.
+- La fiche soulignait la PREMIÈRE occurrence du texte de la voix — sur
+  « le le le », le mot d'une autre main. Le registre calcule `debut` en
+  suivant l'ordre des mains ; une case introuvable n'est pas soulignée.
+- `/voix/%25` déchirait le carnet : le paramètre était décodé deux fois.
+- La dernière place du registre s'écrivait sous « rêvé à … » : une marge
+  basse de 48 px sert de pied de page.
+
+## La galerie, une revue — 1ᵉʳ octobre
+
+La vitrine publique se lisait comme un fil de réseau social. Relevé avant :
+un titre de repli fait des cases collées par « · » et coupé à 48 signes
+(« le vernis · craquelé · avale · une lampe… »), un corps à UN FRAGMENT PAR
+LIGNE — le défaut que le lot 11 avait corrigé au recueil, resté entier
+ici —, des boîtes à filet avec un « + », des réactions 🌙 et un œil 👁 qui
+sortent en pictogrammes jaunes sur iOS, et des dessins en vignettes de
+120 px dans un cadre blanc. Les coutures étaient dans la publication et ne
+s'affichaient nulle part.
+
+- **Un sommaire** (`components/EntreeGalerie.tsx`). Le titre, ou faute de
+  titre l'incipit ENTIER, en Playfair italique ; la signature en petites
+  capitales, « — MIREILLE · 29 SEPTEMBRE » ; un filet fin. Toucher le titre
+  ouvre le poème recousu par `reconstruirePoeme`, débords en retrait. Un
+  poème d'une seule ligne n'est pas écrit deux fois.
+- **Les coutures, lues par un inconnu** (`attributionPubliee`). Au recueil
+  une case humaine dit « toi » ; en galerie « toi » désignerait le LECTEUR.
+  La main qui publie reprend donc son nom, les voix et les mains de salon
+  se disent comme au recueil. Une case sans auteur (les anciennes
+  publications de salon) dit « une main » : l'attribuer serait inventer.
+- **Des signes, pas des emoji.** ☾ ✦ ❀ ⁂, chacun avec son mot en petites
+  capitales ; la légende d'en tête est retirée. **Les clés en base ne
+  changent pas** — « 🌙 » reste la valeur écrite, seul l'imprimé change, et
+  les réactions passées restent comptées. « 🜔 » n'est dessiné par aucune
+  des trois familles : le repli système en faisait « ⊖ », un signe moins.
+  Les vues deviennent « 14 LECTURES », et zéro se tait.
+- **Les dessins en planche** : deux colonnes à hauteur entière, légendées
+  « PL. III — MIREILLE ». Ouverte, la planche **ne bouge pas** : ses
+  détails s'ouvrent sous la rangée (voir plus bas).
+- **La semaine des lecteurs** : trois poèmes retenus par les réactions des
+  sept derniers jours, en tête, sans afficher de compte — un classement
+  chiffré ferait un palmarès. Une panne n'affiche rien.
+- **Les poèmes du jour**, second titre du sommaire, ajouté après coup —
+  le premier passage s'était arrêté à la semaine. Les trois derniers
+  numéros scellés, dans la langue active : leur amorce en italique et leur
+  date, ni vers ni mains comptés. Chacun mène à `/poeme-du-jour?jour=…`,
+  qui ouvre CE jour plié, comme l'almanach ; un jour inconnu retombe sur le
+  dernier. Avant, la galerie ne menait qu'à la journée en cours, et les
+  seuls poèmes du jeu écrits par une foule n'y figuraient nulle part.
+- **`/u/Anonyme` n'existe plus** : la page cherchait par `ilike` et
+  rassemblait tous ceux qui avaient publié sans compte. Le pseudo est
+  échappé (`motifExact`) : « M_reille » ouvrait la page de Mireille.
+- ⚑ et ⊘ restent dans l'état déplié ; le filtre de langue ne bouge pas. La
+  recherche lit aussi le poème — chercher « baleine » ne trouvait pas « la
+  baleine infirme », faute de titre.
+
+### Le feuillet sait qu'il a été publié
+
+La cause était plus basse que « réactions invisibles » : `publierPoeme` ne
+rendait rien, `PoemeDetail` remettait `published` à faux au bout de deux
+secondes, et le même poème pouvait partir trois fois en galerie.
+
+- `publierPoeme` / `publierDessin` rendent un `LienPublication` (`id`,
+  `date`), rangé dans le feuillet Dexie (`marquerPublie`). Le bouton cède la
+  place à « ✓ PUBLIÉ EN GALERIE LE 22 SEPTEMBRE » et à ce que la publication
+  a reçu (`MentionPublication`). Une publication que la base n'a plus —
+  retirée par son auteur ou par la modération — détache le feuillet, et le
+  bouton revient.
+- **Le recueil** porte « ☾ 3 · 12 LECTURES » sous chaque carte publiée, et
+  une ligne **LE COURRIER** dit ce qui est NOUVEAU depuis le dernier
+  passage (relevé local `courrier-releve`). « depuis ton dernier passage »
+  seulement s'il y a eu un passage relevé. Deux requêtes, quel que soit le
+  nombre de feuillets.
+- **Le Profil** liste ses publications — par `author_id`, un pseudo se
+  change — et mène enfin à sa propre page `/u/…`.
+- Rouvrir sa propre publication ne compte plus une lecture : c'est
+  exactement le chiffre qu'on montre désormais à l'auteur.
+- **Le salon publie ses coutures** : les cases partaient réduites à leur
+  texte, un poème à quatre mains paraissait écrit par qui l'avait publié. Il
+  part tel que le recueil le garde (`poemeDuSalon`), noms de plume compris,
+  dans la langue de la table. Le dessin publié porte enfin `author_id` : son
+  auteur ne pouvait pas le retirer.
+
+**Trois silences, comme le solde de l'encrier** : registre muet, aucun
+identifiant rendu, rien reçu — on ne montre jamais un chiffre qu'on n'a pas
+lu. **Aucune migration** : `views_count`, `gallery_reactions` et la
+lecture publique de `gallery` existent depuis le 27 mai.
+`galerie.test.ts` et `e2e/galerie.spec.ts` le tiennent.
+
+### Ce que la relecture a trouvé
+
+- **Le nom volait le bas du titre.** La zone d'appui de 44 px, centrée sur
+  une signature posée à 4 px sous le titre, remontait de treize pixels sur
+  lui et l'emportait — elle vient après dans le document. Mesuré à 390 :
+  toucher le bas de l'incipit ouvrait `/u/Mireille`, quatre entrées sur
+  cinq. `a.lien-signature::after` s'étend vers le BAS seulement ; le poème
+  ouvert et les détails de planche, positionnés, passent au-dessus d'elle.
+- **La planche se réordonnait sous le doigt.** Pleine largeur à
+  l'ouverture et `row dense` : toucher PL. II la faisait quitter sa case,
+  PL. III y remontait, et le dessin revenait dessous à 860 px de haut.
+  `Planches` insère les détails APRÈS la rangée, sans `dense` ;
+  l'agrandissement passe par la visionneuse.
+- **La semaine des lecteurs ne compte que ce qui compte** : les quatre
+  réactions du jeu, une fois par lecteur et par publication. L'insertion
+  est ouverte et `emoji` est un texte libre — cent lignes inventées
+  hissaient un poème en tête. Cela borne la fraude sans l'empêcher (voir
+  hors du code). Une publication supprimée quitte aussi ce sommaire.
+- **`*` est un joker chez PostgREST** dans `ilike`, et aucun échappement
+  ne l'en empêche : `/u/M*` rassemblait les M. Il devient `_`, et la page
+  relit chaque ligne par `memePseudo`.
+- **La fin d'un salon relit son feuillet.** `publishedGallery` repartait de
+  faux à chaque montage : recharger rendait « ✦ GALERIE », et le poème
+  repartait. Le dessin a désormais un feuillet par salon
+  (`idDessinSalon`) ; publié, il entre au recueil avec son lien, comme le
+  poème du salon y entre sans geste.
+
+## Le partage — une porte, et une affiche qui tient — 1ᵉʳ octobre
+
+Le partage est le seul objet du jeu vu HORS du jeu, et il ne menait nulle
+part. Mesuré en générant pour de vrai l'affiche et la vidéo dans Chromium :
+la vidéo calculait l'invitation et ne la dessinait jamais ; la feuille de
+partage ne recevait qu'un fichier et un titre — sur une messagerie, rien sur
+quoi appuyer ; l'invitation, « Ajoute ta main au cadavre. », était en dur en
+français et sortait telle quelle sur l'affiche anglaise ; et un lien collé
+dans une conversation s'affichait en adresse nue.
+
+- **L'invitation mène au poème du jour** — « Ajoute ta main au poème du
+  jour. » / « Add your hand to today's poem. » : le seul lieu où un inconnu
+  peut ajouter sa main le jour même, sans compte ni salon. Elle se pose dans
+  la dernière seconde et demie de la vidéo, une fois le dernier vers écrit :
+  la miniature reste au poème.
+- **La feuille emporte un texte** (`texteAccompagnant`) : l'invitation et
+  `lienPublic('/poeme-du-jour')`. Sans feuille de partage, le presse-papiers
+  reçoit le poème PUIS l'invitation et le lien. `partagerStory` passe
+  directement par `emporterFichier` : `partagerImage` aurait récrit le
+  presse-papiers derrière `usePartage`.
+- **L'adresse imprimée vient de `PROD_API`**, et non plus d'une seconde
+  copie du domaine dans `partager.ts`. Les balises de `index.html`, qui ne
+  peuvent pas l'importer, sont tenues d'accord avec elle par un test.
+- **L'aperçu du lien** : `og:*` et `twitter:*` en dur dans `index.html` —
+  les robots ne lisent pas le JavaScript —, image ABSOLUE,
+  `public/og-image.png` en 1 200 × 630 : l'Œil cousu et le nom, sur noir pur,
+  centrés, parce que WhatsApp recadre au carré. Écartée du précache.
+  **Pas d'`og:url`**, et c'est voulu : toutes les routes servent ce même
+  fichier, et Facebook ou LinkedIn prennent `og:url` pour l'adresse de la
+  carte — un lien `/salon/KX7Q` s'y regroupait sous la racine, code perdu.
+  Sans lui, le robot garde l'adresse qu'il a chargée. La description reste
+  en français : un HTML statique n'a qu'une langue.
+- **L'écran d'entrée annonce la destination** (`destinationEntree`). Arrivé
+  par `/poeme-du-jour`, `/salon/KX7Q` ou `/online?salon=KX7Q`, le rideau dit
+  « LE POÈME DU JOUR » ou « SALON KX7Q » au lieu de « TOUCHER POUR ENTRER »,
+  et se lève en 3 s au lieu de 4,2. On ne le saute pas : c'est la première
+  seconde d'un nouveau venu, et elle porte l'identité.
+
+**L'affiche se recompose sur une grille** (`lib/affiche.ts`). Avant : le
+poème illustré posé dans 520–820, l'image SOUS lui jusqu'à 1860 — un poème
+de trois vers entrait dans le passe-partout, la marque s'imprimait sur
+l'illustration, l'invitation (1888) sur l'adresse (1882), toutes deux sur le
+filet du cadre. Et l'en-tête à 192, la marque dans 1770–1882 : exactement ce
+qu'une story recouvre, barre de progression en haut, champ de réponse en
+bas, environ 250 px de chaque côté.
+
+- **Tout ce qui se lit tient dans 250–1670.** Le cadre reste au bord : c'est
+  un ornement. En-tête, invitation et marque à des ordonnées fixes (`Y`),
+  les mêmes pour l'affiche et la vidéo.
+- **Le poème illustré est une planche et sa légende** : l'image d'abord, le
+  poème dessous, et l'image a la PRIORITÉ. Premier jet : le poème se
+  mesurait d'abord et l'image prenait le reste, au plancher de 460 px —
+  titre, trois vers et une 3:4 sortaient en 418 × 557, un timbre, 36 % de
+  la surface d'avant la grille. Le contradicteur l'a vu sur les affiches
+  régénérées. Désormais l'image vise 760 px (`IMAGE_CIBLE`) et ne descend
+  jamais sous 620 (`IMAGE_MIN`) ; le poème prend le plus grand corps qui la
+  laisse à sa cible (46, 40), sinon 34, et se coupe sur « […] » plutôt que
+  de la rogner. Le titre de la planche perd son filet — le passe-partout,
+  juste dessous, sépare déjà — et la planche remonte de 16 px vers
+  l'en-tête. Mesuré : titre et trois vers **518 × 691** (1,5 fois la
+  surface du premier jet) ; trois vers sans titre 591 × 788 ; un vers seul
+  673 × 897. La contrepartie est assumée : un long poème illustré montre
+  trois à cinq vers avant « […] », deux sous un titre de deux lignes. La
+  lettrine cède sa place à l'image — voir plus bas.
+- **Le contenu se pose au tiers optique**, pas au centre : un vers seul ne
+  flotte plus au milieu de 700 px de papier.
+- **Le filet de pli passe dans le blanc** entre deux lignes. Il était posé à
+  une demi-interligne sous la ligne de base, donc dans les hampes de la
+  ligne suivante — il barrait le « p » de « paupière », sur l'affiche comme
+  dans la vidéo.
+- Le libellé « — LECTURE — » de l'affiche d'un dessin restait en français ;
+  la vidéo le traduisait déjà.
+- **L'invitation se lit sur une image sombre.** Son accent était ramené à
+  4,5:1 sur la couleur du VOILE, puis fondu à 80 % ; or à sa hauteur le voile
+  n'est qu'à moitié opaque et l'image passe à travers : mesuré 3,0:1 sur la
+  dernière image de la vidéo, la ligne la plus terne pour la phrase qu'on
+  veut faire lire. En surimpression elle est tracée pleine, et son accent se
+  règle sur la bande réellement peinte dessous (`accentSurImage`, lue une
+  fois, au neuvième décile) : 4,6:1 au même relevé.
+- **La lettrine garde son blanc** (`LETTRINE_ECART = 60`). La grille pose
+  un vers à la hauteur de ses hampes, l'ancienne mise en page une
+  interligne plus bas : au premier passage, 23 px seulement séparaient le
+  pied du « L » de « la cire », qui semblait posé dessus. Vu sur l'affiche
+  générée, pas déduit.
+
+`affiche.test.ts` balaie huit poèmes × trois titres × cinq images (aucune
+boîte ne se recouvre, toutes dans la zone sûre), la vidéo et sa
+surimpression comme l'affiche. `partage-affiche.spec.ts` relève chaque
+`fillText` réellement tracé, avec sa boîte d'encre, et chaque image posée —
+pour l'affiche, et pour la DERNIÈRE image de la vidéo. Ses six mesures
+échouent sur l'ancien code. `apercuLien.test.ts` lit `index.html`.
+
+**Décision d'identité, prudente et réversible** : sur une affiche illustrée,
+plus de lettrine — sous une planche, une capitale de 240 px ferait un second
+titre et coûterait 200 px d'image. Sans illustration elle reste. Ni de filet
+sous le titre de la planche. Les 800 px demandés AVEC un titre ne tiennent
+pas dans la zone sûre : 1 032 px de contenu, dont le titre en prend 120, le
+passe-partout 56, l'écart 44 et trois vers 137. L'alternative serait de
+donner l'en-tête à la planche — monter l'image à 300 et passer le
+« N° 098 · MMXXVI » dessous, comme le numéro d'une planche de livre :
+environ 730 px au lieu de 691, pour déplacer la seule ligne commune à
+toutes les affiches. Non faite. Le domaine
+`-beta.vercel.app` reste aussi : il n'y en a pas d'autre, mais le jour où il
+change, c'est `PROD_API` et les balises Open Graph.
+
+**Non mesuré** : sur iOS, une feuille de partage qui reçoit un fichier ET un
+texte peut proposer moins de destinations (« Enregistrer la vidéo »). C'est
+l'appareil qui le dira.
+
+## Le carnet compose — 2 octobre
+
+Le carnet portait l'ambition du recueil — « trois cents vers récoltés puis
+assemblés à la main » — et ne l'outillait pas. Deux flèches d'un rang :
+remonter le 280ᵉ vers en tête coûtait 279 appuis. Une seule sortie, un
+`.txt` : le vers assemblé ne devenait ni feuillet, ni affiche, ni
+publication. Relevé avant : aucun chemin du carnet vers le recueil.
+
+- **« COMPOSER »** (`Recolte.tsx`, cerné et non plein) ouvre un second
+  régime. On touche les vers **dans l'ordre du poème** : l'ordre du toucher
+  fait l'ordre du feuillet, le rang s'écrit dans la marge. Le vers du fond
+  du carnet touché en premier ouvre le poème, sans un déplacement. La barre
+  ANNULER / RELIRE est fixe — sur trois cents vers, elle doit rester sous
+  le pouce.
+- **Deux temps, pas un.** La relecture montre le feuillet d'un seul tenant,
+  avec sous chaque vers la couture qu'il portera ; ↑ ↓ pour corriger
+  l'ordre, ÔTER pour l'écarter. Un feuillet compte **deux vers au moins**
+  (`PLANCHER_FEUILLET`) : un seul n'est que ce vers.
+- **« RELIER EN FEUILLET »** (`relierEnFeuillet`, `lib/reliure.ts`)
+  crée un **vers libre** du recueil, `origine: 'carnet'`. Il hérite de tout :
+  dépli, affiche, illustration, galerie. La carte et l'en-tête disent
+  **« RECUEILLI PAR TOI »** à la place de la structure.
+- **Les coutures sont les provenances** : la date et le titre du poème
+  d'origine à la place de la fonction, la signature gardée avec le vers à
+  la place de l'auteur (`Case.signature`). `attributionEnMorceaux` la
+  recoupe aux « · » : les noms de voix redeviennent des liens, mais
+  seulement si TOUS en sont — un pseudo peut contenir le séparateur.
+- **Relier copie.** Le carnet n'est pas touché ; un vers sert à deux
+  feuillets, et deux reliures font deux poèmes.
+- **Le carnet garde l'auteur** (`VersRecolte.auteur`), parce que le `.txt`
+  du recueil appose la mention de l'IA d'après lui. Pour les vers gardés
+  avant, `auteurDuVers` le retrouve dans le poème d'origine, puis par le
+  compte de voix de l'Atelier ; faute de tout, seul un vers signé « toi »
+  passe pour humain. Dans le doute la mention est due.
+- **◇ GARDER au poème du jour**, dans la ligne des coutures, en petites
+  capitales sans cadre (`BoutonRecolte compact`). Le carnet ne récoltait que
+  ses propres coutures, alors que les vers des AUTRES font les meilleurs
+  assemblages — et un visiteur qui n'a rien écrit n'emporte pas le poème.
+  Le bouton arrête son clic : sans cela, toucher ◇ touchait aussi la
+  feuille, qui démontait les coutures — et le bouton avec.
+
+### La reprise — ce que la relecture contradictoire a trouvé
+
+- **« toi » imprimé à chaque visiteur.** Un feuillet relié publié en galerie
+  disait « 14 SEPTEMBRE 2026 — toi » à qui le lisait : la branche de la
+  signature, posée en tête d'`attributionEnMorceaux`, court-circuitait
+  `attributionPubliee`, qui remplace « toi » par le nom de celui qui publie.
+  Mesuré : `{ texte: 'toi' }` pour un vers signé « toi », « toi et 3 voix »
+  pour un vers d'Atelier.
+- **La couture figée dans la langue de la reliure.** `fonction` portait la
+  date déjà écrite en français, la signature « toi » ou « voix 2 ». La case
+  garde désormais `provenance` en DONNÉES (date, titre), composée à
+  l'affichage par `fonctionDeCase` ; la tête de signature se relit
+  (`attributionSignee`) et se récrit dans la langue courante — `moi`, quand
+  il est donné, prend la place de « toi ». Seuls les titres que l'app donne
+  elle-même (« Poème du jour ») se traduisent ; un pseudo ne se traduit
+  jamais.
+- **◇ GARDER en galerie**, sous chaque ligne des coutures, forme compacte.
+  Le bouton ne touche pas la planche : `CouturesPubliees` rendait déjà une
+  ligne par vers. La signature gardée est celle que la ligne imprime — le
+  nom de l'auteur, jamais « toi ».
+- **Un feuillet relié ne propose plus de garder ses vers** : ils sont au
+  carnet par construction. « ◆ GARDÉ » partout invitait à les retirer, et
+  le second appui les réécrivait sous la date du feuillet, sans titre.
+- **« EN TÊTE »** à la relecture, à côté de ↑ ↓ : sur trente vers, remonter
+  le dernier coûtait vingt-neuf appuis. Une reliure ratée le dit
+  maintenant, au lieu de rallumer le bouton en silence.
+- **Le parcours du poème du jour gardait l'ajout du bouton, pas la
+  non-propagation** : la sortie animée des coutures dure 0,2 s, et
+  l'assertion passait pendant. Il attend désormais au-delà, et lit
+  `aria-pressed` de « ⟡ COUTURES ».
+
+### La fin du chantier — 3 octobre
+
+- **« EN TÊTE » dans le carnet lui-même.** On l'avait laissé aux flèches
+  d'un cran, au motif que composer passe par le toucher. Mais l'ordre du
+  carnet est celui que COPIER et FICHIER emportent : le 280ᵉ vers y coûtait
+  encore 279 appuis. `mettreEnTeteDeLaRecolte` lui donne un rang sous le
+  plus petit — une seule écriture, comme les flèches, les autres ne bougent
+  pas. La ligne passe à la ligne (`flex-wrap`) : à 320 points, cinq gestes
+  n'y tiennent plus, LE POÈME descend plutôt que de sortir de l'écran.
+- **◇ GARDER au salon** (`FinOnline`, coutures de l'écrit). Le constat
+  nommait trois lieux où les vers des autres se lisent ; le salon était le
+  dernier sans bouton — il fallait sortir au recueil pour garder un vers lu
+  à table. La signature est celle du **feuillet que le recueil garde** du
+  salon (`attribution` de sa case) : un vers gardé à table et le même gardé
+  au recueil portent la même couture. Le bouton n'est posé qu'une fois ce
+  feuillet relu — le lien vers le poème doit mener quelque part.
+
+`composition.test.ts` (24 mesures, dont la reliure sous Dexie, la galerie,
+l'autre langue et l'ordre du carnet) et quatre parcours (`carnet.spec.ts`,
+`galerie.spec.ts`, `poeme-du-jour.spec.ts`, `salon-recolte.spec.ts`)
+échouent sur l'ancien code. Le dernier bouchonne Supabase par un
+**prédicat d'hôte** : le motif `**/supabase.co/**` des autres parcours ne
+prend pas `placeholder.supabase.co` (il exige une barre avant
+« supabase »), il ne bouchonnait donc rien.
+
+## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
+
+L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
+commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
+
+**Non faits (constats gardés par les contradicteurs) :**
+- En ligne : le signal « la main te revient » qui sonne quand ce n'est pas
+  ton tour ; revenir par le code dans une partie commencée ; le bouton
+  « ✦ IA » mort en production ; l'écran de tour moins soigné que le jeu
+  local ; salons publics par défaut, et aucun moyen d'exclure un joueur.
+- Dessin : trait perlé ou haché ; le dessin ni gardé d'office ni signé par
+  ses mains ; la lecture qui échoue à cinq bandes ; la lecture sans voix
+  nommée.
+- Le corps du texte (réglage CORPS en natif), le vocabulaire du toucher
+  (`@capacitor/haptics`), les pages qui ne se tournent pas.
+- Classement 4+ : images au nu autorisé (FLUX, `safety_tolerance`) et
+  aucun filtre sur les vers du poème du jour ni sur les pseudonymes.
+- Les feuillets tournants (une partie à plusieurs, ou une classe de
+  vingt-cinq) ; le lexique anglais fixé ; la fiche anglaise des magasins ;
+  les captures de la vitrine d'installation, qui montrent un sablier.
+
+**Hors du code, relevés par les agents :**
+- Relire les textes écrits à la main : les 46 épigraphes du registre
+  (`src/data/epigraphes.ts`) et les 1 380 fragments de la réserve par voix
+  (`src/data/reserveVoix.ts`).
+- Galerie : `gallery_reactions` laisse n'importe qui insérer et effacer
+  n'importe quelle réaction (`WITH CHECK (TRUE)`, `USING (TRUE)`). Depuis
+  que l'auteur voit ses lectures et ses réactions, ces chiffres peuvent
+  être gonflés ou effacés : à durcir par une migration.
+- La Bodoni Moda auto-hébergée n'a pas de dessin pour le trait d'union
+  ASCII ni le tiret demi-cadratin (contourné pour les prénoms par U+2010).
+- Au déploiement : vérifier l'aperçu des liens partagés (Facebook Sharing
+  Debugger, WhatsApp, iMessage). Le jour du domaine définitif, changer
+  `PROD_API` et les images Open Graph d'`index.html`.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (593 tests unitaires) + Playwright (105 tests E2E, FR et EN)
+- Tests : Vitest (717 tests unitaires) + Playwright (137 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

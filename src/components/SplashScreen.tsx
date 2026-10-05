@@ -2,6 +2,7 @@ import { Fragment, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReve } from '../reve'
 import { tr } from '../i18n'
+import { destinationEntree, type Destination } from '../lib/invitation'
 
 const LINE1 = tr('Chaque fragment ignore les autres.', 'Each fragment is blind to the others.')
 
@@ -14,13 +15,29 @@ const reduced =
 // démarrage — restait bloqué sur un rideau opaque dont l'invite n'apparaissait
 // qu'au bout de 3,2 s, en 12 px à 30 % d'opacité.
 const DUREE_VOILE = 4200
+// Arrivé par un lien partagé, on sait déjà où l'on va : le rideau le dit et
+// se lève plus tôt. Assez pour lire les deux lignes, pas pour les attendre.
+const DUREE_VOILE_LIEN = 3000
+
+function libelleDestination(d: Destination): string {
+  return d.genre === 'jour'
+    ? tr('Le poème du jour', "Today's poem")
+    : tr(`Salon ${d.code}`, `Room ${d.code}`)
+}
+
+function lireDestination(): Destination | null {
+  if (typeof window === 'undefined') return null
+  return destinationEntree(window.location.pathname, window.location.search)
+}
 
 export default function SplashScreen() {
   const seance = useReve()
   const [visible, setVisible] = useState(true)
+  // Lu une fois, au montage : le rideau n'appartient qu'à l'arrivée.
+  const [destination] = useState(lireDestination)
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(false), DUREE_VOILE)
+    const t = setTimeout(() => setVisible(false), destination ? DUREE_VOILE_LIEN : DUREE_VOILE)
     return () => clearTimeout(t)
   }, [])
 
@@ -40,7 +57,9 @@ export default function SplashScreen() {
           onClick={() => setVisible(false)}
           role="button"
           tabIndex={0}
-          aria-label={tr('Entrer dans le jeu', 'Enter the game')}
+          aria-label={destination
+            ? `${tr('Entrer dans le jeu', 'Enter the game')} — ${libelleDestination(destination)}`
+            : tr('Entrer dans le jeu', 'Enter the game')}
           onKeyDown={e => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setVisible(false) }
           }}
@@ -152,11 +171,12 @@ export default function SplashScreen() {
             </motion.div>
           </div>
 
-          {/* Invite discrète */}
+          {/* Invite discrète — ou, arrivé par un lien, la destination */}
           <motion.div
+            data-destination={destination?.genre}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.55 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
+            animate={{ opacity: destination ? 0.8 : 0.55 }}
+            transition={{ delay: destination ? 0.4 : 1.2, duration: destination ? 0.5 : 0.8 }}
             style={{
               position: 'absolute',
               bottom: 'max(48px, var(--sa-bottom))',
@@ -165,7 +185,7 @@ export default function SplashScreen() {
               color: encre,
             }}
           >
-            {tr('Toucher pour entrer', 'Tap to enter')}
+            {destination ? libelleDestination(destination) : tr('Toucher pour entrer', 'Tap to enter')}
           </motion.div>
         </motion.div>
       )}

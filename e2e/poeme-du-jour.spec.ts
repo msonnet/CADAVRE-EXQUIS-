@@ -318,6 +318,41 @@ test('un visiteur qui n’a rien écrit ne s’en voit rien ajouter', async ({ p
   expect(await page.getByText('la porte bat dans le grenier').count()).toBe(0)
 })
 
+test('un vers d’une autre main se garde au carnet', async ({ page }) => {
+  // Le carnet ne récoltait que ses propres coutures — fin de partie et
+  // recueil. Or ce sont les vers des autres qui font les meilleurs
+  // assemblages, et un visiteur qui n'a rien écrit n'emporte pas le poème.
+  await sessionDe(page, 'moi')
+  await page.addInitScript(() => {
+    localStorage.setItem('cadavre-jour-deplie', '2026-09-20')
+  })
+  await poser(page, { hier: true })
+  await page.route('**/rest/v1/jour_vers**', r => r.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify(VERS_SCELLES.map(v => ({ ...v, main_id: v.main_id === 'moi' ? 'autre-4' : v.main_id }))),
+  }))
+  await ouvrir(page)
+  await expect(page.getByText('un drap glisse le long du couloir')).toBeVisible()
+
+  const garder = page.getByRole('button', { name: /Garder ce vers dans le carnet|Keep this line in the notebook/ })
+  await expect(garder).toHaveCount(5)
+  await garder.nth(3).click()
+  // Le geste ne touche pas la feuille : les coutures restent montées. On le
+  // lit APRÈS leur sortie animée (0,2 s) — lu pendant, le texte est encore
+  // là et l'assertion passait même quand le clic les avait démontées.
+  await page.waitForTimeout(600)
+  await expect(page.getByRole('button', { name: /COUTURES|SEAMS/ })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText(/4 · DESNOS/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Retirer ce vers du carnet|Remove this line from the notebook/ })).toHaveCount(1)
+
+  await page.goto('/recolte')
+  await page.waitForLoadState('networkidle')
+  await franchir(page)
+  await expect(page.getByText('un drap glisse le long du couloir')).toBeVisible()
+  await page.getByRole('button', { name: /SOURCES/ }).click()
+  await expect(page.getByText(/Desnos · 20 septembre 2026 · Poème du jour|Desnos · 20 September 2026 · Poem of the day/)).toBeVisible()
+})
+
 test('l’almanach garde les jours d’avant, et chacun s’ouvre plié', async ({ page }) => {
   // Avant, seul le poème de la veille se relisait : un jour manqué, et le
   // poème d'avant-hier n'existait plus nulle part.
@@ -360,4 +395,93 @@ test('l’almanach garde les jours d’avant, et chacun s’ouvre plié', async 
   // Et l'on revient au dernier.
   await page.getByRole('button', { name: /LE DERNIER|THE LATEST/ }).click()
   await expect(page.getByText(/— LE POÈME ACHEVÉ —|— THE FINISHED POEM —/)).toBeVisible()
+})
+
+test.describe('le rendez-vous, vu de Paris', () => {
+  // Le fuseau du joueur, et non celui de la machine de mesure : « minuit »
+  // n'était juste qu'à Greenwich.
+  test.use({ timezoneId: 'Europe/Paris' })
+
+  test('après sa main : l’heure d’ici, et une suite — l’écran n’est plus une impasse', async ({ page }) => {
+    await poser(page)
+    await ouvrir(page)
+    await page.getByLabel(/Ton vers|Your line/).fill('le sel dort dans les poches')
+    await page.getByRole('button', { name: /Donner ma main|Give my hand/ }).click()
+    await expect(page.getByText(/— TON VERS —|— YOUR LINE —/)).toBeVisible()
+
+    const vu = await page.evaluate(() => document.body.innerText)
+    expect(vu, 'minuit UTC tombe à 2 h à Paris en septembre').not.toMatch(/à minuit|at midnight/)
+    expect(vu).toMatch(/se referme à 2 h|closes at 2 AM/)
+    // Sur le web, rien ne notifie : on ne propose pas ce qu'on ne peut pas tenir.
+    expect(vu).not.toMatch(/M’ÉCRIRE|TELL ME WHEN/)
+
+    await page.getByRole('button', { name: /EN ATTENDANT — UN CADAVRE ÉCRIT|IN THE MEANTIME — A WRITTEN CADAVRE/ }).click()
+    await expect(page).toHaveURL(/\/config$/, { timeout: 5000 })
+  })
+})
+
+test('le sceau de l’accueil dit que ta main est posée', async ({ page }) => {
+  // Le commentaire promettait « ✧ en attente, ✦ une fois écrit » ; le
+  // glyphe était ✧ en dur.
+  const aujourdhui = new Date().toISOString().slice(0, 10)
+  await poser(page, { etat: { jour: aujourdhui } })
+  await ouvrir(page, '/')
+  const sceau = page.getByRole('button', { name: /poème du jour|poem of the day/i })
+  await expect(sceau).toContainText('✧')
+
+  await ouvrir(page)
+  await page.getByLabel(/Ton vers|Your line/).fill('le sel dort dans les poches')
+  await page.getByRole('button', { name: /Donner ma main|Give my hand/ }).click()
+  await expect(page.getByText(/— TON VERS —|— YOUR LINE —/)).toBeVisible()
+
+  await page.goto('/')
+  await page.waitForLoadState('networkidle')
+  await expect(sceau).toContainText('✦')
+  await expect(sceau).toHaveAttribute('aria-label', /ta main est posée|your hand is in/)
+})
+
+test('l’accueil annonce le poème achevé où l’on a écrit, jusqu’à ce qu’on le déplie', async ({ page }) => {
+  await sessionDe(page, 'moi')
+  // Une main posée le 20 septembre, dans les deux langues.
+  await page.addInitScript(() => {
+    const main = { jour: '2026-09-20', rang: 3, pose: Date.parse('2026-09-20T18:00:00Z') }
+    localStorage.setItem('cadavre-jour-mains', JSON.stringify({ fr: main, en: main }))
+  })
+  await poser(page, { hier: true })
+  await ouvrir(page, '/')
+
+  const ligne = page.getByRole('button', { name: /EST ACHEVÉ|IS FINISHED/ })
+  await expect(ligne).toBeVisible()
+  await ligne.click()
+  await expect(page).toHaveURL(/\/poeme-du-jour\?jour=2026-09-20$/, { timeout: 5000 })
+
+  await page.getByRole('button', { name: /Déplier le poème|Unfold the poem/ }).click()
+  await expect(page.getByRole('button', { name: /COUTURES|SEAMS/ })).toBeVisible({ timeout: 15000 })
+
+  await page.goto('/')
+  await page.waitForLoadState('networkidle')
+  await page.waitForTimeout(600)
+  await expect(page.getByRole('button', { name: /EST ACHEVÉ|IS FINISHED/ }), 'lu : la ligne s’éteint').toHaveCount(0)
+})
+
+test('un registre pendu rend la main, et le poème gardé s’affiche sans attendre', async ({ page }) => {
+  // Réseau pendu — le train, le tunnel —, l'étoile tournait encore après
+  // 45 s, sans issue. Le poème scellé, lui, ne change plus : il se garde.
+  await sessionDe(page, 'moi')
+  await poser(page, { hier: true })
+  await ouvrir(page)
+  await expect(page.getByText('le sel', { exact: true })).toBeVisible()
+
+  // Plus rien ne répond.
+  await page.route('**/api/jour**', () => { /* jamais de réponse */ })
+  await page.route('**/rest/v1/**', () => { /* jamais de réponse */ })
+  const t0 = Date.now()
+  await page.reload()
+  await franchir(page)
+  await expect(page.getByText('le sel', { exact: true }), 'le feuillet gardé, tout de suite').toBeVisible({ timeout: 3000 })
+  await expect(page.getByText(/TOUCHER POUR DÉPLIER|TOUCH TO UNFOLD/)).toBeVisible()
+
+  await expect(page.getByText(/Le registre ne répond pas|The register is not answering/)).toBeVisible({ timeout: 9000 })
+  expect(Date.now() - t0, 'six secondes, pas quarante-cinq').toBeLessThan(11000)
+  await expect(page.getByRole('button', { name: /RÉESSAYER|TRY AGAIN/ })).toBeVisible()
 })

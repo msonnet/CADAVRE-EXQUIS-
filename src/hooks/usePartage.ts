@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { partagerStory, partagerVideoStory } from '../utils/partager'
+import { partagerStory, partagerVideoStory, texteAccompagnant } from '../utils/partager'
 import { tr } from '../i18n'
 
 /**
@@ -66,11 +66,13 @@ export function usePartage(opts: { libelleCopie?: string; libelleTravail?: strin
     setPhase('travail')
     setCopie(false)
 
-    // Le texte, tout de suite, tant que le geste est encore frais.
+    // Le texte, tout de suite, tant que le geste est encore frais. L'invitation
+    // et le lien le suivent : sans eux, le poème collé ailleurs n'avait
+    // aucune porte vers le jeu.
     let aCopie = false
     if (!navigator.share && donnees.texte) {
       try {
-        await navigator.clipboard.writeText(donnees.texte)
+        await navigator.clipboard.writeText(`${donnees.texte}\n\n${texteAccompagnant(donnees.invitation)}`)
         aCopie = true
         setCopie(true)
       } catch { /* presse-papiers refusé : le fichier reste */ }

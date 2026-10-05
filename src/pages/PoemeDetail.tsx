@@ -3,11 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
-import { attribution, libelleMorceaux } from '../lib/attribution'
+import { attribution, attributionEnMorceaux, libelleMorceaux } from '../lib/attribution'
 import EtiquetteReserve from '../components/EtiquetteReserve'
 import MainsDuVers from '../components/MainsDuVers'
+import LienVoix from '../components/LienVoix'
 import BoutonRecolte from '../components/BoutonRecolte'
-import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
+import { fonctionDeCase } from '../lib/reliure'
+import MentionPublication from '../components/MentionPublication'
+import { chargerPoeme, supprimerPoeme, mettreAJourTitre, marquerPublie } from '../db'
 import { corrigerAccords } from '../api/corriger'
 import type { Poeme } from '../types'
 import { useSound } from '../hooks/useSound'
@@ -83,8 +86,10 @@ export default function PoemeDetail() {
   const { etape: tutEtape, actif: tutActif, fete: tutFete, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
-    if (tutActif && tutEtape === T_DETAIL && published) tutAvancer()
-  }, [published]) // eslint-disable-line react-hooks/exhaustive-deps
+    // Un feuillet déjà publié a déjà fait ce que l'étape demande : le guide
+    // ne doit pas désigner un bouton qui n'est plus là.
+    if (tutActif && tutEtape === T_DETAIL && (published || poeme?.publication)) tutAvancer()
+  }, [published, !!poeme?.publication]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // La célébration attend désormais un geste : elle porte le rendez-vous
   // quotidien, et un message qui s'efface avant d'être lu n'est pas un
@@ -143,10 +148,14 @@ export default function PoemeDetail() {
     setPublishing(true)
     setPublishError(false)
     try {
-      await publierPoeme(poeme, profile)
+      // Le lien est GARDÉ dans le feuillet : le bouton redevenait actif deux
+      // secondes après « ✓ PUBLIÉ », et le même poème pouvait partir trois
+      // fois en galerie. C'est aussi par ce lien que les lectures remontent.
+      const lien = await publierPoeme(poeme, profile)
+      await marquerPublie(poeme.id, lien).catch(() => { /* stockage refusé : la mention tient jusqu'à la sortie */ })
+      setPoeme(p => p ? { ...p, publication: lien } : p)
       jouer('soumettre')
       setPublished(true)
-      setTimeout(() => setPublished(false), 2000)
     } catch (e) {
       console.error('publish error', e)
       setPublishError(true)
@@ -302,27 +311,48 @@ export default function PoemeDetail() {
       >
         <div style={{ ...mono, fontSize: 11, letterSpacing: '0.12em', lineHeight: 1.4, color: encre, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ opacity: 0.5 }}>{i + 1} ·</span>
-          <span style={{ opacity: 0.75, textTransform: 'uppercase' }}>{attribution(cas)}</span>
-          {cas.fallback && <EtiquetteReserve voixNom={cas.voixNom} accent={accent} />}
-          <span style={{ marginLeft: 'auto' }}>
-            <BoutonRecolte
-              glyphe
-              texte={cas.texte}
-              accent={accent}
-              encre={encre}
-              poemeId={poeme.id}
-              poemeTitre={poeme.titre}
-              datePoeme={poeme.dateCreation}
-              signature={attribution(cas)}
-              nbVoix={cas.nbVoix}
-            />
+          {/* Un feuillet relié au carnet dit d'où vient chaque vers. */}
+          {poeme.origine === 'carnet' && fonctionDeCase(cas) && (
+            <span style={{ opacity: 0.6 }}>{fonctionDeCase(cas)!.toUpperCase()} ·</span>
+          )}
+          <span style={{ opacity: 0.75, textTransform: 'uppercase' }}>
+            {/* Chaque nom de voix mène à sa fiche du registre : c'est ici
+                qu'on rencontre le vers aimé, c'est d'ici qu'on doit pouvoir
+                retrouver qui l'a écrit. */}
+            {(() => {
+              const { texte, voix } = attributionEnMorceaux(cas)
+              return <>{texte}{voix.map((v, k) => <React.Fragment key={k}> · <LienVoix nom={v} /></React.Fragment>)}</>
+            })()}
           </span>
+          {cas.fallback && <EtiquetteReserve voixNom={cas.voixNom} accent={accent} />}
+          {/* Un feuillet relié ne propose pas de garder ses vers : ils
+              viennent du carnet et y sont encore. */}
+          {poeme.origine !== 'carnet' && (
+            <span style={{ marginLeft: 'auto' }}>
+              <BoutonRecolte
+                glyphe
+                texte={cas.texte}
+                accent={accent}
+                encre={encre}
+                poemeId={poeme.id}
+                poemeTitre={poeme.titre}
+                datePoeme={poeme.dateCreation}
+                signature={attribution(cas)}
+                nbVoix={cas.nbVoix}
+                auteur={cas.auteur}
+              />
+            </span>
+          )}
         </div>
-        {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} /> : null}
+        {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} liens /> : null}
       </motion.div>
     )
   }
-  const structLabel = NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId
+  // Un feuillet relié au carnet est un vers libre par sa forme, pas par son
+  // geste : personne n'y a joué, quelqu'un l'a recueilli.
+  const structLabel = poeme.origine === 'carnet'
+    ? tr('Recueilli par toi', 'Gathered by you')
+    : NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId
   const dateStr = new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString(tr('fr-FR', 'en-GB'), { hour: '2-digit', minute: '2-digit' })
   const illustrationLabel = poeme.illustration ? (MEDIUMS[poeme.illustration.style] ?? poeme.illustration.style) : null
@@ -635,31 +665,40 @@ export default function PoemeDetail() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.55 }}
         >
+          {poeme.publication ? (
+            <MentionPublication
+              lien={poeme.publication}
+              accent={accent} encre={encre}
+              onRetiree={() => {
+                marquerPublie(poeme.id, null).catch(() => {})
+                setPoeme(p => p ? { ...p, publication: undefined } : p)
+              }}
+            />
+          ) : (
           <button
             onClick={publierDansGalerie}
-            disabled={publishing || published}
+            disabled={publishing}
             aria-label="Publier ce poème dans la galerie"
             className={tutActif && tutEtape === T_DETAIL ? 'tut-cible' : undefined}
             style={{
               ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
               width: '100%', padding: '0.85em',
               background: 'transparent',
-              color: publishError ? accent : (published ? accent : encre),
+              color: publishError ? accent : encre,
               ...mono, fontSize: 17, textTransform: 'uppercase',
               border: `0.5px solid ${encre}25`,
               borderRadius: 3,
-              cursor: publishing ? 'wait' : (published ? 'default' : 'pointer'),
-              opacity: publishing ? 0.55 : (published ? 1 : 0.75),
+              cursor: publishing ? 'wait' : 'pointer',
+              opacity: publishing ? 0.55 : 0.75,
             }}
           >
             {publishError
               ? tr('ERREUR', 'ERROR')
-              : published
-                ? tr('✓ PUBLIÉ', '✓ PUBLISHED')
-                : publishing
-                  ? tr('✦ Publication…', '✦ Publishing…')
-                  : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
+              : publishing
+                ? tr('✦ Publication…', '✦ Publishing…')
+                : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
           </button>
+          )}
         </motion.div>
 
         <div style={{ flex: 1 }} />

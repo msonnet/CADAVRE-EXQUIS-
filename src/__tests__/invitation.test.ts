@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { codeDeSalon, arriveeSansIdentite, texteInvitation } from '../lib/invitation'
+import { codeDeSalon, arriveeSansIdentite, texteInvitation, destinationEntree } from '../lib/invitation'
 
 /**
  * L'invitation porte le code, et le code survit à l'arrivée.
@@ -26,5 +26,24 @@ describe('le lien d\'un salon', () => {
     expect(texteInvitation('KX7Q', 'l', 'en')).toMatch(/^Join me at the table — room KX7Q/)
     // La voix de la revue : ni emoji, ni point d'exclamation.
     expect(fr).not.toMatch(/!|\p{Extended_Pictographic}/u)
+  })
+})
+
+describe("l'écran d'entrée annonce où mène le lien", () => {
+  it('le poème du jour', () => {
+    expect(destinationEntree('/poeme-du-jour')).toEqual({ genre: 'jour' })
+    expect(destinationEntree('/poeme-du-jour/', '?jour=2026-09-30')).toEqual({ genre: 'jour' })
+  })
+
+  it('un salon, par son chemin ou par la porte de l’identité', () => {
+    expect(destinationEntree('/salon/kx7q')).toEqual({ genre: 'salon', code: 'KX7Q' })
+    expect(destinationEntree('/online', '?salon=KX7Q')).toEqual({ genre: 'salon', code: 'KX7Q' })
+    expect(destinationEntree('/salon/%25%25')).toBeNull()
+  })
+
+  it('partout ailleurs, le rideau ordinaire', () => {
+    for (const c of ['/', '/online', '/galerie', '/salon', '/poeme-du-jour/x', '/fin']) {
+      expect(destinationEntree(c), c).toBeNull()
+    }
   })
 })

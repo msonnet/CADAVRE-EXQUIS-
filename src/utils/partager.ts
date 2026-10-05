@@ -1,6 +1,12 @@
-import { garantirContraste } from '../reve/contraste'
+import { garantirContraste, ratioContraste } from '../reve/contraste'
 import { emporterFichier, partagerTexteSeul, blobDe, type Issue } from '../lib/emporter'
-import { langueActuelle } from '../i18n'
+import { langueActuelle, tr } from '../i18n'
+import { lienPublic, PROD_API } from '../lib/apiBase'
+import {
+  Y, composerAffichePoeme, composerAfficheDessin, composerTitre, composerCorpsVideo,
+  composerSurimpression, composerLectureVideo, invitationDuJour, texteDuPartage,
+  CHEMIN_INVITATION, type Mesure, type SurimpressionVideo, policeVideo,
+} from '../lib/affiche'
 // Toutes les sorties passent par `emporterFichier` : en natif, la feuille
 // de partage du système ; dans un navigateur, `navigator.share` ou le
 // téléchargement. Voir `lib/emporter.ts` — c'est là qu'est la panne corrigée.
@@ -131,11 +137,29 @@ function composerImageAvecTexte(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Story format (9:16, 1080×1920) generator — affiche partageable
-// L'invitation virale par défaut, validée en direction artistique.
+// La grille (zone sûre des stories, ordonnées fixes) et l'invitation vivent
+// dans `lib/affiche.ts`, où elles se mesurent sans canevas.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const INVITATION_DEFAUT = 'Ajoute ta main au cadavre.'
-const LIEN_MARQUE = 'cadavre-exquis-beta.vercel.app'
+// L'adresse imprimée : le domaine seul, qu'on lit et qu'on retient. Elle
+// vient de `PROD_API` — le jour où le domaine définitif remplacera la bêta,
+// l'affiche suivra sans qu'on la cherche ici.
+const LIEN_MARQUE = PROD_API.replace(/^https?:\/\//, '')
+
+/**
+ * Ce que la feuille de partage emporte avec le fichier : l'invitation et un
+ * lien vers le poème du jour. Elle ne recevait qu'un fichier et un titre —
+ * sur une messagerie, le destinataire avait une vidéo et rien sur quoi
+ * appuyer.
+ */
+export function texteAccompagnant(invitation?: string): string {
+  return texteDuPartage(invitation ?? invitationDuJour(), lienPublic(CHEMIN_INVITATION))
+}
+
+/** La mesure du texte par le canevas lui-même — celle que la grille attend. */
+function mesureDe(ctx: CanvasRenderingContext2D): Mesure {
+  return (texte, police) => { ctx.font = police; return ctx.measureText(texte).width }
+}
 
 function withAlpha(hex: string, a: number): string {
   const h = hex.replace('#', '')
@@ -295,49 +319,106 @@ function enTete(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: s
   ctx.fillStyle = accent
   ctx.textAlign = 'center'
   ctx.font = "32px 'Raleway', sans-serif"
-  ctx.fillText('✦', W / 2, 192)
+  ctx.fillText('✦', W / 2, Y.etoile)
   const parts: string[] = []
   if (seed) parts.push(`N° ${deriverNum(seed)}`)
   if (date) parts.push(toRomainLocal(new Date(date).getFullYear()))
   if (parts.length) {
     ctx.fillStyle = withAlpha(ink, 0.42)
     ctx.font = "24px 'Raleway', sans-serif"
-    texteEspace(ctx, parts.join(' · '), W / 2, 248, 24 * 0.35)
+    texteEspace(ctx, parts.join(' · '), W / 2, Y.numero, 24 * 0.35)
   }
 }
 
-// Signature de marque (zone F) — l'ancre mémorable, en bas
+// Signature de marque (zone F) — l'ancre mémorable, en bas. Elle vivait entre
+// 1770 et 1882, sous le champ de réponse d'une story ; elle remonte au-dessus
+// de la bande de 250 px, à la même place sur toutes les affiches.
 function marque(ctx: CanvasRenderingContext2D, W: number, accent: string, ink: string) {
   ctx.beginPath()
   ctx.strokeStyle = withAlpha(ink, 0.20)
   ctx.lineWidth = 1
-  ctx.moveTo(W / 2 - 60, 1770); ctx.lineTo(W / 2 + 60, 1770)
+  ctx.moveTo(W / 2 - 60, Y.filetMarque); ctx.lineTo(W / 2 + 60, Y.filetMarque)
   ctx.stroke()
 
   ctx.fillStyle = ink
   ctx.font = "600 30px 'Bodoni Moda', Georgia, serif"
-  const { left, right } = texteEspace(ctx, 'CADAVRE EXQUIS', W / 2, 1822, 30 * 0.45)
+  const { left, right } = texteEspace(ctx, 'CADAVRE EXQUIS', W / 2, Y.nomMarque, 30 * 0.45)
   ctx.fillStyle = accent
   ctx.textAlign = 'center'
   ctx.font = "22px 'Raleway', sans-serif"
-  ctx.fillText('✦', left - 26, 1820)
-  ctx.fillText('✦', right + 26, 1820)
+  ctx.fillText('✦', left - 26, Y.nomMarque - 2)
+  ctx.fillText('✦', right + 26, Y.nomMarque - 2)
 
   // Le Pli — plume glitchée, marque de fabrique
-  drawNibMark(ctx, W / 2, 1848, 28, accent)
+  drawNibMark(ctx, W / 2, Y.plume, 28, accent)
 
   ctx.fillStyle = withAlpha(ink, 0.45)
   ctx.font = "24px 'Raleway', sans-serif"
-  ctx.fillText(LIEN_MARQUE, W / 2, 1882)
+  ctx.fillText(LIEN_MARQUE, W / 2, Y.lien)
 }
 
-function invitationLigne(ctx: CanvasRenderingContext2D, W: number, accent: string, y: number, texte: string) {
-  ctx.fillStyle = withAlpha(accent, 0.80)
+// L'invitation tient sur une ligne, à la même ordonnée sur toutes les
+// affiches : entre le contenu et la marque, jamais sur l'adresse. L'ombre ne
+// sert qu'en surimpression, quand l'invitation se pose sur une image — et
+// là elle est tracée pleine : l'accent y arrive déjà ramené au contraste, et
+// le fondre à 80 % le faisait retomber à 3:1 sur une illustration sombre.
+function invitationLigne(
+  ctx: CanvasRenderingContext2D, W: number, accent: string, texte: string, ombre?: string,
+) {
+  ctx.save()
+  ctx.fillStyle = ombre ? accent : withAlpha(accent, 0.80)
   ctx.textAlign = 'center'
+  if (ombre) { ctx.shadowColor = withAlpha(ombre, 0.85); ctx.shadowBlur = 18; ctx.shadowOffsetY = 2 }
   let size = 32
   ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif`
   if (ctx.measureText(texte).width > W - 192) { size = 28; ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif` }
-  ctx.fillText(texte, W / 2, y)
+  ctx.fillText(texte, W / 2, Y.invitation)
+  ctx.restore()
+}
+
+/**
+ * L'invitation de la vidéo : calculée, elle n'était JAMAIS dessinée — la
+ * dernière image ne portait que le poème et l'adresse en gris. Elle se pose
+ * dans la dernière seconde et demie, une fois le dernier vers écrit : la
+ * miniature reste au poème, la fin de boucle à l'invitation.
+ */
+const INVITATION_AVANT_FIN = 1500
+const INVITATION_FONDU = 450
+function invitationVideo(
+  ctx: CanvasRenderingContext2D, W: number, t: number, duree: number, accent: string, texte: string, ombre?: string,
+) {
+  const a = easeInOut(clamp01((t - (duree - INVITATION_AVANT_FIN)) / INVITATION_FONDU))
+  if (a <= 0) return
+  ctx.save()
+  ctx.globalAlpha = a
+  invitationLigne(ctx, W, accent, texte, ombre)
+  ctx.restore()
+}
+
+/**
+ * L'accent de l'invitation, ramené au contraste sur ce qu'il y a VRAIMENT
+ * sous elle. Il l'était sur la couleur du voile seule ; or à la hauteur de
+ * l'invitation le voile n'est qu'à moitié opaque et l'image passe à travers :
+ * mesuré 3,0:1 sur une illustration sombre, pour la phrase qu'on veut faire
+ * lire. On lit donc la bande une fois, juste avant que l'invitation
+ * paraisse, et l'on vise le pixel clair du neuvième décile (le sombre, sur un
+ * voile clair) : un point isolé de l'image ne décide pas, un motif répété si.
+ * Canevas teinté (image sans CORS) : on garde le calcul sur le voile.
+ */
+function accentSurImage(ctx: CanvasRenderingContext2D, accent: string, voile: string): string {
+  const repli = garantirContraste(accent, voile, 4.5)
+  try {
+    const x0 = 96, w = ctx.canvas.width - 192
+    const d = ctx.getImageData(x0, Y.invitation - 32, w, 44).data
+    const px: { l: number; i: number }[] = []
+    for (let i = 0; i < d.length; i += 16) px.push({ l: 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2], i })
+    if (!px.length) return repli
+    px.sort((a, b) => a.l - b.l)
+    const voileSombre = ratioContraste(voile, '#000000') < ratioContraste(voile, '#ffffff')
+    const { i } = px[Math.floor((voileSombre ? 0.9 : 0.1) * (px.length - 1))]
+    const hex = '#' + [d[i], d[i + 1], d[i + 2]].map(v => v.toString(16).padStart(2, '0')).join('')
+    return garantirContraste(accent, hex, 4.5)
+  } catch { return repli }
 }
 
 async function prechargerPolices() {
@@ -354,21 +435,6 @@ async function prechargerPolices() {
     if (d.fonts?.load) await Promise.all(fonts.map((f: string) => d.fonts.load(f).catch(() => {})))
     if (d.fonts?.ready) await d.fonts.ready
   } catch { /* ignore */ }
-}
-
-function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const words = text.split(' ')
-  const lines: string[] = []
-  let current = ''
-  for (const w of words) {
-    const test = current ? current + ' ' + w : w
-    if (ctx.measureText(test).width > maxWidth && current) {
-      lines.push(current)
-      current = w
-    } else current = test
-  }
-  if (current) lines.push(current)
-  return lines
 }
 
 function chargerImage(src: string): Promise<HTMLImageElement> {
@@ -405,10 +471,8 @@ export async function genererImageStory(opts: {
 }): Promise<string> {
   const W = 1080
   const H = 1920
-  const MARGE = 96
-  const ZONE_W = W - MARGE * 2
   const { accent, ink, bg } = opts
-  const invitation = opts.invitation ?? INVITATION_DEFAUT
+  const invitation = opts.invitation ?? invitationDuJour()
   const rng = mulberry32(hashSeed(opts.seed ?? opts.titre ?? 'cadavre'))
 
   await prechargerPolices()
@@ -417,6 +481,7 @@ export async function genererImageStory(opts: {
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
+  const mesurer = mesureDe(ctx)
 
   // Fond papier + grain + vignettage + cadre tiré à la main
   ctx.fillStyle = bg
@@ -425,80 +490,42 @@ export async function genererImageStory(opts: {
   cadreDouble(ctx, W, H, accent)
   enTete(ctx, W, accent, ink, opts.date, opts.seed)
 
+  // La grille vient de `composerAffichePoeme` / `composerAfficheDessin` : le
+  // poème illustré y est une planche et sa légende, l'image d'abord, et rien
+  // ne descend plus sous la zone sûre. Avant, l'image était posée SOUS un
+  // poème centré dans 520–820 et descendait jusqu'à 1860, sous la marque.
   if (opts.type === 'poeme') {
-    const avecImage = !!(opts.imageDataUrl)
-    // ── Illustration (pré-chargée) ──
     let illustImg: HTMLImageElement | null = null
-    if (avecImage) {
-      try { illustImg = await chargerImage(opts.imageDataUrl!) } catch { /* ignore */ }
+    if (opts.imageDataUrl) {
+      try { illustImg = await chargerImage(opts.imageDataUrl) } catch { /* ignore */ }
     }
+    const a = composerAffichePoeme({
+      titre: opts.titre, texte: opts.texte,
+      image: illustImg ? { w: illustImg.naturalWidth || illustImg.width, h: illustImg.naturalHeight || illustImg.height } : null,
+    }, mesurer)
 
     // ── Titre (optionnel : sans titre, le poème lui-même est le héros) ──
-    const hasTitle = !!opts.titre?.trim()
-    if (hasTitle) {
+    if (a.titre) {
       ctx.fillStyle = ink
       ctx.textAlign = 'center'
-      let titleSize = 76
-      ctx.font = `800 italic ${titleSize}px 'Bodoni Moda', Georgia, serif`
-      let titleLines = wrapText(ctx, opts.titre, ZONE_W)
-      if (titleLines.length > 2) {
-        titleSize = 64
-        ctx.font = `800 italic ${titleSize}px 'Bodoni Moda', Georgia, serif`
-        titleLines = wrapText(ctx, opts.titre, ZONE_W).slice(0, 2)
-      }
-      const titleLineH = titleSize + 12
-      const titleTop = 360
-      titleLines.forEach((line, i) => ctx.fillText(line, W / 2, titleTop + i * titleLineH))
-      const titleBottom = titleTop + (titleLines.length - 1) * titleLineH
-      filetOrne(ctx, W / 2, titleBottom + 56, accent, bg)
+      ctx.font = a.titre.police
+      a.titre.lignes.forEach((line, i) => ctx.fillText(line, W / 2, a.titre!.baselines[i]))
+      if (a.titre.filetY !== null) filetOrne(ctx, W / 2, a.titre.filetY, accent, bg)
     }
 
-    // ── Corps du poème ──
-    const zoneTop = hasTitle ? 520 : 360, zoneBottom = illustImg ? 820 : 1560
-    let bodySize = 50, bodyLineH = 74
-    const sourceLines = (opts.texte ?? '').split('\n')
-
-    const doWrapImg = (size: number) => {
-      ctx.font = `italic ${size}px 'Playfair Display', Georgia, serif`
-      const r: string[] = []
-      for (const src of sourceLines) {
-        if (!src.trim()) { r.push(''); continue }
-        for (const p of wrapText(ctx, src, ZONE_W)) r.push(p)
-      }
-      return r
-    }
-    let wrapped = doWrapImg(bodySize)
-    if (wrapped.length > 13) { bodySize = 40; bodyLineH = 62; wrapped = doWrapImg(bodySize) }
-    if (wrapped.length > 17) { wrapped = wrapped.slice(0, 15); wrapped.push('[…]') }
-
-    // Positions de fin de chaque fragment pour les lignes de pli
-    const fragEndsImg: number[] = []
-    { let wi = 0
-      for (const src of sourceLines) {
-        if (wi >= wrapped.length) break
-        if (!src.trim()) { wi++; continue }
-        const wl = wrapText(ctx, src, ZONE_W)
-        fragEndsImg.push(Math.min(wi + wl.length - 1, wrapped.length - 1))
-        wi += wl.length
-      }
+    // ── Illustration, la planche ──
+    if (a.image && illustImg) {
+      passePartout(ctx, a.image.x, a.image.y, a.image.w, a.image.h, ink)
+      ctx.drawImage(illustImg, a.image.x, a.image.y, a.image.w, a.image.h)
     }
 
-    const lettrineActive = wrapped.length <= 8 && wrapped[0] && wrapped[0] !== '[…]'
-    const lettrineSize = 240
-    const lettrineVisual = lettrineSize * 0.72
-    const gap = 28
-    const blockH = wrapped.length * bodyLineH
-    const totalH = (lettrineActive ? lettrineVisual + gap : 0) + blockH
-    let startY = zoneTop + (zoneBottom - zoneTop - totalH) / 2 - 30
-    startY = Math.max(startY, zoneTop - 40)
-
-    let y = startY
-    if (lettrineActive) {
-      const lettre = wrapped[0].charAt(0).toUpperCase()
-      const baseline = y + lettrineVisual
-      ctx.font = `900 italic ${lettrineSize}px 'Bodoni Moda', Georgia, serif`
+    // ── Lettrine ──
+    if (a.lettrine) {
+      const { char, baseline, taille } = a.lettrine
+      ctx.font = `900 italic ${taille}px 'Bodoni Moda', Georgia, serif`
       ctx.fillStyle = accent
-      bavure(ctx, () => ctx.fillText(lettre, W / 2, baseline), 0.92)
+      ctx.textAlign = 'center'
+      bavure(ctx, () => ctx.fillText(char, W / 2, baseline), 0.92)
       // éclaboussures déterministes
       ctx.fillStyle = withAlpha(accent, 0.25)
       for (let i = 0; i < 3; i++) {
@@ -506,99 +533,62 @@ export async function genererImageStory(opts: {
         const dist = 30 + rng() * 50
         const r = 2 + rng() * 2
         ctx.beginPath()
-        ctx.arc(W / 2 + Math.cos(ang) * dist, baseline - lettrineVisual / 2 + Math.sin(ang) * dist, r, 0, Math.PI * 2)
+        ctx.arc(W / 2 + Math.cos(ang) * dist, baseline - taille * 0.36 + Math.sin(ang) * dist, r, 0, Math.PI * 2)
         ctx.fill()
       }
-      y = baseline + gap
     }
 
-    // Vers
-    ctx.font = `italic ${bodySize}px 'Playfair Display', Georgia, serif`
+    // ── Vers, et le filet de pli entre les fragments ──
+    ctx.font = a.corps.police
     ctx.fillStyle = withAlpha(ink, 0.88)
     ctx.textAlign = 'center'
-    const fragEndSetImg = new Set(fragEndsImg)
-    wrapped.forEach((line, i) => {
-      if (!line) return
-      const lineY = y + (i + 1) * bodyLineH
-      ctx.fillText(line, W / 2, lineY)
-      // Filet de pli entre les fragments (sauf après le dernier)
-      if (fragEndSetImg.has(i) && i < wrapped.length - 1 && wrapped[i + 1]) {
-        drawFragmentSeparator(ctx, W, lineY + Math.round(bodyLineH / 2), accent)
-      }
-    })
-
-    // ── Illustration sous le poème ──
-    if (illustImg) {
-      const imgZoneTop = 880, imgZoneBottom = 1860
-      const maxW = ZONE_W, maxH = imgZoneBottom - imgZoneTop - 56
-      const ratio = Math.min(maxW / illustImg.width, maxH / illustImg.height)
-      const dW = illustImg.width * ratio, dH = illustImg.height * ratio
-      const dX = (W - dW) / 2, dY = imgZoneTop + 28 + (maxH - dH) / 2
-      filetOrne(ctx, W / 2, imgZoneTop - 40, accent, bg)
-      passePartout(ctx, dX, dY, dW, dH, ink)
-      ctx.drawImage(illustImg, dX, dY, dW, dH)
-    }
-
-    invitationLigne(ctx, W, accent, illustImg ? 1888 : 1660, invitation)
+    for (const l of a.corps.lignes) if (l.texte) ctx.fillText(l.texte, W / 2, l.y)
+    for (const y of a.corps.plis) drawFragmentSeparator(ctx, W, y, accent)
   } else {
     // ── Variante dessin ──
-    let readingTop = 1430
+    let img: HTMLImageElement | null = null
     if (opts.imageDataUrl) {
-      try {
-        const img = await chargerImage(opts.imageDataUrl)
-        const r = img.width / img.height
-        if (r > 1.6) {
-          // Le rouleau : image très horizontale couchée verticalement
-          const zoneTop = 300, zoneBottom = 1300
-          const maxW = 700, maxH = zoneBottom - zoneTop
-          // Après rotation 90°, la largeur de l'image devient la hauteur dessinée
-          const ratio = Math.min(maxW / img.height, maxH / img.width)
-          const dW = img.height * ratio, dH = img.width * ratio
-          const cx = W / 2, cy = zoneTop + (zoneBottom - zoneTop) / 2
-          passePartout(ctx, cx - dW / 2, cy - dH / 2, dW, dH, ink)
-          ctx.save()
-          ctx.translate(cx, cy)
-          ctx.rotate(-Math.PI / 2)
-          ctx.drawImage(img, -dH / 2, -dW / 2, dH, dW)
-          ctx.restore()
-          readingTop = 1400
-        } else {
-          const zoneTop = 300, zoneBottom = r < 0.9 ? 1300 : 1100
-          const maxW = r < 0.9 ? 700 : ZONE_W, maxH = zoneBottom - zoneTop
-          const ratio = Math.min(maxW / img.width, maxH / img.height)
-          const dW = img.width * ratio, dH = img.height * ratio
-          const dX = (W - dW) / 2
-          const dY = r < 0.9 ? zoneTop + (maxH - dH) / 2 : 540 - dH / 2
-          passePartout(ctx, dX, dY, dW, dH, ink)
-          ctx.drawImage(img, dX, dY, dW, dH)
-          readingTop = r < 0.9 ? 1400 : Math.max(dY + dH + 80, 1180)
-        }
-      } catch (e) {
-        console.error('Failed to load image for story', e)
+      try { img = await chargerImage(opts.imageDataUrl) } catch (e) { console.error('Failed to load image for story', e) }
+    }
+    const a = composerAfficheDessin({
+      texte: opts.texte,
+      image: img ? { w: img.naturalWidth || img.width, h: img.naturalHeight || img.height } : null,
+    }, mesurer)
+    if (img && a.image) {
+      const { x, y, w, h, tourner } = a.image
+      passePartout(ctx, x, y, w, h, ink)
+      if (tourner) {
+        // Le rouleau : une image très horizontale couchée verticalement
+        ctx.save()
+        ctx.translate(x + w / 2, y + h / 2)
+        ctx.rotate(-Math.PI / 2)
+        ctx.drawImage(img, -h / 2, -w / 2, h, w)
+        ctx.restore()
+      } else {
+        ctx.drawImage(img, x, y, w, h)
       }
     }
 
     // Lecture surréaliste — la notice du spécimen
-    if (opts.texte && opts.texte.trim()) {
-      filetOrne(ctx, W / 2, readingTop - 50, accent, bg)
+    if (a.lecture) {
+      filetOrne(ctx, W / 2, a.lecture.filetY, accent, bg)
       ctx.fillStyle = withAlpha(accent, 0.65)
       ctx.textAlign = 'center'
       ctx.font = "22px 'Raleway', sans-serif"
-      texteEspace(ctx, '— LECTURE —', W / 2, readingTop, 22 * 0.3)
-
+      // Le libellé était resté en français sur l'affiche anglaise ; la vidéo,
+      // elle, le traduisait déjà.
+      texteEspace(ctx, tr('— LECTURE —', '— READING —'), W / 2, a.lecture.libelleY, 22 * 0.3)
       ctx.font = "italic 36px 'Playfair Display', Georgia, serif"
-      const lignes = wrapText(ctx, opts.texte.replace(/\n+/g, ' ').trim(), ZONE_W - 60).slice(0, 4)
       ctx.fillStyle = withAlpha(ink, 0.85)
-      const lh = 56
-      lignes.forEach((line, i) => {
-        const txt = (i === 0 ? '« ' : '') + line + (i === lignes.length - 1 ? ' »' : '')
-        ctx.fillText(txt, W / 2, readingTop + 56 + i * lh)
+      const n = a.lecture.lignes.length
+      a.lecture.lignes.forEach((l, i) => {
+        const txt = (i === 0 ? '« ' : '') + l.texte + (i === n - 1 ? ' »' : '')
+        ctx.fillText(txt, W / 2, l.y)
       })
     }
-
-    invitationLigne(ctx, W, accent, 1680, invitation)
   }
 
+  invitationLigne(ctx, W, accent, invitation)
   marque(ctx, W, accent, ink)
   return canvas.toDataURL('image/png')
 }
@@ -636,7 +626,13 @@ export async function partagerStory(opts: {
   seed?: string
 }, nomFichier = 'cadavre-exquis'): Promise<Issue> {
   const url = await genererImageStory(opts)
-  return partagerImage(url, nomFichier)
+  // `emporterFichier` et non `partagerImage` : celui-ci, en repli de
+  // téléchargement, récrirait le presse-papiers — où `usePartage` a déjà mis
+  // le poème ET l'invitation, pendant que le geste était frais.
+  return emporterFichier({
+    nom: `${nomFichier}.png`, blob: await blobDe(url), titre: 'Cadavre Exquis',
+    texte: texteAccompagnant(opts.invitation),
+  })
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -680,72 +676,17 @@ const ANIM_LIGNE_PAS = 260
 const LETT_T = 5080
 const LETT_DUR = 340
 
-function layoutPoeme(ctx: CanvasRenderingContext2D, opts: { titre?: string; texte?: string }, W: number, ZONE_W: number, avecImage = false, avecLettrine = true): LayoutPoeme {
-  const hasTitle = !!opts.titre?.trim()
-  const zoneTop = hasTitle ? 520 : 360, zoneBottom = avecImage ? 820 : 1560
-  let bodySize = 50, bodyLineH = 74
+// La composition du poème vient de `composerCorpsVideo` : la même zone que
+// l'affiche, au tiers optique, le corps choisi pour TENIR et non au nombre de
+// lignes. L'ancienne zone (360–1560) laissait le poème descendre sur
+// l'invitation et la marque remontées.
+function layoutPoeme(mesurer: Mesure, opts: { titre?: string; texte?: string }, W: number): LayoutPoeme {
+  const { corps } = composerCorpsVideo(opts, mesurer)
+  const lignes = corps.lignes
   const sourceLines = (opts.texte ?? '').split('\n')
-
-  const doWrap = (size: number) => {
-    ctx.font = `italic ${size}px 'Bodoni Moda', Georgia, serif`
-    const result: string[] = []
-    for (const src of sourceLines) {
-      if (!src.trim()) { result.push(''); continue }
-      for (const p of wrapText(ctx, src, ZONE_W)) result.push(p)
-    }
-    return result
-  }
-
-  let wrapped = doWrap(bodySize)
-  if (wrapped.length > 13) {
-    bodySize = 40; bodyLineH = 62
-    wrapped = doWrap(bodySize)
-  }
-  if (wrapped.length > 17) { bodySize = 33; bodyLineH = 50; wrapped = doWrap(bodySize) }
-  if (wrapped.length > 24) { bodySize = 28; bodyLineH = 42; wrapped = doWrap(bodySize) }
-  if (wrapped.length > 28) { wrapped = wrapped.slice(0, 27); wrapped.push('[…]') }
-
-  // Positions de fin de chaque fragment source dans le tableau wrapped[]
-  const fragEndIndices: number[] = []
-  {
-    let wi = 0
-    for (const src of sourceLines) {
-      if (wi >= wrapped.length) break
-      if (!src.trim()) { wi++; continue }
-      const wlines = wrapText(ctx, src, ZONE_W)
-      const endIdx = Math.min(wi + wlines.length - 1, wrapped.length - 1)
-      fragEndIndices.push(endIdx)
-      wi += wlines.length
-    }
-  }
-
-  const lettrineActive = avecLettrine && wrapped.length <= 8 && !!wrapped[0] && wrapped[0] !== '[…]'
-  const lettrineSize = 240
-  const lettrineVisual = lettrineSize * 0.72
-  const gap = 28
-  const blockH = wrapped.length * bodyLineH
-  const totalH = (lettrineActive ? lettrineVisual + gap : 0) + blockH
-  let startY = zoneTop + (zoneBottom - zoneTop - totalH) / 2 - 30
-  startY = Math.max(startY, zoneTop - 40)
-
-  let y = startY
-  let lettrine: LayoutPoeme['lettrine'] = null
-  if (lettrineActive) {
-    const baseline = y + lettrineVisual
-    lettrine = { char: wrapped[0].charAt(0).toUpperCase(), baselineY: baseline, size: lettrineSize }
-    y = baseline + gap
-  }
-  const lignes = wrapped.map((texte, i) => ({ texte, y: y + (i + 1) * bodyLineH }))
-
-  // Lignes de pli entre les fragments
-  const separatorYs: number[] = []
-  for (let fi = 0; fi < fragEndIndices.length - 1; fi++) {
-    const endIdx = fragEndIndices[fi]
-    const nextIdx = endIdx + 1
-    if (nextIdx < lignes.length && lignes[endIdx]?.texte && lignes[nextIdx]?.texte) {
-      separatorYs.push(Math.round(lignes[endIdx].y + bodyLineH / 2))
-    }
-  }
+  const lettrine: LayoutPoeme['lettrine'] = null
+  const separatorYs = corps.plis
+  const bodySize = corps.taille, bodyLineH = corps.pas
 
   // Centre réel du bloc de texte — point de convergence de l'animation
   const visiblesLignes = lignes.filter(l => l.texte)
@@ -827,13 +768,14 @@ export async function genererVideoStory(opts: {
   if (!mime) return null
 
   await prechargerPolices()
-  const W = 1080, H = 1920, MARGE = 96, ZONE_W = W - MARGE * 2
+  const W = 1080, H = 1920
   const { accent, ink, bg } = opts
-  const invitation = opts.invitation ?? INVITATION_DEFAUT
+  const invitation = opts.invitation ?? invitationDuJour()
 
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')!
+  const mesurer = mesureDe(ctx)
 
   // Fond fixe pré-rendu (le grain ne doit pas scintiller d'une frame à l'autre).
   // Quand une image occupe toute la page, les ornements (cadre, en-tête, marque)
@@ -869,7 +811,8 @@ export async function genererVideoStory(opts: {
   let imgBox = { x: 0, y: 0, w: 0, h: 0 }
   let poemeIllustImg: HTMLImageElement | null = null
   let illustBox = { x: 0, y: 0, w: 0, h: 0 }
-  let overlay: OverlayTexte | null = null
+  let overlay: SurimpressionVideo | null = null
+  let lecture: ReturnType<typeof composerLectureVideo> = null
   // Couleurs du texte en surimpression — décidées par l'IMAGE, pas par l'ambiance
   let encreTexte = bg
   let scrimTexte = ink
@@ -883,7 +826,7 @@ export async function genererVideoStory(opts: {
       const ratio = Math.max(W / poemeIllustImg.width, H / poemeIllustImg.height)
       const dW = poemeIllustImg.width * ratio, dH = poemeIllustImg.height * ratio
       illustBox = { x: (W - dW) / 2, y: (H - dH) / 2, w: dW, h: dH }
-      overlay = layoutTexteOverlay(ctx, opts.titre, opts.texte, W, H, ZONE_W)
+      overlay = composerSurimpression(opts, mesurer)
       // Luminance moyenne de la zone où le texte se posera : encre crème sur
       // image sombre, encre brune sur image claire — plus de loterie d'ambiance.
       try {
@@ -893,8 +836,8 @@ export async function genererVideoStory(opts: {
         const px = probe.getContext('2d')!
         const pr = Math.max(pw / poemeIllustImg.width, ph / poemeIllustImg.height)
         px.drawImage(poemeIllustImg, (pw - poemeIllustImg.width * pr) / 2, (ph - poemeIllustImg.height * pr) / 2, poemeIllustImg.width * pr, poemeIllustImg.height * pr)
-        const y0 = Math.max(0, Math.floor(((overlay.titre ? overlay.titreTop : overlay.top) - 60) / H * ph))
-        const y1 = Math.min(ph, Math.ceil((overlay.top + overlay.lignes.length * overlay.lineH + 30) / H * ph))
+        const y0 = Math.max(0, Math.floor((overlay.haut - 60) / H * ph))
+        const y1 = Math.min(ph, Math.ceil((overlay.bas + 30) / H * ph))
         const d = px.getImageData(0, y0, pw, Math.max(1, y1 - y0)).data
         let lum = 0
         for (let i = 0; i < d.length; i += 4) lum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]
@@ -903,29 +846,29 @@ export async function genererVideoStory(opts: {
         else { encreTexte = '#17100a'; scrimTexte = '#f4eddc' }
       } catch { /* canvas teinté (image sans CORS) : héritage ambiance */ }
       // Marque en bas : dégradé fondu dans l'image (couleur du scrim adaptatif),
-      // encre adaptative, accent ramené au contraste — se marie avec toute image
+      // encre adaptative, accent ramené au contraste — se marie avec toute image.
+      // Le dégradé commence plus haut qu'avant : la marque est remontée hors
+      // de la bande d'Instagram, et l'invitation s'y pose au-dessus d'elle.
       {
         const ox = ornCanvas!.getContext('2d')!
         ox.clearRect(0, 0, W, H)
-        const gs = ox.createLinearGradient(0, H - 540, 0, H)
+        const debut = Y.invitation - 320
+        const gs = ox.createLinearGradient(0, debut, 0, H)
         gs.addColorStop(0, withAlpha(scrimTexte, 0))
-        gs.addColorStop(0.55, withAlpha(scrimTexte, 0.52))
+        gs.addColorStop(0.4, withAlpha(scrimTexte, 0.52))
         gs.addColorStop(1, withAlpha(scrimTexte, 0.92))
         ox.fillStyle = gs
-        ox.fillRect(0, H - 540, W, 540)
+        ox.fillRect(0, debut, W, H - debut)
         marque(ox, W, garantirContraste(accent, scrimTexte, 3), encreTexte)
       }
     } else {
       // ── Texte seul : mise en page et animation existantes ──
-      if (opts.titre?.trim()) {
+      const titre = composerTitre(opts.titre, mesurer)
+      if (titre) {
         bx.fillStyle = ink; bx.textAlign = 'center'
-        bx.font = `800 italic 76px 'Bodoni Moda', Georgia, serif`
-        let tl = wrapText(bx, opts.titre, ZONE_W)
-        let ts = 76
-        if (tl.length > 2) { ts = 64; bx.font = `800 italic 64px 'Bodoni Moda', Georgia, serif`; tl = wrapText(bx, opts.titre, ZONE_W).slice(0, 2) }
-        const tlh = ts + 12
-        tl.forEach((line, i) => bx.fillText(line, W / 2, 360 + i * tlh))
-        filetOrne(bx, W / 2, 360 + (tl.length - 1) * tlh + 56, accent, bg)
+        bx.font = titre.police
+        titre.lignes.forEach((line, i) => bx.fillText(line, W / 2, titre.baselines[i]))
+        if (titre.filetY !== null) filetOrne(bx, W / 2, titre.filetY, accent, bg)
       }
       if (pleinCadre) {
         // L'image annoncée n'a pas chargé : on rend au fond ses ornements
@@ -933,7 +876,7 @@ export async function genererVideoStory(opts: {
         enTete(bx, W, accent, ink, opts.date, opts.seed)
         marque(bx, W, accent, ink)
       }
-      poemeLayout = layoutPoeme(ctx, opts, W, ZONE_W, false, false)
+      poemeLayout = layoutPoeme(mesurer, opts, W)
       // Lignes de pli entre fragments — sur le fond fixe, révélées dès le début
       for (const sy of poemeLayout.separatorYs) {
         drawFragmentSeparator(bx, W, sy, accent)
@@ -946,6 +889,7 @@ export async function genererVideoStory(opts: {
       const ratio = Math.max(W / img.width, H / img.height)
       const w = img.width * ratio, h = img.height * ratio
       imgBox = { x: (W - w) / 2, y: (H - h) / 2, w, h }
+      lecture = composerLectureVideo(opts.texte ?? '', mesurer)
       // Couleurs de lecture décidées par le BAS du dessin (papier choisi) —
       // même logique adaptative que le poème illustré
       try {
@@ -966,7 +910,7 @@ export async function genererVideoStory(opts: {
   }
 
   // Longs poèmes : la vidéo s'étire à 8 s pour laisser chaque vers s'écrire
-  const nbLignesContenu = overlay?.lignes.length ?? poemeLayout?.lignes.filter(l => l.texte).length ?? 0
+  const nbLignesContenu = overlay?.corps.lignes.length ?? poemeLayout?.lignes.filter(l => l.texte).length ?? 0
   const dureeEff = nbLignesContenu > 12 ? Math.max(dureeMs, 8000) : dureeMs
 
   // Audio embarqué dans la vidéo — seulement si la session audio démarre vraiment.
@@ -1017,6 +961,7 @@ export async function genererVideoStory(opts: {
     try { scoreRevelation(audioCtx, audioDest, opts.type) } catch { /* partition silencieuse — la vidéo continue */ }
   }
 
+  let accentInvitation: string | null = null
   await new Promise<void>(resolve => {
     const start = performance.now()
     let fini = false
@@ -1033,7 +978,15 @@ export async function genererVideoStory(opts: {
           dessinerPoemePleinCadre(ctx, poemeIllustImg, illustBox, overlay, ornCanvas!, t, dureeEff, W, H, encreTexte, scrimTexte)
         } else if (opts.type === 'poeme' && poemeLayout) {
           dessinerPoemeAnime(ctx, poemeLayout, t, dureeEff, W, accent, ink, bg)
-        } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, opts.texte ?? '', ornCanvas!, t, W, H, ZONE_W, accent, encreTexte, scrimTexte)
+        } else if (img) dessinerDessinPleinCadre(ctx, img, imgBox, lecture, ornCanvas!, t, W, H, accent, encreTexte, scrimTexte)
+        // Sur une image, l'accent est ramené au contraste et l'invitation
+        // prend l'ombre du voile ; sur le papier, la couleur de l'affiche.
+        const surImage = (opts.type === 'poeme' && !!poemeIllustImg) || !!img
+        if (surImage && accentInvitation === null && t >= dureeEff - INVITATION_AVANT_FIN) {
+          accentInvitation = accentSurImage(ctx, accent, scrimTexte)
+        }
+        if (surImage) invitationVideo(ctx, W, t, dureeEff, accentInvitation ?? garantirContraste(accent, scrimTexte, 4.5), invitation, scrimTexte)
+        else invitationVideo(ctx, W, t, dureeEff, accent, invitation)
         // Voile de boucle — un cillement masque le raccord début/fin sur les réseaux.
         // Sur image plein cadre : couleur du scrim adaptatif (le voile d'ambiance
         // teintait la miniature d'un aplat étranger à l'image).
@@ -1173,50 +1126,8 @@ function dessinerPoemeAnime(
 }
 
 // ── Texte en surimpression sur l'illustration plein cadre ──────────────────────
-
-interface OverlayTexte {
-  lignes: string[]
-  size: number
-  lineH: number
-  top: number
-  titre: string[] | null
-  titreSize: number
-  titreTop: number
-}
-
-function layoutTexteOverlay(
-  ctx: CanvasRenderingContext2D, titre: string | undefined, texte: string | undefined,
-  W: number, H: number, ZONE_W: number,
-): OverlayTexte {
-  let size = 52, lineH = 78
-  const sourceLines = (texte ?? '').split('\n')
-  const doWrap = (s: number) => {
-    ctx.font = `italic ${s}px 'Bodoni Moda', Georgia, serif`
-    const r: string[] = []
-    for (const src of sourceLines) {
-      if (!src.trim()) { r.push(''); continue }
-      for (const p of wrapText(ctx, src, ZONE_W)) r.push(p)
-    }
-    return r
-  }
-  let lignes = doWrap(size)
-  if (lignes.length > 12) { size = 42; lineH = 62; lignes = doWrap(size) }
-  if (lignes.length > 16) { size = 34; lineH = 50; lignes = doWrap(size) }
-  if (lignes.length > 24) { size = 28; lineH = 42; lignes = doWrap(size) }
-  if (lignes.length > 28) { lignes = lignes.slice(0, 27); lignes.push('[…]') }
-
-  let titreLines: string[] | null = null
-  let titreSize = 64
-  if (titre?.trim()) {
-    ctx.font = `800 italic ${titreSize}px 'Bodoni Moda', Georgia, serif`
-    titreLines = wrapText(ctx, titre, ZONE_W).slice(0, 2)
-  }
-  const titreH = titreLines ? titreLines.length * (titreSize + 12) + 44 : 0
-  const blockH = lignes.length * lineH
-  let top = H * 0.44 - (blockH + titreH) / 2
-  top = Math.max(380, Math.min(top, 1600 - blockH))
-  return { lignes, size, lineH, top: top + titreH, titre: titreLines, titreSize, titreTop: top }
-}
+// Sa composition vient de `composerSurimpression` (lib/affiche.ts). L'ancienne
+// pouvait descendre jusqu'à 1600 et au-delà avec un titre : sur la marque.
 
 // Poème + illustration : image bord à bord, texte en fondu simultané.
 // L'encre et le voile viennent de la luminance mesurée de l'image (encreTexte /
@@ -1224,7 +1135,7 @@ function layoutTexteOverlay(
 // texte — l'image reste intacte partout ailleurs.
 function dessinerPoemePleinCadre(
   ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
-  L: OverlayTexte, orn: HTMLCanvasElement, t: number, duree: number, W: number, H: number, encreTexte: string, scrim: string,
+  L: SurimpressionVideo, orn: HTMLCanvasElement, t: number, duree: number, W: number, H: number, encreTexte: string, scrim: string,
 ) {
   // Image : présente dès la frame 0 (miniature de story = première image),
   // pleine à 800 ms, avec une respiration de zoom continue jusqu'au bout
@@ -1252,8 +1163,8 @@ function dessinerPoemePleinCadre(
   if (ta <= 0) return
 
   // Bande de lisibilité locale — dégradé doux aux bords, jamais un aplat
-  const hautBande = (L.titre ? L.titreTop : L.top) - 40
-  const basBande = L.top + L.lignes.length * L.lineH + 28
+  const hautBande = L.haut - 40
+  const basBande = L.bas + 28
   ctx.save()
   ctx.globalAlpha = ta
   const gb = ctx.createLinearGradient(0, hautBande - 70, 0, basBande + 70)
@@ -1272,19 +1183,20 @@ function dessinerPoemePleinCadre(
     ctx.globalAlpha = ta
     ctx.shadowColor = withAlpha(scrim, 0.85); ctx.shadowBlur = 26; ctx.shadowOffsetY = 3
     ctx.fillStyle = encreTexte
-    ctx.font = `800 italic ${L.titreSize}px 'Bodoni Moda', Georgia, serif`
-    L.titre.forEach((line, i) => ctx.fillText(line, W / 2, L.titreTop + (i + 1) * (L.titreSize + 12)))
+    ctx.font = `800 italic ${L.titre.taille}px 'Bodoni Moda', Georgia, serif`
+    const t = L.titre
+    t.lignes.forEach((line, i) => ctx.fillText(line, W / 2, t.baselines[i]))
     ctx.restore()
   }
 
-  ctx.font = `italic ${L.size}px 'Bodoni Moda', Georgia, serif`
-  L.lignes.forEach((ligne, i) => {
+  ctx.font = policeVideo(L.corps.taille)
+  L.corps.lignes.forEach(({ texte: ligne, y }) => {
     if (!ligne) return
     ctx.save()
     ctx.globalAlpha = ta * 0.97
     ctx.shadowColor = withAlpha(scrim, 0.85); ctx.shadowBlur = 24; ctx.shadowOffsetY = 2
     ctx.fillStyle = encreTexte
-    ctx.fillText(ligne, W / 2, L.top + (i + 1) * L.lineH)
+    ctx.fillText(ligne, W / 2, y)
     ctx.restore()
   })
 }
@@ -1316,7 +1228,7 @@ export function fracRevealDessin(t: number): { frac: number; scanActif: boolean 
 // la lecture surréaliste apparaît en surimpression dans un léger fondu.
 function dessinerDessinPleinCadre(
   ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: { x: number; y: number; w: number; h: number },
-  texte: string, orn: HTMLCanvasElement, t: number, W: number, H: number, ZONE_W: number,
+  lecture: ReturnType<typeof composerLectureVideo>, orn: HTMLCanvasElement, t: number, W: number, H: number,
   accent: string, encreLect: string, scrimLect: string,
 ) {
   const { frac, scanActif } = fracRevealDessin(t)
@@ -1350,7 +1262,7 @@ function dessinerDessinPleinCadre(
 
   // Voile de lecture — couleur du scrim ADAPTATIF (mesuré sur le dessin),
   // plus jamais un aplat d'ambiance étranger à l'œuvre
-  const lectOp = texte.trim() && t >= REVEAL_DESSIN.lectT
+  const lectOp = lecture && t >= REVEAL_DESSIN.lectT
     ? clamp01((t - REVEAL_DESSIN.lectT) / REVEAL_DESSIN.lectDur)
     : 0
   if (lectOp > 0) {
@@ -1371,20 +1283,19 @@ function dessinerDessinPleinCadre(
   marque(ctx, W, garantirContraste(accent, scrimLect, 3), encreLect)
 
   // Lecture surréaliste — léger fondu en surimpression
-  if (lectOp > 0) {
+  if (lecture && lectOp > 0) {
     ctx.save()
     ctx.globalAlpha = lectOp
-    const lectTop = 1380
     ctx.fillStyle = garantirContraste(accent, scrimLect, 3)
     ctx.textAlign = 'center'
     ctx.font = "22px 'Raleway', sans-serif"
-    texteEspace(ctx, langueActuelle() === 'en' ? '— READING —' : '— LECTURE —', W / 2, lectTop, 22 * 0.3)
+    texteEspace(ctx, langueActuelle() === 'en' ? '— READING —' : '— LECTURE —', W / 2, lecture.libelleY, 22 * 0.3)
     ctx.font = "italic 36px 'Playfair Display', Georgia, serif"
-    const lignes = wrapText(ctx, texte.replace(/\n+/g, ' ').trim(), ZONE_W - 60).slice(0, 4)
     ctx.fillStyle = withAlpha(encreLect, 0.92)
-    lignes.forEach((line, i) => {
-      const txt = (i === 0 ? '« ' : '') + line + (i === lignes.length - 1 ? ' »' : '')
-      ctx.fillText(txt, W / 2, lectTop + 56 + i * 56)
+    const n = lecture.lignes.length
+    lecture.lignes.forEach((l, i) => {
+      const txt = (i === 0 ? '« ' : '') + l.texte + (i === n - 1 ? ' »' : '')
+      ctx.fillText(txt, W / 2, l.y)
     })
     ctx.restore()
   }
@@ -1409,7 +1320,9 @@ export async function partagerVideoStory(opts: {
   const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
   // Feuille refermée : ni un échec ni un partage — pas de téléchargement
   // forcé, pas de « ✓ PARTAGÉ ».
-  const issue = await emporterFichier({ nom: `${nomFichier}.${ext}`, blob, titre: 'Cadavre Exquis' })
+  const issue = await emporterFichier({
+    nom: `${nomFichier}.${ext}`, blob, titre: 'Cadavre Exquis', texte: texteAccompagnant(opts.invitation),
+  })
   return issue === 'annule' ? 'annule' : true
 }
 

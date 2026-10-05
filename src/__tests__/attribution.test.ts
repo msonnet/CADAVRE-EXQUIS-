@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { attribution, libelleReserve } from '../lib/attribution'
+import { describe, it, expect, vi } from 'vitest'
+import { attribution, attributionEnMorceaux, nomAffiche, libelleReserve } from '../lib/attribution'
 import type { Case } from '../types'
 
 const base = { numero: 1, fonction: 'vers 1', consigne: '', texte: 'x', ts: 0 }
@@ -87,5 +87,47 @@ describe('libelleReserve', () => {
   it('reste nue quand le stock commun a parlé', () => {
     expect(libelleReserve(undefined)).toBe('RÉSERVE')
     expect(libelleReserve('inconnue')).toBe('RÉSERVE')
+  })
+})
+
+describe("attribution — l'identifiant qui s'affichait nu", () => {
+  // Le cadavre écrit, le salon et le poème du jour gardent l'identifiant de
+  // la voix. Les coutures annonçaient « voix 2 · meteorologue ».
+  it("rend le nom d'une voix gardée par son identifiant", () => {
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'meteorologue' }, 2))
+      .toBe('voix 2 · Le météorologue')
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'souffleur de verre' }))
+      .toBe('voix · Le souffleur de verre')
+  })
+
+  it('laisse tel quel un nom déjà écrit, ou inconnu', () => {
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'Écho' }, 1)).toBe('voix 1 · Écho')
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'constructor' })).toBe('voix · constructor')
+  })
+
+  it('rend un nom reconnu dans la langue courante, et garde celui déjà écrit dans cette langue', () => {
+    // Un Atelier joué en français, relu en anglais : les coutures disaient
+    // « Le météorologue » et la fiche du registre « The meteorologist ».
+    // Pas de navigateur sous Node : la langue est lue dans un stockage simulé.
+    const st = new Map<string, string>()
+    vi.stubGlobal('localStorage', { getItem: (k: string) => st.get(k) ?? null, setItem: (k: string, v: string) => { st.set(k, v) } })
+    try {
+      st.set('langue', 'en')
+      expect(nomAffiche('Le météorologue')).toBe('The meteorologist')
+      expect(nomAffiche('the engraver')).toBe('the engraver')
+      expect(nomAffiche('Écho')).toBe('Écho')
+      st.set('langue', 'fr')
+      expect(nomAffiche('The meteorologist')).toBe('Le météorologue')
+      expect(nomAffiche('le graveur')).toBe('le graveur')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('sépare la phrase et les noms, pour que les coutures les lient un à un', () => {
+    expect(attributionEnMorceaux({ ...base, auteur: 'mixte', nbVoix: 2, voixNom: 'le marin · le graveur' }))
+      .toEqual({ texte: 'toi et 2 voix', voix: ['le marin', 'le graveur'] })
+    expect(attributionEnMorceaux({ ...base, auteur: 'humain', nbVoix: 0, voixNom: 'le marin' }))
+      .toEqual({ texte: 'toi seul', voix: [] })
   })
 })

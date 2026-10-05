@@ -46,6 +46,26 @@ export interface Case {
   fallback?: boolean      // true si le fragment provient de la réserve (API indisponible ou doublon remplacé)
   pseudo?: string         // salon ou poème du jour : la personne qui a posé la case
   moi?: boolean           // salon ou poème du jour : la case est la tienne
+  /** Feuillet relié au carnet : la signature du vers telle que les coutures
+   *  de son poème d'origine l'annonçaient quand on l'a gardé. */
+  signature?: string
+  /** Feuillet relié au carnet : d'où vient le vers, gardé en DONNÉES et non
+   *  en phrase — la date se compose à l'affichage, dans la langue courante. */
+  provenance?: { date: number; titre?: string | null }
+}
+
+/**
+ * Le fil qui relie un feuillet du recueil à sa publication en galerie.
+ *
+ * Le feuillet ignorait qu'il avait été publié : le bouton redevenait actif
+ * deux secondes après « ✓ PUBLIÉ », on pouvait publier trois fois le même
+ * poème, et aucune lecture ne pouvait remonter jusqu'à son auteur. `id` est
+ * celui de la ligne `gallery` ; il peut manquer si la base n'a pas rendu la
+ * ligne écrite — le poème reste alors marqué publié, sans compteurs.
+ */
+export interface LienPublication {
+  id?: string
+  date: number
 }
 
 export interface Illustration {
@@ -64,10 +84,13 @@ export interface Poeme {
   visibilite: Visibilite
   cases: Case[]
   illustration?: Illustration
-  /** D'où vient le poème, quand ce n'est pas d'une partie sur ce téléphone. */
-  origine?: 'salon' | 'jour'
+  /** D'où vient le poème, quand ce n'est pas d'une partie sur ce téléphone.
+   *  'carnet' : relié à la main depuis les vers gardés (`lib/composition.ts`). */
+  origine?: 'salon' | 'jour' | 'carnet'
   /** Poème du jour : la journée UTC qu'il a occupée, AAAA-MM-JJ. */
   jour?: string
+  /** Sa publication en galerie, s'il en a une — voir `LienPublication`. */
+  publication?: LienPublication
   dateCreation: number
   dateModification: number
 }
@@ -118,6 +141,7 @@ export interface DessinCadavre {
   nbBandes: number
   imageDataUrl: string  // dessin assemblé final
   texteVision?: string  // texte généré par Claude Vision
+  publication?: LienPublication
   dateCreation: number
   dateModification: number
 }

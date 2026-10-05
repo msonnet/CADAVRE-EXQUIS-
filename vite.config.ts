@@ -122,8 +122,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,mp3,ogg,wav}'],
         // Les captures de la fiche d'installation ne servent qu'au magasin
         // et à l'invite du navigateur : elles n'ont rien à faire dans le
-        // cache hors ligne du joueur.
-        globIgnores: ['**/screenshots/**'],
+        // cache hors ligne du joueur. L'aperçu de lien (`og-image.png`) non
+        // plus : seuls les robots des messageries le lisent.
+        globIgnores: ['**/screenshots/**', '**/og-image.png'],
         // Plus de règle de cache pour Google Fonts : il n'y a plus rien à
         // aller y chercher. Les .woff2 vivent dans /fonts et le
         // `globPatterns` ci-dessus les précache comme le reste.

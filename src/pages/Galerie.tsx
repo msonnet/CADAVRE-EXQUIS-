@@ -3,90 +3,26 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
-import { supabase, getReactorKey } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import { useSound } from '../hooks/useSound'
 import { useAuth } from '../hooks/useAuth'
+import { useReactionsGalerie } from '../hooks/useReactionsGalerie'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
 import { tr, langueActuelle } from '../i18n'
+import { chargerPoemes, chargerDessins } from '../db'
+import EntreeGalerie, { Planches } from '../components/EntreeGalerie'
+import {
+  type Publication, type TypePublication,
+  languePublication, correspond, retenusDeLaSemaine,
+} from '../lib/galerie'
+import { almanach, type ChaineScellee } from '../lib/jour'
 
 const PAGE_SIZE = 20
-const REACTION_EMOJIS = ['🌙', '✦', '❀', '🜔'] as const
-type ReactionEmoji = typeof REACTION_EMOJIS[number]
-const REACTION_LABELS: Record<ReactionEmoji, string> = {
-  '🌙': tr('Onirique', 'Dreamlike'),
-  '✦': tr('Sublime', 'Sublime'),
-  '❀': tr('Délicat', 'Delicate'),
-  '🜔': tr('Troublant', 'Unsettling'),
-}
+const COLONNES = 'id, type, titre, payload, image_url, author_pseudo, author_avatar, author_id, created_at, views_count'
 
-type GalleryType = 'poeme' | 'dessin'
-
-interface GalleryItem {
-  id: string
-  type: GalleryType
-  titre: string | null
-  payload: string
-  image_url: string | null
-  author_pseudo: string
-  author_avatar: string | null
-  author_id?: string | null
-  created_at: string
-  views_count?: number | null
-}
-
-interface ReactionRow {
-  gallery_id: string
-  emoji: string
-  reactor_key: string
-}
-
-type ReactionCounts = Record<string, number>
-type ReactionsMap = Record<string, ReactionCounts>
-type MineMap = Record<string, Set<string>>
-
-interface PoemeCase {
-  texte: string
-}
-
-interface PoemePayload {
-  cases: PoemeCase[]
-  structureId: string
-  titre?: string
-}
-
-interface DessinPayload {
-  imageDataUrl?: string
-  texteVision?: string
-  nbBandes: number
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(tr('fr-FR', 'en-GB'), {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
-}
-
-function parsePoeme(payload: string): PoemePayload | null {
-  try { return JSON.parse(payload) as PoemePayload } catch { return null }
-}
-
-function parseDessin(payload: string): DessinPayload | null {
-  try { return JSON.parse(payload) as DessinPayload } catch { return null }
-}
-
-/** Langue d'une publication — portée par le payload ; l'historique est français. */
-function langueItem(it: GalleryItem): 'fr' | 'en' {
-  try {
-    const l = (JSON.parse(it.payload) as { langue?: string }).langue
-    return l === 'en' ? 'en' : 'fr'
-  } catch { return 'fr' }
-}
-
-function extraitPoeme(payload: PoemePayload): string {
-  const texte = payload.cases.map(c => c.texte).join(' · ')
-  return texte.slice(0, 120)
-}
+type GalleryType = TypePublication
+type GalleryItem = Publication
 
 const REPORT_REASONS = [
   { id: 'inappropriate', label: tr('Contenu inapproprié', 'Inappropriate content') },
@@ -106,6 +42,12 @@ export function cleAuteur(item: { author_id?: string | null; author_pseudo: stri
 function lireMasques(): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(MASQUES_KEY) ?? '[]')) }
   catch { return new Set() }
+}
+
+/** « 28 SEPT. » — le jour UTC d'une chaîne scellée, comme l'almanach l'écrit. */
+function dateNumero(jour: string): string {
+  const d = new Date(`${jour}T12:00:00Z`)
+  return d.toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'short', timeZone: 'UTC' }).toUpperCase()
 }
 
 export default function Galerie() {
@@ -129,9 +71,7 @@ export default function Galerie() {
   const [encore, setEncore] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
-  const [reactions, setReactions] = useState<ReactionsMap>({})
-  const [mine, setMine] = useState<MineMap>({})
-  const reactorKey = useRef<string>(getReactorKey())
+  const { reactions, mine, charger: chargerReactions, basculer: toggleReaction } = useReactionsGalerie()
   const seenViews = useRef<Set<string>>(new Set())
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const [reportingId, setReportingId] = useState<string | null>(null)
@@ -142,6 +82,19 @@ export default function Galerie() {
   const [reportError, setReportError] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [masques, setMasques] = useState<Set<string>>(lireMasques)
+  const [retenus, setRetenus] = useState<GalleryItem[]>([])
+  const [numeros, setNumeros] = useState<ChaineScellee[]>([])
+  // Les publications de ce téléphone : les rouvrir ne compte pas une
+  // lecture. Un auteur qui relit son poème dix fois se serait annoncé dix
+  // lecteurs — et c'est exactement le chiffre qu'on lui montre désormais.
+  const siennes = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    Promise.all([chargerPoemes(), chargerDessins()])
+      .then(([p, d]) => {
+        for (const x of [...p, ...d]) if (x.publication?.id) siennes.current.add(x.publication.id)
+      })
+      .catch(() => { /* stockage illisible : on compte, comme avant */ })
+  }, [])
 
   const masquerAuteur = useCallback((item: GalleryItem) => {
     setMasques(prev => {
@@ -153,113 +106,33 @@ export default function Galerie() {
     setExpanded(null)
   }, [])
 
-  const chargerReactions = useCallback(async (ids: string[]) => {
-    if (ids.length === 0) return
-    try {
-      const { data, error } = await supabase
-        .from('gallery_reactions')
-        .select('gallery_id, emoji, reactor_key')
-        .in('gallery_id', ids)
-      if (error) {
-        console.error('[Galerie] Erreur réactions', error)
-        return
-      }
-      const counts: ReactionsMap = {}
-      const mineNext: MineMap = {}
-      const rows = (data ?? []) as ReactionRow[]
-      for (const r of rows) {
-        if (!counts[r.gallery_id]) counts[r.gallery_id] = {}
-        counts[r.gallery_id][r.emoji] = (counts[r.gallery_id][r.emoji] ?? 0) + 1
-        if (r.reactor_key === reactorKey.current) {
-          if (!mineNext[r.gallery_id]) mineNext[r.gallery_id] = new Set()
-          mineNext[r.gallery_id].add(r.emoji)
-        }
-      }
-      setReactions(prev => ({ ...prev, ...counts }))
-      setMine(prev => {
-        const next: MineMap = { ...prev }
-        for (const id of ids) {
-          next[id] = mineNext[id] ?? new Set()
-        }
-        return next
-      })
-    } catch (e) {
-      console.error('[Galerie] Exception réactions', e)
-    }
-  }, [])
-
-  const toggleReaction = useCallback(async (galleryId: string, emoji: ReactionEmoji) => {
-    const hadIt = mine[galleryId]?.has(emoji) ?? false
-
-    // Mise à jour optimiste
-    setReactions(prev => {
-      const cur = { ...(prev[galleryId] ?? {}) }
-      cur[emoji] = Math.max(0, (cur[emoji] ?? 0) + (hadIt ? -1 : 1))
-      return { ...prev, [galleryId]: cur }
-    })
-    setMine(prev => {
-      const cur = new Set(prev[galleryId] ?? new Set<string>())
-      if (hadIt) cur.delete(emoji)
-      else cur.add(emoji)
-      return { ...prev, [galleryId]: cur }
-    })
-
-    try {
-      if (hadIt) {
-        const { error } = await supabase
-          .from('gallery_reactions')
-          .delete()
-          .eq('gallery_id', galleryId)
-          .eq('reactor_key', reactorKey.current)
-          .eq('emoji', emoji)
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('gallery_reactions')
-          .insert({ gallery_id: galleryId, emoji, reactor_key: reactorKey.current })
-        if (error) throw error
-      }
-    } catch (e) {
-      console.error('[Galerie] Erreur toggle réaction', e)
-      // Rollback
-      setReactions(prev => {
-        const cur = { ...(prev[galleryId] ?? {}) }
-        cur[emoji] = Math.max(0, (cur[emoji] ?? 0) + (hadIt ? 1 : -1))
-        return { ...prev, [galleryId]: cur }
-      })
-      setMine(prev => {
-        const cur = new Set(prev[galleryId] ?? new Set<string>())
-        if (hadIt) cur.add(emoji)
-        else cur.delete(emoji)
-        return { ...prev, [galleryId]: cur }
-      })
-    }
-  }, [mine])
-
-  const incrementView = useCallback(async (galleryId: string) => {
+  const incrementView = useCallback(async (item: GalleryItem) => {
+    const galleryId = item.id
     if (seenViews.current.has(galleryId)) return
     seenViews.current.add(galleryId)
+    if (siennes.current.has(galleryId) || (user && item.author_id === user.id)) return
     try {
       const { error } = await supabase.rpc('increment_gallery_view', { g_id: galleryId })
       if (error) {
         console.error('[Galerie] Erreur incrément vue', error)
         return
       }
-      setItems(prev => prev.map(it => it.id === galleryId
-        ? { ...it, views_count: (it.views_count ?? 0) + 1 }
-        : it))
+      const plusUn = (it: GalleryItem) => it.id === galleryId ? { ...it, views_count: (it.views_count ?? 0) + 1 } : it
+      setItems(prev => prev.map(plusUn))
+      setRetenus(prev => prev.map(plusUn))
     } catch (e) {
       console.error('[Galerie] Exception incrément vue', e)
     }
-  }, [])
+  }, [user])
 
-  const handleExpand = useCallback((id: string) => {
-    setExpanded(prev => {
-      const next = prev === id ? null : id
-      if (next) incrementView(next)
-      return next
-    })
-  }, [incrementView])
+  // La clé d'ouverture distingue le sommaire de la liste : une publication
+  // retenue cette semaine figure aux deux endroits, et ne doit s'ouvrir
+  // qu'à celui qu'on a touché.
+  const handleExpand = useCallback((cle: string, item: GalleryItem) => {
+    const next = expanded === cle ? null : cle
+    setExpanded(next)
+    if (next) incrementView(item)
+  }, [expanded, incrementView])
 
   const envoyerSignalement = useCallback(async () => {
     if (!reportingId || !reportReason) return
@@ -298,7 +171,12 @@ export default function Galerie() {
     setDeletingId(id)
     try {
       const { error } = await supabase.from('gallery').delete().eq('id', id)
-      if (!error) setItems(prev => prev.filter(it => it.id !== id))
+      // Retirée aussi du sommaire de la semaine : elle y restait jusqu'au
+      // rechargement, sous les yeux de l'auteur qui venait de la supprimer.
+      if (!error) {
+        setItems(prev => prev.filter(it => it.id !== id))
+        setRetenus(prev => prev.filter(it => it.id !== id))
+      }
     } catch { /* ignore */ } finally {
       setDeletingId(null)
     }
@@ -324,7 +202,7 @@ export default function Galerie() {
       for (let tour = 0; tour < 5 && nouveaux.length === 0 && !fini; tour++) {
         const { data, error } = await supabase
           .from('gallery')
-          .select('id, type, titre, payload, image_url, author_pseudo, author_avatar, author_id, created_at, views_count')
+          .select(COLONNES)
           .eq('type', type)
           .order('created_at', { ascending: false })
           .range(curseur, curseur + PAGE_SIZE * 2 - 1)
@@ -340,7 +218,7 @@ export default function Galerie() {
         const bruts = (data ?? []) as GalleryItem[]
         curseur += bruts.length
         fini = bruts.length < PAGE_SIZE * 2
-        nouveaux = bruts.filter(it => langueItem(it) === langueActuelle())
+        nouveaux = bruts.filter(it => languePublication(it) === langueActuelle())
       }
 
       setItems(prev => reset ? nouveaux : [...prev, ...nouveaux])
@@ -365,6 +243,135 @@ export default function Galerie() {
     setRecherche('')
     chargerItems(onglet, 0, true)
   }, [onglet, chargerItems])
+
+  // ── La semaine des lecteurs ──
+  //
+  // La seule découverte possible était le fil chronologique : un poème
+  // publié lundi était enfoui jeudi, quels qu'aient été ses lecteurs. Trois
+  // publications retenues par les réactions des sept derniers jours, en
+  // tête des poèmes. Deux requêtes ; une panne n'affiche rien, et la liste
+  // reste ce qu'elle était.
+  useEffect(() => {
+    if (onglet !== 'poeme') { setRetenus([]); return }
+    let annule = false
+    ;(async () => {
+      try {
+        const maintenant = Date.now()
+        const { data, error } = await supabase
+          .from('gallery_reactions')
+          .select('gallery_id, emoji, reactor_key, created_at')
+          .gte('created_at', new Date(maintenant - 7 * 86_400_000).toISOString())
+          .limit(2000)
+        if (error || !data?.length) return
+        // On en prend plus que trois : la langue et le type ne se filtrent
+        // qu'une fois les publications lues.
+        const ids = retenusDeLaSemaine(data as { gallery_id: string; emoji: string; reactor_key: string; created_at: string }[], maintenant, 12)
+        if (!ids.length) return
+        const { data: rows, error: e2 } = await supabase.from('gallery').select(COLONNES).in('id', ids)
+        if (e2 || !rows || annule) return
+        const parId = new Map((rows as GalleryItem[]).map(r => [r.id, r]))
+        const choisis = ids
+          .map(id => parId.get(id))
+          .filter((r): r is GalleryItem => !!r && r.type === 'poeme' && languePublication(r) === langueActuelle())
+          .slice(0, 3)
+        setRetenus(choisis)
+        chargerReactions(choisis.map(r => r.id))
+      } catch { /* le sommaire se tait */ }
+    })()
+    return () => { annule = true }
+  }, [onglet, chargerReactions])
+
+  // ── Les numéros du poème du jour ──
+  //
+  // Le second titre du sommaire. La galerie ne menait au rendez-vous que
+  // par un lien d'en-tête, vers la journée en cours : les poèmes scellés,
+  // les seuls de tout le jeu écrits par une foule, n'y figuraient nulle
+  // part. Les trois derniers, dans la langue active — `almanach` filtre
+  // déjà — et rien de plus que leur date et leur amorce : un nombre de vers
+  // ou de mains ferait un palmarès. Une panne rend une liste vide, donc
+  // rien.
+  useEffect(() => {
+    if (onglet !== 'poeme') { setNumeros([]); return }
+    let annule = false
+    almanach(3).then(a => { if (!annule) setNumeros(a) })
+    return () => { annule = true }
+  }, [onglet])
+
+  // ── Les actions de modération, dans l'état déplié seulement ──
+  function actionsDe(item: GalleryItem): React.ReactNode {
+    if (user && item.author_id === user.id) {
+      return (
+        <button
+          onClick={() => {
+            if (deletingId === item.id) return
+            if (confirm(tr('Supprimer cette publication ?', 'Delete this publication?'))) supprimerItem(item.id)
+          }}
+          style={{
+            ...mono, fontSize: 13, color: accent, opacity: 0.85,
+            background: 'none', border: `0.5px solid ${accent}40`,
+            borderRadius: 3,
+            cursor: 'pointer', padding: '9px 12px', minHeight: 40,
+          }}
+        >
+          {deletingId === item.id ? '…' : tr('✕ SUPPRIMER', '✕ DELETE')}
+        </button>
+      )
+    }
+    return (
+      <>
+        <button
+          onClick={() => {
+            setReportingId(item.id)
+            setReportReason('')
+            setReportDetails('')
+          }}
+          style={{
+            ...mono, fontSize: 13, color: encre, opacity: 0.65,
+            background: 'none', border: `0.5px solid ${encre}30`,
+            borderRadius: 3,
+            cursor: 'pointer', padding: '9px 12px', minHeight: 40,
+          }}
+        >
+          ⚑ {tr('Signaler', 'Report')}
+        </button>
+        <button
+          onClick={() => {
+            if (confirm(tr(`Masquer toutes les publications de « ${item.author_pseudo} » ? (réversible dans Réglages)`, `Hide all publications from “${item.author_pseudo}”? (reversible in Settings)`))) {
+              masquerAuteur(item)
+            }
+          }}
+          aria-label={tr(`Masquer les publications de ${item.author_pseudo}`, `Hide publications from ${item.author_pseudo}`)}
+          style={{
+            ...mono, fontSize: 13, color: encre, opacity: 0.65,
+            background: 'none', border: `0.5px solid ${encre}30`,
+            borderRadius: 3,
+            cursor: 'pointer', padding: '9px 12px', minHeight: 40,
+          }}
+        >
+          ⊘ {tr("Masquer l'auteur", 'Hide author')}
+        </button>
+      </>
+    )
+  }
+
+  function propsEntree(item: GalleryItem, cle: string, domId: string) {
+    return {
+      item,
+      ouvert: expanded === cle,
+      onBasculer: () => handleExpand(cle, item),
+      reactions: reactions[item.id] ?? {},
+      mine: mine[item.id] ?? new Set<string>(),
+      onReagir: (c: Parameters<typeof toggleReaction>[1]) => toggleReaction(item.id, c),
+      onAgrandir: (src: string) => setLightboxSrc(src),
+      accent, encre,
+      actions: actionsDe(item),
+      domId,
+    }
+  }
+
+  function entree(item: GalleryItem, cle: string, domId: string) {
+    return <EntreeGalerie key={cle} {...propsEntree(item, cle, domId)} />
+  }
 
   const chargerPlus = () => {
     if (chargementPlus || !encore) return
@@ -606,18 +613,8 @@ export default function Galerie() {
           })}
         </div>
 
-        {/* ── LÉGENDE DES RÉACTIONS ── */}
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: '4px 14px',
-          marginBottom: 10, opacity: 0.7,
-        }}>
-          {REACTION_EMOJIS.map(em => (
-            <span key={em} style={{ ...mono, fontSize: 13, color: encre, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 17 }}>{em}</span>
-              {REACTION_LABELS[em].toUpperCase()}
-            </span>
-          ))}
-        </div>
+        {/* La légende des réactions est retirée : chaque bouton porte
+            désormais son mot à côté de son signe, là où l'on réagit. */}
 
         {/* ── RECHERCHE ── */}
         <div style={{ marginBottom: 14 }}>
@@ -625,8 +622,8 @@ export default function Galerie() {
             type="search"
             value={recherche}
             onChange={e => setRecherche(e.target.value)}
-            placeholder={tr('Rechercher par titre ou auteur…', 'Search by title or author…')}
-            aria-label={tr('Rechercher par titre ou auteur', 'Search by title or author')}
+            placeholder={tr('Un vers, un titre, un nom…', 'A line, a title, a name…')}
+            aria-label={tr('Rechercher un vers, un titre ou un auteur', 'Search a line, a title or an author')}
             enterKeyHint="search"
             style={{
               width: '100%',
@@ -698,321 +695,77 @@ export default function Galerie() {
           </motion.div>
         )}
 
+        {/* ── LA SEMAINE DES LECTEURS ── */}
+        {!chargement && !erreur && onglet === 'poeme' && !recherche.trim() && (() => {
+          const visibles = retenus.filter(it => !masques.has(cleAuteur(it)))
+          if (!visibles.length) return null
+          return (
+            <section aria-labelledby="titre-semaine" style={{ marginBottom: 22 }}>
+              <h2 id="titre-semaine" style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', margin: '0 0 2px' }}>
+                {tr('— LA SEMAINE DES LECTEURS —', "— THE READERS' WEEK —")}
+              </h2>
+              {visibles.map(item => entree(item, `s:${item.id}`, `semaine-${item.id}`))}
+            </section>
+          )
+        })()}
+
+        {/* ── LES NUMÉROS DU POÈME DU JOUR ── */}
+        {!chargement && !erreur && onglet === 'poeme' && !recherche.trim() && numeros.length > 0 && (
+          <nav aria-label={tr('Numéros du poème du jour', 'Past issues of the poem of the day')} style={{ marginBottom: 22 }}>
+            <h2 style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', margin: '0 0 2px' }}>
+              {tr('— LES POÈMES DU JOUR —', '— POEMS OF THE DAY —')}
+            </h2>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {numeros.map(n => (
+                <li key={n.id} style={{ borderBottom: `0.5px solid ${encre}18` }}>
+                  <Link
+                    to={`/poeme-du-jour?jour=${n.jour}`}
+                    onClick={() => jouer('clic')}
+                    style={{
+                      display: 'flex', alignItems: 'baseline', gap: 14, minHeight: 44,
+                      padding: '11px 0', color: encre, textDecoration: 'none',
+                    }}
+                  >
+                    <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 18, opacity: 0.9, minWidth: 0, overflowWrap: 'anywhere' }}>
+                      {n.amorce}
+                    </span>
+                    <span style={{ ...mono, fontSize: 11, letterSpacing: '0.14em', opacity: 0.6, marginLeft: 'auto', flexShrink: 0 }}>
+                      {dateNumero(n.jour)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
         {/* ── LISTE ── */}
         {!chargement && !erreur && items.length > 0 && (() => {
-          const q = recherche.trim().toLowerCase()
           const visibles = items.filter(it => !masques.has(cleAuteur(it)))
-          const itemsFiltres = q
-            ? visibles.filter(it =>
-                (it.titre ?? '').toLowerCase().includes(q) ||
-                it.author_pseudo.toLowerCase().includes(q)
-              )
+          const itemsFiltres = recherche.trim()
+            ? visibles.filter(it => correspond(it, recherche))
             : visibles
-          return (
-          <AnimatePresence initial={false}>
-            {itemsFiltres.length === 0 ? (
+          if (itemsFiltres.length === 0) {
+            return (
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.6, textAlign: 'center', padding: '28px 0' }}>
                 {tr(`Aucun résultat pour « ${recherche} ».`, `No results for “${recherche}”.`)}
               </p>
-            ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {itemsFiltres.map((item, i) => {
-                const ouvert = expanded === item.id
-                const poemePayload = item.type === 'poeme' ? parsePoeme(item.payload) : null
-                const dessinPayload = item.type === 'dessin' ? parseDessin(item.payload) : null
-                const titreAffiche = item.titre
-                  ?? (poemePayload?.titre)
-                  ?? (item.type === 'poeme' && poemePayload ? extraitPoeme(poemePayload).slice(0, 48) : null)
-                  ?? (item.type === 'dessin' && dessinPayload?.texteVision ? dessinPayload.texteVision.split('\n')[0].slice(0, 48) : null)
-                  ?? tr('Sans titre', 'Untitled')
-
-                return (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                  >
-                    <div
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left',
-                        padding: 12,
-                        border: `0.5px solid ${encre}15`,
-                        borderRadius: 3,
-                        background: 'transparent',
-                        transition: 'border-color 0.15s, background 0.15s',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = `${accent}55` }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = `${encre}15` }}
-                    >
-                      <button
-                        onClick={() => handleExpand(item.id)}
-                        style={{
-                          display: 'block', width: '100%', textAlign: 'left',
-                          padding: 0,
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: 'inherit',
-                        }}
-                      >
-                        {/* En-tête de la carte */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-                          <p style={{
-                            fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17,
-                            lineHeight: 1.3, margin: 0, flex: 1, minWidth: 0,
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          }}>
-                            {titreAffiche}
-                          </p>
-                          <span style={{
-                            ...mono, fontSize: 17, color: accent, flexShrink: 0,
-                            width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: `0.5px solid ${accent}50`, borderRadius: 3, lineHeight: 1,
-                          }}>
-                            {ouvert ? '−' : '+'}
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Méta auteur (Link) + date */}
-                      <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, margin: 0, marginBottom: 8 }}>
-                        <Link
-                          to={`/u/${encodeURIComponent(item.author_pseudo)}`}
-                          onClick={e => e.stopPropagation()}
-                          style={{
-                            color: encre,
-                            textDecoration: 'none',
-                            transition: 'color 0.15s',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.color = accent }}
-                          onMouseLeave={e => { e.currentTarget.style.color = encre }}
-                        >
-                          {item.author_pseudo.toUpperCase()}
-                        </Link>
-                        {' · '}
-                        {formatDate(item.created_at).toUpperCase()}
-                      </p>
-
-                      <button
-                        onClick={() => handleExpand(item.id)}
-                        style={{
-                          display: 'block', width: '100%', textAlign: 'left',
-                          padding: 0,
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: 'inherit',
-                        }}
-                      >
-                        {/* Aperçu / contenu */}
-                        {item.type === 'poeme' && poemePayload && (
-                          <div style={{
-                            fontFamily: "'Playfair Display', serif",
-                            fontSize: 17, color: encre, opacity: 0.92,
-                            lineHeight: 1.5,
-                            whiteSpace: 'pre-wrap',
-                          }}>
-                            {ouvert
-                              ? poemePayload.cases.map(c => c.texte).join('\n')
-                              : poemePayload.cases.slice(0, 2).map(c => c.texte).join('\n')}
-                          </div>
-                        )}
-
-                        {item.type === 'poeme' && item.image_url && (
-                          <div style={{
-                            marginTop: 10,
-                            border: `0.5px solid ${encre}20`,
-                            overflow: 'hidden',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            position: 'relative',
-                            cursor: ouvert ? 'zoom-in' : 'default',
-                          }}
-                            onClick={e => { if (ouvert && item.image_url) { e.stopPropagation(); setLightboxSrc(item.image_url) } }}
-                          >
-                            <img
-                              src={item.image_url}
-                              alt={titreAffiche}
-                              loading="lazy"
-                              style={{
-                                maxHeight: ouvert ? 'none' : 140,
-                                width: ouvert ? '100%' : 'auto',
-                                height: 'auto',
-                                objectFit: 'contain',
-                                display: 'block',
-                              }}
-                            />
-                            {ouvert && (
-                              <span style={{
-                                position: 'absolute', bottom: 6, right: 8,
-                                fontFamily: "'Raleway', sans-serif", letterSpacing: '0.14em',
-                                fontSize: 17, color: '#fff',
-                                background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
-                                pointerEvents: 'none',
-                              }}>⤢ {tr('AGRANDIR', 'ENLARGE')}</span>
-                            )}
-                          </div>
-                        )}
-
-                        {item.type === 'dessin' && (item.image_url || dessinPayload?.imageDataUrl) && (() => {
-                          const src = item.image_url ?? dessinPayload?.imageDataUrl
-                          return (
-                            <div style={{
-                              border: `0.5px solid ${encre}20`,
-                              overflow: 'hidden',
-                              background: '#fff',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              position: 'relative',
-                              cursor: ouvert ? 'zoom-in' : 'default',
-                            }}
-                              onClick={e => { if (ouvert && src) { e.stopPropagation(); setLightboxSrc(src) } }}
-                            >
-                              <img
-                                src={src}
-                                alt={titreAffiche}
-                                style={{
-                                  maxHeight: ouvert ? 'none' : 120,
-                                  width: ouvert ? '100%' : 'auto',
-                                  height: 'auto',
-                                  objectFit: 'contain',
-                                  display: 'block',
-                                }}
-                              />
-                              {ouvert && (
-                                <span style={{
-                                  position: 'absolute', bottom: 6, right: 8,
-                                  fontFamily: "'Raleway', sans-serif", letterSpacing: '0.14em',
-                                  fontSize: 17, color: '#fff',
-                                  background: 'rgba(0,0,0,0.5)', padding: '2px 7px',
-                                  pointerEvents: 'none',
-                                }}>⤢ {tr('AGRANDIR', 'ENLARGE')}</span>
-                              )}
-                            </div>
-                          )
-                        })()}
-
-                        {ouvert && item.type === 'dessin' && dessinPayload?.texteVision && (
-                          <p style={{
-                            fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre,
-                            opacity: 0.85, marginTop: 8, lineHeight: 1.4, whiteSpace: 'pre-wrap',
-                          }}>
-                            {dessinPayload.texteVision}
-                          </p>
-                        )}
-                      </button>
-
-                      {/* ── RÉACTIONS + VUES ── */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        marginTop: 10, flexWrap: 'wrap',
-                      }}>
-                        {REACTION_EMOJIS.map(em => {
-                          const count = reactions[item.id]?.[em] ?? 0
-                          const reacted = mine[item.id]?.has(em) ?? false
-                          return (
-                            <button
-                              key={em}
-                              onClick={e => { e.stopPropagation(); toggleReaction(item.id, em) }}
-                              style={{
-                                ...mono,
-                                fontSize: 17,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4,
-                                padding: '4px 8px',
-                                background: 'transparent',
-                                color: reacted ? accent : encre,
-                                opacity: reacted ? 1 : 0.6,
-                                border: reacted ? `1px solid ${accent}` : `0.5px solid ${encre}25`,
-                                borderRadius: 3,
-                                cursor: 'pointer',
-                                transition: 'opacity 0.15s, border-color 0.15s, color 0.15s',
-                                lineHeight: 1,
-                              }}
-                              onMouseEnter={e => { if (!reacted) e.currentTarget.style.opacity = '0.95' }}
-                              onMouseLeave={e => { if (!reacted) e.currentTarget.style.opacity = '0.6' }}
-                              aria-label={`${tr('Réagir :', 'React:')} ${REACTION_LABELS[em]}`}
-                              title={REACTION_LABELS[em]}
-                            >
-                              <span style={{ fontSize: 17 }}>{em}</span>
-                              {count > 0 && <span>{count}</span>}
-                            </button>
-                          )
-                        })}
-                        <span style={{
-                          ...mono, fontSize: 13, color: encre, opacity: 0.55,
-                          marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
-                        }}>
-                          <span style={{ fontSize: 17 }}>👁</span>
-                          {item.views_count ?? 0}
-                        </span>
-                      </div>
-
-                      {/* ── ACTIONS (signaler / supprimer) — uniquement carte ouverte ── */}
-                      {ouvert && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                        {user && item.author_id === user.id ? (
-                          <button
-                            onClick={e => {
-                              e.stopPropagation()
-                              if (deletingId === item.id) return
-                              if (confirm(tr('Supprimer cette publication ?', 'Delete this publication?'))) supprimerItem(item.id)
-                            }}
-                            style={{
-                              ...mono, fontSize: 13, color: accent, opacity: 0.85,
-                              background: 'none', border: `0.5px solid ${accent}40`,
-                              borderRadius: 3,
-                              cursor: 'pointer', padding: '9px 12px', minHeight: 40,
-                            }}
-                          >
-                            {deletingId === item.id ? '…' : tr('✕ SUPPRIMER', '✕ DELETE')}
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              onClick={e => {
-                                e.stopPropagation()
-                                setReportingId(item.id)
-                                setReportReason('')
-                                setReportDetails('')
-                              }}
-                              style={{
-                                ...mono, fontSize: 13, color: encre, opacity: 0.65,
-                                background: 'none', border: `0.5px solid ${encre}30`,
-                                borderRadius: 3,
-                                cursor: 'pointer', padding: '9px 12px', minHeight: 40,
-                              }}
-                            >
-                              ⚑ {tr('Signaler', 'Report')}
-                            </button>
-                            <button
-                              onClick={e => {
-                                e.stopPropagation()
-                                if (confirm(tr(`Masquer toutes les publications de « ${item.author_pseudo} » ? (réversible dans Réglages)`, `Hide all publications from “${item.author_pseudo}”? (reversible in Settings)`))) {
-                                  masquerAuteur(item)
-                                }
-                              }}
-                              aria-label={tr(`Masquer les publications de ${item.author_pseudo}`, `Hide publications from ${item.author_pseudo}`)}
-                              style={{
-                                ...mono, fontSize: 13, color: encre, opacity: 0.65,
-                                background: 'none', border: `0.5px solid ${encre}30`,
-                                borderRadius: 3,
-                                cursor: 'pointer', padding: '9px 12px', minHeight: 40,
-                              }}
-                            >
-                              ⊘ {tr("Masquer l'auteur", "Hide author")}
-                            </button>
-                          </>
-                        )}
-                      </div>}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-            )}
-          </AnimatePresence>
+            )
+          }
+          if (onglet === 'dessin') {
+            // La planche : deux colonnes, chaque dessin à sa hauteur
+            // entière, et les détails sous la rangée (`Planches`).
+            return <Planches items={itemsFiltres} propsDe={item => propsEntree(item, item.id, `pub-${item.id}`)} />
+          }
+          return (
+            <section aria-label={tr('Publications', 'Publications')}>
+              {recherche.trim() === '' && (numeros.length > 0 || retenus.some(r => !masques.has(cleAuteur(r)))) && (
+                <h2 style={{ ...mono, fontSize: 11, color: accent, fontWeight: 700, letterSpacing: '0.22em', margin: '0 0 2px' }}>
+                  {tr('— AU FIL DES JOURS —', '— DAY BY DAY —')}
+                </h2>
+              )}
+              {itemsFiltres.map(item => entree(item, item.id, `pub-${item.id}`))}
+            </section>
           )
         })()}
 

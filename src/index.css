@@ -437,6 +437,18 @@ a[href]::after,
   height: max(100%, 44px);
 }
 
+/* La signature d'une entrée de galerie est posée à 4 px sous son titre.
+   Centrée, sa zone remontait de treize pixels sur le titre — et, venant
+   après lui dans le document, elle l'emportait : mesuré à 390, toucher le
+   bas de l'incipit ouvrait la page de l'auteur au lieu du poème, quatre
+   entrées sur cinq. Elle s'étend donc vers le BAS seulement, sur la ligne
+   des échos et la marge, qui ne répondent à rien ; l'entrée suivante, plus
+   loin dans le document, garde la main là où les deux se rejoindraient. */
+a.lien-signature::after {
+  top: 0;
+  transform: translateX(-50%);
+}
+
 .appui { transition: opacity 0.12s ease, transform 0.12s ease; }
 .appui:active { opacity: 1 !important; transform: scale(0.96); }
 

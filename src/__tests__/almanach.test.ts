@@ -10,6 +10,8 @@ import { join } from 'node:path'
  */
 const page = readFileSync(join(__dirname, '../pages/PoemeDuJour.tsx'), 'utf8')
 const lib = readFileSync(join(__dirname, '../lib/jour.ts'), 'utf8')
+// La clé du dépli vit dans `jourLocal` depuis que l'accueil la lit aussi.
+const local = readFileSync(join(__dirname, '../lib/jourLocal.ts'), 'utf8')
 
 describe('l\'almanach', () => {
   it('va chercher les jours scellés, et seulement eux', () => {
@@ -20,12 +22,15 @@ describe('l\'almanach', () => {
 
   it('ouvrir un jour ancien ne fait pas rejouer le dépli du dernier', () => {
     // La clé retenait UN jour : ouvrir avant-hier aurait effacé hier.
-    expect(page).toMatch(/const joursDeplies = \(\): string\[\] =>/)
-    expect(page).toMatch(/\.slice\(0, 20\)/)
+    expect(local).toMatch(/export function joursDeplies\(\): string\[\]/)
+    expect(local).toMatch(/\.slice\(0, 20\)/)
+    expect(page).toMatch(/from '\.\.\/lib\/jourLocal'/)
   })
 
   it('un poème ancien où l\'on a écrit entre aussi au recueil', () => {
     const montrer = page.slice(page.indexOf('function montrer('))
-    expect(montrer.slice(0, 900)).toMatch(/garderSiAbsent\(poemeDuJour/)
+    expect(montrer.slice(0, 900)).toMatch(/entrerAuRecueil\(h\)/)
+    const entrer = page.slice(page.indexOf('function entrerAuRecueil('))
+    expect(entrer.slice(0, 400)).toMatch(/garderSiAbsent\(poemeDuJour/)
   })
 })

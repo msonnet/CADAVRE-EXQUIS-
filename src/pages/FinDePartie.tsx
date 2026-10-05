@@ -420,6 +420,7 @@ export default function FinDePartie() {
               datePoeme={poeme.dateCreation}
               signature={attribution(c, iaNum)}
               nbVoix={c.nbVoix}
+              auteur={c.auteur}
             />
           </span>
         </div>

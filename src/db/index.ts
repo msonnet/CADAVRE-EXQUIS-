@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
-import type { Poeme, DessinCadavre, BandeDessin } from '../types'
+import type { Poeme, Case, DessinCadavre, BandeDessin, LienPublication } from '../types'
+import { poemeDuCarnet } from '../lib/reliure'
 
 /** Bandes d'une partie dessinée en cours — trop lourdes pour sessionStorage
  *  (quelques PNG plein écran suffisaient à dépasser le quota, et l'écriture
@@ -35,6 +36,9 @@ export interface VersRecolte {
   /** « toi », ou les noms des voix — tel que les coutures l'annoncent. */
   signature?: string
   nbVoix?: number
+  /** Qui a écrit la ligne. Noté depuis qu'un vers peut être relié en
+   *  feuillet : le feuillet doit savoir s'il porte une voix (`auteurDuVers`). */
+  auteur?: Case['auteur']
 }
 
 class CadavreExquisDB extends Dexie {
@@ -122,6 +126,19 @@ export async function mettreAJourTitre(id: string, titre: string | null): Promis
   await db.poemes.update(id, { titre: titre || null, dateModification: Date.now() })
 }
 
+/**
+ * Relie le feuillet à sa publication, ou l'en détache (`null`) quand la
+ * galerie ne l'a plus. Aucun index : on ne cherche jamais un poème par sa
+ * publication, on lit la publication d'un poème qu'on tient déjà.
+ */
+export async function marquerPublie(id: string, lien: LienPublication | null): Promise<void> {
+  await db.poemes.update(id, { publication: lien ?? undefined })
+}
+
+export async function marquerDessinPublie(id: string, lien: LienPublication | null): Promise<void> {
+  await db.dessins.update(id, { publication: lien ?? undefined })
+}
+
 export async function sauvegarderIllustration(id: string, illustration: import('../types').Illustration): Promise<void> {
   await db.poemes.update(id, { illustration, dateModification: Date.now() })
 }
@@ -203,6 +220,44 @@ export async function deplacerDansLaRecolte(id: string, sens: -1 | 1): Promise<v
     await db.recolte.update(a.id, { ordre: b.ordre })
     await db.recolte.update(b.id, { ordre: a.ordre })
   })
+}
+
+/**
+ * Remonte un vers en tête du carnet, d'un seul appui.
+ *
+ * Les flèches d'un cran restaient le seul moyen d'ordonner le carnet : son
+ * ordre est celui que COPIER et FICHIER emportent, et le 280ᵉ vers coûtait
+ * 279 appuis pour ouvrir le texte. Une seule écriture, comme les flèches :
+ * le vers prend un rang sous le plus petit, les autres ne bougent pas — un
+ * rang négatif n'a rien de faux, seul l'ordre relatif compte.
+ */
+export async function mettreEnTeteDeLaRecolte(id: string): Promise<void> {
+  await db.transaction('rw', db.recolte, async () => {
+    const premier = await db.recolte.orderBy('ordre').first()
+    if (!premier || premier.id === id) return
+    await db.recolte.update(id, { ordre: premier.ordre - 1 })
+  })
+}
+
+/**
+ * Relie des vers du carnet en un feuillet du recueil, dans l'ordre donné.
+ *
+ * Le carnet n'est pas touché : relier copie, et un vers peut servir à deux
+ * feuillets. Les poèmes d'origine ne sont lus que pour les vers gardés
+ * avant qu'on note leur auteur — voir `auteurDuVers`.
+ */
+export async function relierEnFeuillet(ids: string[]): Promise<Poeme> {
+  const lus = await db.recolte.bulkGet(ids)
+  const vers = lus.filter((v): v is VersRecolte => Boolean(v))
+  const sources = new Map<string, Poeme>()
+  for (const v of vers) {
+    if (v.auteur || !v.poemeId || sources.has(v.poemeId)) continue
+    const p = await db.poemes.get(v.poemeId)
+    if (p) sources.set(v.poemeId, p)
+  }
+  const poeme = poemeDuCarnet({ vers, sources })
+  await db.poemes.add(poeme)
+  return poeme
 }
 
 /** Vide le carnet. Sans retour. */

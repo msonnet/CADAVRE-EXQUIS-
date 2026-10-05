@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
-import { chargerPoemes, chargerDessins, chargerRecolte, restaurerRecueil } from '../db'
+import { chargerPoemes, chargerDessins, chargerRecolte, restaurerRecueil, marquerPublie, marquerDessinPublie } from '../db'
 import { Decor, useReve } from '../reve'
 import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_BIBLIO } from '../hooks/useTutoriel'
@@ -12,9 +12,12 @@ import { mono } from '../lib/typo'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { libelleMorceaux, libelleMains } from '../lib/attribution'
 import { mainsDuPoeme } from '../lib/versRecueil'
+import { registreDesVoix } from '../lib/registreVoix'
 import { composerTexte, composerSauvegarde, lireSauvegarde, nomDeFichier } from '../lib/recueil'
 import { tr } from '../i18n'
 import { emporterFichier } from '../lib/emporter'
+import { lireEchos, lireReleve, ecrireReleve, releveDe } from '../lib/echos'
+import { libelleEchos, nouvelles, phraseCourrier, type Echos } from '../lib/galerie'
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -95,6 +98,9 @@ export default function Bibliotheque() {
   const seance = useReve()
   const { jouer } = useSound()
   const [nRecolte, setNRecolte] = useState(0)
+  // Combien de voix ont écrit dans le recueil : relu des poèmes déjà
+  // chargés, aucune lecture de plus.
+  const nVoix = useMemo(() => registreDesVoix(poemes).size, [poemes])
 
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
@@ -106,10 +112,61 @@ export default function Bibliotheque() {
 
   useEffect(() => {
     Promise.all([chargerPoemes(), chargerDessins(), chargerRecolte()])
-      .then(([p, d, r]) => { setPoemes(p); setDessins(d); setNRecolte(r.length) })
+      .then(([p, d, r]) => { setPoemes(p); setDessins(d); setNRecolte(r.length); lireLeCourrier(p, d) })
       .catch(console.error)
       .finally(() => setChargement(false))
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Le courrier ──
+  //
+  // Les lectures et les réactions de la galerie ne remontaient jamais
+  // jusqu'à l'auteur : le feuillet ignorait même qu'il avait été publié. Une
+  // seule lecture du registre pour tous les feuillets publiés ; chaque carte
+  // porte ce que sa publication a reçu, et une ligne en tête dit ce qui est
+  // NOUVEAU depuis le dernier passage — un compteur qui affiche toujours
+  // « 14 » ne dit pas qu'on vient d'être lu.
+  const [echos, setEchos] = useState<Record<string, Echos>>({})
+  const [courrier, setCourrier] = useState<{ phrase: string; vers: string } | null>(null)
+  const courrierLu = useRef(false)
+
+  function lireLeCourrier(ps: Poeme[], ds: DessinCadavre[]) {
+    if (courrierLu.current) return
+    courrierLu.current = true
+    const ids = [...ps, ...ds].map(x => x.publication?.id).filter((x): x is string => !!x)
+    if (!ids.length) return
+    lireEchos(ids).then(r => {
+      // Registre muet : on se tait, plutôt que d'afficher un chiffre qu'on
+      // n'a pas reçu.
+      if (!r) return
+      setEchos(r.echos)
+      // Retirées de la galerie — par leur auteur ou par la modération : le
+      // feuillet s'en détache, et son bouton PUBLIER revient.
+      for (const p of ps) if (p.publication?.id && r.absents.has(p.publication.id)) marquerPublie(p.id, null).catch(() => {})
+      for (const d of ds) if (d.publication?.id && r.absents.has(d.publication.id)) marquerDessinPublie(d.id, null).catch(() => {})
+      const avant = lireReleve()
+      const maintenant = releveDe(r.echos)
+      const n = nouvelles(avant, maintenant)
+      ecrireReleve(maintenant)
+      if (!n.length) return
+      const poeme = ps.find(p => p.publication?.id === n[0].id)
+      const dessin = ds.find(d => d.publication?.id === n[0].id)
+      const tete = poeme
+        ? (poeme.titre || premierVers(poeme))
+        : (dessin?.titre || dessin?.texteVision?.split('\n')[0] || tr('ton dessin', 'your drawing'))
+      setCourrier({
+        phrase: phraseCourrier(tete, n[0], !!avant?.[n[0].id], n.length - 1),
+        vers: poeme ? `/bibliotheque/${poeme.id}` : `/bibliotheque/dessin/${dessin?.id ?? ''}`,
+      })
+    })
+  }
+
+  /** « ☾ 3 · 12 LECTURES » sous la carte d'un feuillet publié — ou rien. */
+  function ligneEchos(lien: { id?: string } | undefined) {
+    const e = lien?.id ? echos[lien.id] : undefined
+    const l = e ? libelleEchos(e) : ''
+    if (!l) return null
+    return <p data-echos style={{ ...mono, fontSize: 11, letterSpacing: '0.16em', color: encre, opacity: 0.6, marginTop: 2 }}>{l}</p>
+  }
 
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
@@ -186,6 +243,48 @@ export default function Bibliotheque() {
             ◆ {tr('LE CARNET', 'THE NOTEBOOK')}
             <span style={{ color: encre, opacity: 0.45, marginLeft: 10 }}>
               {nRecolte} {tr('vers gardé', 'line kept')}{nRecolte > 1 ? tr('s', 's') : ''}
+            </span>
+          </button>
+        )}
+
+        {/* ── LE REGISTRE DES VOIX ── */}
+        {/* Même règle que le carnet : l'entrée n'existe que si une voix a
+            écrit dans un poème du recueil. Un registre vide n'apprendrait
+            rien, sinon qu'il reste quarante-six places à remplir — et le
+            registre n'est pas une collection. */}
+        {!chargement && nVoix > 0 && (
+          <button
+            onClick={() => { jouer('clic'); navigate('/voix') }}
+            style={{
+              ...mono, fontSize: 12, letterSpacing: '0.15em', color: accent,
+              background: 'none', border: `1px solid ${accent}44`, borderRadius: 3,
+              cursor: 'pointer', padding: '10px 14px', marginBottom: 14, minHeight: 44,
+              textAlign: 'left', width: '100%',
+            }}
+          >
+            ✦ {tr('LE REGISTRE DES VOIX', 'THE REGISTER OF VOICES')}
+            <span style={{ color: encre, opacity: 0.45, marginLeft: 10 }}>
+              {nVoix === 1 ? tr('une voix', 'one voice') : tr(`${nVoix} voix`, `${nVoix} voices`)}
+            </span>
+          </button>
+        )}
+
+        {/* ── LE COURRIER ── une ligne, et seulement s'il y a du nouveau. */}
+        {!chargement && courrier && (
+          <button
+            onClick={() => { jouer('clic'); navigate(courrier.vers) }}
+            data-courrier
+            style={{
+              display: 'block', width: '100%', textAlign: 'left', minHeight: 44,
+              background: 'none', border: 'none', borderLeft: `2px solid ${accent}55`,
+              padding: '6px 0 6px 12px', marginBottom: 14, cursor: 'pointer',
+            }}
+          >
+            <span style={{ ...mono, display: 'block', fontSize: 11, letterSpacing: '0.22em', color: accent, fontWeight: 700, marginBottom: 2 }}>
+              {tr('LE COURRIER', 'LETTERS')}
+            </span>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, lineHeight: 1.45, color: encre, opacity: 0.85 }}>
+              {courrier.phrase}
             </span>
           </button>
         )}
@@ -335,11 +434,14 @@ export default function Bibliotheque() {
                         <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
                           {poeme.origine === 'jour'
                             ? tr('POÈME DU JOUR', 'POEM OF THE DAY')
+                            : poeme.origine === 'carnet'
+                            ? tr('RECUEILLI PAR TOI', 'GATHERED BY YOU')
                             : (NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
                           {' · '}{libelleMorceaux(poeme.structureId, poeme.cases.length)}
                           {mainsDuPoeme(poeme) !== null && <>{' · '}{libelleMains(mainsDuPoeme(poeme)!)}</>}
                           {' · '}{formatDate(poeme.dateCreation).toUpperCase()}
                         </p>
+                        {ligneEchos(poeme.publication)}
                       </button>
                       {/*
                         Les coutures sont la meilleure page du produit, et il
@@ -411,6 +513,7 @@ export default function Bibliotheque() {
                   <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
                     {dessin.nbBandes} BANDES · {formatDate(dessin.dateCreation).toUpperCase()}
                   </p>
+                  {ligneEchos(dessin.publication)}
                   {dessin.texteVision && (
                     <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginTop: 3, lineHeight: 1.4 }}>
                       {dessin.texteVision.split('\n')[0]}
