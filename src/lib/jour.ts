@@ -3,6 +3,7 @@ import { api } from './apiBase'
 import { jetonOuIdentite } from './acces'
 import { langueActuelle } from '../i18n'
 import type { RefusVers } from './jourLogique'
+import { garderScelle, garderAlmanach, savoirScelle } from './jourLocal'
 
 /**
  * Le poème du jour, côté joueur.
@@ -59,20 +60,53 @@ export type ResultatSignalement =
   | { ok: true; retire: boolean }
   | { ok: false; motif: 'sien' | 'deja' | 'voix' | 'introuvable' | 'indisponible' | 'auth' }
 
+/**
+ * Six secondes, puis on rend la main.
+ *
+ * Aucune lecture du rendez-vous n'avait de délai : réseau coupé, l'étoile
+ * tournait 8 s (le client Supabase réessaie) ; réseau PENDU — le train, le
+ * tunnel —, elle tournait encore après 45 s, sans issue. Or c'est la page où
+ * mène l'annonce de 9 h. Six secondes, c'est ce que la galerie met à rendre
+ * la main ; au-delà, on dit que le registre se tait et l'on montre ce qu'on
+ * a gardé.
+ */
+export const DELAI_JOUR = 6_000
+
+/** Le navigateur sait qu'il n'a pas de réseau : inutile d'attendre six secondes. */
+export const horsLigne = () => typeof navigator !== 'undefined' && navigator.onLine === false
+
+/**
+ * Borner une lecture : le travail reçoit un signal qu'on abandonne au
+ * délai, et l'on rend le repli dans tous les cas d'échec. Le `race` couvre
+ * aussi ce qui n'écoute pas le signal — le rafraîchissement du jeton.
+ */
+async function borne<T>(travail: (signal: AbortSignal) => Promise<T>, repli: T): Promise<T> {
+  if (horsLigne()) return repli
+  const ctrl = new AbortController()
+  let minuterie: ReturnType<typeof setTimeout> | undefined
+  const delai = new Promise<T>(res => {
+    minuterie = setTimeout(() => { ctrl.abort(); res(repli) }, DELAI_JOUR)
+  })
+  try {
+    return await Promise.race([travail(ctrl.signal).catch(() => repli), delai])
+  } finally {
+    clearTimeout(minuterie)
+  }
+}
+
 /** L'état du rendez-vous. `null` si le serveur ne répond pas. */
 export async function lireJour(): Promise<EtatDuJour | null> {
-  try {
+  return borne(async signal => {
     // Le jeton est facultatif : venir voir l'amorce n'engage personne et ne
     // doit ouvrir aucune identité.
     const { data: { session } } = await supabase.auth.getSession()
     const r = await fetch(api(`/api/jour?langue=${langueActuelle()}`), {
       headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+      signal,
     })
     if (!r.ok) return null
     return await r.json()
-  } catch {
-    return null
-  }
+  }, null)
 }
 
 /**
@@ -106,7 +140,7 @@ export async function poserVers(texte: string): Promise<{ ok: true; rang: number
  * un résultat vide sans dire pourquoi.
  */
 export async function dernierPoemeScelle(): Promise<PoemeScelle | null> {
-  try {
+  return borne(async signal => {
     const { data: chaine } = await supabase
       .from('jour_chaines')
       .select('id,jour,amorce')
@@ -114,12 +148,34 @@ export async function dernierPoemeScelle(): Promise<PoemeScelle | null> {
       .not('scelle_le', 'is', null)
       .order('jour', { ascending: false })
       .limit(1)
+      .abortSignal(signal)
       .maybeSingle()
     if (!chaine) return null
     return await lirePoemeScelle(chaine as ChaineScellee)
-  } catch {
-    return null
-  }
+  }, null)
+}
+
+/**
+ * Le jour du dernier poème scellé, et rien d'autre — une ligne, une
+ * colonne. C'est la seule question que l'accueil pose au registre, et il ne
+ * la pose que lorsqu'un poème où l'on a écrit attend d'être annoncé.
+ */
+export async function dernierJourScelle(): Promise<string | null> {
+  return borne(async signal => {
+    const { data, error } = await supabase
+      .from('jour_chaines')
+      .select('jour')
+      .eq('langue', langueActuelle())
+      .not('scelle_le', 'is', null)
+      .order('jour', { ascending: false })
+      .limit(1)
+      .abortSignal(signal)
+      .maybeSingle()
+    const jour = !error && typeof (data as { jour?: unknown } | null)?.jour === 'string'
+      ? (data as { jour: string }).jour : null
+    if (jour) savoirScelle(langueActuelle(), jour)
+    return jour
+  }, null)
 }
 
 /** Une journée scellée, telle que l'almanach la liste. */
@@ -135,7 +191,7 @@ export interface ChaineScellee { id: string; jour: string; amorce: string }
  * n'allait pas le chercher.
  */
 export async function almanach(limite = 30): Promise<ChaineScellee[]> {
-  try {
+  return borne(async signal => {
     const { data } = await supabase
       .from('jour_chaines')
       .select('id,jour,amorce')
@@ -143,20 +199,25 @@ export async function almanach(limite = 30): Promise<ChaineScellee[]> {
       .not('scelle_le', 'is', null)
       .order('jour', { ascending: false })
       .limit(limite)
-    return Array.isArray(data) ? (data as ChaineScellee[]) : []
-  } catch {
-    return []
-  }
+      .abortSignal(signal)
+    const jours = Array.isArray(data) ? (data as ChaineScellee[]) : []
+    garderAlmanach(langueActuelle(), jours)
+    return jours
+  }, [] as ChaineScellee[])
 }
 
 /** Les vers d'une journée scellée, et ta place parmi eux. */
 export async function lirePoemeScelle(c: ChaineScellee): Promise<PoemeScelle | null> {
-  try {
-    const { data: vers } = await supabase
+  return borne(async signal => {
+    const { data: vers, error } = await supabase
       .from('jour_vers')
       .select('id,rang,texte,pseudo,voix,voix_nom,main_id,retire')
       .eq('chaine_id', c.id)
       .order('rang', { ascending: true })
+      .abortSignal(signal)
+    // Une lecture refusée ou interrompue n'est pas un poème VIDE : la
+    // garder telle quelle écraserait la bonne copie de l'appareil.
+    if (error || !Array.isArray(vers)) return null
 
     const { data: { session } } = await supabase.auth.getSession()
     const moi = session?.user?.id ?? null
@@ -166,7 +227,7 @@ export async function lirePoemeScelle(c: ChaineScellee): Promise<PoemeScelle | n
       voix: boolean; voix_nom: string | null; main_id: string | null; retire: boolean
     }[]
 
-    return {
+    const p: PoemeScelle = {
       jour: c.jour,
       amorce: c.amorce,
       vers: lignes.map(v => ({
@@ -176,9 +237,11 @@ export async function lirePoemeScelle(c: ChaineScellee): Promise<PoemeScelle | n
       })),
       monRang: lignes.find(v => !!moi && v.main_id === moi)?.rang ?? null,
     }
-  } catch {
-    return null
-  }
+    // Un poème scellé ne change plus : on le garde pour la prochaine
+    // visite, qui l'affichera avant même d'avoir demandé quoi que ce soit.
+    if (p.vers.length) garderScelle(langueActuelle(), p)
+    return p
+  }, null)
 }
 
 /**

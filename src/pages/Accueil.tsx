@@ -7,7 +7,8 @@ import { useSound } from '../hooks/useSound'
 import { lireSerie, type Serie } from '../utils/streak'
 import { rearmerRappelSiActif } from '../utils/notifications'
 import { libelleSerie } from '../lib/attribution'
-import { tr } from '../i18n'
+import { sceauDuJour, libelleAcheve } from '../lib/jourLocal'
+import { tr, langueActuelle } from '../i18n'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
 function toRomain(n: number): string {
@@ -27,6 +28,30 @@ export default function Accueil() {
   // l'on poussait la porte, pas les poèmes écrits. C'est le dernier
   // fragment du cadavre du jour qui l'incrémente désormais (`Jeu.tsx`).
   const [serie] = useState<Serie>(() => lireSerie())
+  /*
+    LE SCEAU DU JOUR, LU EN LOCAL.
+
+    Le commentaire du sceau promettait « ✧ en attente, ✦ une fois écrit »,
+    et le glyphe était codé ✧ en dur : aucun état n'était lu. Il l'est
+    maintenant, sans requête dans le cas ordinaire — l'appareil sait où sa
+    main est posée et ce qu'il a déplié.
+
+    La seule question posée au registre — « le poème où j'ai écrit est-il
+    scellé ? » — ne part que si ce poème existe, passé l'heure de la
+    révélation et pas encore ouvert. Le module est chargé à la demande :
+    l'accueil ne tire pas le client Supabase pour une ligne qui, le plus
+    souvent, n'a rien à dire.
+  */
+  const [sceau, setSceau] = useState(() => sceauDuJour(langueActuelle(), new Date()))
+  useEffect(() => {
+    if (!sceau.aVerifier) return
+    let vivant = true
+    import('../lib/jour')
+      .then(m => m.dernierJourScelle())
+      .then(() => { if (vivant) setSceau(sceauDuJour(langueActuelle(), new Date())) })
+      .catch(() => { /* registre muet : on ne dit rien plutôt que de supposer */ })
+    return () => { vivant = false }
+  }, [])
 
   // Premier lancement : au lieu d'un onboarding lu, on emmène directement le
   // joueur dans une partie Découverte (il vit une révélation avant qu'on lui
@@ -350,8 +375,12 @@ export default function Accueil() {
               série, « ✦ 2ᵉ nuit de suite ». */}
           <button
             onClick={() => nav('/poeme-du-jour')}
-            aria-label={tr('Le poème du jour', 'The poem of the day')}
-            title={tr('Le poème du jour', 'The poem of the day')}
+            aria-label={sceau.ecrit
+              ? tr('Le poème du jour — ta main est posée', 'The poem of the day — your hand is in')
+              : tr('Le poème du jour', 'The poem of the day')}
+            title={sceau.ecrit
+              ? tr('Le poème du jour — ta main est posée', 'The poem of the day — your hand is in')
+              : tr('Le poème du jour', 'The poem of the day')}
             style={{
               gridColumn: 2, gridRow: '1 / 3',
               justifySelf: 'center', alignSelf: 'center',
@@ -363,7 +392,7 @@ export default function Accueil() {
               transition: 'border-color 0.3s',
             }}
           >
-            <span style={{ fontSize: 13, lineHeight: 1, color: accent }}>✧</span>
+            <span style={{ fontSize: 13, lineHeight: 1, color: accent }}>{sceau.ecrit ? '✦' : '✧'}</span>
             <span style={{
               ...ui, fontSize: 9, letterSpacing: '0.14em', fontWeight: 700,
               color: accent, opacity: 0.9,
@@ -372,6 +401,31 @@ export default function Accueil() {
             </span>
           </button>
         </div>
+
+        {/*
+          TON POÈME EST ACHEVÉ — une ligne, pas une pastille.
+
+          Le seul mécanisme qui fait revenir chaque jour tenait dans un rond
+          de 52 px qui ne changeait jamais. La nouvelle la plus désirable du
+          jeu — le poème où tu as écrit s'est refermé — ne se lisait nulle
+          part sur l'écran le plus vu. Petites capitales, onze pixels, la
+          couleur de l'accent : la voix de la revue, pas un chiffre rouge.
+          Elle mène au poème lui-même, plié, et s'éteint dès qu'on l'a
+          déplié.
+        */}
+        {sceau.acheve && (
+          <button
+            onClick={() => nav(`/poeme-du-jour?jour=${sceau.acheve!.jour}`)}
+            style={{
+              display: 'block', width: '100%', textAlign: 'center',
+              ...ui, fontSize: 11, letterSpacing: '0.12em', fontWeight: 700,
+              color: accent, background: 'none', border: 'none', cursor: 'pointer',
+              padding: '4px 0 6px', lineHeight: 1.5,
+            }}
+          >
+            {libelleAcheve(sceau.acheve, new Date())}{'\u00a0→'}
+          </button>
+        )}
 
       </motion.div>
 

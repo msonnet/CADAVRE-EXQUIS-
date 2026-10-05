@@ -472,7 +472,7 @@ export default function Reglages() {
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.8 }}>
               {rappelRefuse
                 ? tr('Autorisation refusée — active les notifications dans les réglages du téléphone.', 'Permission denied — enable notifications in your phone settings.')
-                : tr('Un rappel discret chaque soir, à 20 h : le poème du jour t’attend. Rien ne quitte l’appareil.', 'A discreet reminder every evening at 8 pm: the poem of the day awaits. Nothing leaves the device.')}
+                : tr('Un rappel discret à 20 h, les soirs où ta main n’est pas encore posée. Rien ne quitte l’appareil.', 'A discreet reminder at 8 pm, on evenings when your hand is not yet in. Nothing leaves the device.')}
             </div>
           </motion.div>
         )}

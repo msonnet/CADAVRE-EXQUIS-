@@ -19,11 +19,17 @@ import { mentionIA } from '../lib/attribution'
 import { nomDeVoix } from '../data/voiceIds'
 import { refusDuVers, MOTS_MAX, type RefusVers } from '../lib/jourLogique'
 import {
-  lireJour, poserVers, dernierPoemeScelle, signalerVers, almanach, lirePoemeScelle,
+  lireJour, poserVers, dernierPoemeScelle, signalerVers, almanach, lirePoemeScelle, horsLigne,
   type EtatDuJour, type PoemeScelle, type MotifRefus, type ChaineScellee,
 } from '../lib/jour'
+import {
+  dejaDeplie, marquerDeplie, scelleGarde, almanachGarde, dernierAttendu, noterMain,
+} from '../lib/jourLocal'
+import { fermeture, heureAnnonce, libelleHeure } from '../lib/horlogeJour'
 import { pointerSerie } from '../utils/streak'
-import { annoncerScellement } from '../utils/notifications'
+import {
+  annoncerScellement, etatAnnonce, rearmerRappelSiActif, type EtatAnnonce,
+} from '../utils/notifications'
 
 /**
  * Le poème du jour — une chaîne, une main, un vers.
@@ -38,11 +44,17 @@ import { annoncerScellement } from '../utils/notifications'
  * ── Trois états, trois écrans ─────────────────────────────────────────────
  *
  *  · tu n'as pas écrit  → l'écho, un champ, ton rang à venir
- *  · tu as écrit        → ton vers, et le rendez-vous de minuit
+ *  · tu as écrit        → ton vers, l'heure où il se referme, et une suite
  *  · le poème d'hier    → scellé, lisible, ton vers mis en avant
  *
  * On ne montre jamais le poème du jour en cours, même à qui y a déjà écrit.
- * Attendre minuit EST le jeu.
+ * Attendre minuit UTC EST le jeu.
+ *
+ * ── Ce qui n'attend pas le réseau ─────────────────────────────────────────
+ *
+ * La phrase de la règle, et le poème scellé déjà reçu : il ne change plus,
+ * l'appareil le garde (`jourLocal`). Seule la case où l'on pose son vers
+ * attend le registre — et elle n'attend plus que six secondes.
  */
 
 function ordinal(n: number): string {
@@ -62,6 +74,19 @@ function libelleRefus(m: MotifRefus | RefusVers): string {
   }
 }
 
+/**
+ * « DEMAIN À 9 H » — quand l'annonce partira, dit dans le fuseau du joueur.
+ * C'est presque toujours demain ; aux fuseaux où la révélation passe minuit
+ * local, ce peut être le surlendemain, et l'on écrit alors la date.
+ */
+function quandAnnonce(d: Date): string {
+  const demain = new Date(); demain.setDate(demain.getDate() + 1)
+  const h = libelleHeure(d, langueActuelle())
+  if (d.toDateString() === demain.toDateString()) return tr(`DEMAIN À ${h}`, `TOMORROW AT ${h}`)
+  const date = d.toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'short' }).toUpperCase()
+  return tr(`LE ${date} À ${h}`, `ON ${date} AT ${h}`)
+}
+
 /** « 22 sept. » — le jour UTC d'une chaîne, dans la langue du joueur. */
 function dateAlmanach(jour: string): string {
   const d = new Date(`${jour}T12:00:00Z`)
@@ -78,12 +103,37 @@ export default function PoemeDuJour() {
   const encre = c?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
 
+  const langue = langueActuelle()
+  /*
+    LE POÈME GARDÉ, AVANT TOUTE REQUÊTE.
+
+    Un poème scellé ne change plus : celui qu'on a déjà reçu s'affiche au
+    premier rendu, sans étoile qui tourne, et le réseau ne fait ensuite que
+    le confirmer. Il n'est présenté comme « le poème achevé » que s'il est
+    bien le plus récent qu'on puisse attendre à cette heure ; une copie plus
+    ancienne n'est qu'une page de l'almanach jusqu'à ce que le registre
+    réponde.
+  */
+  const [garde] = useState(() => {
+    const voulu = params.get('jour')
+    const p = (voulu ? scelleGarde(langue, voulu) : null) ?? scelleGarde(langue)
+    const connu = [almanachGarde(langue)[0]?.jour, scelleGarde(langue)?.jour]
+      .filter((j): j is string => !!j).sort().pop() ?? null
+    return { poeme: p, dernier: connu && connu >= dernierAttendu(new Date()) ? connu : null }
+  })
+
   const [etat, setEtat] = useState<EtatDuJour | null>(null)
-  const [hier, setHier] = useState<PoemeScelle | null>(null)
+  const [hier, setHier] = useState<PoemeScelle | null>(garde.poeme)
   /** L'almanach — les journées scellées, et laquelle est la dernière. */
-  const [jours, setJours] = useState<ChaineScellee[]>([])
-  const [dernier, setDernier] = useState<string | null>(null)
+  const [jours, setJours] = useState<ChaineScellee[]>(() => almanachGarde(langue))
+  const [dernier, setDernier] = useState<string | null>(garde.dernier)
   const [ouverture, setOuverture] = useState<string | null>(null)
+  /** Le jour de l'almanach qu'on n'a pas pu ouvrir — ni gardé, ni reçu. */
+  const [echecJour, setEchecJour] = useState<string | null>(null)
+  /** Pourquoi la case du vers n'est pas là : pas de réseau, ou un registre muet. */
+  const [reseau, setReseau] = useState<'hors-ligne' | 'muet' | null>(null)
+  /** L'annonce du poème achevé, telle que l'écran « TON VERS » la propose. */
+  const [annonce, setAnnonce] = useState<EtatAnnonce | 'demande' | 'refusee'>('muette')
   const haut = useRef<HTMLDivElement>(null)
   const [chargement, setChargement] = useState(true)
   const [texte, setTexte] = useState('')
@@ -101,31 +151,11 @@ export default function PoemeDuJour() {
 
     « Une belle animation qu'on subit une deuxième fois est pire qu'une
     animation bancale » — c'est la règle du dévoilement de fin de partie et
-    elle vaut ici. On retient donc LE JOUR déjà déplié : revenir sur la page
-    dans la même journée rouvre le poème à plat, sans rien redemander.
-
-    On retient le jour et non un booléen, pour que le poème du lendemain
-    retrouve son feuillet fermé tout seul. C'est le même motif que la graine
-    d'ambiance et que la série.
+    elle vaut ici. On retient donc LE JOUR déjà déplié (`cadavre-jour-deplie`,
+    dans `jourLocal`, que l'accueil lit aussi) : revenir sur la page dans la
+    même journée rouvre le poème à plat, sans rien redemander.
   */
-  const CLE_DEPLI = 'cadavre-jour-deplie'
-  // Plusieurs jours, depuis l'almanach : ouvrir un poème ancien ne doit pas
-  // faire rejouer le dépli du dernier. L'ancienne valeur — un jour seul —
-  // se lit encore.
-  const joursDeplies = (): string[] => {
-    try {
-      const v = localStorage.getItem(CLE_DEPLI) ?? ''
-      return v.startsWith('[') ? JSON.parse(v) : v ? [v] : []
-    } catch { return [] }
-  }
-  const dejaDeplie = (jour: string) => joursDeplies().includes(jour)
-  const marquerDeplie = (jour: string) => {
-    try {
-      const l = [jour, ...joursDeplies().filter(j => j !== jour)].slice(0, 20)
-      localStorage.setItem(CLE_DEPLI, JSON.stringify(l))
-    } catch { /* mode privé */ }
-  }
-  const [deplie, setDeplie] = useState(false)
+  const [deplie, setDeplie] = useState(() => !!garde.poeme && dejaDeplie(garde.poeme.jour))
   /**
    * Les coutures s'affichent d'abord — c'est la récompense annoncée.
    * On les retire pour LIRE, ce qui est l'autre usage d'un poème, et le
@@ -135,7 +165,13 @@ export default function PoemeDuJour() {
   /** Le mouvement réduit coupe la pose des noms comme il coupe le dépli. */
   const reduit = typeof window !== 'undefined' &&
     !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  const [revele, setRevele] = useState(false)
+  const [revele, setRevele] = useState(() => !!garde.poeme && dejaDeplie(garde.poeme.jour))
+  /**
+   * Le poème affiché, et si le joueur y a déjà touché. Quand le réseau
+   * répond après coup, on remplace la copie gardée par la fraîche ; on ne
+   * change de JOUR sous ses doigts que s'il n'a encore rien ouvert.
+   */
+  const vue = useRef<{ jour: string | null; touche: boolean }>({ jour: garde.poeme?.jour ?? null, touche: false })
   // Les vers qu'on vient de signaler, le temps de la visite : le serveur ne
   // dit pas « déjà signalé » deux fois de suite, et griser le drapeau évite
   // d'appuyer en boucle sans retour.
@@ -144,7 +180,8 @@ export default function PoemeDuJour() {
 
   useEffect(() => {
     let vivant = true
-    ;(async () => {
+    async function charger() {
+      setChargement(true); setReseau(null)
       const [e, h, a] = await Promise.all([lireJour(), dernierPoemeScelle(), almanach()])
       // `?jour=` — un numéro touché au sommaire de la galerie. Il ouvre CE
       // jour, plié comme depuis l'almanach ; sans lui on aurait mené le
@@ -154,25 +191,51 @@ export default function PoemeDuJour() {
       const cible = voulu && voulu !== h?.jour ? a.find(j => j.jour === voulu) : undefined
       const choisi = cible ? (await lirePoemeScelle(cible)) ?? h : h
       if (!vivant) return
-      setEtat(e); setChargement(false); setJours(a)
-      montrer(choisi)
+      setEtat(e); setChargement(false)
+      // Sobrement, et en distinguant les deux : sans réseau, c'est au
+      // téléphone qu'il faut regarder ; avec, c'est le registre qui se tait.
+      if (!e) setReseau(horsLigne() ? 'hors-ligne' : 'muet')
+      if (a.length) setJours(a)
       if (h) setDernier(h.jour)
-    })()
-    return () => { vivant = false }
+      if (choisi) recevoir(choisi)
+      // Ta main est posée aujourd'hui : l'accueil le dira (✦), et le rappel
+      // du soir saute ce soir-ci. Ne replanifie qu'à la nouvelle.
+      if (e?.monVers && noterMain(langue, e.jour, e.monVers.rang)) void rearmerRappelSiActif()
+    }
+    void charger()
+    // Le réseau revient : on relit sans attendre un geste. C'est le cas du
+    // train qui sort du tunnel, exactement celui qu'on vise.
+    const retour = () => { if (vivant) void charger() }
+    window.addEventListener('online', retour)
+    return () => { vivant = false; window.removeEventListener('online', retour) }
   }, [])
+
+  /** La copie fraîche d'un poème : elle remplace la gardée sans rien rejouer. */
+  function recevoir(p: PoemeScelle) {
+    if (vue.current.jour === p.jour) {
+      setHier(p)
+      entrerAuRecueil(p)
+    } else if (!vue.current.touche) {
+      montrer(p)
+    }
+  }
+
+  // Qui a posé un vers garde le poème : il entre au recueil, avec les
+  // noms des mains. Sans geste — les deux boutons sous le poème restent
+  // deux. Un visiteur qui n'a rien écrit ne s'en voit rien ajouter.
+  function entrerAuRecueil(h: PoemeScelle) {
+    if (h.monRang === null) return
+    garderSiAbsent(poemeDuJour({ langue: langueActuelle(), jour: h.jour, vers: h.vers }))
+      .catch(() => { /* stockage refusé : le poème reste lisible ici */ })
+  }
 
   /** Montrer un poème scellé — le dernier, ou un jour de l'almanach. */
   function montrer(h: PoemeScelle | null) {
+    vue.current.jour = h?.jour ?? null
     setHier(h)
     setToutVoir(false)
     setCoutures(true)
-    // Qui a posé un vers garde le poème : il entre au recueil, avec les
-    // noms des mains. Sans geste — les deux boutons sous le poème restent
-    // deux. Un visiteur qui n'a rien écrit ne s'en voit rien ajouter.
-    if (h && h.monRang !== null) {
-      garderSiAbsent(poemeDuJour({ langue: langueActuelle(), jour: h.jour, vers: h.vers }))
-        .catch(() => { /* stockage refusé : le poème reste lisible ici */ })
-    }
+    if (h) entrerAuRecueil(h)
     // Déjà déplié : le feuillet s'ouvre à plat, sans redemander le geste ni
     // rejouer la séquence. Sinon il arrive plié.
     const ouvert = !!h && dejaDeplie(h.jour)
@@ -182,12 +245,49 @@ export default function PoemeDuJour() {
   async function ouvrirJour(c: ChaineScellee) {
     if (ouverture || c.jour === hier?.jour) return
     jouer('clic')
+    vue.current.touche = true
+    setEchecJour(null)
+    // Un jour déjà gardé s'ouvre tout de suite ; le réseau ne fait que le
+    // confirmer derrière.
+    const g = scelleGarde(langue, c.jour)
+    if (g) {
+      montrer(g)
+      haut.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      void lirePoemeScelle(c).then(p => { if (p) recevoir(p) })
+      return
+    }
     setOuverture(c.jour)
     const p = await lirePoemeScelle(c)
     setOuverture(null)
-    if (!p) return
+    if (!p) { setEchecJour(c.jour); return }
     montrer(p)
     haut.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  /*
+    L'ANNONCE, PROPOSÉE SOUS TON VERS.
+
+    Elle ne se demandait nulle part ailleurs que dans les Réglages, au
+    rappel du soir : la plupart des mains ne recevaient donc jamais la
+    nouvelle la plus désirable du jeu. Le moment juste pour la demander est
+    celui-ci — le joueur vient de donner sa main et attend la suite.
+  */
+  useEffect(() => {
+    if (!etat?.monVers) return
+    let vivant = true
+    void etatAnnonce(etat.jour).then(v => {
+      // Ne jamais redescendre : l'annonce a pu être armée entre-temps.
+      if (vivant) setAnnonce(a => a === 'armee' ? a : v)
+    })
+    return () => { vivant = false }
+  }, [etat?.jour, !!etat?.monVers])
+
+  async function demanderAnnonce() {
+    if (!etat?.monVers || annonce === 'demande') return
+    jouer('clic')
+    setAnnonce('demande')
+    const ok = await annoncerScellement(etat.monVers.rang, etat.jour, true)
+    setAnnonce(ok ? 'armee' : 'refusee')
   }
 
   async function envoyer() {
@@ -208,10 +308,19 @@ export default function PoemeDuJour() {
     jouer('soumettre')
     // La série ne compte que les jours où une main a réellement écrit.
     pointerSerie()
-    // Et l'on se donne rendez-vous : le poème sera scellé demain matin.
-    void annoncerScellement(r.rang)
+    const jour = etat?.jour
+    if (jour) {
+      // Retenir la main AVANT de replanifier : c'est elle qui fait sauter
+      // le rappel de ce soir.
+      noterMain(langue, jour, r.rang)
+      void rearmerRappelSiActif()
+    }
+    // Et l'on se donne rendez-vous — sans rien demander : seul celui qui a
+    // déjà accepté les notifications est prévenu d'office.
+    const annonceArmee = jour ? annoncerScellement(r.rang, jour) : Promise.resolve(false)
     setEtat(await lireJour())
     setTexte('')
+    if (await annonceArmee) setAnnonce('armee')
   }
 
   async function signaler(id: string) {
@@ -219,8 +328,12 @@ export default function PoemeDuJour() {
     setSignales(s => new Set(s).add(id))
     const r = await signalerVers(id)
     // Retiré sur-le-champ : le vers a atteint le seuil, on relit le poème
-    // plutôt que de laisser le texte signalé à l'écran.
-    if (r.ok && r.retire) setHier(await dernierPoemeScelle())
+    // plutôt que de laisser le texte signalé à l'écran. Un registre muet
+    // rendait `null` et faisait disparaître le poème entier.
+    if (r.ok && r.retire) {
+      const p = await dernierPoemeScelle()
+      if (p) recevoir(p)
+    }
   }
 
   const partage = usePartage({ libelleCopie: tr('✓ POÈME COPIÉ', '✓ POEM COPIED') })
@@ -251,6 +364,8 @@ export default function PoemeDuJour() {
   }
 
   const aEcrit = !!etat?.monVers
+  /** L'heure locale où la chaîne d'aujourd'hui se ferme : « 2 h », « 5 PM ». */
+  const heureFermeture = etat ? libelleHeure(fermeture(etat.jour), langue) : ''
 
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
@@ -272,37 +387,56 @@ export default function PoemeDuJour() {
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-        {chargement && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* ── LA RÈGLE, EN UNE LIGNE ── écrite avant toute réponse du réseau. */}
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.5, marginTop: 24, marginBottom: 20 }}>
+          {tr(
+            'Un seul poème aujourd’hui, écrit par toutes les mains qui passent. Tu en écris un vers, et tu ne vois du précédent que son dernier mot.',
+            'One poem today, written by every hand that passes. You write one line of it, and of the line before you see only its last word.',
+          )}
+        </div>
+
+        {/* Seule la case du vers attend le registre — l'étoile tient sa
+            place, elle ne prend plus la page entière. */}
+        {chargement && !etat && (
+          <div style={{ minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <motion.span
               style={{ fontSize: 22, color: accent }}
-              animate={{ opacity: [0.3, 1, 0.3] }}
+              animate={reduit ? undefined : { opacity: [0.3, 1, 0.3] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             >✦</motion.span>
           </div>
         )}
 
         {!chargement && !etat && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 8px' }}>
+          <div style={{ minHeight: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 8px' }} {...zoneVivante}>
             <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 19, color: encre, opacity: 0.7, lineHeight: 1.5 }}>
-              {tr('Le registre ne répond pas.', 'The register is not answering.')}<br />
-              {tr('Le poème du jour t’attend quand même — reviens dans un instant.', 'Today’s poem is waiting all the same — come back shortly.')}
+              {reseau === 'hors-ligne'
+                ? <>
+                    {tr('Pas de réseau.', 'No network.')}<br />
+                    {hier
+                      ? tr('Ta main attendra son retour ; le poème achevé, lui, est gardé ici.', 'Your hand will wait for it; the finished poem is kept here.')
+                      : tr('Ta main attendra son retour.', 'Your hand will wait for it.')}
+                  </>
+                : <>
+                    {tr('Le registre ne répond pas.', 'The register is not answering.')}<br />
+                    {tr('Le poème du jour t’attend quand même — reviens dans un instant.', 'Today’s poem is waiting all the same — come back shortly.')}
+                  </>}
             </p>
+            {/* Le réseau pendu ne prévient pas de son retour : un geste
+                pour relire, plutôt qu'une page à recharger. */}
+            {reseau === 'muet' && (
+              <button
+                onClick={() => { jouer('clic'); window.dispatchEvent(new Event('online')) }}
+                style={{ ...mono, fontSize: 12, letterSpacing: '0.14em', color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0', minHeight: 44 }}
+              >
+                {tr('RÉESSAYER', 'TRY AGAIN')}
+              </button>
+            )}
           </div>
         )}
 
-        {!chargement && etat && (
-          <>
-            {/* ── LA RÈGLE, EN UNE LIGNE ── */}
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.5, marginTop: 24, marginBottom: 20 }}>
-              {tr(
-                'Un seul poème aujourd’hui, écrit par toutes les mains qui passent. Tu en écris un vers, et tu ne vois du précédent que son dernier mot.',
-                'One poem today, written by every hand that passes. You write one line of it, and of the line before you see only its last word.',
-              )}
-            </div>
-
             {/* ── L'ÉCHO — le seul endroit où l'on regarde ── */}
-            {!aEcrit && !etat.scelle && (
+            {etat && !aEcrit && !etat.scelle && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -333,7 +467,7 @@ export default function PoemeDuJour() {
                   value={texte}
                   onChange={e => { setTexte(e.target.value); if (erreur) setErreur(null) }}
                   onKeyDown={e => { if (e.key === 'Enter') envoyer() }}
-                  placeholder={tr('ton vers — personne ne le verra avant minuit', 'your line — no one sees it before midnight')}
+                  placeholder={tr(`ton vers — personne ne le verra avant ${heureFermeture}`, `your line — no one sees it before ${heureFermeture}`)}
                   className="champ-carnet w-full"
                   style={{ borderLeftColor: accent, fontSize: 20 }}
                   aria-label={tr('Ton vers', 'Your line')}
@@ -369,7 +503,7 @@ export default function PoemeDuJour() {
             )}
 
             {/* ── TU AS ÉCRIT — le rendez-vous est pris ── */}
-            {aEcrit && etat.monVers && (
+            {etat && aEcrit && etat.monVers && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
                   {tr('— TON VERS —', '— YOUR LINE —')}
@@ -382,11 +516,65 @@ export default function PoemeDuJour() {
                 }}>
                   {etat.monVers.texte}
                 </div>
+                {/*
+                  L'HEURE LOCALE, et non « minuit ».
+
+                  Le poème se ferme à minuit UTC : 2 h à Lamastre l'été, 1 h
+                  l'hiver, 17 h en Californie. « À minuit » était faux pour
+                  à peu près tout le monde.
+                */}
                 <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, lineHeight: 1.5 }}>
                   {tr(
-                    `Tu es la ${ordinal(etat.monVers.rang)} main du poème. Il se referme à minuit, et tu sauras alors entre qui le sort t’a mise.`,
-                    `You are the ${ordinal(etat.monVers.rang)} hand of the poem. It closes at midnight, and you will learn then between whom chance placed you.`,
+                    `Tu es la ${ordinal(etat.monVers.rang)} main du poème. Il se referme à ${heureFermeture}, et tu sauras alors entre qui le sort t’a mise.`,
+                    `You are the ${ordinal(etat.monVers.rang)} hand of the poem. It closes at ${heureFermeture}, and you will learn then between whom chance placed you.`,
                   )}
+                </div>
+
+                {/*
+                  LA SUITE — l'écran n'est plus une impasse.
+
+                  Deux lignes en petites capitales, pas des boutons pleins :
+                  la page a déjà dit l'essentiel. La première ne se montre
+                  que si l'appareil sait notifier et qu'on ne l'a pas
+                  refusé ; la seconde toujours, parce qu'attendre la nuit
+                  n'oblige pas à attendre sans rien faire.
+                */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: 14 }}>
+                  {(annonce === 'proposable' || annonce === 'demande') && (
+                    <button
+                      onClick={demanderAnnonce}
+                      disabled={annonce === 'demande'}
+                      style={{
+                        ...mono, fontSize: 12, letterSpacing: '0.12em', textAlign: 'left',
+                        color: accent, opacity: annonce === 'demande' ? 0.5 : 0.9,
+                        background: 'none', border: 'none', cursor: annonce === 'demande' ? 'default' : 'pointer',
+                        padding: '12px 0', minHeight: 44,
+                      }}
+                    >
+                      ✧ {tr('M’ÉCRIRE QUAND IL SERA ACHEVÉ', 'TELL ME WHEN IT IS FINISHED')}
+                    </button>
+                  )}
+                  {annonce === 'armee' && (
+                    <div style={{ ...mono, fontSize: 12, letterSpacing: '0.12em', color: accent, opacity: 0.85, padding: '12px 0' }} {...zoneVivante}>
+                      ✦ {tr('ON T’ÉCRIRA', 'WE WILL WRITE TO YOU')} {quandAnnonce(heureAnnonce(etat.jour, new Date()))}
+                    </div>
+                  )}
+                  {annonce === 'refusee' && (
+                    <div style={{ ...mono, fontSize: 12, letterSpacing: '0.12em', color: encre, opacity: 0.6, padding: '12px 0', lineHeight: 1.6 }} {...zoneVivante}>
+                      {tr('NOTIFICATIONS REFUSÉES · LES RÉGLAGES DU TÉLÉPHONE LES ROUVRENT', 'NOTIFICATIONS DECLINED · YOUR PHONE SETTINGS CAN REOPEN THEM')}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => { jouer('clic'); navigate('/config') }}
+                    style={{
+                      ...mono, fontSize: 12, letterSpacing: '0.12em', textAlign: 'left',
+                      color: encre, opacity: 0.7,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      padding: '12px 0', minHeight: 44,
+                    }}
+                  >
+                    {tr('EN ATTENDANT — UN CADAVRE ÉCRIT', 'IN THE MEANTIME — A WRITTEN CADAVRE')} →
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -454,7 +642,7 @@ export default function PoemeDuJour() {
                         accent={accent}
                         encre={encre}
                         libelle={tr('Déplier le poème', 'Unfold the poem')}
-                        onOuvrir={() => { jouer('clic'); vibrer('devoilement'); setDeplie(true) }}
+                        onOuvrir={() => { vue.current.touche = true; jouer('clic'); vibrer('devoilement'); setDeplie(true) }}
                       >
                         <div style={{
                           ...mono, fontSize: 11, color: encre, opacity: 0.5,
@@ -678,6 +866,7 @@ export default function PoemeDuJour() {
                         <button
                           onClick={() => {
                             jouer('clic')
+                            vue.current.touche = true
                             setToutVoir(true)
                             /*
                               La feuille s'ouvre DAVANTAGE, elle ne saute
@@ -727,13 +916,21 @@ export default function PoemeDuJour() {
                           {j.amorce}
                         </span>
                       </button>
+                      {/* Ni gardé sur l'appareil, ni reçu : on le dit là où
+                          l'on a touché, pas en haut d'une page qu'on a
+                          quittée des yeux. */}
+                      {echecJour === j.jour && (
+                        <div style={{ ...mono, fontSize: 11, letterSpacing: '0.12em', color: accent, opacity: 0.8, paddingBottom: 10 }} {...zoneVivante}>
+                          {horsLigne()
+                            ? tr('PAS DE RÉSEAU · CE JOUR N’EST PAS GARDÉ ICI', 'NO NETWORK · THIS DAY IS NOT KEPT HERE')
+                            : tr('LE REGISTRE NE RÉPOND PAS', 'THE REGISTER IS NOT ANSWERING')}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
               </nav>
             )}
-          </>
-        )}
       </div>
     </PageTransition>
   )
