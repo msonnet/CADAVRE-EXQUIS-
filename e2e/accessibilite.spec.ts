@@ -143,18 +143,48 @@ test('chaque bascule dit quel panneau elle ouvre', async ({ page }) => {
   await page.mouse.click(195, 300)
   await page.waitForTimeout(400)
 
+  // Les coutures se posent dans la carte du poème, sous chaque vers : c'est
+  // donc la carte que la bascule désigne.
   const coutures = page.getByRole('button', { name: /^COUTURES$|^SEAMS$/ })
-  await expect(coutures).toHaveAttribute('aria-controls', 'panneau-coutures')
+  await expect(coutures).toHaveAttribute('aria-controls', 'feuillet-fin')
   await expect(coutures).toHaveAttribute('aria-expanded', 'false')
+  const posees = page.locator('#feuillet-fin [data-couture]')
+  await expect(posees).toHaveCount(0)
 
   await coutures.click()
   await expect(coutures).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.locator('#panneau-coutures')).toBeVisible()
+  await expect(posees.first()).toBeVisible()
 
   // Et les deux panneaux restent exclusifs — ce que l'audit croyait cassé.
   const image = page.getByRole('button', { name: /^IMAGE$/ })
   await image.click()
   await expect(page.locator('#panneau-image')).toBeVisible()
-  await expect(page.locator('#panneau-coutures')).toHaveCount(0)
+  await expect(posees).toHaveCount(0)
   await expect(coutures).toHaveAttribute('aria-expanded', 'false')
+})
+
+test('chaque écran porte son titre', async ({ page }) => {
+  // Hors de la fin de partie, du recueil et du poème du jour, aucun écran
+  // n'avait de titre HTML : le rotor « Titres » de VoiceOver ne trouvait
+  // rien aux préparatifs ni dans les Réglages. Les titres d'affiche sont
+  // maintenant des `h1`, au style inchangé.
+  await preparer(page)
+  const TITRES: [string, RegExp][] = [
+    ['/config', /Choisir la structure/],
+    ['/reglages', /Préférences de séance/],
+    ['/config-dessin', /Préparer le rituel/],
+    ['/atelier', /Écrire avec les voix/],
+    ['/aide', /Comment jouer/],
+    ['/online', /Jouer à plusieurs/],
+  ]
+  for (const [url, nom] of TITRES) {
+    await page.goto(url)
+    await page.waitForLoadState('domcontentloaded')
+    await franchir(page)
+    await expect(page.getByRole('heading', { level: 1, name: nom }), url).toBeVisible({ timeout: 6000 })
+  }
+  // Aux Règles, chaque rubrique est un titre de second rang.
+  await page.goto('/aide')
+  await franchir(page)
+  await expect(page.getByRole('heading', { level: 2, name: /Le poème du jour/ })).toBeVisible()
 })

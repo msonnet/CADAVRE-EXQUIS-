@@ -10,7 +10,9 @@ import { usePartage } from '../hooks/usePartage'
 import { vibrer } from '../utils/haptics'
 import type { BandeDessin, DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
+import { nomsDesBandes } from '../lib/table'
+import { partieNue } from '../lib/corps'
 import MurAbonnement from '../components/MurAbonnement'
 import { lireLeDessin } from '../api/lectureDessin'
 import type { Refus } from '../lib/acces'
@@ -85,6 +87,8 @@ export default function FinDessin() {
   const [refus, setRefus] = useState<Refus | null>(null)
   const [revealJoue, setRevealJoue] = useState(false)
   const [coutures, setCoutures] = useState<number[]>([])
+  // Qui a dessiné quoi, quand la table a donné des prénoms (sinon rien).
+  const [mainsBandes, setMainsBandes] = useState<Array<{ partie: string; nom: string }> | null>(null)
   const [lectureEnCours, setLectureEnCours] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
   const { jouer } = useSound()
@@ -111,6 +115,14 @@ export default function FinDessin() {
       }
       if (cancelled) return
       setNbBandes(bandes.length)
+      const noms = nomsDesBandes(bandes)
+      if (noms) {
+        const langue = langueActuelle()
+        setMainsBandes(bandes.map((b, i) => ({
+          partie: (partieNue(i, bandes.length, langue) ?? `${tr('bande', 'band')} ${i + 1}`).toUpperCase(),
+          nom: noms[i] ?? `${tr('joueur', 'player')} ${b.joueurNumero}`,
+        })))
+      }
 
       setPhase('assemblage')
       const { url: img, coutures: c } = await assemblerDessin(bandes)
@@ -239,9 +251,9 @@ export default function FinDessin() {
         </div>
 
         {/* ── TITRE ── */}
-        <div className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
+        <h1 className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
           {tr('Le cadavre', 'The cadavre,')} <span style={{ color: accent }}>{tr('dessiné', 'drawn')}</span>
-        </div>
+        </h1>
 
         {/* ── PHASES DE CHARGEMENT ── */}
         {phase !== 'revele' && phase !== 'sauvegarde' && (
@@ -309,6 +321,22 @@ export default function FinDessin() {
                     ↗ {tr('AGRANDIR', 'ENLARGE')}
                   </button>
                 </div>
+                {/* Les mains, bande par bande, au registre des coutures du
+                    cadavre écrit : « TÊTE — Nadja ». L'intro et le rideau
+                    appelaient la main par son prénom, puis l'écran de fin
+                    l'oubliait — au moment même où l'on se demande qui a
+                    dessiné les pieds. */}
+                {mainsBandes && (
+                  <ol aria-label={tr('Les mains, bande par bande', 'The hands, band by band')} style={{ listStyle: 'none', padding: 0, margin: '6px 0 0' }}>
+                    {mainsBandes.map((m, i) => (
+                      <li key={i} style={{ ...mono, fontSize: 11, color: accent, opacity: 0.75, lineHeight: 1.7 }}>
+                        {m.partie}
+                        <span style={{ color: encre, opacity: 0.45, margin: '0 6px' }}>—</span>
+                        <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 14, letterSpacing: 0, color: encre }}>{m.nom}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </div>
             )}
 

@@ -2,6 +2,7 @@ import type { Poeme } from '../types'
 import type { VersRecolte } from '../db'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { contientDeLIA, mentionIA } from './attribution'
+import { mainsNommees } from './table'
 import { tr } from '../i18n'
 
 /**
@@ -58,6 +59,12 @@ export function composerTexte(poemes: Poeme[], recolte: VersRecolte[] = []): str
     blocs.push(`${p.titre ?? tr('Sans titre', 'Untitled')} · ${dateLisible(p.dateCreation)}`)
     blocs.push('')
     blocs.push(reconstruirePoeme(p.cases, structure))
+    // Les mains nommées signent le poème : un fichier ne montre pas les
+    // coutures, et un poème écrit à quatre qui ne nomme personne a perdu la
+    // moitié de ce qu'il était. Celles de la table locale comme celles du
+    // salon et du poème du jour.
+    const mains = mainsNommees(p.cases)
+    if (mains.length) { blocs.push(''); blocs.push(tr(`Mains : ${mains.join(', ')}`, `Hands: ${mains.join(', ')}`)) }
     // Un poème qui SORT de l'application doit dire si une machine y a
     // écrit : dans l'app les coutures le nomment, dans un fichier rien ne
     // le disait. Seulement quand c'est vrai — la mention partout la

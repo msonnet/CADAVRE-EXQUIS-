@@ -23,9 +23,15 @@ import { poemeDuSalon, idSalon } from '../lib/versRecueil'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
 import { libelleMains } from '../lib/attribution'
-import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
+import { lignesDuFeuillet } from '../lib/plis'
+import { corpsDuPoeme, TAILLE_CORPS, RETRAIT_DEBORD } from '../lib/composition'
 import { api } from '../lib/apiBase'
+import { NOMS_VOIX, nomDeVoix } from '../data/voiceIds'
 import { tr, langueActuelle } from '../i18n'
+
+// Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; langue?: string | null }
 
@@ -134,6 +140,12 @@ export default function FinOnline() {
   const [sauvegardeDessin_, setSauvegardeDessin] = useState(false)
 
   const [revealReady, setRevealReady] = useState(false)
+  // Le rideau SORTI, puis le dernier mot posé — comme en fin de partie
+  // locale (`FinDePartie`) : le poème parle avant tout le reste, et le titre
+  // du rideau ne traverse plus le poème pendant sa sortie.
+  const [rideauLeve, setRideauLeve] = useState(false)
+  const [poemeFini, setPoemeFini] = useState(false)
+  const titreRef = useRef<HTMLHeadingElement>(null)
   const [revealDessinJoue, setRevealDessinJoue] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
@@ -234,6 +246,20 @@ export default function FinOnline() {
       vibrer('devoilement')
     }
   }, [room?.mode, revealReady, jouer])
+
+  // Le filet, si la sortie du rideau ne prévient pas (onglet suspendu).
+  useEffect(() => {
+    if (!revealReady || rideauLeve) return
+    const t = setTimeout(() => setRideauLeve(true), 900)
+    return () => clearTimeout(t)
+  }, [revealReady, rideauLeve])
+
+  // Le poème annoncé au lecteur d'écran : le titre reçoit le focus.
+  useEffect(() => {
+    if (rideauLeve && room?.mode !== 'dessin') titreRef.current?.focus({ preventScroll: true })
+  }, [rideauLeve, room?.mode])
+
+  const onPoemeFini = useCallback(() => setPoemeFini(true), [])
 
   // Close fullscreen on Escape
   useEffect(() => {
@@ -384,19 +410,50 @@ export default function FinOnline() {
     )
   }
 
-  const texteAffiche = texteCorrige ?? texteAssemble
-  // Un pli par main (`lib/plis.ts`) : chaque personne de la table a sa bande.
-  const lignes = (room && SE_PLIE_PAR_MAIN.has(room.structure_id)
-    ? bandesParMain([...contributions].sort((a, b) => a.case_index - b.case_index).map(c => c.texte), texteCorrige)
-    : null) ?? texteAffiche.split('\n')
+  // Un pli par main (`lib/plis.ts`) : chaque personne de la table a sa bande,
+  // et chaque ligne sait de quelle contribution elle vient — c'est sous
+  // elle que sa couture se pose.
+  const contributionsTriees = [...contributions].sort((a, b) => a.case_index - b.case_index)
+  const feuillet = lignesDuFeuillet(room.structure_id, contributionsTriees.map(c => c.texte), texteCorrige)
+  const lignes = feuillet.lignes
+
+  /*
+    Les coutures se posent sous chaque vers, dans le poème — elles en
+    recopiaient une seconde liste, avatars compris, sous le feuillet. Elles
+    se démontent quand on les ferme : masquer n'est pas retirer.
+  */
+  function couture(j: number): React.ReactNode {
+    if (!showCoutures) return null
+    const c = contributionsTriees[feuillet.cases[j]]
+    if (!c) return null
+    const p = players.find(pl => pl.player_id === c.player_id)
+    return (
+      <motion.div
+        data-couture
+        // Sous mouvement réduit, les coutures se posent sans cascade.
+        initial={mouvementReduit() ? false : { opacity: 0, y: -2 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 + Math.min(j, 12) * 0.06, duration: 0.4, ease: 'easeOut' }}
+        style={{ paddingLeft: RETRAIT_DEBORD, marginTop: -2, marginBottom: 8 }}
+      >
+        <div style={{ ...mono, fontSize: 11, letterSpacing: '0.12em', lineHeight: 1.4, fontStyle: 'normal', textTransform: 'uppercase', color: encre }}>
+          <span style={{ opacity: 0.5 }}>{j + 1} · </span>
+          <span style={{ color: accent }}>{p?.pseudo ?? '?'}</span>
+          {c.voice_name && (
+            <span style={{ opacity: 0.6 }}> · {tr('AVEC', 'WITH')} {NOMS_VOIX[c.voice_name] ? nomDeVoix(c.voice_name, langueActuelle()) : c.voice_name}</span>
+          )}
+        </div>
+      </motion.div>
+    )
+  }
 
   return (
     <>
       {/* ── SÉQUENCE D'ASSEMBLAGE ── */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => setRideauLeve(true)}>
         {!revealReady && room.mode !== 'dessin' && (
           <RevealAssemblageTexte
-            fragments={[...contributions].sort((a, b) => a.case_index - b.case_index).map(c => ({
+            fragments={contributionsTriees.map(c => ({
               texte: c.texte,
               auteur: players.find(p => p.player_id === c.player_id)?.pseudo ?? null,
             }))}
@@ -456,9 +513,13 @@ export default function FinOnline() {
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 12 }}>{tr('— RÉVÉLATION —', '— THE REVEAL —')}</div>
+        {/* Un vrai titre, au style inchangé : il reçoit le focus quand le
+            rideau est sorti, et le lecteur d'écran sait que le poème est là. */}
+        <h1 ref={titreRef} tabIndex={-1} style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginTop: 24, marginBottom: 12, outline: 'none' }}>{tr('— RÉVÉLATION —', '— THE REVEAL —')}</h1>
 
-        {revealReady && (
+        {/* À l'écrit, la page attend que le rideau soit SORTI : pendant sa
+            demi-seconde de sortie, son titre traversait le poème. */}
+        {revealReady && (room.mode === 'dessin' || rideauLeve) && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
 
             {/* ── Mode dessin : dessin assemblé ── */}
@@ -567,7 +628,7 @@ export default function FinOnline() {
 
             {/* ── Mode écrit : le feuillet s'ouvre, l'encre vient dessus ── */}
             {room.mode !== 'dessin' && (
-              <div style={{ marginBottom: 28 }}>
+              <article id="feuillet-salon" aria-label={tr('Le poème', 'The poem')} style={{ marginBottom: 28 }}>
                 <PoemeDevoile
                   lignes={lignes}
                   accent={accent}
@@ -575,50 +636,29 @@ export default function FinOnline() {
                   lettrine
                   tailleLettrine="3.6rem"
                   onLettrine={() => jouer('lettrine')}
-                  style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: 'clamp(1.4rem, 6vw, 1.9rem)', lineHeight: 1.6 }}
+                  onFini={onPoemeFini}
+                  apres={couture}
+                  style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: encre, fontSize: TAILLE_CORPS[corpsDuPoeme(lignes, room.structure_id)], lineHeight: 1.6 }}
                 />
-              </div>
+              </article>
             )}
 
-            {/* Coutures — écrit */}
-            {room.mode !== 'dessin' && (
+            {/* Coutures — écrit. Elles se posent dans le poème, sous chaque
+                vers ; ce bouton n'est plus que leur interrupteur. Il attend,
+                comme tout ce qui suit, que le poème ait parlé. */}
+            {room.mode !== 'dessin' && poemeFini && (
               <div style={{ marginBottom: 20 }}>
                 <button onClick={() => setShowCoutures(!showCoutures)}
-                  style={{ ...mono, fontSize: 13, color: showCoutures ? accent : encre, opacity: showCoutures ? 1 : 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                  {showCoutures ? '▲' : '▼'} {tr('LES COUTURES', 'THE SEAMS')}
+                  aria-expanded={showCoutures}
+                  aria-controls="feuillet-salon"
+                  style={{ ...mono, fontSize: 13, color: showCoutures ? accent : encre, opacity: showCoutures ? 1 : 0.75, background: 'none', border: 'none', cursor: 'pointer', padding: 0, minHeight: 44 }}>
+                  ⟡ {tr('LES COUTURES', 'THE SEAMS')}
                 </button>
-                {showCoutures && (
-                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.15 }} />
-                    {contributions.sort((a, b) => a.case_index - b.case_index).map(c => {
-                      const p = players.find(pl => pl.player_id === c.player_id)
-                      return (
-                        <div key={c.case_index} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 3, overflow: 'hidden', flexShrink: 0, border: `1px solid ${accent}30`, marginTop: 2 }}>
-                            {p?.avatar_url ? <img src={p.avatar_url} alt={p.pseudo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : <div style={{ width: '100%', height: '100%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 17, color: accent, fontWeight: 900 }}>{p?.pseudo[0]?.toUpperCase() ?? '?'}</span></div>}
-                          </div>
-                          <div>
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ ...mono, fontSize: 13, color: accent }}>{p?.pseudo ?? '?'}</span>
-                              {c.voice_name && (
-                                <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 13, color: encre, opacity: 0.5 }}>
-                                  via {c.voice_name}
-                                </span>
-                              )}
-                            </div>
-                            <span style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17 }}>{c.texte}</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
               </div>
             )}
 
             {/* Illustration — écrit */}
-            {room.mode !== 'dessin' && (
+            {room.mode !== 'dessin' && poemeFini && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>{tr('— ILLUSTRATION —', '— ILLUSTRATION —')}</div>
 
@@ -680,7 +720,7 @@ export default function FinOnline() {
             )}
 
             {/* Rejouer ensemble (hôte seulement) */}
-            {room.host_id === user?.id && (
+            {room.host_id === user?.id && (room.mode === 'dessin' || poemeFini) && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                 <button onClick={rejouerEnsemble}
                   style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
@@ -689,10 +729,12 @@ export default function FinOnline() {
               </motion.div>
             )}
 
+            {(room.mode === 'dessin' || poemeFini) && (
             <button onClick={() => navigate('/online')}
               style={{ width: '100%', background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.85em 1.8em', borderRadius: 3, border: `1px solid ${encre}40`, cursor: 'pointer', marginTop: 8 }}>
               {tr('NOUVELLE PARTIE', 'NEW GAME')}
             </button>
+            )}
           </motion.div>
         )}
       </PageTransition>

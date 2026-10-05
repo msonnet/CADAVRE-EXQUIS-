@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { chargerPoemes, sauvegarderIllustration } from '../db'
-import type { Poeme } from '../types'
+import type { ConfigPartie, Poeme } from '../types'
 import { useSound } from '../hooks/useSound'
 import { genererIllustration } from '../api/illustration'
 import { corrigerAccords } from '../api/corriger'
@@ -12,14 +12,18 @@ import { Decor, useReve } from '../reve'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import PoemeDevoile from '../components/PoemeDevoile'
 import TutorielCoach from '../components/TutorielCoach'
-import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_IMAGE, T_FIN_SHARE, T_FIN_RECUEIL } from '../hooks/useTutoriel'
+import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_SUITE, T_BIBLIO } from '../hooks/useTutoriel'
 import { vibrer } from '../utils/haptics'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import SoldeEncrier from '../components/SoldeEncrier'
 import { attribution, libelleMorceaux } from '../lib/attribution'
-import { bandesParMain, SE_PLIE_PAR_MAIN } from '../lib/plis'
+import EtiquetteReserve from '../components/EtiquetteReserve'
+import { zoneVivante } from '../lib/a11y'
+import { ouvrirTable } from '../lib/lancerTable'
+import { lignesDuFeuillet } from '../lib/plis'
+import { corpsDuPoeme, TAILLE_CORPS, RETRAIT_DEBORD } from '../lib/composition'
 import MainsDuVers from '../components/MainsDuVers'
 import { usePartage } from '../hooks/usePartage'
 import BoutonRecolte from '../components/BoutonRecolte'
@@ -66,6 +70,10 @@ const STRUCT_LABELS: Record<string, string> = langueActuelle() === 'en' ? {
   'atelier': "L'Atelier",
 }
 
+// Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 export default function FinDePartie() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -73,8 +81,42 @@ export default function FinDePartie() {
   const [poeme, setPoeme] = useState<Poeme | null>(
     (location.state as { poeme?: Poeme } | null)?.poeme ?? null
   )
+  // La table qui vient de jouer — absente après la Découverte et l'Atelier,
+  // qui ne se rejouent pas « à la même table ».
+  const table = (location.state as { table?: ConfigPartie } | null)?.table ?? null
+  const aPlusieurs = !!table && table.joueursHumains > 1
+  const [relance, setRelance] = useState(false)
   const [activeSection, setActiveSection] = useState<'recueil' | 'coutures' | 'image' | null>(null)
+  // À plusieurs mains, les coutures se dévoilent une à une, au toucher et
+  // dans l'ordre des cases — on devine avant de savoir. Elles s'ouvraient
+  // d'un bloc : autour de la table, la question « qui a écrit ça ? » était
+  // tranchée avant d'avoir été posée. Seul, il n'y a rien à deviner.
+  const [devoilees, setDevoilees] = useState(0)
+  const voiles = useRef<(HTMLElement | null)[]>([])
+  const focusApres = useRef<number | null>(null)
   const [revealReady, setRevealReady] = useState(false)
+  /*
+    Trois instants, dans cet ordre, et la page n'en connaissait qu'un.
+
+    Les délais de la page couraient depuis son MONTAGE, donc sous le rideau
+    d'assemblage : quand il se levait, « SCELLER AU RECUEIL », PARTAGER et
+    NOUVELLE PARTIE étaient déjà là, pleins, au-dessus d'une carte encore
+    vide — l'invitation à quitter le poème arrivait avant lui. Et le titre
+    du rideau, « Le cadavre se reconstitue… », traversait la carte en
+    surimpression pendant son demi-seconde de sortie.
+
+      — `rideauLeve` : le rideau est SORTI, pas seulement congédié. Le titre
+        frappe et l'encre commence à cet instant, sur une page nette.
+      — `poemeFini` : le dernier mot est posé (ou le joueur a touché pour
+        abréger). Les actions montent alors, et pas avant.
+      — `coachPret` : le guide s'ouvre un temps après, jamais pendant
+        l'écriture. Toucher son bouton pendant l'encre posait tout le poème
+        d'un coup, puisque PoemeDevoile écoute l'appui en capture.
+  */
+  const [rideauLeve, setRideauLeve] = useState(false)
+  const [poemeFini, setPoemeFini] = useState(false)
+  const [coachPret, setCoachPret] = useState(false)
+  const titreRef = useRef<HTMLHeadingElement>(null)
   const [illustrationUrl, setIllustrationUrl] = useState<string | null>(null)
   const [styleChoisi, setStyleChoisi] = useState<string | null>(null)
   const [promptLibre, setPromptLibre] = useState('')
@@ -97,6 +139,14 @@ export default function FinDePartie() {
   const { profile } = useAuth()
   const { jouer } = useSound()
 
+  // Le geste qui dévoile une couture rend le focus à la suivante ; sans
+  // cela il tombait sur BODY, le bouton venant de disparaître.
+  useEffect(() => {
+    if (focusApres.current === null) return
+    voiles.current[focusApres.current]?.focus()
+    focusApres.current = null
+  }, [devoilees])
+
   useEffect(() => {
     if (!pleinEcran) return
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setPleinEcran(false) }
@@ -110,7 +160,35 @@ export default function FinDePartie() {
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
-  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
+  // Les liens empilés du bas : une boîte de 44 px chacun (voir plus bas).
+  const lienBas: React.CSSProperties = {
+    ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', textAlign: 'center',
+    minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }
+  const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, allerA: tutAllerA, terminer: tutTerminer } = useTutoriel()
+
+  // La sortie du rideau prévient d'elle-même (`onExitComplete`). Le filet :
+  // une animation suspendue — onglet en arrière-plan — ne doit pas garder
+  // le poème sous clé.
+  useEffect(() => {
+    if (!revealReady || rideauLeve) return
+    const t = setTimeout(() => setRideauLeve(true), 900)
+    return () => clearTimeout(t)
+  }, [revealReady, rideauLeve])
+
+  // Le titre reçoit le focus au lever du rideau : le lecteur d'écran
+  // annonce enfin que le poème est arrivé, et la lecture part de là.
+  useEffect(() => {
+    if (rideauLeve) titreRef.current?.focus({ preventScroll: true })
+  }, [rideauLeve])
+
+  useEffect(() => {
+    if (!poemeFini) return
+    const t = setTimeout(() => setCoachPret(true), 600)
+    return () => clearTimeout(t)
+  }, [poemeFini])
+
+  const onPoemeFini = useCallback(() => setPoemeFini(true), [])
 
   useEffect(() => {
     if (!poeme) {
@@ -142,15 +220,6 @@ export default function FinDePartie() {
     p.then(t => { if (!cancelled) setTexteCorrige(t) })
     return () => { cancelled = true }
   }, [poeme?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Tutoriel : avancement automatique selon les actions détectées
-  useEffect(() => {
-    if (tutActif && tutEtape === T_FIN_IMAGE && illustrationUrl) tutAvancer()
-  }, [illustrationUrl]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (tutActif && tutEtape === T_FIN_SHARE && partage.fait) tutAvancer()
-  }, [partage.fait]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (generationPrecedente.current && !generatingIllustration) setSoldeRelu(v => v + 1)
@@ -219,6 +288,42 @@ export default function FinDePartie() {
     if (style) choisirStyle(style)
   }
 
+  /**
+   * Une autre partie, à la même table.
+   *
+   * La soirée se joue par parties successives, et le geste qui la continuait
+   * était un lien de 13 px vers des préparatifs remis à zéro. Les mêmes
+   * mains, les mêmes prénoms, les mêmes règles — et la même porte que les
+   * préparatifs : une table où une voix écrit se règle à son ouverture, le
+   * raccourci ne contourne pas l'encrier.
+   */
+  async function memeTable() {
+    if (!table || relance) return
+    jouer('demarrage')
+    setRelance(true)
+    const refuse = await ouvrirTable(table)
+    setRelance(false)
+    if (refuse) { setRefus(refuse); return }
+    navigate('/jeu')
+  }
+
+  /*
+    Les deux gestes que le guide propose après le premier poème. Le guide
+    reprend ensuite au recueil (`T_BIBLIO`) : celui qui rejoue tout de suite
+    le retrouvera là, en y venant — le rendez-vous du poème du jour, à la
+    toute fin, n'est pas perdu pour avoir choisi de rejouer.
+  */
+  function encoreUne() {
+    tutAllerA(T_BIBLIO)
+    if (table) { void memeTable(); return }
+    navigate('/config')
+  }
+
+  function aPlusieursIci() {
+    tutAllerA(T_BIBLIO)
+    navigate('/config?mains=2')
+  }
+
   if (!poeme) {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom">
@@ -237,13 +342,91 @@ export default function FinDePartie() {
 
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
-  const texteAffiche = texteCorrige ?? texte
   // Une phrase se déplie un fragment par bande — un pli par main
-  // (`lib/plis.ts`). Les vers, eux, sont déjà une main par ligne.
-  const lignes = (SE_PLIE_PAR_MAIN.has(poeme.structureId)
-    ? bandesParMain(poeme.cases.map(c => c.texte), texteCorrige)
-    : null) ?? texteAffiche.split('\n')
+  // (`lib/plis.ts`). Les vers, eux, sont déjà une main par ligne. Chaque
+  // ligne sait de quelle case elle vient : c'est là que sa couture se pose.
+  const feuillet = lignesDuFeuillet(poeme.structureId, poeme.cases.map(c => c.texte), texteCorrige)
+  const lignes = feuillet.lignes
+  const corps = corpsDuPoeme(lignes, poeme.structureId)
   const voixCount = poeme.cases.length
+  const couturesOuvertes = activeSection === 'coutures'
+
+  /*
+    Les coutures se posent SUR le poème, sous chaque vers — la forme que le
+    poème du jour a trouvée. Elles ouvraient sous la carte une seconde liste
+    qui recopiait chaque vers, avec sa fonction de structure (« X — toi »)
+    et un bouton « ◇ GARDER » par ligne : un atelier de onze vers
+    s'affichait deux fois de suite, et les noms arrivaient loin sous le pli.
+
+    Elles se DÉMONTENT au lieu de se replier : un texte clippé reste lu par
+    le lecteur d'écran et trouvé par la recherche de la page.
+  */
+  function couture(j: number): React.ReactNode {
+    if (!couturesOuvertes || !poeme) return null
+    const i = feuillet.cases[j]
+    const c = poeme.cases[i]
+    if (!c) return null
+    const iaNum = c.voixSlot ?? poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
+    // Voilée tant que la table ne l'a pas demandée ; seule la SUIVANTE se
+    // touche, pour que l'ordre des cases tienne.
+    const voilee = aPlusieurs && i >= devoilees
+    const suivante = voilee && i === devoilees
+    // Petites capitales par le style, pas par le texte : le lecteur d'écran
+    // lit un nom, il n'épelle pas des majuscules.
+    const signe: React.CSSProperties = { ...mono, fontSize: 11, letterSpacing: '0.12em', fontStyle: 'normal', textIndent: 0, textTransform: 'uppercase' }
+    return (
+      <motion.div
+        data-couture
+        initial={mouvementReduit() ? false : { opacity: 0, y: -2 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 + Math.min(j, 12) * 0.06, duration: 0.4, ease: 'easeOut' }}
+        style={{ paddingLeft: RETRAIT_DEBORD, marginTop: -2, marginBottom: 8 }}
+      >
+        <div style={{ ...signe, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: encre, lineHeight: 1.4 }}>
+          <span style={{ opacity: 0.5 }}>{i + 1} ·</span>
+          {suivante ? (
+            <button
+              ref={el => { voiles.current[i] = el }}
+              onClick={() => { focusApres.current = i + 1; setDevoilees(i + 1) }}
+              aria-label={tr(`Dévoiler qui a écrit le fragment ${i + 1}`, `Reveal who wrote fragment ${i + 1}`)}
+              style={{ ...signe, color: accent, background: 'none', border: 'none', borderBottom: `1px dotted ${accent}`, padding: 0, cursor: 'pointer' }}
+            >
+              {tr('QUI ?', 'WHO?')}
+            </button>
+          ) : voilee ? (
+            <span aria-hidden="true" style={{ opacity: 0.35, letterSpacing: '0.3em' }}>· · ·</span>
+          ) : (
+            <motion.span
+              ref={el => { voiles.current[i] = el }}
+              tabIndex={-1}
+              initial={aPlusieurs && !mouvementReduit() ? { opacity: 0 } : false}
+              animate={{ opacity: 0.75 }}
+              transition={{ duration: 0.35 }}
+              style={{ outline: 'none' }}
+            >
+              {attribution(c, iaNum)}
+            </motion.span>
+          )}
+          {c.fallback && !voilee && <EtiquetteReserve voixNom={c.voixNom} accent={accent} />}
+          {/* Garder ce vers : un glyphe de marge, à droite, qui prend l'accent une fois gardé. */}
+          <span style={{ marginLeft: 'auto' }}>
+            <BoutonRecolte
+              glyphe
+              texte={c.texte}
+              accent={accent}
+              encre={encre}
+              poemeId={poeme.id}
+              poemeTitre={poeme.titre}
+              datePoeme={poeme.dateCreation}
+              signature={attribution(c, iaNum)}
+              nbVoix={c.nbVoix}
+            />
+          </span>
+        </div>
+        {c.mains?.length && !voilee ? <MainsDuVers mains={c.mains} accent={accent} encre={encre} /> : null}
+      </motion.div>
+    )
+  }
 
   async function partager() {
     if (!poeme || partage.enCours) return
@@ -282,7 +465,7 @@ export default function FinDePartie() {
   return (
     <>
       {/* ── SÉQUENCE D'ASSEMBLAGE THÉÂTRALE ── */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => setRideauLeve(true)}>
         {!revealReady && poeme && (
           <RevealAssemblageTexte
             fragments={poeme.cases.map(c => ({ texte: c.texte }))}
@@ -307,7 +490,9 @@ export default function FinDePartie() {
         plafond={refus?.plafond}
         onFermer={() => setRefus(null)}
         onEncrierRempli={() => {
+          const acte = refus?.acte
           setRefus(null)
+          if (acte === 'partie_ia') { memeTable(); return }
           if (styleChoisiRef.current) choisirStyle(styleChoisiRef.current)
         }}
         accent={accent} encre={encre} bg={bg}
@@ -368,40 +553,54 @@ export default function FinDePartie() {
         </div>
         <hr style={{ border: 'none', borderTop: `1.2px solid ${accent}`, marginTop: 6, opacity: 0.45 }} />
 
-        {/* ── TITLE — frappé au lever de rideau ── */}
+        {/* ── TITLE — frappé au lever de rideau ──
+            Un vrai titre (`h1`), au style inchangé : le rotor « Titres » de
+            VoiceOver ne trouvait rien sur les écrans de jeu. Il reçoit le
+            focus quand le rideau est sorti. */}
         <motion.div
           className="mt-5 mb-4"
           initial={{ opacity: 0, scale: 1.09 }}
-          animate={revealReady ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.09 }}
+          animate={rideauLeve ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.09 }}
           transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
         >
-          <div
+          <h1
+            ref={titreRef}
+            tabIndex={-1}
             className="font-fraunces font-black"
             style={{
               fontSize: 'clamp(3.5rem, 15vw, 6rem)',
               lineHeight: 0.92,
               letterSpacing: '-0.02em',
               color: encre,
+              outline: 'none',
             }}
           >
             <span style={{ display: 'block' }}>{tr('Le cadavre', 'The corpse')}</span>
             <span style={{ display: 'block', color: accent }}>{tr('est exquis', 'is exquisite')}</span>
-          </div>
+          </h1>
         </motion.div>
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
-        {/* ── POEM CARD ── */}
-        <motion.div
+        {/* ── POEM CARD ──
+            Un article nommé : le poème était une coulée de texte fondue
+            avec l'en-tête et le pied, ni titre, ni région.
+            La surface dérive de l'ENCRE, comme le feuillet plié du poème du
+            jour : le voile crème fixe, à 25 %, devenait une dalle
+            gris-lavande sur minuit, gris-brun sur argile — étrangère à
+            l'ambiance. */}
+        <motion.article
+          id="feuillet-fin"
+          aria-label={tr('Le poème', 'The poem')}
           initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
+          animate={rideauLeve ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ duration: 0.45 }}
           style={{
             border: `1px solid ${accent}40`,
             borderLeft: `3px solid ${accent}`,
             borderRadius: 3,
             padding: '16px 16px 12px',
-            background: 'rgba(240,228,204,0.25)',
+            background: `${encre}09`,
             marginBottom: 20,
           }}
         >
@@ -414,21 +613,65 @@ export default function FinDePartie() {
           <PoemeDevoile
             lignes={lignes}
             accent={accent}
-            actif={revealReady}
+            actif={rideauLeve}
             lettrine
             onLettrine={() => { jouer('lettrine'); vibrer('devoilement') }}
+            onFini={onPoemeFini}
+            apres={couture}
             style={{
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-              color: encre, fontSize: 'clamp(1.55rem, 7vw, 2.1rem)', lineHeight: 1.6,
+              // Un cran plus bas quand les vers sont longs (`lib/composition.ts`).
+              color: encre, fontSize: TAILLE_CORPS[corps], lineHeight: 1.6,
               overflowWrap: 'break-word', wordBreak: 'break-word',
             }}
           />
+
+          {/* À plusieurs, les coutures se dévoilent une à une : la dernière
+              dévoilée est dite au lecteur d'écran, et tout se lève d'un geste. */}
+          {couturesOuvertes && aPlusieurs && (
+            <>
+              <p className="sr-only" {...zoneVivante}>
+                {devoilees > 0 && devoilees <= poeme.cases.length
+                  ? (() => {
+                      const k = devoilees - 1
+                      const ck = poeme.cases[k]
+                      const n = ck.voixSlot ?? poeme.cases.slice(0, k).filter(x => x.auteur === 'ia').length + 1
+                      return `${k + 1} — ${attribution(ck, n)}`
+                    })()
+                  : ''}
+              </p>
+              {devoilees < poeme.cases.length && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setDevoilees(poeme.cases.length)}
+                    style={{ ...mono, fontSize: 11, letterSpacing: '0.15em', color: encre, opacity: 0.6, background: 'none', border: 'none', cursor: 'pointer', minHeight: 44 }}
+                  >
+                    {tr('TOUT DÉVOILER', 'REVEAL ALL')}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
           {/* Card footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
             {libelleMorceaux(poeme.structureId, voixCount)} · {structLabel.toUpperCase()} · {heureStr}
           </div>
-        </motion.div>
+        </motion.article>
+
+        {/*
+          Tout ce qui suit attend que le poème ait parlé — le dernier mot
+          posé, ou l'appui qui abrège. Absent du document jusque-là, et non
+          seulement transparent : un bouton invisible se presse quand même,
+          et le lecteur d'écran l'annoncerait avant le poème.
+        */}
+        {poemeFini && (
+        <motion.div
+          className="flex flex-col"
+          initial={mouvementReduit() ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+        >
 
         {/* ── IMAGE (if already generated) ── */}
         {illustrationUrl && (
@@ -534,19 +777,43 @@ export default function FinDePartie() {
           )}
         </AnimatePresence>
 
-        {/* ── SCELLER CTA ── */}
+        {/* ── SCELLER CTA ──
+            À plusieurs, le bouton principal est la partie suivante : le
+            poème est déjà au recueil depuis la dernière case, « sceller »
+            ne faisait que mener à la bibliothèque — et c'est la relance que
+            la table attend. Seul, rien ne change : le guide des premiers
+            pas désigne ce bouton. */}
         <motion.div
           className="mb-3 mt-2"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.4 }}
           whileTap={{ scale: 0.98 }}
         >
+          {aPlusieurs ? (
+            <button
+              onClick={memeTable}
+              disabled={relance}
+              className="w-full flex items-center justify-center"
+              style={{
+                background: accent, color: btnText,
+                ...mono, fontSize: 17,
+                textTransform: 'uppercase',
+                padding: '1.15em 1em',
+                border: 'none', cursor: relance ? 'default' : 'pointer',
+                gap: 2,
+                borderRadius: 3,
+                opacity: relance ? 0.7 : 1,
+              }}
+            >
+              <span>{tr('Une autre, à la même table', 'Another, at the same table')}&nbsp;→</span>
+            </button>
+          ) : (
           <button
-            onClick={() => { if (tutActif && tutEtape === T_FIN_RECUEIL) tutAvancer(); navigate('/bibliotheque') }}
-            className={`w-full flex items-center justify-center${tutActif && tutEtape === T_FIN_RECUEIL ? ' tut-cible' : ''}`}
+            onClick={() => {
+              // Le guide reprend au recueil, quel que soit le panneau ouvert.
+              if (tutActif && tutEtape >= T_FIN_REVEL && tutEtape < T_BIBLIO) tutAllerA(T_BIBLIO)
+              navigate('/bibliotheque')
+            }}
+            className="w-full flex items-center justify-center"
             style={{
-              ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
               background: accent, color: btnText,
               ...mono, fontSize: 17,
               textTransform: 'uppercase',
@@ -558,6 +825,7 @@ export default function FinDePartie() {
           >
             <span>{tr('Sceller au recueil', 'Seal into the collection')}&nbsp;→</span>
           </button>
+          )}
 
         </motion.div>
 
@@ -565,24 +833,21 @@ export default function FinDePartie() {
             Trois pairs, trois colonnes égales séparées par un filet : en
             deux colonnes, les tirets de deux libellés voisins se touchaient
             et le troisième restait orphelin. Voir PoemeDetail, même remède. */}
-        <motion.div
+        <div
           style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', paddingBottom: 4, marginBottom: 8 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 0.4 }}
         >
           <button
             onClick={partager}
             disabled={partage.enCours}
-            className={tutActif && tutEtape === T_FIN_SHARE ? 'appui tut-cible' : 'appui'}
-            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: partage.actif ? accent : encre, opacity: partage.actif ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partage.enCours ? 'default' : 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44 }}
+            className="appui"
+            style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: partage.actif ? accent : encre, opacity: partage.actif ? 0.9 : 0.7, background: 'none', border: 'none', cursor: partage.enCours ? 'default' : 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44 }}
           >
             {partage.libelle(tr('PARTAGER', 'SHARE'))}
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'coutures' ? null : 'coutures')}
-            aria-expanded={activeSection === 'coutures'}
-            aria-controls="panneau-coutures"
+            aria-expanded={couturesOuvertes}
+            aria-controls="feuillet-fin"
             className="appui"
             style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: activeSection === 'coutures' ? accent : encre, opacity: activeSection === 'coutures' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
@@ -590,86 +855,25 @@ export default function FinDePartie() {
           </button>
           <button
             onClick={() => setActiveSection(s => s === 'image' ? null : 'image')}
-            className={tutActif && tutEtape === T_FIN_IMAGE ? 'appui tut-cible' : 'appui'}
+            className="appui"
             aria-expanded={activeSection === 'image'}
             aria-controls="panneau-image"
-            style={{ ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`, ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
+            style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: activeSection === 'image' ? accent : encre, opacity: activeSection === 'image' ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
             {tr('IMAGE', 'IMAGE')}
           </button>
-        </motion.div>
+        </div>
 
-        {/* ── COUTURES PANEL ── */}
-        <AnimatePresence>
-          {/*
-            L'audit (lot 16) voulait faire de ces trois libellés une barre
-            d'onglets, au motif qu'ouvrir IMAGE laisserait COUTURES ouvert.
-            Reproduit : c'est faux — un seul `activeSection` les gouverne,
-            ils sont DÉJÀ exclusifs. Et `role="tablist"` serait un mensonge
-            d'un autre genre : PARTAGER, le premier des trois, est une action
-            et non un onglet.
-            Ce qui manquait vraiment, c'est le lien entre la bascule et son
-            panneau — `aria-expanded` disait qu'une chose s'ouvrait sans
-            jamais dire laquelle.
-          */}
-          {activeSection === 'coutures' && (
-            <motion.div
-              key="coutures"
-              id="panneau-coutures"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-4 mb-6"
-            >
-              <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.15 }} />
-              {poeme.cases.map((c, i) => {
-                const iaNum = c.voixSlot ?? poeme.cases.slice(0, i).filter(x => x.auteur === 'ia').length + 1
-                return (
-                  <div key={i} style={{ borderLeft: `2px solid ${accent}30`, paddingLeft: 12, paddingTop: 2, paddingBottom: 2 }}>
-                    <p style={{ ...mono, fontSize: 13, color: accent, opacity: 0.7, marginBottom: 3 }}>
-                      {c.fonction.toUpperCase()}
-                      <span style={{ color: encre, opacity: 0.35, margin: '0 6px' }}>—</span>
-                      <span style={{ fontFamily: "'Playfair Display', serif" }}>
-                        {attribution(c, iaNum)}
-                      </span>
-                      {c.fallback && (
-                        <span style={{
-                          fontSize: 11,
-                          letterSpacing: '0.2em',
-                          border: `1px solid ${accent}55`,
-                          color: accent,
-                          opacity: 0.55,
-                          padding: '1px 5px',
-                          borderRadius: 3,
-                          marginLeft: 7,
-                          fontFamily: "'Raleway', sans-serif",
-                          verticalAlign: 'middle',
-                        }}>
-                          {tr('RÉSERVE', 'RESERVE')}
-                        </span>
-                      )}
-                    </p>
-                    <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
-                      {c.texte}
-                    </p>
-                    {c.mains?.length ? <MainsDuVers mains={c.mains} accent={accent} encre={encre} /> : null}
-                    <BoutonRecolte
-                      texte={c.texte}
-                      accent={accent}
-                      encre={encre}
-                      poemeId={poeme.id}
-                      poemeTitre={poeme.titre}
-                      datePoeme={poeme.dateCreation}
-                      signature={attribution(c, iaNum)}
-                      nbVoix={c.nbVoix}
-                    />
-                  </div>
-                )
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/*
+          L'audit (lot 16) voulait faire de ces trois libellés une barre
+          d'onglets, au motif qu'ouvrir IMAGE laisserait COUTURES ouvert.
+          Reproduit : c'est faux — un seul `activeSection` les gouverne, ils
+          sont DÉJÀ exclusifs. Et `role="tablist"` serait un mensonge d'un
+          autre genre : PARTAGER, le premier des trois, est une action et non
+          un onglet. Ce qui manquait, c'était le lien entre la bascule et ce
+          qu'elle ouvre — `aria-controls`. Les coutures vivant désormais dans
+          la carte, c'est la carte qu'il désigne.
+        */}
 
         {/* ── IMAGE PANEL ── */}
         <AnimatePresence>
@@ -782,26 +986,52 @@ export default function FinDePartie() {
           )}
         </AnimatePresence>
 
-        {/* ── NOUVELLE PARTIE ── */}
-        <motion.div
-          className="flex justify-center mt-4 pb-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.8 }}
-        >
+        {/* ── NOUVELLE PARTIE ──
+            Quand une table a joué, il y a deux suites et elles ne se
+            confondent pas : la même table, d'un geste, ou une autre table,
+            par les préparatifs — qui se souviennent désormais de la
+            dernière. À plusieurs, la première est déjà le bouton principal,
+            et c'est le recueil qui descend ici.
+
+            Chaque lien a une boîte RÉELLE de 44 px. Ils étaient hauts de
+            20 px à 4 px d'écart : la zone d'appui globale (le ::after de
+            44 px) débordait sur le voisin, et le suivant dans le DOM
+            gagnait — la moitié basse de « VOIR AU RECUEIL » menait aux
+            préparatifs. La taille était juste, c'est le recouvrement qui
+            mentait. */}
+        <div className="flex flex-col items-center mt-4 pb-2">
+          {table && !aPlusieurs && (
+            <button
+              onClick={memeTable}
+              disabled={relance}
+              style={{ ...lienBas, cursor: relance ? 'default' : 'pointer' }}
+            >
+              {tr('— UNE AUTRE, À LA MÊME TABLE —', '— ANOTHER, AT THE SAME TABLE —')}
+            </button>
+          )}
+          {aPlusieurs && (
+            <button
+              onClick={() => navigate('/bibliotheque')}
+              style={{ ...lienBas, cursor: 'pointer' }}
+            >
+              {tr('— VOIR AU RECUEIL —', '— SEE IN THE COLLECTION —')}
+            </button>
+          )}
           <button
             onClick={() => navigate('/config')}
-            style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ ...lienBas, cursor: 'pointer' }}
           >
-            {tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
+            {table ? tr('— CHANGER DE TABLE —', '— CHANGE THE TABLE —') : tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
           </button>
+        </div>
         </motion.div>
+        )}
 
       </div>
 
       {/* ── TUTORIEL COACHES ── */}
       <TutorielCoach
-        visible={tutActif && tutEtape === T_FIN_REVEL && revealReady}
+        visible={tutActif && tutEtape === T_FIN_REVEL && coachPret}
         etape={T_FIN_REVEL} total={TUTORIEL_TOTAL}
         titre={tr('La révélation', 'The revelation')}
         corps={tr("Trois fragments écrits sans se voir — voilà le poème que personne n'a décidé.", 'Fragments written blind to each other — a poem no one decided.')}
@@ -809,36 +1039,25 @@ export default function FinDePartie() {
         onPasser={tutTerminer}
         accent={accent} encre={encre} bg={bg}
       />
+      {/*
+        La suite : rejouer, et d'abord à plusieurs. C'était la visite de
+        l'IMAGE, du PARTAGE et du RECUEIL — trois panneaux qui faisaient
+        visiter des fonctions déjà sous les yeux, et jamais ne proposaient
+        de rejouer ni la soirée sur un même téléphone. Le recueil reste au
+        bout du lien discret, pour poursuivre le guide.
+      */}
       <TutorielCoach
-        visible={tutActif && tutEtape === T_FIN_IMAGE}
-        etape={T_FIN_IMAGE} total={TUTORIEL_TOTAL}
-        titre={tr('Donne-lui une image', 'Give it an image')}
-        corps={tr("L'IA peut peindre ton poème — aquarelle, fusain, gravure…", 'The AI can paint your poem — watercolor, charcoal, engraving…')}
-        cible={tr('— IMAGE —', '— IMAGE —')}
-        position="top"
-        onCompris={tutAvancer}
-        labelCompris={tr('PLUS TARD →', 'LATER →')}
-        onPasser={tutTerminer}
-        accent={accent} encre={encre} bg={bg}
-      />
-      <TutorielCoach
-        visible={tutActif && tutEtape === T_FIN_SHARE}
-        etape={T_FIN_SHARE} total={TUTORIEL_TOTAL}
-        titre={tr('Partage-le', 'Share it')}
-        corps={tr('Une vidéo animée se compose toute seule — Instagram, WhatsApp, SMS.', 'An animated video composes itself — Instagram, WhatsApp, texts.')}
-        cible={tr('PARTAGER', 'SHARE')}
-        position="top"
-        onCompris={tutAvancer}
-        labelCompris={tr('PLUS TARD →', 'LATER →')}
-        onPasser={tutTerminer}
-        accent={accent} encre={encre} bg={bg}
-      />
-      <TutorielCoach
-        visible={tutActif && tutEtape === T_FIN_RECUEIL}
-        etape={T_FIN_RECUEIL} total={TUTORIEL_TOTAL}
-        titre={tr('Scelle ton poème', 'Seal your poem')}
-        corps={tr('Il rejoint ta bibliothèque — tu pourras le relire, le partager, le publier.', 'It joins your collection — reread it, share it, publish it.')}
-        cible={tr('SCELLER AU RECUEIL', 'SEAL INTO THE COLLECTION')}
+        visible={tutActif && tutEtape === T_FIN_SUITE && coachPret}
+        etape={T_FIN_SUITE} total={TUTORIEL_TOTAL}
+        titre={tr('La suite', 'What next')}
+        corps={tr(
+          'Une autre, tout de suite — ou ce soir, à plusieurs sur ce téléphone : chacun écrit sa bande sans voir celle du voisin.',
+          'Another one, right away — or tonight, with friends on this phone: each writes a strip without seeing the next one.',
+        )}
+        gestes={[
+          { libelle: tr('ENCORE UNE', 'ONE MORE'), onClick: encoreUne },
+          { libelle: tr('À PLUSIEURS, SUR CE TÉLÉPHONE', 'WITH FRIENDS, ON THIS PHONE'), onClick: aPlusieursIci },
+        ]}
         onCompris={() => { tutAvancer(); navigate('/bibliotheque') }}
         labelCompris={tr('VOIR MON RECUEIL →', 'SEE MY COLLECTION →')}
         onPasser={tutTerminer}

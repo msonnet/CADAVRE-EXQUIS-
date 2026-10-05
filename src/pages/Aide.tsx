@@ -182,12 +182,12 @@ export default function Aide() {
           transition={{ duration: 0.5 }}
           style={{ marginBottom: 24 }}
         >
-          <div
+          <h1
             className="font-fraunces font-black leading-tight mb-3"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre }}
           >
             {tr('Comment', 'How to')} <span style={{ color: accent }}>{tr('jouer', 'play')}</span>
-          </div>
+          </h1>
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, lineHeight: 1.65 }}>
             {tr("Le cadavre exquis est un jeu surréaliste inventé à Paris dans les années 1920. Chaque participant contribue à l'œuvre sans voir ce que les autres ont produit. Le résultat révélé est toujours une surprise.", 'The exquisite corpse is a surrealist game invented in Paris in the 1920s. Each participant contributes to the work without seeing what the others have produced. The revealed result is always a surprise.')}
           </p>
@@ -211,7 +211,10 @@ export default function Aide() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 + si * 0.08 }}
             >
-              {/* ── En-tête de section (toujours visible) ── */}
+              {/* ── En-tête de section (toujours visible) ──
+                  Le bouton dans un `h2`, la forme de l'accordéon : chaque
+                  rubrique devient un titre que le rotor du lecteur trouve. */}
+              <h2>
               <button
                 onClick={() => toggle(section.id)}
                 style={{
@@ -240,6 +243,7 @@ export default function Aide() {
                   {isOpen ? '−' : '+'}
                 </span>
               </button>
+              </h2>
 
               {/* ── Contenu dépliable ── */}
               <AnimatePresence initial={false}>

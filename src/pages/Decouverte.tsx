@@ -18,7 +18,7 @@ export default function Decouverte() {
 
   // Le marqueur se pose au CHOIX du joueur, jamais au simple affichage : un
   // appel entrant pendant ces vingt secondes lui coûtait l'introduction — et
-  // avec elle le guide en 9 étapes, qui n'est armé que depuis cet écran.
+  // avec elle le guide des premiers pas, qui n'est armé que depuis cet écran.
   // Toute sortie doit passer par ici, sinon l'accueil y renvoie en boucle.
   function marquerVue() {
     try { localStorage.setItem(ONBOARDING_KEY, '1') } catch { /* ignore */ }
@@ -70,12 +70,12 @@ export default function Decouverte() {
             {tr('— BIENVENUE —', '— WELCOME —')}
           </div>
 
-          <div
+          <h1
             className="font-fraunces font-black"
             style={{ fontSize: 'clamp(2.6rem, 11vw, 3.6rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 20 }}
           >
             {tr('Le cadavre', 'The exquisite')}<br /><span style={{ color: accent }}>{tr('exquis', 'corpse')}</span>
-          </div>
+          </h1>
 
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 20, lineHeight: 1.55,

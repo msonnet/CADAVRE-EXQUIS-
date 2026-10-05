@@ -62,6 +62,9 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
       ne le lisent toujours pas
 - [ ] Monitoring erreurs Sentry (optionnel — Vercel Analytics couvre les Web Vitals)
 - [ ] Nettoyage galerie ancienne (images orphelines dans Storage)
+- [ ] La voix intérieure du mode hypnotique puise encore dans le stock commun
+      (« chavire », « la nuit garde tout ») : une réserve « du médium » reste
+      à écrire, comme celles des voix (`data/reserveVoix.ts`)
 
 ## Procédure de soumission (sur Mac avec Xcode / Android Studio)
 
@@ -1106,13 +1109,259 @@ DERNIER » ramène. La clé `cadavre-jour-deplie` retient désormais plusieurs
 jours (l'ancienne valeur, un jour seul, se lit encore). Un poème ancien où
 l'on a écrit entre aussi au recueil.
 
+## La table locale — 1er octobre
+
+Plusieurs mains sur un seul téléphone. Relevé avant : « Passe le téléphone
+à Joueur 2 », des coutures signées « joueur 1 » — et « joueur 1 » même en
+solo, où il n'y a que toi —, et des préparatifs revenus à « 1 main, 1 voix »
+après chaque partie à trois.
+
+**Les mains ont des prénoms** (`lib/table.ts`, `components/NomsDesMains.tsx`).
+Facultatifs, une ligne par siège humain dès deux mains ; vide, la main garde
+son numéro. Ils ne créent aucun champ : `Case.pseudo` (et `moi` en solo)
+existaient pour le salon, et `attribution` les lit — le prénom passe
+désormais AVANT le numéro. Le rideau appelle « Nadja », son corps se réduit
+avec la longueur (à 18vw, « Christophe » sortait de l'écran à 320 points).
+L'export `.txt` du recueil porte « Mains : Nadja, Léa ». Le dessiné reçoit
+le même champ et le même rideau.
+
+**La dernière table est retenue** (`derniere-table`, `localStorage`) :
+sièges, prénoms, structure, visibilité, mode. Un prénom PAR SIÈGE et non par
+main — un siège qui devient voix puis redevient main retrouve le sien.
+
+**« UNE AUTRE, À LA MÊME TABLE »** (`lib/lancerTable.ts`). À plusieurs, c'est
+le bouton principal de fin de partie : « Sceller au recueil » ne faisait que
+mener à la bibliothèque, le poème y était déjà. Seul, il reste ce qu'il
+était — le guide le désigne — et la relance est un lien. Les deux portes
+passent par `ouvrirTable` : une table où une voix écrit se règle à son
+ouverture, le raccourci ne contourne pas l'encrier.
+
+**Chaque voix a sa réserve** (`data/reserveVoix.ts`). Hors ligne, toutes
+les cases d'une partie tombaient dans un stock commun — « chavire »,
+« vacille », « la nuit garde tout » — sous « Le cartographe écrit… ». Trois
+fragments par famille et par voix, tirés à la main du lexique et des gestes
+de `_voices.ts`, cinq familles (celles des grilles), deux langues. Le
+commun ne sert plus que quand la voix n'a rien, et l'étiquette le dit :
+« RÉSERVE DU CARTOGRAPHE », ou RÉSERVE nue. Corrigé au passage : les
+coutures écrivaient « voix 2 · meteorologue » — l'identifiant brut.
+
+**Au lecteur d'écran, la case dit ce qu'elle demande** : `aria-describedby`
+vers l'acte et la consigne. Une zone vivante, posée en premier enfant des
+quatre écrans du jeu pour que React la garde, annonce le rideau, la voix qui
+écrit et la main qui reprend. « TOUCHER POUR CONTINUER » est un vrai bouton,
+et le focus s'y pose.
+
+**Trouvé en route, non corrigé** : le trait d'union ASCII n'a pas de dessin
+dans la Bodoni auto-hébergée (« Marie-Christine » s'affichait « Marie
+Christine »). Contourné pour les prénoms par le trait d'union typographique ;
+la police elle-même n'est pas touchée.
+
+### La relecture — ce que la première passe avait laissé
+
+**Les prénoms ne partent pas en galerie** (`casesPourGalerie`,
+`lib/publier.ts`). Une case de la table locale porte désormais « Nadja » ;
+`publierPoeme` envoyait les cases telles quelles dans une table que la clé
+anonyme lit. Des prénoms d'enfants devenaient une donnée publique. La
+galerie ne montre aucune couture : `pseudo` et `moi` sont retirés, le
+numéro de la main reste.
+
+**À plusieurs, les coutures se dévoilent une à une** — le point 3 de la
+proposition, d'abord oublié. Elles s'ouvraient d'un bloc : la question
+« qui a écrit ça ? » était tranchée avant d'avoir été posée. Chaque
+signature est voilée ; seule la SUIVANTE se touche (« QUI ? »), dans
+l'ordre des cases, et le focus passe à la suivante. « TOUT DÉVOILER »
+abrège. Le fondu est coupé sous `prefers-reduced-motion`. Seul, rien n'est
+voilé : il n'y a rien à deviner.
+
+**Les liens du bas ne se volent plus leurs appuis.** Hauts de 20 px à 4 px
+d'écart, leurs zones de 44 px se chevauchaient, et la moitié basse de
+« VOIR AU RECUEIL » menait aux préparatifs. Chacun a maintenant une boîte
+réelle de 44 px. `cibles-tactiles` mesure les tailles, pas les
+recouvrements : `table-locale.spec.ts` demande à `elementFromPoint` qui
+reçoit l'appui, ligne par ligne.
+
+**L'écran de fin du dessiné nomme les bandes** — « TÊTE — Nadja ». Le
+prénom voyage avec la bande (`BandeDessin.nom`) ; rien ne s'affiche quand
+personne n'en a donné. **Corrigé au passage, et c'était une perte de
+dessin** : le rideau de passage restait touchable pendant son fondu de
+sortie, si bien qu'un joueur qui posait aussitôt le crayon le relevait une
+seconde fois. L'indice sautait une bande — celle de Léa disparaissait.
+
+Et quatre retouches : un prénom d'un seul mot long (« Bartholomäusberger »)
+ne se coupe plus au milieu du rideau — c'est le plus long MOT qui borne le
+corps, mesuré à 0,6 em par lettre en Bodoni noir ; le recueil porte
+l'étiquette « RÉSERVE DU … » comme la fin de partie (`EtiquetteReserve`) ;
+pendant l'attente réseau de la voix, le focus se pose sur son nom au lieu de
+BODY ; le siège reprend son carré — l'initiale ne départageait pas
+« Marie-Christine » et « Maximilien ».
+
+## Le pli à l'écriture — 1er octobre
+
+Le geste central du jeu — écrire sans voir, sur une feuille pliée — se
+jouait sur un formulaire, et « sceller » ne scellait rien. La consigne
+grammaticale était le héros de l'écran (2,4 rem de Bodoni), l'écho des
+autres mains une citation de 17 px, la case une boîte à cadre d'accent
+arrondie — ce cadre était l'anneau de focus global, qu'un champ de texte
+porte toujours. SCELLER écrasait la case (`scaleY: 0`,
+`filter: brightness(0.7)`) puis coupait l'écran, même sous
+`prefers-reduced-motion`. Le pli n'existait qu'au dévoilement.
+
+**Le papier, en pièces réutilisables** (`components/Papier.tsx`) — celles de
+`FeuilletPlie`, sorties de lui : `Tranches`, `FaceFermee`, `Feuillet`,
+`Bande`, `EchoDuPli`. `FeuilletPlie` et `Depli` les emploient désormais ;
+`JeuOnline` les posera à son tour. Mêmes règles et aucune autre : tranches
+d'un pixel, surface `${encre}09`, ombre noire très faible, aucune texture.
+
+**L'écran d'écriture est le feuillet en cours.** Au-dessus, une tranche par
+case scellée — trois tours, trois épaisseurs (`tranchesDuFeuillet`, retrait
+ramené à 2 px au-delà de huit : le vers libre va jusqu'à douze). Sur la
+lèvre du dernier pli, l'écho en Bodoni d'accent, comme au poème du jour ; en
+aveugle, le pli sans mot. La consigne descend en rubrique — « — VERBE
+CONJUGUÉ — » en petites capitales — avec ses exemples en italique lisible.
+La case devient la bande : plus de cadre, un filet d'écriture qui prend
+l'accent au focus. Le champ cite l'écho dans `aria-describedby`.
+
+**SCELLER rabat la bande** (`components/Rabat.tsx`, `lib/pli.ts`). Le dépli
+joué à l'envers : charnière haute, `rotateX` jusqu'à −92°, l'ombre noire qui
+monte, `transform` et `opacity` seulement. Sur la tranche reste exactement
+ce que la visibilité transmet — rien, le dernier mot, la case — et c'est
+`resteDuPli`, la MÊME fonction que lisent l'écran suivant et la voix.
+Premier jet : la courbe du dépli rembobinée à la lettre ; mesuré, 16 % de
+l'angle à 70 % du temps — la bande semblait ne pas répondre à l'appui.
+
+**Mesuré, de l'appui à l'écran suivant** (`mesure-sceau`, sans bridage /
+CPU ×4) : avant 458–476 ms / 500–604 ms, **même sous mouvement réduit** ;
+après 445–455 / 507–530 ms, et **56–63 ms** sous mouvement réduit. La suite
+part à 0,4 s de l'appui sans attendre la dernière trame — attendre ajoutait
+50 à 70 ms par tour. Un appui ou une touche abrège le rabat. Aucun son
+ajouté.
+
+**L'écran de passage à plusieurs montre la feuille qu'on se passe** :
+`FaceFermee`, une tranche par case scellée, et sur la face « 3 FRAGMENTS
+SOUS LE PLI » — jamais un mot de ce qui est dessous. Le libellé reste
+« Passe le téléphone à » : c'est le geste réel.
+
+**L'appui qui abrège ne traverse pas l'écran de passage** — trouvé par le
+contradicteur, au doigt seulement. On abrégeait sur `pointerdown` : l'écran
+changeait entre le toucher et le relâcher, et le clic que le navigateur
+synthétise après `touchend` tombait sur « C'EST À MOI → », déjà sous le
+doigt. La main qui venait d'écrire ouvrait la case de la suivante — trois
+fois sur trois, à 0, 100 et 250 ms. À la souris rien ne se voyait : la cible
+d'un clic y est l'ancêtre commun du presser et du relâcher. On abrège donc
+sur le CLIC, consommé en capture ; et un doigt posé pendant le rabat arme un
+avaleur du clic suivant qui survit au composant, parce que l'horloge de
+0,4 s peut passer la main pendant que le doigt est encore posé (posé à
+330 ms, relâché à 480 : traversé sans l'avaleur). `rabat.spec.ts` le
+mesure au toucher par CDP, le doigt tenu 80 ms — `touchscreen.tap` relâche
+dans la même trame et ne voit rien.
+
+**Et « C'EST À MOI → » ne se presse pas avant de paraître**
+(`APPARITION_PASSAGE`, 0,7 s). Il était pressable dès le montage, à opacité
+nulle : un doigt posé juste APRÈS l'horloge — plus de rabat pour l'avaler —
+ouvrait encore la case de la main suivante, trois fois sur trois. Sans prise
+tant qu'il n'est pas paru, le toucher tombe sur la page. C'est aussi ce qui
+rendait les tests au doigt instables sous charge : leur doigt arrivait tard.
+
+**Pas fait, et c'est délibéré** : la voix IA écrit toujours derrière ses
+trois points ; le salon et le poème du jour n'ont pas encore leur rabat, ni
+le salon son feuillet en cours. Les pièces sont prêtes ; ce lot s'en tenait
+au cadavre écrit local. Le salon revient au groupe « en ligne » (l'écran de
+tour en ligne), le poème du jour à la voie qui tient `PoemeDuJour.tsx`.
+
+## La fin de partie — le poème parle d'abord — 2 octobre
+
+**Les délais couraient depuis le montage**, donc sous le rideau
+d'assemblage. Mesuré sur un atelier de onze vers : « SCELLER AU RECUEIL »
+plein à 1,5 s, le rideau levé à 5,5 s, le dernier mot à 15,8 s — et le
+titre du rideau qui traversait la carte pendant 400 ms. Au premier
+lancement, le guide « La révélation » montait au même instant que l'encre.
+
+Trois instants désormais, dans cet ordre : **le rideau SORTI**
+(`onExitComplete`, un filet de 900 ms), **le dernier mot posé** (`onFini`
+de `PoemeDevoile`, enfin branché), **le guide** 600 ms plus tard. Tout ce
+qui suit le poème est ABSENT du document jusque-là, et non transparent :
+un bouton invisible se presse quand même. Après : actions à 16,6 s, guide à
+17,0 s, aucun croisement. Même ordre à `FinOnline`, côté écrit.
+
+**Corrigé au passage, et c'était cassé depuis le dévoilement** : un appui
+EN COURS de séquence ne posait rien. Les mots lancés recevaient une
+transition nulle et se figeaient à mi-masque — « il reste du givre sur la
+v » — et les volets suivants restaient couchés. Seul l'appui avant le
+premier mot marchait, et c'est le seul que la mesure faisait. Le feuillet
+se remonte désormais d'un coup (une clé). Une touche du clavier abrège
+aussi. Et au doigt, `onFini` attend que le clic synthétisé soit passé :
+sinon l'appui qui abrège, sous la carte, pressait « SCELLER » apparu entre
+le toucher et le relâcher — le piège du rabat. Le minuteur de fin ne
+repart plus de zéro quand la correction d'accord arrive en cours d'encre.
+Et l'écoute se retire quand le poème s'est posé seul : elle survivait à la
+séquence, si bien que le premier appui sur COUTURES « abrégeait » un poème
+déjà écrit et remontait le feuillet entier sous le doigt.
+
+**Le guide propose de rejouer** (`useTutoriel`, sept étapes au lieu de
+neuf). Les visites de l'IMAGE, du PARTAGE et du RECUEIL sont remplacées par
+un panneau, « La suite », et deux gestes : ENCORE UNE, et À PLUSIEURS, SUR
+CE TÉLÉPHONE — `/config?mains=2`, deux mains et aucune voix
+(`tableAPlusieurs`), donc une table que le mur n'arrête jamais. Les mains
+d'une soirée précédente gardent leur siège, donc leur prénom ; ses voix,
+elles, partent — le premier jet les gardait, et « aucune voix » ne valait
+plus que pour la table par défaut. Le lien
+discret mène au recueil et à la publication ; choisir de rejouer reprend le
+guide au recueil, si bien que le rendez-vous du poème du jour n'est pas
+perdu.
+
+**La composition** (`lib/composition.ts`). Lettrine droite — elle héritait
+de l'italique, et un « L » de Bodoni penché se lisait « / e vernis ».
+Retrait des débords : la suite d'un vers rentre de 1,2 em, la lettrine
+flotte dans le retrait (le flottant est un conteneur au corps du vers :
+1,2 em au corps de la lettrine reculait trois fois trop). Le corps baisse
+d'un cran au-delà de 28 signes et à l'Atelier — le poème d'atelier de
+l'audit tient en dix-huit lignes au lieu de vingt et une, et chaque vers se
+voit commencer. La surface de la carte est `${encre}09`, comme le feuillet
+plié : le voile crème fixe grisait minuit et argile.
+
+Le vers qui porte la lettrine la **contient** (`flow-root`). Au recueil,
+où elle fait deux lignes de haut pour un corps de 17 px, elle débordait sur
+le vers suivant, que son retrait négatif faisait partir à mi-chemin du
+flottant — « cave où dorment… » quinze points à droite des autres.
+La lettrine en deux lignes de haut à la fin de partie, convention des
+revues, n'est PAS faite : un premier vers d'une ligne — le cas des phrases
+pliées par main — laisserait un blanc sous lui.
+
+**Les coutures se posent sur le poème** (`lignesDuFeuillet`, `lib/plis.ts`).
+La forme du poème du jour : sous chaque vers, le rang et la main en petites
+capitales (par le style, pas par le texte : le lecteur d'écran lit un nom),
+et ◇ dans la marge pour garder le vers (`BoutonRecolte glyphe`). La liste
+qui recopiait onze vers sous la carte est retirée, à la fin de partie, au
+recueil et au salon ; « X — toi » aussi, une fonction de structure brute.
+À plusieurs, « QUI ? » se pose sous le vers, toujours dans l'ordre.
+`aria-controls` désigne la carte. Au recueil, ouvrir les coutures déplie la
+phrase en ses bandes ; fermées, elle reste d'un seul tenant. Un poème sans
+titre s'y nomme par son incipit, et « TOUCHER POUR NOMMER ».
+
+**À l'oreille.** Chaque vers dessiné est caché au lecteur d'écran et doublé
+d'une copie entière (`.sr-only`) : « Je marche » et non « J… e marche », et
+plus de mots à opacité nulle sur lesquels VoiceOver pouvait s'arrêter. Le
+titre est un `h1` qui reçoit le focus au lever du rideau ; la carte est un
+article nommé « Le poème ». **Conséquence pour les mesures** : un vers a
+DEUX nœuds texte pendant le dépli — `getByText(…).last()` est le dessin,
+et un compte d'occurrences retire d'abord les `.sr-only`.
+
+Le poème du jour hérite du doublage et du retrait ; son titre, « — LE
+POÈME ACHEVÉ — », est un `h2` qui reçoit le focus quand on déplie : le
+bouton « Déplier » disparaissait sous le doigt et le focus tombait sur BODY.
+
+**Pas fait** : les titres d'affiche des autres écrans (préparatifs,
+réglages…) ne sont pas encore des `h1`/`h2` — hors des fichiers de ce
+groupe. Et le comportement de VoiceOver sur la copie `.sr-only` pendant le
+dépli reste à écouter sur un iPhone.
+
 ## Stack
 - React + TypeScript + Vite + PWA (Vercel)
 - Supabase (DB, Auth, Realtime, Storage)
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (535 tests unitaires) + Playwright (79 tests E2E, FR et EN)
+- Tests : Vitest (593 tests unitaires) + Playwright (105 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

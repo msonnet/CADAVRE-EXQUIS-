@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SectionAide from '../components/SectionAide'
@@ -11,7 +11,14 @@ import { groupeRadio, optionRadio } from '../lib/a11y'
 import { tr, langueActuelle } from '../i18n'
 import MurAbonnement from '../components/MurAbonnement'
 import SoldeEncrier from '../components/SoldeEncrier'
-import { ouvrirPartieIA, nouvellePartieId, deposerRecu, type Refus } from '../lib/acces'
+import type { Refus } from '../lib/acces'
+import { ouvrirTable } from '../lib/lancerTable'
+import NomsDesMains from '../components/NomsDesMains'
+import {
+  CLE_TABLE, NB_SIEGES, lireTable, nomsDesMains, nettoyerNom,
+  tableAPlusieurs, mainsDemandees,
+  type Siege, type TableRetenue,
+} from '../lib/table'
 
 const STRUCTURES_UI_FR: { id: StructureId; romain: string; label: string; description: string; detail: string }[] = [
   { id: 'phrase-simple',  romain: 'I',   label: 'Phrase courte',  description: '3 cases · sujet, verbe, complément', detail: 'La forme la plus directe — une phrase surréaliste en trois fragments.' },
@@ -25,7 +32,7 @@ const STRUCTURES_UI_EN: typeof STRUCTURES_UI_FR = [
 ]
 const STRUCTURES = langueActuelle() === 'en' ? STRUCTURES_UI_EN : STRUCTURES_UI_FR
 
-type SlotType = 'vide' | 'humain' | 'ia'
+type SlotType = Siege
 
 const CONFIG_PAR_DEFAUT: ConfigPartie = {
   structureId: 'phrase-etoffee',
@@ -36,6 +43,52 @@ const CONFIG_PAR_DEFAUT: ConfigPartie = {
   mode: 'standard',
   joueursHumains: 1,
   voixIA: 1,
+}
+
+/**
+ * La dernière table, si elle est lisible — sinon la table par défaut.
+ *
+ * On ne reprend une règle retenue que si elle existe encore : une structure
+ * renommée d'une version à l'autre ne doit pas ouvrir des préparatifs où
+ * aucune carte n'est cochée.
+ */
+function tableDeDepart(): { sieges: SlotType[]; noms: string[]; config: ConfigPartie } {
+  const depart = tableRetenue()
+  // `?mains=2` — « À PLUSIEURS, SUR CE TÉLÉPHONE », proposé par le guide
+  // après le premier poème. Les règles retenues restent ; seuls les sièges
+  // deviennent des mains, et les prénoms de la dernière soirée suivent.
+  const n = typeof window !== 'undefined' ? mainsDemandees(window.location.search) : 0
+  if (!n) return depart
+  const sieges = tableAPlusieurs(depart.sieges, n)
+  return {
+    ...depart, sieges,
+    config: {
+      ...depart.config,
+      joueursHumains: sieges.filter(s => s === 'humain').length,
+      voixIA: sieges.filter(s => s === 'ia').length,
+    },
+  }
+}
+
+function tableRetenue(): { sieges: SlotType[]; noms: string[]; config: ConfigPartie } {
+  let t: TableRetenue | null = null
+  try { t = lireTable(localStorage.getItem(CLE_TABLE)) } catch { /* stockage indisponible */ }
+  const config: ConfigPartie = { ...CONFIG_PAR_DEFAUT }
+  if (t) {
+    if (STRUCTURES.some(s => s.id === t!.structureId)) config.structureId = t.structureId as StructureId
+    if (['aveugle', 'dernier-mot', 'derniere-case'].includes(t.visibilite ?? '')) config.visibilite = t.visibilite as Visibilite
+    if (t.mode === 'standard' || t.mode === 'hypnotique') config.mode = t.mode
+    if (t.premierJoueur === 'humain' || t.premierJoueur === 'ia') config.premierJoueur = t.premierJoueur
+    config.joueursHumains = t.sieges.filter(s => s === 'humain').length
+    config.voixIA = t.sieges.filter(s => s === 'ia').length
+    return { sieges: t.sieges, noms: t.noms, config }
+  }
+  const h = CONFIG_PAR_DEFAUT.joueursHumains
+  const ia = CONFIG_PAR_DEFAUT.voixIA
+  const sieges: SlotType[] = Array(NB_SIEGES).fill('vide') as SlotType[]
+  for (let i = 0; i < h && i < NB_SIEGES; i++) sieges[i] = 'humain'
+  for (let i = h; i < h + ia && i < NB_SIEGES; i++) sieges[i] = 'ia'
+  return { sieges, noms: Array(NB_SIEGES).fill(''), config }
 }
 
 function descriptionTable(humains: number, ia: number): string {
@@ -56,16 +109,26 @@ export default function Configuration() {
   const { jouer } = useSound()
   const seance = useReve()
 
-  const [slots, setSlots] = useState<SlotType[]>(() => {
-    const h = CONFIG_PAR_DEFAUT.joueursHumains
-    const ia = CONFIG_PAR_DEFAUT.voixIA
-    const result: SlotType[] = Array(6).fill('vide') as SlotType[]
-    for (let i = 0; i < h && i < 6; i++) result[i] = 'humain'
-    for (let i = h; i < h + ia && i < 6; i++) result[i] = 'ia'
-    return result
-  })
+  // La table se retrouve d'une partie à l'autre : avant, les préparatifs
+  // repartaient toujours de « 1 main, 1 voix », et une famille de quatre
+  // recomposait la sienne siège par siège à chaque partie de la soirée.
+  const [depart] = useState(tableDeDepart)
+  const [slots, setSlots] = useState<SlotType[]>(depart.sieges)
+  // Un prénom par SIÈGE : un siège qui devient voix puis redevient main
+  // retrouve le sien, et les autres ne se décalent pas.
+  const [noms, setNoms] = useState<string[]>(depart.noms)
 
-  const [config, setConfig] = useState<ConfigPartie>(CONFIG_PAR_DEFAUT)
+  const [config, setConfig] = useState<ConfigPartie>(depart.config)
+
+  // `?mains=2` se lit une fois, puis s'efface de l'adresse. Il y restait :
+  // un rechargement, ou un retour arrière depuis la partie, réimposait deux
+  // mains sans voix et écrasait les sièges que le joueur venait de régler.
+  // L'entrée d'historique est REMPLACÉE — le retour arrière retrouve des
+  // préparatifs ordinaires, qui reprennent la table retenue.
+  const location = useLocation()
+  useEffect(() => {
+    if (mainsDemandees(location.search)) navigate('/config', { replace: true })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [refus, setRefus] = useState<Refus | null>(null)
   const [ouverture, setOuverture] = useState(false)
 
@@ -95,26 +158,35 @@ export default function Configuration() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
 
+  // Les sièges humains, de gauche à droite : c'est l'ordre dans lequel
+  // `buildSequence` numérote les mains, donc celui des prénoms.
+  const siegesHumains = slots.flatMap((s, i) => (s === 'humain' ? [i] : []))
+
   async function demarrer() {
     jouer('demarrage')
+    if (ouverture) return
 
-    // Une partie où l'IA écrit se règle ici, avant de commencer — jamais en
-    // cours de route. Une table entièrement humaine ne coûte rien et passe.
-    if (voixIA > 0) {
-      if (ouverture) return
-      setOuverture(true)
-      const partieId = nouvellePartieId()
-      const refuse = await ouvrirPartieIA(partieId, 'ecrit')
-      setOuverture(false)
-      if (refuse) { setRefus(refuse); return }
-      deposerRecu(partieId)
+    // Seul, on n'a de nom pour personne : la couture dira « toi ».
+    const table: ConfigPartie = {
+      ...config, joueursHumains, voixIA,
+      ...(joueursHumains > 1 ? { noms: nomsDesMains(slots, noms) } : {}),
     }
+    try {
+      const retenue: TableRetenue = {
+        sieges: slots, noms: noms.map(nettoyerNom),
+        structureId: config.structureId, visibilite: config.visibilite,
+        mode: config.mode, premierJoueur: config.premierJoueur,
+      }
+      localStorage.setItem(CLE_TABLE, JSON.stringify(retenue))
+    } catch { /* stockage plein ou interdit : la partie se joue quand même */ }
 
-    // Purge : un brouillon périmé écraserait cette config, et le drapeau
-    // découverte forcerait le passage manuel des tours IA.
-    localStorage.removeItem('brouillon-actuel')
-    sessionStorage.removeItem('decouverte')
-    sessionStorage.setItem('config-partie', JSON.stringify(config))
+    // Une partie où l'IA écrit se règle à son ouverture — jamais en cours de
+    // route. `ouvrirTable` est la même porte que « la même table » en fin de
+    // partie : un raccourci ne contourne pas l'encrier.
+    if (voixIA > 0) setOuverture(true)
+    const refuse = await ouvrirTable(table)
+    setOuverture(false)
+    if (refuse) { setRefus(refuse); return }
     navigate('/jeu')
   }
 
@@ -141,19 +213,23 @@ export default function Configuration() {
           {tr('— PRÉPARATIFS —', '— PREPARATIONS —')}
         </div>
 
-        {/* ── TITLE ── */}
+        {/* ── TITLE ──
+            Un vrai titre (`h1`), au style inchangé : hors de la fin de partie,
+            aucun écran de jeu n'en portait, et le rotor « Titres » de VoiceOver
+            ne trouvait rien. Même chose aux Réglages, à l'Atelier, aux Règles,
+            aux préparatifs du dessin, au mode en ligne et à la Découverte. */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div
+          <h1
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 18 }}
           >
             {tr('Choisir la', 'Choose the')}{' '}
             <span style={{ color: accent }}>{tr('structure', 'structure')}</span>
-          </div>
+          </h1>
         </motion.div>
 
         {/* ── STRUCTURE CARDS ── */}
@@ -238,12 +314,15 @@ export default function Configuration() {
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
             {tr('— AUTOUR DE LA TABLE —', '— AROUND THE TABLE —')}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          {/* Six sièges de 44 et cinq écarts de 8 font 304 points : à 320,
+              il en reste 288, et le sixième siège sortait du cadre. Les
+              écarts se resserrent au besoin, le siège ne rétrécit jamais. */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', maxWidth: 304, gap: 4, marginBottom: 12 }}>
             {slots.map((slot, i) => (
               <button
                 key={i}
                 onClick={() => cyclerSlot(i)}
-                aria-label={slot === 'vide' ? tr('Ajouter un joueur', 'Add a player') : slot === 'humain' ? tr('Joueur humain — changer', 'Human player — change') : tr('Voix IA — changer', 'AI voice — change')}
+                aria-label={slot === 'vide' ? tr('Ajouter un joueur', 'Add a player') : slot === 'humain' ? `${tr('Joueur humain', 'Human player')}${nettoyerNom(noms[i] ?? '') ? `, ${nettoyerNom(noms[i])}` : ''} — ${tr('changer', 'change')}` : tr('Voix IA — changer', 'AI voice — change')}
                 style={{
                   width: 44, height: 44, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -258,6 +337,12 @@ export default function Configuration() {
                 {slot === 'vide' && (
                   <span style={{ color: `${encre}20`, fontSize: 14 }}>·</span>
                 )}
+                {/* Le siège garde son carré, nommé ou non. Une initiale y
+                    avait été posée pour relier le siège à sa ligne de
+                    prénom ; mais « Marie-Christine » et « Maximilien »
+                    portaient toutes deux « M », et un repère qui ne
+                    départage pas ne relie rien. Les lignes de prénoms
+                    suivent l'ordre des sièges, « MAIN I », « MAIN II ». */}
                 {slot === 'humain' && (
                   <span style={{
                     display: 'block', width: 10, height: 10,
@@ -284,6 +369,18 @@ export default function Configuration() {
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.80, fontStyle: 'italic', lineHeight: 1.55 }}>
             {descriptionTable(joueursHumains, voixIA)}
           </div>
+
+          {/*
+            Les prénoms — à plusieurs seulement. Seul, il n'y a personne à
+            appeler et la couture dit « toi ».
+          */}
+          {joueursHumains > 1 && (
+            <NomsDesMains
+              sieges={siegesHumains} noms={noms}
+              onNom={(siege, v) => setNoms(prev => prev.map((n, j) => (j === siege ? v : n)))}
+              encre={encre} accent={accent}
+            />
+          )}
         </motion.div>
 
         {/* ── PREMIER JOUEUR — uniquement solo avec IA ── */}

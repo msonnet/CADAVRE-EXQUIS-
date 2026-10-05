@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { getStructure, reconstruirePoeme } from '../structures'
 import { attribution, libelleMorceaux } from '../lib/attribution'
+import EtiquetteReserve from '../components/EtiquetteReserve'
 import MainsDuVers from '../components/MainsDuVers'
 import BoutonRecolte from '../components/BoutonRecolte'
 import { chargerPoeme, supprimerPoeme, mettreAJourTitre } from '../db'
@@ -20,6 +21,12 @@ import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import { lignesDuFeuillet } from '../lib/plis'
+import { styleVers, RETRAIT_DEBORD, incipitDe } from '../lib/composition'
+
+// Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 const NOMS_STRUCTURES: Record<string, string> = langueActuelle() === 'en' ? {
   'phrase-simple':  'Short form',
@@ -257,10 +264,64 @@ export default function PoemeDetail() {
   const structure = getStructure(poeme.structureId)
   const texte = reconstruirePoeme(poeme.cases, structure)
   const texteAffiche = texteCorrige ?? texte
-  const lignes = texteAffiche.split('\n')
-  const lettrine = (lignes[0]?.trim().charAt(0) ?? '').toLocaleUpperCase()
-  const resteLigne0 = lignes[0]?.trim().slice(1) ?? ''
+  /*
+    Les coutures se posent SOUS chaque vers, dans le poème même — elles en
+    recopiaient une seconde liste sous les boutons, si bien que le poème
+    s'affichait deux fois. Ouvertes, elles déplient la phrase en ses bandes
+    (`lignesDuFeuillet`) : une couture est la marque d'une main, on la voit
+    sur la bande qu'elle a écrite. Fermées, le recueil garde la phrase d'un
+    seul tenant.
+  */
+  const feuillet = casesVisibles
+    ? lignesDuFeuillet(poeme.structureId, poeme.cases.map(c => c.texte), texteCorrige)
+    : null
+  const lignes = feuillet?.lignes ?? texteAffiche.split('\n')
+  const ligne0 = lignes[0]?.trim() ?? ''
+  const lettrine = ligne0.charAt(0).toLocaleUpperCase()
+  const resteLigne0 = ligne0.slice(1)
+  // Un poème sans titre se nomme par son premier vers, comme dans toute
+  // table des matières de poésie — et non « Sans titre » en gris fantôme.
+  // Une phrase d'un seul tenant n'en garde que le début (`incipitDe`).
+  const incipit = incipitDe(texteAffiche)
   const voixCount = poeme.cases.length
+
+  // La couture de la case i, posée sous sa ligne j — la forme du poème du
+  // jour : le rang, la main en petites capitales, et le glyphe qui garde le
+  // vers au carnet, dans la marge.
+  function couture(i: number, j: number): React.ReactNode {
+    const cas = poeme?.cases[i]
+    if (!cas || !poeme) return null
+    return (
+      <motion.div
+        data-couture
+        // Sous mouvement réduit, les coutures se posent sans cascade.
+        initial={mouvementReduit() ? false : { opacity: 0, y: -2 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.06 + Math.min(j, 12) * 0.05, duration: 0.35, ease: 'easeOut' }}
+        style={{ paddingLeft: RETRAIT_DEBORD, marginBottom: 6 }}
+      >
+        <div style={{ ...mono, fontSize: 11, letterSpacing: '0.12em', lineHeight: 1.4, color: encre, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ opacity: 0.5 }}>{i + 1} ·</span>
+          <span style={{ opacity: 0.75, textTransform: 'uppercase' }}>{attribution(cas)}</span>
+          {cas.fallback && <EtiquetteReserve voixNom={cas.voixNom} accent={accent} />}
+          <span style={{ marginLeft: 'auto' }}>
+            <BoutonRecolte
+              glyphe
+              texte={cas.texte}
+              accent={accent}
+              encre={encre}
+              poemeId={poeme.id}
+              poemeTitre={poeme.titre}
+              datePoeme={poeme.dateCreation}
+              signature={attribution(cas)}
+              nbVoix={cas.nbVoix}
+            />
+          </span>
+        </div>
+        {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} /> : null}
+      </motion.div>
+    )
+  }
   const structLabel = NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId
   const dateStr = new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
   const heureStr = new Date(poeme.dateCreation).toLocaleTimeString(tr('fr-FR', 'en-GB'), { hour: '2-digit', minute: '2-digit' })
@@ -366,23 +427,39 @@ export default function PoemeDetail() {
               >✕</button>
             </div>
           ) : (
+            // Le titre est un vrai titre (`h1`) : le rotor « Titres » du
+            // lecteur d'écran ne trouvait rien sur cette page.
+            <h1>
             <button
               onClick={() => setEditionTitre(true)}
-              aria-label={poeme.titre ? `Titre : ${poeme.titre}. Tap pour renommer` : 'Sans titre — tap pour nommer'}
+              aria-label={poeme.titre
+                ? tr(`Titre : ${poeme.titre}. Toucher pour renommer`, `Title: ${poeme.titre}. Touch to rename`)
+                : tr(`Sans titre, « ${incipit} » — toucher pour nommer`, `Untitled, “${incipit}” — touch to name`)}
               className="text-left w-full"
             >
-              <div
-                className="font-fraunces font-black leading-tight"
-                style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: poeme.titre ? encre : `${encre}40` }}
-              >
-                {poeme.titre ?? tr('Sans titre', 'Untitled')}
-              </div>
+              {poeme.titre || !incipit ? (
+                <span
+                  className="font-fraunces font-black leading-tight"
+                  style={{ display: 'block', fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: poeme.titre ? encre : `${encre}40` }}
+                >
+                  {poeme.titre ?? tr('Sans titre', 'Untitled')}
+                </span>
+              ) : (
+                <span style={{
+                  display: 'block',
+                  fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 400,
+                  fontSize: 'clamp(1.45rem, 6vw, 1.9rem)', lineHeight: 1.25, color: encre,
+                }}>
+                  {incipit}
+                </span>
+              )}
               {!poeme.titre && (
-                <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 2 }}>
-                  {tr('TAP POUR NOMMER', 'TAP TO NAME')}
-                </div>
+                <span style={{ ...mono, display: 'block', fontSize: 13, fontWeight: 400, color: encre, opacity: 0.7, marginTop: 4 }}>
+                  {tr('TOUCHER POUR NOMMER', 'TOUCH TO NAME')}
+                </span>
               )}
             </button>
+            </h1>
           )}
         </motion.div>
 
@@ -433,22 +510,48 @@ export default function PoemeDetail() {
           <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
             {tr('— LE CADAVRE —', '— THE CORPSE —')}
           </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.7 }}>
-            {lettrine && (
-              <span style={{
-                fontFamily: "'Bodoni Moda', serif", fontWeight: 900,
-                fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
-                lineHeight: 0.85, color: accent,
-                float: 'left', marginRight: 6, marginTop: 4,
-              }}>
-                {lettrine}
-              </span>
-            )}
-            {resteLigne0 && <span>{resteLigne0}</span>}
-            {lignes.slice(1).map((ligne, i) => (
-              <React.Fragment key={i}>
-                <br />
-                {ligne || ' '}
+          {/*
+            Un vers par bloc, en retrait de débord (`lib/composition.ts`) :
+            les vers étaient des lignes coupées de `<br>`, et la suite d'un
+            vers trop long repartait du bord comme un vers nouveau.
+          */}
+          <div
+            id="poeme-detail"
+            style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.7 }}
+          >
+            {lignes.map((ligne, j) => (
+              <React.Fragment key={j}>
+                {/* `flow-root` : le vers CONTIENT sa lettrine. Plus haute que la
+                    ligne, elle débordait sur le vers suivant, que son retrait
+                    négatif faisait alors partir à mi-chemin du flottant. */}
+                <div style={{ ...styleVers(j === 0 && !!lettrine), display: j === 0 && lettrine ? 'flow-root' : 'block' }}>
+                  {j === 0 && lettrine ? (
+                    <>
+                      {/* La lettrine pour l'œil, le premier mot entier pour l'oreille. */}
+                      <span aria-hidden="true">
+                        <span style={{ float: 'left', marginLeft: `-${RETRAIT_DEBORD}`, lineHeight: 0 }}>
+                          {/* UNE ligne de haut, comme à la fin de partie : la
+                              taille d'affiche faisait deux lignes au corps du
+                              recueil, et un premier vers court laissait un
+                              blanc sous lui. Le même poème avait deux
+                              lettrines selon l'écran. */}
+                          <span style={{
+                            display: 'inline-block',
+                            fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'normal',
+                            fontSize: '1.95em',
+                            lineHeight: 0.85, color: accent,
+                            marginRight: 6, marginTop: 2,
+                          }}>
+                            {lettrine}
+                          </span>
+                        </span>
+                        {resteLigne0}
+                      </span>
+                      <span className="sr-only lu-seul" data-lu={ligne0} />
+                    </>
+                  ) : (ligne || '\u00a0')}
+                </div>
+                {feuillet && couture(feuillet.cases[j], j)}
               </React.Fragment>
             ))}
           </div>
@@ -491,8 +594,8 @@ export default function PoemeDetail() {
           </button>
           <button
             onClick={() => setCasesVisibles(v => !v)}
-            aria-label={casesVisibles ? 'Masquer les coutures' : 'Voir case par case'}
             aria-expanded={casesVisibles}
+            aria-controls="poeme-detail"
             className="appui"
             style={{ ...mono, fontSize: 12, letterSpacing: '0.1em', whiteSpace: 'nowrap', color: casesVisibles ? accent : encre, opacity: casesVisibles ? 0.9 : 0.7, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', padding: '12px 0', minHeight: 44, borderLeft: `0.5px solid ${encre}1f` }}
           >
@@ -558,53 +661,6 @@ export default function PoemeDetail() {
                   : tr('✦ Publier dans la galerie', '✦ Publish to the gallery')}
           </button>
         </motion.div>
-
-        {/* ── COUTURES ── */}
-        <AnimatePresence>
-          {casesVisibles && (
-            <motion.div
-              key="coutures"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.25 }}
-              style={{ marginBottom: 16 }}
-            >
-              <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 12 }} />
-              {poeme.cases.map((cas, i) => (
-                <div
-                  key={i}
-                  style={{
-                    borderLeft: `2px solid ${accent}35`, paddingLeft: 12,
-                    paddingTop: 6, paddingBottom: 6, marginBottom: 10,
-                  }}
-                >
-                  <div style={{ ...mono, fontSize: 13, color: accent, opacity: 0.8, marginBottom: 3 }}>
-                    {cas.fonction?.toUpperCase() ?? `CASE ${i + 1}`}
-                    <span style={{ color: encre, opacity: 0.35, margin: '0 8px' }}>—</span>
-                    <span style={{ fontFamily: "'Playfair Display', serif", textTransform: 'none', letterSpacing: 0 }}>
-                      {attribution(cas)}
-                    </span>
-                  </div>
-                  <p style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.4 }}>
-                    {cas.texte}
-                  </p>
-                  {cas.mains?.length ? <MainsDuVers mains={cas.mains} accent={accent} encre={encre} /> : null}
-                  <BoutonRecolte
-                    texte={cas.texte}
-                    accent={accent}
-                    encre={encre}
-                    poemeId={poeme.id}
-                    poemeTitre={poeme.titre}
-                    datePoeme={poeme.dateCreation}
-                    signature={attribution(cas)}
-                    nbVoix={cas.nbVoix}
-                  />
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <div style={{ flex: 1 }} />
 

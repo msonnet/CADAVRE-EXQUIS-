@@ -44,7 +44,7 @@ export default function Reglages() {
     catch { return 0 }
   })
 
-  // Réarme l'introduction ET le guide en 9 étapes : celui-ci n'est activé
+  // Réarme l'introduction ET le guide des premiers pas : celui-ci n'est activé
   // qu'au bouton « Commencer » de la Découverte — manquée une fois, il était
   // perdu pour de bon.
   function rejouerIntroduction() {
@@ -121,12 +121,12 @@ export default function Reglages() {
           transition={{ duration: 0.5 }}
           style={{ marginBottom: 24 }}
         >
-          <div
+          <h1
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 4 }}
           >
             {tr('Préférences', 'Session')} <span style={{ color: accent }}>{tr('de séance', 'preferences')}</span>
-          </div>
+          </h1>
         </motion.div>
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 24 }} />

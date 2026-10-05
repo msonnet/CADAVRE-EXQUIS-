@@ -100,7 +100,13 @@ test('onze chaînes uniques donnent onze vers distincts', async ({ page }) => {
   await page.mouse.click(195, 300)          // poser le dévoilement d'un coup
   await page.waitForTimeout(400)
 
-  const texte = await page.locator('.page-carnet').innerText()
+  // Le texte DESSINÉ : chaque vers a aussi sa copie pour le lecteur d'écran
+  // (`.sr-only`), qui ne se voit pas et ne compte pas ici.
+  const texte = await page.evaluate(() => {
+    const copie = document.querySelector('.page-carnet')!.cloneNode(true) as HTMLElement
+    copie.querySelectorAll('.sr-only').forEach(n => n.remove())
+    return copie.textContent ?? ''
+  })
   for (let i = 0; i < TOTAL; i++) {
     // On compte sur la fin du vers et non sur le vers entier : la lettrine
     // détache la première lettre du premier vers dans son propre nœud —

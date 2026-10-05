@@ -19,6 +19,12 @@ export interface TutorielCoachProps {
   encre: string
   bg: string
   position?: 'bottom' | 'top'
+  /**
+   * Des gestes qui mènent ailleurs, rendus en vrais boutons sous le corps —
+   * le premier plein, les suivants cernés. Avec eux, `onCompris` devient le
+   * lien discret qui poursuit le guide.
+   */
+  gestes?: { libelle: string; onClick: () => void }[]
 }
 
 /** Rangée de points de progression — remplie, courante (pulsante), à venir. */
@@ -49,7 +55,7 @@ function ProgressDots({ etape, total, accent, encre }: { etape: number; total: n
 
 export default function TutorielCoach({
   visible, etape, total, titre, corps, cible, onCompris, labelCompris, onPasser,
-  accent, encre, bg, position = 'bottom',
+  accent, encre, bg, position = 'bottom', gestes,
 }: TutorielCoachProps) {
   const isTop = position === 'top'
 
@@ -103,7 +109,7 @@ export default function TutorielCoach({
           <div style={{
             fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.5,
             color: encre, opacity: 0.88,
-            marginBottom: (cible || onCompris) ? 12 : 0,
+            marginBottom: (cible || onCompris || gestes?.length) ? 12 : 0,
           }}>
             {corps}
           </div>
@@ -124,9 +130,31 @@ export default function TutorielCoach({
             </div>
           )}
 
-          {/* Avance manuelle : primaire sans cible, lien discret avec cible */}
+          {/* Les gestes : de vrais boutons, en petites capitales. */}
+          {gestes && gestes.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: onCompris ? 4 : 0 }}>
+              {gestes.map((g, i) => (
+                <button
+                  key={g.libelle}
+                  onClick={g.onClick}
+                  style={{
+                    width: '100%',
+                    background: i === 0 ? accent : 'transparent',
+                    color: i === 0 ? bg : encre,
+                    ...mono, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.16em',
+                    padding: '0.85em 1em', borderRadius: 3, cursor: 'pointer',
+                    border: i === 0 ? 'none' : `1px solid ${encre}40`,
+                  }}
+                >
+                  {g.libelle}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Avance manuelle : primaire sans cible, lien discret avec cible ou gestes */}
           {onCompris && (
-            cible ? (
+            (cible || gestes?.length) ? (
               <button
                 onClick={onCompris}
                 style={{
@@ -168,7 +196,7 @@ export default function TutorielCoach({
  * y ajouter sa main. Un message qui s'efface avant d'être lu n'est pas un
  * message.
  *
- * Il attend donc un geste. Un seul, à la toute fin d'un parcours de neuf
+ * Il attend donc un geste. Un seul, à la toute fin d'un parcours de sept
  * étapes — c'est le moment où le joueur vient précisément de finir quelque
  * chose et cherche la suite.
  */

@@ -52,3 +52,32 @@ export function bandesParMain(fragments: string[], corrige?: string | null): str
 
 /** Les structures dont une case est un morceau de phrase, pas un vers. */
 export const SE_PLIE_PAR_MAIN = new Set(['phrase-simple', 'phrase-etoffee'])
+
+/**
+ * Les lignes du feuillet, et la case dont chacune vient.
+ *
+ * Les coutures se posent désormais SOUS chaque vers, dans le poème même —
+ * elles en recopiaient une seconde liste en dessous, et un atelier de onze
+ * vers s'affichait deux fois de suite. Pour cela chaque ligne doit savoir de
+ * quelle case elle vient, toujours :
+ *
+ *   — une phrase se plie par main, une bande par fragment non vide ;
+ *   — des vers sont une case par ligne. Si la correction d'accord rend un
+ *     autre nombre de lignes que de cases, on garde les vers bruts : une
+ *     couture posée sous le mauvais vers mentirait sur qui l'a écrit.
+ */
+export function lignesDuFeuillet(
+  structureId: string,
+  fragments: string[],
+  corrige?: string | null,
+): { lignes: string[]; cases: number[] } {
+  if (SE_PLIE_PAR_MAIN.has(structureId)) {
+    const cases = fragments.flatMap((f, i) => (f.trim() ? [i] : []))
+    const lignes = bandesParMain(fragments, corrige)
+    if (lignes && lignes.length === cases.length) return { lignes, cases }
+  }
+  const bruts = fragments.map(f => f.trim())
+  const corriges = corrige?.split('\n')
+  const lignes = corriges && corriges.length === bruts.length ? corriges : bruts
+  return { lignes, cases: bruts.map((_, i) => i) }
+}
