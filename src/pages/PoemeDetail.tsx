@@ -22,7 +22,7 @@ import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import { lignesDuFeuillet } from '../lib/plis'
-import { styleVers, RETRAIT_DEBORD } from '../lib/composition'
+import { styleVers, RETRAIT_DEBORD, incipitDe } from '../lib/composition'
 
 // Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
 const mouvementReduit = () =>
@@ -281,7 +281,8 @@ export default function PoemeDetail() {
   const resteLigne0 = ligne0.slice(1)
   // Un poème sans titre se nomme par son premier vers, comme dans toute
   // table des matières de poésie — et non « Sans titre » en gris fantôme.
-  const incipit = texteAffiche.split('\n')[0]?.trim() ?? ''
+  // Une phrase d'un seul tenant n'en garde que le début (`incipitDe`).
+  const incipit = incipitDe(texteAffiche)
   const voixCount = poeme.cases.length
 
   // La couture de la case i, posée sous sa ligne j — la forme du poème du
@@ -529,19 +530,24 @@ export default function PoemeDetail() {
                       {/* La lettrine pour l'œil, le premier mot entier pour l'oreille. */}
                       <span aria-hidden="true">
                         <span style={{ float: 'left', marginLeft: `-${RETRAIT_DEBORD}`, lineHeight: 0 }}>
+                          {/* UNE ligne de haut, comme à la fin de partie : la
+                              taille d'affiche faisait deux lignes au corps du
+                              recueil, et un premier vers court laissait un
+                              blanc sous lui. Le même poème avait deux
+                              lettrines selon l'écran. */}
                           <span style={{
                             display: 'inline-block',
                             fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'normal',
-                            fontSize: 'clamp(2.8rem, 10vw, 3.4rem)',
+                            fontSize: '1.95em',
                             lineHeight: 0.85, color: accent,
-                            marginRight: 6, marginTop: 4,
+                            marginRight: 6, marginTop: 2,
                           }}>
                             {lettrine}
                           </span>
                         </span>
                         {resteLigne0}
                       </span>
-                      <span className="sr-only">{ligne0}</span>
+                      <span className="sr-only lu-seul" data-lu={ligne0} />
                     </>
                   ) : (ligne || '\u00a0')}
                 </div>

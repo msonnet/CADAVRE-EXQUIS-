@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import SectionAide from '../components/SectionAide'
@@ -119,6 +119,16 @@ export default function Configuration() {
   const [noms, setNoms] = useState<string[]>(depart.noms)
 
   const [config, setConfig] = useState<ConfigPartie>(depart.config)
+
+  // `?mains=2` se lit une fois, puis s'efface de l'adresse. Il y restait :
+  // un rechargement, ou un retour arrière depuis la partie, réimposait deux
+  // mains sans voix et écrasait les sièges que le joueur venait de régler.
+  // L'entrée d'historique est REMPLACÉE — le retour arrière retrouve des
+  // préparatifs ordinaires, qui reprennent la table retenue.
+  const location = useLocation()
+  useEffect(() => {
+    if (mainsDemandees(location.search)) navigate('/config', { replace: true })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [refus, setRefus] = useState<Refus | null>(null)
   const [ouverture, setOuverture] = useState(false)
 
@@ -203,19 +213,23 @@ export default function Configuration() {
           {tr('— PRÉPARATIFS —', '— PREPARATIONS —')}
         </div>
 
-        {/* ── TITLE ── */}
+        {/* ── TITLE ──
+            Un vrai titre (`h1`), au style inchangé : hors de la fin de partie,
+            aucun écran de jeu n'en portait, et le rotor « Titres » de VoiceOver
+            ne trouvait rien. Même chose aux Réglages, à l'Atelier, aux Règles,
+            aux préparatifs du dessin, au mode en ligne et à la Découverte. */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div
+          <h1
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 18 }}
           >
             {tr('Choisir la', 'Choose the')}{' '}
             <span style={{ color: accent }}>{tr('structure', 'structure')}</span>
-          </div>
+          </h1>
         </motion.div>
 
         {/* ── STRUCTURE CARDS ── */}

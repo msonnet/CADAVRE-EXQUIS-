@@ -60,3 +60,37 @@ export const TAILLE_CORPS: Record<Corps, string> = {
 export function styleVers(avecLettrine = false): { paddingLeft: string; textIndent: string | number } {
   return { paddingLeft: RETRAIT_DEBORD, textIndent: avecLettrine ? 0 : `-${RETRAIT_DEBORD}` }
 }
+
+/** Les mots sur lesquels un incipit ne s'arrête pas : il resterait en l'air. */
+const MOTS_SUSPENDUS = new Set([
+  'le', 'la', 'les', "l'", 'un', 'une', 'des', 'du', 'de', "d'", 'au', 'aux',
+  'à', 'et', 'ou', 'en', 'sur', 'sous', 'dans', 'par', 'pour', 'sans', 'vers',
+  'the', 'a', 'an', 'of', 'to', 'in', 'on', 'and', 'or', 'with', 'by', 'for',
+  'at', 'from', 'into',
+])
+
+/** Le nombre de mots que garde l'incipit d'une phrase d'un seul tenant. */
+export const MOTS_INCIPIT = 4
+
+/**
+ * Le nom d'un poème sans titre : son premier vers, comme dans toute table
+ * des matières de poésie.
+ *
+ * Premier jet : la première ligne, toujours. Mais une phrase — courte ou
+ * étoffée, les deux structures d'entrée — tient sur UNE ligne : l'incipit
+ * était le poème entier, affiché en titre puis recopié juste dessous. Quand
+ * la première ligne est tout le poème, on n'en garde que le début, quatre
+ * mots, sans finir sur un article ni une préposition. Une phrase trop courte
+ * pour être coupée n'a pas d'incipit : « Sans titre » vaut mieux qu'un
+ * doublon.
+ */
+export function incipitDe(texte: string): string {
+  const lignes = texte.split('\n').map(l => l.trim()).filter(Boolean)
+  const premiere = lignes[0] ?? ''
+  if (lignes.length > 1) return premiere
+  const mots = premiere.split(/\s+/).filter(Boolean)
+  if (mots.length <= MOTS_INCIPIT) return ''
+  const debut = mots.slice(0, MOTS_INCIPIT)
+  while (debut.length > 1 && MOTS_SUSPENDUS.has(debut[debut.length - 1].toLocaleLowerCase())) debut.pop()
+  return `${debut.join(' ').replace(/[\s,;:.—–-]+$/, '')}…`
+}

@@ -81,7 +81,8 @@ export default function VersEncre({ texte, debut, duree, immediat, avant, lu, st
     // `flow-root` quand la lettrine y flotte : le vers la contient, au lieu
     // qu'elle déborde sur le vers suivant et en décale le début.
     <span style={{ display: avant ? 'flow-root' : 'block', minHeight: '1.65em', ...styleVers(!!avant), ...style }}>
-      <span className="sr-only">{lu ?? texte}</span>
+      {/* La copie pour l'oreille, hors du texte de la page (`.lu-seul`). */}
+      <span className="sr-only lu-seul" data-lu={lu ?? texte} />
       <span aria-hidden="true">
       {/*
         La lettrine flotte dans le retrait et tient le bord du feuillet. Le

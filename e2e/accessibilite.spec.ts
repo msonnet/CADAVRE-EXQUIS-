@@ -162,3 +162,29 @@ test('chaque bascule dit quel panneau elle ouvre', async ({ page }) => {
   await expect(posees).toHaveCount(0)
   await expect(coutures).toHaveAttribute('aria-expanded', 'false')
 })
+
+test('chaque écran porte son titre', async ({ page }) => {
+  // Hors de la fin de partie, du recueil et du poème du jour, aucun écran
+  // n'avait de titre HTML : le rotor « Titres » de VoiceOver ne trouvait
+  // rien aux préparatifs ni dans les Réglages. Les titres d'affiche sont
+  // maintenant des `h1`, au style inchangé.
+  await preparer(page)
+  const TITRES: [string, RegExp][] = [
+    ['/config', /Choisir la structure/],
+    ['/reglages', /Préférences de séance/],
+    ['/config-dessin', /Préparer le rituel/],
+    ['/atelier', /Écrire avec les voix/],
+    ['/aide', /Comment jouer/],
+    ['/online', /Jouer à plusieurs/],
+  ]
+  for (const [url, nom] of TITRES) {
+    await page.goto(url)
+    await page.waitForLoadState('domcontentloaded')
+    await franchir(page)
+    await expect(page.getByRole('heading', { level: 1, name: nom }), url).toBeVisible({ timeout: 6000 })
+  }
+  // Aux Règles, chaque rubrique est un titre de second rang.
+  await page.goto('/aide')
+  await franchir(page)
+  await expect(page.getByRole('heading', { level: 2, name: /Le poème du jour/ })).toBeVisible()
+})

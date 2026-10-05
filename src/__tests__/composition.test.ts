@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { corpsDuPoeme, TAILLE_CORPS, SIGNES_PLEIN_CORPS, styleVers, RETRAIT_DEBORD } from '../lib/composition'
+import { corpsDuPoeme, TAILLE_CORPS, SIGNES_PLEIN_CORPS, styleVers, RETRAIT_DEBORD, incipitDe } from '../lib/composition'
 import { lignesDuFeuillet } from '../lib/plis'
 import { tableAPlusieurs, mainsDemandees, NB_SIEGES, type Siege } from '../lib/table'
 import { TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_SUITE, T_BIBLIO, T_DETAIL } from '../hooks/useTutoriel'
@@ -107,5 +107,24 @@ describe('la suite que propose le guide', () => {
     expect(mainsDemandees('?mains=99')).toBe(0)
     expect(mainsDemandees('?mains=deux')).toBe(0)
     expect(mainsDemandees('')).toBe(0)
+  })
+})
+
+describe('l’incipit d’un poème sans titre', () => {
+  it('une phrase d’un seul tenant n’est pas recopiée en titre', () => {
+    const phrase = 'la cire des horloges boit le vin nouveau'
+    const inc = incipitDe(phrase)
+    expect(inc).not.toBe(phrase)
+    expect(inc).toBe('la cire des horloges…')
+  })
+  it('ne s’arrête pas sur un article ni une préposition', () => {
+    expect(incipitDe('le cadavre de la lune boira le vin')).toBe('le cadavre…')
+    expect(incipitDe('the exquisite corpse of a drowned bell')).toBe('the exquisite corpse…')
+  })
+  it('une phrase trop courte pour être coupée n’a pas d’incipit', () => {
+    expect(incipitDe('l’ombre mord la lune')).toBe('')
+  })
+  it('un poème en vers garde son premier vers entier', () => {
+    expect(incipitDe('Je marche\nle plomb chante obliquement dans la cave')).toBe('Je marche')
   })
 })

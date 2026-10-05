@@ -462,3 +462,12 @@ a[href]::after,
     scroll-behavior: auto !important;
   }
 }
+
+/* ── La copie du vers pour l'oreille ──
+   Le vers dessiné (lettrine à part, un masque par mot) est caché au lecteur
+   d'écran, qui entendait « J… e marche » ; une copie entière le lit. Elle
+   était un second nœud de texte : une sélection copiée, une recherche dans
+   la page rendaient alors chaque vers DEUX fois. Portée par un contenu
+   généré, elle reste dans l'arbre d'accessibilité — les lecteurs d'écran
+   lisent `content` — mais hors du texte de la page. */
+.lu-seul::before { content: attr(data-lu); }

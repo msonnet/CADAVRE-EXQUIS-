@@ -120,12 +120,12 @@ export default function ConfigurationDessin() {
           transition={{ duration: 0.5, delay: 0.1 }}
           style={{ marginBottom: 20 }}
         >
-          <div
+          <h1
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 6 }}
           >
             {tr('Préparer le', 'Prepare the')} <span style={{ color: accent }}>{tr('rituel', 'ritual')}</span>
-          </div>
+          </h1>
         </motion.div>
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />

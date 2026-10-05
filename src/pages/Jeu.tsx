@@ -498,7 +498,9 @@ export default function Jeu() {
   useEffect(() => {
     setPassagePret(false)
     if (!attendPassage || !multiJoueurs) return
-    const t = setTimeout(() => setPassagePret(true), APPARITION_PASSAGE * 1000)
+    // Sous mouvement réduit, le rabat ne se joue pas : aucun appui à avaler,
+    // le bouton paraît et se presse tout de suite.
+    const t = setTimeout(() => setPassagePret(true), reduit ? 0 : APPARITION_PASSAGE * 1000)
     return () => clearTimeout(t)
   }, [attendPassage, caseIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -877,9 +879,9 @@ export default function Jeu() {
         {multiJoueurs ? (
           <motion.div
             className="mt-10"
-            initial={{ opacity: 0 }}
+            initial={reduit ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: APPARITION_PASSAGE }}
+            transition={{ delay: reduit ? 0 : APPARITION_PASSAGE }}
             whileTap={{ scale: 0.97 }}
             // Sans prise tant qu'il n'est pas paru : le toucher passe à la
             // page, qui n'en fait rien. Un `disabled` l'aurait grisé.

@@ -199,8 +199,16 @@ test('le guide attend le poème, puis propose de rejouer — à plusieurs', asyn
   await expect(suite).not.toContainText(/Donne-lui une image|Partage-le/)
 
   await suite.getByRole('button', { name: 'À PLUSIEURS, SUR CE TÉLÉPHONE' }).click()
-  await expect(page).toHaveURL(/\/config\?mains=2$/)
   await expect(page.getByText(/^2 mains — la séance peut commencer\.$/)).toBeVisible({ timeout: 8000 })
+  // La demande se lit une fois, puis quitte l'adresse : elle y restait, et
+  // un rechargement réimposait deux mains sans voix par-dessus les sièges
+  // que le joueur venait de régler.
+  await expect(page).toHaveURL(/\/config$/)
+  await page.reload()
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  await expect(page.getByText(/la séance peut commencer\.$/)).toBeVisible({ timeout: 8000 })
+  await expect(page.getByText(/^2 mains — la séance peut commencer\.$/)).toHaveCount(0)
 })
 
 test('les coutures se posent sous chaque vers, sans recopier le poème', async ({ page }) => {
@@ -321,6 +329,77 @@ test('au recueil, la lettrine reste dans son vers', async ({ page }) => {
   })
   expect(gauches.length).toBe(3)
   expect(new Set(gauches).size, `les vers partent du même bord : ${gauches}`).toBe(1)
+})
+
+test('au recueil, une phrase sans titre ne se recopie pas en titre', async ({ page }) => {
+  // L'incipit était la première ligne — et une phrase tient sur UNE ligne :
+  // « la cire des horloges boit le vin nouveau » en titre, puis, sous
+  // « — LE CADAVRE — », exactement le même texte.
+  test.setTimeout(60_000)
+  await preparer(page)
+  await semer(page, { structure: 'phrase-etoffee', vers: ['la cire', 'exquise', 'boira', 'le vin', 'nouveau'] })
+
+  await page.goto('/bibliotheque/fin')
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  const titre = page.getByRole('heading', { level: 1 })
+  await expect(titre).toBeVisible({ timeout: 8000 })
+  const corps = (await page.locator('#poeme-detail').innerText()).replace(/\s+/g, ' ').trim()
+  const nom = (await titre.innerText()).replace(/TOUCHER POUR NOMMER/, '').replace(/\s+/g, ' ').trim()
+  expect(corps).toContain('cire exquise boira le vin nouveau')
+  expect(nom, 'le titre n’est pas le poème entier').not.toContain('le vin nouveau')
+  expect(nom).toMatch(/^la cire exquise boira…$|^Sans titre$/)
+})
+
+test('au recueil, la lettrine fait une ligne, comme à la fin de partie', async ({ page }) => {
+  // Deux lignes de haut au recueil, une à la fin de partie : le même poème
+  // avait deux lettrines, et un premier vers court laissait un blanc sous lui.
+  test.setTimeout(60_000)
+  await preparer(page)
+  await semer(page, { structure: 'atelier', vers: [VERS[0], VERS[2], VERS[4], VERS[6]] })
+
+  await page.goto('/bibliotheque/fin')
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  await page.waitForTimeout(1200)
+  const hauteurs = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('#poeme-detail > div')].map(v => v.getBoundingClientRect().height))
+  expect(hauteurs.length).toBe(4)
+  // « Je marche », vers court qui porte la lettrine, contre « un athanor ».
+  expect(hauteurs[0], `vers à lettrine ${hauteurs[0]} contre ${hauteurs[2]}`).toBeLessThan(hauteurs[2] * 1.2)
+})
+
+test('le poème se copie une seule fois, et se lit encore d’un tenant', async ({ page }) => {
+  // La copie pour le lecteur d'écran était un second nœud de texte : un
+  // « tout sélectionner, copier », une recherche dans la page rendaient
+  // chaque vers deux fois — « Je marche / J / e marche ».
+  test.setTimeout(90_000)
+  await preparer(page)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await semer(page, { structure: 'atelier', vers: VERS.slice(0, 3) })
+
+  await page.goto('/fin')
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  await page.getByLabel(/Passer la révélation|Skip the reveal/).click({ timeout: 6000 }).catch(() => {})
+  await expect(sceller(page)).toBeVisible({ timeout: 8000 })
+
+  const copie = await page.evaluate(() => {
+    const carte = document.querySelector('#feuillet-fin')!
+    const sel = getSelection()!
+    sel.removeAllRanges()
+    const r = document.createRange()
+    r.selectNodeContents(carte)
+    sel.addRange(r)
+    return { selection: sel.toString(), texte: (carte as HTMLElement).innerText }
+  })
+  for (const t of [copie.selection, copie.texte]) {
+    expect(t.split('le plomb chante obliquement dans la cave').length - 1).toBe(1)
+    expect(t.split('Je marche').length - 1, 'le premier vers une seule fois').toBeLessThanOrEqual(1)
+  }
+  const arbre = await page.getByRole('article', { name: 'Le poème' }).ariaSnapshot()
+  expect(arbre).toContain('Je marche')
+  expect(arbre).toContain('le plomb chante obliquement dans la cave')
 })
 
 test.describe('au doigt', () => {

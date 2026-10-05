@@ -251,9 +251,9 @@ export default function FinDessin() {
         </div>
 
         {/* ── TITRE ── */}
-        <div className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
+        <h1 className="font-fraunces font-black leading-tight" style={{ fontSize: 'clamp(1.7rem, 7vw, 2.4rem)', color: encre, marginBottom: 20 }}>
           {tr('Le cadavre', 'The cadavre,')} <span style={{ color: accent }}>{tr('dessiné', 'drawn')}</span>
-        </div>
+        </h1>
 
         {/* ── PHASES DE CHARGEMENT ── */}
         {phase !== 'revele' && phase !== 'sauvegarde' && (

@@ -346,12 +346,12 @@ export default function Atelier() {
           transition={{ duration: 0.5 }}
           style={{ marginBottom: 18 }}
         >
-          <div
+          <h1
             className="font-fraunces font-black leading-tight"
             style={{ fontSize: 'clamp(1.9rem, 8vw, 2.6rem)', color: encre, marginBottom: 6 }}
           >
             {tr('Écrire avec', 'Writing with')} <span style={{ color: accent }}>{tr('les voix', 'the voices')}</span>
-          </div>
+          </h1>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.75, fontStyle: 'italic', lineHeight: 1.5 }}>
             {nbVoix === 0
               ? <>{tr(`Le sort fixera la longueur du poème — de ${fourchetteVers(nbVoix)[0]} à ${fourchetteVers(nbVoix)[1]} vers. Tu les écriras tous, seul, sans jamais relire : le cadavre exquis se joue contre ta propre mémoire.`,

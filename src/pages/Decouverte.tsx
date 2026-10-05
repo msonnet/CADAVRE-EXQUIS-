@@ -70,12 +70,12 @@ export default function Decouverte() {
             {tr('— BIENVENUE —', '— WELCOME —')}
           </div>
 
-          <div
+          <h1
             className="font-fraunces font-black"
             style={{ fontSize: 'clamp(2.6rem, 11vw, 3.6rem)', lineHeight: 0.95, letterSpacing: '-0.02em', color: encre, marginBottom: 20 }}
           >
             {tr('Le cadavre', 'The exquisite')}<br /><span style={{ color: accent }}>{tr('exquis', 'corpse')}</span>
-          </div>
+          </h1>
 
           <p style={{
             fontFamily: "'Playfair Display', serif", fontSize: 20, lineHeight: 1.55,
