@@ -483,3 +483,17 @@ a.lien-signature::after {
    généré, elle reste dans l'arbre d'accessibilité — les lecteurs d'écran
    lisent `content` — mais hors du texte de la page. */
 .lu-seul::before { content: attr(data-lu); }
+
+/* Le nuancier : la piste porte le dégradé du canal, le curseur est un
+   anneau blanc (comme Freeform), assez grand pour le pouce. */
+.curseur-couleur::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: transparent; border: 4px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+.curseur-couleur::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: transparent; border: 4px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}

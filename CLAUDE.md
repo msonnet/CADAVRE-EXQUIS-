@@ -1752,6 +1752,61 @@ rogner. Le troisième parcours de `lecture-dessin.spec.ts` le mesure à
 passait. **Piège rencontré** : les parcours lisent `dist/` (`vite preview`) ;
 sans `npm run build`, on teste l'ancienne version.
 
+## Le studio du dessiné — 7 octobre
+
+Les outils étaient de petites icônes plates à 42 % d'opacité, et le trait
+était posé SEGMENT PAR SEGMENT : un outil translucide foncait à chaque
+jointure et partout où il repassait sur lui-même — le « chapelet de perles »
+vu sur le feutre bleu de la vidéo. Mesuré sur un aller-retour au feutre :
+**80 niveaux d'écart** le long d'un même trait avant, **3 au plus** après.
+L'auteur a demandé le niveau de Freeform ; quatre décisions prises avec lui :
+réalisme habillé au jeu, une seule palette avec réglages au second toucher,
+règle et formes redressées, nuancier à trois onglets.
+
+- **Le moteur** (`lib/trait/`). Le trait en cours vit sur une COUCHE posée
+  sur la feuille, redessinée entière à chaque image, puis versée d'un bloc
+  au lever avec l'opacité de l'outil appliquée UNE fois (`rendu.ts`). Le
+  contour d'épaisseur variable vient de `perfect-freehand` (MIT, la seule
+  dépendance ajoutée). Pression réelle au stylet ; au doigt, la vitesse la
+  remplace pour la plume, le crayon et l'aquarelle. Aucun `ctx.filter` :
+  iOS ne le gère qu'à partir de Safari 18, l'app vise iOS 16.
+- **Huit instruments** (`outils.ts`) : crayon, stylo (ligne égale), plume
+  (effilée), feutre et aquarelle (qui teintent en « produit » sur papier
+  clair, jamais sur l'ardoise), craie, aérographe, gomme. Le grain du
+  crayon et de la craie est ANCRÉ AU PAPIER, pas au trait : repasser
+  noircit les mêmes creux. Premier réglage de la craie : des taches
+  séparées, on lisait un trait cassé.
+- **La trousse** (`components/dessin/`). Instruments en SVG — fût d'ivoire,
+  laiton, acier, la partie colorée prend la couleur de l'outil, chiffre de
+  taille gravé ; l'outil choisi se soulève, son nom s'affiche un instant.
+  Le SECOND toucher ouvre ses réglages : épaisseur au quart de pixel,
+  opacité, aperçu tracé par le vrai moteur. Chaque instrument garde sa
+  taille, son opacité et sa couleur (les deux premières survivent à la
+  partie, `studio-reglages`).
+- **Le nuancier** : Grille (douze teintes, de l'ombre à la lumière), Spectre,
+  Curseurs RVB + code ; les huit ENCRES du jeu, les couleurs récentes, la
+  pipette. Au salon, le choix du papier y reste en tête.
+- **La règle** : un doigt la déplace, deux la tournent, l'angle s'affiche et
+  s'aimante aux multiples de 15°. Un trait qui COMMENCE à moins de 28 px
+  d'un bord le suit, décalé d'une demi-épaisseur — à côté du liseré, pas
+  dessous. Ailleurs, le trait reste libre.
+- **Les formes** (`redresser.ts`) : un trait tenu 0,6 s à la fin devient
+  droite, ellipse, rectangle ou triangle, et l'écran le nomme. Un
+  gribouillis reste un gribouillis : redresser à tort détruit un trait voulu.
+- **Un seul studio pour deux pages** (`hooks/useStudio.ts`) : le dessiné
+  local et le salon (`OnlineDrawingCanvas`) avaient chacun leur copie du
+  moteur. `JeuDessin.tsx` passe de 1 313 à 898 lignes.
+
+**Corrigé en route** : glisser au stylet ou à la souris sélectionnait le
+texte de l'écran ; le voile du nuancier, pendant sa sortie animée, avalait
+le premier trait posé juste après. `e2e/studio-dessin.spec.ts` (5 parcours)
+et `trait.test.ts` (17 mesures) le tiennent.
+
+**Pas fait** : le remplissage, le zoom de précision repensé et le lissage
+réglable, que l'auteur n'a pas retenus. Le studio n'a pas été essayé sur un
+vrai iPhone ni avec un Apple Pencil — la pression réelle n'est vérifiée
+qu'en lecture de code.
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
@@ -1793,7 +1848,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (717 tests unitaires) + Playwright (140 tests E2E, FR et EN)
+- Tests : Vitest (734 tests unitaires) + Playwright (145 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
