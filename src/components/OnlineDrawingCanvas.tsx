@@ -9,6 +9,7 @@ import Trousse from './dessin/Trousse'
 import ReglagesOutil from './dessin/ReglagesOutil'
 import Nuancier from './dessin/Nuancier'
 import RegleVisible from './dessin/RegleVisible'
+import Fleche from './dessin/Fleche'
 
 // Le même studio qu'en local : la trousse (92) et la rangée des gestes (44).
 const TOOLBAR_H = 178
@@ -369,6 +370,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
             )}
           </AnimatePresence>
           <Trousse
+            papier={CANVAS_BG_ACTUEL}
             outil={studio.outil} reglages={studio.reglages}
             onChoisir={id => { studio.setOutil(id); setReglagesOuverts(null) }}
             onRegler={id => setReglagesOuverts(o => (o === id ? null : id))}
@@ -386,7 +388,7 @@ export default function OnlineDrawingCanvas({ onSubmit, raccordDataUrl, bandeNum
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={() => setPanMode(p => !p)} aria-pressed={panMode} aria-label={panMode ? tr('Retour au dessin', 'Back to drawing') : tr('Naviguer / zoomer', 'Pan / zoom')}
             style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: panMode ? accent : '#c8bfb0', color: panMode ? '#fff' : '#1a1208', fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✥</button>
-          {([{ fn: undo, can: canUndo, icon: '↩', label: tr('Annuler', 'Undo') }, { fn: redo, can: canRedo, icon: '↪', label: tr('Rétablir', 'Redo') }] as const).map(({ fn, can, icon, label }) => (
+          {([{ fn: undo, can: canUndo, icon: <Fleche sens="annuler" />, label: tr('Annuler', 'Undo') }, { fn: redo, can: canRedo, icon: <Fleche sens="retablir" />, label: tr('Rétablir', 'Redo') }] as const).map(({ fn, can, icon, label }) => (
             <button key={label} onClick={fn} disabled={!can} aria-label={label}
               style={{ width: 44, height: 44, borderRadius: 3, border: 'none', background: can ? `${accent}18` : 'transparent', color: can ? accent : TB_INK, opacity: can ? 1 : 0.35, fontSize: 18, cursor: can ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {icon}

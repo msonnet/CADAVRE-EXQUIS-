@@ -25,14 +25,26 @@ interface Props {
   onCouleur: () => void
   /** Hauteur visible du plateau (les instruments plongent sous son bord). */
   hauteur?: number
+  /** La couleur du papier : le plateau en dérive, pour ne pas trancher sur la feuille. */
+  papier?: string
 }
 
 const ECHELLE = 1.25
-const PLONGE = 30   // de combien un instrument au repos s'enfonce de plus qu'un instrument levé
+const PLONGE = 26   // de combien un instrument au repos s'enfonce de plus qu'un instrument levé
+// L'instrument levé garde sa pointe DANS le plateau, à quelques pixels du
+// bord : au premier jet il montait de 16 px au-dessus et le bord la coupait.
+const LEVEE = 3
+
+function melange(a: string, b: string, t: number) {
+  const h = (x: string) => { const n = parseInt(x.replace('#', '').slice(0, 6), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255] }
+  const A = h(a), B = h(b)
+  return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('')
+}
+const sombre = (c: string) => { const n = parseInt(c.replace('#', '').slice(0, 6), 16); return (((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) < 110 }
 
 export const nomOutil = (id: OutilId) => (langueActuelle() === 'en' ? OUTILS[id].nom[1] : OUTILS[id].nom[0])
 
-export default function Trousse({ outil, reglages, onChoisir, onRegler, regle, onRegle, onCouleur, hauteur = 92 }: Props) {
+export default function Trousse({ outil, reglages, onChoisir, onRegler, regle, onRegle, onCouleur, hauteur = 92, papier = '#fdf8f2' }: Props) {
   // Le nom de l'instrument qu'on vient de prendre s'affiche un instant au-dessus
   // du plateau : sans étiquettes permanentes, il faut pouvoir apprendre leurs noms.
   const [nomVu, setNomVu] = useState<string | null>(null)
@@ -46,7 +58,12 @@ export default function Trousse({ outil, reglages, onChoisir, onRegler, regle, o
 
   const couleur = reglages[outil].couleur
   const w = LARGEUR_INSTRUMENT * ECHELLE, h = HAUTEUR_INSTRUMENT * ECHELLE
-  const levee = hauteur - h * 0.72          // décalage vertical d'un instrument levé
+  const levee = LEVEE
+  // Le plateau est le papier éclairci, pas un ivoire fixe : sur le kraft, un
+  // plateau blanc faisait un trou dans la feuille. Sur l'ardoise, on éclaircit
+  // davantage pour que les instruments d'ivoire restent lisibles.
+  const clair = sombre(papier) ? 0.62 : 0.45
+  const haut = melange(papier, '#ffffff', clair + 0.08), bas = melange(papier, '#ffffff', clair)
   return (
     <div style={{ position: 'relative' }}>
       {nomVu && (
@@ -57,8 +74,8 @@ export default function Trousse({ outil, reglages, onChoisir, onRegler, regle, o
       )}
       <div style={{
         display: 'flex', alignItems: 'stretch', height: hauteur,
-        background: 'linear-gradient(#fdfbf7, #f6f1e7)', borderRadius: 30,
-        boxShadow: '0 12px 30px rgba(40,28,16,0.16), 0 2px 6px rgba(40,28,16,0.08), inset 0 1px 0 #ffffff',
+        background: `linear-gradient(${haut}, ${bas})`, borderRadius: 30,
+        boxShadow: '0 10px 26px rgba(40,28,16,0.14), 0 2px 6px rgba(40,28,16,0.07), inset 0 1px 0 rgba(255,255,255,0.7)',
         overflow: 'hidden',
       }}>
         {/* La règle, couchée en tête de la trousse. */}
@@ -121,7 +138,7 @@ export default function Trousse({ outil, reglages, onChoisir, onRegler, regle, o
             background: 'conic-gradient(#ff4d4d, #ffb03b, #f7f740, #5ee05e, #3fd5e0, #4a6cff, #b84dff, #ff4dc1, #ff4d4d)',
             boxShadow: '0 2px 6px rgba(40,28,16,0.2)', position: 'relative',
           }}>
-            <span style={{ position: 'absolute', inset: 6, borderRadius: '50%', background: couleur, boxShadow: '0 0 0 2.5px #fffdf8' }} />
+            <span style={{ position: 'absolute', inset: 6, borderRadius: '50%', background: couleur, boxShadow: `0 0 0 2.5px ${haut}` }} />
           </span>
         </button>
       </div>

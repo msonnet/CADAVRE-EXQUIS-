@@ -1797,6 +1797,12 @@ règle et formes redressées, nuancier à trois onglets.
   local et le salon (`OnlineDrawingCanvas`) avaient chacun leur copie du
   moteur. `JeuDessin.tsx` passe de 1 313 à 898 lignes.
 
+**Retouches après l'essai de l'auteur sur iPhone** : l'instrument levé
+dépassait du plateau, pointe coupée par le bord — il se lève désormais DANS
+le plateau, à 3 px du bord ; le plateau n'est plus un ivoire fixe mais le
+papier éclairci (un plateau blanc trouait le kraft) ; « ↩ » et « ↪ »
+sortaient en emoji bleus sous iOS, ils sont dessinés (`Fleche.tsx`).
+
 **Corrigé en route** : glisser au stylet ou à la souris sélectionnait le
 texte de l'écran ; le voile du nuancier, pendant sa sortie animée, avalait
 le premier trait posé juste après. `e2e/studio-dessin.spec.ts` (5 parcours)

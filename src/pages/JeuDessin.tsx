@@ -18,6 +18,7 @@ import Trousse from '../components/dessin/Trousse'
 import ReglagesOutil from '../components/dessin/ReglagesOutil'
 import Nuancier from '../components/dessin/Nuancier'
 import RegleVisible from '../components/dessin/RegleVisible'
+import Fleche from '../components/dessin/Fleche'
 
 
 // Fonds de papier — texture procédurale dessinée au démarrage de chaque bande
@@ -708,6 +709,7 @@ export default function JeuDessin() {
             )}
           </AnimatePresence>
           <Trousse
+            papier={CANVAS_BG_ACTUEL}
             outil={studio.outil} reglages={studio.reglages}
             onChoisir={id => { studio.setOutil(id); setReglagesOuverts(null) }}
             onRegler={id => setReglagesOuverts(o => (o === id ? null : id))}
@@ -759,8 +761,8 @@ export default function JeuDessin() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             } as const)
             return (<>
-              <button onClick={undo} disabled={!canUndo} aria-label={tr('Annuler', 'Undo')} title={tr('Annuler (Ctrl+Z)', 'Undo (Ctrl+Z)')} style={geste(canUndo)}>↩</button>
-              <button onClick={redo} disabled={!canRedo} aria-label={tr('Rétablir', 'Redo')} title={tr('Rétablir (Ctrl+Shift+Z)', 'Redo (Ctrl+Shift+Z)')} style={geste(canRedo)}>↪</button>
+              <button onClick={undo} disabled={!canUndo} aria-label={tr('Annuler', 'Undo')} title={tr('Annuler (Ctrl+Z)', 'Undo (Ctrl+Z)')} style={geste(canUndo)}><Fleche sens="annuler" /></button>
+              <button onClick={redo} disabled={!canRedo} aria-label={tr('Rétablir', 'Redo')} title={tr('Rétablir (Ctrl+Shift+Z)', 'Redo (Ctrl+Shift+Z)')} style={geste(canRedo)}><Fleche sens="retablir" /></button>
             </>)
           })()}
           <div style={{ flex: 1 }} />
