@@ -18,7 +18,7 @@ function bande(i: number) {
   return { joueurIdx: i, joueurNumero: i + 1, width: 360, height: 420, lowestDrawnFraction: 0.97, dpr: 1, ts: Date.now() }
 }
 
-async function semerEtOuvrir(page: Page, delaiLecture: number) {
+async function semerEtOuvrir(page: Page, delaiLecture: number, texte = LECTURE) {
   await page.addInitScript(() => {
     localStorage.setItem('cadavre-onboarding-done', '1')
     // La lecture demande une identité : celle du client de la version de test.
@@ -32,7 +32,7 @@ async function semerEtOuvrir(page: Page, delaiLecture: number) {
   await page.route('**/api/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }))
   await page.route('**/api/interpreter-dessin**', async r => {
     await new Promise(ok => setTimeout(ok, delaiLecture))
-    await r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ texte: LECTURE }) })
+    await r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ texte }) })
   })
   await page.goto('/bibliotheque')
   const seuil = page.getByLabel(/Entrer dans le jeu|Enter the game/)
@@ -72,4 +72,21 @@ test('une lecture qui arrive après l’attente s’affiche sur la révélation'
 test('une lecture déjà là se montre dès que le dessin est découvert', async ({ page }) => {
   await semerEtOuvrir(page, 50)
   await expect(page.getByText(LECTURE, { exact: false }).first()).toBeVisible({ timeout: 9000 })
+})
+
+// Relevé avant : quatre lignes au plus. La vraie lecture d'un dessin de la
+// vidéo — trois vers — s'arrêtait sur « qu'ils… ».
+const LONGUE = "le cyclope en haut-de-forme digère son propre regard\nle cœur tambourine dans l'anneau bleu sans raison\nses pieds de violette ne touchent jamais le sol qu'ils inventent"
+
+test('une longue lecture se lit entière sur la révélation', async ({ page }) => {
+  // Au format d'un téléphone : en largeur de bureau, quatre lignes suffisaient.
+  await page.setViewportSize({ width: 390, height: 693 })
+  await semerEtOuvrir(page, 50, LONGUE)
+  // La lecture de la révélation — la page de fin, dessous, la répète en entier.
+  const bloc = page.getByRole('status').filter({ hasText: 'qu\'ils inventent' }).locator('div').last()
+  await expect(bloc).toBeVisible({ timeout: 12000 })
+  // Rien de rogné : le bloc montre toute sa hauteur, et sa fin est à l'écran.
+  // Le dessin remonte en 0,9 s pour céder sa place : on mesure une fois posé.
+  await expect.poll(() => bloc.evaluate(el => el.getBoundingClientRect().bottom), { timeout: 5000 }).toBeLessThanOrEqual(693)
+  expect(await bloc.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1)
 })

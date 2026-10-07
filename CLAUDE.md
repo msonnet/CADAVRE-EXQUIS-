@@ -1743,6 +1743,15 @@ finit pas retient l'entrée suivante. Le joueur restait devant l'attente
 jusqu'à toucher l'écran. La sortie a maintenant sa propre durée
 (`RevealDessin`). `e2e/lecture-dessin.spec.ts` échoue sur l'ancien code.
 
+**Et elle était tronquée.** Quatre lignes au plus (`WebkitLineClamp`) : la
+vraie lecture d'un dessin à trois vers, au format d'un téléphone, s'arrêtait
+sur « qu'ils… ». Elle s'affiche désormais entière ; au-delà de 110 signes le
+corps baisse d'un cran, et la zone défile en dernier recours plutôt que de
+rogner. Le troisième parcours de `lecture-dessin.spec.ts` le mesure à
+390 × 693 — en largeur de bureau, quatre lignes suffisaient et l'ancien code
+passait. **Piège rencontré** : les parcours lisent `dist/` (`vite preview`) ;
+sans `npm run build`, on teste l'ancienne version.
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
@@ -1784,7 +1793,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (717 tests unitaires) + Playwright (139 tests E2E, FR et EN)
+- Tests : Vitest (717 tests unitaires) + Playwright (140 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

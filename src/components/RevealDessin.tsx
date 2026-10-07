@@ -135,7 +135,7 @@ export default function RevealDessin({
       </motion.div>
 
       {/* La lecture, dans la place libérée. */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: '28px 28px 36px', textAlign: 'center' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: '28px 28px 36px', textAlign: 'center' }}>
         <AnimatePresence mode="wait">
           {decouvert && texte ? (
             <motion.div
@@ -148,12 +148,16 @@ export default function RevealDessin({
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.28em', marginBottom: 12 }}>
                 {tr('— LECTURE —', '— READING —')}
               </div>
+              {/* Entière, jamais coupée : quatre lignes au plus tronquaient
+                  une lecture de trois vers sur « qu'ils… ». Le corps baisse
+                  d'un cran quand elle est longue, et la place défile en dernier
+                  recours plutôt que de rogner le texte. */}
               <div style={{
                 fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.05rem, 4.6vw, 1.35rem)', lineHeight: 1.55,
+                fontSize: texte.length > 110 ? 'clamp(0.95rem, 4.1vw, 1.2rem)' : 'clamp(1.05rem, 4.6vw, 1.35rem)',
+                lineHeight: 1.5,
                 color: encre, opacity: 0.92,
-                display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-              } as React.CSSProperties}>
+              }}>
                 {tr('«', '“')} {texte.replace(/\n+/g, ' ').trim()} {tr('»', '”')}
               </div>
             </motion.div>
