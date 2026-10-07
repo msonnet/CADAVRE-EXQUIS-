@@ -162,7 +162,12 @@ export default function RevealDessin({
               key="attente"
               initial={{ opacity: 0 }}
               animate={{ opacity: reduit ? 0.6 : [0.3, 0.7, 0.3] }}
-              exit={{ opacity: 0 }}
+              // La sortie a sa propre durée. Elle héritait de la pulsation
+              // (`repeat: Infinity`) : sous `mode="wait"`, une sortie qui ne
+              // finit jamais retient la suivante, et la lecture arrivée après
+              // l'attente — le cas ordinaire, le modèle met plusieurs
+              // secondes — ne s'affichait jamais sur la révélation.
+              exit={{ opacity: 0, transition: { duration: reduit ? 0 : 0.25 } }}
               transition={reduit ? { duration: 0 } : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
               style={{ ...mono, fontSize: 12, letterSpacing: '0.24em', color: encre }}
             >

@@ -1732,6 +1732,17 @@ l'autre langue et l'ordre du carnet) et quatre parcours (`carnet.spec.ts`,
 prend pas `placeholder.supabase.co` (il exige une barre avant
 « supabase »), il ne bouchonnait donc rien.
 
+## La lecture du dessin restait cachée — 7 octobre
+
+Trouvé en tournant la vidéo promotionnelle, mesuré en temps réel : quand la
+lecture surréaliste arrivait APRÈS que la révélation eut affiché « LA
+LECTURE SE FAIT » — le cas ordinaire, le modèle met plusieurs secondes —,
+elle ne s'affichait jamais. La sortie de l'attente héritait de sa pulsation
+(`repeat: Infinity`) ; sous `AnimatePresence mode="wait"`, une sortie qui ne
+finit pas retient l'entrée suivante. Le joueur restait devant l'attente
+jusqu'à toucher l'écran. La sortie a maintenant sa propre durée
+(`RevealDessin`). `e2e/lecture-dessin.spec.ts` échoue sur l'ancien code.
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
@@ -1773,7 +1784,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (717 tests unitaires) + Playwright (137 tests E2E, FR et EN)
+- Tests : Vitest (717 tests unitaires) + Playwright (139 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
