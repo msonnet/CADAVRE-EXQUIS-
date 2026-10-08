@@ -918,9 +918,47 @@ quatre points de départ** : cinq couleurs distinctes, toutes au-dessus de
 11 px à 35 % d'opacité — donc **moins visible que « RÉGLAGES »**. Un
 quatrième mode de jeu ne peut pas être plus discret qu'un lien utilitaire :
 le code décrivait son ambition (« entrée discrète ») et non sa place dans la
-hiérarchie. Il passe sous « Mode en ligne », cerné plutôt que plein, d'un
-point plus petit — c'est le mode solo et expérimental, il se propose sans se
-réclamer. Sa couleur est la `tierce`, celle que les Règles lui donnent.
+hiérarchie. Il est passé sous « Mode en ligne », d'abord cerné plutôt que
+plein — **règle remplacée le 8 octobre, voir « Les quatre pavés de
+l'accueil »**. Sa couleur reste la `tierce`, celle que les Règles lui donnent.
+
+### Les quatre pavés de l'accueil — 8 octobre
+
+L'auteur : « Mode en ligne » et « L'Atelier » étaient trop différents des
+deux cadavres. Deux cadres vides, d'un autre corps (17 et 15 px contre
+14,82) et d'un autre espacement : on lisait deux boutons de jeu suivis de
+deux liens d'une autre application. Ce sont quatre modes de jeu.
+
+- **Une seule famille** : grille 2 × 2 de pavés pleins, même corps
+  élastique, 0,06 em, rayon 3, texte couleur du papier. Les ✧ partent.
+- **La hiérarchie tient à la hauteur**, plus au contour : les deux
+  cadavres à 0,9 em, le second rang à 0,65 em. Écart de 8 px entre les
+  rangs et non 6 : les zones d'appui de 44 px du rang bas (35 px dessinés
+  à 320 points) se seraient chevauchées.
+- **Les quatre accents du jour** : écrit, dessiné, et l'Atelier en tierce
+  comme aux Règles. **Le mode en ligne prend la quarte, pas l'encre** :
+  sur les trois ambiances sombres l'encre est le crème du papier, et l'un
+  des accents en est le voisin — deux pavés jumeaux un jour sur trois.
+  La quarte est aussi celle du poème du jour aux Règles : assumé, ce sont
+  les deux jeux à mains lointaines.
+- Choisie par l'auteur parmi quatre variantes construites et photographiées
+  sur les sept ambiances, 320 × 568 et l'anglais, jugées sous trois angles
+  (identité, hiérarchie, accessibilité). Écartées : quatre pavés égaux
+  (l'encre en pavé presque noir écrasait les cadavres les jours clairs),
+  pavés teintés (l'air désactivé), trois étages pleine largeur (la page se
+  lisait à l'envers).
+- `couleursRubriques.test.ts` balaie les 28 tirages **par `composerSeance`**,
+  désormais exportée — le vrai code, pas une recopie : contraste ≥ 4,5 et
+  deux voisins jamais sous ΔE 10 ; un témoin montre que l'encre ferait des
+  jumeaux. `e2e/accueil.spec.ts` exige la même typographie pour les quatre
+  et leurs deux navigations ; il échoue sur l'ancien accueil.
+
+**Trouvé en route, non corrigé** : l'ancienne mesure des cinq rubriques
+passe l'accent principal par `horsEncre`, ce que `Decor` ne fait pas.
+Quand le crème ouvre le tirage (minuit, encre, argile, un départ sur
+quatre), les Règles peignent « Cadavre écrit » et « L'Encrier » du même
+crème, et la mesure, qui dit « cinq distinctes », le cache. Décision
+d'identité en attente de l'auteur.
 
 ## La conformité — 22 septembre 2026
 
@@ -1854,7 +1892,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (734 tests unitaires) + Playwright (145 tests E2E, FR et EN)
+- Tests : Vitest (738 tests unitaires) + Playwright (147 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

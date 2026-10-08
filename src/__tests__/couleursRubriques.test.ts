@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { AMBIANCES, type AmbianceKey } from '../reve/pools'
 import { garantirContraste, ratioContraste } from '../reve/contraste'
+import { composerSeance } from '../reve/Decor'
+import type { SeanceReve } from '../reve/Decor'
 
 /**
  * Cinq rubriques, cinq couleurs — pour TOUTES les ambiances.
@@ -81,5 +83,83 @@ describe('les cinq rubriques des Règles ne se confondent jamais', () => {
         }
       }
     }
+  })
+})
+
+/**
+ * Les quatre pavés de l'accueil — Cadavre écrit, dessiné, Mode en ligne,
+ * L'Atelier — portent les quatre accents du jour, en grille 2 × 2 :
+ *
+ *     accent  | second
+ *     quarte  | tierce
+ *
+ * Le mode en ligne avait d'abord l'encre. Sur les trois ambiances sombres,
+ * l'encre EST le crème du papier, et l'un des accents en est le voisin
+ * (`horsEncre` lui donne son `hover`) ou le crème même : deux pavés
+ * jumeaux, un jour sur trois. La quarte ne le fait jamais.
+ *
+ * Ces mesures passent par `composerSeance`, le VRAI code des ambiances, et
+ * non par une recopie : une recopie qui dérive cache exactement ce qu'elle
+ * prétend tenir.
+ */
+function lab(hex: string): [number, number, number] {
+  const n = parseInt(hex.replace('#', '').slice(0, 6), 16)
+  const lin = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 })
+  const [x, y, z] = [
+    (0.4124 * lin[0] + 0.3576 * lin[1] + 0.1805 * lin[2]) / 0.95047,
+    0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2],
+    (0.0193 * lin[0] + 0.1192 * lin[1] + 0.9505 * lin[2]) / 1.08883,
+  ].map(t => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116))
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)]
+}
+const deltaE = (a: string, b: string) => { const [p, q] = [lab(a), lab(b)]; return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) }
+
+/** Un tirage par ambiance ET par accent d'ouverture : on balaie les graines jusqu'à les avoir tous. */
+function tousLesTirages(): SeanceReve[] {
+  const voulus = CLES.reduce((n, cle) => n + AMBIANCES[cle].accents.length, 0)
+  const vus = new Map<string, SeanceReve>()
+  for (let graine = 1; graine < 20000 && vus.size < voulus; graine++) {
+    const s = composerSeance(graine)
+    vus.set(`${s.ambiance.name}|${s.accent.name}`, s)
+  }
+  return [...vus.values()]
+}
+const TIRAGES = tousLesTirages()
+/** Les quatre pavés dans l'ordre de la grille, et leurs quatre voisinages. */
+const pavesDe = (s: SeanceReve, enLigne = s.colorSchema.quarte) =>
+  [s.colorSchema.hex, s.colorSchema.second, enLigne, s.colorSchema.tierce]
+const VOISINS: [number, number][] = [[0, 1], [2, 3], [0, 2], [1, 3]]
+// Le couple légitime le plus proche de la palette (l'or et l'ocre d'« encre
+// profonde ») est à 16,9 ; deux crèmes jumeaux tombent sous 5.
+const PLANCHER = 10
+
+describe('les quatre pavés de l’accueil', () => {
+  it('la mesure couvre les sept ambiances et chaque accent d’ouverture', () => {
+    expect(TIRAGES.length).toBe(CLES.reduce((n, cle) => n + AMBIANCES[cle].accents.length, 0))
+  })
+
+  it('le texte, couleur du papier, se lit sur chacun des quatre', () => {
+    for (const s of TIRAGES) for (const f of pavesDe(s)) {
+      expect(ratioContraste(s.colorSchema.bg, f), `${s.ambiance.name} · ${s.accent.name} · ${f}`).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  it('deux pavés voisins ne se confondent jamais', () => {
+    for (const s of TIRAGES) {
+      const p = pavesDe(s)
+      for (const [a, b] of VOISINS) {
+        expect(deltaE(p[a], p[b]), `${s.ambiance.name} · ${s.accent.name} · ${p[a]} / ${p[b]}`).toBeGreaterThanOrEqual(PLANCHER)
+      }
+    }
+  })
+
+  it('c’est la quarte qui le permet : avec l’encre, des jumeaux', () => {
+    // Le témoin. Si quelqu'un rend l'encre au mode en ligne, voilà ce qu'il
+    // retrouve — et ce test-ci rappelle pourquoi on l'a quittée.
+    const jumeaux = TIRAGES.filter(s => {
+      const p = pavesDe(s, s.colorSchema.encre)
+      return [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]].some(([a, b]) => deltaE(p[a], p[b]) < PLANCHER)
+    })
+    expect(jumeaux.length).toBeGreaterThan(0)
   })
 })

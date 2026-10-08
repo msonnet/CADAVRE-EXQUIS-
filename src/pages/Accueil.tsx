@@ -87,7 +87,11 @@ export default function Accueil() {
   const second = c?.second ?? '#1d3a8c'
   // Le troisième accent de l'ambiance — celui que les Règles donnent aussi
   // à l'Atelier, pour qu'on le reconnaisse d'un écran à l'autre.
-  const tierce = c?.tierce ?? '#1d3a8c'
+  const tierce = c?.tierce ?? '#1a4a1e'
+  // Le quatrième, celui du mode en ligne (voir le bloc des pavés). Les
+  // replis sont quatre couleurs distinctes : sans séance, quatre pavés ne
+  // doivent pas en montrer deux pareils.
+  const quarte = c?.quarte ?? '#701448'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -258,76 +262,72 @@ export default function Accueil() {
           </div>
         )}
 
-        {/* ── CTA ── */}
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+        {/* ── CTA ──
+             QUATRE PAVÉS, DEUX RANGS — les quatre portes du même jeu.
+
+             Le mode en ligne et l'Atelier étaient des cadres vides, d'un
+             autre corps et d'un autre espacement que les deux cadavres : on
+             lisait deux boutons de jeu suivis de deux liens d'une autre
+             famille. Ce sont pourtant des modes de jeu au même titre. Ils
+             prennent donc la forme des cadavres — pavé plein, texte couleur
+             du papier, même corps, même graisse, même espacement. Les ✧
+             partent : ils distinguaient l'Atelier des autres, et c'est ce
+             qu'on ne veut plus.
+
+             Une couleur par mode, et ce sont les QUATRE ACCENTS du jour.
+             L'Atelier garde la tierce, celle que les Règles lui donnent. Le
+             mode en ligne prend la quarte, et non l'encre qu'il portait en
+             contour : sur les trois ambiances sombres l'encre est le crème du
+             papier, et l'un des accents en est le voisin clair (`horsEncre`)
+             — ou le crème même, quand c'est lui qui ouvre le tirage. Mesuré
+             sur sept ambiances × quatre départs : en encre, deux pavés
+             jumeaux dans neuf tirages sur vingt-huit, dont trois identiques ;
+             en quarte, les quatre pavés ne se ressemblent jamais plus que la
+             palette ne se ressemble à elle-même. Aux Règles, la quarte est
+             aussi la couleur du poème du jour, et c'est assumé : ce sont les
+             deux jeux à mains lointaines, le salon et le rendez-vous. Ne pas
+             la « corriger » vers l'encre — `couleursRubriques.test.ts` dit
+             pourquoi.
+
+             La hiérarchie ne tient plus au contour mais à la HAUTEUR. Les
+             deux cadavres sont le jeu d'origine et ouvrent la grille à
+             0,9 em ; le second rang descend à 0,65 em. Même voix, un cran
+             plus bas — on voit d'abord les cadavres, ensuite le reste.
+
+             Le rang bas a moins de 44 px de dessin — 42 à 390 points, 35 à
+             320 : c'est la zone d'appui globale d'`index.css` qui le porte à
+             44, sans grossir le pavé. Cette zone déborde alors au-dessus de
+             lui, d'où l'écart de 8 px entre les rangs et non 6 : à 6, à 320
+             points, les zones des deux rangs se chevauchaient d'un tiers de
+             pixel. Rien qu'un doigt sente, mais plus aucune marge entre deux
+             portes voisines ; à 8, il en reste 1,7 px. Balayé au pixel de
+             320 à 430 points, chaque point de chaque zone mène à son pavé. */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 6px',
+          marginBottom: 10,
+        }}>
+          {[
+            { label: tr('Cadavre Écrit', 'Written Cadavre'), path: '/config',        haut: true,  fond: accent },
+            { label: tr('Cadavre Dessiné', 'Drawn Cadavre'), path: '/config-dessin', haut: true,  fond: second },
+            { label: tr('Mode en ligne', 'Online mode'),     path: '/online',        haut: false, fond: quarte },
+            { label: tr("L'Atelier", 'The Workshop'),        path: '/atelier',       haut: false, fond: tierce },
+          ].map(({ label, path, fond, haut }) => (
             <button
-              onClick={() => nav('/config')}
+              key={path}
+              onClick={() => nav(path)}
               style={{
-                flex: 1, minWidth: 0,
+                minWidth: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: accent, color: bg,
+                background: fond, color: bg,
                 ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
-                padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
+                padding: haut ? '0.9em 0.5em' : '0.65em 0.5em',
+                border: 'none', cursor: 'pointer',
                 borderRadius: 3, whiteSpace: 'nowrap',
               }}
             >
-              {tr('Cadavre Écrit', 'Written Cadavre')}
+              {label}
             </button>
-            <button
-              onClick={() => nav('/config-dessin')}
-              style={{
-                flex: 1, minWidth: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: second, color: bg,
-                ...ui, fontSize: 'clamp(11px, 3.8vw, 15px)', letterSpacing: '0.06em', textTransform: 'uppercase',
-                padding: '0.9em 0.5em', border: 'none', cursor: 'pointer',
-                borderRadius: 3, whiteSpace: 'nowrap',
-              }}
-            >
-              {tr('Cadavre Dessiné', 'Drawn Cadavre')}
-            </button>
-          </div>
-          <button
-            onClick={() => nav('/online')}
-            style={{
-              width: '100%', marginTop: 6,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              background: 'transparent', color: encre,
-              ...ui, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase',
-              padding: '0.55em 1em', border: `1px solid ${encre}40`, cursor: 'pointer',
-              borderRadius: 3,
-            }}
-          >
-            <span>{tr('Mode en ligne', 'Online mode')}</span>
-          </button>
-
-          {/*
-            L'ATELIER remonte ici — c'est un MODE DE JEU.
-
-            Il vivait sous le pied de page, en 11 px à 35 % d'opacité, donc
-            moins visible que « RÉGLAGES ». Un quatrième mode de jeu ne peut
-            pas être plus discret qu'un lien utilitaire : l'entrée décrivait
-            son ambition (« discrète »), pas sa place dans la hiérarchie.
-
-            Il garde pourtant un rang en dessous des trois autres, et c'est
-            voulu : cerné plutôt que plein, un point plus petit que le mode
-            en ligne. C'est le mode solo et expérimental, il se propose sans
-            se réclamer. La couleur est celle que les Règles lui donnent.
-          */}
-          <button
-            onClick={() => nav('/atelier')}
-            style={{
-              width: '100%', marginTop: 6,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              background: 'transparent', color: tierce,
-              ...ui, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase',
-              padding: '0.5em 1em', border: `1px solid ${tierce}55`, cursor: 'pointer',
-              borderRadius: 3,
-            }}
-          >
-            <span>✧ {tr("L'Atelier", 'The Workshop')} ✧</span>
-          </button>
+          ))}
         </div>
 
         {/* ── FOOTER ──

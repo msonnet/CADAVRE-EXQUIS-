@@ -57,7 +57,8 @@ export interface SeanceReve {
 
 const ReveCtx = createContext<SeanceReve | null>(null)
 
-function composerSeance(seed: number): SeanceReve {
+/** Exportée pour les mesures : elles balaient les tirages par le VRAI code, pas par une recopie. */
+export function composerSeance(seed: number): SeanceReve {
   const rng = mulberry32(seed)
   const ambianceKey = pickOne(rng, AMBIANCE_POOL) as AmbianceKey
   const ambianceBrute = AMBIANCES[ambianceKey]

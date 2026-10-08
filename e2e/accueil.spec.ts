@@ -50,6 +50,50 @@ test.describe('Accueil', () => {
     await expect(page).toHaveURL(/\/config$/, { timeout: 5000 })
   })
 
+  // Les quatre modes de jeu sont une seule famille de boutons. Relevé avant :
+  // « Mode en ligne » et « L'Atelier » étaient des cadres vides, d'un autre
+  // corps (17 et 15 px) et d'un autre espacement que les deux cadavres — on
+  // lisait deux boutons de jeu suivis de deux liens d'une autre application.
+  test('les quatre modes de jeu sont quatre pavés de la même famille', async ({ page }) => {
+    await skipOnboarding(page)
+    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    const styles = await page.evaluate(() => {
+      const noms = [/Cadavre Écrit/, /Cadavre Dessiné/, /Mode en ligne/, /Atelier/]
+      const boutons = [...document.querySelectorAll('button')]
+      return noms.map(n => {
+        const b = boutons.find(x => n.test(x.textContent || ''))!
+        const cs = getComputedStyle(b)
+        return { texte: b.textContent, corps: cs.fontSize, espacement: cs.letterSpacing, graisse: cs.fontWeight,
+          casse: cs.textTransform, rayon: cs.borderTopLeftRadius, bordure: cs.borderTopStyle, fond: cs.backgroundColor, largeur: b.offsetWidth }  // la largeur de mise en page : le pied se déplie en 3D à l'ouverture, la boîte projetée change
+      })
+    })
+    const typo = (x: typeof styles[number]) => [x.corps, x.espacement, x.graisse, x.casse, x.rayon, x.largeur].join(' ')
+    for (const st of styles) {
+      expect(typo(st), st.texte ?? '').toBe(typo(styles[0]))
+      // Plein, sans cadre : plus de bouton « vide ».
+      expect(st.bordure, st.texte ?? '').toBe('none')
+      expect(st.fond, st.texte ?? '').not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
+    }
+    // Quatre couleurs pour quatre modes, et plus d'étoiles qui mettaient l'Atelier à part.
+    expect(new Set(styles.map(st => st.fond)).size).toBe(4)
+    expect(styles[3].texte).not.toContain('✧')
+  })
+
+  test('Mode en ligne et L’Atelier mènent à leur mode', async ({ page }) => {
+    await skipOnboarding(page)
+    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    await page.locator('button', { hasText: 'Mode en ligne' }).dispatchEvent('click')
+    await expect(page).toHaveURL(/\/online$/, { timeout: 5000 })
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    await page.locator('button', { hasText: "L'Atelier" }).dispatchEvent('click')
+    await expect(page).toHaveURL(/\/atelier$/, { timeout: 5000 })
+  })
+
   test('le poème du jour est accessible depuis la galerie', async ({ page }) => {
     await skipOnboarding(page)
     await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))

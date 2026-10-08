@@ -131,10 +131,11 @@ export default function Aide() {
     jour étaient tous deux en encre, l'Encrier et le cadavre écrit tous deux
     en accent — à l'écran, deux paires jumelles qui n'ont rien à voir.
 
-    Les deux premières reprennent la couleur du BOUTON de leur mode sur
-    l'accueil : le rouge du cadavre écrit, le bleu du dessiné. On reconnaît
-    la rubrique avant de lire son nom. Les deux accents suivants de
-    l'ambiance vont aux deux modes qui n'ont pas de bouton coloré.
+    Les trois premières reprennent la couleur du BOUTON de leur mode sur
+    l'accueil : le cadavre écrit, le dessiné, l'Atelier. On reconnaît la
+    rubrique avant de lire son nom. Le poème du jour prend la quarte — que
+    l'accueil donne aussi au mode en ligne, qui n'a pas de rubrique ici :
+    ce sont les deux jeux à mains lointaines, le rendez-vous et le salon.
 
     L'ENCRIER garde l'encre, et c'est le seul choix qui n'est pas arbitraire :
     c'est son nom.
