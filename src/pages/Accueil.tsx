@@ -9,6 +9,7 @@ import { rearmerRappelSiActif } from '../utils/notifications'
 import { libelleSerie } from '../lib/attribution'
 import { sceauDuJour, libelleAcheve } from '../lib/jourLocal'
 import { tr, langueActuelle } from '../i18n'
+import { pavesAccueil } from '../lib/nuances'
 
 const ONBOARDING_KEY = 'cadavre-onboarding-done'
 function toRomain(n: number): string {
@@ -84,14 +85,6 @@ export default function Accueil() {
   const c = seance?.colorSchema
   const accent = c?.hex ?? '#b22c20'
   const encre = c?.encre ?? '#0f0805'
-  const second = c?.second ?? '#1d3a8c'
-  // Le troisième accent de l'ambiance — celui que les Règles donnent aussi
-  // à l'Atelier, pour qu'on le reconnaisse d'un écran à l'autre.
-  const tierce = c?.tierce ?? '#1a4a1e'
-  // Le quatrième, celui du mode en ligne (voir le bloc des pavés). Les
-  // replis sont quatre couleurs distinctes : sans séance, quatre pavés ne
-  // doivent pas en montrer deux pareils.
-  const quarte = c?.quarte ?? '#701448'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const num = String(((seance?.seed ?? 0) % 999) + 1).padStart(3, '0')
   const annee = toRomain(new Date().getFullYear())
@@ -100,6 +93,8 @@ export default function Accueil() {
   const letters = 'Exquis'
 
   const bg = c?.bg ?? '#0f0805'
+  // Les quatre modes de jeu : l'accent du jour et trois nuances de lui (voir le bloc des pavés).
+  const pavés = pavesAccueil(accent, bg)
   const ui: React.CSSProperties = { fontFamily: "'Raleway', sans-serif" }
 
   const cadavreSide = seance?.symbolSide === 'right' ? 'left' : 'right'
@@ -274,43 +269,42 @@ export default function Accueil() {
              partent : ils distinguaient l'Atelier des autres, et c'est ce
              qu'on ne veut plus.
 
-             Une couleur par mode, et ce sont les QUATRE ACCENTS du jour.
-             L'Atelier garde la tierce, celle que les Règles lui donnent. Le
-             mode en ligne prend la quarte, et non l'encre qu'il portait en
-             contour : sur les trois ambiances sombres l'encre est le crème du
-             papier, et l'un des accents en est le voisin clair (`horsEncre`)
-             — ou le crème même, quand c'est lui qui ouvre le tirage. Mesuré
-             sur sept ambiances × quatre départs : en encre, deux pavés
-             jumeaux dans neuf tirages sur vingt-huit, dont trois identiques ;
-             en quarte, les quatre pavés ne se ressemblent jamais plus que la
-             palette ne se ressemble à elle-même. Aux Règles, la quarte est
-             aussi la couleur du poème du jour, et c'est assumé : ce sont les
-             deux jeux à mains lointaines, le salon et le rendez-vous. Ne pas
-             la « corriger » vers l'encre — `couleursRubriques.test.ts` dit
-             pourquoi.
+             UNE couleur, et ses nuances. L'accent du jour est sur le cadavre
+             écrit ; le dessiné, le mode en ligne et l'Atelier portent trois
+             variations de lui, de la plus proche à la plus lointaine — même
+             teinte, même saturation, la clarté seule change, à pas égal
+             (`pavesAccueil`, `lib/nuances.ts`). Le premier jet donnait à
+             chaque mode un des quatre accents de l'ambiance : quatre tons qui
+             « diffèrent trop », a jugé l'auteur, et une page qui se lisait
+             comme un nuancier. Ce schéma-ci a été retenu parmi quatre,
+             construits et photographiés sur les sept ambiances.
+
+             Le texte est la couleur du papier : une nuance n'est gardée que
+             s'il s'y lit à 4,5:1, et l'échelle part des deux côtés de l'accent
+             quand l'un manque de place — un prune foncé sur papier clair ne
+             tourne plus au noir, il s'éclaircit aussi.
 
              La hiérarchie ne tient plus au contour mais à la HAUTEUR. Les
              deux cadavres sont le jeu d'origine et ouvrent la grille à
              0,9 em ; le second rang descend à 0,65 em. Même voix, un cran
              plus bas — on voit d'abord les cadavres, ensuite le reste.
 
-             Le rang bas a moins de 44 px de dessin — 42 à 390 points, 35 à
-             320 : c'est la zone d'appui globale d'`index.css` qui le porte à
-             44, sans grossir le pavé. Cette zone déborde alors au-dessus de
-             lui, d'où l'écart de 8 px entre les rangs et non 6 : à 6, à 320
-             points, les zones des deux rangs se chevauchaient d'un tiers de
-             pixel. Rien qu'un doigt sente, mais plus aucune marge entre deux
-             portes voisines ; à 8, il en reste 1,7 px. Balayé au pixel de
-             320 à 430 points, chaque point de chaque zone mène à son pavé. */}
+             À 320 points, les DEUX rangs ont moins de 44 px de dessin — 41
+             en haut, 35 en bas : c'est la zone d'appui globale d'`index.css`
+             qui les porte à 44, sans grossir le pavé. Elle déborde alors de
+             chaque côté de l'écart, 1,6 px sous le rang haut, 4,7 px au-dessus
+             du rang bas : d'où 8 px entre les rangs et non 6, où les deux
+             zones se chevauchaient. À 8 il reste 1,7 px de marge.
+             `accueil.spec.ts` balaie l'écart au pixel par `elementFromPoint`. */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 6px',
           marginBottom: 10,
         }}>
           {[
-            { label: tr('Cadavre Écrit', 'Written Cadavre'), path: '/config',        haut: true,  fond: accent },
-            { label: tr('Cadavre Dessiné', 'Drawn Cadavre'), path: '/config-dessin', haut: true,  fond: second },
-            { label: tr('Mode en ligne', 'Online mode'),     path: '/online',        haut: false, fond: quarte },
-            { label: tr("L'Atelier", 'The Workshop'),        path: '/atelier',       haut: false, fond: tierce },
+            { label: tr('Cadavre Écrit', 'Written Cadavre'), path: '/config',        haut: true,  fond: pavés[0] },
+            { label: tr('Cadavre Dessiné', 'Drawn Cadavre'), path: '/config-dessin', haut: true,  fond: pavés[1] },
+            { label: tr('Mode en ligne', 'Online mode'),     path: '/online',        haut: false, fond: pavés[2] },
+            { label: tr("L'Atelier", 'The Workshop'),        path: '/atelier',       haut: false, fond: pavés[3] },
           ].map(({ label, path, fond, haut }) => (
             <button
               key={path}

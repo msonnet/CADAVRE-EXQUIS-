@@ -933,25 +933,38 @@ deux liens d'une autre application. Ce sont quatre modes de jeu.
   élastique, 0,06 em, rayon 3, texte couleur du papier. Les ✧ partent.
 - **La hiérarchie tient à la hauteur**, plus au contour : les deux
   cadavres à 0,9 em, le second rang à 0,65 em. Écart de 8 px entre les
-  rangs et non 6 : les zones d'appui de 44 px du rang bas (35 px dessinés
-  à 320 points) se seraient chevauchées.
-- **Les quatre accents du jour** : écrit, dessiné, et l'Atelier en tierce
-  comme aux Règles. **Le mode en ligne prend la quarte, pas l'encre** :
-  sur les trois ambiances sombres l'encre est le crème du papier, et l'un
-  des accents en est le voisin — deux pavés jumeaux un jour sur trois.
-  La quarte est aussi celle du poème du jour aux Règles : assumé, ce sont
-  les deux jeux à mains lointaines.
-- Choisie par l'auteur parmi quatre variantes construites et photographiées
-  sur les sept ambiances, 320 × 568 et l'anglais, jugées sous trois angles
-  (identité, hiérarchie, accessibilité). Écartées : quatre pavés égaux
-  (l'encre en pavé presque noir écrasait les cadavres les jours clairs),
-  pavés teintés (l'air désactivé), trois étages pleine largeur (la page se
-  lisait à l'envers).
-- `couleursRubriques.test.ts` balaie les 28 tirages **par `composerSeance`**,
-  désormais exportée — le vrai code, pas une recopie : contraste ≥ 4,5 et
-  deux voisins jamais sous ΔE 10 ; un témoin montre que l'encre ferait des
-  jumeaux. `e2e/accueil.spec.ts` exige la même typographie pour les quatre
-  et leurs deux navigations ; il échoue sur l'ancien accueil.
+  rangs et non 6 : à 320 points les DEUX rangs ont moins de 44 px de
+  dessin (41 et 35), leurs zones d'appui débordent dans l'écart de 1,6 et
+  4,7 px, et à 6 elles se chevauchaient.
+- **Une couleur et ses nuances** — l'auteur, le même jour : « les 4 tons
+  diffèrent trop. C'est 1 couleur dominante + variations de la couleur ».
+  Le premier jet donnait à chaque pavé un des quatre accents de
+  l'ambiance. Désormais l'accent du jour est sur le cadavre écrit, et les
+  trois autres pavés en sont des nuances : même teinte, même saturation,
+  la clarté seule change, à pas égal, de la plus proche à la plus
+  lointaine (`pavesAccueil`, `src/lib/nuances.ts`, en OKLCH). Une nuance
+  n'est gardée que si le texte, couleur du papier, s'y lit à 4,5:1 ;
+  l'échelle part des deux côtés de l'accent quand l'un manque de place, et
+  s'élargit au-delà de 0,14 de clarté seulement si le pas tombait sous
+  0,06 (les crèmes des ambiances sombres, le rouge sang sur lin).
+- Le schéma « répartie », choisi par l'auteur parmi quatre construits et
+  photographiés sur les sept ambiances (les trois autres : plus ample, en
+  sourdine, en teintes voisines). Avant lui, la forme : quatre variantes
+  jugées sous trois angles (identité, hiérarchie, accessibilité) ;
+  écartées, quatre pavés égaux, pavés teintés, trois étages pleine
+  largeur.
+- `couleursRubriques.test.ts` balaie les 28 tirages **par
+  `composerSeance`**, désormais exportée — le vrai code, pas une recopie :
+  l'accent tel quel sur le cadavre écrit, contraste ≥ 4,5, teinte à 4° au
+  plus de l'accent (mesuré 1,8), voisins à ΔE 6 au moins (mesuré 7,0),
+  clarté à 0,35 au plus de l'accent. `e2e/accueil.spec.ts` exige la même
+  typographie pour les quatre, leurs deux navigations, et balaie l'écart
+  au quart de pixel par `elementFromPoint` à 320, 360 et 390 points — ce
+  balayage échoue à un écart de 6 px. Ses bouchons Supabase passent par un
+  prédicat d'hôte.
+- **Les Règles gardent leurs cinq couleurs** : seule la première, l'accent,
+  y rejoint l'accueil. Cinq nuances d'une couleur ne sépareraient plus cinq
+  rubriques.
 
 **Trouvé en route, non corrigé** : l'ancienne mesure des cinq rubriques
 passe l'accent principal par `horsEncre`, ce que `Decor` ne fait pas.
@@ -1892,7 +1905,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (738 tests unitaires) + Playwright (147 tests E2E, FR et EN)
+- Tests : Vitest (739 tests unitaires) + Playwright (150 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

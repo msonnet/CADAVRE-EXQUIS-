@@ -3,6 +3,7 @@ import { AMBIANCES, type AmbianceKey } from '../reve/pools'
 import { garantirContraste, ratioContraste } from '../reve/contraste'
 import { composerSeance } from '../reve/Decor'
 import type { SeanceReve } from '../reve/Decor'
+import { pavesAccueil, versLch } from '../lib/nuances'
 
 /**
  * Cinq rubriques, cinq couleurs — pour TOUTES les ambiances.
@@ -88,19 +89,18 @@ describe('les cinq rubriques des Règles ne se confondent jamais', () => {
 
 /**
  * Les quatre pavés de l'accueil — Cadavre écrit, dessiné, Mode en ligne,
- * L'Atelier — portent les quatre accents du jour, en grille 2 × 2 :
+ * L'Atelier — portent UNE couleur et ses nuances : l'accent du jour, puis
+ * trois variations de sa clarté, à la même teinte (`pavesAccueil`).
  *
- *     accent  | second
- *     quarte  | tierce
+ * Le premier jet leur donnait les quatre accents de l'ambiance : quatre tons
+ * qui, pour l'auteur, différaient trop. Le risque s'inverse donc — non plus
+ * des pavés jumeaux d'une palette à l'autre, mais des nuances trop proches
+ * pour séparer quatre portes, ou poussées si loin qu'elles deviennent une
+ * autre couleur. C'est ce que ces mesures tiennent, sur tous les tirages.
  *
- * Le mode en ligne avait d'abord l'encre. Sur les trois ambiances sombres,
- * l'encre EST le crème du papier, et l'un des accents en est le voisin
- * (`horsEncre` lui donne son `hover`) ou le crème même : deux pavés
- * jumeaux, un jour sur trois. La quarte ne le fait jamais.
- *
- * Ces mesures passent par `composerSeance`, le VRAI code des ambiances, et
- * non par une recopie : une recopie qui dérive cache exactement ce qu'elle
- * prétend tenir.
+ * Elles passent par `composerSeance`, le VRAI code des ambiances, et non par
+ * une recopie : une recopie qui dérive cache exactement ce qu'elle prétend
+ * tenir.
  */
 function lab(hex: string): [number, number, number] {
   const n = parseInt(hex.replace('#', '').slice(0, 6), 16)
@@ -125,41 +125,61 @@ function tousLesTirages(): SeanceReve[] {
   return [...vus.values()]
 }
 const TIRAGES = tousLesTirages()
-/** Les quatre pavés dans l'ordre de la grille, et leurs quatre voisinages. */
-const pavesDe = (s: SeanceReve, enLigne = s.colorSchema.quarte) =>
-  [s.colorSchema.hex, s.colorSchema.second, enLigne, s.colorSchema.tierce]
+const nom = (s: SeanceReve) => `${s.ambiance.name} · ${s.accent.name}`
+const pavesDe = (s: SeanceReve) => pavesAccueil(s.colorSchema.hex, s.colorSchema.bg)
+/** Les voisinages de la grille 2 × 2 : écrit | dessiné au-dessus de en ligne | Atelier. */
 const VOISINS: [number, number][] = [[0, 1], [2, 3], [0, 2], [1, 3]]
-// Le couple légitime le plus proche de la palette (l'or et l'ocre d'« encre
-// profonde ») est à 16,9 ; deux crèmes jumeaux tombent sous 5.
-const PLANCHER = 10
+// Mesuré sur les 28 tirages : les nuances s'écartent de la teinte de
+// l'accent de 1,8° au plus (l'arrondi à 8 bits), deux voisins sont à 7,0 au
+// moins, et la clarté s'éloigne de 0,34 au plus — sur le crème d'« encre
+// profonde », qui n'a de place que vers le bas et la prend toute pour que
+// quatre crèmes ne se confondent pas.
+const TEINTE_MAX = 4
+const VOISIN_MIN = 6
+const CLARTE_MAX = 0.35
 
 describe('les quatre pavés de l’accueil', () => {
   it('la mesure couvre les sept ambiances et chaque accent d’ouverture', () => {
     expect(TIRAGES.length).toBe(CLES.reduce((n, cle) => n + AMBIANCES[cle].accents.length, 0))
   })
 
+  it('le cadavre écrit porte l’accent du jour tel quel', () => {
+    for (const s of TIRAGES) expect(pavesDe(s)[0], nom(s)).toBe(s.colorSchema.hex)
+  })
+
   it('le texte, couleur du papier, se lit sur chacun des quatre', () => {
     for (const s of TIRAGES) for (const f of pavesDe(s)) {
-      expect(ratioContraste(s.colorSchema.bg, f), `${s.ambiance.name} · ${s.accent.name} · ${f}`).toBeGreaterThanOrEqual(4.5)
+      expect(ratioContraste(s.colorSchema.bg, f), `${nom(s)} · ${f}`).toBeGreaterThanOrEqual(4.5)
     }
   })
 
-  it('deux pavés voisins ne se confondent jamais', () => {
+  it('ce sont des nuances de l’accent : sa teinte, à peine écartée', () => {
     for (const s of TIRAGES) {
-      const p = pavesDe(s)
-      for (const [a, b] of VOISINS) {
-        expect(deltaE(p[a], p[b]), `${s.ambiance.name} · ${s.accent.name} · ${p[a]} / ${p[b]}`).toBeGreaterThanOrEqual(PLANCHER)
+      const base = versLch(s.colorSchema.hex)
+      for (const f of pavesDe(s).slice(1)) {
+        const c = versLch(f)
+        // Une couleur presque grise n'a pas de teinte qui se lise : on ne la
+        // juge que si l'accent en a une.
+        if (base.C < 0.04 || c.C < 0.02) continue
+        const dh = Math.abs(((c.h - base.h) * 180 / Math.PI + 540) % 360 - 180)
+        expect(dh, `${nom(s)} · ${s.colorSchema.hex} → ${f}`).toBeLessThanOrEqual(TEINTE_MAX)
       }
     }
   })
 
-  it('c’est la quarte qui le permet : avec l’encre, des jumeaux', () => {
-    // Le témoin. Si quelqu'un rend l'encre au mode en ligne, voilà ce qu'il
-    // retrouve — et ce test-ci rappelle pourquoi on l'a quittée.
-    const jumeaux = TIRAGES.filter(s => {
-      const p = pavesDe(s, s.colorSchema.encre)
-      return [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]].some(([a, b]) => deltaE(p[a], p[b]) < PLANCHER)
-    })
-    expect(jumeaux.length).toBeGreaterThan(0)
+  it('assez écartées pour séparer quatre portes, jamais au point d’en faire une autre couleur', () => {
+    for (const s of TIRAGES) {
+      const p = pavesDe(s)
+      for (const [a, b] of VOISINS) {
+        expect(deltaE(p[a], p[b]), `${nom(s)} · ${p[a]} / ${p[b]}`).toBeGreaterThanOrEqual(VOISIN_MIN)
+      }
+      for (const f of p.slice(1)) {
+        const L = versLch(f).L
+        expect(Math.abs(L - versLch(p[0]).L), `${nom(s)} · ${f}`).toBeLessThanOrEqual(CLARTE_MAX)
+        // Ni noire, ni blanche : une nuance qui y tombe a perdu sa couleur.
+        expect(L, `${nom(s)} · ${f}`).toBeGreaterThanOrEqual(0.26)
+        expect(L, `${nom(s)} · ${f}`).toBeLessThanOrEqual(0.97)
+      }
+    }
   })
 })

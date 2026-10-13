@@ -5,10 +5,14 @@ async function skipOnboarding(page: import('@playwright/test').Page) {
   await page.addInitScript(() => localStorage.setItem('cadavre-onboarding-done', '1'))
 }
 
+// Un prédicat d'hôte et non `**/supabase.co/**` : ce motif exige une barre
+// avant « supabase » et ne prend donc pas `placeholder.supabase.co`.
+const versSupabase = (u: URL) => u.hostname.endsWith('supabase.co')
+
 test.describe('Accueil', () => {
   test('page loads with Exquis title and CTA buttons', async ({ page }) => {
     await skipOnboarding(page)
-    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
 
     await page.goto('/')
     await page.waitForLoadState('networkidle')
@@ -27,7 +31,7 @@ test.describe('Accueil', () => {
 
   test('footer navigation links are all present', async ({ page }) => {
     await skipOnboarding(page)
-    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
 
     await page.goto('/')
     await page.waitForLoadState('networkidle')
@@ -40,7 +44,7 @@ test.describe('Accueil', () => {
 
   test('clicking Cadavre Écrit navigates to /config', async ({ page }) => {
     await skipOnboarding(page)
-    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
 
     await page.goto('/')
     await page.waitForLoadState('networkidle')
@@ -56,7 +60,7 @@ test.describe('Accueil', () => {
   // lisait deux boutons de jeu suivis de deux liens d'une autre application.
   test('les quatre modes de jeu sont quatre pavés de la même famille', async ({ page }) => {
     await skipOnboarding(page)
-    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
     await page.goto('/')
     await page.waitForLoadState('networkidle')
     const styles = await page.evaluate(() => {
@@ -83,7 +87,7 @@ test.describe('Accueil', () => {
 
   test('Mode en ligne et L’Atelier mènent à leur mode', async ({ page }) => {
     await skipOnboarding(page)
-    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
     await page.goto('/')
     await page.waitForLoadState('networkidle')
     await page.locator('button', { hasText: 'Mode en ligne' }).dispatchEvent('click')
@@ -96,7 +100,7 @@ test.describe('Accueil', () => {
 
   test('le poème du jour est accessible depuis la galerie', async ({ page }) => {
     await skipOnboarding(page)
-    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
 
     await page.goto('/galerie')
     await page.waitForLoadState('networkidle')
@@ -107,11 +111,62 @@ test.describe('Accueil', () => {
 
   test('retirer button is present and shows color label', async ({ page }) => {
     await skipOnboarding(page)
-    await page.route('**/supabase.co/**', route => route.fulfill({ status: 200, body: '[]' }))
+    await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
 
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
     await expect(page.locator('button[title="Re-tirer un rêve"]')).toBeVisible()
   })
+
+  // Le rang bas a moins de 44 px de dessin, le rang haut aussi à 320 points :
+  // la zone d'appui globale (`index.css`, centrée, au moins 44 px) déborde
+  // dans l'écart de chaque côté. Mesurer la TAILLE des zones ne dit pas
+  // qui reçoit l'appui quand elles se touchent. Deux mesures : les zones
+  // des deux rangs ne se chevauchent pas — à un écart de 6 px, celle du rang
+  // bas mordait d'un tiers de pixel sur celle du rang haut, à 320 points —,
+  // et `elementFromPoint` confirme que l'intérieur de chaque zone mène à son
+  // pavé (au demi-pixel près : sur les bords, l'arrondi du moteur décide).
+  for (const largeur of [320, 360, 390]) {
+    test(`chaque point de la zone d'un pavé mène à ce pavé (${largeur} points)`, async ({ page }) => {
+      await page.setViewportSize({ width: largeur, height: largeur === 320 ? 568 : 844 })
+      await skipOnboarding(page)
+      await page.route(versSupabase, route => route.fulfill({ status: 200, body: '[]' }))
+      await page.goto('/')
+      await page.waitForLoadState('networkidle')
+      // Le rideau d'entrée recouvre l'accueil : on le lève, comme un joueur.
+      const rideau = page.getByLabel(/Entrer dans le jeu|Enter the game/)
+      await rideau.click({ timeout: 4000 }).catch(() => {})
+      await rideau.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {})
+      // Le pied se déplie en 3D (0,9 s + 1,1 s), sur une courbe qui finit
+      // lentement : on mesure une fois le pli posé à plat, quand plus aucun
+      // ancêtre ne porte de rotation.
+      await expect.poll(() => page.evaluate(() => {
+        let e: HTMLElement | null = [...document.querySelectorAll('button')].find(x => /Atelier/.test(x.textContent || ''))!
+        for (; e; e = e.parentElement) if (/rotateX/.test(e.style.transform)) return false
+        return true
+      }), { timeout: 8000 }).toBe(true)
+      const { zones, fautes } = await page.evaluate(() => {
+        const noms = [/Cadavre Écrit/, /Cadavre Dessiné/, /Mode en ligne/, /Atelier/]
+        const boutons = noms.map(n => [...document.querySelectorAll('button')].find(x => n.test(x.textContent || ''))!)
+        const zones: [number, number][] = []
+        const fautes: string[] = []
+        for (const b of boutons) {
+          const r = b.getBoundingClientRect()
+          const x = r.left + r.width / 2, c = r.top + r.height / 2
+          const demi = Math.max(r.height, 44) / 2
+          zones.push([c - demi, c + demi])
+          for (let y = c - demi + 0.5; y <= c + demi - 0.5; y += 0.25) {
+            const t = document.elementFromPoint(x, y)?.closest('button')
+            if (t !== b) { fautes.push(`${b.textContent} à y=${y.toFixed(2)} → ${t?.textContent ?? 'rien'}`); break }
+          }
+        }
+        return { zones, fautes }
+      })
+      expect(fautes).toEqual([])
+      // Rang haut (0, 1) au-dessus du rang bas (2, 3) : au moins un pixel entre leurs zones.
+      expect(zones[2][0] - zones[0][1]).toBeGreaterThanOrEqual(1)
+      expect(zones[3][0] - zones[1][1]).toBeGreaterThanOrEqual(1)
+    })
+  }
 })
