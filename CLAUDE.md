@@ -52,13 +52,12 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] S'inscrire au Small Business Program d'Apple (15 % au lieu de 30 %)
 
 #### Le lancement — reste à faire hors du code
-- [ ] Appliquer `supabase/migrations/20261014000010_lancement.sql` — copier
-      TOUT le contenu du fichier dans SQL Editor → New query → Run (le
-      chemin seul n'est pas du SQL) (salons
-      privés par défaut, exclusion, filtre en base). Éprouvée le 14 octobre
-      sur un Postgres 16 jetable. Sans elle l'app tient : le filtre vit côté
-      client et côté API du poème du jour, et « retirer une main » dit qu'il
-      n'est pas encore possible.
+- [x] **Migration appliquée** — `supabase/migrations/20261014000010_lancement.sql`,
+      le 14 octobre 2026 (collée en TEXTE dans SQL Editor : le chemin seul
+      n'est pas du SQL, c'est ce qui avait échoué au premier essai).
+      Vérifié en production par l'API publique : la colonne `exclus` répond,
+      `cadavre_inconvenant` rend vrai pour « espèce de connard » et
+      « xX_salope_Xx », faux pour « le cône de lumière » et « he will bite ».
 
 #### Non bloquants (v1.1)
 - [ ] React Router v7 (2 vulnérabilités modérées non atteignables — voir le dossier de soumission)
