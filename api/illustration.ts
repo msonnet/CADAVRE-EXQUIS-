@@ -83,7 +83,7 @@ async function texteVersPromptVisuel(texte: string, anthropicKey: string): Promi
         max_tokens: 140,
         messages: [{
           role: 'user',
-          content: `${consigneVisuelle(texte)}\n- Use GERUND form for all actions to show the act in progress, not the result:\n  * "eats/devours" = "jaws wide open, teeth sinking into [object], actively devouring — NOT the aftermath"\n  * "crushes" = "pressing [object] flat underfoot, the act of crushing mid-motion"\n  * "flies" = "airborne mid-flight, wings fully spread"\n  * "caresses" = "hand in motion touching [object]"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- No nudity and no gore: every figure is clothed, injuries are suggested, never shown\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
+          content: `${consigneVisuelle(texte)}\n- Use GERUND form for all actions to show the act in progress, not the result:\n  * "eats/devours" = "jaws wide open, teeth sinking into [object], actively devouring — NOT the aftermath"\n  * "crushes" = "pressing [object] flat underfoot, the act of crushing mid-motion"\n  * "flies" = "airborne mid-flight, wings fully spread"\n  * "caresses" = "hand in motion touching [object]"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- Nudity only as classical fine art (\"draped nude\", \"sculptural figure\"), museum-quality, never explicit: no genitals, no sexual act\n- Violence and blood may be shown as they are written\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
         }],
       }),
     })
@@ -209,11 +209,13 @@ export default async function handler(req: any, res: any): Promise<void> {
         image_size: { width: 1056, height: 1408 },
         num_inference_steps: 28,
         guidance_scale,
-        // Le niveau par défaut de FLUX (1 le plus strict, 6 le plus permissif).
-        // Il était à 5, qui laisse passer le nu : un jeu ouvert aux enfants et
-        // aux inconnus ne peut pas le promettre, et la classification d'âge
-        // des magasins demande ce que l'IA est capable de produire.
-        safety_tolerance: 2,
+        // 1 le plus strict, 6 le plus permissif. Mesuré le 14 octobre sur
+        // FLUX pro 1.1 : à 2 (le défaut) et à 3, un chevalier ensanglanté ET
+        // une Vénus de Botticelli sortent noirs ; à 4 les deux passent.
+        // L'auteur veut le sang et ne censure que la nudité EXPLICITE : 4,
+        // un cran plus strict que le 5 d'origine, et la consigne de la
+        // description visuelle interdit l'explicite.
+        safety_tolerance: 4,
         num_images: 1,
       }),
     })

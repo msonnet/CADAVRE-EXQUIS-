@@ -52,7 +52,9 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] S'inscrire au Small Business Program d'Apple (15 % au lieu de 30 %)
 
 #### Le lancement — reste à faire hors du code
-- [ ] Appliquer `supabase/migrations/20261014000010_lancement.sql` (salons
+- [ ] Appliquer `supabase/migrations/20261014000010_lancement.sql` — copier
+      TOUT le contenu du fichier dans SQL Editor → New query → Run (le
+      chemin seul n'est pas du SQL) (salons
       privés par défaut, exclusion, filtre en base). Éprouvée le 14 octobre
       sur un Postgres 16 jetable. Sans elle l'app tient : le filtre vit côté
       client et côté API du poème du jour, et « retirer une main » dit qu'il
@@ -1876,13 +1878,17 @@ qu'en lecture de code.
 Ce que l'auteur a demandé de corriger avant de sortir : tout ce qui, dans
 le code, empêchait de mettre le jeu entre des mains inconnues.
 
-**Les images ne montrent plus de nu** (`api/illustration.ts`,
-`api/avatar.ts`). `safety_tolerance` passe de 5, qui laisse passer le nu, à
-2, le défaut de FLUX ; la consigne qui décrivait le nu « en beaux-arts »
-devient « aucune nudité, aucun sang ». Une image écartée par le filtre
-arrive noire avec `has_nsfw_concepts` : elle est rendue à son bocal et dite
-(« écartée par le filtre — essaie un autre style »), au lieu d'un carré
-noir décompté.
+**Les images : le sang reste, seule la nudité explicite est censurée**
+(`api/illustration.ts`) — la règle de l'auteur. Mesuré sur FLUX pro 1.1 :
+à `safety_tolerance` 2 (le défaut) et 3, un chevalier ensanglanté et une
+Vénus de Botticelli sortent NOIRS ; à 4 les deux passent. Le premier jet
+avait mis 2 — il aurait censuré le sang. C'est donc 4, un cran plus strict
+que le 5 d'origine, et la consigne de la description visuelle n'admet le
+nu qu'en beaux-arts, jamais explicite (ni sexe, ni acte). Une image
+écartée arrive noire avec `has_nsfw_concepts` : elle est rendue à son
+bocal et dite (« écartée par le filtre — essaie un autre style »), au lieu
+d'un carré noir décompté. Le portrait (`api/avatar.ts`) garde le filtre de
+FLUX schnell, allumé par défaut, désormais écrit.
 
 **La convenance** (`src/lib/convenance.ts`, `api/_convenance.ts`,
 `cadavre_inconvenant` en base). Partout où l'on écrit pour des inconnus :

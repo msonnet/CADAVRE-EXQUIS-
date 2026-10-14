@@ -1,10 +1,17 @@
 -- ══════════════════════════════════════════════════════════
 -- CADAVRE EXQUIS — Le lancement : salons privés, exclusion, convenance
--- À appliquer à la main dans l'éditeur SQL de Supabase. Sans elle, l'app
+-- À appliquer à la main : copier TOUT ce fichier dans l'éditeur SQL de
+-- Supabase (SQL Editor → New query), puis Run. Sans elle, l'app
 -- fonctionne comme avant : les salons naissent privés (le client le dit),
 -- retirer une main répond « pas encore possible sur ce serveur », et le
 -- filtre ne vit que côté client et côté API du poème du jour.
 -- ══════════════════════════════════════════════════════════
+
+-- ── 0. Les colonnes dont elle dépend ──────────────────────
+-- Posées par des migrations antérieures ; redites ici pour qu'elle passe
+-- même si l'une d'elles n'a jamais été appliquée.
+ALTER TABLE rooms ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;
+ALTER TABLE rooms ADD COLUMN IF NOT EXISTS langue TEXT DEFAULT 'fr';
 
 -- ── 1. Un salon est privé par défaut ──────────────────────
 -- Le client l'écrit déjà explicitement ; la valeur par défaut le dit aussi
