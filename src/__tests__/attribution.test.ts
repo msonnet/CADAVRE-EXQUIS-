@@ -6,18 +6,18 @@ const base = { numero: 1, fonction: 'vers 1', consigne: '', texte: 'x', ts: 0 }
 
 describe('attribution — vers d\'atelier', () => {
   it('annonce le nombre de mains avant les noms', () => {
-    const c: Case = { ...base, auteur: 'ia', nbVoix: 3, voixNom: 'le fossoyeur · le graveur · l\'apiculteur' }
-    expect(attribution(c)).toBe("3 voix · le fossoyeur · le graveur · l'apiculteur")
+    const c: Case = { ...base, auteur: 'ia', nbVoix: 3, voixNom: 'le fossoyeur · le greffier · l\'apiculteur' }
+    expect(attribution(c)).toBe("3 voix · le fossoyeur · le greffier · l'apiculteur")
   })
 
   it('accorde le singulier', () => {
-    expect(attribution({ ...base, auteur: 'ia', nbVoix: 1, voixNom: 'le boucher' }))
-      .toBe('une voix · le boucher')
+    expect(attribution({ ...base, auteur: 'ia', nbVoix: 1, voixNom: 'le cuisinier' }))
+      .toBe('une voix · le cuisinier')
   })
 
   it('sait lire un vers mixte — que personne ne savait lire', () => {
-    expect(attribution({ ...base, auteur: 'mixte', nbVoix: 2, voixNom: 'le marin · le graveur' }))
-      .toBe('toi et 2 voix · le marin · le graveur')
+    expect(attribution({ ...base, auteur: 'mixte', nbVoix: 2, voixNom: 'le marin · le greffier' }))
+      .toBe('toi et 2 voix · le marin · le greffier')
   })
 
   it('le médium seul sur son vers', () => {
@@ -31,8 +31,8 @@ describe('attribution — vers d\'atelier', () => {
 
 describe('attribution — cadavre écrit', () => {
   it('numérote la voix et la nomme', () => {
-    expect(attribution({ ...base, auteur: 'ia', voixNom: 'le télégraphiste' }, 2))
-      .toBe('voix 2 · le télégraphiste')
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'le tisserand' }, 2))
+      .toBe('voix 2 · le tisserand')
   })
 
   it('le joueur numéroté en multijoueur', () => {
@@ -68,7 +68,7 @@ describe('attribution — la table locale', () => {
 describe('attribution — le nom des voix', () => {
   it('traduit l’identifiant que range le cadavre écrit', () => {
     // Les coutures affichaient « voix 2 · meteorologue », sans accent ni article.
-    expect(attribution({ ...base, auteur: 'ia', voixNom: 'meteorologue' }, 2)).toBe('voix 2 · Le météorologue')
+    expect(attribution({ ...base, auteur: 'ia', voixNom: 'meteorologue' }, 2)).toBe('voix 2 · La météorologue')
   })
 
   it('ne signe pas au nom de la voix un fragment de sa réserve', () => {
@@ -78,7 +78,8 @@ describe('attribution — le nom des voix', () => {
 
 describe('libelleReserve', () => {
   it('dit de quelle voix vient la conserve, article contracté', () => {
-    expect(libelleReserve('cartographe')).toBe('RÉSERVE DU CARTOGRAPHE')
+    expect(libelleReserve('fossoyeur')).toBe('RÉSERVE DU FOSSOYEUR')
+    expect(libelleReserve('cartographe')).toBe('RÉSERVE DE LA CARTOGRAPHE')
     expect(libelleReserve('notice')).toBe('RÉSERVE DE LA NOTICE')
     expect(libelleReserve('herboriste')).toBe("RÉSERVE DE L'HERBORISTE")
     expect(libelleReserve('souffleur de verre')).toBe('RÉSERVE DU SOUFFLEUR DE VERRE')
@@ -95,7 +96,7 @@ describe("attribution — l'identifiant qui s'affichait nu", () => {
   // la voix. Les coutures annonçaient « voix 2 · meteorologue ».
   it("rend le nom d'une voix gardée par son identifiant", () => {
     expect(attribution({ ...base, auteur: 'ia', voixNom: 'meteorologue' }, 2))
-      .toBe('voix 2 · Le météorologue')
+      .toBe('voix 2 · La météorologue')
     expect(attribution({ ...base, auteur: 'ia', voixNom: 'souffleur de verre' }))
       .toBe('voix · Le souffleur de verre')
   })
@@ -117,16 +118,16 @@ describe("attribution — l'identifiant qui s'affichait nu", () => {
       expect(nomAffiche('the engraver')).toBe('the engraver')
       expect(nomAffiche('Écho')).toBe('Écho')
       st.set('langue', 'fr')
-      expect(nomAffiche('The meteorologist')).toBe('Le météorologue')
-      expect(nomAffiche('le graveur')).toBe('le graveur')
+      expect(nomAffiche('The meteorologist')).toBe('La météorologue')
+      expect(nomAffiche('le greffier')).toBe('le greffier')
     } finally {
       vi.unstubAllGlobals()
     }
   })
 
   it('sépare la phrase et les noms, pour que les coutures les lient un à un', () => {
-    expect(attributionEnMorceaux({ ...base, auteur: 'mixte', nbVoix: 2, voixNom: 'le marin · le graveur' }))
-      .toEqual({ texte: 'toi et 2 voix', voix: ['le marin', 'le graveur'] })
+    expect(attributionEnMorceaux({ ...base, auteur: 'mixte', nbVoix: 2, voixNom: 'le marin · le greffier' }))
+      .toEqual({ texte: 'toi et 2 voix', voix: ['le marin', 'le greffier'] })
     expect(attributionEnMorceaux({ ...base, auteur: 'humain', nbVoix: 0, voixNom: 'le marin' }))
       .toEqual({ texte: 'toi seul', voix: [] })
   })

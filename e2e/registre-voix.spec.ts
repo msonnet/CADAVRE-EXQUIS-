@@ -91,12 +91,14 @@ test('le registre, de la bibliothèque à la fiche, et retour par les coutures',
   await expect(page.getByText('Tient des bulletins pour une radio rurale.')).toBeVisible()
   await expect(page.getByText(/2 SÉANCES/)).toBeVisible()
   // Les places en blanc ne nomment personne.
-  await expect(page.getByText('Le chimiste')).toHaveCount(0)
+  await expect(page.getByText('La chimiste')).toHaveCount(0)
 
   // ── La fiche ──
-  await page.getByRole('button', { name: /Le météorologue/ }).click()
+  // Le recueil a gardé « Le météorologue », le nom d'avant la parité : la
+  // voix est retrouvée, et nommée comme aujourd'hui.
+  await page.getByRole('button', { name: /La météorologue/ }).click()
   await expect(page).toHaveURL(/\/voix\/meteorologue$/)
-  await expect(page.getByRole('heading', { name: 'Le météorologue' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'La météorologue' })).toBeVisible()
   await expect(page.getByText(/PREMIÈRE SÉANCE/)).toBeVisible()
   await expect(page.getByText('avale', { exact: true })).toBeVisible()
 
@@ -105,7 +107,7 @@ test('le registre, de la bibliothèque à la fiche, et retour par les coutures',
   await expect(page).toHaveURL(/\/bibliotheque\/p-atelier\?coutures/)
 
   // ── Et retour par le nom de la voix, dans les coutures ──
-  await page.getByRole('link', { name: /Le météorologue/ }).first().click()
+  await page.getByRole('link', { name: /La météorologue/ }).first().click()
   await expect(page).toHaveURL(/\/voix\/meteorologue$/)
 
   // Aucun débordement horizontal à la plus petite largeur tenue.
@@ -124,7 +126,7 @@ test("les coutures du cadavre écrit nomment la voix, et non son identifiant", a
   await page.goto('/bibliotheque/p-cadavre?coutures')
   await page.waitForLoadState('networkidle')
   await entrer(page)
-  await expect(page.getByRole('link', { name: /Le météorologue/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /La météorologue/ })).toBeVisible()
   await expect(page.getByText(/voix · meteorologue/)).toHaveCount(0)
 })
 

@@ -10,7 +10,7 @@ import type { DefinitionCase } from '../structures'
 import { validerCase } from '../utils/validation'
 import type { NiveauValidation } from '../utils/validation'
 import { demanderFragmentIA } from '../api/claude'
-import { VOICE_IDS, nomDeVoix } from '../data/voiceIds'
+import { VOICE_IDS, nomDeVoix, pronomsDeVoix } from '../data/voiceIds'
 import { TYPES_A_DETERMINANT, tirerStrategie } from '../lib/determinants'
 import { sauvegarderPoeme } from '../db'
 import type { ConfigPartie, Case, Poeme, Visibilite } from '../types'
@@ -757,9 +757,13 @@ export default function Jeu() {
   const appelMain = participantActuel?.type === 'humain'
     ? nomMainActuelle ?? `${tr('Joueur', 'Player')} ${participantActuel.num}`
     : ''
+  const voixActuelle = participantActuel?.type === 'ia' ? voixParSlot[caseIndex % seq.length] : undefined
   const nomVoixActuelle = participantActuel?.type === 'ia'
-    ? nomDeVoix(voixParSlot[caseIndex % seq.length], langueActuelle())
+    ? nomDeVoix(voixActuelle, langueActuelle())
     : ''
+  // « elle dépose son fragment » sous « Le cartographe » : le pronom
+  // s'accordait au mot « voix », le joueur lisait le nom juste au-dessus.
+  const pronomsVoix = pronomsDeVoix(voixActuelle, langueActuelle())
   // En chiffres arabes pour l'oreille : un lecteur d'écran lit « V » comme
   // une lettre, et l'acte n'est plus un nombre.
   const acteParle = tr(`Acte ${caseIndex + 1} sur ${total}.`, `Act ${caseIndex + 1} of ${total}.`)
@@ -1039,7 +1043,7 @@ export default function Jeu() {
                       animate={{ opacity: 0.7 }}
                       transition={{ delay: 0.3, duration: 0.5 }}
                     >
-                      {tr('elle dépose son fragment', 'it lays down its fragment')}<br />{tr("à l'abri des regards", 'hidden from every eye')}
+                      {tr(`${pronomsVoix.sujet} dépose son fragment`, `${pronomsVoix.sujet} lays down ${pronomsVoix.possessif} fragment`)}<br />{tr("à l'abri des regards", 'hidden from every eye')}
                     </motion.div>
 
                     <motion.div
@@ -1134,7 +1138,9 @@ export default function Jeu() {
 
           {/* Footer */}
           <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, textAlign: 'center', paddingBottom: 8 }}>
-            {iaChargement ? tr('— NE PAS LA DÉRANGER —', '— DO NOT DISTURB —') : tr('— SES MOTS RESTENT SCELLÉS —', '— ITS WORDS REMAIN SEALED —')}
+            {iaChargement
+              ? tr(`— NE PAS ${pronomsVoix.objet.toUpperCase()} DÉRANGER —`, '— DO NOT DISTURB —')
+              : tr('— SES MOTS RESTENT SCELLÉS —', `— ${pronomsVoix.possessif.toUpperCase()} WORDS REMAIN SEALED —`)}
           </div>
         </div>
         <TutorielCoach
@@ -1144,24 +1150,6 @@ export default function Jeu() {
           corps={tr("Son fragment restera caché jusqu'à la fin — c'est la règle du cadavre exquis.", 'Its fragment stays hidden until the end — that’s the rule of the exquisite corpse.')}
           onCompris={() => {
             tutAvancer()
-            if (iaAvancePendingRef.current) {
-              iaAvancePendingRef.current()
-              iaAvancePendingRef.current = null
-            }
-          }}
-          labelCompris={`${apresLaVoix} →`}
-          onPasser={tutTerminer}
-          accent={accent} encre={encre} bg={bg}
-        />
-        {/* La seconde voix de la Découverte : c'est elle qui écrit la fin. */}
-        <TutorielCoach
-          visible={tutActif && tutEtape === T_JEU_2}
-          etape={T_JEU_2} total={TUTORIEL_TOTAL}
-          titre={tr('Une seconde voix', 'A second voice')}
-          corps={tr('Elle ne sait rien de la première, ni de toi. C’est elle qui écrit la fin.', 'It knows nothing of the first voice, nor of you. It writes the ending.')}
-          // Le panneau couvre le bas de l'écran, où vit le bouton de
-          // passage : c'est donc lui qui le porte, comme à l'étape d'avant.
-          onCompris={() => {
             if (iaAvancePendingRef.current) {
               iaAvancePendingRef.current()
               iaAvancePendingRef.current = null

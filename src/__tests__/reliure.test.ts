@@ -223,8 +223,8 @@ describe('le feuillet relié, publié en galerie', () => {
   })
 
   it('« toi et 3 voix » garde ses voix, sous le nom de celui qui publie', () => {
-    expect(attributionPubliee(sig('toi et 3 voix · Le boucher · Le géologue', { auteur: 'mixte' }), 'Nathan'))
-      .toEqual({ texte: 'Nathan et 3 voix', voix: ['Le boucher', 'Le géologue'] })
+    expect(attributionPubliee(sig('toi et 3 voix · Le cuisinier · Le géologue', { auteur: 'mixte' }), 'Nathan'))
+      .toEqual({ texte: 'Nathan et 3 voix', voix: ['Le cuisinier', 'Le géologue'] })
   })
 
   it('les autres mains restent les leurs', () => {

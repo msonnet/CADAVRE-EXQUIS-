@@ -310,26 +310,34 @@ export default function PoemeDetail() {
         transition={{ delay: 0.06 + Math.min(j, 12) * 0.05, duration: 0.35, ease: 'easeOut' }}
         style={{ paddingLeft: RETRAIT_DEBORD, marginBottom: 6 }}
       >
-        <div style={{ ...mono, fontSize: 11, letterSpacing: '0.12em', lineHeight: 1.4, color: encre, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ opacity: 0.5 }}>{i + 1} ·</span>
-          {/* Un feuillet relié au carnet dit d'où vient chaque vers. */}
-          {poeme.origine === 'carnet' && fonctionDeCase(cas) && (
-            <span style={{ opacity: 0.6 }}>{fonctionDeCase(cas)!.toUpperCase()} ·</span>
-          )}
-          <span style={{ opacity: 0.75, textTransform: 'uppercase' }}>
-            {/* Chaque nom de voix mène à sa fiche du registre : c'est ici
-                qu'on rencontre le vers aimé, c'est d'ici qu'on doit pouvoir
-                retrouver qui l'a écrit. */}
-            {(() => {
-              const { texte, voix } = attributionEnMorceaux(cas)
-              return <>{texte}{voix.map((v, k) => <React.Fragment key={k}> · <LienVoix nom={v} /></React.Fragment>)}</>
-            })()}
-          </span>
-          {cas.fallback && <EtiquetteReserve voixNom={cas.voixNom} accent={accent} />}
+        {/* Le glyphe vit dans sa propre colonne, large d'une cible. Il
+            était un élément de plus dans la ligne qui passe à la ligne :
+            quand les noms en remplissaient une seconde, il tombait seul
+            sur une troisième, juste sous le dernier nom, et sa zone
+            d'appui de 44 px mordait le bas de ce nom — toucher le pied de
+            « Le souffleur de verre » gardait le vers au carnet. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ ...mono, fontSize: 11, letterSpacing: '0.12em', lineHeight: 1.4, color: encre, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+            <span style={{ opacity: 0.5 }}>{i + 1} ·</span>
+            {/* Un feuillet relié au carnet dit d'où vient chaque vers. */}
+            {poeme.origine === 'carnet' && fonctionDeCase(cas) && (
+              <span style={{ opacity: 0.6 }}>{fonctionDeCase(cas)!.toUpperCase()} ·</span>
+            )}
+            <span style={{ opacity: 0.75, textTransform: 'uppercase' }}>
+              {/* Chaque nom de voix mène à sa fiche du registre : c'est ici
+                  qu'on rencontre le vers aimé, c'est d'ici qu'on doit pouvoir
+                  retrouver qui l'a écrit. */}
+              {(() => {
+                const { texte, voix } = attributionEnMorceaux(cas)
+                return <>{texte}{voix.map((v, k) => <React.Fragment key={k}> · <LienVoix nom={v} /></React.Fragment>)}</>
+              })()}
+            </span>
+            {cas.fallback && <EtiquetteReserve voixNom={cas.voixNom} accent={accent} />}
+          </div>
           {/* Un feuillet relié ne propose pas de garder ses vers : ils
               viennent du carnet et y sont encore. */}
           {poeme.origine !== 'carnet' && (
-            <span style={{ marginLeft: 'auto' }}>
+            <span style={{ flex: 'none', width: 44, display: 'flex', justifyContent: 'center' }}>
               <BoutonRecolte
                 glyphe
                 texte={cas.texte}

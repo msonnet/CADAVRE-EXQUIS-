@@ -4,11 +4,11 @@ import { CONFIG_DECOUVERTE } from '../lib/decouverte'
 import { getStructure } from '../structures'
 
 /**
- * La Découverte montre ce que les voix font.
+ * La Découverte : le joueur écrit deux fragments, le premier et le dernier ;
+ * une voix écrit celui du milieu.
  *
- * Avant : une seule voix sur trois cases, donc joueur · voix · joueur. Le
- * joueur écrivait deux fragments, la voix un mot, et la première révélation
- * montrait surtout ce qu'on venait d'écrire soi-même.
+ * Du 30 septembre au 14 octobre, deux voix suivaient le joueur : il écrivait
+ * un fragment sur trois et regardait la machine finir son poème.
  */
 function mains(config: typeof CONFIG_DECOUVERTE) {
   const seq = buildSequence(config.joueursHumains, config.voixIA, config.premierJoueur)
@@ -17,12 +17,13 @@ function mains(config: typeof CONFIG_DECOUVERTE) {
 }
 
 describe('la partie Découverte', () => {
-  it('le joueur ouvre, les voix écrivent la suite', () => {
-    expect(mains(CONFIG_DECOUVERTE)).toEqual(['humain', 'ia', 'ia'])
+  it('le joueur ouvre et ferme, la voix écrit au milieu', () => {
+    expect(mains(CONFIG_DECOUVERTE)).toEqual(['humain', 'ia', 'humain'])
   })
 
-  it('l\'ancienne configuration donnait deux cases sur trois au joueur', () => {
-    expect(mains({ ...CONFIG_DECOUVERTE, voixIA: 1 })).toEqual(['humain', 'ia', 'humain'])
+  it('la machine n’écrit jamais plus que le joueur', () => {
+    const m = mains(CONFIG_DECOUVERTE)
+    expect(m.filter(t => t === 'ia').length).toBeLessThan(m.filter(t => t === 'humain').length)
   })
 
   it('reste la plus courte des parties', () => {

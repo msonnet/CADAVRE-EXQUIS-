@@ -48,10 +48,10 @@ describe('recalerMains — les cases suivent le vers corrigé', () => {
 describe('nomDeVoix — les coutures ne montrent plus les identifiants', () => {
   it('traduit les identifiants sans accent ni article', () => {
     expect(nomDeVoix('geologue', 'fr')).toBe('Le géologue')
-    expect(nomDeVoix('medecin', 'fr')).toBe('Le médecin')
+    expect(nomDeVoix('medecin', 'fr')).toBe('La médecin')
     expect(nomDeVoix('reveur', 'fr')).toBe('Le rêveur')
-    expect(nomDeVoix('speleologue', 'fr')).toBe('Le spéléologue')
-    expect(nomDeVoix('epistolier', 'fr')).toBe("L'épistolier")
+    expect(nomDeVoix('speleologue', 'fr')).toBe('La spéléologue')
+    expect(nomDeVoix('epistolier', 'fr')).toBe("L'épistolière")
   })
 
   it('couvre les 46 identifiants du poème examiné', () => {

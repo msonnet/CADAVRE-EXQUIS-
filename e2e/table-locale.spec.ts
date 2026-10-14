@@ -272,5 +272,5 @@ test('au recueil aussi, un fragment de réserve dit de quelle voix', async ({ pa
   await page.goto('/bibliotheque/r1?coutures')
   await page.waitForLoadState('networkidle')
   await franchir(page)
-  await expect(page.getByText('RÉSERVE DU CARTOGRAPHE')).toBeVisible({ timeout: 8000 })
+  await expect(page.getByText('RÉSERVE DE LA CARTOGRAPHE')).toBeVisible({ timeout: 8000 })
 })

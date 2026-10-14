@@ -4,17 +4,20 @@ import type { ConfigPartie } from '../types'
  * La partie Découverte — la première qu'un joueur voit.
  *
  * La plus courte possible (phrase courte, trois fragments) : le joueur écrit
- * le premier, DEUX voix complètent à l'aveugle, puis la révélation. Faire
- * vivre un cadavre exquis entier en trente secondes, sans une seule décision
- * de configuration — c'est la révélation qui fait comprendre le jeu.
+ * le PREMIER et le DERNIER, une voix écrit celui du milieu à l'aveugle, puis
+ * la révélation. Faire vivre un cadavre exquis entier en trente secondes,
+ * sans une seule décision de configuration — c'est la révélation qui fait
+ * comprendre le jeu.
  *
- * ── Ce qui était faux ─────────────────────────────────────────────────────
+ * ── Deux réglages successifs ──────────────────────────────────────────────
  *
- * Le commentaire annonçait deux voix ; la configuration n'en donnait qu'une.
- * Sur trois cases, l'ordre devenait joueur · voix · joueur : le joueur
- * écrivait deux fragments sur trois, et la voix un seul mot — le verbe. La
- * révélation montrait surtout ce qu'on venait d'écrire soi-même, et presque
- * rien de ce que le jeu fait.
+ * Le 30 septembre, deux voix sur trois cases : le joueur n'écrivait que le
+ * premier fragment et regardait les machines finir. L'auteur, le 14 octobre :
+ * « il faut faire l'inverse ». Un premier contact où la machine joue deux
+ * fois et le joueur une seule apprend que le jeu se joue sans lui. Le jeu est
+ * une affaire de mains ; la voix y est l'inconnu qu'on n'a pas vu écrire, et
+ * une seule suffit à le faire sentir. Le joueur encadre donc la voix : il
+ * ouvre, il ferme sans savoir ce qu'elle a mis entre les deux.
  */
 export const CONFIG_DECOUVERTE: ConfigPartie = {
   structureId: 'phrase-simple',
@@ -22,5 +25,5 @@ export const CONFIG_DECOUVERTE: ConfigPartie = {
   premierJoueur: 'humain',
   mode: 'standard',
   joueursHumains: 1,
-  voixIA: 2,
+  voixIA: 1,
 }

@@ -60,7 +60,7 @@ describe('le poème du jour', () => {
     vers: [
       { rang: 2, texte: 'sous la lampe sourde', pseudo: null, voix: false, voixNom: null, aMoi: false },
       { rang: 1, texte: 'la cire se souvient', pseudo: 'Nadja', voix: false, voixNom: null, aMoi: false },
-      { rang: 3, texte: 'un baromètre en deuil', pseudo: null, voix: true, voixNom: 'le météorologue', aMoi: false },
+      { rang: 3, texte: 'un baromètre en deuil', pseudo: null, voix: true, voixNom: 'le géologue', aMoi: false },
       { rang: 4, texte: 'et moi je signe', pseudo: 'Soupault', voix: false, voixNom: null, aMoi: true },
     ],
   })
@@ -73,7 +73,7 @@ describe('le poème du jour', () => {
 
   it('une main anonyme n\'est pas « toi »', () => {
     // Le repli d'`attribution` disait « toi » à toute main sans numéro.
-    expect(p.cases.map(c => attribution(c))).toEqual(['Nadja', 'une main', 'voix · le météorologue', 'toi'])
+    expect(p.cases.map(c => attribution(c))).toEqual(['Nadja', 'une main', 'voix · le géologue', 'toi'])
   })
 
   it('trois mains, une voix', () => {
@@ -90,7 +90,7 @@ describe('le poème du jour', () => {
     expect(lu.ok).toBe(true)
     if (lu.ok) {
       expect(lu.data.poemes[0].origine).toBe('jour')
-      expect(lu.data.poemes[0].cases.map(c => attribution(c))).toEqual(['Nadja', 'une main', 'voix · le météorologue', 'toi'])
+      expect(lu.data.poemes[0].cases.map(c => attribution(c))).toEqual(['Nadja', 'une main', 'voix · le géologue', 'toi'])
     }
   })
 })

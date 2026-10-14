@@ -1127,7 +1127,8 @@ sept bandes — le salon va jusqu'à sept mains.
 commentaire annonçait deux voix, la configuration une : le joueur écrivait
 deux fragments sur trois et la voix un seul mot. Le guide suit le nouvel
 ordre — « LA VOIX SUIVANTE », puis « Une seconde voix » qui écrit la fin,
-et le panneau porte le bouton qu'il recouvrirait.
+et le panneau porte le bouton qu'il recouvrirait. **Défait le 14 octobre à
+la demande de l'auteur** — voir « La Découverte, et le genre des voix ».
 
 **L'anglais.** L'Atelier anglais attelait ses vers en français (« il est
 pale the lamp ») : la dislocation y devient l'exclamative poétique — « how
@@ -1937,6 +1938,56 @@ liste des exclus avant la chaise, `is_public: false`, le reçu présenté à
 n'est pas une identité : la durcir demande un compte pour réagir). L'écran
 de tour en ligne n'a pas reçu le pli du jeu local.
 
+## La Découverte, et le genre des voix — 14 octobre
+
+**Le joueur écrit le premier et le dernier fragment, la voix celui du
+milieu** (`lib/decouverte.ts`, une voix au lieu de deux). L'auteur : « l'ia
+joue 2 fois tandis que le joueur une seule. Il faut faire l'inverse ». La
+première partie apprenait que le jeu se joue sans soi ; le joueur encadre
+maintenant la voix, et ferme le poème sans savoir ce qu'elle a mis entre
+les deux. Le panneau « Une seconde voix » est retiré ; le guide retrouve
+« La voix écrit en secret » puis « Le dernier fragment ».
+
+**Le pronom s'accorde au nom, plus au mot « voix »** (`pronomsDeVoix`,
+`data/voiceIds.ts`). L'écran de la voix imprimait « elle dépose son
+fragment » sous « Le cartographe », et « NE PAS LA DÉRANGER ». En anglais,
+« it lays down its fragment » sous un nom de personne. Désormais « il » /
+« elle », « le » / « la », « his » / « her » ; la notice reste « it ».
+
+**La parité : vingt-trois femmes, vingt-deux hommes, et la notice.** Avant,
+quarante-quatre noms masculins sur quarante-six, y compris là où le
+français n'en demande rien (« Le photographe », « Le somnambule ») ; une
+seule femme, la collecteuse. Dix-huit noms changent, et les personas
+d'`api/_voices.ts` disent le même genre (« Tu es une cartographe ») :
+la météorologue, la chimiste, la détective, la médecin, la musicienne, la
+cartographe, la télégraphiste, la somnambule, la traductrice, la
+spéléologue, la bouchère, la photographe, la funambule, la lexicographe,
+l'épistolière, la convalescente, la graveuse, la prisonnière ; et
+l'archiviste, l'entomologiste, l'alchimiste, épicènes, deviennent des
+femmes par la persona et le pronom. L'herboriste l'était déjà. Le partage
+évite les clichés de métier dans les deux sens : la bouchère, la graveuse
+d'épitaphes, la détective ; le tisserand, le jardinier, le parfumeur.
+**Décision d'identité prise sans l'auteur, réversible en une ligne par
+voix** (`genre` et `fr` dans `NOMS_VOIX`, la phrase « Tu es … » de la
+persona).
+
+- **Les identifiants ne changent pas** (« traducteur » nomme la
+  traductrice) : le recueil les garde, le serveur les renvoie.
+- **Les anciens noms restent lus** (`NOMS_ANCIENS`) : l'Atelier a gardé
+  « Le météorologue » en toutes lettres dans des poèmes. Le registre
+  retrouve la voix, l'affichage rend le nom d'aujourd'hui — une voix, un
+  nom, sur tous les écrans.
+- `voixGenre.test.ts` tient la parité (à une voix près), l'accord de la
+  persona avec le nom, et les pronoms ; `e2e/decouverte.spec.ts` joue la
+  Découverte entière (une seule case pour la voix) et lit les pronoms en
+  français et en anglais.
+
+**Trouvé en route, et corrigé** : au recueil, le glyphe ◇ passait à la
+ligne avec les noms des coutures ; quand ils en remplissaient deux, il
+tombait seul sous le dernier, et sa zone d'appui mordait le pied de
+« Le souffleur de verre ». Les noms féminins, plus longs, l'ont fait
+apparaître à 320 points. Le glyphe a maintenant sa colonne de 44 px.
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
@@ -1974,7 +2025,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (795 tests unitaires) + Playwright (155 tests E2E, FR et EN)
+- Tests : Vitest (803 tests unitaires) + Playwright (159 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
