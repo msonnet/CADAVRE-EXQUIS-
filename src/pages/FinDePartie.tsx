@@ -260,6 +260,8 @@ export default function FinDePartie() {
             ? tr("Génération d'images non configurée (clé FAL_KEY manquante)", 'Image generation not configured (missing FAL_KEY)')
             : reason === 'timeout'
             ? tr('La génération a pris trop de temps — réessaie', 'Generation took too long — try again')
+            : reason === 'contenu_refuse'
+            ? tr('Cette image a été écartée par le filtre — essaie un autre style', 'This image was held back by the filter — try another style')
             : tr('Illustration indisponible — réessaie dans un instant', 'Illustration unavailable — try again in a moment')
           setErreurIllustration(msg)
           setStyleChoisi(null)

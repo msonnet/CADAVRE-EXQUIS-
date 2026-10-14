@@ -2,6 +2,21 @@ import { useState, useEffect } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { api } from '../lib/apiBase'
+import { inconvenant } from '../lib/convenance'
+import { tr } from '../i18n'
+
+/**
+ * Un nom de plume se lit chez des inconnus — au salon, en galerie, dans les
+ * coutures du poème du jour. On le vérifie avant d'ouvrir l'identité ; la
+ * base le revérifie (`cadavre_inconvenant`), et c'est elle qui tranche.
+ */
+const NOM_REFUSE = () => tr('Ce nom de plume ne peut pas être affiché aux autres joueurs. Choisis-en un autre.', 'This pen name can’t be shown to other players. Choose another one.')
+function refusDuNom(pseudo: string): string | null {
+  return inconvenant(pseudo, 'tout') ? NOM_REFUSE() : null
+}
+function messageDeLaBase(message: string): string {
+  return message.includes('pseudo_inconvenant') ? NOM_REFUSE() : message
+}
 
 export type Profile = {
   id: string
@@ -51,6 +66,9 @@ export function useAuth() {
 
   // Connexion anonyme : crée un compte + profil sans email.
   async function signInAnonymously(pseudo: string): Promise<string | null> {
+    // Avant d'ouvrir l'identité : un refus après coup laisserait un compte sans nom.
+    const refus = refusDuNom(pseudo)
+    if (refus) return refus
     const { data, error } = await supabase.auth.signInAnonymously()
     if (error) return error.message
     if (!data.user) return 'Connexion impossible'
@@ -60,7 +78,7 @@ export function useAuth() {
       avatar_url: null,
       avatar_prompt: null,
     })
-    if (profError) return profError.message
+    if (profError) return messageDeLaBase(profError.message)
     setProfile({ id: data.user.id, pseudo: pseudo.trim(), avatar_url: null, avatar_prompt: null })
     return null
   }
@@ -97,9 +115,11 @@ export function useAuth() {
 
   async function saveProfile(pseudo: string, avatar_url?: string, avatar_prompt?: string): Promise<string | null> {
     if (!user) return 'Non connecté'
+    const refus = refusDuNom(pseudo)
+    if (refus) return refus
     const payload = { id: user.id, pseudo, avatar_url: avatar_url ?? null, avatar_prompt: avatar_prompt ?? null }
     const { error } = await supabase.from('profiles').upsert(payload)
-    if (error) return error.message
+    if (error) return messageDeLaBase(error.message)
     setProfile({ id: user.id, pseudo, avatar_url: avatar_url ?? null, avatar_prompt: avatar_prompt ?? null })
     return null
   }

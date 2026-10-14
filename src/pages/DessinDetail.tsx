@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import { Decor, useReve } from '../reve'
 import { chargerDessin, supprimerDessin, mettreAJourTitreDessin, marquerDessinPublie } from '../db'
-import { publierDessin } from '../lib/publier'
+import { publierDessin, PublicationRefusee } from '../lib/publier'
 import MentionPublication from '../components/MentionPublication'
 import { exporterPDF } from '../utils/partager'
 import { usePartage } from '../hooks/usePartage'
@@ -32,7 +32,7 @@ export default function DessinDetail() {
   const [titreDraft, setTitreDraft] = useState('')
   const [confirmSuppr, setConfirmSuppr] = useState(false)
   const [publishing, setPublishing] = useState(false)
-  const [publishError, setPublishError] = useState(false)
+  const [publishError, setPublishError] = useState<false | 'erreur' | 'refus'>(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const partage = usePartage({ libelleTravail: tr('✦ COMPOSITION…', '✦ COMPOSING…') })
   const { profile } = useAuth()
@@ -84,7 +84,7 @@ export default function DessinDetail() {
       // plus republier et pour lire ce que la planche a reçu.
       const lien = await publierDessin(dessin, profile)
       if (!lien) {
-        setPublishError(true)
+        setPublishError('erreur')
         setTimeout(() => setPublishError(false), 2000)
         return
       }
@@ -93,8 +93,9 @@ export default function DessinDetail() {
       jouer('soumettre')
     } catch (e) {
       console.error('publish error', e)
-      setPublishError(true)
-      setTimeout(() => setPublishError(false), 2000)
+      const refus = e instanceof PublicationRefusee
+      setPublishError(refus ? 'refus' : 'erreur')
+      setTimeout(() => setPublishError(false), refus ? 4000 : 2000)
     } finally {
       setPublishing(false)
     }
@@ -348,7 +349,9 @@ export default function DessinDetail() {
               opacity: publishing ? 0.55 : 0.75,
             }}
           >
-            {publishError
+            {publishError === 'refus'
+              ? tr('Refusé par le filtre de la galerie', 'Held back by the gallery filter')
+              : publishError
               ? tr('ERREUR', 'ERROR')
               : publishing
                 ? tr('✦ Publication…', '✦ Publishing…')

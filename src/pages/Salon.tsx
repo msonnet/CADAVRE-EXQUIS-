@@ -14,8 +14,9 @@ import { lienPublic } from '../lib/apiBase'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import MiniCoach from '../components/MiniCoach'
+import { estExclu } from '../lib/salonEnLigne'
 
-type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null; langue?: string | null }
+type Room = { code: string; host_id: string | null; mode: 'ecrit' | 'dessin'; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; is_public: boolean; nb_cases: number | null; langue?: string | null; exclus?: string[] | null }
 
 /** Langue d'un salon — l'historique (colonne absente ou NULL) est français. */
 function langueSalon(r: { langue?: string | null }): 'fr' | 'en' {
@@ -58,6 +59,10 @@ export default function Salon() {
   const [confirmQuit, setConfirmQuit] = useState(false)
   const [spectator, setSpectator] = useState(false)
   const [spectators, setSpectators] = useState<SpectatorPresence[]>([])
+  // L'hôte retire une main : deux temps, comme « quitter ». Et si la base
+  // n'a pas encore la colonne `exclus`, on le dit plutôt que de faire semblant.
+  const [aRetirer, setARetirer] = useState<string | null>(null)
+  const [retraitImpossible, setRetraitImpossible] = useState(false)
 
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting')
   const [reconnectTick, setReconnectTick] = useState(0)
@@ -90,7 +95,7 @@ export default function Salon() {
   const loadRoom = useCallback(async () => {
     if (!code) return
     const { data: r, error } = await supabase.from('rooms').select('*').eq('code', code).single()
-    if (error || !r) { setRoomError(tr('Salon introuvable.', 'Room not found.')); return }
+    if (error || !r) { setRoomError(tr('Salon introuvable.', 'Room not found.')); return null }
     setRoom(r)
     if (r.status === 'playing') navigate(`/jeu-online/${code}`)
     if (r.status === 'finished') navigate(`/fin-online/${code}`)
@@ -107,6 +112,7 @@ export default function Salon() {
         if (updatedRoom) setRoom(updatedRoom)
       }
     }
+    return r as Room
   }, [code, navigate])
 
   useEffect(() => {
@@ -114,7 +120,10 @@ export default function Salon() {
     // plume, puis revient ici. Avant, `/online` tout court le perdait.
     if (!authLoading && (!user || !profile) && code) { navigate(arriveeSansIdentite(code), { replace: true }); return }
     if (!authLoading && user && profile) {
-      loadRoom().then(() => joinRoom())
+      // On ne s'assoit qu'à une table qui attend, et dont l'hôte ne nous a pas
+      // retiré : s'insérer dans une partie commencée changeait le nombre de
+      // mains en plein jeu, et une main exclue revenait en rechargeant.
+      loadRoom().then(r => { if (r && r.status === 'waiting' && !estExclu(r, user.id)) joinRoom() })
     }
   }, [authLoading, user, profile, loadRoom, joinRoom])
 
@@ -204,6 +213,25 @@ export default function Salon() {
     if (!code) return
     await supabase.from('rooms').update(changes).eq('code', code)
     setRoom(prev => prev ? { ...prev, ...changes } : prev)
+  }
+
+  // ── Hôte : retirer une main ───────────────────────────
+  // D'abord l'inscrire parmi les exclus (elle ne pourra plus se rasseoir),
+  // puis lever sa chaise. Dans cet ordre : l'inverse lui laissait le temps
+  // de revenir entre les deux.
+  async function retirerMain(id: string) {
+    if (!code || !room || !isHost || id === user?.id) return
+    jouer('clic')
+    setARetirer(null)
+    const exclus = Array.from(new Set([...(room.exclus ?? []), id]))
+    const { error: e1 } = await supabase.from('rooms').update({ exclus }).eq('code', code)
+    if (e1) { setRetraitImpossible(true); return }
+    const { data: levees, error: e2 } = await supabase.from('room_players').delete()
+      .eq('room_code', code).eq('player_id', id).select('id')
+    if (e2 || !levees?.length) { setRetraitImpossible(true); return }
+    setRetraitImpossible(false)
+    setRoom(prev => prev ? { ...prev, exclus } : prev)
+    loadRoom()
   }
 
   // ── Toggle ready ──────────────────────────────────────
@@ -314,6 +342,23 @@ export default function Salon() {
     )
   }
 
+  if (estExclu(room, user?.id)) {
+    return (
+      <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh safe-top safe-bottom text-center">
+        <Decor variant="aide" />
+        <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 14 }}>
+          {tr(`— SALON ${code} —`, `— ROOM ${code} —`)}
+        </div>
+        <p role="status" style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: encre, lineHeight: 1.5, maxWidth: 320 }}>
+          {tr("L'hôte t'a retiré de cette table.", 'The host removed you from this table.')}
+        </p>
+        <button onClick={() => navigate('/online')} style={{ ...mono, fontSize: 13, color: accent, background: 'none', border: 'none', cursor: 'pointer', marginTop: 22, minHeight: 44 }}>
+          ← {tr("D'AUTRES TABLES", 'OTHER TABLES')}
+        </button>
+      </PageTransition>
+    )
+  }
+
   return (
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="aide" />
@@ -324,7 +369,7 @@ export default function Salon() {
         accent={accent} encre={encre} bg={seance?.ambiance.bg ?? '#f0e4cc'}
         etapes={[
           { titre: tr('Le salon d’attente.', 'The waiting room.'),
-            corps: tr('« Inviter à la table » envoie un lien qui mène ici — ou laisse le salon public, et des inconnus pourront s’asseoir.', '“Invite to the table” sends a link that leads here — or leave the room public, and strangers may take a seat.') },
+            corps: tr('« Inviter à la table » envoie un lien qui mène ici. Le salon est privé ; rends-le public, et des inconnus pourront s’asseoir.', '“Invite to the table” sends a link that leads here. The room is private; make it public, and strangers may take a seat.') },
           { titre: tr('Prêt ?', 'Ready?'),
             corps: tr('Quand chaque joueur s’est déclaré prêt, l’hôte lance la partie.', 'Once every player says they’re ready, the host starts the game.') },
         ]}
@@ -446,9 +491,33 @@ export default function Salon() {
                 <span style={{ ...mono, fontSize: 13, color: p.is_ready ? accent : `${encre}50` }}>
                   {p.is_ready ? tr('✓ PRÊT', '✓ READY') : tr('EN ATTENTE', 'WAITING')}
                 </span>
+                {isHost && p.player_id !== user?.id && (
+                  aRetirer === p.player_id ? (
+                    <span style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={() => retirerMain(p.player_id)} aria-label={tr(`Retirer ${p.pseudo} de la table`, `Remove ${p.pseudo} from the table`)}
+                        style={{ ...mono, fontSize: 12, color: accent, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', minHeight: 44 }}>
+                        {tr('RETIRER ?', 'REMOVE?')}
+                      </button>
+                      <button onClick={() => setARetirer(null)}
+                        style={{ ...mono, fontSize: 12, color: encre, opacity: 0.7, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', minHeight: 44 }}>
+                        {tr('NON', 'NO')}
+                      </button>
+                    </span>
+                  ) : (
+                    <button onClick={() => setARetirer(p.player_id)} aria-label={tr(`Retirer ${p.pseudo}`, `Remove ${p.pseudo}`)}
+                      style={{ ...mono, fontSize: 12, color: encre, opacity: 0.55, background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', minHeight: 44 }}>
+                      ✕
+                    </button>
+                  )
+                )}
               </motion.div>
             ))}
           </AnimatePresence>
+          {retraitImpossible && (
+            <p role="alert" style={{ ...mono, fontSize: 12, color: accent, marginTop: 6, lineHeight: 1.5 }}>
+              {tr("Retirer une main n'est pas encore possible sur ce serveur.", 'Removing a player is not available on this server yet.')}
+            </p>
+          )}
           {players.length < 2 && (
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.75, marginTop: 8 }}>
               {tr("En attente d'autres joueurs… Partage le code", 'Waiting for more players… Share the code')} <strong>{code}</strong>.
@@ -639,7 +708,7 @@ export default function Salon() {
                 { value: true, label: tr('PUBLIC', 'PUBLIC') },
                 { value: false, label: tr('PRIVÉ', 'PRIVATE') },
               ] as const).map(opt => {
-                const selected = (room.is_public ?? true) === opt.value
+                const selected = (room.is_public ?? false) === opt.value
                 return (
                   <button
                     key={opt.label}
@@ -658,7 +727,7 @@ export default function Salon() {
               })}
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, color: encre, opacity: 0.65, marginTop: 6 }}>
-              {(room.is_public ?? true)
+              {(room.is_public ?? false)
                 ? tr('Visible dans la liste des parties ouvertes.', 'Visible in the list of open games.')
                 : tr('Accessible uniquement par code — salon privé.', 'Accessible by code only — private room.')}
             </div>

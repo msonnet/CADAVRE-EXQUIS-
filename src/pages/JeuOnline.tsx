@@ -14,11 +14,15 @@ import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { api } from '../lib/apiBase'
 import { tr } from '../i18n'
 import { partieNue } from '../lib/corps'
+import { signalDeTour, partieDuSalon } from '../lib/salonEnLigne'
+import { ouvrirPartieIA, jetonOuIdentite, nouvellePartieId, type Refus } from '../lib/acces'
+import { inconvenant } from '../lib/convenance'
 import MiniCoach from '../components/MiniCoach'
+import MurAbonnement from '../components/MurAbonnement'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; nb_cases: number | null; langue?: string | null }
+type Room = { code: string; host_id: string | null; mode: string; structure_id: string; nb_joueurs: number; status: string; turn_seconds: number | null; started_at: string | null; nb_cases: number | null; langue?: string | null; is_public?: boolean | null }
 type RoomPlayer = { id: string; player_id: string; pseudo: string; avatar_url: string | null; order_index: number | null; joined_at: string | null }
 type Contribution = { case_index: number; texte: string; player_id: string }
 
@@ -50,14 +54,25 @@ const TYPE_LABEL_EN: Record<string, string> = {
 
 // ── Claude IA helper ──────────────────────────────────────────────────────────
 
-async function callClaude(consigne: string, type: string, langue: 'fr' | 'en'): Promise<{ texte: string; voixNom: string | null }> {
+// La partie a été réglée (`ouvrirPartieIA`) : on présente son reçu et son
+// jeton. Sans les deux, le serveur refusait chaque appel et le bouton ne
+// faisait rien en production.
+async function callClaude(consigne: string, type: string, langue: 'fr' | 'en', partieId: string): Promise<{ texte: string; voixNom: string | null }> {
   try {
-    const r = await fetch(api('/api/claude'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consigne, type, langue }) })
+    const jeton = await jetonOuIdentite()
+    const r = await fetch(api('/api/claude'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(jeton ? { Authorization: `Bearer ${jeton}` } : {}) },
+      body: JSON.stringify({ consigne, type, langue, partieId }),
+    })
     if (!r.ok) return { texte: '', voixNom: null }
     const { texte, voixNom } = await r.json()
     return { texte: texte ?? '', voixNom: voixNom ?? null }
   } catch { return { texte: '', voixNom: null } }
 }
+
+/** Un fragment de salon public se lit chez des inconnus : le même filtre que le poème du jour. */
+const FRAGMENT_REFUSE = () => tr('Ce fragment ne peut pas être scellé : des inconnus le liront. Choisis d’autres mots.', 'This fragment can’t be sealed: strangers will read it. Choose other words.')
 
 // ── JeuOnline ─────────────────────────────────────────────────────────────────
 
@@ -73,8 +88,9 @@ export default function JeuOnline() {
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
-  const prevContribCountRef = useRef(0)
-  const contribInitializedRef = useRef(false)
+  const etaitMonTourRef = useRef<boolean | null>(null)
+  const [partieChargee, setPartieChargee] = useState(false)
+  const [refusIA, setRefusIA] = useState<Refus | null>(null)
 
   const [room, setRoom] = useState<Room | null>(null)
   const [players, setPlayers] = useState<RoomPlayer[]>([])
@@ -195,6 +211,8 @@ export default function JeuOnline() {
         }
       }
     }
+    // Dans la même tâche que les lectures ci-dessus : React les rend ensemble.
+    setPartieChargee(true)
   }, [code, user, navigate])
 
   useEffect(() => {
@@ -297,12 +315,17 @@ export default function JeuOnline() {
     setContributions(prev => prev.find(x => x.case_index === c2.case_index) ? prev : [...prev, c2].sort((a, b) => a.case_index - b.case_index))
   }, [])
 
+  // La main revient : un son et une vibration, au passage seulement (voir
+  // `signalDeTour`). On ne commence à suivre qu'une fois la table lue, pour
+  // ne pas sonner au chargement.
+  const tablePrete = partieChargee && !!room && orderedPlayers.length > 0
+  const monTour = isMyTurnEcrit || isMyTurnDessin
   useEffect(() => {
-    const prev = prevContribCountRef.current; const now = contributions.length
-    prevContribCountRef.current = now
-    if (!contribInitializedRef.current) { contribInitializedRef.current = true; return }
-    if (now > prev && !submitted) { jouer('clic'); if ('vibrate' in navigator) navigator.vibrate(180) }
-  }, [contributions.length, submitted, jouer])
+    if (!tablePrete) return
+    const avant = etaitMonTourRef.current
+    etaitMonTourRef.current = monTour
+    if (signalDeTour(avant, monTour)) { jouer('clic'); if ('vibrate' in navigator) navigator.vibrate(180) }
+  }, [tablePrete, monTour, jouer])
 
   useEffect(() => { if (!room?.turn_seconds) return; const id = setInterval(() => setTick(t => t + 1), 1000); return () => clearInterval(id) }, [room?.turn_seconds])
   useEffect(() => { turnStartedAtRef.current = Date.now() }, [contributions.length])
@@ -319,7 +342,10 @@ export default function JeuOnline() {
     if (isSpectator || secondsLeft === null || secondsLeft > 0 || submitted || autoSubmittedRef.current) return
     if (!(isMyTurnEcrit || isMyTurnDessin) || !user || !code || myEffectiveIndex === null) return
     autoSubmittedRef.current = true
-    const textToSubmit = inputRef.current.trim() || '…';
+    // Un fragment que le filtre refuserait part en points de suspension : la
+    // base le rejetterait, et la soumission automatique réessaierait sans fin.
+    const saisi = inputRef.current.trim()
+    const textToSubmit = !saisi || (room?.is_public && inconvenant(saisi, langueRoom)) ? '…' : saisi;
     (async () => {
       try {
         const caseIdx = room?.mode === 'dessin' ? myEffectiveIndex : contributions.length
@@ -347,20 +373,33 @@ export default function JeuOnline() {
   }, [secondsLeft, submitted, isSpectator, user, code, myEffectiveIndex, jouer, isMyTurnEcrit, isMyTurnDessin, room?.mode, contributions.length, mergeContribution])
 
   async function handleIa() {
-    if (!caseDef) return
+    if (!caseDef || !code || iaLoading) return
     setIaLoading(true)
     setIaVoixNom(null)
-    const { texte, voixNom } = await callClaude(caseDef.consigne, caseDef.type, langueRoom)
-    if (texte) { setInput(texte); setIaVoixNom(voixNom) }
-    setIaLoading(false); jouer('ia')
+    setSubmitError(null)
+    try {
+      // Une partie avec les voix, par main et par salon, réglée au premier appel.
+      const stockage = typeof localStorage !== 'undefined' ? localStorage : null
+      const partieId = partieDuSalon(code, stockage, nouvellePartieId)
+      const refus = await ouvrirPartieIA(partieId, 'salon')
+      if (refus) { setRefusIA(refus); return }
+      const { texte, voixNom } = await callClaude(caseDef.consigne, caseDef.type, langueRoom, partieId)
+      if (texte) { setInput(texte); setIaVoixNom(voixNom); jouer('ia') }
+      else setSubmitError(tr('Les voix ne répondent pas — écris toi-même, ou réessaie.', 'The voices aren’t answering — write it yourself, or try again.'))
+    } finally {
+      setIaLoading(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!input.trim() || !user || !code || !isMyTurnEcrit || submitted || submitting) return
+    if (room?.is_public && inconvenant(input, langueRoom)) { setSubmitError(FRAGMENT_REFUSE()); return }
     setSubmitting(true); setSubmitError(null)
     const { error } = await supabase.from('contributions').insert({ room_code: code, player_id: user.id, case_index: currentCase, texte: input.trim(), voice_name: iaVoixNom })
-    if (!error) {
+    if (error?.message?.includes('fragment_inconvenant')) {
+      setSubmitError(FRAGMENT_REFUSE())
+    } else if (!error) {
       mergeContribution({ case_index: currentCase, texte: input.trim(), player_id: user.id }); setMyContrib(input.trim()); setSubmitted(true); jouer('soumettre')
     } else if (error.code === '23505') {
       // Unique constraint: this case was already sealed (race condition)
@@ -509,6 +548,16 @@ export default function JeuOnline() {
     <PageTransition className="page-carnet flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="jeu" />
       {connBanner}
+
+      <MurAbonnement
+        visible={refusIA !== null}
+        acte={refusIA?.acte ?? 'partie_ia'}
+        motif={refusIA?.motif ?? 'essai_epuise'}
+        plafond={refusIA?.plafond}
+        onFermer={() => setRefusIA(null)}
+        onEncrierRempli={() => { setRefusIA(null); handleIa() }}
+        accent={accent} encre={encre} bg={bg}
+      />
 
       {/* ── MINI-GUIDE (première partie en ligne uniquement) ── */}
       <MiniCoach

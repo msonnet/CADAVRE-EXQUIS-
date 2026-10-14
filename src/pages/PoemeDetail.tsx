@@ -19,7 +19,7 @@ import { partagerVideoStory, partagerStory, exporterPDF } from '../utils/partage
 import { estNatif } from '../lib/emporter'
 import { useAuth } from '../hooks/useAuth'
 import { supabase, uploaderImageGalerie } from '../lib/supabase'
-import { publierPoeme } from '../lib/publier'
+import { publierPoeme, PublicationRefusee } from '../lib/publier'
 import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
@@ -71,7 +71,7 @@ export default function PoemeDetail() {
   const [partageOk, setPartageOk] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState(false)
-  const [publishError, setPublishError] = useState(false)
+  const [publishError, setPublishError] = useState<false | 'erreur' | 'refus'>(false)
   const [pdfBusy, setPdfBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { jouer } = useSound()
@@ -158,8 +158,9 @@ export default function PoemeDetail() {
       setPublished(true)
     } catch (e) {
       console.error('publish error', e)
-      setPublishError(true)
-      setTimeout(() => setPublishError(false), 2000)
+      const refus = e instanceof PublicationRefusee
+      setPublishError(refus ? 'refus' : 'erreur')
+      setTimeout(() => setPublishError(false), refus ? 4000 : 2000)
     } finally {
       setPublishing(false)
     }
@@ -692,7 +693,9 @@ export default function PoemeDetail() {
               opacity: publishing ? 0.55 : 0.75,
             }}
           >
-            {publishError
+            {publishError === 'refus'
+              ? tr('Refusé par le filtre de la galerie', 'Held back by the gallery filter')
+              : publishError
               ? tr('ERREUR', 'ERROR')
               : publishing
                 ? tr('✦ Publication…', '✦ Publishing…')

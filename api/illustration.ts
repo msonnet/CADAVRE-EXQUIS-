@@ -83,7 +83,7 @@ async function texteVersPromptVisuel(texte: string, anthropicKey: string): Promi
         max_tokens: 140,
         messages: [{
           role: 'user',
-          content: `${consigneVisuelle(texte)}\n- Use GERUND form for all actions to show the act in progress, not the result:\n  * "eats/devours" = "jaws wide open, teeth sinking into [object], actively devouring — NOT the aftermath"\n  * "crushes" = "pressing [object] flat underfoot, the act of crushing mid-motion"\n  * "flies" = "airborne mid-flight, wings fully spread"\n  * "caresses" = "hand in motion touching [object]"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- Nudity: describe as classical fine art ("nude figure", "draped torso", "sculptural female form") — painterly and museum-quality, never explicit\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
+          content: `${consigneVisuelle(texte)}\n- Use GERUND form for all actions to show the act in progress, not the result:\n  * "eats/devours" = "jaws wide open, teeth sinking into [object], actively devouring — NOT the aftermath"\n  * "crushes" = "pressing [object] flat underfoot, the act of crushing mid-motion"\n  * "flies" = "airborne mid-flight, wings fully spread"\n  * "caresses" = "hand in motion touching [object]"\n- Surrealist impossible scenes happen literally — specify what is physically touching what\n- No nudity and no gore: every figure is clothed, injuries are suggested, never shown\n- 25–35 words max, concrete and visual\n- Return only the description\n\nFrench: "${texte}"`,
         }],
       }),
     })
@@ -209,7 +209,11 @@ export default async function handler(req: any, res: any): Promise<void> {
         image_size: { width: 1056, height: 1408 },
         num_inference_steps: 28,
         guidance_scale,
-        safety_tolerance: 5,
+        // Le niveau par défaut de FLUX (1 le plus strict, 6 le plus permissif).
+        // Il était à 5, qui laisse passer le nu : un jeu ouvert aux enfants et
+        // aux inconnus ne peut pas le promettre, et la classification d'âge
+        // des magasins demande ce que l'IA est capable de produire.
+        safety_tolerance: 2,
         num_images: 1,
       }),
     })
@@ -222,6 +226,13 @@ export default async function handler(req: any, res: any): Promise<void> {
     }
 
     const data = await response.json()
+    // Une image écartée par le filtre arrive NOIRE, avec le drapeau levé :
+    // la montrer serait un carré vide, la décompter un vol.
+    if (data.has_nsfw_concepts?.[0] === true) {
+      await rembourser('filtre')
+      res.status(200).json({ url: null, reason: 'contenu_refuse' })
+      return
+    }
     const url = data.images?.[0]?.url ?? null
     if (!url) {
       await rembourser('sans_image')

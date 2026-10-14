@@ -49,6 +49,8 @@
  * plutôt que dispersées dans des requêtes qu'on ne peut pas éprouver.
  */
 
+import { inconvenant } from './convenance'
+
 export interface Vers {
   rang: number
   /** L'identité qui l'a écrit ; null quand c'est une voix. */
@@ -88,7 +90,7 @@ export const PLANCHER_VERS = 5
 export const MOTS_MAX = 9
 export const CARACTERES_MAX = 100
 
-export type RefusVers = 'vide' | 'trop-long' | 'trop-de-mots' | 'plusieurs-lignes' | 'deja-ecrit'
+export type RefusVers = 'vide' | 'trop-long' | 'trop-de-mots' | 'plusieurs-lignes' | 'deja-ecrit' | 'inconvenant'
 
 /**
  * Le dernier mot d'un texte, ponctuation ôtée — c'est tout ce qu'on voit.
@@ -144,13 +146,19 @@ export function mainsHumaines(c: Chaine): number {
   return c.vers.filter(v => !v.voix).length
 }
 
-/** Ce vers est-il recevable ? Le motif du refus, ou null. */
-export function refusDuVers(texte: string): RefusVers | null {
+/**
+ * Ce vers est-il recevable ? Le motif du refus, ou null.
+ *
+ * Avec sa langue, on anticipe aussi le filtre du serveur (`convenance.ts`) :
+ * dire non avant l'envoi plutôt qu'après.
+ */
+export function refusDuVers(texte: string, langue?: 'fr' | 'en'): RefusVers | null {
   const t = texte.trim()
   if (!t) return 'vide'
   if (/[\r\n]/.test(t)) return 'plusieurs-lignes'
   if (t.length > CARACTERES_MAX) return 'trop-long'
   if (t.split(/\s+/).filter(Boolean).length > MOTS_MAX) return 'trop-de-mots'
+  if (langue && inconvenant(t, langue)) return 'inconvenant'
   return null
 }
 

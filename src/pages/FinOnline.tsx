@@ -19,7 +19,7 @@ import PoemeDevoile from '../components/PoemeDevoile'
 import RevealDessin from '../components/RevealDessin'
 import { vibrer } from '../utils/haptics'
 import { sauvegarderDessin, garderSiAbsent, sauvegarderIllustration, marquerPublie, chargerPoeme, chargerDessin } from '../db'
-import { publierPoeme, publierDessin } from '../lib/publier'
+import { publierPoeme, publierDessin, PublicationRefusee } from '../lib/publier'
 import { poemeDuSalon, idSalon, idDessinSalon } from '../lib/versRecueil'
 import type { DessinCadavre, LienPublication, Poeme } from '../types'
 import BoutonRecolte from '../components/BoutonRecolte'
@@ -154,6 +154,7 @@ export default function FinOnline() {
   const [revealDessinJoue, setRevealDessinJoue] = useState(false)
   const [publishingGallery, setPublishingGallery] = useState(false)
   const [publishedGallery, setPublishedGallery] = useState(false)
+  const [refusGalerie, setRefusGalerie] = useState(false)
   const [lienDessin, setLienDessin] = useState<LienPublication | null>(null)
   const [partageEnCours, setPartageEnCours] = useState(false)
 
@@ -319,7 +320,9 @@ export default function FinOnline() {
       // ce que la publication reçoit, et ne la republiera pas.
       marquerPublie(idSalon(code), lien).catch(() => {})
       setPublishedGallery(true); jouer('soumettre')
-    } catch { /* ignore */ }
+    } catch (e) {
+      if (e instanceof PublicationRefusee) { setRefusGalerie(true); setTimeout(() => setRefusGalerie(false), 4000) }
+    }
     setPublishingGallery(false)
   }
 
@@ -343,7 +346,9 @@ export default function FinOnline() {
         sauvegarderDessinLocal(lien).catch(() => {})
         setPublishedGallery(true); jouer('soumettre')
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      if (e instanceof PublicationRefusee) { setRefusGalerie(true); setTimeout(() => setRefusGalerie(false), 4000) }
+    }
     setPublishingGallery(false)
   }
 
@@ -643,7 +648,7 @@ export default function FinOnline() {
                       </button>
                       <button onClick={publierDansGalerieDessin} disabled={publishingGallery || publishedGallery}
                         style={{ flex: 1, ...mono, fontSize: 17, background: publishedGallery ? `${accent}20` : 'transparent', color: publishedGallery ? accent : `${encre}70`, border: `0.5px solid ${publishedGallery ? accent : encre}25`, borderRadius: 3, padding: '10px 8px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
-                        {publishedGallery ? tr('✓ PUBLIÉ', '✓ PUBLISHED') : publishingGallery ? '…' : tr('✦ GALERIE COMMUNE', '✦ SHARED GALLERY')}
+                        {publishedGallery ? tr('✓ PUBLIÉ', '✓ PUBLISHED') : publishingGallery ? '…' : refusGalerie ? tr('REFUSÉ PAR LE FILTRE', 'HELD BACK BY THE FILTER') : tr('✦ GALERIE COMMUNE', '✦ SHARED GALLERY')}
                       </button>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
@@ -742,7 +747,7 @@ export default function FinOnline() {
                       </button>
                       <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
                         style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : `${encre}60`, background: publishedGallery ? `${accent}15` : 'none', border: `0.5px solid ${publishedGallery ? accent : encre}20`, borderRadius: 3, padding: '6px 10px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
-                        {publishedGallery ? tr('✓ PUBLIÉ', '✓ PUBLISHED') : publishingGallery ? '…' : tr('✦ GALERIE', '✦ GALLERY')}
+                        {publishedGallery ? tr('✓ PUBLIÉ', '✓ PUBLISHED') : publishingGallery ? '…' : refusGalerie ? tr('REFUSÉ PAR LE FILTRE', 'HELD BACK BY THE FILTER') : tr('✦ GALERIE', '✦ GALLERY')}
                       </button>
                     </div>
                   </div>
@@ -756,7 +761,7 @@ export default function FinOnline() {
                     </button>
                     <button onClick={publierDansGalerieEcrit} disabled={publishingGallery || publishedGallery}
                       style={{ ...mono, fontSize: 13, color: publishedGallery ? accent : encre, background: publishedGallery ? `${accent}15` : 'transparent', border: `0.5px solid ${publishedGallery ? accent : encre}30`, borderRadius: 3, padding: '7px 14px', cursor: publishedGallery || publishingGallery ? 'default' : 'pointer' }}>
-                      {publishedGallery ? tr('✓ PUBLIÉ', '✓ PUBLISHED') : publishingGallery ? '…' : tr('✦ GALERIE COMMUNE', '✦ SHARED GALLERY')}
+                      {publishedGallery ? tr('✓ PUBLIÉ', '✓ PUBLISHED') : publishingGallery ? '…' : refusGalerie ? tr('REFUSÉ PAR LE FILTRE', 'HELD BACK BY THE FILTER') : tr('✦ GALERIE COMMUNE', '✦ SHARED GALLERY')}
                     </button>
                   </div>
                 )}

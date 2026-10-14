@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import { codeDeSalon, CLE_SALON_ATTENDU } from '../lib/invitation'
+import { destinationDuCode, estExclu } from '../lib/salonEnLigne'
 
 function genCode(): string {
   const adj = ['LOUP', 'CYGNE', 'CRABE', 'OURS', 'VACHE', 'TIGRE', 'AIGLE', 'SINGE', 'VIPÈRE', 'LAPIN', 'RENARD', 'HIBOU']
@@ -177,6 +178,10 @@ export default function Online() {
     }
   }
 
+  // Un salon qu'on crée est PRIVÉ : on l'ouvre pour des amis, à qui l'on
+  // envoie son code. Il était public par défaut, si bien qu'un inconnu
+  // pouvait s'asseoir à une table de famille avant que l'hôte ait compris
+  // qu'elle était ouverte. L'hôte peut l'ouvrir au public depuis le salon.
   async function handleCreate() {
     if (!user || !profile) return
     jouer('clic')
@@ -187,7 +192,7 @@ export default function Online() {
       const { error } = await insererRoom({
         code, host_id: user.id, mode: 'ecrit',
         structure_id: 'phrase-simple', nb_joueurs: 3,
-        status: 'waiting', is_public: true,
+        status: 'waiting', is_public: false,
       })
       if (error) throw error
       navigate(`/salon/${code}`)
@@ -207,10 +212,20 @@ export default function Online() {
     setJoining(true)
     setJoinError(null)
     try {
-      const { data: room } = await supabase.from('rooms').select('*').eq('code', code).single()
+      const { data: room } = await supabase.from('rooms').select('*').eq('code', code).maybeSingle()
       if (!room) { setJoinError(tr('Salon introuvable — vérifie le code.', 'Room not found — check the code.')); setJoining(false); return }
-      if (room.status !== 'waiting') { setJoinError(tr('Cette partie a déjà commencé.', 'This game has already started.')); setJoining(false); return }
-      navigate(`/salon/${code}`)
+      // Une main de la partie y revient par son code, même commencée : sa
+      // place l'attend. Seuls les inconnus d'une partie en cours sont refusés.
+      const { data: moi } = await supabase.from('room_players').select('id')
+        .eq('room_code', code).eq('player_id', user.id).maybeSingle()
+      const issue = destinationDuCode(code, room.status, !!moi, estExclu(room, user.id))
+      if ('chemin' in issue) { navigate(issue.chemin); return }
+      setJoinError(issue.refus === 'exclu'
+        ? tr("L'hôte t'a retiré de cette table.", 'The host removed you from this table.')
+        : issue.refus === 'termine'
+          ? tr('Cette partie est terminée.', 'This game is over.')
+          : tr('Cette partie a déjà commencé — seules ses mains peuvent y revenir.', 'This game has already started — only its own hands can come back.'))
+      setJoining(false)
     } catch {
       setJoinError(tr('Impossible de rejoindre — réessaie.', 'Could not join — try again.'))
       setJoining(false)
@@ -373,7 +388,7 @@ export default function Online() {
                       `REJOINDRE — ${publicRooms.filter(r => r.player_count < r.nb_joueurs).length} place${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''} libre${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''}`,
                       `JOIN — ${publicRooms.filter(r => r.player_count < r.nb_joueurs).length} open seat${publicRooms.filter(r => r.player_count < r.nb_joueurs).length > 1 ? 's' : ''}`
                     )
-                  : tr('CRÉER UNE PARTIE', 'CREATE A GAME')}
+                  : tr('OUVRIR UNE TABLE PUBLIQUE', 'OPEN A PUBLIC TABLE')}
             </motion.button>
             {joinError && (
               <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{joinError}</p>
@@ -452,21 +467,21 @@ export default function Online() {
             )}
           </div>
 
-          {/* ── NOUVELLE PARTIE — seulement quand des salons existent déjà ── */}
-          {publicRooms.length > 0 && (
+          {/* ── ENTRE AMIS — un salon privé, toujours proposé ── */}
+          {(
             <div>
               <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-                {tr('— NOUVELLE PARTIE —', '— NEW GAME —')}
+                {tr('— ENTRE AMIS —', '— WITH FRIENDS —')}
               </div>
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: encre, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
-                {tr("Crée un salon et partage le code, ou laisse-le public pour que d'autres rejoignent.", 'Create a room and share the code, or leave it public so others can join.')}
+                {tr("Un salon privé : seuls ceux à qui tu envoies son code s'y assoient. Tu pourras l'ouvrir au public depuis le salon.", 'A private room: only those you send its code to can sit down. You can open it to the public from the room.')}
               </p>
               <button
                 onClick={handleCreate}
                 disabled={creating}
                 style={{ background: 'transparent', color: encre, ...mono, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.9em 1.8em', border: `1px solid ${encre}40`, borderRadius: 3, cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.6 : 1, width: '100%' }}
               >
-                {creating ? tr('CRÉATION…', 'CREATING…') : tr('CRÉER UN SALON', 'CREATE A ROOM')}
+                {creating ? tr('CRÉATION…', 'CREATING…') : tr('CRÉER UN SALON PRIVÉ', 'CREATE A PRIVATE ROOM')}
               </button>
               {createError && (
                 <p style={{ ...mono, fontSize: 13, color: '#b22c20', marginTop: 8 }}>{createError}</p>

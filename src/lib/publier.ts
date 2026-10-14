@@ -1,6 +1,19 @@
 import type { Poeme, LienPublication } from '../types'
 import { supabase, uploaderImageGalerie } from './supabase'
 import { langueActuelle } from '../i18n'
+import { inconvenant } from './convenance'
+
+/**
+ * La galerie est la surface la plus publique du jeu : n'importe qui la lit,
+ * sans compte. Un texte qui porte un mot que le filtre écarte n'y part pas
+ * (`convenance.ts`) — il reste au recueil, où il appartient à qui l'a écrit.
+ */
+export class PublicationRefusee extends Error {
+  constructor() { super('publication_inconvenante') }
+}
+function exigerConvenance(textes: Array<string | null | undefined>, langue: 'fr' | 'en'): void {
+  if (textes.some(t => !!t && inconvenant(t, langue))) throw new PublicationRefusee()
+}
 
 /**
  * Publier un poème en galerie.
@@ -54,6 +67,7 @@ export async function publierPoeme(
   auteur: AuteurPublication | null,
   langue: 'fr' | 'en' = langueActuelle(),
 ): Promise<LienPublication> {
+  exigerConvenance([poeme.titre, ...poeme.cases.map(c => c.texte)], langue)
   const payload = JSON.stringify({
     cases: casesPourGalerie(poeme.cases),
     structureId: poeme.structureId,
@@ -106,6 +120,7 @@ export async function publierDessin(
   prefixe = 'dessin',
   langue: 'fr' | 'en' = langueActuelle(),
 ): Promise<LienPublication | null> {
+  exigerConvenance([dessin.titre], langue)
   const url = await uploaderImageGalerie(dessin.imageDataUrl, prefixe)
   if (!url) return null
   const payload = JSON.stringify({

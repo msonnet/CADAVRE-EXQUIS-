@@ -62,6 +62,9 @@ export default async function handler(req: any, res: any): Promise<void> {
         image_size: 'square',
         num_inference_steps: 4,
         num_images: 1,
+        // Le portrait s'affiche à côté du nom, chez des inconnus : le filtre
+        // de FLUX reste allumé, et dit expressément.
+        enable_safety_checker: true,
       }),
     })
 
@@ -73,6 +76,11 @@ export default async function handler(req: any, res: any): Promise<void> {
     }
 
     const data = await response.json()
+    if (data.has_nsfw_concepts?.[0] === true) {
+      await rendre(userId, verdict.event)
+      res.status(200).json({ url: null, reason: 'contenu_refuse' })
+      return
+    }
     const url = data.images?.[0]?.url ?? null
     if (!url) await rendre(userId, verdict.event)
     res.status(200).json({ url })

@@ -1,5 +1,6 @@
 import { clientAdmin } from './_supabase.js'
 import { amorcePour, jourUTC, type Langue } from './_amorces.js'
+import { inconvenant } from './_convenance.js'
 
 /**
  * Le poème du jour, côté serveur.
@@ -125,16 +126,22 @@ export function echoPour(amorce: string, versPrecedent: string | null | undefine
   return versPrecedent ? dernierMot(versPrecedent) : amorce
 }
 
-export type RefusVers = 'vide' | 'trop-long' | 'trop-de-mots' | 'plusieurs-lignes'
+export type RefusVers = 'vide' | 'trop-long' | 'trop-de-mots' | 'plusieurs-lignes' | 'inconvenant'
 
-/** Ce vers est-il recevable ? Le serveur tranche, le client anticipe. */
-export function refusDuVers(texte: unknown): RefusVers | null {
+/**
+ * Ce vers est-il recevable ? Le serveur tranche, le client anticipe.
+ *
+ * Avec sa langue, on vérifie aussi qu'il peut entrer dans LE poème de tout
+ * le monde (`_convenance.ts`) : des inconnus le liront demain.
+ */
+export function refusDuVers(texte: unknown, langue?: Langue): RefusVers | null {
   if (typeof texte !== 'string') return 'vide'
   const t = texte.trim()
   if (!t) return 'vide'
   if (/[\r\n]/.test(t)) return 'plusieurs-lignes'
   if (t.length > CARACTERES_MAX) return 'trop-long'
   if (t.split(/\s+/).filter(Boolean).length > MOTS_MAX) return 'trop-de-mots'
+  if (langue && inconvenant(t, langue)) return 'inconvenant'
   return null
 }
 
@@ -232,8 +239,11 @@ export async function poserVers(
   texte: string,
   quand = new Date(),
 ): Promise<VerdictEcriture> {
-  const refus = refusDuVers(texte)
+  const refus = refusDuVers(texte, langue)
   if (refus) return { ok: false, motif: refus }
+  // Un nom de plume que la base n'aurait pas arrêté (un profil antérieur au
+  // filtre) n'entre pas dans les coutures : le vers reste, le nom part.
+  if (pseudo && inconvenant(pseudo, 'tout')) pseudo = null
 
   const admin = clientAdmin()
   const chaine = await chaineDuJour(langue, quand)

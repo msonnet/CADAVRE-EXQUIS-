@@ -65,6 +65,7 @@ function ordinal(n: number): string {
 function libelleRefus(m: MotifRefus | RefusVers): string {
   switch (m) {
     case 'vide': return tr('Il faut écrire quelque chose.', 'Write something first.')
+    case 'inconvenant': return tr('Ce vers ne peut pas entrer dans le poème de tout le monde. Choisis d’autres mots.', 'This line can’t go into everyone’s poem. Choose other words.')
     case 'trop-de-mots': return tr(`Un vers, pas une strophe — ${MOTS_MAX} mots au plus.`, `One line, not a stanza — ${MOTS_MAX} words at most.`)
     case 'trop-long': return tr('Un vers, pas une strophe.', 'One line, not a stanza.')
     case 'plusieurs-lignes': return tr('Un seul vers.', 'A single line.')
@@ -303,7 +304,7 @@ export default function PoemeDuJour() {
 
   async function envoyer() {
     if (envoi) return
-    const refus = refusDuVers(texte)
+    const refus = refusDuVers(texte, langueActuelle())
     if (refus) { setErreur(libelleRefus(refus)); return }
 
     setEnvoi(true); setErreur(null)

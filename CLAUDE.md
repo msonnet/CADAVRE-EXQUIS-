@@ -51,6 +51,13 @@ Textes de la fiche anglaise : [`docs/app-store-en.md`](docs/app-store-en.md).
 - [ ] Renseigner les 4 variables `REVENUECAT_*` (voir `.env.example`)
 - [ ] S'inscrire au Small Business Program d'Apple (15 % au lieu de 30 %)
 
+#### Le lancement — reste à faire hors du code
+- [ ] Appliquer `supabase/migrations/20261014000010_lancement.sql` (salons
+      privés par défaut, exclusion, filtre en base). Éprouvée le 14 octobre
+      sur un Postgres 16 jetable. Sans elle l'app tient : le filtre vit côté
+      client et côté API du poème du jour, et « retirer une main » dit qu'il
+      n'est pas encore possible.
+
 #### Non bloquants (v1.1)
 - [ ] React Router v7 (2 vulnérabilités modérées non atteignables — voir le dossier de soumission)
 - [ ] Haptique iOS : brancher `@capacitor/haptics` (`navigator.vibrate` est ignoré par le WKWebView)
@@ -1864,23 +1871,80 @@ réglable, que l'auteur n'a pas retenus. Le studio n'a pas été essayé sur un
 vrai iPhone ni avec un Apple Pencil — la pression réelle n'est vérifiée
 qu'en lecture de code.
 
+## Le lancement — ce qui relevait du code — 14 octobre
+
+Ce que l'auteur a demandé de corriger avant de sortir : tout ce qui, dans
+le code, empêchait de mettre le jeu entre des mains inconnues.
+
+**Les images ne montrent plus de nu** (`api/illustration.ts`,
+`api/avatar.ts`). `safety_tolerance` passe de 5, qui laisse passer le nu, à
+2, le défaut de FLUX ; la consigne qui décrivait le nu « en beaux-arts »
+devient « aucune nudité, aucun sang ». Une image écartée par le filtre
+arrive noire avec `has_nsfw_concepts` : elle est rendue à son bocal et dite
+(« écartée par le filtre — essaie un autre style »), au lieu d'un carré
+noir décompté.
+
+**La convenance** (`src/lib/convenance.ts`, `api/_convenance.ts`,
+`cadavre_inconvenant` en base). Partout où l'on écrit pour des inconnus :
+le vers du poème du jour (`refusDuVers(texte, langue)`, motif
+`inconvenant`), le nom de plume (profil et chaise de salon), le fragment
+d'un salon PUBLIC, et la publication en galerie (titre, cases, nom).
+- Injures, haine et pornographie, pas le registre familier : « merde » et
+  « cul-de-sac » passent, comme « cône », « viole », « salopette »,
+  « baiser », « chatte ». Listes par langue — « bite » mord en anglais,
+  « retard » est un délai en français. Un nom de plume passe les trois.
+- Le texte est réduit à un squelette (accents, chiffres-lettres, points et
+  soulignements pris pour des blancs), chaque mot admet ses lettres
+  doublées, les mots épelés sont recollés. Mot à mot, jamais en
+  sous-chaîne, sauf cinq racines sans aucun sens honnête.
+- **Trouvé par l'épreuve SQL** : « xX_salope_Xx » passait — le
+  soulignement était effacé et soudait les mots. C'est un séparateur.
+- Trois copies, comme les règles du poème du jour : `convenance.test.ts`
+  tient les listes et les verdicts d'accord, migration comprise.
+- La table locale n'est pas filtrée : on y écrit entre soi.
+
+**Le salon** (`src/lib/salonEnLigne.ts`).
+- **Le signal du tour** sonnait à chaque fragment des autres tant qu'on
+  n'avait pas joué — donc quand ce n'était PAS son tour — et se taisait
+  quand la main revenait, l'état « soumis » étant remis à zéro une image
+  trop tard. Il suit maintenant le passage de « pas mon tour » à « mon
+  tour », jamais au chargement (`signalDeTour`).
+- **« ✦ IA »** appelait les voix sans jeton ni partie réglée : 401 à chaque
+  fois. Il règle une partie avec les voix par main et par salon au premier
+  appel (`partieDuSalon`, reçu gardé d'un rechargement à l'autre) et ouvre
+  le mur de l'encrier si la réserve est vide.
+- **Revenir par le code** : une main de la partie y revient, même
+  commencée ; seuls les inconnus sont refusés (`destinationDuCode`). Le
+  salon ne s'assoit plus à une table qui n'attend plus — il changeait le
+  nombre de mains en plein jeu.
+- **Privé par défaut.** « Créer un salon privé » est toujours proposé ;
+  la table publique ne s'ouvre que par le bouton qui le dit.
+- **Retirer une main** : « ✕ » puis « RETIRER ? », pour l'hôte, tant que
+  la table attend. La main est d'abord inscrite parmi les `exclus` (elle
+  ne peut plus se rasseoir), puis sa chaise est levée ; elle voit « L'hôte
+  t'a retiré de cette table ». Sans la migration, l'écran le dit.
+
+`salon-lancement.spec.ts` (5 parcours) relève ce que l'écran ENVOIE : la
+liste des exclus avant la chaise, `is_public: false`, le reçu présenté à
+`/api/claude` égal à celui réglé, et un seul reçu pour deux appels.
+
+**Pas fait** : `gallery_reactions` reste ouverte à tous (la clé de lecteur
+n'est pas une identité : la durcir demande un compte pour réagir). L'écran
+de tour en ligne n'a pas reçu le pli du jeu local.
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
 commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 
 **Non faits (constats gardés par les contradicteurs) :**
-- En ligne : le signal « la main te revient » qui sonne quand ce n'est pas
-  ton tour ; revenir par le code dans une partie commencée ; le bouton
-  « ✦ IA » mort en production ; l'écran de tour moins soigné que le jeu
-  local ; salons publics par défaut, et aucun moyen d'exclure un joueur.
+- En ligne : l'écran de tour moins soigné que le jeu local (le reste est
+  fait, voir « Le lancement »).
 - Dessin : trait perlé ou haché ; le dessin ni gardé d'office ni signé par
   ses mains ; la lecture qui échoue à cinq bandes ; la lecture sans voix
   nommée.
 - Le corps du texte (réglage CORPS en natif), le vocabulaire du toucher
   (`@capacitor/haptics`), les pages qui ne se tournent pas.
-- Classement 4+ : images au nu autorisé (FLUX, `safety_tolerance`) et
-  aucun filtre sur les vers du poème du jour ni sur les pseudonymes.
 - Les feuillets tournants (une partie à plusieurs, ou une classe de
   vingt-cinq) ; le lexique anglais fixé ; la fiche anglaise des magasins ;
   les captures de la vitrine d'installation, qui montrent un sablier.
@@ -1905,7 +1969,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (739 tests unitaires) + Playwright (150 tests E2E, FR et EN)
+- Tests : Vitest (795 tests unitaires) + Playwright (155 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
