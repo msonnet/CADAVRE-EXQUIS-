@@ -2004,6 +2004,12 @@ demande), trois couleurs repères remplacées par celles de l'ambiance, image
 fixe sous mouvement réduit, JSON ajouté au précache. Critère de fin : 34
 boucles `repeat: Infinity` avant, 12 après, listées dans le document.
 
+**Étape 1 faite le 7 novembre** : `src/lib/animation.ts`,
+`src/components/Animation.tsx`, le précache, `animations.test.ts`, vérifiés
+avec `essai.json` dans trois ambiances. Le détail, et ce qui est reporté à
+l'étape 2, est dans le document (« Où en est le chantier »). Prochaine :
+`couture.json`, aux douze endroits.
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
@@ -2041,7 +2047,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (803 tests unitaires) + Playwright (159 tests E2E, FR et EN)
+- Tests : Vitest (827 tests unitaires) + Playwright (159 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

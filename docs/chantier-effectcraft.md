@@ -265,4 +265,56 @@ VectorCraft.
 À chaque étape : `npm run build` (les parcours lisent `dist/`), les deux
 suites, un commit, un push sur `claude/cadavre-exquis-pwa-SlVtb` et sur
 `main`. **Critère de fin du lot** : 34 boucles avant, 12 après — exactement
-celles du tableau « Ce qui ne bouge pas ».
+celles du tableau « Ce qui ne bouge pas ». (Un `grep` en trouve 35 : la
+trente-cinquième est dans un commentaire de `RevealDessin.tsx`, ligne 170.)
+
+## Où en est le chantier
+
+### Étape 1 — le cadre technique, 7 novembre
+
+Fait sur l'ordinateur de l'auteur, EffectCraft 0.22.0 et PhotoCraft
+connectés.
+
+- **`src/lib/animation.ts`** : tout ce qui se calcule sans écran — la
+  recoloration des repères (une copie, jamais l'original : `lottie-web`
+  annote les données, et le JSON est partagé par toutes les instances), la
+  lecture des repères de composition (nom nu ou enveloppé en JSON), le
+  segment à jouer, l'image de pose, les proportions.
+- **`src/components/Animation.tsx`** : `nom`, `boucle`, `segment`, `taille`
+  (la hauteur), `largeur`, `onFin`, `repli`, `etiquette`, et deux réglages
+  ajoutés pour les étapes suivantes — `couleurs` (remplacer une teinte : le
+  bouton « Charger plus » veut encre = `btnText`) et `couleursPropres`
+  (l'Œil). Un nom de segment inconnu joue le tout plutôt que rien. Sous
+  mouvement réduit : la pose, et `onFin` 300 ms après. Pause quand la page
+  se cache, `destroy()` au démontage. `data-animation` et `data-etat`
+  (`chargement`, `pret`, `echec`) servent aux parcours.
+- **Le repli par défaut est une étoile FIXE**, pas l'étoile qui bat : une
+  boucle `repeat: Infinity` cachée dans le repli ferait mentir le critère
+  de fin (34 → 12).
+- **`vite.config.ts`** précache `animations/*.json` (le dossier seul).
+- **`src/__tests__/animations.test.ts`** : la logique, puis chaque fichier de
+  `public/animations/` — déclaré dans `ATTENDUS` (repères et plafond ; les
+  cinq animations du lot y sont déjà), source `.ecproj` au dépôt, 30 im/s,
+  ni expression, ni dégradé, ni effet, style, fusion ou 3D, calques de forme
+  seulement (l'Œil a droit à ses PNG, embarqués), couleurs repères
+  seulement, `pose` dans la durée. Plus deux gardes : le précache, et aucun
+  import statique de `lottie-web` dans `src/`. Vérifié en y glissant un
+  faux fichier : six alertes.
+- **L'animation d'essai** est `essai.json` (aiguille, fil, un point ; 2,3 Ko).
+  Réexportée depuis `animations/essai.ecproj` : identique à l'octet,
+  avertissements vides. Elle reste tant qu'aucune autre n'est au dépôt —
+  la retirer avec la couture, et sa ligne d'`ATTENDUS` avec elle.
+- **Vu dans un navigateur** (page d'essai jetable) : le fil prend l'accent,
+  l'aiguille l'encre, le chas le papier, sur Lin écru, Minuit profond et le
+  kraft ; un fichier absent laisse l'étoile ; la boucle tourne, l'animation à
+  fin rend la main ; sous mouvement réduit, rien ne bouge.
+- **Reporté à l'étape 2, volontairement** : le parcours
+  `e2e/animations.spec.ts`. Tant qu'aucun écran ne monte `Animation`, il
+  n'a rien à lire ; il naît avec la première couture posée. Pour la même
+  raison, le poids du lecteur dans `dist/` ne se mesure qu'alors : Vite
+  n'embarque pas un composant que personne n'importe.
+- **Deux mesures réparées en passant**, qui ne tenaient que dans le cloud :
+  `telephone.test.ts` (sous macOS, le dossier temporaire passe par un lien
+  vers `/private`, et le chemin relatif donné à `tar` remontait d'un cran
+  de trop peu) ; `table-locale.spec.ts` (« — NE PAS LA DÉRANGER — » : la
+  voix est tirée au sort, et le fossoyeur dit « LE » — un échec sur deux).

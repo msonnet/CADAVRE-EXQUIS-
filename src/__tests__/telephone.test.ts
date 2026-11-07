@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync, readdirSync, statSync, mkdtempSync, mkdirSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync, mkdtempSync, mkdirSync, realpathSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { tmpdir } from 'node:os'
 import { execFileSync } from 'node:child_process'
@@ -71,7 +71,11 @@ describe('portrait, au téléphone', () => {
   // Les VRAIS gabarits de Capacitor, pas une copie : si une version future
   // change leur forme, la mesure le dira.
   const gabarits = (() => {
-    const d = mkdtempSync(join(tmpdir(), 'cap-'))
+    // Le vrai chemin, pas celui du lien : sous macOS, le dossier temporaire
+    // (/var/folders/…, /tmp) passe par un lien vers /private. Le chemin
+    // relatif, calculé sur le lien, remontait d'un cran de trop peu une fois
+    // `tar` placé dans le vrai dossier, et le gabarit restait introuvable.
+    const d = realpathSync(mkdtempSync(join(tmpdir(), 'cap-')))
     const assets = join(SRC, '..', 'node_modules/@capacitor/cli/assets')
     // Chemins relatifs et dossiers créés par Node : sous Windows, GNU tar lit
     // « C: » comme un hôte distant.

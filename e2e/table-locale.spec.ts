@@ -192,7 +192,10 @@ test('la case dit ce qu’elle demande, et le tour de la voix s’entend', async
   })
   await champ(page).fill('le cadavre')
   await page.locator('button[aria-label="Sceller cette voix et passer à la suivante"]').click()
-  await expect(page.getByText('— NE PAS LA DÉRANGER —')).toBeVisible({ timeout: 4000 })
+  // La voix est tirée au sort, et l'écran l'accorde à son genre
+  // (`pronomsDeVoix`) : « LA » pour la notice, « LE » pour le fossoyeur.
+  // N'attendre que le féminin faisait échouer la mesure un tirage sur deux.
+  await expect(page.getByText(/— NE PAS L[AE] DÉRANGER —/)).toBeVisible({ timeout: 4000 })
   // Le rideau de l'écran précédent a fini de tomber : le focus tient sur
   // le nom de la voix, qui écrit.
   await page.waitForTimeout(800)
