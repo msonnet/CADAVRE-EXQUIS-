@@ -24,7 +24,6 @@ import TutorielCoach, { TutorielFete } from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
-import Animation from '../components/Animation'
 import { lignesDuFeuillet } from '../lib/plis'
 import { styleVers, RETRAIT_DEBORD, incipitDe } from '../lib/composition'
 
@@ -246,7 +245,12 @@ export default function PoemeDetail() {
   if (chargement) {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
-        <Animation nom="couture" boucle taille={28} largeur={84} etiquette={tr('Chargement…', 'Loading…')} />
+        <motion.span
+          aria-label="Chargement…"
+          style={{ fontSize: 22, color: accent }}
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >✦</motion.span>
       </PageTransition>
     )
   }

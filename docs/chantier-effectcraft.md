@@ -1,5 +1,11 @@
 # Le chantier EffectCraft — arrêté le 7 novembre 2026
 
+> **Suspendu le 7 novembre au soir, à la demande de l'auteur.** La couture
+> (étape 2) a été posée, jugée amateur et retirée. Les animations de ce
+> document ne se font plus sans direction artistique validée d'abord —
+> voir « Où en est le chantier », en fin de document. Le cadre technique
+> (étape 1) reste en place et sert à la suite.
+
 Ce document se suit dans une session Claude Code **sur l'ordinateur de
 l'auteur**, là où EffectCraft et PhotoCraft sont connectés (serveurs MCP
 d'ArtCraft). Une session dans le cloud ne les voit pas.
@@ -319,51 +325,44 @@ connectés.
   de trop peu) ; `table-locale.spec.ts` (« — NE PAS LA DÉRANGER — » : la
   voix est tirée au sort, et le fossoyeur dit « LE » — un échec sur deux).
 
-### Étape 2 — la couture, 7 novembre
+### Étape 2 — la couture, posée puis retirée, 7 novembre
 
-- **`couture.json`** (source `animations/couture.ecproj`, 4 Ko, export sans
-  avertissement). 84 × 28, 43 images : `boucle` = 0 – 42 (1,4 s), `pose` =
-  l'image 42. Deux calques de forme :
-  - **le fil** (accent) : cinq points de 7 px au pas de 12 px (une
-    répétition `rp`), plus le point qui se forme (tracé progressif `tm`,
-    images 8 – 18) ; le calque avance d'un pas, 12 px, images 18 – 38. Le
-    nouveau point arrive exactement où était le dernier : la reprise est
-    sans à-coup PAR CONSTRUCTION, pas par réglage ;
-  - **l'aiguille** (encre), un peu penchée, son fil en boucle à l'accent :
-    elle pique au bout du point qui se forme (images 0 – 8) et remonte
-    (8 – 18) pendant qu'il se tend.
-  - Le **nœud** (un aplat à l'accent) n'existe qu'à l'image 42 : la pose est
-    « un point noué ». Il servira tel quel à la ligne 1053 de `Jeu.tsx`.
-- **Posée aux douze endroits** du tableau. Ce qui s'écarte du tableau :
-  - « Charger plus » (`Galerie.tsx`) : le fil ET l'aiguille prennent
-    `btnText` — le tableau ne disait que l'encre, mais le fond du bouton est
-    l'accent, et un fil à l'accent y disparaissait. Marge de −4 px : le
-    bouton garde sa hauteur. Il n'a plus d'autre texte pendant l'attente,
-    donc la couture le nomme (« Chargement… »).
-  - `Profil.tsx` : c'est l'avatar qui se génère, dans une case de 72 px ; la
-    couture y fait 60 × 20, masquée (le bouton dit « GÉNÉRATION… »).
-  - Seule sur sa page, la couture se nomme « Chargement… » ; à côté d'un
-    texte (« Le poème se referme… », « En attente des autres joueurs… »),
-    elle est masquée. `JeuOnline.tsx` 540 : nommée seulement quand le nom
-    de celui qu'on attend n'est pas affiché.
-- **L'animation d'essai est retirée** (`essai.json`, `essai.ecproj`).
-- **Le lecteur, mesuré dans `dist/`** : `lottie_light` 5.13.0 fait 169 Ko,
-  **48,2 Ko compressés** (et non 46 : la mesure du cahier datait de
-  5.12.2). Il a son propre morceau, que seul celui d'`Animation` importe ;
-  le JS principal prend 237 octets.
-- **Les mesures** : `animations.test.ts` relève la couture aux douze
-  endroits (par fichier) et les boucles qui restent — **22**, fichier par
-  fichier ; la cible de fin de lot (12) s'atteint à l'étape 3.
-  `e2e/animations.spec.ts`, sept parcours : la galerie qui attend, sur Lin
-  écru (graine 6) et Minuit (graine 7), à 320 et 390 points — fil à
-  l'accent et aiguille à l'encre relus dans le SVG, aucune couleur repère,
-  84 × 28 dans l'écran, elle coud, nœud caché, puis démontée ; « Charger
-  plus » ; le mouvement réduit (la pose, nœud visible, SVG figé) ; le
-  lecteur jamais chargé à l'accueil.
-- **Ce que les parcours ne voient pas** : les dix autres attentes une à une
-  (la mesure unitaire dit qu'elles sont posées ; `JeuOnline` demande un
-  salon en temps réel) ; le **kraft**, puisqu'aucune des douze n'est sur un
-  papier de dessin — il revient à l'étape 3, avec `FinDessin`.
-- **Piège relevé** : `test.use({ reducedMotion: 'reduce' })` n'atteint pas
-  `matchMedia` dans ce dépôt ; `page.emulateMedia({ reducedMotion })`, comme
-  les autres parcours, oui.
+Posée aux douze attentes courtes (commit `2c49bb5`), déployée, puis
+**retirée le soir même à la demande de l'auteur** (annulation de ce
+commit) : « on ne comprend pas que c'est une couture, on ne voit pas la
+formation du nœud ». L'étoile qui bat est revenue aux douze endroits ;
+l'animation d'essai aussi, pour les mesures du cadre.
+
+Ce qui n'allait pas, et qu'il ne faut pas refaire :
+- dessinée **sans référence**, en formes géométriques (des tirets, un trait
+  penché pour l'aiguille), à 28 px : le geste n'était pas lisible ;
+- le nœud **apparaissait** à la pose au lieu de se former ;
+- **intégrée avant d'être montrée** : l'auteur l'a découverte en ligne.
+
+La source reste dans l'historique (`animations/couture.ecproj` au commit
+`2c49bb5`) ; ce qui s'y apprend sur EffectCraft — répétition, tracé
+progressif, repères, export — vaut toujours.
+
+## La suite : la direction artistique d'abord
+
+Décidé avec l'auteur le 7 novembre : le jeu doit avoir l'air conçu par un
+studio de jeu mobile. La mécanique ne bouge pas ; ce qui manque est la
+vie — mouvement, son, illustration. Ordre de travail pour TOUT élément
+visuel ou sonore désormais :
+
+1. **Des références** (planche de tendances, sans reproduire d'image).
+2. **Des images témoins** — trois ou quatre images fixes, au format réel,
+   dans le vrai écran — montrées à l'auteur.
+3. **Sa validation**, puis la production, puis l'intégration.
+
+Matière première : des gravures du XIXᵉ du domaine public **CC0**
+(Smithsonian Open Access, Metropolitan Museum, Rijksmuseum, British
+Library sur Flickr). **Pas Gallica** : la réutilisation commerciale y est
+soumise à licence. Chaîne : PhotoCraft découpe, VectorCraft vectorise
+(« Image Trace », par dossier entier), EffectCraft anime et exporte en
+Lottie pour le composant `Animation`.
+
+Décisions de l'auteur, même jour :
+- **pas de visage pour les voix** — l'idée est écartée ;
+- **musique : en suspens** ;
+- **vidéo de présentation : l'auteur en a déjà une**, à demander si besoin.

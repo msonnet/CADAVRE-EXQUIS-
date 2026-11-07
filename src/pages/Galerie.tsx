@@ -10,7 +10,6 @@ import { useReactionsGalerie } from '../hooks/useReactionsGalerie'
 import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
 import { tr, langueActuelle } from '../i18n'
-import Animation from '../components/Animation'
 import { chargerPoemes, chargerDessins } from '../db'
 import EntreeGalerie, { Planches } from '../components/EntreeGalerie'
 import {
@@ -644,7 +643,11 @@ export default function Galerie() {
         {/* ── CHARGEMENT ── */}
         {chargement && (
           <div className="flex justify-center py-16">
-            <Animation nom="couture" boucle taille={28} largeur={84} etiquette={tr('Chargement…', 'Loading…')} />
+            <motion.span
+              style={{ fontSize: 20, color: accent }}
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >✦</motion.span>
           </div>
         )}
 
@@ -788,13 +791,11 @@ export default function Galerie() {
               }}
             >
               {chargementPlus ? (
-                // Le bouton n'a plus d'autre texte : l'étiquette lui donne
-                // son nom. Fil et aiguille prennent la couleur du texte — ici
-                // l'accent est le fond. La marge négative garde sa hauteur.
-                <Animation nom="couture" boucle taille={28} largeur={84}
-                  etiquette={tr('Chargement…', 'Loading…')}
-                  couleurs={{ accent: btnText, encre: btnText }}
-                  style={{ margin: '-4px 0', verticalAlign: 'middle' }} />
+                <motion.span
+                  style={{ display: 'inline-block' }}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                >✦</motion.span>
               ) : tr('Charger plus →', 'Load more →')}
             </button>
           </motion.div>

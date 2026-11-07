@@ -28,6 +28,8 @@ const KO = 1024
  * de cette table fait échouer la mesure : une animation nouvelle se déclare.
  */
 const ATTENDUS: Record<string, { reperes: string[]; plafondKo: number; couleursPropres?: true }> = {
+  // L'animation d'essai de l'étape 1 : une aiguille, un fil, un point.
+  essai: { reperes: ['boucle', 'pose'], plafondKo: 15 },
   couture: { reperes: ['boucle', 'pose'], plafondKo: 15 },
   'couture-longue': { reperes: ['boucle', 'noeud', 'pose'], plafondKo: 40 },
   sceau: { reperes: ['frappe', 'pose'], plafondKo: 30 },
@@ -268,77 +270,6 @@ for (const fichier of fichiers) {
     })
   })
 }
-
-/* ── Où elles sont posées ───────────────────────────────────────────────── */
-
-/** Les lignes de `src/` (mesures exclues), commentaires écartés. */
-function lignesDuCode(): { fichier: string; ligne: string }[] {
-  const out: { fichier: string; ligne: string }[] = []
-  const balayer = (dir: string) => {
-    for (const f of readdirSync(dir)) {
-      const p = join(dir, f)
-      if (statSync(p).isDirectory()) { if (f !== '__tests__') balayer(p); continue }
-      if (!/\.(ts|tsx)$/.test(f)) continue
-      for (const ligne of readFileSync(p, 'utf8').split('\n')) {
-        if (/^\s*(\/\/|\*|\/\*|\{\/\*)/.test(ligne)) continue
-        out.push({ fichier: p.replace(RACINE + '/', ''), ligne })
-      }
-    }
-  }
-  balayer(resolve(RACINE, 'src'))
-  return out
-}
-
-function compterPar(motif: RegExp): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const { fichier, ligne } of lignesDuCode()) {
-    if (motif.test(ligne)) out[fichier] = (out[fichier] ?? 0) + 1
-  }
-  return out
-}
-
-describe('les attentes', () => {
-  it('la couture est posée aux douze attentes courtes', () => {
-    expect(compterPar(/<Animation nom="couture"/)).toEqual({
-      'src/pages/Bibliotheque.tsx': 1,
-      'src/pages/DessinDetail.tsx': 1,
-      'src/pages/Galerie.tsx': 2,
-      'src/pages/Jeu.tsx': 1,
-      'src/pages/JeuOnline.tsx': 3,
-      'src/pages/PoemeDetail.tsx': 1,
-      'src/pages/PoemeDuJour.tsx': 1,
-      'src/pages/Profil.tsx': 1,
-      'src/pages/ProfilPublic.tsx': 1,
-    })
-  })
-
-  /**
-   * Le critère de fin du lot : 34 boucles `repeat: Infinity` avant, 12 après
-   * — les invitations, les ornements, les signes et les états du tableau
-   * « Ce qui ne bouge pas ». Ce relevé suit le chantier étape par étape :
-   * une boucle qui revient, ou qui part sans qu'on l'ait remplacée, le fait
-   * échouer.
-   *
-   * Étape 2 : 22. Restent les six attentes longues (étape 3) : FinDePartie,
-   * FinOnline ×3, FinDessin ×2, Jeu ×3 (dont la pose), RevealDessin.
-   */
-  it('les boucles qui restent sont celles du relevé', () => {
-    const boucles = compterPar(/repeat:\s*Infinity/)
-    expect(boucles).toEqual({
-      'src/components/RevealDessin.tsx': 2,
-      'src/components/TutorielCoach.tsx': 2,
-      'src/pages/Configuration.tsx': 1,
-      'src/pages/FinDePartie.tsx': 1,
-      'src/pages/FinDessin.tsx': 2,
-      'src/pages/FinOnline.tsx': 3,
-      'src/pages/Jeu.tsx': 4,
-      'src/pages/JeuAtelier.tsx': 2,
-      'src/pages/JeuOnline.tsx': 4,
-      'src/pages/Online.tsx': 1,
-    })
-    expect(Object.values(boucles).reduce((a, b) => a + b, 0)).toBe(22)
-  })
-})
 
 // Les repères eux-mêmes, figés : les changer obligerait à rouvrir chaque
 // projet EffectCraft.

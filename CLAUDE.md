@@ -2009,11 +2009,16 @@ boucles `repeat: Infinity` avant, 12 après, listées dans le document.
 avec `essai.json` dans trois ambiances. Le détail, et ce qui est reporté à
 l'étape 2, est dans le document (« Où en est le chantier »).
 
-**Étape 2 faite le 7 novembre** : `couture.json` (aiguille, fil, un point
-qui se tend ; le nœud est la pose) aux douze attentes courtes ; 22 boucles
-restent, relevées fichier par fichier dans `animations.test.ts` ;
-`e2e/animations.spec.ts` les regarde dans la galerie. Prochaine :
-`couture-longue.json`, aux six attentes longues — et le kraft.
+**La couture — posée puis retirée le 7 novembre, à la demande de l'auteur.**
+Illisible (formes géométriques à 28 px, sans référence), le nœud ne se
+formait pas, et elle a été intégrée avant d'être montrée. L'étoile est
+revenue. **Le chantier est suspendu** au profit d'une direction artistique
+d'ensemble (« le jeu doit avoir l'air conçu par un studio de jeu
+mobile ») : pour tout élément visuel ou sonore, **des références, puis des
+images témoins montrées à l'auteur, puis sa validation — jamais
+l'intégration d'abord.** Gravures CC0 seulement (pas Gallica). Pas de
+visage pour les voix ; musique en suspens ; l'auteur a déjà une vidéo de
+présentation.
 
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
@@ -2052,7 +2057,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (829 tests unitaires) + Playwright (166 tests E2E, FR et EN)
+- Tests : Vitest (827 tests unitaires) + Playwright (159 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

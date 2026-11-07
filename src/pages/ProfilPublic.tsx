@@ -6,7 +6,6 @@ import { Decor, useReve } from '../reve'
 import { supabase } from '../lib/supabase'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
-import Animation from '../components/Animation'
 import { useAuth } from '../hooks/useAuth'
 import { useReactionsGalerie } from '../hooks/useReactionsGalerie'
 import EntreeGalerie, { Planches } from '../components/EntreeGalerie'
@@ -199,7 +198,11 @@ export default function ProfilPublic() {
         {/* ── CHARGEMENT ── */}
         {chargement && (
           <div className="flex justify-center py-16">
-            <Animation nom="couture" boucle taille={28} largeur={84} etiquette={tr('Chargement…', 'Loading…')} />
+            <motion.span
+              style={{ fontSize: 20, color: accent }}
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >✦</motion.span>
           </div>
         )}
 

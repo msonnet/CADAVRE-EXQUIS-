@@ -21,7 +21,6 @@ import { Decor, useReve } from '../reve'
 import { mono } from '../lib/typo'
 import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { tr, langueActuelle } from '../i18n'
-import Animation from '../components/Animation'
 import { buildSequence, type Participant } from '../lib/sequence'
 import { nomDeMain, corpsDuNom } from '../lib/table'
 import { puiserReserve } from '../lib/reserveVoix'
@@ -809,7 +808,13 @@ export default function Jeu() {
     return (
       <PageTransition className="page-carnet flex flex-col items-center justify-center min-h-dvh">
         {zoneAnnonce}
-        <Animation nom="couture" boucle taille={28} largeur={84} />
+        <motion.span
+          className="text-or text-3xl"
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ duration: 1.8, repeat: Infinity }}
+        >
+          ✦
+        </motion.span>
         <p className="text-encre mt-4" style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 19 }}>
           {tr('Le poème se referme…', 'The poem is closing…')}
         </p>
