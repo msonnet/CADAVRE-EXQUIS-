@@ -144,6 +144,18 @@ Trace »), EffectCraft (animation, export Lottie).*
     animer sans inventer), entouré de figures nues. Septième motif
     proposé à la place : **le cheval au galop de Muybridge** (1878, domaine
     public), une vraie suite d'images comme le disque.
+- **Retour de l'auteur sur ces témoins** : « le thaumatrope est pas mal mais
+  il faut l'améliorer ; il faut que les gravures aient un lien avec le
+  surréalisme ». Le papillon et la montgolfière n'en avaient pas. Série
+  repensée, proposée — de vraies gravures du XIXᵉ, celles que les
+  surréalistes découpaient (Ernst, *La Femme 100 têtes*, *Une semaine de
+  bonté*), chacune avec sa référence au cartel : le phénakistiscope
+  (ancêtre des Rotoreliefs de Duchamp) ; l'œil-ballon (Redon, 1882,
+  précurseur salué par Breton — trouvé, domaine public) ; la rencontre
+  fortuite (thaumatrope : machine à coudre et parapluie, Lautréamont, la
+  phrase-manifeste du surréalisme) ; la lune et le nuage (*Un chien
+  andalou*, 1929) ; le poisson soluble (Breton, 1924 — la carpe de Bloch) ;
+  la pomme (Magritte) ; la clef des songes (Magritte, 1930).
 - **Intégré le 7 novembre, sur l'ACCUEIL seulement** (décision de
   l'auteur ; ailleurs, le rotorelief dessiné d'avant, `ailleurs` dans
   `collages.tsx`). Au rang du rotorelief dans `COLLAGES` : les tirages du
