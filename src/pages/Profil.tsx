@@ -8,6 +8,7 @@ import { mono } from '../lib/typo'
 import { api } from '../lib/apiBase'
 import { jetonOuIdentite } from '../lib/acces'
 import { tr } from '../i18n'
+import Animation from '../components/Animation'
 import { lireEchos, publicationsDe } from '../lib/echos'
 import { tetePublication, dateSignature, libelleEchos, estAnonyme, type Publication, type Echos } from '../lib/galerie'
 
@@ -171,11 +172,9 @@ export default function Profil() {
               {avatarUrl ? (
                 <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : generatingAvatar ? (
-                <motion.span
-                  style={{ fontSize: 22, color: accent }}
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ repeat: Infinity, duration: 1.2 }}
-                >✦</motion.span>
+                // Le bouton dit déjà « GÉNÉRATION… ». La case fait 72 px :
+                // la couture s'y réduit, aux mêmes proportions.
+                <Animation nom="couture" boucle taille={20} largeur={60} />
               ) : (
                 <span style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontSize: 28, color: `${accent}50` }}>
                   {pseudo[0]?.toUpperCase() || '?'}

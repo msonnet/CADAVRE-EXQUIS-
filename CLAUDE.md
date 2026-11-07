@@ -2007,8 +2007,13 @@ boucles `repeat: Infinity` avant, 12 après, listées dans le document.
 **Étape 1 faite le 7 novembre** : `src/lib/animation.ts`,
 `src/components/Animation.tsx`, le précache, `animations.test.ts`, vérifiés
 avec `essai.json` dans trois ambiances. Le détail, et ce qui est reporté à
-l'étape 2, est dans le document (« Où en est le chantier »). Prochaine :
-`couture.json`, aux douze endroits.
+l'étape 2, est dans le document (« Où en est le chantier »).
+
+**Étape 2 faite le 7 novembre** : `couture.json` (aiguille, fil, un point
+qui se tend ; le nœud est la pose) aux douze attentes courtes ; 22 boucles
+restent, relevées fichier par fichier dans `animations.test.ts` ;
+`e2e/animations.spec.ts` les regarde dans la galerie. Prochaine :
+`couture-longue.json`, aux six attentes longues — et le kraft.
 
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
@@ -2047,7 +2052,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (827 tests unitaires) + Playwright (159 tests E2E, FR et EN)
+- Tests : Vitest (829 tests unitaires) + Playwright (166 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

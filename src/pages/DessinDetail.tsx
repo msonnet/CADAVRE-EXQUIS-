@@ -13,6 +13,7 @@ import { useSound } from '../hooks/useSound'
 import type { DessinCadavre } from '../types'
 import { mono } from '../lib/typo'
 import { tr } from '../i18n'
+import Animation from '../components/Animation'
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString(tr('fr-FR', 'en-GB'), {
@@ -138,7 +139,7 @@ export default function DessinDetail() {
     return (
       <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
         <div className="flex justify-center py-24">
-          <motion.span style={{ fontSize: 20, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}>✦</motion.span>
+          <Animation nom="couture" boucle taille={28} largeur={84} etiquette={tr('Chargement…', 'Loading…')} />
         </div>
       </PageTransition>
     )

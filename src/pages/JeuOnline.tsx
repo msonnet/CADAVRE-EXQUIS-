@@ -13,6 +13,7 @@ import { mono } from '../lib/typo'
 import { CLAVIER_FRAGMENT } from '../lib/clavier'
 import { api } from '../lib/apiBase'
 import { tr } from '../i18n'
+import Animation from '../components/Animation'
 import { partieNue } from '../lib/corps'
 import { signalDeTour, partieDuSalon } from '../lib/salonEnLigne'
 import { ouvrirPartieIA, jetonOuIdentite, nouvellePartieId, type Refus } from '../lib/acces'
@@ -537,7 +538,10 @@ export default function JeuOnline() {
               {tr('En attente de', 'Waiting for')} <strong>{currentTurnPlayer.pseudo}</strong>…
             </p>
           )}
-          <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+          {/* Le nom de celui qu'on attend n'est pas toujours connu : sans
+              lui, la couture se nomme elle-même. */}
+          <Animation nom="couture" boucle taille={28} largeur={84}
+            etiquette={currentTurnPlayer && currentCase < nbTotal ? undefined : tr('En attente…', 'Waiting…')} />
         </div>
       </PageTransition>
     )
@@ -619,7 +623,7 @@ export default function JeuOnline() {
                 {tr('En attente des autres joueurs… La révélation aura lieu lorsque tout le monde aura soumis.', 'Waiting for the other players… The reveal happens once everyone has submitted.')}
               </p>
             )}
-            <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+            <Animation nom="couture" boucle taille={28} largeur={84} />
           </motion.div>
 
         ) : showIntro && isMyTurnEcrit ? (
@@ -717,7 +721,7 @@ export default function JeuOnline() {
             ) : (
               <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: encre, opacity: 0.75 }}>{tr('En attente de la partie…', 'Waiting for the game…')}</p>
             )}
-            <motion.span style={{ fontSize: 22, color: accent }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>✦</motion.span>
+            <Animation nom="couture" boucle taille={28} largeur={84} />
           </motion.div>
         )}
       </AnimatePresence>

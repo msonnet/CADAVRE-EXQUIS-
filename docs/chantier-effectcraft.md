@@ -318,3 +318,52 @@ connectés.
   vers `/private`, et le chemin relatif donné à `tar` remontait d'un cran
   de trop peu) ; `table-locale.spec.ts` (« — NE PAS LA DÉRANGER — » : la
   voix est tirée au sort, et le fossoyeur dit « LE » — un échec sur deux).
+
+### Étape 2 — la couture, 7 novembre
+
+- **`couture.json`** (source `animations/couture.ecproj`, 4 Ko, export sans
+  avertissement). 84 × 28, 43 images : `boucle` = 0 – 42 (1,4 s), `pose` =
+  l'image 42. Deux calques de forme :
+  - **le fil** (accent) : cinq points de 7 px au pas de 12 px (une
+    répétition `rp`), plus le point qui se forme (tracé progressif `tm`,
+    images 8 – 18) ; le calque avance d'un pas, 12 px, images 18 – 38. Le
+    nouveau point arrive exactement où était le dernier : la reprise est
+    sans à-coup PAR CONSTRUCTION, pas par réglage ;
+  - **l'aiguille** (encre), un peu penchée, son fil en boucle à l'accent :
+    elle pique au bout du point qui se forme (images 0 – 8) et remonte
+    (8 – 18) pendant qu'il se tend.
+  - Le **nœud** (un aplat à l'accent) n'existe qu'à l'image 42 : la pose est
+    « un point noué ». Il servira tel quel à la ligne 1053 de `Jeu.tsx`.
+- **Posée aux douze endroits** du tableau. Ce qui s'écarte du tableau :
+  - « Charger plus » (`Galerie.tsx`) : le fil ET l'aiguille prennent
+    `btnText` — le tableau ne disait que l'encre, mais le fond du bouton est
+    l'accent, et un fil à l'accent y disparaissait. Marge de −4 px : le
+    bouton garde sa hauteur. Il n'a plus d'autre texte pendant l'attente,
+    donc la couture le nomme (« Chargement… »).
+  - `Profil.tsx` : c'est l'avatar qui se génère, dans une case de 72 px ; la
+    couture y fait 60 × 20, masquée (le bouton dit « GÉNÉRATION… »).
+  - Seule sur sa page, la couture se nomme « Chargement… » ; à côté d'un
+    texte (« Le poème se referme… », « En attente des autres joueurs… »),
+    elle est masquée. `JeuOnline.tsx` 540 : nommée seulement quand le nom
+    de celui qu'on attend n'est pas affiché.
+- **L'animation d'essai est retirée** (`essai.json`, `essai.ecproj`).
+- **Le lecteur, mesuré dans `dist/`** : `lottie_light` 5.13.0 fait 169 Ko,
+  **48,2 Ko compressés** (et non 46 : la mesure du cahier datait de
+  5.12.2). Il a son propre morceau, que seul celui d'`Animation` importe ;
+  le JS principal prend 237 octets.
+- **Les mesures** : `animations.test.ts` relève la couture aux douze
+  endroits (par fichier) et les boucles qui restent — **22**, fichier par
+  fichier ; la cible de fin de lot (12) s'atteint à l'étape 3.
+  `e2e/animations.spec.ts`, sept parcours : la galerie qui attend, sur Lin
+  écru (graine 6) et Minuit (graine 7), à 320 et 390 points — fil à
+  l'accent et aiguille à l'encre relus dans le SVG, aucune couleur repère,
+  84 × 28 dans l'écran, elle coud, nœud caché, puis démontée ; « Charger
+  plus » ; le mouvement réduit (la pose, nœud visible, SVG figé) ; le
+  lecteur jamais chargé à l'accueil.
+- **Ce que les parcours ne voient pas** : les dix autres attentes une à une
+  (la mesure unitaire dit qu'elles sont posées ; `JeuOnline` demande un
+  salon en temps réel) ; le **kraft**, puisqu'aucune des douze n'est sur un
+  papier de dessin — il revient à l'étape 3, avec `FinDessin`.
+- **Piège relevé** : `test.use({ reducedMotion: 'reduce' })` n'atteint pas
+  `matchMedia` dans ce dépôt ; `page.emulateMedia({ reducedMotion })`, comme
+  les autres parcours, oui.

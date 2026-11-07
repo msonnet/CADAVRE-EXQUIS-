@@ -15,6 +15,7 @@ import { mainsDuPoeme } from '../lib/versRecueil'
 import { registreDesVoix } from '../lib/registreVoix'
 import { composerTexte, composerSauvegarde, lireSauvegarde, nomDeFichier } from '../lib/recueil'
 import { tr } from '../i18n'
+import Animation from '../components/Animation'
 import { emporterFichier } from '../lib/emporter'
 import { lireEchos, lireReleve, ecrireReleve, releveDe } from '../lib/echos'
 import { libelleEchos, nouvelles, phraseCourrier, type Echos } from '../lib/galerie'
@@ -309,11 +310,7 @@ export default function Bibliotheque() {
         {/* ── CHARGEMENT ── */}
         {chargement && (
           <div className="flex justify-center py-16">
-            <motion.span
-              style={{ fontSize: 20, color: accent }}
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >✦</motion.span>
+            <Animation nom="couture" boucle taille={28} largeur={84} etiquette={tr('Chargement…', 'Loading…')} />
           </div>
         )}
 

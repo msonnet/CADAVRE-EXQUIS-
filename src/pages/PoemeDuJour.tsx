@@ -6,6 +6,7 @@ import { Decor, useReve } from '../reve'
 import { useSound } from '../hooks/useSound'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
+import Animation from '../components/Animation'
 import { garderSiAbsent } from '../db'
 import { poemeDuJour, idJour } from '../lib/versRecueil'
 import BoutonRecolte from '../components/BoutonRecolte'
@@ -407,15 +408,11 @@ export default function PoemeDuJour() {
           )}
         </div>
 
-        {/* Seule la case du vers attend le registre — l'étoile tient sa
+        {/* Seule la case du vers attend le registre — la couture tient sa
             place, elle ne prend plus la page entière. */}
         {chargement && !etat && (
           <div style={{ minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.span
-              style={{ fontSize: 22, color: accent }}
-              animate={reduit ? undefined : { opacity: [0.3, 1, 0.3] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >✦</motion.span>
+            <Animation nom="couture" boucle taille={28} largeur={84} etiquette={tr('Chargement…', 'Loading…')} />
           </div>
         )}
 
