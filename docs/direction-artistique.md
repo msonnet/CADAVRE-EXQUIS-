@@ -74,6 +74,29 @@ première impression, et elle est sur presque tous les écrans.
 *Outils : PhotoCraft (détourage), VectorCraft (vectorisation « Image
 Trace »), EffectCraft (animation, export Lottie).*
 
+**Images témoins du 7 novembre — en attente de validation.**
+- Le symbole du rotorelief remplacé par un **vrai disque de
+  phénakistiscope** : « Cats and Donkey », Vienne, vers 1830 (Jos. Berman ;
+  Cooper Hewitt, Smithsonian, domaine public). Deux anneaux de douze
+  images : un chat bondit par-dessus un tabouret, un âne en redingote
+  tourne la tête. Un douzième de tour par image, dans le sens inverse des
+  aiguilles d'une montre (vérifié : à l'endroit, le chat saute en avant),
+  10 images par seconde — c'est l'animation d'origine, rien n'est inventé.
+- Posé à la place du symbole, 150 px, avec son cartel (« Le
+  Phénakistiscope · disque stroboscopique · Vienne, v. 1830 »), sur Lin
+  écru et Minuit, en deux traitements : **couleurs d'origine** (un objet
+  de collection posé sur la page — le plus convaincant) et **gravure
+  monochrome** teintée à l'encre du jour (terne en l'état).
+- **Écartés** : les deux disques de Stampfer (« Distorted Man », 1833 ;
+  « Dancing Man », v. 1835) et la cage de Boucher — caricatures
+  orientalistes de l'époque, qui n'ont pas leur place dans le jeu.
+- **Le thaumatrope** oiseau et cage reste à faire : les gravures trouvées
+  (cage minuscule, oiseaux de Chodowiecki en basse définition) ne
+  suffisent pas. Chercher un oiseau chanteur et une cage vide, seuls, en
+  CC0 (planches d'histoire naturelle, catalogues d'objets).
+- Le droit : le rotorelief de Duchamp n'est pas du domaine public (mort en
+  1968) ; le disque viennois, son ancêtre, l'est.
+
 ### 2. Les attentes : des jouets optiques
 À la place de la couture : un petit **disque de phénakistiscope** gravé
 qui tourne pour les attentes courtes ; une **bande de zootrope** qui
