@@ -156,6 +156,22 @@ Trace »), EffectCraft (animation, export Lottie).*
   phrase-manifeste du surréalisme) ; la lune et le nuage (*Un chien
   andalou*, 1929) ; le poisson soluble (Breton, 1924 — la carpe de Bloch) ;
   la pomme (Magritte) ; la clef des songes (Magritte, 1930).
+- **Série surréaliste, validée par l'auteur ; images témoins faites le
+  7 novembre** (gravures téléchargées sur son accord : Redon, LACMA ;
+  machine Singer, *Scientific American* 1851 ; parapluie, brevet américain
+  de 1882 ; pommes de Brookshaw, Houghton Library ; clef de 1635,
+  Rijksmuseum ; le nuage est découpé dans la planche de la lune).
+  L'œil-ballon (médaillon ovale, la brume de Redon comprise) flotte et
+  s'élève au toucher ; la Rencontre fortuite est un vrai jouet de 1825
+  (titre en couronne, cordons à pompons) — machine d'un côté, parapluie de
+  l'autre, ils se superposent au toucher ; la lune est traversée par un
+  mince nuage (*Un chien andalou*) qui passe vite au toucher ; le poisson
+  soluble se dissout au toucher puis se reforme ; la pomme lévite et tourne
+  sur elle-même ; la clef se balance et oscille au toucher. **Points
+  faibles** : le parapluie est une carcasse de dessin de brevet (une vraie
+  gravure de parapluie serait mieux) ; le titre du disque est illisible à
+  160 px ; le médaillon de Redon ressort fort sur fond sombre. Le plafond
+  se calcule désormais sur la TEINTE MOYENNE du motif, pas sur son papier.
 - **Intégré le 7 novembre, sur l'ACCUEIL seulement** (décision de
   l'auteur ; ailleurs, le rotorelief dessiné d'avant, `ailleurs` dans
   `collages.tsx`). Au rang du rotorelief dans `COLLAGES` : les tirages du
