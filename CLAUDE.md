@@ -1988,6 +1988,22 @@ tombait seul sous le dernier, et sa zone d'appui mordait le pied de
 « Le souffleur de verre ». Les noms féminins, plus longs, l'ont fait
 apparaître à 320 points. Le glyphe a maintenant sa colonne de 44 px.
 
+## Le chantier EffectCraft — arrêté le 7 novembre, à faire en local
+
+**Cahier des charges : [`docs/chantier-effectcraft.md`](docs/chantier-effectcraft.md).**
+À suivre dans une session Claude Code sur l'ordinateur de l'auteur, où
+EffectCraft et PhotoCraft sont connectés ; une session dans le cloud ne
+les voit pas.
+
+Décidé avec l'auteur : l'ouverture montre l'**Œil cousu**, qui prolonge
+l'écran natif (927 px sur 2732, soit 33,9 %) au lieu de l'étoile ✦ ; les
+attentes deviennent **la couture** — douze courtes, six longues ; le
+**sceau** quand on scelle au recueil ; l'**encrier** qui se remplit après
+un achat. Lecteur `lottie-web` léger (46 Ko compressés, chargé à la
+demande), trois couleurs repères remplacées par celles de l'ambiance, image
+fixe sous mouvement réduit, JSON ajouté au précache. Critère de fin : 34
+boucles `repeat: Infinity` avant, 12 après, listées dans le document.
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
