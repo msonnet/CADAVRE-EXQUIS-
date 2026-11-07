@@ -99,6 +99,11 @@ Trace »), EffectCraft (animation, export Lottie).*
   Teinter le disque à la couleur de la page sur les clairs a été essayé et
   écarté : il ternit l'Aube froide. (Un `mix-blend-mode` ne marche pas à
   cet endroit : l'animation d'entrée du symbole isole son contexte.)
+- **Décision de l'auteur, 7 novembre : les motifs animés vivent
+  UNIQUEMENT sur l'accueil, et y remplaceront à terme TOUS les symboles
+  dessinés** — le rotorelief et les dix-sept autres. Le chantier du décor
+  vivant est donc une suite : un motif après l'autre, chacun validé sur
+  images témoins.
 - **Intégré le 7 novembre, sur l'ACCUEIL seulement** (décision de
   l'auteur ; ailleurs, le rotorelief dessiné d'avant, `ailleurs` dans
   `collages.tsx`). Au rang du rotorelief dans `COLLAGES` : les tirages du

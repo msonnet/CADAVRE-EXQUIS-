@@ -2029,7 +2029,10 @@ jusqu'à 6,5:1 au plus contre le fond (`plafondLuminosite`). Les autres
 pages gardent le rotorelief dessiné. Sources et droits :
 `resources/gravures/SOURCES.md` — **domaine public ou CC0 seulement, jamais
 Gallica, et aucune caricature d'époque** (les disques de Stampfer sont
-écartés pour cela).
+écartés pour cela). **Règle de l'auteur : les motifs animés vivent
+UNIQUEMENT sur l'accueil, et y remplaceront à terme tous les symboles
+dessinés** (le rotorelief et les dix-sept autres), un par un, chacun validé
+sur images témoins.
 
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
