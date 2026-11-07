@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync, readdirSync, statSync, mkdtempSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, readdirSync, statSync, mkdtempSync, mkdirSync } from 'node:fs'
+import { join, relative } from 'node:path'
 import { tmpdir } from 'node:os'
 import { execFileSync } from 'node:child_process'
 import config from '../../capacitor.config'
@@ -73,9 +73,13 @@ describe('portrait, au téléphone', () => {
   const gabarits = (() => {
     const d = mkdtempSync(join(tmpdir(), 'cap-'))
     const assets = join(SRC, '..', 'node_modules/@capacitor/cli/assets')
-    execFileSync('mkdir', ['-p', join(d, 'ios'), join(d, 'android')])
-    execFileSync('tar', ['xzf', join(assets, 'ios-spm-template.tar.gz'), '-C', join(d, 'ios')])
-    execFileSync('tar', ['xzf', join(assets, 'android-template.tar.gz'), '-C', join(d, 'android')])
+    // Chemins relatifs et dossiers créés par Node : sous Windows, GNU tar lit
+    // « C: » comme un hôte distant.
+    for (const [os, gabarit] of [['ios', 'ios-spm-template.tar.gz'], ['android', 'android-template.tar.gz']]) {
+      const cible = join(d, os)
+      mkdirSync(cible, { recursive: true })
+      execFileSync('tar', ['xzf', relative(cible, join(assets, gabarit))], { cwd: cible })
+    }
     return d
   })()
   const lire = (p: string) => readFileSync(join(gabarits, p), 'utf8')

@@ -88,7 +88,7 @@ describe('aucune sortie ne contourne la porte', () => {
   it('ni `download`, ni `jsPDF.save`, ni fenêtre `blob:` hors d\'emporter.ts', () => {
     const fautifs: string[] = []
     for (const f of fichiers(SRC)) {
-      if (f.endsWith('lib/emporter.ts')) continue
+      if (f.replace(/\\/g, '/').endsWith('lib/emporter.ts')) continue
       const t = readFileSync(f, 'utf8')
       if (/\.download\s*=/.test(t) || /\bdoc\.save\(/.test(t)) fautifs.push(f.replace(SRC, 'src'))
     }
