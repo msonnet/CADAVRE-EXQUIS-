@@ -2018,7 +2018,8 @@ mobile ») : pour tout élément visuel ou sonore, **des références, puis des
 images témoins montrées à l'auteur, puis sa validation — jamais
 l'intégration d'abord.** Gravures CC0 seulement (pas Gallica). Pas de
 visage pour les voix ; musique en suspens ; l'auteur a déjà une vidéo de
-présentation.
+présentation. **Proposition en cours : [`docs/direction-artistique.md`](docs/direction-artistique.md)** —
+constat, références, sept chantiers par ordre d'impact, à valider un à un.
 
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
