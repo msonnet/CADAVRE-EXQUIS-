@@ -99,6 +99,18 @@ Trace »), EffectCraft (animation, export Lottie).*
   Teinter le disque à la couleur de la page sur les clairs a été essayé et
   écarté : il ternit l'Aube froide. (Un `mix-blend-mode` ne marche pas à
   cet endroit : l'animation d'entrée du symbole isole son contexte.)
+- **Intégré le 7 novembre, sur l'ACCUEIL seulement** (décision de
+  l'auteur ; ailleurs, le rotorelief dessiné d'avant, `ailleurs` dans
+  `collages.tsx`). Au rang du rotorelief dans `COLLAGES` : les tirages du
+  jour ne bougent pas — la graine 7 (Minuit) montrait le rotorelief, elle
+  montre le disque. Une seule image (`public/decor/phenakistiscope.webp`,
+  39 Ko, fabriquée par `scripts/decor-phenakistiscope.mjs` depuis
+  `resources/gravures/`, recentrée sur l'axe réel du disque) qui tourne en
+  `steps(12)` par CSS — ni Lottie ni JavaScript. Plafond :
+  `plafondLuminosite` (`src/reve/contraste.ts`), `filtreSymbole`
+  (`src/reve/Decor.tsx`). Une gravure opaque s'écarte aussi des lignes de
+  texte, pas seulement des boutons. Mesures : `decorVivant.test.ts`,
+  `e2e/decor-vivant.spec.ts`.
 - **Écartés** : les deux disques de Stampfer (« Distorted Man », 1833 ;
   « Dancing Man », v. 1835) et la cage de Boucher — caricatures
   orientalistes de l'époque, qui n'ont pas leur place dans le jeu.

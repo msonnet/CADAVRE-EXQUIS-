@@ -2021,6 +2021,16 @@ visage pour les voix ; musique en suspens ; l'auteur a déjà une vidéo de
 présentation. **Proposition en cours : [`docs/direction-artistique.md`](docs/direction-artistique.md)** —
 constat, références, sept chantiers par ordre d'impact, à valider un à un.
 
+**Le décor vivant, premier élément — 7 novembre.** Sur l'ACCUEIL seulement,
+le symbole « rotorelief » est devenu un vrai disque de phénakistiscope
+(Vienne, v. 1830, domaine public) qui tourne d'un douzième de tour par
+image, en couleurs d'origine ; sur les ambiances sombres sa lumière baisse
+jusqu'à 6,5:1 au plus contre le fond (`plafondLuminosite`). Les autres
+pages gardent le rotorelief dessiné. Sources et droits :
+`resources/gravures/SOURCES.md` — **domaine public ou CC0 seulement, jamais
+Gallica, et aucune caricature d'époque** (les disques de Stampfer sont
+écartés pour cela).
+
 ## Ce qui reste de l'audit — arrêté le 5 octobre, à la demande de l'auteur
 
 L'audit du 30 septembre a été traité jusqu'ici ; le reste n'a PAS été
@@ -2058,7 +2068,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (827 tests unitaires) + Playwright (159 tests E2E, FR et EN)
+- Tests : Vitest (836 tests unitaires) + Playwright (163 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

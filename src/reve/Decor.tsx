@@ -7,7 +7,26 @@ import {
   CITATIONS, ETIQ_POOL, HEURES_NOCTURNES, MARGINALIA,
   type Citation, type MargEntry, type ColorSchema,
 } from './pools'
-import { garantirContraste } from './contraste'
+import { garantirContraste, plafondLuminosite } from './contraste'
+
+/** Au-delà, une gravure claire éblouit sur une ambiance sombre (décidé avec l'auteur le 7 novembre). */
+export const PLAFOND_GRAVURE = 6.5
+
+/**
+ * Le filtre du symbole du jour.
+ *
+ * Les dessins à l'encre s'inversent sur les ambiances sombres (encre claire
+ * sur fond nuit). Une gravure en couleurs d'origine (`papier` connu) ne
+ * s'inverse jamais : elle garde ses couleurs, et seule sa lumière baisse si
+ * son papier dépasse le plafond de contraste sur le fond — luminosité et un
+ * peu de saturation, jamais d'opacité (le fond transparaîtrait).
+ */
+export function filtreSymbole(symbole: CollageDef, fond: string | undefined, sombre: boolean): string | undefined {
+  if (!symbole.papier) return sombre ? 'invert(1) brightness(0.88)' : undefined
+  const f = fond ? plafondLuminosite(symbole.papier, fond, PLAFOND_GRAVURE) : 1
+  const ombre = 'drop-shadow(1px 2px 1.5px rgba(0,0,0,0.22))'
+  return f < 1 ? `brightness(${f}) saturate(0.88) ${ombre}` : ombre
+}
 
 // ════════════════════════════════════════════════
 // SÉANCE — composition unique par seed
@@ -488,7 +507,7 @@ const ECARTS: [number, number][] = (() => {
   return out
 })()
 
-function useEcarterDuTexte(ref: React.RefObject<HTMLDivElement | null>) {
+function useEcarterDuTexte(ref: React.RefObject<HTMLDivElement | null>, opaque = false) {
   const [ecart, setEcart] = useState<[number, number]>([0, 0])
 
   useLayoutEffect(() => {
@@ -519,6 +538,19 @@ function useEcarterDuTexte(ref: React.RefObject<HTMLDivElement | null>) {
       )]
         .map(e => e.getBoundingClientRect())
         .filter(r => r.width > 0 && r.height > 0)
+
+      // Une gravure OPAQUE (le phénakistiscope) cache ce qu'elle recouvre :
+      // elle s'écarte aussi du texte. Les lignes elles-mêmes, pas leurs
+      // blocs — un titre occupe toute la largeur, ses mots non. Les dessins
+      // au trait, transparents, gardent leur liberté d'avant.
+      if (opaque) {
+        for (const el of document.querySelectorAll('h1, h2, h3, p, label')) {
+          if (noeud.contains(el)) continue
+          const plage = document.createRange()
+          plage.selectNodeContents(el)
+          for (const r of plage.getClientRects()) if (r.width > 0 && r.height > 0) obstacles.push(r)
+        }
+      }
 
       const recouvrement = ([dx, dy]: [number, number]) => {
         const l = base.left + dx, t = base.top + dy
@@ -571,7 +603,7 @@ function useEcarterDuTexte(ref: React.RefObject<HTMLDivElement | null>) {
       oeil.disconnect()
       window.removeEventListener('resize', bientot)
     }
-  }, [ref])
+  }, [ref, opaque])
 
   return ecart
 }
@@ -586,9 +618,14 @@ function SymboleAvecCartel({
 }) {
   const s = useReve()
   const boite = useRef<HTMLDivElement>(null)
-  const [dx, dy] = useEcarterDuTexte(boite)
-  const Draw = symbole.draw
-  const size = symbole.w * pos.sizeMul
+  // Une gravure qui ne vit que sur l'accueil (le phénakistiscope) laisse
+  // ailleurs la place à son dessin d'avant : seul l'accueil change.
+  const vu: CollageDef = variant !== 'accueil' && symbole.ailleurs
+    ? { ...symbole, draw: symbole.ailleurs.draw, w: symbole.ailleurs.w, papier: undefined }
+    : symbole
+  const [dx, dy] = useEcarterDuTexte(boite, !!vu.papier)
+  const Draw = vu.draw
+  const size = vu.w * pos.sizeMul
   const isCentered = variant === 'jeu-ia' || variant === 'multi'
   const showCartel = variant === 'accueil'
   const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
@@ -613,7 +650,7 @@ function SymboleAvecCartel({
         opacity: 0,
         animation: 'symbolDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.5s both',
       }}>
-        <div style={{ filter: isDark ? 'invert(1) brightness(0.88)' : undefined }}>
+        <div style={{ filter: filtreSymbole(vu, s?.ambiance.bg, isDark) }}>
           <Draw w={size} />
         </div>
         {showCartel && (

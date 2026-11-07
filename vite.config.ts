@@ -123,7 +123,9 @@ export default defineConfig({
         // sont du JSON, que le premier motif ne prend pas : sans le second,
         // le jeu dans le train retombait sur l'étoile de repli. Le dossier
         // seulement — pas `**/*.json`, qui embarquerait n'importe quoi.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,mp3,ogg,wav}', 'animations/*.json'],
+        // Le décor vivant : ses gravures sont en WebP (`public/decor/`), que le
+        // premier motif ne prend pas non plus — le dossier seul, là aussi.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,mp3,ogg,wav}', 'animations/*.json', 'decor/*.webp'],
         // Les captures de la fiche d'installation ne servent qu'au magasin
         // et à l'invite du navigateur : elles n'ont rien à faire dans le
         // cache hors ligne du joueur. L'aperçu de lien (`og-image.png`) non

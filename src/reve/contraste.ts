@@ -65,3 +65,35 @@ export function garantirContraste(couleur: string, fond: string, cible: number):
   }
   return rgbToHex(c)
 }
+
+/**
+ * Le PLAFOND, symétrique du plancher ci-dessus : le facteur de luminosité
+ * (celui du filtre CSS `brightness()`) qui ramène une image claire posée sur
+ * `fond` à `plafond` au plus. 1 : rien à baisser.
+ *
+ * Décidé avec l'auteur le 7 novembre pour les gravures en couleurs
+ * d'origine du décor (`docs/direction-artistique.md`) : « les couleurs
+ * d'origine, sauf si cela crée un trop gros contraste avec l'ambiance du
+ * jour ». Mesuré : le papier crème d'un disque de 1830 fait 1,04 à 1,14:1
+ * sur les ambiances claires — rien à faire —, mais 11,5 à 15:1 sur les
+ * sombres, où il éclate comme une pleine lune.
+ *
+ * `brightness(f)` multiplie chaque composante sRGB par `f` : on cherche le
+ * plus grand `f` tel que le papier ainsi assombri ne dépasse pas `plafond`
+ * sur le fond. Une image PLUS SOMBRE que son fond n'a pas de plafond : ce
+ * n'est pas elle qui éblouit. Le résultat est arrondi vers le bas au
+ * centième, pour que le plafond tienne toujours.
+ */
+export function plafondLuminosite(papier: string, fond: string, plafond: number): number {
+  const p = hexToRgb(papier)
+  const lf = luminance(hexToRgb(fond))
+  if (luminance(p) <= lf) return 1
+  const ratio = (f: number) => (luminance({ r: p.r * f, g: p.g * f, b: p.b * f }) + 0.05) / (lf + 0.05)
+  if (ratio(1) <= plafond) return 1
+  let bas = 0, haut = 1
+  for (let i = 0; i < 30; i++) {
+    const m = (bas + haut) / 2
+    if (ratio(m) <= plafond) bas = m; else haut = m
+  }
+  return Math.floor(bas * 100) / 100
+}

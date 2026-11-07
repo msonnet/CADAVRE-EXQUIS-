@@ -1,8 +1,9 @@
 import React from 'react'
 
 // ════════════════════════════════════════════════
-// COLLAGES — 17 gravures inspirées d'œuvres surréalistes
-// Chacune est un SVG inline, en hachures noires sur papier
+// COLLAGES — 18 symboles inspirés d'œuvres surréalistes
+// Dix-sept sont des SVG inline, en hachures noires sur papier ; le
+// phénakistiscope est une vraie gravure de 1830, qui tourne (le décor vivant)
 // ════════════════════════════════════════════════
 
 const ENCRE = '#1a1410'
@@ -209,7 +210,32 @@ const PaysageTanguy: React.FC<SVGProps> = ({ w = 140 }) => (
   </svg>
 )
 
-// 17 · Rotorelief — Duchamp
+// 17 · Le Phénakistiscope — un VRAI disque, Vienne, vers 1830
+//
+// Le premier élément du décor vivant (docs/direction-artistique.md). Il
+// remplace le rotorelief dessiné d'après Duchamp — dont l'œuvre n'est pas du
+// domaine public — par son ancêtre, qui l'est : un disque stroboscopique
+// viennois (Cooper Hewitt, Smithsonian ; resources/gravures/SOURCES.md).
+// Deux anneaux de douze images : un chat bondit par-dessus un tabouret, un
+// âne en redingote tourne la tête. Le disque tourne d'un douzième de tour
+// par image (`.phenakistiscope`, src/index.css) : c'est l'animation
+// d'origine, rien n'est inventé. En couleurs d'origine — choix de l'auteur ;
+// le plafond de contraste des ambiances sombres est posé par le décor
+// (`plafondLuminosite`, src/reve/contraste.ts).
+//
+// Sur l'ACCUEIL seulement (décision de l'auteur, 7 novembre) : ailleurs, le
+// symbole du jour reste le rotorelief dessiné ci-dessous, comme avant.
+const Phenakistiscope: React.FC<SVGProps> = ({ w = 166 }) => (
+  <img
+    src={`${import.meta.env.BASE_URL}decor/phenakistiscope.webp`}
+    width={w} height={w} alt="" draggable={false}
+    className="phenakistiscope"
+    style={{ display: 'block', width: w, height: w }}
+  />
+)
+
+// Le rotorelief dessiné d'après Duchamp — le symbole des autres pages,
+// quand le phénakistiscope est celui du jour.
 const Spirale: React.FC<SVGProps> = ({ w = 120 }) => {
   const cx = 60, cy = 60
   const ticks = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
@@ -352,6 +378,19 @@ export interface CollageDef {
   ref: string
   draw: React.FC<SVGProps>
   w: number
+  /**
+   * Une gravure en couleurs d'origine, et non un dessin à l'encre : la
+   * couleur de son papier, mesurée sur le scan. Le décor ne l'inverse pas
+   * sur les ambiances sombres ; il baisse sa lumière jusqu'au plafond de
+   * contraste.
+   */
+  papier?: string
+  /**
+   * Ce que montrent les AUTRES pages que l'accueil, quand ce symbole est
+   * celui du jour : le phénakistiscope ne vit que sur l'accueil (décision de
+   * l'auteur) ; ailleurs, le rotorelief dessiné d'avant.
+   */
+  ailleurs?: { draw: React.FC<SVGProps>; w: number }
 }
 
 export const COLLAGES: CollageDef[] = [
@@ -372,5 +411,6 @@ export const COLLAGES: CollageDef[] = [
   { id: 'mannequin',label: "Le Mannequin métaphysique", ref: "d'après G. de Chirico · 1917",            draw: Mannequin,      w: 80  },
   { id: 'poupee',   label: "La Poupée articulée",      ref: "d'après H. Bellmer · 1934",                draw: Poupee,         w: 90  },
   { id: 'merz',     label: "Ticket Merz",             ref: "d'après K. Schwitters · 1923",             draw: TicketMerz,   w: 120 },
-  { id: 'spirale',  label: "Rotorelief",               ref: "d'après M. Duchamp · 1935",                draw: Spirale,      w: 120 },
+  // Au rang du rotorelief qu'il remplace : les tirages du jour ne bougent pas.
+  { id: 'phenakistiscope', label: "Le Phénakistiscope", ref: "disque stroboscopique · Vienne, v. 1830", draw: Phenakistiscope, w: 166, papier: '#eddbba', ailleurs: { draw: Spirale, w: 120 } },
 ]
