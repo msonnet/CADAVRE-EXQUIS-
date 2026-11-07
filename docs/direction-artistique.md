@@ -87,6 +87,18 @@ Trace »), EffectCraft (animation, export Lottie).*
   écru et Minuit, en deux traitements : **couleurs d'origine** (un objet
   de collection posé sur la page — le plus convaincant) et **gravure
   monochrome** teintée à l'encre du jour (terne en l'état).
+- **Choix de l'auteur (7 novembre) : les couleurs d'origine**, « sauf si
+  cela crée un trop gros contraste avec l'ambiance du jour ». Mesuré sur
+  les sept ambiances (papier du disque contre fond de page) : clairs 1,04
+  à 1,14:1 — aucun excès, couleurs d'origine telles quelles ; sombres 11,5
+  (Minuit, Argile) à 15:1 (Encre) — excès. Règle proposée : **sur fond
+  sombre, la lumière du disque baisse jusqu'à 6,5:1 au plus** (luminosité
+  et saturation, pas d'opacité : le fond ne doit pas transparaître), un
+  plafond calculé comme `garantirContraste` calcule un plancher. Essai à
+  74 % de luminosité : 6,6 à 8,6:1 — l'Encre doit descendre encore.
+  Teinter le disque à la couleur de la page sur les clairs a été essayé et
+  écarté : il ternit l'Aube froide. (Un `mix-blend-mode` ne marche pas à
+  cet endroit : l'animation d'entrée du symbole isole son contexte.)
 - **Écartés** : les deux disques de Stampfer (« Distorted Man », 1833 ;
   « Dancing Man », v. 1835) et la cage de Boucher — caricatures
   orientalistes de l'époque, qui n'ont pas leur place dans le jeu.
