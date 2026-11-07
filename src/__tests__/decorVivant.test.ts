@@ -3,14 +3,16 @@ import { readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { plafondLuminosite, ratioContraste } from '../reve/contraste'
 import { AMBIANCES } from '../reve/pools'
-import { COLLAGES } from '../reve/collages'
+import { MOTIFS, motifDuJour } from '../reve/collages'
+import { composerSeance } from '../reve/Decor'
 
 /**
  * Le décor vivant — `docs/direction-artistique.md`.
  *
- * Premier élément : le rotorelief dessiné à la main cède la place à un vrai
- * disque de phénakistiscope (Vienne, vers 1830, domaine public), qui tourne
- * d'un douzième de tour par image — son animation d'origine. En couleurs
+ * Décisions de l'auteur, 7 novembre : des motifs animés, sur l'accueil
+ * seulement ; sept, un par jour de la semaine ; un mouvement subtil qui vit
+ * de lui-même et se modifie légèrement au toucher ; les dix-huit dessins au
+ * trait d'avant supprimés. Chaque motif est une vraie gravure, en couleurs
  * d'origine, avec un plafond de contraste sur les ambiances sombres.
  */
 
@@ -34,37 +36,64 @@ describe('le plafond de contraste', () => {
     const f = plafondLuminosite('#eddbba', '#080604', PLAFOND)
     expect(f).toBeLessThan(1)
     expect(ratioContraste(assombrir('#eddbba', f), '#080604')).toBeLessThanOrEqual(PLAFOND)
-    // Un centième de plus dépasserait : c'est le plus grand facteur qui tient.
+    // Un cran de plus dépasserait presque : c'est le plus grand facteur qui tient.
     expect(ratioContraste(assombrir('#eddbba', f + 0.02), '#080604')).toBeGreaterThan(PLAFOND - 0.15)
   })
 })
 
+describe('les motifs du jour', () => {
+  it('sont sept au plus, tous des gravures dont on connaît le papier', () => {
+    expect(MOTIFS.length).toBeGreaterThan(0)
+    expect(MOTIFS.length).toBeLessThanOrEqual(7)
+    for (const m of MOTIFS) expect(m.papier, m.id).toMatch(/^#[0-9a-f]{6}$/)
+  })
+
+  it('un par jour de la semaine, lundi d\'abord ; la semaine reprend les motifs existants', () => {
+    // Le 3 novembre 2026 est un lundi.
+    const jour = (n: number) => new Date(2026, 10, 3 + n, 12)
+    expect(motifDuJour(jour(0))).toBe(MOTIFS[0])
+    for (let n = 0; n < 14; n++) {
+      expect(motifDuJour(jour(n))).toBe(MOTIFS[(n % 7) % MOTIFS.length])
+    }
+  })
+
+  it('la séance porte le motif du jour, quelle que soit la graine', () => {
+    const lundi = new Date(2026, 10, 3, 12)
+    for (const g of [1, 7, 74, 274, 9999]) expect(composerSeance(g, lundi).symbole).toBe(MOTIFS[0])
+  })
+
+  it('les tirages de chaque graine n\'ont pas bougé (côté, heure, citation)', () => {
+    // Relevés avant la suppression des dessins : la pioche consommait six
+    // tirages, qu'on consomme toujours.
+    const s = composerSeance(6)
+    expect(s.ambiance.id).toBe('lin')
+    expect(s.symbolSide).toBe('right')
+  })
+
+  it('les dix-huit dessins au trait sont supprimés', () => {
+    const source = readFileSync(resolve(RACINE, 'src/reve/collages.tsx'), 'utf8')
+    expect(source).not.toMatch(/<svg/)
+    expect(source).not.toMatch(/Spirale|Rotorelief|OeilTranche|HorlogeMolle|Hatches/)
+  })
+
+  it('tiennent le plafond sur chacune des sept ambiances', () => {
+    for (const m of MOTIFS) for (const a of Object.values(AMBIANCES)) {
+      const f = plafondLuminosite(m.papier, a.bg, PLAFOND)
+      expect(ratioContraste(assombrir(m.papier, f), a.bg), `${m.id} · ${a.id}`).toBeLessThanOrEqual(PLAFOND)
+    }
+  })
+})
+
 describe('le phénakistiscope', () => {
-  const disque = COLLAGES.find(c => c.id === 'phenakistiscope')
+  const disque = MOTIFS.find(m => m.id === 'phenakistiscope')!
 
-  it('remplace le rotorelief, au même rang : les tirages du jour ne bougent pas', () => {
-    expect(disque).toBeDefined()
-    expect(COLLAGES.find(c => c.id === 'spirale')).toBeUndefined()
-    expect(COLLAGES.length).toBe(18)
-    expect(COLLAGES.indexOf(disque!)).toBe(17)
+  it('est le motif du lundi', () => {
+    expect(MOTIFS[0]).toBe(disque)
   })
 
-  it('ne vit que sur l\'accueil : ailleurs, le rotorelief dessiné d\'avant', () => {
-    expect(disque!.ailleurs).toBeDefined()
-    expect(disque!.ailleurs!.w).toBe(120)
-    expect(disque!.ailleurs!.draw.name).toBe('Spirale')
-  })
-
-  it('porte la couleur mesurée de son papier, que lit le plafond', () => {
-    expect(disque!.papier).toMatch(/^#[0-9a-f]{6}$/)
-  })
-
-  it('tient le plafond sur chacune des sept ambiances', () => {
-    for (const a of Object.values(AMBIANCES)) {
-      const f = plafondLuminosite(disque!.papier!, a.bg, PLAFOND)
-      expect(ratioContraste(assombrir(disque!.papier!, f), a.bg), a.id).toBeLessThanOrEqual(PLAFOND)
-      // Les claires gardent les couleurs d'origine, telles quelles.
-      if (['aube', 'rose', 'celadon', 'lin'].includes(a.id)) expect(f, a.id).toBe(1)
+  it('garde ses couleurs d\'origine sur les ambiances claires', () => {
+    for (const id of ['aube', 'rose', 'celadon', 'lin'] as const) {
+      expect(plafondLuminosite(disque.papier, AMBIANCES[id].bg, PLAFOND), id).toBe(1)
     }
   })
 
@@ -75,9 +104,9 @@ describe('le phénakistiscope', () => {
     expect(config).toMatch(/globPatterns:\s*\[[^\]]*'decor\/\*\.webp'/)
   })
 
-  it('tourne en douze crans, et s\'arrête sous mouvement réduit', () => {
+  it('tourne en douze crans, ralenti à 1,6 s le tour, et s\'arrête sous mouvement réduit', () => {
     const css = readFileSync(resolve(RACINE, 'src/index.css'), 'utf8')
-    expect(css).toMatch(/\.phenakistiscope\s*\{[^}]*steps\(12\)/)
+    expect(css).toMatch(/\.phenakistiscope\s*\{[^}]*1\.6s steps\(12\)/)
     expect(css).toMatch(/prefers-reduced-motion:\s*reduce\)\s*\{[^}]*\.phenakistiscope\s*\{\s*animation:\s*none/)
   })
 })

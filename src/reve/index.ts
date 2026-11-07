@@ -4,7 +4,7 @@
 // sur :root par <ReveProvider> à chaque changement de rêve.
 
 export { ReveProvider, Decor, HeaderKeywords, useReve, type SeanceReve, type Variant } from './Decor'
-export { COLLAGES, type CollageDef, Hatches } from './collages'
+export { MOTIFS, motifDuJour, type Motif } from './collages'
 export {
   AMBIANCES, AMBIANCE_POOL, CITATIONS, ETIQ_POOL,
   HEURES_NOCTURNES, MARGINALIA,

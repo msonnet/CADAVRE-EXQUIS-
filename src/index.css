@@ -361,12 +361,13 @@
 @keyframes symbolDrop { from { opacity: 0; transform: translateY(-22px) rotate(-15deg) scale(0.88); } to { opacity: 1; transform: translateY(0) rotate(0) scale(1); } }
 
 /* ── Le phénakistiscope — le décor vivant (docs/direction-artistique.md) ──
-   Un douzième de tour par image, dix images par seconde : l'animation
+   Un douzième de tour par image, 7,5 images par seconde (ralenti à la
+   demande de l'auteur, le 7 novembre — 10 au départ) : l'animation
    d'origine du disque viennois (vers 1830), chaque figure prenant la place de
    sa voisine. Sens inverse des aiguilles d'une montre — vérifié : à
    l'endroit, le chat saute EN AVANT par-dessus le tabouret. Sous mouvement
    réduit, le disque reste posé, immobile. ── */
-.phenakistiscope { animation: phenakistiscope 1.2s steps(12) infinite; }
+.phenakistiscope { animation: phenakistiscope 1.6s steps(12) infinite; }
 @keyframes phenakistiscope { to { transform: rotate(-360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .phenakistiscope { animation: none; }

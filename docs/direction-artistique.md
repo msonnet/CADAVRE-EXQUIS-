@@ -104,6 +104,23 @@ Trace »), EffectCraft (animation, export Lottie).*
   dessinés** — le rotorelief et les dix-sept autres. Le chantier du décor
   vivant est donc une suite : un motif après l'autre, chacun validé sur
   images témoins.
+- **Décisions de l'auteur, même soir : SEPT motifs, un par jour de la
+  semaine** ; un mouvement **subtil**, qui vit de lui-même et **se modifie
+  légèrement au toucher** ; les dix-huit dessins au trait **supprimés**
+  (les autres pages n'ont plus de symbole) ; le disque **un peu ralenti**
+  (1,6 s le tour au lieu de 1,2). Au toucher, il s'emballe (×3) et
+  retrouve son pas en 1,5 s.
+- **Les six motifs suivants, proposés** (gravures repérées, à télécharger
+  sur accord, images témoins à faire) : le papillon (Hollar, 1646, MET,
+  CC0) — ses ailes respirent, au toucher il bat des ailes ; le thaumatrope
+  (moineau et cage, planche de 1821, Rijksmuseum) — il se retourne de temps
+  en temps, au toucher il tourne et l'oiseau entre dans la cage ; la
+  montgolfière (le « Flesselles », Lyon, 1784, Rijksmuseum, CC0) — elle
+  flotte, au toucher elle monte un peu ; la lune (*Tabula Selenographica*,
+  Homann et Doppelmayr, 1707) — une ombre la parcourt lentement ; le
+  poisson (Bloch, *Ichthyologie*, années 1780) — il nage sur place, au
+  toucher un coup de queue ; la montre (cadran gravé, v. 1610,
+  Rijksmuseum, CC0).
 - **Intégré le 7 novembre, sur l'ACCUEIL seulement** (décision de
   l'auteur ; ailleurs, le rotorelief dessiné d'avant, `ailleurs` dans
   `collages.tsx`). Au rang du rotorelief dans `COLLAGES` : les tirages du

@@ -89,8 +89,9 @@ test('sur une ambiance sombre, sa lumière baisse jusqu\'au plafond — jamais i
   expect(ratio(PAPIER, facteur, ENCRE.fond)).toBeGreaterThan(6)
 })
 
-test('sur les autres pages, rien ne change : le rotorelief dessiné, sans disque', async ({ page }) => {
-  // Décision de l'auteur : le disque vit sur l'accueil seulement.
+test('les autres pages n\'ont plus de symbole : ni disque, ni dessin', async ({ page }) => {
+  // Décisions de l'auteur : les motifs vivent sur l'accueil seulement, et
+  // les dessins au trait d'avant sont supprimés.
   await accueil(page, LIN.graine)
   await present(page)
   await page.goto('/config')
@@ -99,8 +100,20 @@ test('sur les autres pages, rien ne change : le rotorelief dessiné, sans disque
   await s.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {})
   await expect(page.getByRole('heading', { name: /Choisir la structure/ })).toBeVisible()
   await expect(disque(page)).toHaveCount(0)
-  // Le symbole du jour y est toujours — dessiné, en SVG (les cercles du rotorelief).
-  await expect(page.locator('svg circle[r="52"]')).toHaveCount(1)
+  await expect(page.locator('svg circle[r="52"]')).toHaveCount(0)   // l'ancien rotorelief
+})
+
+test('au toucher, le disque s\'emballe un instant, puis retrouve son pas', async ({ page }) => {
+  await accueil(page, LIN.graine)
+  await present(page)
+  await page.waitForTimeout(1200)   // la chute du symbole est finie
+  const vitesse = () => disque(page).evaluate(i => i.getAnimations()[0]?.playbackRate ?? 0)
+  expect(await vitesse()).toBe(1)
+  await disque(page).dispatchEvent('pointerdown')
+  await page.waitForTimeout(150)
+  expect(await vitesse()).toBeGreaterThan(1.8)
+  await page.waitForTimeout(1800)
+  expect(await vitesse()).toBe(1)
 })
 
 test('sous mouvement réduit, le disque reste posé, immobile', async ({ page }) => {

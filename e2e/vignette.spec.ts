@@ -37,7 +37,7 @@ const mordSur = (page: Page) => page.evaluate(() => {
   const vignette = [...document.querySelectorAll('div')].find(d => {
     const cs = getComputedStyle(d)
     return cs.position === 'absolute' && cs.zIndex === '3'
-      && cs.pointerEvents === 'none' && !!d.querySelector('svg')
+      && cs.pointerEvents === 'none' && !!d.querySelector('svg, img')
   })
   if (!vignette) return []   // certains écrans n'en portent pas
   const v = vignette.getBoundingClientRect()
@@ -85,8 +85,9 @@ test('elle reste à l’écran après s’être écartée', async ({ page }) => 
   await page.addInitScript(() => localStorage.setItem('cadavre-onboarding-done', '1'))
   await page.route('**/supabase.co/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
 
-  // Les préparatifs : l'écran le plus dense, celui où elle mordait.
-  await page.goto('/config')
+  // L'accueil : depuis le 7 novembre, le seul écran qui porte un motif (une
+  // gravure, en <img> ; les dessins SVG d'avant sont supprimés).
+  await page.goto('/')
   await page.waitForLoadState('networkidle')
   await franchir(page)
   await page.waitForTimeout(1500)
@@ -95,7 +96,7 @@ test('elle reste à l’écran après s’être écartée', async ({ page }) => 
     const v = [...document.querySelectorAll('div')].find(d => {
       const cs = getComputedStyle(d)
       return cs.position === 'absolute' && cs.zIndex === '3'
-        && cs.pointerEvents === 'none' && !!d.querySelector('svg')
+        && cs.pointerEvents === 'none' && !!d.querySelector('svg, img')
     })?.getBoundingClientRect()
     if (!v) return null
     return v.left >= -1 && v.top >= -1

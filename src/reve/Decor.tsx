@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, createContext, useContext, useEffect, useLayoutEffect, useRef } from 'react'
 import { tr } from '../i18n'
 import { mulberry32, pickOne, pickN } from './prng'
-import { COLLAGES, type CollageDef, Hatches } from './collages'
+import { motifDuJour, type Motif } from './collages'
 import {
   AMBIANCE_POOL, AMBIANCES, type AmbianceKey, type Ambiance, type Accent,
   CITATIONS, ETIQ_POOL, HEURES_NOCTURNES, MARGINALIA,
@@ -13,17 +13,16 @@ import { garantirContraste, plafondLuminosite } from './contraste'
 export const PLAFOND_GRAVURE = 6.5
 
 /**
- * Le filtre du symbole du jour.
+ * Le filtre du motif du jour.
  *
- * Les dessins à l'encre s'inversent sur les ambiances sombres (encre claire
- * sur fond nuit). Une gravure en couleurs d'origine (`papier` connu) ne
- * s'inverse jamais : elle garde ses couleurs, et seule sa lumière baisse si
- * son papier dépasse le plafond de contraste sur le fond — luminosité et un
- * peu de saturation, jamais d'opacité (le fond transparaîtrait).
+ * Une gravure en couleurs d'origine ne s'inverse jamais : elle garde ses
+ * couleurs, et seule sa lumière baisse si son papier dépasse le plafond de
+ * contraste sur le fond — luminosité et un peu de saturation, jamais
+ * d'opacité (le fond transparaîtrait). Plus une ombre portée : c'est un
+ * objet posé sur la page.
  */
-export function filtreSymbole(symbole: CollageDef, fond: string | undefined, sombre: boolean): string | undefined {
-  if (!symbole.papier) return sombre ? 'invert(1) brightness(0.88)' : undefined
-  const f = fond ? plafondLuminosite(symbole.papier, fond, PLAFOND_GRAVURE) : 1
+export function filtreSymbole(motif: Motif, fond: string | undefined): string {
+  const f = fond ? plafondLuminosite(motif.papier, fond, PLAFOND_GRAVURE) : 1
   const ombre = 'drop-shadow(1px 2px 1.5px rgba(0,0,0,0.22))'
   return f < 1 ? `brightness(${f}) saturate(0.88) ${ombre}` : ombre
 }
@@ -59,9 +58,9 @@ export interface SeanceReve {
   ambiance: Ambiance
   accent: Accent
   accent2: Accent
-  symbole: CollageDef
+  /** Le motif du jour (un par jour de la semaine) — affiché sur l'accueil seulement. */
+  symbole: Motif
   symbolSide: 'left' | 'right'
-  collages: CollageDef[]
   citation: Citation
   etiqs: [string, string]
   margs: MargEntry[]
@@ -77,7 +76,7 @@ export interface SeanceReve {
 const ReveCtx = createContext<SeanceReve | null>(null)
 
 /** Exportée pour les mesures : elles balaient les tirages par le VRAI code, pas par une recopie. */
-export function composerSeance(seed: number): SeanceReve {
+export function composerSeance(seed: number, date: Date = new Date()): SeanceReve {
   const rng = mulberry32(seed)
   const ambianceKey = pickOne(rng, AMBIANCE_POOL) as AmbianceKey
   const ambianceBrute = AMBIANCES[ambianceKey]
@@ -118,8 +117,12 @@ export function composerSeance(seed: number): SeanceReve {
   }
   const accent2: Accent = { ...accent2Brut, hex: garantirContraste(accent2Brut.hex, bg, 4.5) }
 
-  const collages = pickN(rng, COLLAGES, Math.min(6, COLLAGES.length))
-  const symbole = collages[0]
+  // Le motif ne se tire plus : un par jour de la semaine (décision de
+  // l'auteur, 7 novembre). Les six tirages que consommait l'ancienne pioche
+  // des dessins sont consommés quand même : sans eux, le côté du symbole, la
+  // citation, les étiquettes, l'heure… de chaque graine auraient tous changé.
+  for (let i = 0; i < 6; i++) rng()
+  const symbole = motifDuJour(date)
   const symbolSide = rng() > 0.5 ? 'right' : 'left'
   const citation = pickOne(rng, CITATIONS)
   const etiqs = pickOne(rng, ETIQ_POOL)
@@ -130,7 +133,7 @@ export function composerSeance(seed: number): SeanceReve {
   const angleBiais = rng() * 12 - 6
 
   return {
-    seed, ambiance, accent, accent2, symbole, symbolSide, collages,
+    seed, ambiance, accent, accent2, symbole, symbolSide,
     citation, etiqs, margs, heure,
     titreRotation, idxBiais, angleBiais,
     retirer: () => {},
@@ -234,7 +237,6 @@ export function ReveProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ReveCtx.Provider value={seance}>
-      <Hatches />
       {children}
     </ReveCtx.Provider>
   )
@@ -411,7 +413,9 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
         />
       )}
 
-      {symbolPos && (
+      {/* Le motif du jour vit sur l'ACCUEIL seulement (décision de l'auteur,
+          7 novembre) ; les autres pages n'ont plus de symbole. */}
+      {variant === 'accueil' && symbolPos && (
         <SymboleAvecCartel
           symbole={s.symbole}
           pos={symbolPos}
@@ -454,8 +458,6 @@ function VerticalAccent({ side, rotation }: { side: 'left' | 'right'; rotation: 
     } as React.CSSProperties}>CADAVRE</div>
   )
 }
-
-const DARK_AMBIANCES = new Set(['minuit', 'encre', 'argile'])
 
 /**
  * La vignette cède la place.
@@ -612,23 +614,18 @@ function useEcarterDuTexte(ref: React.RefObject<HTMLDivElement | null>, opaque =
 function SymboleAvecCartel({
   symbole, pos, variant,
 }: {
-  symbole: CollageDef
+  symbole: Motif
   pos: NonNullable<VariantZones['symbol']>
   variant: Variant
 }) {
   const s = useReve()
   const boite = useRef<HTMLDivElement>(null)
-  // Une gravure qui ne vit que sur l'accueil (le phénakistiscope) laisse
-  // ailleurs la place à son dessin d'avant : seul l'accueil change.
-  const vu: CollageDef = variant !== 'accueil' && symbole.ailleurs
-    ? { ...symbole, draw: symbole.ailleurs.draw, w: symbole.ailleurs.w, papier: undefined }
-    : symbole
-  const [dx, dy] = useEcarterDuTexte(boite, !!vu.papier)
-  const Draw = vu.draw
-  const size = vu.w * pos.sizeMul
+  // Une gravure est opaque : elle s'écarte aussi du texte.
+  const [dx, dy] = useEcarterDuTexte(boite, true)
+  const Draw = symbole.draw
+  const size = symbole.w * pos.sizeMul
   const isCentered = variant === 'jeu-ia' || variant === 'multi'
   const showCartel = variant === 'accueil'
-  const isDark = DARK_AMBIANCES.has(s?.ambiance.id ?? '')
   return (
     // Outer: position + centering + responsive CSS scale (not touched by inner animation)
     <div
@@ -650,7 +647,7 @@ function SymboleAvecCartel({
         opacity: 0,
         animation: 'symbolDrop 1.1s cubic-bezier(0.34, 1.2, 0.64, 1) 0.5s both',
       }}>
-        <div style={{ filter: filtreSymbole(vu, s?.ambiance.bg, isDark) }}>
+        <div style={{ filter: filtreSymbole(symbole, s?.ambiance.bg) }}>
           <Draw w={size} />
         </div>
         {showCartel && (
