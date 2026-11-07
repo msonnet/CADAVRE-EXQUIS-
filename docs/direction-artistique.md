@@ -121,6 +121,29 @@ Trace »), EffectCraft (animation, export Lottie).*
   poisson (Bloch, *Ichthyologie*, années 1780) — il nage sur place, au
   toucher un coup de queue ; la montre (cadran gravé, v. 1610,
   Rijksmuseum, CC0).
+- **Images témoins des motifs suivants — 7 novembre, en attente de
+  validation.** Gravures téléchargées (accord de l'auteur), détourées,
+  animées dans le vrai accueil, sur Lin écru et Encre profonde :
+  - **le papillon** (Hollar, 1646) : ailes qui respirent ; au toucher, deux
+    battements. Sur fond sombre, l'eau-forte presque noire se perd — le
+    plafond doit y être calculé sur la luminosité réelle du motif, pas sur
+    son papier ;
+  - **la montgolfière** (« Le Flesselles », 1784) : elle flotte ; au toucher,
+    elle monte un peu ;
+  - **la carpe** (Bloch, 1785) : elle nage sur place ; au toucher, un coup de
+    queue ;
+  - **la lune** (Doppelmayr et Homann, 1707) : libration lente et une ombre
+    qui passe ; au toucher, l'ombre passe vite. Défaut vu : après le
+    toucher, le cycle repart par le côté sombre — en production, l'ombre
+    restera un croissant ;
+  - **le thaumatrope** (moineau et cage d'un surimono de 1821) : il se
+    retourne de temps en temps ; au toucher, il tourbillonne et l'oiseau
+    apparaît dans la cage. Le moineau, minuscule dans l'estampe, reste
+    flou : chercher un oiseau gravé plus grand avant de produire ;
+  - **la montre est écartée** : un cadran d'ornement sans aiguilles (rien à
+    animer sans inventer), entouré de figures nues. Septième motif
+    proposé à la place : **le cheval au galop de Muybridge** (1878, domaine
+    public), une vraie suite d'images comme le disque.
 - **Intégré le 7 novembre, sur l'ACCUEIL seulement** (décision de
   l'auteur ; ailleurs, le rotorelief dessiné d'avant, `ailleurs` dans
   `collages.tsx`). Au rang du rotorelief dans `COLLAGES` : les tirages du
