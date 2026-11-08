@@ -224,10 +224,29 @@ ambiances, sans couche alpha.
 *Outils : FilmCraft (rushes), EffectCraft (détourage, masques d'encre),
 SoundCraft.*
 
+**Planche témoin du 8 novembre** — une maquette comparative, aujourd'hui
+contre proposé, avec la partition réelle de `rythme.ts` pour un poème de
+cinq fragments (dernier mot à 5,8 s). Rien n'est intégré au jeu.
+- **Le papier** : la carte grise à liseré rouge devient une feuille posée,
+  avec son ombre. Elle arrive en paquet, l'en-tête et dessous les tranches
+  des volets, comme à l'écran d'écriture ; chaque volet sort de sous le
+  précédent et la feuille s'allonge. Plis marqués au repos, en creux et en
+  arête, volontairement faibles : au premier rendu ils faisaient des barres
+  empilées, le piège que décrit `Papier.tsx`.
+- **Le grain** : séparé, parce que `Papier.tsx` pose la règle « une feuille
+  se reconnaît à ses plis, pas à son grain ». À l'auteur de trancher.
+- **L'encre** : même rythme mot par mot, mais un bord fibreux et un halo
+  qui sèche en 0,5 s. Le premier halo (2,4 px) se lisait comme une ombre
+  portée ; ramené à 0,9 px.
+- **Le tampon « ACHEVÉ » : refusé par l'auteur le 8 novembre**, retiré de
+  la planche. La fin reste ce qu'elle est : les actions à 6,1 s. Ne pas
+  reproposer de tampon, ni ici ni au chantier 4, sans que l'auteur le
+  demande.
+
 ### 4. La matière de l'interface
 Boutons et cartes en papier : un bord, une ombre, une infime inclinaison,
-un appui qui enfonce. Étiquettes et onglets. Un **tampon** quand on scelle
-une voix. Les vibrations du téléphone (`@capacitor/haptics`, déjà relevé
+un appui qui enfonce. Étiquettes et onglets. ~~Un tampon quand on scelle
+une voix~~ (le tampon est refusé par l'auteur, 8 novembre). Les vibrations du téléphone (`@capacitor/haptics`, déjà relevé
 par l'audit). Des écrans vides illustrés.
 *Outils : FigCraft (maquettes, composants, export des variables vers le
 CSS).*
