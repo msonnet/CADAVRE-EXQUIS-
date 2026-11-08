@@ -372,6 +372,38 @@ c'était une attente.
 négative au treizième fragment et l'API Web Animations refusait. La page de fin
 plantait entièrement — personne ne l'avait ouverte avec le réglage actif.
 
+### La feuille de papier, et le mot déjà sur le volet — 8 novembre
+
+Planche témoin comparative montrée à l'auteur (`docs/direction-artistique.md`,
+chantier 3), puis intégrée à la fin de partie.
+
+- **Le mot est DÉJÀ sur son volet.** L'auteur : « le mot met trop de temps à
+  apparaître quand le papier se déplie ». L'encre attendait que le volet soit
+  ouvert aux trois quarts (0,9 s sur 1,15 s) : le papier descendait vide. Les
+  fragments d'un cadavre exquis sont écrits avant d'être pliés ; c'est le pli
+  qui les montre. `VersEncre` est posé `immediat` (mise en page, lettrine,
+  copie pour l'oreille, sans masque) ; la lettrine ne tombe plus, son son
+  part quand le premier volet se couche. Le poème est posé à
+  `finDuDepli` (dernier volet à plat) ; les temps d'encre de `rythme.ts`
+  restent la mesure du souffle qui ESPACE les volets.
+- **Une feuille, et non une carte** (`lib/papier.ts`, `VoletDePapier` dans
+  `Depli.tsx`). Plus de liseré rouge : un papier posé, plus clair que le fond
+  sur les ambiances claires, un papier noir sur les sombres, avec son ombre.
+  Les volets sont des faces OPAQUES qui débordent la marge (un pli traverse
+  la feuille), prennent l'ombre debout, et la feuille S'ALLONGE de leur
+  projection : elle arrive en paquet, l'en-tête et les tranches des volets
+  fermés dessous, comme à l'écran d'écriture. Le pied est écrit sur le
+  dernier volet. Plis au repos faibles, creux et arête en alternance.
+- **Le grain est gardé**, très faible, dessiné au canvas (aucun fichier) ;
+  `GRAIN = false` dans `lib/papier.ts` le retire.
+- **Un volet fermé est transparent, jamais `visibility: hidden`** : sans
+  quoi la copie du vers pour le lecteur d'écran disparaissait jusqu'à
+  l'ouverture de son volet. Trouvé par `fin-de-partie.spec.ts`.
+- **Le tampon « ACHEVÉ » a été refusé par l'auteur.** Ne pas le reproposer.
+- Le salon et le poème du jour reçoivent le mot déjà sur le volet, mais pas
+  encore la feuille : ils n'ont pas de carte, leur mise en page est à
+  dessiner à part.
+
 ## Les polices — auto-hébergées depuis le 11 septembre 2026
 
 Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.
@@ -2080,7 +2112,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (842 tests unitaires) + Playwright (168 tests E2E, FR et EN)
+- Tests : Vitest (852 tests unitaires) + Playwright (170 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

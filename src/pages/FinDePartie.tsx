@@ -11,6 +11,7 @@ import { corrigerAccords } from '../api/corriger'
 import { Decor, useReve } from '../reve'
 import RevealAssemblageTexte from '../components/RevealAssemblageTexte'
 import PoemeDevoile from '../components/PoemeDevoile'
+import { papierDeLaFeuille, grainDuPapier } from '../lib/papier'
 import TutorielCoach from '../components/TutorielCoach'
 import { useTutoriel, TUTORIEL_TOTAL, T_FIN_REVEL, T_FIN_SUITE, T_BIBLIO } from '../hooks/useTutoriel'
 import { vibrer } from '../utils/haptics'
@@ -158,6 +159,11 @@ export default function FinDePartie() {
   const accent = sc?.hex ?? '#b22c20'
   const encre = sc?.encre ?? '#0f0805'
   const bg = seance?.ambiance.bg ?? '#f0e4cc'
+  // La feuille de papier (`lib/papier.ts`), et sa marge intérieure : les
+  // volets la débordent pour qu'un pli traverse la feuille d'un bord à l'autre.
+  const feuille = papierDeLaFeuille(bg, encre)
+  const grain = grainDuPapier(feuille.sombre)
+  const BORD_FEUILLE = 16
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = sc?.name.toUpperCase() ?? ''
   // Les liens empilés du bas : une boîte de 44 px chacun (voir plus bas).
@@ -585,13 +591,13 @@ export default function FinDePartie() {
 
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 20 }} />
 
-        {/* ── POEM CARD ──
+        {/* ── LA FEUILLE ──
             Un article nommé : le poème était une coulée de texte fondue
             avec l'en-tête et le pied, ni titre, ni région.
-            La surface dérive de l'ENCRE, comme le feuillet plié du poème du
-            jour : le voile crème fixe, à 25 %, devenait une dalle
-            gris-lavande sur minuit, gris-brun sur argile — étrangère à
-            l'ambiance. */}
+            Depuis le 8 novembre, une feuille de papier posée et non plus une
+            carte à liseré rouge (planche témoin validée par l'auteur) : elle
+            arrive pliée, en paquet, et s'allonge à chaque volet. Positionnée,
+            parce que les tranches des volets fermés pendent sous son bord. */}
         <motion.article
           id="feuillet-fin"
           aria-label={tr('Le poème', 'The poem')}
@@ -599,11 +605,13 @@ export default function FinDePartie() {
           animate={rideauLeve ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           transition={{ duration: 0.45 }}
           style={{
-            border: `1px solid ${accent}40`,
-            borderLeft: `3px solid ${accent}`,
+            position: 'relative',
             borderRadius: 3,
-            padding: '16px 16px 12px',
-            background: `${encre}09`,
+            padding: `16px ${BORD_FEUILLE}px 12px`,
+            backgroundColor: feuille.couleur,
+            backgroundImage: grain,
+            backgroundSize: '200px 200px',
+            boxShadow: feuille.ombre,
             marginBottom: 20,
           }}
         >
@@ -621,6 +629,13 @@ export default function FinDePartie() {
             onLettrine={() => { jouer('lettrine'); vibrer('devoilement') }}
             onFini={onPoemeFini}
             apres={couture}
+            papier={{ couleur: feuille.couleur, sombre: feuille.sombre, ombre: feuille.ombreVolet, grain, bord: BORD_FEUILLE }}
+            // Le pied est écrit sur le dernier volet : il arrive avec lui.
+            pied={
+              <div style={{ ...mono, fontStyle: 'normal', fontSize: 13, lineHeight: 1.5, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
+                {libelleMorceaux(poeme.structureId, voixCount)} · {structLabel.toUpperCase()} · {heureStr}
+              </div>
+            }
             style={{
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
               // Un cran plus bas quand les vers sont longs (`lib/composition.ts`).
@@ -656,10 +671,6 @@ export default function FinDePartie() {
             </>
           )}
 
-          {/* Card footer */}
-          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
-            {libelleMorceaux(poeme.structureId, voixCount)} · {structLabel.toUpperCase()} · {heureStr}
-          </div>
         </motion.article>
 
         {/*

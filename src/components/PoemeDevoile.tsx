@@ -1,17 +1,28 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
-import Depli from './Depli'
+import Depli, { type VoletPapier } from './Depli'
 import VersEncre from './VersEncre'
-import { partitionDuPoeme, DUREE_DEPLI } from '../lib/rythme'
+import { Tranches } from './Papier'
+import { partitionDuPoeme, finDuDepli, DUREE_DEPLI } from '../lib/rythme'
 
 /**
- * Le dévoilement du poème : le papier s'ouvre, puis l'encre vient dessus.
+ * Le dévoilement du poème : le papier s'ouvre, et les vers sont dessus.
  *
- * Deux gestes, dans cet ordre, et c'est tout le dispositif. Le feuillet est
- * plié en volets — jusqu'à cinq, un par vers quand le poème est court, ce qui
- * retrouve exactement le pliage d'origine d'un cadavre exquis à trois ou
- * quatre mains. Un volet s'ouvre, les vers qu'il porte s'écrivent, le volet
- * suivant s'ouvre déjà pendant que le précédent finit sa phrase.
+ * Le feuillet est plié en volets — jusqu'à cinq, un par vers quand le poème
+ * est court, ce qui retrouve exactement le pliage d'origine d'un cadavre
+ * exquis à trois ou quatre mains. Un volet s'ouvre et montre le vers qu'il
+ * porte ; le suivant s'ouvre quand le précédent a eu le temps d'être lu.
+ *
+ * Jusqu'au 8 novembre il y avait deux gestes : le papier, puis l'encre, qui
+ * attendait que le volet soit presque à plat. L'auteur : « le mot met trop de
+ * temps à apparaître quand le papier se déplie ». Les fragments d'un cadavre
+ * exquis sont écrits AVANT d'être pliés ; le mot est donc déjà sur le volet
+ * (`finDuDepli`, `rythme.ts`). `VersEncre` garde la mise en page du vers, sa
+ * lettrine et sa copie pour le lecteur d'écran, sans son masque.
+ *
+ * Avec `papier`, les volets sont des faces de papier opaques et la feuille
+ * s'allonge à chaque pli (`Depli`) ; sous elle pendent les tranches des
+ * volets encore fermés. Le conteneur de la feuille doit être positionné :
+ * c'est sous SON bord que les tranches pendent.
  *
  * `rythme.ts` tient la partition : c'est lui qui sait qu'un vers d'un mot doit
  * tomber vite et laisser un silence, et que le poème entier doit passer en
@@ -53,6 +64,10 @@ interface Props {
   tailleLettrine?: string
   /** Rendu sous le vers d'indice i — les coutures, une fois le poème posé. */
   apres?: (i: number) => React.ReactNode
+  /** La feuille de papier (`lib/papier.ts`). Absent : les volets transparents d'avant. */
+  papier?: VoletPapier
+  /** Le pied de la feuille, porté par le dernier volet : il arrive avec lui. */
+  pied?: React.ReactNode
 }
 
 const mouvementReduit = () =>
@@ -64,10 +79,9 @@ const OUVRANTS = /^[«»"'“”‘’]+/
 
 export default function PoemeDevoile({
   lignes, accent, actif, lettrine, onLettrine, onFini, style,
-  tailleLettrine = 'clamp(2.8rem, 10vw, 3.4rem)', apres,
+  tailleLettrine = 'clamp(2.8rem, 10vw, 3.4rem)', apres, papier, pied,
 }: Props) {
   const [saute, setSaute] = useState(false)
-  const [lettrinePosee, setLettrinePosee] = useState(false)
   const reduit = useMemo(mouvementReduit, [])
   const immediat = saute || reduit
 
@@ -83,6 +97,10 @@ export default function PoemeDevoile({
   )
 
   const partition = useMemo(() => partitionDuPoeme(affichees), [affichees])
+  const fin = finDuDepli(partition)
+  const nPanneaux = partition.panneaux.length
+  // Les volets encore fermés : autant de tranches sous la feuille.
+  const [ouverts, setOuverts] = useState(0)
 
   // L'instant où le rideau s'est levé, gardé une fois pour toutes. Le
   // minuteur de fin repartait de zéro à chaque nouvelle partition — or la
@@ -107,14 +125,22 @@ export default function PoemeDevoile({
     // Le poème posé de lui-même, on cesse d'écouter. L'écoute survivait à la
     // séquence : le premier appui sur COUTURES ou sur le guide « abrégeait »
     // un poème déjà écrit, et le feuillet se remontait sous le doigt.
-    const fin = setTimeout(() => { retirer(); onFini?.() }, Math.max(0, partition.fin + 240 - ecoule))
+    const finie = setTimeout(() => { retirer(); onFini?.() }, Math.max(0, fin + 240 - ecoule))
+    // Le son et l'haptique de la lettrine : quand le premier volet se pose.
+    const lettrinePosee = capitale && onLettrine && nPanneaux > 0
+      ? setTimeout(onLettrine, Math.max(0, partition.panneaux[0].ouverture + DUREE_DEPLI - ecoule))
+      : undefined
+    const plis = partition.panneaux.map((pan, p) =>
+      setTimeout(() => setOuverts(o => Math.max(o, p + 1)), Math.max(0, pan.ouverture - ecoule)))
     window.addEventListener('pointerdown', sauter, { capture: true })
     window.addEventListener('keydown', sauter, { capture: true })
     return () => {
-      clearTimeout(fin)
+      clearTimeout(finie)
+      clearTimeout(lettrinePosee)
+      plis.forEach(clearTimeout)
       retirer()
     }
-  }, [actif, immediat, partition.fin]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [actif, immediat, fin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /*
     Abrégé AU DOIGT, `onFini` attend que le clic soit passé.
@@ -160,7 +186,11 @@ export default function PoemeDevoile({
           delai={panneau.ouverture / 1000}
           duree={dureeDepli}
           immediat={immediat}
-          pli={p > 0}
+          // Sur la feuille de papier, le premier volet est plié sous
+          // l'en-tête : son bord haut est un pli, lui aussi.
+          pli={papier ? true : p > 0}
+          papier={papier}
+          rang={p}
         >
           {panneau.lignes.map(i => {
             const t = partition.vers[i]
@@ -173,19 +203,12 @@ export default function PoemeDevoile({
                 lu={i === 0 && capitale ? ligne0 : undefined}
                 debut={t.debut / 1000}
                 duree={t.duree / 1000}
-                immediat={immediat}
+                // Le mot est déjà sur le volet : c'est le pli qui le montre.
+                immediat
                 avant={i === 0 && capitale ? (
-                  <motion.span
-                    initial={immediat ? false : { y: -38, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={immediat ? { duration: 0, delay: 0 } : {
-                      delay: t.debut / 1000,
-                      duration: 0.72,
-                      ease: [0.22, 1.4, 0.36, 1],
-                    }}
-                    onAnimationComplete={() => {
-                      if (!lettrinePosee) { setLettrinePosee(true); onLettrine?.() }
-                    }}
+                  // Imprimée avec le reste : elle ne tombe plus, elle est là
+                  // quand le premier volet se couche.
+                  <span
                     style={{
                       display: 'inline-block',
                       fontFamily: "'Bodoni Moda', serif",
@@ -204,15 +227,22 @@ export default function PoemeDevoile({
                     }}
                   >
                     {capitale}
-                  </motion.span>
+                  </span>
                 ) : undefined}
               />
               {apres?.(i)}
               </React.Fragment>
             )
           })}
+          {p === nPanneaux - 1 && pied}
         </Depli>
       ))}
+      {/* Les volets encore fermés, en tranches sous le bord de la feuille. */}
+      {papier && !immediat && ouverts < nPanneaux && (
+        <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: '100%', pointerEvents: 'none' }}>
+          <Tranches n={nPanneaux - ouverts} encre={style?.color as string ?? '#000'} />
+        </div>
+      )}
     </div>
   )
 }

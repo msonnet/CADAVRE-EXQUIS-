@@ -76,8 +76,16 @@ async function semer(page: Page, opts: { structure?: string; vers?: string[]; tu
 async function motsEcrits(page: Page) {
   return page.evaluate(() => {
     const mots = [...document.querySelectorAll<HTMLElement>('#feuillet-fin span[style*="clip-path"]')]
+    // Depuis le 8 novembre le mot est DÉJÀ sur son volet : il est lisible
+    // quand son volet est à plat, et non quand un masque l'a découvert.
+    const aPlat = (m: HTMLElement) => {
+      const v = m.closest<HTMLElement>('[data-volet-papier]')
+      if (!v) return true
+      const cs = getComputedStyle(v)
+      return parseFloat(cs.opacity) > 0.95 && cs.transform === 'none'
+    }
     const ecrits = mots.filter(m => parseFloat(getComputedStyle(m).opacity) > 0.95
-      && /none|inset\(0px\)|0%/.test(getComputedStyle(m).clipPath))
+      && /none|inset\(0px\)|0%/.test(getComputedStyle(m).clipPath) && aPlat(m))
     return { total: mots.length, ecrits: ecrits.length }
   })
 }

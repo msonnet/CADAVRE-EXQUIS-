@@ -6,6 +6,10 @@ import { test, expect, type Page } from '@playwright/test'
  * Trois promesses, et elles se vérifient à l'écran : le poème entier finit par
  * être là, un appui le pose d'un coup, et `prefers-reduced-motion` supprime la
  * séquence au lieu de la jouer plus vite.
+ *
+ * Et deux de plus depuis le 8 novembre, la feuille de papier validée par
+ * l'auteur : le mot est DÉJÀ sur son volet quand celui-ci se déplie, et la
+ * feuille s'allonge d'un volet à chaque pli pendant que ses tranches s'en vont.
  */
 
 const VERS = [
@@ -72,6 +76,15 @@ async function semer(page: Page, n: number) {
   }, { nn: n, vers: VERS })
 }
 
+/** Chaque volet de la feuille : pas encore parti, en train de se coucher, ou à plat. */
+async function volets(page: Page) {
+  return page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-volet-papier]')].map(v => {
+    const cs = getComputedStyle(v)
+    if (parseFloat(cs.opacity) < 0.05) return 'ferme'
+    return cs.transform === 'none' ? 'plat' : 'mouvement'
+  }))
+}
+
 async function preparer(page: Page) {
   await page.addInitScript(() => localStorage.setItem('cadavre-onboarding-done', '1'))
   await page.route('**/supabase.co/**', r => r.fulfill({ status: 200, body: '[]' }))
@@ -101,7 +114,10 @@ test('le poème entier finit par être écrit, et le rideau se saute', async ({ 
 
   // ── Le poème s'écrit, puis il est là en entier ──
   const carte = page.locator('.page-carnet')
-  await expect(carte.getByText('un athanor').first()).toBeVisible({ timeout: 12_000 })
+  await expect.poll(async () => {
+    const v = await volets(page)
+    return v.length > 0 && v.every(e => e === 'plat')
+  }, { timeout: 12_000 }).toBe(true)
   const texte = await carte.innerText()
   for (const v of VERS.slice(1)) expect(texte).toContain(v)
   // La lettrine a bien pris la première lettre du premier vers.
@@ -151,4 +167,77 @@ test('mouvement réduit : le poème est posé sans séquence', async ({ page }) 
   await page.waitForTimeout(250)
   const texte = await page.locator('.page-carnet').innerText()
   for (const v of VERS.slice(1)) expect(texte).toContain(v)
+})
+
+test('le mot est déjà sur son volet : il arrive avec le pli, pas après', async ({ page }) => {
+  test.setTimeout(90_000)
+  await preparer(page)
+  await semer(page, 5)
+
+  await page.goto('/fin')
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  await passerLeRideau(page)
+
+  // Saisir un volet EN TRAIN de se coucher — pas le premier, déjà parti au
+  // lever du rideau — et regarder son vers à cet instant.
+  let vu = null as null | { hauteur: number; mots: { opacite: number; clip: string }[] }
+  const debut = Date.now()
+  while (!vu && Date.now() - debut < 10_000) {
+    vu = await page.evaluate(() => {
+      const v = [...document.querySelectorAll<HTMLElement>('[data-volet-papier]')].slice(1).find(el => {
+        const cs = getComputedStyle(el)
+        return parseFloat(cs.opacity) > 0.95 && cs.transform !== 'none'
+      })
+      if (!v) return null
+      return {
+        hauteur: v.getBoundingClientRect().height,
+        mots: [...v.querySelectorAll<HTMLElement>('span[style*="clip-path"]')].map(m => ({
+          opacite: parseFloat(getComputedStyle(m).opacity), clip: getComputedStyle(m).clipPath,
+        })),
+      }
+    })
+    if (!vu) await page.waitForTimeout(40)
+  }
+  expect(vu, 'un volet a été vu en train de se déplier').not.toBeNull()
+  expect(vu!.hauteur).toBeGreaterThan(2)
+  expect(vu!.mots.length).toBeGreaterThan(0)
+  for (const m of vu!.mots) {
+    expect(m.opacite, 'le mot est déjà là').toBeGreaterThan(0.95)
+    expect(m.clip === 'none' || /inset\(0px\)|0%/.test(m.clip), 'aucun masque d’encre').toBe(true)
+  }
+})
+
+test('la feuille s’allonge d’un volet à chaque pli, et ses tranches s’en vont', async ({ page }) => {
+  test.setTimeout(90_000)
+  await preparer(page)
+  await semer(page, 5)
+
+  await page.goto('/fin')
+  await page.waitForLoadState('domcontentloaded')
+  await entrer(page)
+  await passerLeRideau(page)
+
+  const releves: { hauteur: number; tranches: number }[] = []
+  const debut = Date.now()
+  while (Date.now() - debut < 12_000) {
+    releves.push(await page.evaluate(() => {
+      const f = document.querySelector<HTMLElement>('#feuillet-fin')!
+      const t = f.querySelector<HTMLElement>('[data-tranches]')
+      return { hauteur: f.getBoundingClientRect().height, tranches: t ? Number(t.dataset.tranches) : 0 }
+    }))
+    const v = await volets(page)
+    if (v.length && v.every(e => e === 'plat')) break
+    await page.waitForTimeout(80)
+  }
+  const premier = releves[0], dernier = releves[releves.length - 1]
+  // Elle arrive courte, en paquet, et finit cinq volets plus longue.
+  expect(dernier.hauteur - premier.hauteur).toBeGreaterThan(120)
+  for (let i = 1; i < releves.length; i++) {
+    expect(releves[i].hauteur, `relevé ${i}`).toBeGreaterThanOrEqual(releves[i - 1].hauteur - 1)
+    expect(releves[i].tranches, `relevé ${i}`).toBeLessThanOrEqual(releves[i - 1].tranches)
+  }
+  // Des tranches au départ, aucune quand tout est ouvert.
+  expect(premier.tranches).toBeGreaterThan(0)
+  expect(dernier.tranches).toBe(0)
 })

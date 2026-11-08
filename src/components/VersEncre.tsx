@@ -5,6 +5,12 @@ import { styleVers, RETRAIT_DEBORD } from '../lib/composition'
 /**
  * Un vers qui s'écrit.
  *
+ * Depuis le 8 novembre, `PoemeDevoile` le pose toujours `immediat` : le mot
+ * est déjà sur son volet, c'est le pli qui le montre (décision de l'auteur).
+ * Le masque d'encre ci-dessous ne joue donc plus ; on le garde parce que le
+ * composant porte aussi la mise en page du vers, sa lettrine et sa copie
+ * pour le lecteur d'écran.
+ *
  * Le fondu est le vocabulaire du chargement. Ici le vers est découvert par un
  * masque qui court de gauche à droite, mot après mot, à la vitesse d'une main :
  * il ne paraît pas, il s'écrit.

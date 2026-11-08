@@ -238,6 +238,12 @@ cinq fragments (dernier mot à 5,8 s). Rien n'est intégré au jeu.
 - **L'encre** : même rythme mot par mot, mais un bord fibreux et un halo
   qui sèche en 0,5 s. Le premier halo (2,4 px) se lisait comme une ombre
   portée ; ramené à 0,9 px.
+- **Le mot arrive avec son volet** — l'auteur, le même jour : « le mot met
+  trop de temps à apparaître quand le papier se déplie ». Deux variantes
+  montrées (écrit pendant le pli, déjà sur le volet) ; **choisie : déjà sur
+  le volet**. L'encre fibreuse n'a donc plus d'objet.
+- **Intégré le 8 novembre** à la fin de partie : papier, grain, mot déjà sur
+  le volet. Voir CLAUDE.md, « La feuille de papier ».
 - **Le tampon « ACHEVÉ » : refusé par l'auteur le 8 novembre**, retiré de
   la planche. La fin reste ce qu'elle est : les actions à 6,1 s. Ne pas
   reproposer de tampon, ni ici ni au chantier 4, sans que l'auteur le

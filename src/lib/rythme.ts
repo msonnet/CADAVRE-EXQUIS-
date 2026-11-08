@@ -269,3 +269,18 @@ export function partitionDuPoeme(
 
   return { panneaux, vers, fin: finEncre, facteur: +facteur.toFixed(3) }
 }
+
+/**
+ * L'instant où le poème est posé : le dernier volet à plat.
+ *
+ * Depuis le 8 novembre le mot est DÉJÀ écrit sur son volet — l'auteur : « le
+ * mot met trop de temps à apparaître quand le papier se déplie ». L'encre
+ * attendait que le volet soit ouvert aux trois quarts (`RECOUVREMENT`), si
+ * bien que le papier descendait vide. Les temps des vers ne s'affichent donc
+ * plus ; ils restent la mesure du souffle, celle qui espace les volets : un
+ * vers long laisse plus de temps à la lecture avant que le suivant s'ouvre.
+ */
+export function finDuDepli(p: Partition): number {
+  if (p.panneaux.length === 0) return 0
+  return p.panneaux[p.panneaux.length - 1].ouverture + DUREE_DEPLI
+}
