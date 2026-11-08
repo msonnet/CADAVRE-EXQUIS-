@@ -172,6 +172,17 @@ Trace »), EffectCraft (animation, export Lottie).*
   gravure de parapluie serait mieux) ; le titre du disque est illisible à
   160 px ; le médaillon de Redon ressort fort sur fond sombre. Le plafond
   se calcule désormais sur la TEINTE MOYENNE du motif, pas sur son papier.
+- **Produit le 7 novembre, à la demande de l'auteur (« fais ce que tu penses
+  qui est le mieux »)** : les quatre motifs aboutis — le Phénakistiscope
+  (lundi), la Lune et le nuage (jeudi), le Poisson soluble (vendredi), la
+  Clef des songes (dimanche, au toucher un quart de tour comme dans une
+  serrure). **Le bord découpé** unifie la série : une marge de papier
+  #f6f0e2, au contour à peine irrégulier, comme une coupure collée — le
+  plafond de contraste la lit. Les jours vides (mardi, mercredi, samedi)
+  prennent l'un des quatre, en tournant. À retravailler avant de les
+  produire : la Rencontre fortuite (un vrai parapluie gravé), l'Œil-ballon
+  (découpé, sans sa brume), la Pomme (une réaction qui ait du sens).
+  `scripts/decor-motifs.mjs` fabrique tout depuis `resources/gravures/`.
 - **Intégré le 7 novembre, sur l'ACCUEIL seulement** (décision de
   l'auteur ; ailleurs, le rotorelief dessiné d'avant, `ailleurs` dans
   `collages.tsx`). Au rang du rotorelief dans `COLLAGES` : les tirages du

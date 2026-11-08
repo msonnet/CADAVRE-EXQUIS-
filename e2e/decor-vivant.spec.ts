@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test'
 /**
  * Le décor vivant — `docs/direction-artistique.md`.
  *
- * Premier élément : le symbole du jour peut être un vrai disque de
+ * Le motif du jour, sur l'accueil seulement — ici le premier, un vrai disque de
  * phénakistiscope (Vienne, vers 1830), qui tourne d'un douzième de tour par
  * image. En couleurs d'origine sur les ambiances claires ; sur les sombres,
  * sa lumière baisse jusqu'à 6,5:1 au plus contre le fond (choix de l'auteur,
@@ -13,13 +13,28 @@ import { test, expect, type Page } from '@playwright/test'
  * pour tourner, qui ne tournait pas.
  */
 
-// Deux graines dont le symbole du jour est le disque (relevées par
-// `composerSeance`) : Lin écru, claire ; Encre profonde, la plus sombre.
+// Deux graines (relevées par `composerSeance`) : Lin écru, claire ; Encre
+// profonde, la plus sombre.
 const LIN = { graine: 274, fond: '#f2ede2' }
 const ENCRE = { graine: 74, fond: '#080604' }
-const PAPIER = '#eddbba'
+/** Le papier du bord découpé des motifs : le plafond de contraste le lit. */
+const PAPIER = '#f6f0e2'
 
-async function accueil(page: Page, graine: number) {
+/**
+ * Un motif par jour de la semaine : la date est FIXÉE, sinon le motif
+ * changerait selon le jour où l'on lance les mesures. La semaine du
+ * 9 novembre 2026 : lundi le disque, jeudi la lune, vendredi le poisson,
+ * dimanche la clef.
+ */
+const JOURS = {
+  lundi: new Date('2026-11-09T10:00:00'),
+  jeudi: new Date('2026-11-12T10:00:00'),
+  vendredi: new Date('2026-11-13T10:00:00'),
+  dimanche: new Date('2026-11-15T10:00:00'),
+}
+
+async function accueil(page: Page, graine: number, date: Date = JOURS.lundi) {
+  await page.clock.setFixedTime(date)
   await page.addInitScript(g => {
     const d = new Date()
     const jour = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -114,6 +129,54 @@ test('au toucher, le disque s\'emballe un instant, puis retrouve son pas', async
   expect(await vitesse()).toBeGreaterThan(1.8)
   await page.waitForTimeout(1800)
   expect(await vitesse()).toBe(1)
+})
+
+/** L'animation en cours d'un élément, et sa réaction au toucher. */
+const anim = (page: Page, sel: string) => page.locator(sel).first().evaluate(e => getComputedStyle(e).animationName)
+
+test('jeudi, la lune : le nuage la traverse ; au toucher, il passe vite', async ({ page }) => {
+  await accueil(page, LIN.graine, JOURS.jeudi)
+  await expect(page.getByText('La Lune et le nuage', { exact: true })).toBeVisible({ timeout: 8000 })
+  await expect(page.locator('.motif-lune .lune-astre')).toBeVisible()
+  expect(await anim(page, '.motif-lune .lune-nuage')).toBe('lune-nuage')
+  await expect(page.getByText(/chien andalou/)).toBeVisible()
+  await page.waitForTimeout(1200)
+  await page.locator('.motif-lune').dispatchEvent('pointerdown')
+  await expect(page.locator('.motif-lune')).toHaveClass(/touche/)
+  // La traversée rapide finie, le nuage reprend son pas lent.
+  await expect(page.locator('.motif-lune')).not.toHaveClass(/touche/, { timeout: 4000 })
+})
+
+test('vendredi, le poisson soluble : il nage ; au toucher, il se dissout', async ({ page }) => {
+  await accueil(page, LIN.graine, JOURS.vendredi)
+  await expect(page.getByText('Le Poisson soluble', { exact: true })).toBeVisible({ timeout: 8000 })
+  expect(await anim(page, '.motif-carpe')).toBe('carpe-nage')
+  await page.waitForTimeout(1200)
+  await page.locator('.motif-carpe').dispatchEvent('pointerdown')
+  expect(await anim(page, '.motif-carpe')).toBe('carpe-dissout')
+  await page.waitForTimeout(800)
+  // Au plus fort, presque transparent.
+  expect(Number(await page.locator('.motif-carpe').evaluate(e => getComputedStyle(e).opacity))).toBeLessThan(0.5)
+  await expect.poll(() => anim(page, '.motif-carpe'), { timeout: 4000 }).toBe('carpe-nage')
+})
+
+test('dimanche, la clef des songes : elle se balance ; au toucher, un quart de tour', async ({ page }) => {
+  await accueil(page, ENCRE.graine, JOURS.dimanche)
+  await expect(page.getByText('La Clef des songes', { exact: true })).toBeVisible({ timeout: 8000 })
+  expect(await anim(page, '.motif-clef')).toBe('clef-balance')
+  await page.waitForTimeout(1200)
+  await page.locator('.motif-clef').dispatchEvent('pointerdown')
+  expect(await anim(page, '.motif-clef')).toBe('clef-tourne')
+  await expect.poll(() => anim(page, '.motif-clef'), { timeout: 4000 }).toBe('clef-balance')
+})
+
+test('sous mouvement réduit, chaque motif est posé', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  for (const [date, sel] of [[JOURS.jeudi, '.motif-lune .lune-nuage'], [JOURS.vendredi, '.motif-carpe'], [JOURS.dimanche, '.motif-clef']] as const) {
+    await accueil(page, LIN.graine, date)
+    await expect(page.locator(sel).first()).toBeVisible({ timeout: 8000 })
+    expect(await anim(page, sel), sel).toBe('none')
+  }
 })
 
 test('sous mouvement réduit, le disque reste posé, immobile', async ({ page }) => {

@@ -372,6 +372,53 @@
 @media (prefers-reduced-motion: reduce) {
   .phenakistiscope { animation: none; }
 }
+
+/* ── Les autres motifs du jour (src/reve/collages.tsx) ──
+   Un mouvement subtil, qui vit de lui-même ; au toucher (classe `touche`),
+   une réaction qui dit la référence. Sous mouvement réduit, tout est posé. */
+
+/* Le Poisson soluble — il nage sur place ; au toucher, il se dissout puis se reforme. */
+.motif-carpe { animation: carpe-nage 2.8s ease-in-out infinite; transform-origin: 78% 50%; }
+@keyframes carpe-nage { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg) translateX(2px); } }
+.motif-carpe.touche { animation: carpe-dissout 2s ease-in-out 1; }
+@keyframes carpe-dissout {
+  0% { opacity: 1; filter: none; }
+  40%, 60% { opacity: .12; filter: blur(2.5px); transform: scale(1.04, .96) skewX(5deg); }
+  100% { opacity: 1; filter: none; }
+}
+
+/* La Lune et le nuage — le filet de nuée traverse la lune ; au toucher, il passe vite. */
+.motif-lune .lune-astre { animation: lune-libration 16s ease-in-out infinite; }
+@keyframes lune-libration { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.motif-lune .lune-nuage { animation: lune-nuage 15s linear infinite; }
+@keyframes lune-nuage {
+  0% { transform: translateX(-105%); opacity: 0; }
+  8%, 92% { opacity: 1; }
+  100% { transform: translateX(110%); opacity: 0; }
+}
+/* Un NOM propre pour la traversée rapide : sous le même nom, le navigateur
+   ne relance pas l'animation, il raccourcit celle qui tourne — passé 1,3 s de
+   la traversée lente, la rapide était finie avant d'avoir commencé. */
+.motif-lune.touche .lune-nuage { animation: lune-nuage-vite 1.3s ease-in-out 1; }
+@keyframes lune-nuage-vite {
+  0% { transform: translateX(-105%); opacity: 0; }
+  8%, 92% { opacity: 1; }
+  100% { transform: translateX(110%); opacity: 0; }
+}
+
+/* La Clef des songes — elle se balance ; au toucher, un quart de tour, comme dans une serrure. */
+.motif-clef-scene { perspective: 500px; }
+.motif-clef { transform-origin: 50% 2%; animation: clef-balance 3.8s ease-in-out infinite; }
+@keyframes clef-balance { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+.motif-clef.touche { animation: clef-tourne 1.4s ease-in-out 1; }
+@keyframes clef-tourne { 0% { transform: rotateY(0); } 40%, 65% { transform: rotateY(88deg); } 100% { transform: rotateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .motif-carpe, .motif-carpe.touche, .motif-clef, .motif-clef.touche,
+  .motif-lune .lune-astre, .motif-lune .lune-nuage, .motif-lune.touche .lune-nuage { animation: none; }
+  /* Posé : le nuage en travers de la lune, comme dans le plan du film. */
+  .motif-lune .lune-nuage { transform: translateX(3%); }
+}
 @keyframes collageDrop { 0% { opacity: 0; transform: translateY(-30px) rotate(-20deg) scale(0.85); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); } }
 @keyframes etiqDrop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; } }
 @keyframes stripesIn { from { opacity: 0; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); } to { opacity: 0.72; } }

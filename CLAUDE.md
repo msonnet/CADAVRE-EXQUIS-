@@ -2028,9 +2028,14 @@ image, en couleurs d'origine ; sur les ambiances sombres sa lumière baisse
 jusqu'à 6,5:1 au plus contre le fond (`plafondLuminosite`). Les dix-huit
 dessins au trait d'avant sont SUPPRIMÉS (le même soir) : les autres pages
 n'ont plus de symbole. Sept motifs, un par jour de la semaine
-(`motifDuJour`, lundi = le disque) ; tant qu'ils ne sont pas tous validés,
-la semaine reprend ceux qui existent. Le disque tourne à 1,6 s le tour et
-s'emballe un instant au toucher. Sources et droits :
+(`motifDuJour`, `SEMAINE`) ; quatre sont produits — le Phénakistiscope
+(lundi), la Lune et le nuage (jeudi, *Un chien andalou*), le Poisson soluble
+(vendredi, Breton), la Clef des songes (dimanche, Magritte) — et les jours
+vides en prennent un, en tournant. Chacun lié au surréalisme, découpé avec
+le même bord de papier (`scripts/decor-motifs.mjs`), un mouvement subtil et
+une réaction au toucher qui dit la référence (la carpe se dissout, le nuage
+passe, la clef tourne d'un quart de tour). Les parcours FIXENT la date
+(`page.clock.setFixedTime`) : le motif dépend du jour de la semaine. Sources et droits :
 `resources/gravures/SOURCES.md` — **domaine public ou CC0 seulement, jamais
 Gallica, et aucune caricature d'époque** (les disques de Stampfer sont
 écartés pour cela). **Règle de l'auteur : les motifs animés vivent
@@ -2075,7 +2080,7 @@ commencé, et c'est voulu : l'auteur a demandé de livrer ce qui était fait.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (840 tests unitaires) + Playwright (164 tests E2E, FR et EN)
+- Tests : Vitest (842 tests unitaires) + Playwright (168 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
