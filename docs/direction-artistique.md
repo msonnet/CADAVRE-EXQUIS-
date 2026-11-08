@@ -110,6 +110,10 @@ Trace »), EffectCraft (animation, export Lottie).*
   (les autres pages n'ont plus de symbole) ; le disque **un peu ralenti**
   (1,6 s le tour au lieu de 1,2). Au toucher, il s'emballe (×3) et
   retrouve son pas en 1,5 s.
+- **Remplacé le 8 novembre : un motif par AMBIANCE**, et non plus par jour
+  de la semaine — « je veux que le changement ait lieu à chaque changement
+  d'ambiance ». Le motif est tiré de la graine de l'ambiance, et chaque
+  nouvelle ambiance en amène un autre.
 - **Les six motifs suivants, proposés** (gravures repérées, à télécharger
   sur accord, images témoins à faire) : le papillon (Hollar, 1646, MET,
   CC0) — ses ailes respirent, au toucher il bat des ailes ; le thaumatrope

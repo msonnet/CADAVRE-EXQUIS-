@@ -180,31 +180,35 @@ test('le mot est déjà sur son volet : il arrive avec le pli, pas après', asyn
   await passerLeRideau(page)
 
   // Saisir un volet EN TRAIN de se coucher — pas le premier, déjà parti au
-  // lever du rideau — et regarder son vers à cet instant.
-  let vu = null as null | { hauteur: number; mots: { opacite: number; clip: string }[] }
-  const debut = Date.now()
-  while (!vu && Date.now() - debut < 10_000) {
-    vu = await page.evaluate(() => {
+  // lever du rideau — et regarder son vers à cet instant. Le relevé se fait
+  // DANS la page, à chaque image : depuis Node, sous charge, l'échantillonnage
+  // pouvait manquer tout le dépli.
+  const vu = await page.evaluate(() => new Promise<null | { mots: Record<string, unknown>[] }>(ok => {
+    const fin = performance.now() + 10_000
+    const regarder = () => {
       const v = [...document.querySelectorAll<HTMLElement>('[data-volet-papier]')].slice(1).find(el => {
         const cs = getComputedStyle(el)
-        return parseFloat(cs.opacity) > 0.95 && cs.transform !== 'none'
+        // Déjà visiblement descendu : de champ, un volet ne fait qu'un ou
+        // deux pixels de haut.
+        return parseFloat(cs.opacity) > 0.95 && cs.transform !== 'none' && el.getBoundingClientRect().height > 8
       })
-      if (!v) return null
-      return {
-        hauteur: v.getBoundingClientRect().height,
-        mots: [...v.querySelectorAll<HTMLElement>('span[style*="clip-path"]')].map(m => ({
+      if (v) {
+        ok({ mots: [...v.querySelectorAll<HTMLElement>('span[style*="clip-path"]')].map(m => ({
           opacite: parseFloat(getComputedStyle(m).opacity), clip: getComputedStyle(m).clipPath,
-        })),
+          texte: m.textContent, style: m.getAttribute('style'),
+        })) })
+        return
       }
-    })
-    if (!vu) await page.waitForTimeout(40)
-  }
+      if (performance.now() > fin) { ok(null); return }
+      requestAnimationFrame(regarder)
+    }
+    requestAnimationFrame(regarder)
+  }))
   expect(vu, 'un volet a été vu en train de se déplier').not.toBeNull()
-  expect(vu!.hauteur).toBeGreaterThan(2)
   expect(vu!.mots.length).toBeGreaterThan(0)
   for (const m of vu!.mots) {
-    expect(m.opacite, 'le mot est déjà là').toBeGreaterThan(0.95)
-    expect(m.clip === 'none' || /inset\(0px\)|0%/.test(m.clip), 'aucun masque d’encre').toBe(true)
+    expect(m.opacite as number, 'le mot est déjà là ' + JSON.stringify(m)).toBeGreaterThan(0.95)
+    expect(m.clip === 'none' || /inset\(0px\)|0%/.test(m.clip as string), 'aucun masque d’encre').toBe(true)
   }
 })
 

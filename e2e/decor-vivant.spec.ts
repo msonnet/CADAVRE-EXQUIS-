@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test'
 /**
  * Le décor vivant — `docs/direction-artistique.md`.
  *
- * Le motif du jour, sur l'accueil seulement — ici le premier, un vrai disque de
+ * Le motif de l'ambiance, sur l'accueil seulement — ici le premier, un vrai disque de
  * phénakistiscope (Vienne, vers 1830), qui tourne d'un douzième de tour par
  * image. En couleurs d'origine sur les ambiances claires ; sur les sombres,
  * sa lumière baisse jusqu'à 6,5:1 au plus contre le fond (choix de l'auteur,
@@ -13,28 +13,18 @@ import { test, expect, type Page } from '@playwright/test'
  * pour tourner, qui ne tournait pas.
  */
 
-// Deux graines (relevées par `composerSeance`) : Lin écru, claire ; Encre
-// profonde, la plus sombre.
-const LIN = { graine: 274, fond: '#f2ede2' }
-const ENCRE = { graine: 74, fond: '#080604' }
+/**
+ * Un motif par AMBIANCE (décision de l'auteur, 8 novembre) : il est tiré de
+ * la même graine qu'elle. Graines relevées par `composerSeance` — Lin écru,
+ * claire, pour chacun des quatre motifs ; Encre profonde, la plus sombre,
+ * pour le disque et la clef.
+ */
+const LIN = { fond: '#f2ede2', disque: 13, lune: 21, poisson: 6, clef: 274 }
+const ENCRE = { fond: '#080604', disque: 9, clef: 74 }
 /** Le papier du bord découpé des motifs : le plafond de contraste le lit. */
 const PAPIER = '#f6f0e2'
 
-/**
- * Un motif par jour de la semaine : la date est FIXÉE, sinon le motif
- * changerait selon le jour où l'on lance les mesures. La semaine du
- * 9 novembre 2026 : lundi le disque, jeudi la lune, vendredi le poisson,
- * dimanche la clef.
- */
-const JOURS = {
-  lundi: new Date('2026-11-09T10:00:00'),
-  jeudi: new Date('2026-11-12T10:00:00'),
-  vendredi: new Date('2026-11-13T10:00:00'),
-  dimanche: new Date('2026-11-15T10:00:00'),
-}
-
-async function accueil(page: Page, graine: number, date: Date = JOURS.lundi) {
-  await page.clock.setFixedTime(date)
+async function accueil(page: Page, graine: number) {
   await page.addInitScript(g => {
     const d = new Date()
     const jour = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -75,7 +65,7 @@ function ratio(hex: string, f: number, fond: string) {
 }
 
 test('sur une ambiance claire, le disque tourne dans ses couleurs d\'origine', async ({ page }) => {
-  await accueil(page, LIN.graine)
+  await accueil(page, LIN.disque)
   await present(page)
   // Il tourne : deux relevés de sa rotation diffèrent.
   const angle = () => disque(page).evaluate(i => getComputedStyle(i).transform)
@@ -90,7 +80,7 @@ test('sur une ambiance claire, le disque tourne dans ses couleurs d\'origine', a
 })
 
 test('sur une ambiance sombre, sa lumière baisse jusqu\'au plafond — jamais inversé', async ({ page }) => {
-  await accueil(page, ENCRE.graine)
+  await accueil(page, ENCRE.disque)
   await present(page)
   const f = await filtre(page)
   expect(f).not.toMatch(/invert/)
@@ -107,7 +97,7 @@ test('sur une ambiance sombre, sa lumière baisse jusqu\'au plafond — jamais i
 test('les autres pages n\'ont plus de symbole : ni disque, ni dessin', async ({ page }) => {
   // Décisions de l'auteur : les motifs vivent sur l'accueil seulement, et
   // les dessins au trait d'avant sont supprimés.
-  await accueil(page, LIN.graine)
+  await accueil(page, LIN.disque)
   await present(page)
   await page.goto('/config')
   const s = page.getByLabel(/Entrer dans le jeu|Enter the game/)
@@ -119,7 +109,7 @@ test('les autres pages n\'ont plus de symbole : ni disque, ni dessin', async ({ 
 })
 
 test('au toucher, le disque s\'emballe un instant, puis retrouve son pas', async ({ page }) => {
-  await accueil(page, LIN.graine)
+  await accueil(page, LIN.disque)
   await present(page)
   await page.waitForTimeout(1200)   // la chute du symbole est finie
   const vitesse = () => disque(page).evaluate(i => i.getAnimations()[0]?.playbackRate ?? 0)
@@ -134,8 +124,8 @@ test('au toucher, le disque s\'emballe un instant, puis retrouve son pas', async
 /** L'animation en cours d'un élément, et sa réaction au toucher. */
 const anim = (page: Page, sel: string) => page.locator(sel).first().evaluate(e => getComputedStyle(e).animationName)
 
-test('jeudi, la lune : le nuage la traverse ; au toucher, il passe vite', async ({ page }) => {
-  await accueil(page, LIN.graine, JOURS.jeudi)
+test('la lune : le nuage la traverse ; au toucher, il passe vite', async ({ page }) => {
+  await accueil(page, LIN.lune)
   await expect(page.getByText('La Lune et le nuage', { exact: true })).toBeVisible({ timeout: 8000 })
   await expect(page.locator('.motif-lune .lune-astre')).toBeVisible()
   expect(await anim(page, '.motif-lune .lune-nuage')).toBe('lune-nuage')
@@ -147,8 +137,8 @@ test('jeudi, la lune : le nuage la traverse ; au toucher, il passe vite', async 
   await expect(page.locator('.motif-lune')).not.toHaveClass(/touche/, { timeout: 4000 })
 })
 
-test('vendredi, le poisson soluble : il nage ; au toucher, il se dissout', async ({ page }) => {
-  await accueil(page, LIN.graine, JOURS.vendredi)
+test('le poisson soluble : il nage ; au toucher, il se dissout', async ({ page }) => {
+  await accueil(page, LIN.poisson)
   await expect(page.getByText('Le Poisson soluble', { exact: true })).toBeVisible({ timeout: 8000 })
   expect(await anim(page, '.motif-carpe')).toBe('carpe-nage')
   await page.waitForTimeout(1200)
@@ -160,8 +150,8 @@ test('vendredi, le poisson soluble : il nage ; au toucher, il se dissout', async
   await expect.poll(() => anim(page, '.motif-carpe'), { timeout: 4000 }).toBe('carpe-nage')
 })
 
-test('dimanche, la clef des songes : elle se balance ; au toucher, un quart de tour', async ({ page }) => {
-  await accueil(page, ENCRE.graine, JOURS.dimanche)
+test('la clef des songes : elle se balance ; au toucher, un quart de tour', async ({ page }) => {
+  await accueil(page, ENCRE.clef)
   await expect(page.getByText('La Clef des songes', { exact: true })).toBeVisible({ timeout: 8000 })
   expect(await anim(page, '.motif-clef')).toBe('clef-balance')
   await page.waitForTimeout(1200)
@@ -172,8 +162,8 @@ test('dimanche, la clef des songes : elle se balance ; au toucher, un quart de t
 
 test('sous mouvement réduit, chaque motif est posé', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  for (const [date, sel] of [[JOURS.jeudi, '.motif-lune .lune-nuage'], [JOURS.vendredi, '.motif-carpe'], [JOURS.dimanche, '.motif-clef']] as const) {
-    await accueil(page, LIN.graine, date)
+  for (const [graine, sel] of [[LIN.lune, '.motif-lune .lune-nuage'], [LIN.poisson, '.motif-carpe'], [LIN.clef, '.motif-clef']] as const) {
+    await accueil(page, graine)
     await expect(page.locator(sel).first()).toBeVisible({ timeout: 8000 })
     expect(await anim(page, sel), sel).toBe('none')
   }
@@ -181,8 +171,25 @@ test('sous mouvement réduit, chaque motif est posé', async ({ page }) => {
 
 test('sous mouvement réduit, le disque reste posé, immobile', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await accueil(page, LIN.graine)
+  await accueil(page, LIN.disque)
   await present(page)
   expect(await disque(page).evaluate(i => getComputedStyle(i).animationName)).toBe('none')
   expect(await disque(page).evaluate(i => getComputedStyle(i).transform)).toBe('none')
+})
+
+test('une nouvelle ambiance amène toujours un autre motif', async ({ page }) => {
+  // L'auteur : « je veux que le changement ait lieu à chaque changement
+  // d'ambiance ». Cinq tirages d'affilée : jamais deux fois le même motif.
+  await accueil(page, LIN.clef)
+  const cartel = page.locator('[data-motif]')
+  await expect(cartel).toHaveCount(1, { timeout: 8000 })
+  let avant = await cartel.getAttribute('data-motif')
+  expect(avant).toBe('clef')
+  for (let i = 0; i < 5; i++) {
+    await page.getByRole('button', { name: /Tirer une nouvelle ambiance/ }).click()
+    await expect(cartel).not.toHaveAttribute('data-motif', avant!, { timeout: 4000 })
+    const apres = await cartel.getAttribute('data-motif')
+    expect(apres, `tirage ${i + 1}`).not.toBe(avant)
+    avant = apres
+  }
 })

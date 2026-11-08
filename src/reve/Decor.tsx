@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, createContext, useContext, useEffect, useLayoutEffect, useRef } from 'react'
 import { tr } from '../i18n'
 import { mulberry32, pickOne, pickN } from './prng'
-import { motifDuJour, type Motif } from './collages'
+import { MOTIFS, motifDuTirage, type Motif } from './collages'
 import {
   AMBIANCE_POOL, AMBIANCES, type AmbianceKey, type Ambiance, type Accent,
   CITATIONS, ETIQ_POOL, HEURES_NOCTURNES, MARGINALIA,
@@ -76,7 +76,7 @@ export interface SeanceReve {
 const ReveCtx = createContext<SeanceReve | null>(null)
 
 /** Exportée pour les mesures : elles balaient les tirages par le VRAI code, pas par une recopie. */
-export function composerSeance(seed: number, date: Date = new Date()): SeanceReve {
+export function composerSeance(seed: number): SeanceReve {
   const rng = mulberry32(seed)
   const ambianceKey = pickOne(rng, AMBIANCE_POOL) as AmbianceKey
   const ambianceBrute = AMBIANCES[ambianceKey]
@@ -117,12 +117,14 @@ export function composerSeance(seed: number, date: Date = new Date()): SeanceRev
   }
   const accent2: Accent = { ...accent2Brut, hex: garantirContraste(accent2Brut.hex, bg, 4.5) }
 
-  // Le motif ne se tire plus : un par jour de la semaine (décision de
-  // l'auteur, 7 novembre). Les six tirages que consommait l'ancienne pioche
-  // des dessins sont consommés quand même : sans eux, le côté du symbole, la
-  // citation, les étiquettes, l'heure… de chaque graine auraient tous changé.
-  for (let i = 0; i < 6; i++) rng()
-  const symbole = motifDuJour(date)
+  // Le motif suit l'ambiance : il est tiré de la même graine, et change avec
+  // elle (décision de l'auteur, 8 novembre ; `graineSuivante` garantit qu'il
+  // change vraiment). Il prend le premier des six tirages que consommait
+  // l'ancienne pioche des dessins ; les cinq autres sont consommés quand
+  // même : sans eux, le côté du symbole, la citation, les étiquettes,
+  // l'heure… de chaque graine auraient tous changé.
+  const symbole = motifDuTirage(rng())
+  for (let i = 0; i < 5; i++) rng()
   const symbolSide = rng() > 0.5 ? 'right' : 'left'
   const citation = pickOne(rng, CITATIONS)
   const etiqs = pickOne(rng, ETIQ_POOL)
@@ -176,20 +178,42 @@ function jourLocal(d = new Date()): string {
   return `${d.getFullYear()}-${m}-${j}`
 }
 
-function tirerGraine(): number {
-  return Math.floor(Math.random() * 100000)
+function tirerGraine(hasard: () => number = Math.random): number {
+  return Math.floor(hasard() * 100000)
+}
+
+/**
+ * Une graine neuve, dont le motif n'est PAS celui de la précédente.
+ *
+ * L'auteur : « je veux que le changement ait lieu à chaque changement
+ * d'ambiance ». Avec quatre motifs, une graine tirée au hasard retombait sur
+ * le même une fois sur quatre : « Nouvelle ambiance » changeait les couleurs
+ * sous un motif immobile. On retire donc tant que le motif est le même.
+ * Exportée pour les mesures, avec son hasard.
+ */
+export function graineSuivante(ancienne: number | null, hasard: () => number = Math.random): number {
+  if (ancienne === null || MOTIFS.length < 2) return tirerGraine(hasard)
+  const avant = composerSeance(ancienne).symbole.id
+  for (let i = 0; i < 64; i++) {
+    const neuve = tirerGraine(hasard)
+    if (composerSeance(neuve).symbole.id !== avant) return neuve
+  }
+  return tirerGraine(hasard)
 }
 
 /** La graine du jour : celle d'aujourd'hui si elle existe, sinon une neuve. */
 function graineDuJour(): number {
+  let hier: number | null = null
   try {
     const brut = localStorage.getItem(CLE_AMBIANCE)
     if (brut) {
       const { graine, jour } = JSON.parse(brut) as { graine: number; jour: string }
       if (jour === jourLocal() && Number.isFinite(graine)) return graine
+      if (Number.isFinite(graine)) hier = graine
     }
   } catch { /* stockage refusé : on tire, simplement */ }
-  const neuve = tirerGraine()
+  // Le jour a changé : l'ambiance change, et le motif avec elle.
+  const neuve = graineSuivante(hier)
   poserGraine(neuve)
   return neuve
 }
@@ -202,9 +226,11 @@ function poserGraine(graine: number): void {
 
 export function ReveProvider({ children }: { children: React.ReactNode }) {
   const [seed, setSeed] = useState<number>(graineDuJour)
+  const graineCourante = useRef(seed)
+  graineCourante.current = seed
 
   const retirer = useCallback(() => {
-    const neuve = tirerGraine()
+    const neuve = graineSuivante(graineCourante.current)
     poserGraine(neuve)
     setSeed(neuve)
   }, [])
@@ -417,6 +443,8 @@ export function Decor({ variant, hideCitation, hideSignature }: DecorProps) {
           7 novembre) ; les autres pages n'ont plus de symbole. */}
       {variant === 'accueil' && symbolPos && (
         <SymboleAvecCartel
+          // Remonté quand l'ambiance change de motif : le nouveau retombe.
+          key={s.symbole.id}
           symbole={s.symbole}
           pos={symbolPos}
           variant={variant}
@@ -630,6 +658,7 @@ function SymboleAvecCartel({
     // Outer: position + centering + responsive CSS scale (not touched by inner animation)
     <div
       ref={boite}
+      data-motif={symbole.id}
       className={variant === 'accueil' ? 'decor-symbol-accueil' : undefined}
       style={{
         position: 'absolute',

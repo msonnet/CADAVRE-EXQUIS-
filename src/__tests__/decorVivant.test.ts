@@ -3,18 +3,20 @@ import { readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { plafondLuminosite, ratioContraste } from '../reve/contraste'
 import { AMBIANCES } from '../reve/pools'
-import { MOTIFS, SEMAINE, motifDuJour } from '../reve/collages'
-import { composerSeance } from '../reve/Decor'
+import { MOTIFS, motifDuTirage } from '../reve/collages'
+import { composerSeance, graineSuivante } from '../reve/Decor'
 
 /**
  * Le décor vivant — `docs/direction-artistique.md`.
  *
  * Décisions de l'auteur, 7 novembre : des motifs animés sur l'accueil
- * seulement ; sept, un par jour de la semaine, chacun avec un lien au
+ * seulement ; sept au plus, chacun avec un lien au
  * surréalisme ; un mouvement subtil qui vit de lui-même et réagit au
  * toucher ; les dix-huit dessins au trait d'avant supprimés ; de vraies
  * gravures, en couleurs d'origine, découpées avec le même bord de papier,
- * et un plafond de contraste sur les ambiances sombres.
+ * et un plafond de contraste sur les ambiances sombres. Le 8 novembre : un
+ * motif par AMBIANCE et non plus par jour, et il change à chaque changement
+ * d'ambiance.
  */
 
 const RACINE = resolve(__dirname, '../..')
@@ -25,8 +27,6 @@ const css = readFileSync(resolve(RACINE, 'src/index.css'), 'utf8')
 const assombrir = (hex: string, f: number) =>
   '#' + [1, 3, 5].map(i => Math.floor(parseInt(hex.slice(i, i + 2), 16) * f).toString(16).padStart(2, '0')).join('')
 
-/** Le 2 novembre 2026 est un lundi ; `jour(n)` est n jours plus tard, à midi. */
-const jour = (n: number) => new Date(2026, 10, 2 + n, 12)
 
 describe('le plafond de contraste', () => {
   it('ne touche à rien quand l\'image est plus sombre que son fond', () => {
@@ -45,37 +45,43 @@ describe('le plafond de contraste', () => {
   })
 })
 
-describe('la semaine des motifs', () => {
-  it('sept jours, lundi d\'abord ; les motifs produits dans leurs jours', () => {
-    expect(SEMAINE).toHaveLength(7)
-    expect(SEMAINE.map(m => m?.id ?? null)).toEqual(['phenakistiscope', null, null, 'lune', 'poisson', null, 'clef'])
+describe('un motif par ambiance', () => {
+  it('quatre motifs produits, dans l\'ordre', () => {
     expect(MOTIFS.map(m => m.id)).toEqual(['phenakistiscope', 'lune', 'poisson', 'clef'])
+    expect(motifDuTirage(0).id).toBe('phenakistiscope')
+    expect(motifDuTirage(0.999).id).toBe('clef')
   })
 
-  it('chaque jour a son motif ; un jour vide en prend un, en tournant', () => {
-    expect(jour(0).getDay()).toBe(1)   // la mesure elle-même : c'est bien un lundi
-    expect(motifDuJour(jour(0)).id).toBe('phenakistiscope')
-    expect(motifDuJour(jour(3)).id).toBe('lune')
-    expect(motifDuJour(jour(4)).id).toBe('poisson')
-    expect(motifDuJour(jour(6)).id).toBe('clef')
-    // Les jours vides : mardi, mercredi, samedi — jamais le motif de la veille.
-    for (const n of [1, 2, 5]) {
-      const m = motifDuJour(jour(n))
-      expect(MOTIFS).toContain(m)
-      expect(m, `jour ${n}`).not.toBe(motifDuJour(jour(n - 1)))
+  it('la graine décide du motif, comme de l\'ambiance : même graine, même motif', () => {
+    for (const g of [1, 6, 13, 21, 74, 274, 9999]) expect(composerSeance(g).symbole).toBe(composerSeance(g).symbole)
+    // Les graines des parcours : Lin écru pour chaque motif.
+    expect(composerSeance(13).symbole.id).toBe('phenakistiscope')
+    expect(composerSeance(21).symbole.id).toBe('lune')
+    expect(composerSeance(6).symbole.id).toBe('poisson')
+    expect(composerSeance(274).symbole.id).toBe('clef')
+    for (const g of [13, 21, 6, 274]) expect(composerSeance(g).ambiance.id).toBe('lin')
+  })
+
+  it('les quatre motifs reviennent à parts à peu près égales', () => {
+    const vus: Record<string, number> = {}
+    for (let g = 0; g < 4000; g++) { const id = composerSeance(g).symbole.id; vus[id] = (vus[id] ?? 0) + 1 }
+    for (const m of MOTIFS) expect(vus[m.id], m.id).toBeGreaterThan(800)
+  })
+
+  it('une nouvelle ambiance amène TOUJOURS un autre motif', () => {
+    // Un hasard fixé, pour que la mesure soit la même à chaque fois.
+    let x = 2463534242
+    const hasard = () => { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; return x / 4294967296 }
+    let g = 274
+    for (let i = 0; i < 300; i++) {
+      const neuve = graineSuivante(g, hasard)
+      expect(composerSeance(neuve).symbole.id, `tirage ${i}`).not.toBe(composerSeance(g).symbole.id)
+      g = neuve
     }
-    // Et la semaine suivante recommence.
-    for (let n = 0; n < 7; n++) expect(motifDuJour(jour(n + 7))).toBe(motifDuJour(jour(n)))
   })
 
-  it('la séance porte le motif du jour, quelle que soit la graine', () => {
-    for (const g of [1, 7, 74, 274, 9999]) expect(composerSeance(g, jour(4)).symbole.id).toBe('poisson')
-  })
-
-  it('les tirages de chaque graine n\'ont pas bougé (ambiance, côté)', () => {
-    const s = composerSeance(6)
-    expect(s.ambiance.id).toBe('lin')
-    expect(s.symbolSide).toBe('right')
+  it('sans graine précédente, une graine neuve suffit', () => {
+    expect(Number.isInteger(graineSuivante(null))).toBe(true)
   })
 
   it('les dix-huit dessins au trait sont supprimés', () => {

@@ -1,11 +1,13 @@
 import React from 'react'
 
 // ════════════════════════════════════════════════════════════════════════
-// LES MOTIFS DU JOUR — le décor vivant (docs/direction-artistique.md)
+// LES MOTIFS — le décor vivant (docs/direction-artistique.md)
 //
 // Décisions de l'auteur, 7 novembre 2026 :
 // - les motifs animés vivent UNIQUEMENT sur l'accueil ;
-// - SEPT motifs, un par jour de la semaine ;
+// - SEPT motifs au plus (quatre produits) ;
+// - un motif PAR AMBIANCE, et non plus par jour de la semaine (8 novembre) :
+//   « je veux que le changement ait lieu à chaque changement d'ambiance » ;
 // - un mouvement subtil, qui vit de lui-même, et qui se modifie légèrement
 //   quand on le touche ;
 // - les dix-huit dessins au trait d'avant (rotorelief, œil tranché, pipe,
@@ -133,21 +135,17 @@ const POISSON: Motif = { id: 'poisson', label: 'Le Poisson soluble', ref: 'A. Br
 const CLEF: Motif = { id: 'clef', label: 'La Clef des songes', ref: 'd’après Magritte, 1930 · clef de 1635', draw: ClefDesSonges, w: 54, papier: PAPIER_DECOUPE }
 
 /**
- * La semaine, lundi d'abord. Les cases vides attendent leur motif — l'Œil-
- * ballon (Redon), la Rencontre fortuite (Lautréamont), la Pomme (Magritte),
- * à retravailler avant production (docs/direction-artistique.md).
+ * Les motifs produits. Trois attendent encore — l'Œil-ballon (Redon), la
+ * Rencontre fortuite (Lautréamont), la Pomme (Magritte), à retravailler
+ * avant production (docs/direction-artistique.md) ; ils s'ajoutent ici.
  */
-export const SEMAINE: (Motif | null)[] = [PHENAKISTISCOPE, null, null, LUNE, POISSON, null, CLEF]
-
-/** Les motifs produits, dans l'ordre de la semaine. */
-export const MOTIFS: Motif[] = SEMAINE.filter((m): m is Motif => m !== null)
+export const MOTIFS: Motif[] = [PHENAKISTISCOPE, LUNE, POISSON, CLEF]
 
 /**
- * Le motif d'un jour : celui de son jour de la semaine ; un jour encore vide
- * prend l'un des motifs produits, en tournant, pour que deux jours voisins
- * ne se ressemblent pas.
+ * Le motif d'une ambiance, tiré de la MÊME graine qu'elle (`composerSeance`) :
+ * il tient tant que l'ambiance tient, et change avec elle. `tirage` est un
+ * nombre de [0, 1[ pris dans le flot de la graine.
  */
-export function motifDuJour(date: Date = new Date()): Motif {
-  const lundiZero = (date.getDay() + 6) % 7
-  return SEMAINE[lundiZero] ?? MOTIFS[lundiZero % MOTIFS.length]
+export function motifDuTirage(tirage: number): Motif {
+  return MOTIFS[Math.min(MOTIFS.length - 1, Math.floor(tirage * MOTIFS.length))]
 }
