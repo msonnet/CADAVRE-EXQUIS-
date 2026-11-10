@@ -247,7 +247,7 @@ cinq fragments (dernier mot à 5,8 s). Rien n'est intégré au jeu.
   montrées (écrit pendant le pli, déjà sur le volet) ; **choisie : déjà sur
   le volet**. L'encre fibreuse n'a donc plus d'objet.
 - **Intégré le 8 novembre** à la fin de partie : papier, grain, mot déjà sur
-  le volet. Voir CLAUDE.md, « La feuille de papier ».
+  le volet. Voir `docs/journal.md`, « La feuille de papier ».
 - **Le tampon « ACHEVÉ » : refusé par l'auteur le 8 novembre**, retiré de
   la planche. La fin reste ce qu'elle est : les actions à 6,1 s. Ne pas
   reproposer de tampon, ni ici ni au chantier 4, sans que l'auteur le
