@@ -204,9 +204,26 @@ injoignable : on laisse passer. Les cadrans se règlent dans `api/_acces.ts`.
 L'auteur veut un jeu « à la pointe de la modernité », digne d'un studio de
 jeu mobile. Sept chantiers par ordre d'impact, à valider un à un sur images
 témoins. Fait : le décor vivant de l'accueil (quatre motifs gravés), la
-feuille de papier de la fin de partie. Demandé le 10 novembre : un vrai
-dépli en 3D, la révélation du dessin, du relief dans l'interface — aucune
-maquette encore montrée.
+feuille de papier de la fin de partie.
+
+**Le plan « moderne », validé par l'auteur le 10 novembre** — cinq points,
+dans cet ordre, chacun sur maquette témoin d'abord (`scripts/temoins/`,
+voir son README) :
+1. **On manipule soi-même** : le poème se déplie en tirant le bord de la
+   feuille du doigt ; lâchée, elle retombe avec son poids (ressorts).
+2. **La vibration** à chaque geste : plier, sceller, un volet qui tombe
+   (`@capacitor/haptics`).
+3. **Les écrans qui s'enchaînent** : la carte du recueil s'ouvre en feuille
+   au lieu d'un fondu de page.
+4. **La vraie 3D au bon endroit** : le dépli du poème et la révélation du
+   dessin (lumière, ombre, épaisseur du papier) ; ailleurs un relief
+   discret (boutons qui s'enfoncent, accueil qui bouge quand on incline le
+   téléphone). Pas de 3D partout.
+5. **Plus tard, un widget** « poème du jour » sur l'écran d'accueil de
+   l'iPhone (code natif Swift, chantier à part).
+
+Première maquette à faire : **le dépli tiré du doigt, en 3D** (points 1 et
+4 ensemble), à envoyer à l'auteur pour qu'il l'essaie sur son téléphone.
 
 **Le chantier EffectCraft** — [`docs/chantier-effectcraft.md`](docs/chantier-effectcraft.md).
 Suspendu. Le cadre technique Lottie est en place (`src/components/Animation.tsx`,

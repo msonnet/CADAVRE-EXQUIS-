@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maquette de référence — la fin de partie telle qu'elle est</title>
+<link rel="stylesheet" href="../commun/polices.css">
+<link rel="stylesheet" href="../commun/base.css">
+<script src="../commun/kit.js"></script>
+</head>
+<body>
+<!-- L'écran de fin de partie du jeu, à l'état FINAL, sans animation : le point
+     de départ des maquettes. Comparer à references/fin-poeme-lin.png. -->
+<div class="page">
+  <div class="entete"><span class="retour">← FEUILLET · FIN</span><span class="nom" data-nom-ambiance>LIN ÉCRU</span></div>
+  <hr class="filet-accent">
+  <h1 class="titre-affiche"><span>Le cadavre</span><span class="accent">est exquis</span></h1>
+  <hr class="filet">
+  <article class="feuille" aria-label="Le poème">
+    <div class="feuille-titre">CADAVRE EXQUIS · 10 NOVEMBRE 2026</div>
+    <div class="volet"><div class="relief"></div><p class="vers avec-lettrine"><span class="loge"><span class="lettrine">L</span></span>e vernis craquelé</p></div>
+    <div class="volet"><div class="relief"></div><p class="vers">avale</p></div>
+    <div class="volet"><div class="relief"></div><p class="vers">une lampe sourde</p></div>
+    <div class="volet"><div class="relief"></div><p class="vers">sous la pluie</p></div>
+    <div class="volet"><div class="relief"></div><p class="vers">du jardin</p>
+      <div class="pied">5 FRAGMENTS · STRUCTURE ÉTOFFÉE · 07:32</div></div>
+  </article>
+  <button class="bouton-plein"><span>Sceller au recueil&nbsp;→</span></button>
+  <div class="onglets"><button>PARTAGER</button><button>COUTURES</button><button>IMAGE</button></div>
+  <div class="lien-centre">— NOUVELLE PARTIE —</div>
+</div>
+<script>
+  // Les plis au repos : un creux, puis une arête (`reliefDuPli`).
+  const poserReliefs = () => document.querySelectorAll('.volet .relief').forEach((e, i) => { e.style.background = Temoin.reliefDuPli(i, Temoin.papier.sombre) })
+  poserReliefs()
+  Temoin.enregistrer({ duree: 0, rendre() {}, surAmbiance: poserReliefs })
+</script>
+</body>
+</html>

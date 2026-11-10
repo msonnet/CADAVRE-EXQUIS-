@@ -1,0 +1,90 @@
+<!doctype html><meta charset="utf-8">
+<style>body{margin:0;background:#888} svg{display:block}</style>
+<!-- Un cadavre dessiné à trois mains : tête (plume noire), corps (feutre rouge), jambes (crayon bleu).
+     Trois bandes de 360 × 420 ; les raccords passent en x=150/210 (cou) et x=138/222 (taille). -->
+<svg id="d" xmlns="http://www.w3.org/2000/svg" width="360" height="1260" viewBox="0 0 360 1260">
+  <defs>
+    <filter id="main1" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+    <filter id="main2" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+    <filter id="main3" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="23"/><feDisplacementMap in="SourceGraphic" scale="4"/></filter>
+    <filter id="grainCrayon" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.3" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>
+  </defs>
+  <rect width="360" height="1260" fill="#fdf8f2"/>
+
+  <!-- ── Bande 1 : la tête — plume noire ── -->
+  <g filter="url(#main1)" fill="none" stroke="#1a1410" stroke-linecap="round" stroke-linejoin="round">
+    <!-- haut-de-forme -->
+    <path d="M118 150 L112 62 Q180 44 250 60 L243 150" stroke-width="3.2"/>
+    <path d="M84 152 Q180 128 280 152 Q286 166 268 170 Q180 150 94 170 Q78 166 84 152" stroke-width="3.2" fill="#fdf8f2"/>
+    <path d="M116 122 Q180 108 246 122" stroke-width="7"/>
+    <!-- une plume au chapeau -->
+    <path d="M236 92 Q286 40 300 18 Q262 30 240 78" stroke-width="2"/>
+    <path d="M250 70 L270 62 M256 58 L276 48 M264 46 L284 36" stroke-width="1.4"/>
+    <!-- tête : une lune -->
+    <path d="M104 178 Q70 250 110 318 Q180 372 250 318 Q292 250 256 178" stroke-width="3.4"/>
+    <!-- l'œil unique, grand ouvert -->
+    <path d="M124 246 Q180 196 238 246 Q180 292 124 246 Z" stroke-width="3"/>
+    <circle cx="181" cy="245" r="20" stroke-width="3"/>
+    <circle cx="181" cy="245" r="8" fill="#1a1410"/>
+    <path d="M132 222 L122 206 M152 208 L146 190 M180 202 L180 184 M208 208 L214 190 M228 222 L238 206" stroke-width="2"/>
+    <!-- bouche cousue -->
+    <path d="M146 316 Q180 328 214 316" stroke-width="2.6"/>
+    <path d="M156 310 L158 326 M170 314 L171 330 M184 315 L184 331 M198 313 L197 329 M210 309 L208 325" stroke-width="1.8"/>
+    <!-- le cou : deux traits jusqu'au bord, pour la main suivante -->
+    <path d="M150 352 Q146 386 150 420" stroke-width="3.2"/>
+    <path d="M210 352 Q214 386 210 420" stroke-width="3.2"/>
+  </g>
+
+  <!-- ── Bande 2 : le corps — feutre rouge ── -->
+  <g transform="translate(0 420)">
+    <g filter="url(#main2)" fill="none" stroke="#c01c14" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+      <path d="M150 0 Q150 22 132 34" stroke-width="5"/>
+      <path d="M210 0 Q210 22 228 34" stroke-width="5"/>
+      <!-- une cage pour torse -->
+      <path d="M96 96 Q180 6 264 96" stroke-width="5.5"/>
+      <path d="M92 96 L92 318 Q180 344 268 318 L268 96" stroke-width="5.5"/>
+      <path d="M92 96 Q180 122 268 96" stroke-width="4"/>
+      <path d="M124 76 L124 328 M152 58 L152 336 M180 50 L180 338 M208 58 L208 336 M236 76 L236 328" stroke-width="3"/>
+      <circle cx="180" cy="40" r="9" stroke-width="4"/>
+      <!-- bras : une cuiller, une clef -->
+      <path d="M92 150 Q46 170 36 232" stroke-width="5"/>
+      <path d="M36 232 Q20 262 36 284 Q54 262 36 232" stroke-width="4" fill="#c01c1430"/>
+      <path d="M268 150 Q316 168 322 226" stroke-width="5"/>
+      <circle cx="324" cy="244" r="15" stroke-width="4"/>
+      <path d="M324 259 L324 304 M324 284 L338 284 M324 298 L336 298" stroke-width="4"/>
+      <!-- la taille, pour la main suivante -->
+      <path d="M138 338 Q134 380 138 420" stroke-width="5"/>
+      <path d="M222 338 Q226 380 222 420" stroke-width="5"/>
+    </g>
+    <!-- l'oiseau dans la cage, au trait noir de la même main -->
+    <g filter="url(#main2)" fill="none" stroke="#1a1410" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M150 232 Q160 196 196 204 Q214 210 212 228 L228 236 L210 240 Q200 268 166 262 Q150 254 150 232 Z" stroke-width="2.6"/>
+      <circle cx="198" cy="220" r="2.6" fill="#1a1410"/>
+      <path d="M150 240 L126 262 M154 250 L134 274" stroke-width="2.2"/>
+      <path d="M172 264 L170 286 M186 264 L188 286 M120 288 L240 288" stroke-width="2.2"/>
+    </g>
+  </g>
+
+  <!-- ── Bande 3 : les jambes — crayon bleu ── -->
+  <g transform="translate(0 840)" filter="url(#grainCrayon)">
+    <g filter="url(#main3)" fill="none" stroke="#1428a0" stroke-linecap="round" stroke-linejoin="round">
+      <!-- jupe-queue de poisson -->
+      <path d="M138 0 Q110 60 96 130 Q180 160 264 130 Q250 60 222 0" stroke-width="4.5"/>
+      <path d="M118 62 Q180 82 242 62 M106 98 Q180 122 254 98" stroke-width="2.6"/>
+      <path d="M128 30 q10 10 20 0 q10 10 20 0 q10 10 20 0 q10 10 20 0" stroke-width="2.2"/>
+      <!-- jambe gauche : botte -->
+      <path d="M140 146 Q136 220 140 300" stroke-width="4.5"/>
+      <path d="M168 150 Q166 220 170 300" stroke-width="4.5"/>
+      <path d="M140 300 L132 356 Q88 362 80 388 L176 388 L170 300" stroke-width="4.5"/>
+      <path d="M138 318 L168 318 M136 334 L168 334" stroke-width="2.6"/>
+      <!-- jambe droite : un pilon à roulette -->
+      <path d="M204 150 Q208 250 214 330" stroke-width="4.5"/>
+      <path d="M228 148 Q226 250 224 330" stroke-width="4.5"/>
+      <circle cx="220" cy="362" r="28" stroke-width="4.5"/>
+      <path d="M220 334 L220 390 M192 362 L248 362 M200 342 L240 382 M240 342 L200 382" stroke-width="2.4"/>
+      <!-- le sol -->
+      <path d="M40 396 Q180 386 330 398" stroke-width="3"/>
+      <path d="M60 406 l14 -6 M110 404 l14 -6 M270 406 l14 -6 M306 408 l12 -6" stroke-width="2"/>
+    </g>
+  </g>
+</svg>
