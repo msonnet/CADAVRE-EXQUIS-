@@ -561,6 +561,23 @@ Puis les deux autres améliorations, à la demande de l'auteur :
   dès que le précédent est posé, sans attendre que son bord ait fini de
   trembler. Immobile entre les deux plis : 200 ms au lieu d'environ 500.
 
+**L'auteur, même jour** : « le deuxième dépli dévoile les jambes. Il n'y a
+pas le moment où on se concentre uniquement sur la partie jambe, comme
+pour la tête et le corps. » Juste : trois bandes ne donnaient que deux
+plis, et le dernier portait les jambes au revers — elles arrivaient
+pendant qu'on regardait encore le corps. Fait : la feuille a son **bas**,
+la marge sous le dessin (22 % d'une bande, 64 px au moins), avec une ligne
+comme le pied du poème (« CADAVRE DESSINÉ · 3 MAINS · date »). C'est lui
+qui replie les jambes : **trois plis, trois découvertes**. Pendant le
+troisième, l'écran ne montre que les jambes ; la vue reste sur elles une
+fois le bas de feuille posé, puis recule. Le rabat garde la hauteur de la
+bande qu'il couvre et prend celle de la bande où il se pose.
+
+**Même structure au dépli du poème** : le dernier vers y arrive au revers
+du dernier pli, avec le pied. Laissé tel quel (validé) ; à proposer à
+l'auteur : le pied comme pli à part, pour que le dernier vers ait aussi
+son moment.
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.

@@ -45,6 +45,15 @@
   (« TÊTE — NADJA »), déjà écrite quand le pli la découvre, comme le mot sur
   le volet ; et quand un toucher déplie tout, le pli suivant part dès que le
   précédent est posé, sans attendre que son bord ait fini de trembler.
+
+  Cinquième passage — l'auteur : « le deuxième dépli dévoile les jambes ; il
+  n'y a pas le moment où on se concentre uniquement sur la partie jambe,
+  comme pour la tête et le corps. » Trois bandes ne donnaient que deux plis,
+  et le dernier portait les jambes au revers. La feuille a maintenant son
+  BAS, la marge sous le dessin, avec une ligne comme le pied du poème : il
+  replie les jambes. Trois plis, trois découvertes ; pendant le troisième,
+  l'écran ne montre que les jambes, et la vue reste sur elles avant de
+  reculer.
 */
 :root { --trait: rgba(40, 28, 10, 0.22); --ombre-paquet: rgba(40, 28, 10, 0.34); }
 :root[data-sombre="1"] { --trait: rgba(40, 28, 10, 0.3); --ombre-paquet: rgba(0, 0, 0, 0.7); }
@@ -64,6 +73,8 @@ body { overflow: hidden; }
 .bande { background-color: var(--papier-dessin); overflow: hidden; }
 .bande img { display: block; width: 100%; height: 100%; }
 /* Le nom de la main, dans le coin de sa bande : écrit sur le papier. */
+/* Le bas de la feuille : la marge sous le dessin, et sa ligne. */
+.pied-dessin { margin: 0 14px; padding-top: 12px; border-top: 0.5px solid rgba(58, 44, 24, 0.2); font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 0.18em; color: #5a5040; }
 .main { position: absolute; left: 10px; top: 10px; z-index: 3; font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 0.16em; color: var(--accent); background: color-mix(in srgb, var(--papier-dessin) 88%, transparent); padding: 3px 6px; border-radius: 2px; white-space: nowrap; }
 .bande.prolonge { box-shadow: 0 1px 0 var(--papier-dessin); }
 .bande.cachee { visibility: hidden; }
@@ -182,8 +193,12 @@ body { overflow: hidden; }
   // ── Le dessin ────────────────────────────────────────────────────────────
   const el = (classe, html) => { const e = document.createElement('div'); e.className = classe; if (html != null) e.innerHTML = html; return e }
   const img = i => `<img src="${FICHIERS['bande-' + (i + 1)]}" alt="" draggable="false">`
-  const contenuBande = i => img(i) + `<div class="main">${Temoin.DESSIN.mains[i].toUpperCase()}</div>`
-  const N = 3
+  const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  // Trois mains, puis le bas de la feuille : c'est lui qui replie les jambes.
+  const N = 4
+  const contenuBande = i => i < N - 1
+    ? img(i) + `<div class="main">${Temoin.DESSIN.mains[i].toUpperCase()}</div>`
+    : `<div class="pied-dessin">CADAVRE DESSINÉ · ${N - 1} MAINS · ${date}</div>`
   let bandes = [], lamelles = [], ombre, empreinte, W = 200, HB = 233
   function face(classe) {
     const f = el('face ' + classe)
@@ -218,7 +233,10 @@ body { overflow: hidden; }
     HB = W * 840 / 720
     VH = innerHeight - 14 - 56
     scene.style.width = W + 'px'
-    bandes.forEach((b, i) => { b.h = HB; b.top = i * HB; b.el.style.height = HB + 'px'; b.el.style.transform = `translate3d(0px,${b.top}px,0px)` })
+    // Le bas de la feuille est une marge : assez pour sa ligne, pas plus.
+    const HP = Math.round(Math.max(64, HB * 0.22))
+    let y = 0
+    bandes.forEach((b, i) => { b.h = i < N - 1 ? HB : HP; b.top = y; y += b.h; b.el.style.height = b.h + 'px'; b.el.style.transform = `translate3d(0px,${b.top}px,0px)` })
     // Un rabat plus grand se regarde de plus loin, sans quoi il sort de l'écran en se dressant.
     R.perspective = Math.round(1300 * Math.sqrt(W / 200))
     scene.style.perspective = R.perspective + 'px'
@@ -231,12 +249,13 @@ body { overflow: hidden; }
   // tombe vers le milieu de l'écran. (Centrer la pliure coupait le haut de la
   // bande, et le nom de la main avec.) Une fois tout ouvert, la vue descend
   // jusqu'aux pieds avant de reculer.
+  // Pendant le dernier pli et juste après, la vue reste sur les jambes seules.
   let recule = false
+  const haut = i => bandes[i].top, bas = i => bandes[i].top + bandes[i].h, total = () => bas(N - 1)
   function cadre() {
-    const max = Math.max(0, N * HB - VH)
-    if (mode === 'ouvert') return max
+    if (mode === 'ouvert') return haut(N - 2)
     if (mode === 'repos' && k === 0 && th === 0) return 0   // le paquet fermé, entier
-    return M.borne(Math.min((k + 1) * HB - 0.5 * VH, k * HB), 0, max)
+    return Math.max(0, Math.min(bas(k) - 0.5 * VH, haut(k)))
   }
   function poserVue() {
     R.origine = cam + R.oeil * VH
@@ -260,10 +279,11 @@ body { overflow: hidden; }
     scene.classList.toggle('rabat-cache', ouvert)
     if (ouvert) {
       ombre.style.opacity = '0'
-      empreinte.style.height = N * HB + 'px'; scene.style.height = N * HB + 'px'
+      empreinte.style.height = total() + 'px'; scene.style.height = total() + 'px'
     } else {
-      const s = (1 - Math.cos(th)) / 2, h = HB, S = lamelles.length, L = h / S
-      const charniere = (k + 1) * HB
+      // Le rabat a la hauteur de la bande qu'il couvre, puis de celle où il se pose.
+      const s = (1 - Math.cos(th)) / 2, h = bandes[k].h + s * (bandes[k + 1].h - bandes[k].h), S = lamelles.length, L = h / S
+      const charniere = bas(k)
       if (k !== kFace) {
         kFace = k
         const recto = k === N - 2
@@ -373,7 +393,7 @@ body { overflow: hidden; }
   // Le recul : du détail à l'ensemble, plus lentement qu'un pli.
   function resserrer() {
     if (mode !== 'ouvert') return
-    const H = N * HB
+    const H = total()
     const s = echelleEnsemble(H)
     recule = true
     boite.style.transition = 'transform 1.3s cubic-bezier(0.45, 0, 0.2, 1)'
@@ -473,7 +493,7 @@ body { overflow: hidden; }
   function reduitLecture() {
     mode = 'ouvert'; recule = true; rendre(); scene.classList.add('ouvert')
     boite.style.transition = 'none'
-    const H = N * HB, s = echelleEnsemble(H)
+    const H = total(), s = echelleEnsemble(H)
     boite.style.transform = `translate3d(0px,0px,0px) scale(${s.toFixed(4)})`
     lecture.style.transition = 'none'; lecture.style.top = (14 + H * s + 26) + 'px'
     lecture.innerHTML = `<div class="surtitre">— LECTURE —</div><div class="texte">« ${Temoin.DESSIN.lecture} »</div>`
