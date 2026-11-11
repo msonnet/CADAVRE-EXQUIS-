@@ -301,6 +301,45 @@ réutilisation commerciale y est soumise à licence.
   accordéon qu'on déplie, sur fond uni, téléphone fixe.
 - Les validations, à chaque planche.
 
+## Le plan « moderne » — validé le 10 novembre
+
+Cinq points, dans l'ordre, chacun sur maquette témoin d'abord (la liste
+est dans `CLAUDE.md`).
+
+### Points 1 et 4 : le dépli tiré du doigt, en 3D — maquette du 11 novembre
+
+**En attente de l'essai de l'auteur sur son téléphone.** Rien n'est
+intégré au jeu. Maquette : `scripts/temoins/depli-au-doigt/maquette.html`.
+
+- **La feuille arrive pliée en accordéon**, comme une bande de cadavre
+  exquis repliée main après main : l'en-tête et le premier vers à plat
+  (la lettrine se voit d'emblée), le reste en plis en toit — un faîte qui
+  monte vers l'œil, une vallée posée sur la table. Les marques au repos
+  de la fin de partie (creux, arête, en alternance) sont exactement ces
+  plis-là.
+- **On tire le bas de la feuille** : le bord reste sous le doigt, les plis
+  s'ouvrent dans l'ordre du poème, chacun un peu avant que le précédent
+  soit à plat. Tirée au-delà, la feuille entière glisse un peu et revient.
+- **Lâchée**, elle tombe à plat sur un ressort, ses plis se soulèvent à
+  peine et elle se pose ; tirée de moins de 40 % et lâchée doucement, elle
+  se replie. Un geste vif décide seul. **Un simple toucher l'ouvre** (la
+  règle : un appui pose le poème). Les actions n'apparaissent qu'une fois
+  la feuille posée.
+- **La lumière** est celle du kit, en haut à gauche : le pli qui monte
+  s'éclaire, celui qui redescend s'éteint, l'arête du faîte accroche un
+  filet de lumière (l'épaisseur du papier), un faîte haut jette son ombre
+  en bas à droite. La lumière passe sous l'encre, l'ombre dessus.
+- **Sans `preserve-3d`** : une perspective commune, et chaque morceau de
+  papier peint à son tour. Pas de tri en profondeur, donc pas de
+  scintillement sur Safari ; l'œil est placé au-dessus de la feuille, si
+  bien qu'aucun pli ne tourne le dos à l'écran.
+- **Si personne n'y touche**, la feuille esquisse le geste deux fois
+  (1,1 s puis 5,2 s). Rien sous « réduire les animations ».
+- **Limite connue** : les longs volets de l'Atelier arrivent moins serrés
+  (un faîte est plafonné à 90 px, sans quoi il monterait trop vers l'œil).
+- Les réglages (angle du paquet, ressort, seuil, perspective) sont en tête
+  du script, `R`, pour être ajustés après l'essai.
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.

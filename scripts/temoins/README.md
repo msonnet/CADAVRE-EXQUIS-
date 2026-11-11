@@ -31,6 +31,12 @@ qu'on photographie image par image puis qu'on montre à l'auteur.
   [--params="cas=atelier"] [--pleine]`. Dans un conteneur cloud, préfixer
   par `PW_CHROMIUM=/opt/pw-browsers/chromium`.
 
+- `outils/autonome.mjs` — fait d'une maquette une page qui tient seule
+  (polices du jeu, styles et kit recopiés dedans), pour l'envoyer sur le
+  téléphone de l'auteur :
+  `node scripts/temoins/outils/autonome.mjs <maquette.html> <sortie.html>
+  --fragment`. Environ 700 Ko : la sortie ne va pas dans le dépôt.
+
 Une maquette va dans son propre sous-dossier et charge
 `../commun/polices.css`, `../commun/base.css`, `../commun/kit.js`.
 
