@@ -161,7 +161,8 @@ injoignable : on laisse passer. Les cadrans se règlent dans `api/_acces.ts`.
   sa validation, puis l'intégration. Jamais l'intégration d'abord (la
   couture du 7 novembre a été retirée pour cela).
 - **Aucun son** ajouté sans son accord (les sons de papier du 1er octobre
-  ont été retirés). **Pas de tampon** (refusé le 8 novembre). **Pas de
+  ont été retirés ; le froissement du dépli, essayé le 11 novembre, aussi :
+  « définitivement le son ne me convient pas » — le dépli est muet). **Pas de tampon** (refusé le 8 novembre). **Pas de
   visage** pour les voix. La musique est en suspens.
 - **Le mot est déjà écrit sur le volet** quand le papier se déplie.
 - **Gravures du domaine public ou CC0 seulement** ; jamais Gallica, aucune
@@ -223,10 +224,10 @@ voir son README) :
    l'iPhone (code natif Swift, chantier à part).
 
 **Points 1 et 4, le dépli tiré du doigt en 3D : maquette validée le
-11 novembre** (`scripts/temoins/depli-au-doigt/paquet.html`, son
-« feuille courte »). Le paquet arrive fermé, chaque pli se dresse vers le
-joueur et retombe sous son poids, le papier se courbe, un froissement
-quand un pli s'ouvre, aucun claquement. Tout le cheminement (quatre
+11 novembre** (`scripts/temoins/depli-au-doigt/paquet.html`). Le paquet
+arrive fermé, chaque pli se dresse vers le joueur et retombe sous son
+poids, le papier se courbe. **Sans aucun son** : un froissement a été
+essayé puis retiré par l'auteur le même jour, définitivement. Tout le cheminement (quatre
 retours de l'auteur) est dans `docs/direction-artistique.md`, « Le plan
 moderne ». **Reste à l'intégrer au jeu.**
 

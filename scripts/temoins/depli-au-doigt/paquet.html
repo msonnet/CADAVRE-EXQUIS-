@@ -28,8 +28,9 @@
     suivent une courbe. Mené au doigt, son bord libre devance ; en chute, il
     traîne dans l'air ; tenu de biais, il s'affaisse. Le pli touche la
     table, et son bord se pose un instant après.
-  — LE SON. De vraies prises de papier, CC0 (`sons/SOURCES.md`) : un
-    froissement quand le pli s'ouvre. Rien ne sonne avant le premier toucher.
+  — LE SON. Essayé du 11 novembre au matin au soir (de vraies prises de
+    papier, CC0), puis RETIRÉ par l'auteur : « définitivement le son ne me
+    convient pas ». Le dépli est muet.
     Cinquième passage — l'auteur : « d'autres sons de papier, moins grossiers
     que celui-ci ? » Trois prises plus fines à comparer à l'oreille, au même
     niveau que l'ancienne (« Avant », la carte routière) : « Page » (une page
@@ -39,7 +40,7 @@
     chacune — « Douce » (craquements rabotés, aigu dur adouci, entrée plus
     lente), « Courte » (la première moitié, 0,28 s), « Légère » (trois
     demi-tons plus haut, même durée : un papier plus fin).
-    L'auteur choisit « Courte », le 11 novembre : c'est le son par défaut.
+    L'auteur choisit « Courte », le 11 novembre (retiré le soir même, voir plus haut).
 
   Quatrième passage — l'auteur : « trop rapide, bruit trop fort et oublie
   le claquement ». La chute est deux fois plus lente, le doigt mène le pli
@@ -179,24 +180,8 @@ body, .page { overflow-x: clip; }
   <button type="button" data-cas="court">3 vers</button>
   <button type="button" data-cas="etoffe">5 vers</button>
   <button type="button" data-cas="atelier">Atelier</button>
-  <span class="ligne"></span>
-  <span class="legende">Son</span>
-  <button type="button" data-son="feuille">Feuille</button>
-  <button type="button" data-son="feuille-douce">Douce</button>
-  <button type="button" data-son="feuille-courte">Courte</button>
-  <button type="button" data-son="feuille-legere">Légère</button>
-  <button type="button" data-son="sans">Sans</button>
 </nav>
 
-<!-- Les prises de papier. `outils/autonome.mjs` les recopie dans la page. -->
-<script type="application/json" id="fichiers-sons" data-autonome>
-{
-  "feuille-ouverture": "sons/feuille-ouverture.wav",
-  "feuille-douce-ouverture": "sons/feuille-douce-ouverture.wav",
-  "feuille-courte-ouverture": "sons/feuille-courte-ouverture.wav",
-  "feuille-legere-ouverture": "sons/feuille-legere-ouverture.wav"
-}
-</script>
 
 <script>
 (function () {
@@ -245,60 +230,6 @@ body, .page { overflow-x: clip; }
   const LY = LUMIERE[1], LZ = LUMIERE[2], E0 = LZ
   // Où tombe l'ombre d'un point à la hauteur z : en bas à droite.
   const OX = -LUMIERE[0] / LUMIERE[2], OY = -LUMIERE[1] / LUMIERE[2]
-
-  // ── Le son ───────────────────────────────────────────────────────────────
-  /*
-    Web Audio : des tampons décodés une fois, joués sans délai. Le contexte
-    naît suspendu ; le premier toucher le réveille (Safari l'exige). Chaque
-    lecture varie d'un rien (±4 % de vitesse) pour qu'un pli ne sonne jamais
-    deux fois pareil.
-  */
-  const Son = {
-    ctx: null, tampons: {}, jeu: ['feuille', 'feuille-douce', 'feuille-courte', 'feuille-legere', 'sans'].includes(q.get('son')) ? q.get('son') : 'feuille-courte', dernier: {},
-    permis: false,   // rien ne sonne avant le premier geste de la personne, même si le navigateur le permettrait
-    async charger() {
-      const AC = window.AudioContext || window.webkitAudioContext
-      if (!AC) return
-      try { this.ctx = new AC() } catch { return }
-      let fichiers = {}
-      try { fichiers = JSON.parse(document.getElementById('fichiers-sons').textContent) } catch { return }
-      await Promise.all(Object.entries(fichiers).map(async ([nom, src]) => {
-        try {
-          let octets
-          if (src.startsWith('data:')) {
-            const b = atob(src.slice(src.indexOf(',') + 1)); octets = new Uint8Array(b.length)
-            for (let i = 0; i < b.length; i++) octets[i] = b.charCodeAt(i)
-            octets = octets.buffer
-          } else octets = await (await fetch(src)).arrayBuffer()
-          this.tampons[nom] = await new Promise((ok, ko) => this.ctx.decodeAudioData(octets, ok, ko))
-        } catch { /* une page ouverte en fichier local : pas de son, tant pis */ }
-      }))
-    },
-    reveiller() {
-      this.permis = true
-      const c = this.ctx
-      if (!c || c.state === 'running') return
-      c.resume().catch(() => {})
-      // Safari : un tampon muet joué dans le geste achève de déverrouiller.
-      try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0) } catch { /* rien */ }
-    },
-    jouer(nom, force) {
-      const c = this.ctx
-      if (!this.permis || this.jeu === 'sans' || !c || c.state !== 'running' || force < 0.05) return
-      const t = performance.now()
-      if (t - (this.dernier[nom] || 0) < 45) return
-      this.dernier[nom] = t
-      const b = this.tampons[`${this.jeu}-${nom}`]
-      if (!b) return
-      const s = c.createBufferSource(), g = c.createGain()
-      s.buffer = b
-      s.playbackRate.value = 1 + (Math.random() - 0.5) * 0.08
-      g.gain.value = R.volume * Math.min(1, force)
-      s.connect(g); g.connect(c.destination)
-      s.start()
-    },
-  }
-  for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'keydown', 'click']) addEventListener(ev, () => Son.reveiller(), { capture: true, passive: true })
 
   // ── La feuille ───────────────────────────────────────────────────────────
   let cas = Temoin.cas
@@ -448,8 +379,11 @@ body, .page { overflow-x: clip; }
         profondeurs.push([(yc - R.origine) ** 2 + (R.perspective - zc) ** 2, l.el])
         y = y2; z = z2; yMax = Math.max(yMax, y)
       })
-      // Peindre de la plus lointaine à la plus proche de l'œil.
-      profondeurs.sort((p1, p2) => p2[0] - p1[0]).forEach(([, e2], i) => { e2.style.zIndex = String(6 + i) })
+      // Peindre dans l'ordre de la feuille, de la charnière au bord libre :
+      // le recouvrement de chaque lamelle passe SOUS la suivante. Peintes de la
+      // plus lointaine à la plus proche, il dépassait à chaque pliure quand le
+      // papier se courbe — de fines stries claires pendant le mouvement.
+      profondeurs.forEach(([, e2], i) => { e2.style.zIndex = String(6 + i) })
       // L'ombre du rabat : de la charnière jusqu'à l'ombre de son bord libre.
       const long = y + OY * z - charniere
       ombre.style.opacity = (Math.min(1, Math.sin(th) * 2.5) * (sombre ? 0.9 : 0.75)).toFixed(3)
@@ -498,16 +432,6 @@ body, .page { overflow-x: clip; }
     libre += ((mode === 'tire' ? 0 : 1) - libre) * Math.min(1, h / 0.08)
   }
 
-  // Le froissement : un pli qui quitte la table, une fois par pli.
-  function surveiller(v) {
-    if (k !== kArme) { kArme = k; arme = true }   // un nouveau pli commence
-    if (th <= 0.02 || th >= PI - 0.02) arme = true
-    if (arme && th > 0.15 && th < PI - 0.15) {
-      arme = false
-      Son.jouer('ouverture', M.borne(0.3 + Math.abs(v) / 30, 0.3, 0.8))
-    }
-  }
-
   let raf = 0, tPrec = 0
   function boucle(t) {
     raf = 0
@@ -515,7 +439,6 @@ body, .page { overflow-x: clip; }
     const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
     if (mode === 'tire') wDoigt *= Math.exp(-dt / 0.06)
     if (dt > 0) for (let i = 0; i < n; i++) pas(h)
-    surveiller(mode === 'tire' ? wDoigt : w)
     // Le pli et son bord sont posés : on passe à la bande suivante. Quand un
     // toucher déplie tout, on n'attend pas que le bord ait fini de trembler.
     const calme = enchaine ? Math.abs(beta) < 0.02 && Math.abs(vbeta) < 0.6 : Math.abs(beta) < 0.003 && Math.abs(vbeta) < 0.05
@@ -628,17 +551,16 @@ body, .page { overflow-x: clip; }
   function esquisse() { if (!touche && !reduit && mode === 'repos' && k === 0 && th === 0) lacher(R.esquisse) }
 
   // ── La maquette ──────────────────────────────────────────────────────────
-  const boutons = [...document.querySelectorAll('.maquette [data-ambiance], .maquette [data-cas], .maquette [data-son]')]
+  const boutons = [...document.querySelectorAll('.maquette [data-ambiance], .maquette [data-cas]')]
   function marquer() {
     for (const b of boutons) b.setAttribute('aria-pressed', String(
-      b.dataset.ambiance ? b.dataset.ambiance === Temoin.ambiance.id : b.dataset.cas ? b.dataset.cas === cas : b.dataset.son === Son.jeu))
+      b.dataset.ambiance ? b.dataset.ambiance === Temoin.ambiance.id : b.dataset.cas === cas))
   }
   function remettre() { cacherSuite(); enchaine = false; w = 0; beta = 0; vbeta = 0; libre = 1; posee = false; k = 0; th = 0; kFace = -1; mode = 'repos'; scene.classList.remove('ouvert'); rendre() }
   document.getElementById('replier').addEventListener('click', () => { touche = true; remettre() })
   for (const b of boutons) b.addEventListener('click', () => {
     if (b.dataset.ambiance) { Temoin.poserAmbiance(b.dataset.ambiance); teindre(); rendre() }
     else if (b.dataset.cas) { cas = b.dataset.cas; construire(); mesurer(); remettre() }
-    else { Son.jeu = b.dataset.son; Son.reveiller(); Son.jouer('ouverture', 0.6) }
     marquer()
   })
   let largeur = 0
@@ -646,11 +568,10 @@ body, .page { overflow-x: clip; }
 
   // Pour les mesures et les planches : `?p=1.5` fige le rabat à mi-chemin du
   // deuxième pli ; `&courbe=-0.5` lui donne une courbure (en radians).
-  window.Depli = { R, Son, get P() { return P() }, get N() { return N }, get mode() { return mode }, get courbe() { return beta }, toutDeplier, remettre }
+  window.Depli = { R, get P() { return P() }, get N() { return N }, get mode() { return mode }, get courbe() { return beta }, toutDeplier, remettre }
 
   construire()
   marquer()
-  Son.charger()
   ;(async () => {
     try { await document.fonts.ready } catch { /* tant pis */ }
     mesurer(); largeur = scene.clientWidth

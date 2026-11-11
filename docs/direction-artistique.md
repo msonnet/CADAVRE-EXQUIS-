@@ -512,6 +512,24 @@ Proposé — le geste du dépli validé, appliqué au dessin :
   la hauteur), « — LA LECTURE SE FAIT — », la lecture, « TOUCHER POUR
   CONTINUER ». Le dessin reste entier à l'écran, jamais coupé.
 
+**Retour de l'auteur, même jour** : « définitivement le son ne me convient
+pas. On retire le son pour le dessin déplié mais aussi pour le texte. »
+Et l'animation du dessin : « pas mal, trop rapide ». Fait :
+- **Plus aucun son au dépli**, ni pour le poème ni pour le dessin. Les
+  extraits de papier (CC0) sont retirés du dépôt ; ils restent dans son
+  histoire (`scripts/temoins/depli-au-doigt/sons/`, commit c061a48).
+- **Le dessin, plus lent, par une règle** : une grande feuille tombe plus
+  lentement qu'une petite, comme un pendule plus long. Le mouvement validé
+  du poème est joué au ralenti d'un facteur (hauteur du rabat / 60 px)^0,35,
+  environ 1,6 pour une bande de dessin : un toucher le déplie en 2,6 s au
+  lieu de 1,7. Le poème garde sa vitesse validée.
+- **Corrigé** : de fines stries claires traversaient le rabat pendant qu'il
+  se courbe. Les lamelles étaient peintes de la plus lointaine à la plus
+  proche de l'œil, si bien que le recouvrement de l'une dépassait au-dessus
+  de l'autre à chaque pliure. Elles sont peintes dans l'ordre de la
+  feuille, de la charnière au bord : chaque recouvrement passe dessous.
+  Même correction au dépli du poème.
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.

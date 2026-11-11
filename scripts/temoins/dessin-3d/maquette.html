@@ -27,6 +27,12 @@
   Seule différence de réglage : une bande de dessin est six fois plus haute
   qu'un vers, alors le doigt parcourt une distance fixe par pli (150 px)
   au lieu de la hauteur de la bande.
+
+  Second passage — l'auteur : « définitivement le son ne me convient pas »
+  (retiré ici et au dépli du poème) ; l'animation « pas mal, trop rapide ».
+  Une grande feuille tombe plus lentement qu'une petite, comme un pendule
+  plus long : le mouvement validé du poème est joué au ralenti, d'un
+  facteur (hauteur du rabat / 60 px)^0,35 — environ 1,6 pour un dessin.
 */
 :root { --trait: rgba(40, 28, 10, 0.22); --ombre-paquet: rgba(40, 28, 10, 0.34); }
 :root[data-sombre="1"] { --trait: rgba(40, 28, 10, 0.3); --ombre-paquet: rgba(0, 0, 0, 0.7); }
@@ -108,20 +114,18 @@ body { overflow: hidden; }
 <nav class="maquette" aria-label="Réglages de la maquette">
   <span class="marque">MAQUETTE</span>
   <button id="replier" type="button">Replier</button>
-  <button id="son" type="button" aria-pressed="true">Son</button>
   <span class="sep"></span>
   <button type="button" data-ambiance="lin">Lin</button>
   <button type="button" data-ambiance="minuit">Minuit</button>
   <button type="button" data-ambiance="encre">Encre</button>
 </nav>
 
-<!-- Le dessin témoin et le son validé. `outils/autonome.mjs` les recopie dans la page. -->
+<!-- Le dessin témoin. `outils/autonome.mjs` le recopie dans la page. -->
 <script type="application/json" id="fichiers" data-autonome>
 {
   "bande-1": "../assets/dessin-bande-1.png",
   "bande-2": "../assets/dessin-bande-2.png",
-  "bande-3": "../assets/dessin-bande-3.png",
-  "froissement": "../depli-au-doigt/sons/feuille-courte-ouverture.wav"
+  "bande-3": "../assets/dessin-bande-3.png"
 }
 </script>
 
@@ -144,7 +148,7 @@ body { overflow: hidden; }
     coursePli: 150,     // px — la course du doigt pour un pli entier
     lamelles: 10,
     raideur: 380, amortiPapier: 21, traine: 0.045, devance: 0.02, affaisse: 0.22, profil: 1.5, rebondBord: 0,
-    volume: 0.4,
+    lenteur: 1,         // calculée à la mesure : (hauteur du rabat / 60 px)^0,35
     resserre: 0.6,      // une fois ouvert, le dessin occupe 60 % de la hauteur ; la lecture dessous
   }
   const reduit = Temoin.params.reduit || (q.get('reduit') !== '0' && matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -158,28 +162,6 @@ body { overflow: hidden; }
 
   const LY = LUMIERE[1], LZ = LUMIERE[2], E0 = LZ
   const OX = -LUMIERE[0] / LUMIERE[2], OY = -LUMIERE[1] / LUMIERE[2]
-
-  // ── Le son : le froissement court, validé ────────────────────────────────
-  const Son = { ctx: null, b: null, permis: false, actif: true,
-    async charger() {
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC()
-        const src = FICHIERS.froissement; let o
-        if (src.startsWith('data:')) { const s = atob(src.slice(src.indexOf(',') + 1)); o = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) o[i] = s.charCodeAt(i); o = o.buffer }
-        else o = await (await fetch(src)).arrayBuffer()
-        this.b = await new Promise((ok, ko) => this.ctx.decodeAudioData(o, ok, ko))
-      } catch { /* page locale : pas de son */ }
-    },
-    reveiller() { this.permis = true; const c = this.ctx; if (c && c.state !== 'running') { c.resume().catch(() => {}); try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0) } catch { /* rien */ } } },
-    jouer(force) {
-      const c = this.ctx
-      if (!this.actif || !this.permis || !this.b || !c || c.state !== 'running') return
-      const s = c.createBufferSource(), g = c.createGain()
-      s.buffer = this.b; s.playbackRate.value = 1 + (Math.random() - 0.5) * 0.08; g.gain.value = R.volume * Math.min(1, force)
-      s.connect(g); g.connect(c.destination); s.start()
-    },
-  }
-  for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'keydown', 'click']) addEventListener(ev, () => Son.reveiller(), { capture: true, passive: true })
 
   // ── Le dessin ────────────────────────────────────────────────────────────
   const el = (classe, html) => { const e = document.createElement('div'); e.className = classe; if (html != null) e.innerHTML = html; return e }
@@ -220,6 +202,8 @@ body { overflow: hidden; }
     bandes.forEach((b, i) => { b.h = HB; b.top = i * HB; b.el.style.height = HB + 'px'; b.el.style.transform = `translate3d(0px,${b.top}px,0px)` })
     scene.style.perspective = R.perspective + 'px'
     scene.style.perspectiveOrigin = `50% ${R.origine}px`
+    // Plus le rabat est haut, plus il tombe lentement (le pendule).
+    R.lenteur = Math.max(1, Math.pow(HB / 60, 0.35))
   }
 
   // ── L'état : celui du dépli validé ───────────────────────────────────────
@@ -270,7 +254,11 @@ body { overflow: hidden; }
         profondeurs.push([((y + y2) / 2 - R.origine) ** 2 + (R.perspective - (z + z2) / 2) ** 2, l.el])
         y = y2; z = z2; yMax = Math.max(yMax, y)
       })
-      profondeurs.sort((a, b) => b[0] - a[0]).forEach(([, e2], i) => { e2.style.zIndex = String(6 + i) })
+      // Peindre dans l'ordre de la feuille, de la charnière au bord libre :
+      // le recouvrement de chaque lamelle passe SOUS la suivante. Peintes de la
+      // plus lointaine à la plus proche, il dépassait à chaque pliure quand le
+      // papier se courbe — de fines stries claires pendant le mouvement.
+      profondeurs.forEach(([, e2], i) => { e2.style.zIndex = String(6 + i) })
       const long = y + OY * z - charniere
       ombre.style.opacity = (Math.min(1, Math.sin(th) * 2.5) * 0.8).toFixed(3)
       ombre.style.transform = `matrix(1,0,${(OX * z / 100).toFixed(4)},${(long / 100).toFixed(4)},0,${charniere.toFixed(2)})`
@@ -290,7 +278,7 @@ body { overflow: hidden; }
         if (choc < R.pose) { w = 0; posee = true } else w = -R.rebond * w
       }
     }
-    const v = mode === 'tire' ? wDoigt : w
+    const v = mode === 'tire' ? wDoigt * R.lenteur : w
     let cible = mode === 'tire' ? M.borne(R.devance * v, -0.5, 0.5) : mode === 'chute' ? M.borne(-R.traine * v, -0.7, 0.7) : 0
     if (mode === 'tire' || mode === 'chute') cible -= R.affaisse * Math.sin(2 * th)
     vbeta += (R.raideur * (cible - beta) - R.amortiPapier * vbeta) * h
@@ -301,19 +289,14 @@ body { overflow: hidden; }
     }
     libre += ((mode === 'tire' ? 0 : 1) - libre) * Math.min(1, h / 0.08)
   }
-  function surveiller(v) {
-    if (k !== kArme) { kArme = k; arme = true }
-    if (th <= 0.02 || th >= PI - 0.02) arme = true
-    if (arme && th > 0.15 && th < PI - 0.15) { arme = false; Son.jouer(M.borne(0.3 + Math.abs(v) / 30, 0.3, 0.8)) }
-  }
   let raf = 0, tPrec = 0
   function boucle(t) {
     raf = 0
     const dt = Math.min(0.05, Math.max(0, (t - tPrec) / 1000)); tPrec = t
     const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
     if (mode === 'tire') wDoigt *= Math.exp(-dt / 0.06)
-    if (dt > 0) for (let i = 0; i < n; i++) pas(h)
-    surveiller(mode === 'tire' ? wDoigt : w)
+    // Le mouvement validé, au ralenti : le temps du papier s'écoule moins vite.
+    if (dt > 0) for (let i = 0; i < n; i++) pas(h / R.lenteur)
     const calme = enchaine ? Math.abs(beta) < 0.02 && Math.abs(vbeta) < 0.6 : Math.abs(beta) < 0.003 && Math.abs(vbeta) < 0.05
     if (mode === 'chute' && posee && calme) { beta = 0; vbeta = 0; posee = false; if (th >= PI) { k += 1; th = 0 } return poser() }
     rendre()
@@ -334,7 +317,7 @@ body { overflow: hidden; }
     rendre()
     scene.classList.toggle('ouvert', mode === 'ouvert')
     if (mode === 'ouvert') setTimeout(resserrer, reduit ? 0 : 450)
-    else if (enchaine) setTimeout(() => { if (enchaine && mode === 'repos') lacher(R.poussee) }, R.entrePlis)
+    else if (enchaine) setTimeout(() => { if (enchaine && mode === 'repos') lacher(R.poussee) }, R.entrePlis * R.lenteur)
   }
 
   // ── Une fois ouvert : le dessin remonte, la lecture arrive dessous ───────
@@ -395,7 +378,8 @@ body { overflow: hidden; }
     if (tape) { enchaine = true; return lacher(R.poussee) }
     if (P() >= N - 1 - 1e-9) { k = N - 1; th = 0; return poser() }
     if (th <= 1e-6 && Math.abs(vitesse) < 0.5) { th = 0; mode = 'repos'; return demander() }
-    lacher(vitesse)
+    // La vitesse du doigt, dans le temps ralenti du papier.
+    lacher(vitesse * R.lenteur)
   }
   scene.addEventListener('pointerup', relacher)
   scene.addEventListener('pointercancel', relacher)
@@ -405,10 +389,9 @@ body { overflow: hidden; }
 
   // ── La maquette ──────────────────────────────────────────────────────────
   const bAmb = [...document.querySelectorAll('[data-ambiance]')]
-  const marquer = () => { bAmb.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ambiance === Temoin.ambiance.id))); $('son').setAttribute('aria-pressed', String(Son.actif)) }
+  const marquer = () => { bAmb.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ambiance === Temoin.ambiance.id))) }
   bAmb.forEach(b => b.addEventListener('click', () => { Temoin.poserAmbiance(b.dataset.ambiance); rgbOmbre = [1, 3, 5].map(i => parseInt(Temoin.papier.ombreVolet.slice(i, i + 2), 16)).join(','); marquer() }))
   $('replier').addEventListener('click', () => { touche = true; remettre() })
-  $('son').addEventListener('click', () => { Son.actif = !Son.actif; marquer() })
   rgbOmbre = [1, 3, 5].map(i => parseInt(Temoin.papier.ombreVolet.slice(i, i + 2), 16)).join(',')
   marquer()
   addEventListener('resize', () => { mesurer(); kFace = -1; rendre() })
@@ -416,7 +399,6 @@ body { overflow: hidden; }
   window.Depli = { R, get P() { return P() }, get mode() { return mode }, get courbe() { return beta }, remettre, toutDeplier: () => { enchaine = true; lacher(R.poussee) } }
 
   construire()
-  Son.charger()
   ;(async () => {
     try { await document.fonts.ready } catch { /* tant pis */ }
     mesurer(); rendre()
