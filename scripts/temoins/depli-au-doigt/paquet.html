@@ -29,8 +29,12 @@
     traîne dans l'air ; tenu de biais, il s'affaisse. Le pli touche la
     table, et son bord se pose un instant après.
   — LE SON. De vraies prises de papier, CC0 (`sons/SOURCES.md`) : un
-    froissement quand le pli s'ouvre. Deux jeux à comparer à l'oreille,
-    « carte » et « livre ». Rien ne sonne avant le premier toucher.
+    froissement quand le pli s'ouvre. Rien ne sonne avant le premier toucher.
+    Cinquième passage — l'auteur : « d'autres sons de papier, moins grossiers
+    que celui-ci ? » Trois prises plus fines à comparer à l'oreille, au même
+    niveau que l'ancienne (« Avant », la carte routière) : « Page » (une page
+    tournée), « Feuille » (une feuille qu'on manie), « Glissé » (une carte à
+    jouer qu'on fait glisser).
 
   Quatrième passage — l'auteur : « trop rapide, bruit trop fort et oublie
   le claquement ». La chute est deux fois plus lente, le doigt mène le pli
@@ -48,7 +52,7 @@
   --ombre-paquet: rgba(0, 0, 0, 0.7);
 }
 
-.page { padding-bottom: 120px; }
+.page { padding-bottom: 150px; }
 /* Le pli dressé déborde un peu la page, et son ombre aussi : on les coupe au
    bord de l'écran, sans quoi le téléphone dézoome. */
 body, .page { overflow-x: clip; }
@@ -141,7 +145,7 @@ body, .page { overflow-x: clip; }
 .maquette button:focus-visible { outline: 1px solid var(--accent); }
 .maquette .sep { width: 0.5px; height: 14px; background: var(--encre); opacity: 0.22; margin: 0 3px; }
 .maquette .ligne { flex-basis: 100%; height: 0; }
-@media (max-width: 359px) { .maquette button { padding: 8px 3px; } .maquette .legende { display: none; } }
+@media (max-width: 359px) { .maquette button { padding: 8px 3px; } }
 </style>
 </head>
 <body>
@@ -170,10 +174,12 @@ body, .page { overflow-x: clip; }
   <button type="button" data-cas="court">3 vers</button>
   <button type="button" data-cas="etoffe">5 vers</button>
   <button type="button" data-cas="atelier">Atelier</button>
-  <span class="sep"></span>
+  <span class="ligne"></span>
   <span class="legende">Son</span>
-  <button type="button" data-son="carte">Carte</button>
-  <button type="button" data-son="livre">Livre</button>
+  <button type="button" data-son="carte">Avant</button>
+  <button type="button" data-son="page">Page</button>
+  <button type="button" data-son="feuille">Feuille</button>
+  <button type="button" data-son="glisse">Glissé</button>
   <button type="button" data-son="sans">Sans</button>
 </nav>
 
@@ -181,7 +187,9 @@ body, .page { overflow-x: clip; }
 <script type="application/json" id="fichiers-sons" data-autonome>
 {
   "carte-ouverture": "sons/carte-ouverture.wav",
-  "livre-ouverture": "sons/livre-ouverture.wav"
+  "page-ouverture": "sons/page-ouverture.wav",
+  "feuille-ouverture": "sons/feuille-ouverture.wav",
+  "glisse-ouverture": "sons/glisse-ouverture.wav"
 }
 </script>
 
@@ -241,7 +249,7 @@ body, .page { overflow-x: clip; }
     deux fois pareil.
   */
   const Son = {
-    ctx: null, tampons: {}, jeu: ['carte', 'livre', 'sans'].includes(q.get('son')) ? q.get('son') : 'carte', dernier: {},
+    ctx: null, tampons: {}, jeu: ['carte', 'page', 'feuille', 'glisse', 'sans'].includes(q.get('son')) ? q.get('son') : 'page', dernier: {},
     permis: false,   // rien ne sonne avant le premier geste de la personne, même si le navigateur le permettrait
     async charger() {
       const AC = window.AudioContext || window.webkitAudioContext

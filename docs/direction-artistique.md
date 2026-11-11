@@ -378,6 +378,17 @@ oublie le claquement ». Fait :
   de l'enchaînement repartait en retard avec un claquement de trop. Un
   contact ne compte plus que si le pli va vers la table.
 
+**L'auteur, même jour** : « est-ce qu'il y a d'autres sons de papier
+déplié, peut-être moins grossiers que celui-ci ? » Trois prises CC0 plus
+fines, choisies sur la mesure (peu de craquements, pas de grave, un fond
+propre), mises au même niveau moyen que l'ancienne pour qu'on compare la
+matière et non le volume : **Page** (une page tournée, Kenney), **Feuille**
+(une feuille qu'on manie, enregistrée au téléphone), **Glissé** (une carte
+à jouer qu'on fait glisser, Kenney, coupée avant son claquement sec).
+« Avant » garde la carte routière pour comparer ; « Livre » est retiré,
+de la même famille. Page est le son par défaut, en attendant le choix de
+l'auteur. Détail : `sons/SOURCES.md`.
+
 La première — l'accordéon (`accordeon.html`) :
 
 - **La feuille arrive pliée en accordéon**, comme une bande de cadavre
