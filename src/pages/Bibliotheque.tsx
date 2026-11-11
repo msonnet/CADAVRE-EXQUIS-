@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -19,7 +19,7 @@ import { emporterFichier } from '../lib/emporter'
 import { lireEchos, lireReleve, ecrireReleve, releveDe } from '../lib/echos'
 import { libelleEchos, nouvelles, phraseCourrier, type Echos } from '../lib/galerie'
 import FeuilletVoyageur from '../components/FeuilletVoyageur'
-import { VOYAGE, part, lisse, confierVoyage, type Relais } from '../lib/voyage'
+import { VOYAGE, part, lisse, confierVoyage, reprendreRetour, type Relais } from '../lib/voyage'
 import { papierDeLaFeuille, grainDuPapier } from '../lib/papier'
 
 const mouvementReduit = () =>
@@ -120,8 +120,21 @@ export default function Bibliotheque() {
   // ── Le voyage du feuillet (`lib/voyage.ts`) ──
   // La ligne touchée devient papier et se soulève, le reste du recueil
   // s'efface autour d'elle ; puis la page du poème reprend le mouvement.
-  const [voyage, setVoyage] = useState<(Relais & { retrait: number }) | null>(null)
+  const [voyage, setVoyage] = useState<(Relais & { retrait?: number }) | null>(null)
   const contenuRef = useRef<HTMLDivElement>(null)
+  // Le retour : la page du poème a joué la feuille qui redevient feuillet ;
+  // ici, le recueil réapparaît autour et le feuillet se repose sur sa ligne,
+  // le recueil défilé là où on l'avait laissé.
+  const [retour, setRetour] = useState(() => reprendreRetour())
+  const revenu = useRef(retour?.id ?? null)
+  const defileARendre = useRef(retour?.defile ?? null)
+  useLayoutEffect(() => {
+    if (defileARendre.current != null && poemes.length) { window.scrollTo(0, defileARendre.current); defileARendre.current = null }
+  }, [poemes])
+  const fuiteDuRecueil = (t: number) => {
+    const f = lisse(part(t, VOYAGE.fuite)), el = contenuRef.current
+    if (el) { el.style.opacity = String(1 - f); el.style.transform = `translateY(${(6 * f).toFixed(2)}px)` }
+  }
   const metaDe = (poeme: Poeme) => [
     poeme.origine === 'jour'
       ? tr('POÈME DU JOUR', 'POEM OF THE DAY')
@@ -141,6 +154,7 @@ export default function Bibliotheque() {
       id: poeme.id,
       de: { x: r.left, y: r.top, w: r.width, h: r.height },
       retrait: b.left - r.left,
+      defile: window.scrollY,
       titre: poeme.titre || premierVers(poeme) || tr('Sans titre', 'Untitled'),
       meta: metaDe(poeme),
       depart: performance.now(),
@@ -218,15 +232,29 @@ export default function Bibliotheque() {
           grain={grainDuPapier(feuille.sombre)}
           sombre={feuille.sombre}
           encre={encre}
-          onInstant={t => {
-            const f = lisse(part(t, VOYAGE.fuite)), el = contenuRef.current
-            if (el) { el.style.opacity = String(1 - f); el.style.transform = `translateY(${(6 * f).toFixed(2)}px)` }
-          }}
+          onInstant={fuiteDuRecueil}
           onFin={() => { confierVoyage(voyage); navigate(`/bibliotheque/${voyage.id}`) }}
         />
       )}
+      {retour && (
+        <FeuilletVoyageur
+          {...retour}
+          sens={-1}
+          jusqua={0}
+          papier={feuille.couleur}
+          grain={grainDuPapier(feuille.sombre)}
+          sombre={feuille.sombre}
+          encre={encre}
+          onInstant={fuiteDuRecueil}
+          onFin={() => {
+            const el = contenuRef.current
+            if (el) { el.style.opacity = ''; el.style.transform = '' }
+            setRetour(null)
+          }}
+        />
+      )}
 
-      <div ref={contenuRef} style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+      <div ref={contenuRef} style={{ position: 'relative', zIndex: 10, ...(retour ? { opacity: 0 } : {}) }} className="flex flex-col flex-1">
 
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
@@ -440,8 +468,9 @@ export default function Bibliotheque() {
                     key={poeme.id}
                     data-carte
                     initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: voyage?.id === poeme.id ? 0 : 1, y: 0 }}
-                    transition={voyage?.id === poeme.id ? { duration: 0 } : { delay: i * 0.04 }}
+                    animate={{ opacity: voyage?.id === poeme.id || retour?.id === poeme.id ? 0 : 1, y: 0 }}
+                    // La ligne du feuillet reparaît d'un coup, sous lui : un fondu la faisait clignoter.
+                    transition={voyage?.id === poeme.id || revenu.current === poeme.id ? { duration: 0 } : { delay: i * 0.04 }}
                     style={{
                       display: 'flex', alignItems: 'stretch', gap: 12,
                       borderBottom: `0.5px solid ${encre}12`,

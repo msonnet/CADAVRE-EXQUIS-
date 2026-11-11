@@ -41,6 +41,18 @@ export const VOYAGE = {
   fin: 1530,
 }
 
+/** Le retour refait le chemin à l'envers, plus vite (la maquette : × 1,4). */
+export const VITESSE_RETOUR = 1.4
+
+/**
+ * L'instant du voyage — à l'aller, le temps écoulé depuis le toucher ; au
+ * retour, le même chemin lu à l'envers depuis la fin, plus vite.
+ */
+export function instantDuVoyage(maintenant: number, depart: number, sens: 1 | -1 = 1): number {
+  const e = Math.max(0, maintenant - depart)
+  return sens > 0 ? e : VOYAGE.fin - e * VITESSE_RETOUR
+}
+
 export const borne01 = (v: number) => Math.min(1, Math.max(0, v))
 /** L'avancée de t entre a et b, de 0 à 1. */
 export const part = (t: number, [a, b]: readonly [number, number]) => borne01((t - a) / (b - a))
@@ -105,8 +117,12 @@ export interface Relais {
   /** Ce que la ligne portait : son titre et sa ligne de métadonnées. */
   titre: string
   meta: string
-  /** `performance.now()` au toucher. */
+  /** `performance.now()` au toucher (à l'aller), ou au départ du retour. */
   depart: number
+  /** 1 : du recueil au poème ; −1 : le retour. */
+  sens?: 1 | -1
+  /** Où le recueil était défilé : au retour, la ligne retrouve sa place. */
+  defile?: number
 }
 
 let relais: Relais | null = null
@@ -121,7 +137,19 @@ export function confierVoyage(r: Relais) { relais = r }
  */
 export function reprendreVoyage(id: string, maintenant = performance.now()): Relais | null {
   const r = relais
-  if (!r || r.id !== id) return null
+  if (!r || r.id !== id || r.sens === -1) return null
   const ecoule = maintenant - r.depart
   return ecoule >= 0 && ecoule < VOYAGE.arrivee ? r : null
+}
+
+/**
+ * Le recueil reprend le retour, s'il est en cours : la page du poème a joué
+ * la feuille qui redevient feuillet et rapetisse jusqu'à sa ligne ; le
+ * recueil joue la fin — il réapparaît autour, le feuillet se repose.
+ */
+export function reprendreRetour(maintenant = performance.now()): Relais | null {
+  const r = relais
+  if (!r || r.sens !== -1) return null
+  const t = instantDuVoyage(maintenant, r.depart, -1)
+  return t > 0 && t <= VOYAGE.relais + 50 ? r : null
 }

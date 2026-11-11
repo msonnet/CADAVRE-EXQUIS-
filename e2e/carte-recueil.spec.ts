@@ -147,3 +147,23 @@ test('mouvement réduit : la page du poème s’ouvre sans voyage', async ({ pag
   await expect(feuillet(page)).toHaveCount(0)
   await expect(page.locator('#poeme-detail [data-volet-papier]')).toHaveCount(5)
 })
+
+test('« ← MES POÈMES » refait le chemin à l’envers, et la ligne retrouve sa place', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await preparer(page)
+  await page.getByRole('button', { name: /le vernis craquelé/ }).click()
+  await expect(feuillet(page)).toHaveCount(0, { timeout: 4000 })
+  await page.getByRole('button', { name: 'Retour à mes poèmes' }).click()
+  // La feuille redevient feuillet ; le recueil reprend la fin du chemin.
+  await expect(feuillet(page)).toHaveCount(1)
+  await expect(page).toHaveURL(/\/bibliotheque$/, { timeout: 3000 })
+  await expect(feuillet(page)).toHaveCount(0, { timeout: 3000 })
+  const ligne = page.getByRole('button', { name: /le vernis craquelé/ })
+  await expect(ligne).toBeVisible()
+  // Rien n'est resté effacé : ni le recueil, ni la ligne.
+  await expect.poll(() => ligne.evaluate(e => {
+    let o = 1
+    for (let el: Element | null = e; el; el = el.parentElement) o *= parseFloat(getComputedStyle(el).opacity)
+    return o
+  })).toBe(1)
+})

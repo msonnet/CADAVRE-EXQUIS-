@@ -435,8 +435,7 @@ révélation qui apparaissait, et poussait le texte vers le haut.
 
 La maquette retenue par l'auteur (`scripts/temoins/recueil-feuille/
 maquette.html`, plan « moderne », point 3 ; « c'est mieux, chantier
-suivant ») entre dans le jeu. **L'aller seulement** ; le retour (« ← MES
-POÈMES » qui refait le chemin à l'envers, plus vite) vient ensuite.
+suivant ») entre dans le jeu, l'aller puis le retour.
 
 - **La page du poème montre le poème sur SA feuille**, déjà dépliée, comme
   à la fin de partie : la même `PoemeDevoile`, posée d'avance (`pose`), les
@@ -462,8 +461,15 @@ POÈMES » qui refait le chemin à l'envers, plus vite) vient ensuite.
 - **À dire à l'auteur** : un poème ILLUSTRÉ a son image au-dessus de la
   feuille ; le feuillet glisse donc plus bas, vers le bas de l'écran. La
   maquette n'avait pas d'illustration.
-- **Les parcours** : `carte-recueil.spec.ts` (trois de plus : le voyage, un
-  appui qui le termine, mouvement réduit). Deux mesures de
+- **Le retour, même jour** (« ok fais le retour ») : « ← MES POÈMES »
+  rejoue le chemin à l'envers, 1,4 fois plus vite (0,82 s sur la page du
+  poème, puis 0,27 s au recueil) : les actions et l'en-tête s'effacent, la
+  feuille redevient feuillet et rapetisse jusqu'à sa ligne, le recueil
+  réapparaît autour et le feuillet s'y repose. Le recueil revient défilé
+  là où on l'avait laissé (`defile`) : sans cela, la ligne n'était plus à
+  sa place. Venue autrement que par le voyage, la page revient comme avant.
+- **Les parcours** : `carte-recueil.spec.ts` (quatre de plus : le voyage, un
+  appui qui le termine, mouvement réduit, le retour). Deux mesures de
   `fin-de-partie.spec.ts` lisaient les vers comme des lignes de texte nu
   (`#poeme-detail > div`) : elles lisent désormais les vers de la feuille ;
   ce qu'elles tiennent ne change pas (les vers partent du même bord ; la

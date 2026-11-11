@@ -28,7 +28,7 @@ import { lignesDuFeuillet } from '../lib/plis'
 import { RETRAIT_DEBORD, incipitDe, corpsDuPoeme, TAILLE_CORPS } from '../lib/composition'
 import PoemeDevoile from '../components/PoemeDevoile'
 import FeuilletVoyageur from '../components/FeuilletVoyageur'
-import { VOYAGE, part, lisse, reprendreVoyage } from '../lib/voyage'
+import { VOYAGE, part, lisse, reprendreVoyage, confierVoyage, type Relais } from '../lib/voyage'
 import { papierDeLaFeuille, grainDuPapier } from '../lib/papier'
 
 // Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
@@ -103,32 +103,50 @@ export default function PoemeDetail() {
   const feuilleRef = useRef<HTMLDivElement>(null)
   const suiteRef = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => { if (voyage) window.scrollTo(0, 0) }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const voyageur = voyage && enVoyage && (
+  // L'en-tête, la feuille et les actions, à l'instant t du voyage — à l'aller
+  // comme au retour.
+  const regler = (t: number) => {
+    const a = lisse(part(t, VOYAGE.entete)), b = lisse(part(t, [VOYAGE.arrivee, VOYAGE.fin]))
+    const e = enteteRef.current, s = suiteRef.current
+    if (e) { e.style.opacity = String(a); e.style.transform = `translateY(${(-6 * (1 - a)).toFixed(2)}px)` }
+    if (s) { s.style.opacity = String(b); s.style.transform = `translateY(${(8 * (1 - b)).toFixed(2)}px)` }
+    setPosee(t >= VOYAGE.arrivee)
+  }
+  const proprietesVoyage = {
+    papier: feuille.couleur, grain, sombre: feuille.sombre, encre,
+    vers: () => {
+      const r = feuilleRef.current?.getBoundingClientRect()
+      return r && r.height > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : null
+    },
+    feuille: () => feuilleRef.current,
+    onInstant: regler,
+  }
+  // « ← MES POÈMES » : venu du recueil par le voyage, on refait le chemin à
+  // l'envers, plus vite ; le recueil joue la fin. Sinon, comme avant.
+  const [retour, setRetour] = useState<Relais | null>(null)
+  const revenir = () => {
+    if (!voyage || enVoyage || retour || mouvementReduit()) { navigate('/bibliotheque'); return }
+    setRetour({ ...voyage, titre: poeme?.titre || voyage.titre, sens: -1, depart: performance.now() })
+  }
+  const voyageur = voyage && enVoyage ? (
     <FeuilletVoyageur
       {...voyage}
+      {...proprietesVoyage}
       jusqua={VOYAGE.fin}
-      papier={feuille.couleur}
-      grain={grain}
-      sombre={feuille.sombre}
-      encre={encre}
-      vers={() => {
-        const r = feuilleRef.current?.getBoundingClientRect()
-        return r && r.height > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : null
-      }}
-      feuille={() => feuilleRef.current}
-      onInstant={t => {
-        const a = lisse(part(t, VOYAGE.entete)), b = lisse(part(t, [VOYAGE.arrivee, VOYAGE.fin]))
-        const e = enteteRef.current, s = suiteRef.current
-        if (e) { e.style.opacity = String(a); e.style.transform = `translateY(${(-6 * (1 - a)).toFixed(2)}px)` }
-        if (s) { s.style.opacity = String(b); s.style.transform = `translateY(${(8 * (1 - b)).toFixed(2)}px)` }
-        if (t >= VOYAGE.arrivee) setPosee(true)
-      }}
       onFin={() => {
         for (const el of [enteteRef.current, suiteRef.current]) if (el) { el.style.opacity = ''; el.style.transform = '' }
         setPosee(true); setEnVoyage(false)
       }}
     />
-  )
+  ) : retour ? (
+    <FeuilletVoyageur
+      {...retour}
+      {...proprietesVoyage}
+      sens={-1}
+      jusqua={VOYAGE.relais}
+      onFin={() => { confierVoyage(retour); navigate('/bibliotheque') }}
+    />
+  ) : null
 
   useEffect(() => {
     // Un feuillet déjà publié a déjà fait ce que l'étape demande : le guide
@@ -465,7 +483,7 @@ export default function PoemeDetail() {
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
           <button
-            onClick={() => navigate('/bibliotheque')}
+            onClick={revenir}
             aria-label="Retour à mes poèmes"
             style={{ ...mono, fontSize: 13, color: encre, opacity: 0.85, background: 'none', border: 'none', cursor: 'pointer' }}
           >

@@ -241,13 +241,13 @@ sentira que dans l'application installée (`@capacitor/haptics`).
 L'auteur n'a jamais installé l'application sur son iPhone depuis Xcode :
 la vibration se fera à cette première installation, guidée pas à pas.
 
-**Point 3, les écrans qui s'enchaînent : maquette retenue, l'aller intégré
-le 11 novembre** (`scripts/temoins/recueil-feuille/maquette.html` ;
+**Point 3, les écrans qui s'enchaînent : maquette retenue, intégrée le
+11 novembre** (`scripts/temoins/recueil-feuille/maquette.html` ;
 `lib/voyage.ts`, `FeuilletVoyageur.tsx` ; journal, « Le recueil s'ouvre en
 feuille ») — la ligne du recueil devient un feuillet qui glisse à sa place
 et grandit jusqu'à la feuille, déjà dépliée, sans son ; la page du poème
-montre le poème sur sa feuille. Reste le retour (« ← MES POÈMES » à
-l'envers).
+montre le poème sur sa feuille ; « ← MES POÈMES » refait le chemin à
+l'envers.
 
 **Point 4, la révélation du dessin en 3D : maquette validée, intégrée le
 11 novembre** (`scripts/temoins/dessin-3d/maquette.html` ; `RevealDessin.tsx`
@@ -296,7 +296,7 @@ sont connectés sur l'ordinateur de l'auteur, pas dans les sessions cloud.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (887 tests unitaires) + Playwright (177 tests E2E, FR et EN)
+- Tests : Vitest (889 tests unitaires) + Playwright (178 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

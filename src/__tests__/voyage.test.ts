@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { VOYAGE, bezier, courbeGlisse, feuilletA, confierVoyage, reprendreVoyage, type Rect } from '../lib/voyage'
+import { VOYAGE, VITESSE_RETOUR, bezier, courbeGlisse, feuilletA, confierVoyage, reprendreVoyage, reprendreRetour, instantDuVoyage, type Rect } from '../lib/voyage'
 
 /**
  * Le voyage du feuillet, du recueil à la page du poème — la maquette retenue
@@ -56,5 +56,23 @@ describe('le relais', () => {
     expect(reprendreVoyage('b', 1400)).toBeNull()
     confierVoyage({ id: 'a', de, titre: 't', meta: 'm', depart: 1000 })
     expect(reprendreVoyage('a', 1000 + VOYAGE.arrivee + 1)).toBeNull()
+  })
+})
+
+describe('le retour (« ← MES POÈMES »)', () => {
+  it('refait le chemin à l’envers, plus vite', () => {
+    expect(instantDuVoyage(1000, 1000, -1)).toBe(VOYAGE.fin)
+    const duree = VOYAGE.fin / VITESSE_RETOUR
+    expect(instantDuVoyage(1000 + duree, 1000, -1)).toBeCloseTo(0, 6)
+    expect(duree).toBeLessThan(VOYAGE.fin)
+  })
+  it('le recueil reprend le retour en cours, pas l’aller, et pas un retour fini', () => {
+    const depart = 1000, relais = depart + (VOYAGE.fin - VOYAGE.relais) / VITESSE_RETOUR
+    confierVoyage({ id: 'a', de, titre: 't', meta: 'm', depart, sens: -1 })
+    expect(reprendreRetour(relais + 10)).not.toBeNull()
+    expect(reprendreVoyage('a', relais + 10)).toBeNull()
+    expect(reprendreRetour(depart + VOYAGE.fin)).toBeNull()
+    confierVoyage({ id: 'a', de, titre: 't', meta: 'm', depart })
+    expect(reprendreRetour(depart + 400)).toBeNull()
   })
 })

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { feuilletA, VOYAGE, type Rect } from '../lib/voyage'
+import { feuilletA, instantDuVoyage, VOYAGE, type Rect } from '../lib/voyage'
 import { mono } from '../lib/typo'
 
 interface Props {
@@ -14,6 +14,8 @@ interface Props {
   depart: number
   /** ms — jusqu'où il joue ; arrivé là, `onFin`. */
   jusqua: number
+  /** 1 : l'aller ; −1 : le retour, le même chemin à l'envers, plus vite. */
+  sens?: 1 | -1
   /** La place de la feuille à l'écran ; `null` tant qu'elle n'y est pas. */
   vers?: () => Rect | null
   /** La feuille, recopiée dans le feuillet quand elle y apparaît. */
@@ -51,7 +53,9 @@ export default function FeuilletVoyageur(props: Props) {
     const image = () => {
       raf = 0
       const r = rappels.current
-      const t = abrege ? r.jusqua : Math.min(r.jusqua, performance.now() - r.depart)
+      const sens = r.sens ?? 1
+      const brut = instantDuVoyage(performance.now(), r.depart, sens)
+      const t = abrege ? r.jusqua : sens > 0 ? Math.min(r.jusqua, brut) : Math.max(r.jusqua, brut)
       const vers = r.vers?.() ?? null
       const f = feuilletA(t, r.de, vers)
       const el = racine.current
@@ -82,7 +86,7 @@ export default function FeuilletVoyageur(props: Props) {
         }
       }
       r.onInstant?.(t)
-      if (t >= r.jusqua) { r.onFin?.(); return }
+      if (sens > 0 ? t >= r.jusqua : t <= r.jusqua) { r.onFin?.(); return }
       raf = requestAnimationFrame(image)
     }
     // Un appui pendant le mouvement le termine.
