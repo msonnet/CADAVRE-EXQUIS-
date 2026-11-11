@@ -137,7 +137,7 @@ défaites. Ce fichier-ci ne garde que l'état, les règles et la carte.
 | table locale, prénoms | « La table locale » | `src/lib/table.ts`, `NomsDesMains.tsx` |
 | poème du jour | « Le poème du jour » | `api/_jour.ts`, `src/lib/jourLogique.ts`, `PoemeDuJour.tsx` |
 | voix, registre, genre | « Le registre des voix », « La Découverte, et le genre des voix » | `api/_voices.ts`, `src/data/voiceIds.ts`, `RegistreVoix.tsx` |
-| galerie | « La galerie, une revue » | `Galerie.tsx`, `EntreeGalerie.tsx`, `src/lib/publier.ts` |
+| galerie | « La galerie, une revue », « La galerie aussi » | `Galerie.tsx`, `EntreeGalerie.tsx`, `src/lib/publier.ts`, `src/lib/voyage.ts` |
 | partage, affiche, vidéo | « Le partage — une porte, et une affiche qui tient » | `src/utils/partager.ts`, `src/lib/affiche.ts` |
 | dessiné, studio | « Le studio du dessiné », « La lecture du dessin », « Le dessin plié, au doigt » | `JeuDessin.tsx`, `src/lib/trait/`, `RevealDessin.tsx`, `FeuillePliee.tsx` |
 | salon en ligne, convenance | « Le lancement — ce qui relevait du code » | `src/lib/salonEnLigne.ts`, `src/lib/convenance.ts` |
@@ -247,7 +247,8 @@ la vibration se fera à cette première installation, guidée pas à pas.
 feuille ») — la ligne du recueil devient un feuillet qui glisse à sa place
 et grandit jusqu'à la feuille, déjà dépliée, sans son ; la page du poème
 montre le poème sur sa feuille ; « ← MES POÈMES » refait le chemin à
-l'envers.
+l'envers. **La galerie aussi**, sur place : la ligne glisse sous son titre
+et grandit jusqu'à la feuille, et se replie à l'envers.
 
 **Point 4, la révélation du dessin en 3D : maquette validée, intégrée le
 11 novembre** (`scripts/temoins/dessin-3d/maquette.html` ; `RevealDessin.tsx`
@@ -296,7 +297,7 @@ sont connectés sur l'ordinateur de l'auteur, pas dans les sessions cloud.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (889 tests unitaires) + Playwright (178 tests E2E, FR et EN)
+- Tests : Vitest (889 tests unitaires) + Playwright (179 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

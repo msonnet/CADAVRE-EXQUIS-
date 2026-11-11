@@ -352,3 +352,37 @@ test.describe('le feuillet et sa publication', () => {
     await expect(page.getByRole('button', { name: 'Publier ce poème dans la galerie' })).toBeVisible({ timeout: 5000 })
   })
 })
+
+// ── Le poème sur sa feuille, et le voyage sur place (11 novembre) ───────────
+
+test('un poème s’ouvre sur sa feuille : la ligne glisse et grandit, puis refait le chemin à l’envers', async ({ page }) => {
+  test.setTimeout(60_000)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await bouchonner(page, () => [VERNIS])
+  await page.goto('/galerie')
+  await page.waitForLoadState('networkidle')
+  await franchir(page)
+  const liste = page.locator('section[aria-label="Publications"]')
+  const feuillet = page.locator('body > div[aria-hidden="true"][style*="position: fixed"]')
+  const tete = liste.getByRole('button', { name: 'le vernis craquelé avale une lampe sourde' })
+  await expect(tete).toBeVisible({ timeout: 5000 })
+
+  await tete.click()
+  // Le feuillet porte la ligne touchée, puis laisse la place à la feuille.
+  await expect(feuillet).toHaveCount(1)
+  await expect(feuillet).toContainText('le vernis craquelé')
+  await expect(feuillet).toHaveCount(0, { timeout: 4000 })
+  // Une bande par main, sur le papier ; sans titre, la tête se réduit à
+  // l'incipit : le poème n'est pas écrit deux fois.
+  await expect(liste.locator('[data-volet-papier]')).toHaveCount(5)
+  await expect(liste.getByRole('button', { name: /COUTURES/ })).toBeVisible()
+  const ouverte = liste.getByRole('button', { expanded: true })
+  await expect(ouverte).not.toHaveText('le vernis craquelé avale une lampe sourde')
+
+  // Refermée : le chemin à l'envers, puis l'entrée close.
+  await ouverte.click()
+  await expect(feuillet).toHaveCount(1)
+  await expect(liste.getByRole('button', { name: 'le vernis craquelé avale une lampe sourde' })).toHaveAttribute('aria-expanded', 'false', { timeout: 3000 })
+  await expect(liste.locator('[data-volet-papier]')).toHaveCount(0)
+  await expect(feuillet).toHaveCount(0)
+})

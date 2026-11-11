@@ -1,5 +1,12 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import PoemeDevoile from './PoemeDevoile'
+import FeuilletVoyageur from './FeuilletVoyageur'
+import { useReve } from '../reve'
+import { VOYAGE, part, lisse, courbeGlisse, type Relais } from '../lib/voyage'
+import { papierDeLaFeuille, grainDuPapier } from '../lib/papier'
+import { lignesDuFeuillet } from '../lib/plis'
+import { corpsDuPoeme, incipitDe, TAILLE_CORPS } from '../lib/composition'
 import MainsDuVers from './MainsDuVers'
 import BoutonRecolte from './BoutonRecolte'
 import { fonctionDeCase } from '../lib/reliure'
@@ -174,21 +181,99 @@ function Signature({ item, encre, echos, sansLien, prefixe }: { item: Publicatio
   )
 }
 
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 export default function EntreeGalerie(props: Commun) {
   const { item, ouvert, onBasculer, reactions, accent, encre, actions, sansLienAuteur, domId, onAgrandir } = props
   const [coutures, setCoutures] = useState(false)
   const poeme = lirePoemePublie(item.payload)
   const tete = tetePublication(item)
   const vers = poeme ? versPublies(poeme) : []
-  // Sans titre, la tête EST l'incipit, et ouverte elle ne se replie plus :
-  // un poème d'une seule ligne — la phrase courte, la phrase étoffée — y est
-  // déjà entier, le répéter dessous serait l'écrire deux fois.
-  const corps = vers.length === 1 && tete === vers[0] ? [] : vers
   const echos = libelleEchos({ lectures: item.views_count ?? 0, reactions })
   const idCoutures = `${domId}-coutures`
 
+  // ── Le poème sur SA feuille, déjà dépliée (11 novembre) ──
+  // Comme au recueil et à la fin de partie : une bande par main, le papier
+  // de l'ambiance, la lettrine. Sans titre, la tête ouverte se réduit à
+  // l'incipit : la feuille porte le poème, il n'est pas écrit deux fois.
+  const seance = useReve()
+  const feuille = papierDeLaFeuille(seance?.ambiance.bg ?? '#f0e4cc', encre)
+  const grain = grainDuPapier(feuille.sombre)
+  const lignes = poeme ? lignesDuFeuillet(poeme.structureId, poeme.cases.map(c => c.texte ?? '')).lignes : []
+  const aUnTitre = !!(item.titre?.trim() || poeme?.titre?.trim())
+  const teteAffichee = ouvert && !aUnTitre && vers.length ? incipitDe(vers.join('\n')) : tete
+
+  // ── Le voyage, sur place (`lib/voyage.ts`) ──
+  // La ligne touchée devient papier et se soulève, puis glisse sous le titre
+  // et grandit jusqu'à la feuille ; la place s'ouvre avec elle, ce qui suit
+  // arrive après. Refermer refait le chemin à l'envers, plus vite.
+  const [voyage, setVoyage] = useState<Relais | null>(null)
+  const [posee, setPosee] = useState(true)
+  const teteRef = useRef<HTMLDivElement>(null)
+  const zoneRef = useRef<HTMLDivElement>(null)
+  const feuilleRef = useRef<HTMLDivElement>(null)
+  const suiteRef = useRef<HTMLDivElement>(null)
+  const basculer = () => {
+    if (voyage) return
+    const el = teteRef.current
+    if (!poeme || !lignes.length || !el || mouvementReduit()) { onBasculer(); return }
+    const r = el.getBoundingClientRect()
+    const v: Relais = { id: item.id, de: { x: r.left, y: r.top, w: r.width, h: r.height }, titre: tete, meta: '', depart: performance.now() }
+    if (ouvert) { setVoyage({ ...v, sens: -1 }); return }
+    setPosee(false)
+    setVoyage({ ...v, sens: 1 })
+    onBasculer()
+  }
+  // Refermée d'ailleurs (une autre entrée s'ouvre) : le voyage s'arrête là.
+  useEffect(() => {
+    if (!ouvert && voyage?.sens === 1) { setVoyage(null); setPosee(true); if (teteRef.current) teteRef.current.style.opacity = '' }
+  }, [ouvert]) // eslint-disable-line react-hooks/exhaustive-deps
+  const regler = (t: number) => {
+    const z = zoneRef.current, s = suiteRef.current, h = teteRef.current
+    if (z) z.style.height = `${(z.scrollHeight * courbeGlisse(part(t, VOYAGE.glisse))).toFixed(1)}px`
+    if (s) s.style.opacity = String(lisse(part(t, [VOYAGE.arrivee, VOYAGE.fin])))
+    if (h) h.style.opacity = String(lisse(part(t, VOYAGE.ligne)))
+    setPosee(t >= VOYAGE.arrivee)
+  }
+  const nettoyer = () => {
+    for (const el of [zoneRef.current, suiteRef.current, teteRef.current]) if (el) { el.style.height = ''; el.style.opacity = '' }
+  }
+
   return (
     <article style={{ borderBottom: `0.5px solid ${encre}22`, padding: '14px 0 12px' }}>
+      {voyage && (
+        <FeuilletVoyageur
+          {...voyage}
+          jusqua={voyage.sens === -1 ? 0 : VOYAGE.fin}
+          ligne={
+            <div>
+              <span style={{
+                fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 19, lineHeight: 1.35, color: encre,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              } as React.CSSProperties}>
+                {tete}
+              </span>
+              <Signature item={item} encre={encre} echos={echos} sansLien />
+            </div>
+          }
+          papier={feuille.couleur}
+          grain={grain}
+          sombre={feuille.sombre}
+          encre={encre}
+          vers={() => {
+            const r = feuilleRef.current?.getBoundingClientRect()
+            return r && r.height > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : null
+          }}
+          feuille={() => feuilleRef.current}
+          onInstant={regler}
+          onFin={() => {
+            if (voyage.sens === -1) { if (teteRef.current) teteRef.current.style.opacity = ''; onBasculer() }
+            else nettoyer()
+            setPosee(true); setVoyage(null)
+          }}
+        />
+      )}
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         {/* La vignette, comme sur la carte du recueil : décorative, le titre
             est juste à côté. Ouvert, l'illustration passe en pleine largeur. */}
@@ -198,9 +283,9 @@ export default function EntreeGalerie(props: Commun) {
             style={{ width: 54, height: 72, objectFit: 'cover', flexShrink: 0, border: `0.5px solid ${accent}30` }}
           />
         )}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div ref={teteRef} style={{ flex: 1, minWidth: 0 }}>
           <button
-            onClick={onBasculer}
+            onClick={basculer}
             aria-expanded={ouvert}
             aria-controls={domId}
             style={{
@@ -212,7 +297,7 @@ export default function EntreeGalerie(props: Commun) {
               fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 19, lineHeight: 1.35,
               display: '-webkit-box', WebkitLineClamp: ouvert ? 'unset' : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
             } as React.CSSProperties}>
-              {tete}
+              {teteAffichee}
             </span>
           </button>
           <Signature item={item} encre={encre} echos={echos} sansLien={sansLienAuteur} />
@@ -220,19 +305,34 @@ export default function EntreeGalerie(props: Commun) {
       </div>
 
       {ouvert && (
-        <div id={domId} style={{ marginTop: 12 }}>
-          {/* Le poème entier. Chaque vers est un paragraphe à retrait
-              négatif : ce qui déborde se range sous le vers, en retrait,
-              comme dans un recueil imprimé. */}
-          {/* `relative` : positionné et placé après la signature, le poème
-              passe au-dessus de la zone d'appui du lien auteur qui descend
-              jusqu'ici quand l'entrée n'a pas encore d'échos — toucher le
-              premier vers ne doit mener nulle part. */}
-          <div style={{ position: 'relative', fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.55, color: encre }}>
-            {corps.map((v, i) => (
-              <p key={i} style={{ margin: 0, paddingLeft: '1.4em', textIndent: '-1.4em' }}>{v}</p>
-            ))}
-          </div>
+        <div
+          ref={zoneRef}
+          id={domId}
+          style={{ marginTop: 12, ...(voyage ? { overflow: 'hidden', ...(voyage.sens === 1 ? { height: 0 } : {}) } : {}) }}
+        >
+          {/* Le poème entier, sur sa feuille. `relative` : positionné et
+              placé après la signature, il passe au-dessus de la zone d'appui
+              du lien auteur qui descend jusqu'ici quand l'entrée n'a pas
+              encore d'échos — toucher le premier vers ne doit mener nulle
+              part. */}
+          {lignes.length > 0 && (
+            <div ref={feuilleRef} style={{ position: 'relative', marginBottom: 4, visibility: posee ? undefined : 'hidden' }}>
+              <PoemeDevoile
+                lignes={lignes}
+                accent={accent}
+                actif
+                pose
+                lettrine
+                papier={{ couleur: feuille.couleur, sombre: feuille.sombre, ombre: feuille.ombreVolet, grain, bord: 16, dos: feuille.dos, ombreFeuille: feuille.ombre }}
+                style={{
+                  fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
+                  color: encre, fontSize: TAILLE_CORPS[corpsDuPoeme(lignes, poeme?.structureId ?? '')], lineHeight: 1.6,
+                  overflowWrap: 'break-word', wordBreak: 'break-word',
+                }}
+              />
+            </div>
+          )}
+          <div ref={suiteRef} style={voyage?.sens === 1 ? { opacity: 0 } : undefined}>
 
           {item.image_url && (
             <button
@@ -264,6 +364,7 @@ export default function EntreeGalerie(props: Commun) {
 
           <RangeeReactions {...props} />
           {actions && <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>{actions}</div>}
+          </div>
         </div>
       )}
     </article>

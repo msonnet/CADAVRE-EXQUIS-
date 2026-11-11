@@ -475,6 +475,31 @@ suivant ») entre dans le jeu, l'aller puis le retour.
   ce qu'elles tiennent ne change pas (les vers partent du même bord ; la
   lettrine fait une ligne, 42 px contre 36).
 
+### La galerie aussi — même jour
+
+L'auteur : « fais la même chose pour la galerie ». La galerie n'a pas de
+page par poème : une entrée se déplie sur place, sous son titre. Le même
+geste y est donc joué SUR PLACE (`EntreeGalerie.tsx`), sans maquette à
+part — c'est la transposition demandée du voyage retenu, à montrer.
+
+- **Le poème sur sa feuille**, déjà dépliée, comme au recueil et à la fin
+  de partie (une bande par main, le papier de l'ambiance, la lettrine),
+  sans en-tête ni pied : la tête de l'entrée porte déjà la signature et la
+  date. Sans titre, la tête ouverte se réduit à l'incipit (`incipitDe`) :
+  la règle du 1ᵉʳ octobre tient, le poème n'est pas écrit deux fois.
+- **Le voyage** : la ligne touchée devient papier et se soulève, puis
+  glisse sous le titre et grandit jusqu'à la feuille ; la place s'ouvre
+  avec elle (les entrées suivantes descendent au même pas), la tête
+  reparaît pendant que le texte du feuillet s'efface ; les coutures et les
+  réactions arrivent après. **Refermer** refait le chemin à l'envers, plus
+  vite. Pas de fuite du reste : on ne quitte pas la page. Un appui termine
+  le voyage ; mouvement réduit, l'entrée s'ouvre d'un coup ; une autre
+  entrée ouverte pendant le voyage l'arrête.
+- Les planches (dessins) ne changent pas. La page publique d'un auteur
+  (`/u/…`) prend le même geste : elle est faite des mêmes entrées.
+- `galerie.spec.ts` : un parcours de plus (l'aller, la feuille, la tête
+  réduite, le retour). Les neuf autres passent tels quels.
+
 ## Les polices — auto-hébergées depuis le 11 septembre 2026
 
 Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.

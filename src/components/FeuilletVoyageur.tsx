@@ -10,6 +10,8 @@ interface Props {
   retrait?: number
   titre: string
   meta: string
+  /** Ce que porte la ligne, s'il ne s'agit pas d'une carte du recueil (la galerie). */
+  ligne?: React.ReactNode
   /** `performance.now()` au toucher. */
   depart: number
   /** ms — jusqu'où il joue ; arrivé là, `onFin`. */
@@ -99,7 +101,7 @@ export default function FeuilletVoyageur(props: Props) {
     }
   }, [])
 
-  const { retrait = 12, titre, meta, papier, grain, sombre, encre } = props
+  const { retrait = 12, titre, meta, ligne: contenuLigne, papier, grain, sombre, encre } = props
   const couche: React.CSSProperties = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }
   return createPortal(
     <div
@@ -113,6 +115,9 @@ export default function FeuilletVoyageur(props: Props) {
         boxShadow: sombre ? OMBRE_SOMBRE : OMBRE_CLAIR,
       }} />
       <div style={{ ...couche, borderRadius: 3, overflow: 'hidden' }}>
+        {contenuLigne ? (
+          <div ref={ligne} style={{ position: 'absolute', left: 0, right: 0, top: 0 }}>{contenuLigne}</div>
+        ) : (
         <div ref={ligne} style={{ position: 'absolute', left: retrait, right: 12, top: 0, paddingTop: 13 }}>
           <p style={{
             fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.35, margin: '0 0 4px',
@@ -122,6 +127,7 @@ export default function FeuilletVoyageur(props: Props) {
           </p>
           <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75, margin: 0 }}>{meta}</p>
         </div>
+        )}
         <div ref={tete} style={{ position: 'absolute', left: 0, top: 0, opacity: 0 }} />
       </div>
     </div>,
