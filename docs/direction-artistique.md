@@ -361,6 +361,23 @@ souplesse et le son d'un vrai pli ». Fait le 11 novembre, dans
 - **Non entendu par moi** : les sons ont été choisis et coupés sur la forme
   de leur onde, pas à l'oreille. L'auteur juge.
 
+**Retour de l'auteur, même jour** : « trop rapide, bruit trop fort et
+oublie le claquement ». Fait :
+- **Plus lent** : la pesanteur passe de 110 à 40 et l'air freine davantage.
+  Un pli lâché juste après la verticale touche la table en 0,57 s au lieu
+  de 0,3 ; le papier vibre plus lentement (3 fois par seconde au lieu de
+  5) ; le doigt parcourt 1,25 fois la course du papier ; un toucher déplie
+  cinq vers en 3,5 s environ.
+- **Plus bas** : environ −8 dB.
+- **Plus de claquement**, ni au contact du pli ni au bord libre ; le bord se
+  pose sans rebondir. Seul reste le froissement quand un pli s'ouvre. Les
+  deux extraits « pose » sont retirés (`sons/SOURCES.md`).
+- **Corrigé au passage, et c'était ancien** : un pli lancé depuis la table
+  y était compté comme « touchant la table » dès la première image du
+  calcul, et s'arrêtait net. L'esquisse ne bougeait pas, et parfois un pli
+  de l'enchaînement repartait en retard avec un claquement de trop. Un
+  contact ne compte plus que si le pli va vers la table.
+
 La première — l'accordéon (`accordeon.html`) :
 
 - **La feuille arrive pliée en accordéon**, comme une bande de cadavre

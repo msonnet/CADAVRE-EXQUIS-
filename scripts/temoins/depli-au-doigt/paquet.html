@@ -27,11 +27,15 @@
   — LA SOUPLESSE. Le rabat n'est plus une planche : huit lamelles qui
     suivent une courbe. Mené au doigt, son bord libre devance ; en chute, il
     traîne dans l'air ; tenu de biais, il s'affaisse. Le pli touche la
-    table, et son bord claque un instant après, avec un petit rebond.
+    table, et son bord se pose un instant après.
   — LE SON. De vraies prises de papier, CC0 (`sons/SOURCES.md`) : un
-    froissement quand le pli s'ouvre, un claquement quand il se pose, plus
-    fort s'il tombe vite. Deux jeux à comparer à l'oreille, « carte » et
-    « livre ». Rien ne sonne avant le premier toucher.
+    froissement quand le pli s'ouvre. Deux jeux à comparer à l'oreille,
+    « carte » et « livre ». Rien ne sonne avant le premier toucher.
+
+  Quatrième passage — l'auteur : « trop rapide, bruit trop fort et oublie
+  le claquement ». La chute est deux fois plus lente, le doigt mène le pli
+  plus posément, le son est plus bas (−8 dB), et plus aucun claquement :
+  ni au contact du pli, ni au bord, qui se pose sans rebondir.
 */
 :root {
   --lumiere: #ffffff;
@@ -177,9 +181,7 @@ body, .page { overflow-x: clip; }
 <script type="application/json" id="fichiers-sons" data-autonome>
 {
   "carte-ouverture": "sons/carte-ouverture.wav",
-  "carte-pose": "sons/carte-pose.wav",
-  "livre-ouverture": "sons/livre-ouverture.wav",
-  "livre-pose": "sons/livre-pose.wav"
+  "livre-ouverture": "sons/livre-ouverture.wav"
 }
 </script>
 
@@ -196,24 +198,26 @@ body, .page { overflow-x: clip; }
     origine: 650,       // px — l'œil du joueur, vers le bas de l'écran, sous le haut de la feuille :
                         // on tient le téléphone, le pli se dresse VERS SOI. (Essayé : l'œil
                         // au-dessus de la feuille — le pli dressé n'était plus qu'un trait.)
-    pesanteur: 110,     // rad/s² — le poids du papier : plus fort, il tombe plus vite
-    air: 2.5,           // le freinage de l'air : le papier est léger
-    rebond: 0.15,       // ce que le pli garde de sa vitesse en touchant la table
+    pesanteur: 40,      // rad/s² — le poids du papier : plus fort, il tombe plus vite
+                        // (110 le 11 novembre au matin : « trop rapide », dit l'auteur)
+    air: 3.5,           // le freinage de l'air : le papier est léger
+    rebond: 0.08,       // ce que le pli garde de sa vitesse en touchant la table
     pose: 1.2,          // rad/s — en dessous, il ne rebondit plus : il est posé
-    poussee: 20,        // rad/s — l'élan d'un pli qu'on ouvre d'un toucher
-    esquisse: 10,       // rad/s — l'élan du pli qui esquisse le geste (≈ 25°)
-    entrePlis: 40,      // ms — entre deux plis, quand un toucher déplie tout
+    poussee: 14,        // rad/s — l'élan d'un pli qu'on ouvre d'un toucher
+    esquisse: 6,        // rad/s — l'élan du pli qui esquisse le geste (≈ 25°)
+    entrePlis: 120,     // ms — entre deux plis, quand un toucher déplie tout
+    course: 1.25,       // le doigt parcourt 1,25 fois la course du papier : le pli suit plus posément
     // La souplesse
     lamelles: 8,        // le rabat en huit lamelles
-    raideur: 1000,      // la raideur du papier : sa vibration propre, ≈ 5 fois par seconde
-    amortiPapier: 19,   // il ne vibre pas longtemps
-    traine: 0.03,       // rad par rad/s — en chute, le bord libre traîne dans l'air
+    raideur: 380,       // la raideur du papier : sa vibration propre, ≈ 3 fois par seconde
+    amortiPapier: 21,   // il ne vibre pas longtemps
+    traine: 0.045,      // rad par rad/s — en chute, le bord libre traîne dans l'air
     devance: 0.02,      // rad par rad/s — mené au doigt, le bord libre devance
     affaisse: 0.22,     // rad — tenu de biais, il s'affaisse sous son poids
     profil: 1.5,        // la courbe se marque vers le bord libre
-    rebondBord: 0.3,    // le bord libre qui claque sur la table rebondit un peu
-    // Le son
-    volume: 0.9,
+    rebondBord: 0,      // le bord libre se pose sans rebondir (« oublie le claquement »)
+    // Le son : le froissement seul, bas
+    volume: 0.4,
   }
   // Pour comparer sur planche : `?oeil=-200&recul=750`.
   if (q.has('oeil')) R.origine = Number(q.get('oeil'))
@@ -454,10 +458,13 @@ body, .page { overflow-x: clip; }
     if (mode === 'chute' && !posee) {
       w += (-R.pesanteur * Math.cos(th) - R.air * w) * h
       th += w * h
-      if (th <= 0 || th >= PI) {
+      // Un contact ne compte que si le pli va VERS la table : posé à θ = 0 et
+      // lancé vers le haut, il n'a rien touché. (Sans cela, la première image
+      // d'un pli lancé depuis la table l'arrêtait net : l'esquisse ne bougeait
+      // pas, et un pli de l'enchaînement repartait en retard.)
+      if ((th <= 0 && w < 0) || (th >= PI && w > 0)) {
         const choc = Math.abs(w)
         th = th <= 0 ? 0 : PI
-        Son.jouer('pose', Math.pow(Math.min(1, choc / 16), 0.9))
         if (choc < R.pose) { w = 0; posee = true } else w = -R.rebond * w
       }
     }
@@ -471,7 +478,7 @@ body, .page { overflow-x: clip; }
       const contre = (th >= PI && beta > 0) ? 1 : (th <= 0 && beta < 0) ? -1 : 0
       if (contre) {
         const choc = Math.abs(vbeta)
-        if (contre * vbeta > 0) { Son.jouer('pose', 0.3 * Math.min(1, choc / 6)); vbeta = -R.rebondBord * vbeta }
+        if (contre * vbeta > 0) vbeta = -R.rebondBord * vbeta
         beta = 0
       }
     }
@@ -484,7 +491,7 @@ body, .page { overflow-x: clip; }
     if (th <= 0.02 || th >= PI - 0.02) arme = true
     if (arme && th > 0.15 && th < PI - 0.15) {
       arme = false
-      Son.jouer('ouverture', M.borne(0.35 + Math.abs(v) / 25, 0.35, 1))
+      Son.jouer('ouverture', M.borne(0.3 + Math.abs(v) / 30, 0.3, 0.8))
     }
   }
 
@@ -494,7 +501,7 @@ body, .page { overflow-x: clip; }
     const dt = Math.min(0.05, Math.max(0, (t - tPrec) / 1000)); tPrec = t
     const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
     if (mode === 'tire') wDoigt *= Math.exp(-dt / 0.06)
-    for (let i = 0; i < n; i++) pas(h)
+    if (dt > 0) for (let i = 0; i < n; i++) pas(h)
     surveiller(mode === 'tire' ? wDoigt : w)
     // Le pli et son bord sont posés : on passe à la bande suivante. Quand un
     // toucher déplie tout, on n'attend pas que le bord ait fini de trembler.
@@ -570,12 +577,10 @@ body, .page { overflow-x: clip; }
     if (!doigt || e.pointerId !== doigt.id) return
     const dy = e.clientY - doigt.y0
     if (Math.abs(dy) > 6) doigt.bouge = true
-    const avant = doigt.p, p = progresDe(doigt.base + dy), t = performance.now()
-    // Le rabat touche une bande en passant : il claque, selon la vitesse.
+    const avant = doigt.p, p = progresDe(doigt.base + dy / R.course), t = performance.now()
     const [tA] = doigt.traces[doigt.traces.length - 1]
     const inst = (p - avant) / Math.max(0.004, (t - tA) / 1000) * PI
     wDoigt = 0.5 * wDoigt + 0.5 * inst
-    if (Math.floor(avant + 1e-9) !== Math.floor(p + 1e-9) || (p !== avant && (p === 0 || p === N - 1))) Son.jouer('pose', Math.pow(Math.min(1, Math.abs(wDoigt) / 16), 0.9))
     doigt.p = p
     placer(p)
     doigt.traces.push([t, p])
@@ -620,7 +625,7 @@ body, .page { overflow-x: clip; }
   for (const b of boutons) b.addEventListener('click', () => {
     if (b.dataset.ambiance) { Temoin.poserAmbiance(b.dataset.ambiance); teindre(); rendre() }
     else if (b.dataset.cas) { cas = b.dataset.cas; construire(); mesurer(); remettre() }
-    else { Son.jeu = b.dataset.son; Son.reveiller(); Son.jouer('pose', 0.7) }
+    else { Son.jeu = b.dataset.son; Son.reveiller(); Son.jouer('ouverture', 0.6) }
     marquer()
   })
   let largeur = 0
