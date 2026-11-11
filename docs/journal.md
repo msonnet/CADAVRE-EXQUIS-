@@ -388,6 +388,31 @@ dessiné local (`FinDessin`) comme au salon (`FinOnline`).
   le texte du composant : il mesure désormais que le dessin reculé tient
   entier dans l'écran.
 
+### Retouche, même jour : « trop rapide quand on le fait manuellement »
+
+L'auteur, après l'essai du poème et du dessin : le dépli au doigt va trop
+vite ; l'automatique (un toucher) lui convient. Mesuré sur le dessin, un
+geste vif de 220 px en 64 ms : le papier suivait le doigt EXACTEMENT, puis
+repartait avec toute la vitesse du geste (jusqu'à 40 rad/s) — le pli se
+retournait en un dixième de seconde, le suivant claquait derrière.
+
+- **Le papier ne va jamais plus vite qu'un pli qui tombe**
+  (`REGLAGES.vitesseDoigt`, 6 rad/s, `suivreDoigt`) : un geste lent le mène
+  toujours exactement ; un geste vif le voit se dresser à son rythme,
+  avec un léger retard (`suiviDoigt`, 0,06 s) qui lui donne du poids. Au
+  dessin, le ralenti du grand papier s'y ajoute.
+- **Lâché, il part du côté où le DOIGT l'a mené** (`elanAuLacher`), pas du
+  côté où le papier, en retard, penche encore — avec juste l'élan qu'il
+  faut pour passer la verticale, puis son poids. Sa vitesse est celle du
+  papier, plus celle du geste.
+- **Tiré loin d'un geste**, les plis suivants tombent à leur tour jusqu'à
+  la bande où le doigt est allé, au rythme de la cascade.
+- Mesuré après, même geste : le premier pli du dessin se pose en 1,15 s
+  (0,7 s pour un toucher) ; au poème, un pli entier mené au plus vite
+  prend une demi-seconde. `paquet.test.ts` le tient (quatre mesures).
+- Les maquettes (`depli-au-doigt/paquet.html`, `dessin-3d/maquette.html`)
+  gardent l'ancien suivi : le jeu fait foi.
+
 ## Les polices — auto-hébergées depuis le 11 septembre 2026
 
 Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.

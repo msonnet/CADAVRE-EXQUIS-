@@ -4,7 +4,7 @@ import { reliefDuPli } from '../lib/papier'
 import { mono } from '../lib/typo'
 import {
   REGLAGES as R, REGLAGES_DESSIN as D, etatInitial, pas, estCalme, poidsCourbe, angleA,
-  progres, pliDe, placer, progresDe, positionDe, cadreDe, type Mode, type EtatPli,
+  progres, pliDe, placer, progresDe, positionDe, cadreDe, suivreDoigt, elanAuLacher, type Mode, type EtatPli,
 } from '../lib/paquet'
 
 /**
@@ -28,8 +28,10 @@ import {
  *
  * ── Les gestes ────────────────────────────────────────────────────────────
  *
- * — Tirer le paquet vers soi : le pli suit le doigt ; lâché, il tombe du côté
- *   où il penche.
+ * — Tirer le paquet vers soi : le pli suit le doigt, mais jamais plus vite
+ *   qu'un pli qui tombe (un geste vif le retournait en un éclair) ; lâché, il
+ *   part du côté où le doigt l'a mené et finit son mouvement sous son poids.
+ *   Tiré loin d'un geste, les plis suivants tombent à leur tour jusque-là.
  * — Le toucher : tout se déplie, pli après pli.
  * — Un appui AILLEURS que sur la feuille, ou pendant que les plis tombent, ou
  *   une touche du clavier : le poème est posé d'un coup (`onSauter`). La
@@ -110,7 +112,8 @@ const degrade = (sens: string, rgb: string, a0: number, a1: number) =>
 
 interface Face { lumiere: HTMLDivElement | null; ombre: HTMLDivElement | null; contenu: HTMLDivElement | null }
 interface Lamelle { el: HTMLDivElement | null; dessus: Face; dessous: Face }
-interface Doigt { id: number; y0: number; base: number; t0: number; bouge: boolean; traces: [number, number][]; p: number }
+/** Le doigt : `cible`, où il mène le papier ; `traces`, où le PAPIER est passé. */
+interface Doigt { id: number; y0: number; base: number; t0: number; bouge: boolean; traces: [number, number][]; cible: number }
 
 export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuvert, onSauter, onPliPose, invite, dessin }: Props) {
   const N = bandes.length
@@ -137,6 +140,8 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     e: etatInitial() as EtatPli,
     mode: (ouvert ? 'ouvert' : 'repos') as Mode,
     enchaine: false, touche: false, fini: ouvert,
+    /** Tiré loin d'un geste : les plis tombent à leur tour jusqu'à cette bande. */
+    jusqua: -1,
     wDoigt: 0, raf: 0, tPrec: 0,
     tops: [] as number[], hs: [] as number[],
     doigt: null as Doigt | null,
@@ -221,7 +226,16 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     st.raf = 0
     const dt = Math.min(0.05, Math.max(0, (t - st.tPrec) / 1000)); st.tPrec = t
     const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
-    if (st.mode === 'tire') st.wDoigt *= Math.exp(-dt / 0.06)
+    // Le papier rejoint le doigt, à son rythme.
+    const doigt = st.doigt
+    if (st.mode === 'tire' && doigt && dt > 0) {
+      const p = progres(e)
+      const pn = Math.max(0, Math.min(N - 1, suivreDoigt(p, doigt.cible, dt / lenteur)))
+      st.wDoigt = 0.5 * st.wDoigt + 0.5 * ((pn - p) / dt * PI)
+      placer(e, pn, N)
+      doigt.traces.push([t, pn])
+      while (doigt.traces.length > 2 && t - doigt.traces[0][0] > 90) doigt.traces.shift()
+    }
     // Le dessin : le mouvement validé, au ralenti — le temps du papier s'écoule moins vite.
     if (dt > 0) for (let i = 0; i < n; i++) pas(e, h / lenteur, st.mode, st.wDoigt * lenteur)
     // La vue rattrape la pliure en cours ; pendant qu'on tire, elle reste où elle est.
@@ -258,9 +272,11 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     if (st.mode === 'ouvert') {
       st.enchaine = false
       if (!st.fini) { st.fini = true; setOuvert(true); rappels.current.onOuvert?.() }
-    } else if (st.enchaine) {
+    } else if (st.enchaine || st.jusqua > e.k) {
       const entre = dessin ? D.entrePlis * lenteur : R.entrePlis
-      st.minuteurs.push(window.setTimeout(() => { if (st.enchaine && st.mode === 'repos') lacher(R.poussee) }, entre))
+      const suite = () => st.mode === 'repos' && (st.enchaine || st.jusqua > st.e.k)
+      st.minuteurs.push(window.setTimeout(() => { if (suite()) lacher(R.poussee) }, entre))
+      if (dessin) demander()
     } else if (dessin) {
       // Le pli posé, la vue glisse pour montrer la bande suivante entière.
       demander()
@@ -320,12 +336,12 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       const basVisible = el.getBoundingClientRect().top + (st.tops[k] ?? 0) + (st.hs[k] ?? 0)
         + (st.e.th > PI / 2 ? (st.hs[k + 1] ?? 0) : 0) + 8
       if (ev.clientY > basVisible) { sauter(true); return }
-      st.touche = true; st.e.posee = false
+      st.touche = true; st.e.posee = false; st.jusqua = -1
       try { el.setPointerCapture(ev.pointerId) } catch { /* tant pis */ }
       const t = performance.now(), p = progres(st.e)
       // Le dessin : une course fixe par pli, à partir d'où en est le papier.
       const base = dessin ? p : positionDe(p, milieux())
-      st.doigt = { id: ev.pointerId, y0: ev.clientY, base, t0: t, bouge: false, traces: [[t, p]], p }
+      st.doigt = { id: ev.pointerId, y0: ev.clientY, base, t0: t, bouge: false, traces: [[t, p]], cible: p }
       st.mode = 'tire'; st.e.w = 0; st.wDoigt = 0
       demander()
       ev.preventDefault()
@@ -335,16 +351,10 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       if (!d || ev.pointerId !== d.id) return
       const dy = ev.clientY - d.y0
       if (Math.abs(dy) > 6) d.bouge = true
-      const p = dessin
+      // Le doigt dit où il mène le papier ; la boucle l'y conduit, à son rythme.
+      d.cible = dessin
         ? Math.max(0, Math.min(N - 1, d.base + dy / D.coursePli))
         : progresDe(d.base + dy / R.course, milieux())
-      const t = performance.now()
-      const tA = d.traces[d.traces.length - 1][0]
-      st.wDoigt = 0.5 * st.wDoigt + 0.5 * ((p - d.p) / Math.max(0.004, (t - tA) / 1000) * PI)
-      d.p = p
-      placer(st.e, p, N)
-      d.traces.push([t, p])
-      while (d.traces.length > 2 && t - d.traces[0][0] > 90) d.traces.shift()
       demander()
     }
     const relache = (ev: PointerEvent) => {
@@ -357,10 +367,12 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       st.doigt = null
       if (tape) { st.enchaine = true; lacher(R.poussee); return }
       if (progres(st.e) >= N - 1 - 1e-9) { st.e.k = N - 1; st.e.th = 0; poser(); return }
-      // Couché pile sur une bande : rien ne tombe.
-      if (st.e.th <= 1e-6 && Math.abs(vitesse) < 0.5) { st.e.th = 0; st.mode = 'repos'; demander(); return }
-      // La vitesse du doigt, dans le temps ralenti du papier.
-      lacher(vitesse * lenteur)
+      // Couché pile sur une bande, et le doigt n'a rien mené : rien ne tombe.
+      if (st.e.th <= 1e-6 && Math.abs(vitesse) < 0.5 && d.cible < st.e.k + 0.5) { st.e.th = 0; st.mode = 'repos'; demander(); return }
+      // Tiré loin d'un geste : les plis suivants tomberont à leur tour.
+      st.jusqua = Math.min(N - 1, Math.floor(d.cible + 0.5))
+      // Le côté où le doigt l'a mené ; la vitesse du papier, dans son temps ralenti.
+      lacher(elanAuLacher(st.e, vitesse * lenteur, d.cible))
     }
     // Dans une vue web, le défilement natif ne doit pas reprendre le geste.
     const retenir = (ev: TouchEvent) => { if (st.mode !== 'ouvert') ev.preventDefault() }

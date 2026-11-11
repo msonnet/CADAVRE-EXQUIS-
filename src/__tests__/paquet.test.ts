@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   REGLAGES, etatInitial, pas, estCalme, progres, placer, pliDe, progresDe, positionDe, angleA, poidsCourbe,
   REGLAGES_DESSIN, lenteurDe, perspectiveDe, cadreDe, echelleEnsemble,
+  suivreDoigt, elanPourPasser, elanAuLacher,
   type EtatPli, type Mode,
 } from '../lib/paquet'
 import { papierDeLaFeuille, papierDuDessin } from '../lib/papier'
@@ -154,5 +155,39 @@ describe('le dessin plié', () => {
     expect(clair.dos).not.toBe(clair.couleur)
     expect(nuit.ombre).not.toBe(clair.ombre)
     expect(papierDuDessin('#2f3438', '#f0e4cc').sombre).toBe(true)
+  })
+})
+
+describe('le doigt, au geste vif (« trop rapide quand on le fait manuellement », 11 novembre)', () => {
+  it('un geste lent mène le papier exactement', () => {
+    let p = 0, cible = 0
+    for (let i = 0; i < 60; i++) { cible += 0.005; p = suivreDoigt(p, cible, 1 / 60) }
+    expect(Math.abs(cible - p)).toBeLessThan(0.02)
+  })
+  it('un geste vif ne retourne pas le pli d’un coup : il se dresse à son rythme', () => {
+    let p = 0
+    for (let i = 0; i < 6; i++) p = suivreDoigt(p, 3, 1 / 60)   // un dixième de seconde
+    expect(p).toBeLessThanOrEqual(REGLAGES.vitesseDoigt / Math.PI * 0.1 + 1e-9)
+    // Un pli entier, au plus vite : une demi-seconde.
+    let q = 0, t = 0
+    while (q < 1 && t < 3) { q = suivreDoigt(q, 3, 1 / 60); t += 1 / 60 }
+    expect(t).toBeGreaterThan(0.5)
+  })
+  it('lâché, il part du côté où le doigt l’a mené, même si le papier est en retard', () => {
+    for (const deg of [0, 20, 45, 70, 88]) {
+      const th = deg * Math.PI / 180
+      const e: EtatPli = { ...etatInitial(), th }
+      expect(chute(th, elanAuLacher(e, 0, 0.8)).cote, `${deg}° vers l’avant`).toBe('avant')
+    }
+    for (const deg of [92, 110, 135, 160, 180]) {
+      const th = deg * Math.PI / 180
+      const e: EtatPli = { ...etatInitial(), th }
+      expect(chute(th, elanAuLacher(e, 0, 0.2)).cote, `${deg}° vers l’arrière`).toBe('arrière')
+    }
+  })
+  it('sa vitesse reste celle du papier : jamais plus que l’élan qu’il lui faut', () => {
+    const e: EtatPli = { ...etatInitial(), th: 0.3 }
+    expect(elanAuLacher(e, 2, 0.8)).toBe(elanPourPasser(0.3))
+    expect(elanAuLacher(e, -1, 0.1)).toBe(-1)
   })
 })

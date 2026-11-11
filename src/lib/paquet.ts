@@ -66,6 +66,13 @@ export const REGLAGES = {
   recouvre: 1.5,
   /** ms — personne n'y touche : le paquet s'ouvre de lui-même. */
   autoOuverture: 8000,
+  /** rad/s — le plus vite que le papier suive le doigt. Il le suivait
+   *  exactement, et repartait avec toute la vitesse du geste : un geste vif le
+   *  retournait en un éclair (« trop rapide quand on le fait manuellement »,
+   *  11 novembre). Désormais il ne va jamais plus vite qu'un pli qui tombe. */
+  vitesseDoigt: 6,
+  /** s — et il rejoint le doigt avec un léger retard : il a du poids. */
+  suiviDoigt: 0.06,
 } as const
 
 export type Reglages = typeof REGLAGES
@@ -156,6 +163,34 @@ export function poidsCourbe(e: EtatPli): number {
 /** L'angle du papier à la place s du rabat (0 : la charnière, 1 : le bord libre). */
 export const angleA = (e: EtatPli, s: number, poids: number, R: Reglages = REGLAGES) =>
   borne(e.th + e.beta * poids * Math.pow(s, R.profil), 0, PI)
+
+/**
+ * Le papier suit le doigt (`cible`, une position) — sans le dépasser, et
+ * jamais plus vite que `vitesseDoigt` : un geste lent le mène exactement,
+ * un geste vif le voit se dresser à son rythme. `dt` en temps du papier.
+ */
+export function suivreDoigt(p: number, cible: number, dt: number, R: Reglages = REGLAGES): number {
+  const max = (R.vitesseDoigt / PI) * dt
+  return p + borne((cible - p) * (1 - Math.exp(-dt / R.suiviDoigt)), -max, max)
+}
+
+/** L'élan qu'il faut à un pli lâché en θ pour passer la verticale (avec la marge de l'air). */
+export function elanPourPasser(th: number, R: Reglages = REGLAGES): number {
+  if (th >= PI / 2) return 0
+  return Math.sqrt(2 * R.pesanteur * (1 - Math.sin(th))) * 1.5 + 1
+}
+
+/**
+ * Lâché, le pli part du côté où le DOIGT l'a mené, pas seulement du côté où
+ * le papier, en retard, penche encore : tiré au-delà de la moitié du pli, il
+ * passe et tombe en avant ; en deçà, il se referme. Sa vitesse reste la
+ * sienne — celle du papier, pas celle du geste.
+ */
+export function elanAuLacher(e: EtatPli, vitesse: number, cible: number, R: Reglages = REGLAGES): number {
+  return cible >= e.k + 0.5
+    ? Math.max(vitesse, elanPourPasser(e.th, R))
+    : Math.min(vitesse, -elanPourPasser(PI - e.th, R))
+}
 
 /**
  * Le doigt mène l'angle : la course d'un pli va du milieu de la bande qu'il

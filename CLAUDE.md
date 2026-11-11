@@ -293,7 +293,7 @@ sont connectés sur l'ordinateur de l'auteur, pas dans les sessions cloud.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (875 tests unitaires) + Playwright (174 tests E2E, FR et EN)
+- Tests : Vitest (879 tests unitaires) + Playwright (174 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)
