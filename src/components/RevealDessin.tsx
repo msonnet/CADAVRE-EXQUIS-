@@ -208,7 +208,8 @@ export default function RevealDessin({
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      // Un fondu, sur l'écran « se reconstitue » qui s'efface dessous.
+      animate={{ opacity: 1, transition: { duration: 0.6, ease: 'easeInOut' } }}
       exit={{ opacity: 0, transition: { duration: 0.6, ease: 'easeInOut' } }}
       onClick={() => {
         if (performance.now() - abregeA.current < 450) return

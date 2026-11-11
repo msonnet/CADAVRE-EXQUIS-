@@ -21,6 +21,16 @@ const RACCORD_H = 80
 const CANVAS_BG = '#fdf8f2'
 
 /**
+ * ms — le temps, au moins, de l'écran « Le cadavre se reconstitue… ».
+ * L'assemblage ne prend que quelques dixièmes de seconde : l'écran passait
+ * à la révélation avant qu'on ait pu le lire (« il faut que l'écran de
+ * chargement dure plus longtemps, 2-3 secondes, sinon on comprend rien »,
+ * l'auteur, 11 novembre). Ce n'est PAS une attente de la lecture — elle
+ * part pendant ce temps, et arrive quand elle arrive.
+ */
+const DUREE_RECONSTITUTION = 2800
+
+/**
  * Assemble les bandes, et dit où tombent les coutures — là où finissait ce
  * qu'avait dessiné la bande d'au-dessus. Le dévoilement s'y arrête.
  */
@@ -106,6 +116,7 @@ export default function FinDessin() {
   useEffect(() => {
     let cancelled = false
     async function run() {
+      const debut = performance.now()
       let bandes: BandeDessin[]
       try {
         const enregistre = await chargerBandesDessin()
@@ -135,12 +146,17 @@ export default function FinDessin() {
       setImageAssemblee(img)
       setCoutures(c)
 
-      // Le dessin se découvre DÈS qu'il est assemblé. La lecture suit, quand
-      // elle arrive : on attendait sa réponse — jusqu'à vingt secondes —
-      // avant de montrer un dessin déjà prêt.
-      setPhase('revele')
+      // La lecture part tout de suite ; le dessin se découvre une fois l'écran
+      // « se reconstitue » lu (`DUREE_RECONSTITUTION`), sans attendre la
+      // lecture : on attendait sa réponse — jusqu'à vingt secondes — avant
+      // de montrer un dessin déjà prêt.
       setLectureEnCours(true)
-      const { texte, refus: refuse } = await lireLeDessin(img)
+      const lecture = lireLeDessin(img)
+      const reste = DUREE_RECONSTITUTION - (performance.now() - debut)
+      if (reste > 0) await new Promise(ok => setTimeout(ok, reste))
+      if (cancelled) return
+      setPhase('revele')
+      const { texte, refus: refuse } = await lecture
       if (cancelled) return
       setLectureEnCours(false)
       if (refuse) setRefus(refuse)
@@ -257,12 +273,17 @@ export default function FinDessin() {
           {tr('Le cadavre', 'The cadavre,')} <span style={{ color: accent }}>{tr('dessiné', 'drawn')}</span>
         </h1>
 
-        {/* ── PHASES DE CHARGEMENT ── */}
+        {/* ── PHASES DE CHARGEMENT ── elles s'effacent pendant que la
+            révélation arrive par-dessus, au lieu de disparaître d'un coup ;
+            la page révélée attend qu'elles soient parties (`mode="wait"`) :
+            montée trop tôt, elle poussait le texte vers le haut. */}
+        <AnimatePresence mode="wait">
         {phase !== 'revele' && phase !== 'sauvegarde' && (
           <motion.div
+            key="reconstitution"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center', textAlign: 'center' }}
           >
             <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
@@ -289,6 +310,7 @@ export default function FinDessin() {
         {/* ── RÉVÉLÉ ── */}
         {(phase === 'revele' || phase === 'sauvegarde') && (
           <motion.div
+            key="revele"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -444,6 +466,7 @@ export default function FinDessin() {
             </div>
           </motion.div>
         )}
+        </AnimatePresence>
 
         <div style={{ flex: 1 }} />
       </div>

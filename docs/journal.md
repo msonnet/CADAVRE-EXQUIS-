@@ -413,6 +413,24 @@ retournait en un dixième de seconde, le suivant claquait derrière.
 - Les maquettes (`depli-au-doigt/paquet.html`, `dessin-3d/maquette.html`)
   gardent l'ancien suivi : le jeu fait foi.
 
+### Retouche, même jour : l'écran « se reconstitue » durait un éclair
+
+L'auteur : au dessiné, après la dernière bande, « la transition se fait
+mal » entre « Le cadavre se reconstitue… » et la révélation ; « il faut que
+l'écran de chargement dure plus longtemps, 2-3 secondes, sinon on comprend
+rien ». L'assemblage ne prend que quelques dixièmes de seconde : l'écran
+passait avant d'être lu. Et au passage, la page révélée montait SOUS la
+révélation qui apparaissait, et poussait le texte vers le haut.
+
+- **Au moins 2,8 s** (`DUREE_RECONSTITUTION`, `FinDessin.tsx`). Ce n'est
+  pas une attente de la lecture (décision du 30 septembre, tenue) : elle
+  part pendant ce temps, et n'en arrive que plus tôt.
+- **Un fondu** : l'écran s'efface en 0,5 s pendant que la révélation arrive
+  par-dessus en 0,6 s ; la page révélée attend qu'il soit parti
+  (`AnimatePresence mode="wait"`). Vu image par image dans le jeu : plus de
+  saut.
+- Le salon avait déjà son rideau de trois secondes (`FinOnline`) : inchangé.
+
 ## Les polices — auto-hébergées depuis le 11 septembre 2026
 
 Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.
