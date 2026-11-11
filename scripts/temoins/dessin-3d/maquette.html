@@ -33,6 +33,13 @@
   Une grande feuille tombe plus lentement qu'une petite, comme un pendule
   plus long : le mouvement validé du poème est joué au ralenti, d'un
   facteur (hauteur du rabat / 60 px)^0,35 — environ 1,6 pour un dessin.
+
+  Troisième passage, accepté par l'auteur : SUIVRE LE DESSIN. La feuille
+  prend toute la largeur de l'écran, chaque bande se voit en grand. Pendant
+  qu'on tire, la vue ne bouge pas (le papier reste sous le doigt) ; quand
+  un pli se pose, elle glisse pour centrer la pliure suivante, comme une
+  caméra qui suit. Une fois tout ouvert, elle recule pour montrer le dessin
+  entier, puis la lecture arrive dessous.
 */
 :root { --trait: rgba(40, 28, 10, 0.22); --ombre-paquet: rgba(40, 28, 10, 0.34); }
 :root[data-sombre="1"] { --trait: rgba(40, 28, 10, 0.3); --ombre-paquet: rgba(0, 0, 0, 0.7); }
@@ -40,7 +47,7 @@
 html, body { height: 100%; }
 body { overflow: hidden; }
 .revelation { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
-.boite { transform-origin: 50% 0; transition: transform 1s cubic-bezier(0.16, 0.84, 0.24, 1); }
+.boite { transform-origin: 50% 0; will-change: transform; }
 .scene { position: relative; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: grab; outline: none; }
 .scene.tient { cursor: grabbing; }
 .scene.ouvert { cursor: default; }
@@ -85,7 +92,7 @@ body { overflow: hidden; }
 .lecture .texte { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(1.05rem, 4.6vw, 1.35rem); line-height: 1.5; opacity: 0.92; }
 .lecture .attente { font-family: 'Raleway', sans-serif; font-size: 12px; letter-spacing: 0.24em; animation: pouls 2.2s ease-in-out infinite; }
 @keyframes pouls { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
-.continuer { position: absolute; left: 0; right: 0; bottom: calc(104px + env(safe-area-inset-bottom, 0px)); text-align: center; font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 0.3em; opacity: 0; transition: opacity 0.8s; }
+.continuer { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 0.3em; opacity: 0; transition: opacity 0.8s; }
 .continuer.la { opacity: 0.6; }
 
 .maquette {
@@ -139,9 +146,11 @@ body { overflow: hidden; }
 
   // ── Les réglages : ceux du dépli validé, sauf la course du doigt ─────────
   const R = {
-    perspective: 1300,  // px — un rabat de dessin est haut : l'œil recule un peu
-    origine: 450,       // px — l'œil du joueur, sous le haut du dessin. (À 650 et 1 000,
-                        // le premier rabat dressé sortait par le haut de l'écran.)
+    perspective: 1300,  // px — calculée à la mesure, selon la largeur de la feuille
+    origine: 450,       // px — suit la vue : l'œil reste au même endroit de l'écran
+    oeil: 0.55,         // l'œil du joueur, à 55 % de la hauteur de l'écran
+    suivi: 0.3,         // s — la vue rattrape la pliure suivante en un peu plus d'une demi-seconde
+    largeurMax: 460,    // px
     recouvre: 2,        // px — chaque lamelle passe sous la suivante : pas de jour entre elles
     pesanteur: 40, air: 3.5, rebond: 0.08, pose: 1.2,
     poussee: 14, esquisse: 6, entrePlis: 120,
@@ -149,7 +158,7 @@ body { overflow: hidden; }
     lamelles: 10,
     raideur: 380, amortiPapier: 21, traine: 0.045, devance: 0.02, affaisse: 0.22, profil: 1.5, rebondBord: 0,
     lenteur: 1,         // calculée à la mesure : (hauteur du rabat / 60 px)^0,35
-    resserre: 0.6,      // une fois ouvert, le dessin occupe 60 % de la hauteur ; la lecture dessous
+    resserre: 0.68,     // une fois ouvert, le dessin entier occupe 68 % de la hauteur ; la lecture dessous
   }
   const reduit = Temoin.params.reduit || (q.get('reduit') !== '0' && matchMedia('(prefers-reduced-motion: reduce)').matches)
   const $ = id => document.getElementById(id)
@@ -194,16 +203,30 @@ body { overflow: hidden; }
     bandes.forEach((b, i) => { b.relief.style.background = i ? Temoin.reliefDuPli((i + 1) % 2, false) : 'none' })
   }
   // La feuille tient en entier dans l'écran, comme aujourd'hui : jamais coupée.
+  // La feuille prend toute la largeur ; la hauteur visible, sous la barre de la maquette.
+  let VH = 700, cam = 0
   function mesurer() {
-    const dispo = innerHeight - 14 - 150
-    W = Math.floor(Math.min(innerWidth - 40, dispo / N * 720 / 840))
+    W = Math.floor(Math.min(innerWidth - 32, R.largeurMax))
     HB = W * 840 / 720
+    VH = innerHeight - 14 - 56
     scene.style.width = W + 'px'
     bandes.forEach((b, i) => { b.h = HB; b.top = i * HB; b.el.style.height = HB + 'px'; b.el.style.transform = `translate3d(0px,${b.top}px,0px)` })
+    // Un rabat plus grand se regarde de plus loin, sans quoi il sort de l'écran en se dressant.
+    R.perspective = Math.round(1300 * Math.sqrt(W / 200))
     scene.style.perspective = R.perspective + 'px'
-    scene.style.perspectiveOrigin = `50% ${R.origine}px`
-    // Plus le rabat est haut, plus il tombe lentement (le pendule).
-    R.lenteur = Math.max(1, Math.pow(HB / 60, 0.35))
+    // Plus le rabat est haut, plus il tombe lentement (le pendule) ; plafonné.
+    R.lenteur = Math.min(1.7, Math.max(1, Math.pow(HB / 60, 0.35)))
+  }
+
+  // ── La vue : elle centre la pliure en cours, et ne bouge pas sous le doigt ──
+  function cadre() {
+    if (mode === 'repos' && k === 0 && th === 0) return 0   // le paquet fermé, entier
+    return M.borne((k + 1) * HB - 0.5 * VH, 0, Math.max(0, N * HB - VH))
+  }
+  function poserVue() {
+    R.origine = cam + R.oeil * VH
+    scene.style.perspectiveOrigin = `50% ${R.origine.toFixed(1)}px`
+    boite.style.transform = `translate3d(0px,${(-cam).toFixed(2)}px,0px) scale(1)`
   }
 
   // ── L'état : celui du dépli validé ───────────────────────────────────────
@@ -266,6 +289,7 @@ body { overflow: hidden; }
       scene.style.height = (yMax + 2).toFixed(2) + 'px'
     }
     invite.style.opacity = mode === 'ouvert' ? '0' : (0.62 * M.borne(1 - P() * 1.5)).toFixed(3)
+    if (mode !== 'ouvert') poserVue()
   }
 
   function pas(h) {
@@ -297,10 +321,13 @@ body { overflow: hidden; }
     if (mode === 'tire') wDoigt *= Math.exp(-dt / 0.06)
     // Le mouvement validé, au ralenti : le temps du papier s'écoule moins vite.
     if (dt > 0) for (let i = 0; i < n; i++) pas(h / R.lenteur)
+    // La vue rattrape la pliure en cours ; pendant qu'on tire, elle reste où elle est.
+    if (mode !== 'tire' && mode !== 'ouvert') cam += (cadre() - cam) * (1 - Math.exp(-dt / R.suivi))
     const calme = enchaine ? Math.abs(beta) < 0.02 && Math.abs(vbeta) < 0.6 : Math.abs(beta) < 0.003 && Math.abs(vbeta) < 0.05
     if (mode === 'chute' && posee && calme) { beta = 0; vbeta = 0; posee = false; if (th >= PI) { k += 1; th = 0 } return poser() }
     rendre()
-    const bouge = mode === 'chute' || mode === 'tire' || Math.abs(beta) > 0.002 || Math.abs(vbeta) > 0.02 || Math.abs(libre - (mode === 'tire' ? 0 : 1)) > 0.01
+    const vueBouge = mode !== 'tire' && mode !== 'ouvert' && Math.abs(cadre() - cam) > 0.4
+    const bouge = vueBouge || mode === 'chute' || mode === 'tire' || Math.abs(beta) > 0.002 || Math.abs(vbeta) > 0.02 || Math.abs(libre - (mode === 'tire' ? 0 : 1)) > 0.01
     if (bouge) demander(); else if (mode !== 'tire') { beta = 0; vbeta = 0; rendre() }
   }
   function demander() { if (!raf) { tPrec = performance.now(); raf = requestAnimationFrame(boucle) } }
@@ -316,33 +343,44 @@ body { overflow: hidden; }
     if (mode === 'ouvert') enchaine = false
     rendre()
     scene.classList.toggle('ouvert', mode === 'ouvert')
-    if (mode === 'ouvert') setTimeout(resserrer, reduit ? 0 : 450)
+    if (mode === 'ouvert') setTimeout(resserrer, reduit ? 0 : 800)   // on regarde les jambes un instant, puis la vue recule
     else if (enchaine) setTimeout(() => { if (enchaine && mode === 'repos') lacher(R.poussee) }, R.entrePlis * R.lenteur)
   }
 
   // ── Une fois ouvert : le dessin remonte, la lecture arrive dessous ───────
   let minuteurs = []
+  // Le dessin entier occupe 68 % de la hauteur ; sur un très petit écran, la
+  // lecture et son invitation (≈ 190 px) gardent d'abord leur place.
+  const echelleEnsemble = H => Math.min(1, (VH * R.resserre) / H, (VH - 190) / H)
+  // Le recul : du détail à l'ensemble, plus lentement qu'un pli.
   function resserrer() {
     if (mode !== 'ouvert') return
-    const H = N * HB, dispo = innerHeight - 14 - 104
-    const s = Math.min(1, (dispo * R.resserre) / H)
-    boite.style.transform = `scale(${s.toFixed(4)})`
+    const H = N * HB
+    const s = echelleEnsemble(H)
+    boite.style.transition = 'transform 1.3s cubic-bezier(0.45, 0, 0.2, 1)'
+    boite.style.transform = `translate3d(0px,0px,0px) scale(${s.toFixed(4)})`
+    cam = 0
     lecture.style.top = (14 + H * s + 26) + 'px'
-    lecture.innerHTML = '<div class="attente">— LA LECTURE SE FAIT —</div>'
-    lecture.classList.add('la')
+    // La lecture attend que la vue ait fini de reculer : elle se posait sur
+    // le dessin encore grand.
+    minuteurs.push(setTimeout(() => {
+      lecture.innerHTML = '<div class="attente">— LA LECTURE SE FAIT —</div>'
+      lecture.classList.add('la')
+    }, reduit ? 0 : 1300))
     minuteurs.push(setTimeout(() => {
       lecture.classList.remove('la')
       minuteurs.push(setTimeout(() => {
         lecture.innerHTML = `<div class="surtitre">— LECTURE —</div><div class="texte">« ${Temoin.DESSIN.lecture} »</div>`
         lecture.classList.add('la')
-        minuteurs.push(setTimeout(() => continuer.classList.add('la'), 1600))
+        minuteurs.push(setTimeout(() => { placerContinuer(); continuer.classList.add('la') }, 1600))
       }, 300))
-    }, reduit ? 0 : 1600))
+    }, reduit ? 0 : 3300))
   }
   function remettre() {
     minuteurs.forEach(clearTimeout); minuteurs = []
     enchaine = false; w = 0; beta = 0; vbeta = 0; libre = 1; posee = false; k = 0; th = 0; kFace = -1; mode = 'repos'
-    boite.style.transform = ''; lecture.classList.remove('la'); continuer.classList.remove('la')
+    boite.style.transition = 'none'; cam = 0
+    lecture.classList.remove('la'); continuer.classList.remove('la')
     scene.classList.remove('ouvert'); rendre()
   }
 
@@ -404,7 +442,7 @@ body { overflow: hidden; }
     mesurer(); rendre()
     if (q.has('p')) {
       const p = M.borne(Number(q.get('p')), 0, N - 1)
-      if (p >= N - 1) { k = N - 1; th = 0; reduitLecture() } else { placer(p); beta = Number(q.get('courbe') || 0); rendre() }
+      if (p >= N - 1) { k = N - 1; th = 0; reduitLecture() } else { placer(p); beta = Number(q.get('courbe') || 0); cam = cadre(); rendre() }
       document.documentElement.dataset.temoin = 'fige'
       return
     }
@@ -416,12 +454,15 @@ body { overflow: hidden; }
   function reduitLecture() {
     mode = 'ouvert'; rendre(); scene.classList.add('ouvert')
     boite.style.transition = 'none'
-    const H = N * HB, s = Math.min(1, ((innerHeight - 118) * R.resserre) / H)
-    boite.style.transform = `scale(${s.toFixed(4)})`
+    const H = N * HB, s = echelleEnsemble(H)
+    boite.style.transform = `translate3d(0px,0px,0px) scale(${s.toFixed(4)})`
     lecture.style.transition = 'none'; lecture.style.top = (14 + H * s + 26) + 'px'
     lecture.innerHTML = `<div class="surtitre">— LECTURE —</div><div class="texte">« ${Temoin.DESSIN.lecture} »</div>`
-    lecture.classList.add('la'); continuer.classList.add('la')
+    lecture.classList.add('la'); placerContinuer(); continuer.classList.add('la')
   }
+  // « Toucher pour continuer » sous la lecture, jamais dessus : à une hauteur
+  // fixe, il la chevauchait sur un petit écran.
+  function placerContinuer() { continuer.style.top = (lecture.offsetTop + lecture.offsetHeight + 34) + 'px' }
 })()
 </script>
 </body>

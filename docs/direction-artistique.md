@@ -530,6 +530,26 @@ Et l'animation du dessin : « pas mal, trop rapide ». Fait :
   feuille, de la charnière au bord : chaque recouvrement passe dessous.
   Même correction au dépli du poème.
 
+**Mes défauts relevés, montrés à l'auteur** : le dessin trop petit (la
+moitié de la largeur, puis un tiers une fois resserré), les mains jamais
+nommées, un temps mort entre deux plis quand un toucher déplie tout, le
+second pli vu par la tranche un instant. Trois améliorations proposées ;
+**l'auteur retient la première : suivre le dessin.** Fait :
+- **La feuille prend toute la largeur** (moins 16 px de chaque côté,
+  460 px au plus) : chaque bande se voit en grand, 418 px de haut sur un
+  écran de 390.
+- **La vue suit la pliure** : elle centre la pliure en cours, glisse vers la
+  suivante quand un pli se pose (en un peu plus d'une demi-seconde), et
+  NE BOUGE PAS pendant qu'on tire — le papier reste sous le doigt. Le
+  paquet fermé est montré entier. L'œil suit la vue (55 % de la hauteur de
+  l'écran) ; un rabat plus grand se regarde de plus loin (perspective
+  1 300 × √(largeur / 200)). Le ralenti « pendule » est plafonné à 1,7.
+- **Puis le recul** : on regarde les jambes 0,8 s, la vue recule en 1,3 s
+  jusqu'au dessin entier (68 % de la hauteur), et la lecture n'arrive
+  qu'ensuite — elle se posait sur le dessin encore grand. Sur un très
+  petit écran (320 × 568), la lecture et son invitation gardent d'abord
+  leur place ; « toucher pour continuer » se place sous la lecture.
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.

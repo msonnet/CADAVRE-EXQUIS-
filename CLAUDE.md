@@ -246,7 +246,9 @@ poème sur sa feuille.
 **Point 4, la révélation du dessin en 3D : maquette du 11 novembre, en
 attente de l'essai** (`scripts/temoins/dessin-3d/maquette.html`) — le
 geste du dépli validé, appliqué au dessin : il arrive plié, chaque pli
-découvre la bande d'une main. Reste ensuite du point 4 le relief discret
+découvre la bande d'une main, sans son ; la feuille prend toute la largeur
+et la vue suit la pliure, puis recule sur le dessin entier avant la
+lecture. Reste ensuite du point 4 le relief discret
 (boutons qui s'enfoncent, accueil qui bouge quand on incline le
 téléphone).
 
