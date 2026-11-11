@@ -130,7 +130,7 @@ défaites. Ce fichier-ci ne garde que l'état, les règles et la carte.
 | économie, encrier, flacons | « Modèle économique — l'abonnement » | `api/_acces.ts`, `src/lib/acces.ts`, `MurAbonnement.tsx` |
 | Atelier (gelé) | « L'Atelier — gelé le 27 août » | `src/lib/determinants.ts`, `formes.ts`, `metrique.ts`, `lexique.ts` |
 | carnet, reliure | « Le carnet — la récolte », « Le carnet compose » | `src/pages/Recolte.tsx`, `src/lib/reliure.ts` |
-| dévoilement, feuille de papier | « Le dévoilement », « La feuille de papier » | `Depli.tsx`, `PoemeDevoile.tsx`, `src/lib/rythme.ts`, `src/lib/papier.ts` |
+| dévoilement, feuille de papier | « Le dévoilement », « La feuille de papier », « La feuille pliée, au doigt » | `FeuillePliee.tsx`, `src/lib/paquet.ts`, `PoemeDevoile.tsx`, `Depli.tsx`, `src/lib/rythme.ts`, `src/lib/papier.ts` |
 | écriture, pli, rabat | « Le pli à l'écriture » | `Jeu.tsx`, `Papier.tsx`, `Rabat.tsx`, `src/lib/pli.ts` |
 | fin de partie, coutures | « La fin de partie — le poème parle d'abord » | `FinDePartie.tsx`, `src/lib/plis.ts`, `src/lib/composition.ts` |
 | table locale, prénoms | « La table locale » | `src/lib/table.ts`, `NomsDesMains.tsx` |
@@ -229,7 +229,10 @@ arrive fermé, chaque pli se dresse vers le joueur et retombe sous son
 poids, le papier se courbe. **Sans aucun son** : un froissement a été
 essayé puis retiré par l'auteur le même jour, définitivement. Tout le cheminement (quatre
 retours de l'auteur) est dans `docs/direction-artistique.md`, « Le plan
-moderne ». **Reste à l'intégrer au jeu.**
+moderne ». **Intégré à la fin de partie le 11 novembre** (`FeuillePliee.tsx`,
+`lib/paquet.ts` ; journal, « La feuille pliée, au doigt ») ; il s'ouvre de
+lui-même au bout de huit secondes si personne n'y touche. Restent le salon
+et le poème du jour, qui gardent l'ancien dépli.
 
 **Point 2, la vibration** : une page web ne peut plus faire vibrer un
 iPhone (Apple a fermé la dernière astuce avec iOS 26.5) ; elle ne se
@@ -290,7 +293,7 @@ sont connectés sur l'ordinateur de l'auteur, pas dans les sessions cloud.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (853 tests unitaires) + Playwright (171 tests E2E, FR et EN)
+- Tests : Vitest (867 tests unitaires) + Playwright (171 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

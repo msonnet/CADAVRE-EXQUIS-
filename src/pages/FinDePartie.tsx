@@ -595,9 +595,10 @@ export default function FinDePartie() {
             Un article nommé : le poème était une coulée de texte fondue
             avec l'en-tête et le pied, ni titre, ni région.
             Depuis le 8 novembre, une feuille de papier posée et non plus une
-            carte à liseré rouge (planche témoin validée par l'auteur) : elle
-            arrive pliée, en paquet, et s'allonge à chaque volet. Positionnée,
-            parce que les tranches des volets fermés pendent sous son bord. */}
+            carte à liseré rouge (planche témoin validée par l'auteur).
+            Depuis le 11 novembre, elle arrive FERMÉE et on la déplie au doigt
+            (`FeuillePliee`, maquette validée) : c'est elle qui peint son
+            papier, bande par bande, et l'en-tête est sur sa première bande. */}
         <motion.article
           id="feuillet-fin"
           aria-label={tr('Le poème', 'The poem')}
@@ -606,30 +607,25 @@ export default function FinDePartie() {
           transition={{ duration: 0.45 }}
           style={{
             position: 'relative',
-            borderRadius: 3,
-            padding: `16px ${BORD_FEUILLE}px 12px`,
-            backgroundColor: feuille.couleur,
-            backgroundImage: grain,
-            backgroundSize: '200px 200px',
-            boxShadow: feuille.ombre,
             marginBottom: 20,
           }}
         >
-          {/* Poem title in mono */}
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
-            CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
-          </div>
-
-          {/* Le poème — le feuillet s'ouvre volet par volet, l'encre vient dessus */}
+          {/* Le poème — la feuille arrive pliée ; on la déplie au doigt. Muette :
+              « définitivement le son ne me convient pas » (l'auteur, 11 novembre). */}
           <PoemeDevoile
             lignes={lignes}
             accent={accent}
             actif={rideauLeve}
             lettrine
-            onLettrine={() => { jouer('lettrine'); vibrer('devoilement') }}
             onFini={onPoemeFini}
+            onPliPose={() => vibrer('tick')}
             apres={couture}
-            papier={{ couleur: feuille.couleur, sombre: feuille.sombre, ombre: feuille.ombreVolet, grain, bord: BORD_FEUILLE }}
+            entete={
+              <div style={{ ...mono, fontStyle: 'normal', fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+                CADAVRE EXQUIS · {new Date(poeme.dateCreation).toLocaleDateString(tr('fr-FR', 'en-GB'), { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
+              </div>
+            }
+            papier={{ couleur: feuille.couleur, sombre: feuille.sombre, ombre: feuille.ombreVolet, grain, bord: BORD_FEUILLE, dos: feuille.dos, ombreFeuille: feuille.ombre }}
             // Le pied est écrit sur le dernier volet : il arrive avec lui.
             pied={
               <div style={{ ...mono, fontStyle: 'normal', fontSize: 13, lineHeight: 1.5, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>

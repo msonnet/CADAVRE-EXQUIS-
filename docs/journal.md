@@ -298,6 +298,51 @@ chantier 3), puis intégrée à la fin de partie.
   encore la feuille : ils n'ont pas de carte, leur mise en page est à
   dessiner à part.
 
+### La feuille pliée, au doigt — intégrée le 11 novembre
+
+La maquette validée par l'auteur (`scripts/temoins/depli-au-doigt/paquet.html`,
+plan « moderne », points 1 et 4 ; le cheminement est dans
+`docs/direction-artistique.md`) entre à la **fin de partie**.
+
+- **La physique** vit seule et se mesure : `lib/paquet.ts` (pesanteur, air,
+  rebond, souplesse du papier, course du doigt), `paquet.test.ts`.
+  **La feuille** : `components/FeuillePliee.tsx`. `PoemeDevoile` la prend
+  quand il reçoit `papier` (la fin de partie) ; le salon et le poème du
+  jour, qui n'ont pas encore de feuille, gardent l'ancien dépli au rythme
+  de la partition. `VoletDePapier` (`Depli.tsx`) n'est plus appelé.
+- **La feuille arrive fermée**, on ne voit que le dos du papier
+  (`papierDeLaFeuille` donne désormais `dos`). Tirée vers soi, chaque pli se
+  dresse et retombe sous son poids en découvrant sa bande ; un toucher
+  déplie tout, pli après pli. L'en-tête est sur la première bande
+  (`entete`), le pied sur la dernière ; la page ne peint plus de papier,
+  c'est la feuille qui le fait, bande par bande.
+- **Muette** : la lettrine ne sonne plus (« définitivement le son ne me
+  convient pas »). **Un pli posé vibre** (`vibrer('tick')`) — Android
+  seulement tant que `@capacitor/haptics` n'est pas branché.
+- **Ce qui tient de l'ancien dévoilement, et que les parcours vérifient** :
+  un appui AILLEURS que sur la feuille, ou PENDANT que les plis tombent, ou
+  une touche du clavier pose le poème entier ; l'appui qui abrège ne presse
+  pas l'action qui monte sous le doigt ; mouvement réduit, rien à déplier ;
+  le lecteur d'écran lit tout le poème à tout moment (une bande pas encore
+  découverte est TRANSPARENTE, jamais cachée ; le rabat, lui, est caché au
+  lecteur et disparaît une fois tout ouvert) ; le poème se copie une seule
+  fois.
+- **Décidé sans maquette, à dire à l'auteur** : si personne ne touche au
+  paquet, il esquisse le geste deux fois puis **s'ouvre de lui-même au bout
+  de huit secondes** (`REGLAGES.autoOuverture`). Un joueur qui ne comprend
+  pas le geste voit quand même son poème.
+- **Trouvé par les parcours avant de livrer** : les bandes encore pliées
+  ont déjà leur place, transparentes, sous le paquet — un appui sur cet
+  espace vide comptait comme un appui sur la feuille et dépliait pli par
+  pli au lieu de tout poser (la règle : c'est la table, donc « ailleurs »).
+  Et un poème d'UN vers n'a qu'une bande : la feuille s'ouvrait d'emblée
+  sans prévenir la page, et les actions n'arrivaient jamais.
+- `devoilement.spec.ts` : les deux parcours de l'ancien mécanisme (le volet
+  qui tourne, les tranches sous la feuille) sont remplacés par « le mot est
+  déjà sur sa bande quand le pli la découvre » et « la feuille arrive
+  fermée, et le doigt la déplie pli par pli » (tiré à peine, il se referme ;
+  tiré franchement, il découvre une bande ; un toucher déplie le reste).
+
 ## Les polices — auto-hébergées depuis le 11 septembre 2026
 
 Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.

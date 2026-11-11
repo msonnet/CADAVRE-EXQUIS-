@@ -66,6 +66,10 @@ export interface VoletPapier {
    * pli traverse la feuille d'un bord à l'autre, pas seulement le texte.
    */
   bord: number
+  /** Le dos du papier — la face qu'on voit du paquet plié (`FeuillePliee`). */
+  dos?: string
+  /** L'ombre de la feuille posée (`box-shadow`) — c'est le paquet qui la porte. */
+  ombreFeuille?: string
 }
 
 /**

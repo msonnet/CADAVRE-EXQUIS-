@@ -7,9 +7,13 @@ import { test, expect, type Page } from '@playwright/test'
  * être là, un appui le pose d'un coup, et `prefers-reduced-motion` supprime la
  * séquence au lieu de la jouer plus vite.
  *
- * Et deux de plus depuis le 8 novembre, la feuille de papier validée par
- * l'auteur : le mot est DÉJÀ sur son volet quand celui-ci se déplie, et la
- * feuille s'allonge d'un volet à chaque pli pendant que ses tranches s'en vont.
+ * Depuis le 8 novembre, la feuille de papier validée par l'auteur : le mot est
+ * DÉJÀ sur son volet quand celui-ci se déplie.
+ *
+ * Depuis le 11 novembre, la feuille PLIÉE (`FeuillePliee`, maquette validée) :
+ * elle arrive fermée, rien n'en est lisible ; on la déplie au doigt, pli par
+ * pli — un pli à peine tiré se referme, un pli tiré franchement découvre sa
+ * bande — ou d'un toucher. Si personne n'y touche, elle s'ouvre d'elle-même.
  */
 
 const VERS = [
@@ -169,7 +173,7 @@ test('mouvement réduit : le poème est posé sans séquence', async ({ page }) 
   for (const v of VERS.slice(1)) expect(texte).toContain(v)
 })
 
-test('le mot est déjà sur son volet : il arrive avec le pli, pas après', async ({ page }) => {
+test('le mot est déjà sur sa bande : il est là quand le pli la découvre', async ({ page }) => {
   test.setTimeout(90_000)
   await preparer(page)
   await semer(page, 5)
@@ -179,23 +183,18 @@ test('le mot est déjà sur son volet : il arrive avec le pli, pas après', asyn
   await entrer(page)
   await passerLeRideau(page)
 
-  // Saisir un volet EN TRAIN de se coucher — pas le premier, déjà parti au
-  // lever du rideau — et regarder son vers à cet instant. Le relevé se fait
-  // DANS la page, à chaque image : depuis Node, sous charge, l'échantillonnage
-  // pouvait manquer tout le dépli.
-  const vu = await page.evaluate(() => new Promise<null | { mots: Record<string, unknown>[] }>(ok => {
-    const fin = performance.now() + 10_000
+  // Un toucher sur le paquet : les plis tombent l'un après l'autre. On saisit,
+  // DANS la page, une bande à l'instant où elle vient d'être découverte — la
+  // suivante encore pliée — et on regarde ses mots.
+  const vu = page.evaluate(() => new Promise<null | { mots: { opacite: number; clip: string }[] }>(ok => {
+    const fin = performance.now() + 12_000
     const regarder = () => {
-      const v = [...document.querySelectorAll<HTMLElement>('[data-volet-papier]')].slice(1).find(el => {
-        const cs = getComputedStyle(el)
-        // Déjà visiblement descendu : de champ, un volet ne fait qu'un ou
-        // deux pixels de haut.
-        return parseFloat(cs.opacity) > 0.95 && cs.transform !== 'none' && el.getBoundingClientRect().height > 8
-      })
-      if (v) {
-        ok({ mots: [...v.querySelectorAll<HTMLElement>('span[style*="clip-path"]')].map(m => ({
+      const b = [...document.querySelectorAll<HTMLElement>('[data-volet-papier]')]
+      const i = b.findIndex((el, j) => j > 0 && parseFloat(getComputedStyle(el).opacity) > 0.95
+        && b[j + 1] && parseFloat(getComputedStyle(b[j + 1]).opacity) < 0.05)
+      if (i > 0) {
+        ok({ mots: [...b[i].querySelectorAll<HTMLElement>('span[style*="clip-path"]')].map(m => ({
           opacite: parseFloat(getComputedStyle(m).opacity), clip: getComputedStyle(m).clipPath,
-          texte: m.textContent, style: m.getAttribute('style'),
         })) })
         return
       }
@@ -204,15 +203,18 @@ test('le mot est déjà sur son volet : il arrive avec le pli, pas après', asyn
     }
     requestAnimationFrame(regarder)
   }))
-  expect(vu, 'un volet a été vu en train de se déplier').not.toBeNull()
-  expect(vu!.mots.length).toBeGreaterThan(0)
-  for (const m of vu!.mots) {
-    expect(m.opacite as number, 'le mot est déjà là ' + JSON.stringify(m)).toBeGreaterThan(0.95)
-    expect(m.clip === 'none' || /inset\(0px\)|0%/.test(m.clip as string), 'aucun masque d’encre').toBe(true)
+  const feuille = await page.locator('#feuillet-fin').boundingBox()
+  await page.mouse.click(feuille!.x + feuille!.width / 2, feuille!.y + 30)
+  const releve = await vu
+  expect(releve, 'une bande a été vue juste découverte').not.toBeNull()
+  expect(releve!.mots.length).toBeGreaterThan(0)
+  for (const m of releve!.mots) {
+    expect(m.opacite, 'le mot est déjà là').toBeGreaterThan(0.95)
+    expect(m.clip === 'none' || /inset\(0px\)|0%/.test(m.clip), 'aucun masque d’encre').toBe(true)
   }
 })
 
-test('la feuille s’allonge d’un volet à chaque pli, et ses tranches s’en vont', async ({ page }) => {
+test('la feuille arrive fermée, et le doigt la déplie pli par pli', async ({ page }) => {
   test.setTimeout(90_000)
   await preparer(page)
   await semer(page, 5)
@@ -221,27 +223,44 @@ test('la feuille s’allonge d’un volet à chaque pli, et ses tranches s’en 
   await page.waitForLoadState('domcontentloaded')
   await entrer(page)
   await passerLeRideau(page)
+  await page.waitForTimeout(400)
 
-  const releves: { hauteur: number; tranches: number }[] = []
-  const debut = Date.now()
-  while (Date.now() - debut < 12_000) {
-    releves.push(await page.evaluate(() => {
-      const f = document.querySelector<HTMLElement>('#feuillet-fin')!
-      const t = f.querySelector<HTMLElement>('[data-tranches]')
-      return { hauteur: f.getBoundingClientRect().height, tranches: t ? Number(t.dataset.tranches) : 0 }
-    }))
-    const v = await volets(page)
-    if (v.length && v.every(e => e === 'plat')) break
-    await page.waitForTimeout(80)
+  const ouvertes = () => page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-volet-papier]')]
+    .filter(el => parseFloat(getComputedStyle(el).opacity) > 0.95).length)
+  // Fermée : la première bande seulement, et le paquet couché dessus — le dos
+  // du papier la couvre entière. (Le rabat laisse passer le doigt : c'est la
+  // feuille dessous qui reçoit le geste ; on compare donc les places.)
+  expect(await ouvertes()).toBe(1)
+  const feuille = (await page.locator('#feuillet-fin').boundingBox())!
+  const x = feuille.x + feuille.width / 2, y = feuille.y + 30
+  const couvre = await page.evaluate(() => {
+    const bande = document.querySelector<HTMLElement>('[data-volet-papier="0"]')!.getBoundingClientRect()
+    const l = [...document.querySelectorAll<HTMLElement>('#feuillet-fin [style*="preserve-3d"]')].map(e => e.getBoundingClientRect())
+    if (l.length === 0) return false
+    const haut = Math.min(...l.map(r => r.top)), bas = Math.max(...l.map(r => r.bottom))
+    const gauche = Math.min(...l.map(r => r.left)), droite = Math.max(...l.map(r => r.right))
+    return haut <= bande.top + 2 && bas >= bande.bottom - 2 && gauche <= bande.left + 2 && droite >= bande.right - 2
+  })
+  expect(couvre, 'le paquet couvre la première bande').toBe(true)
+  await expect(page.getByText(/^TIRER POUR DÉPLIER|— TIRER POUR DÉPLIER —/)).toBeVisible()
+
+  const tirer = async (distance: number) => {
+    await page.mouse.move(x, y); await page.mouse.down()
+    for (let i = 1; i <= 12; i++) { await page.mouse.move(x, y + distance * i / 12); await page.waitForTimeout(30) }
+    await page.waitForTimeout(150)
+    await page.mouse.up()
+    await page.waitForTimeout(1600)
   }
-  const premier = releves[0], dernier = releves[releves.length - 1]
-  // Elle arrive courte, en paquet, et finit cinq volets plus longue.
-  expect(dernier.hauteur - premier.hauteur).toBeGreaterThan(120)
-  for (let i = 1; i < releves.length; i++) {
-    expect(releves[i].hauteur, `relevé ${i}`).toBeGreaterThanOrEqual(releves[i - 1].hauteur - 1)
-    expect(releves[i].tranches, `relevé ${i}`).toBeLessThanOrEqual(releves[i - 1].tranches)
-  }
-  // Des tranches au départ, aucune quand tout est ouvert.
-  expect(premier.tranches).toBeGreaterThan(0)
-  expect(dernier.tranches).toBe(0)
+  // Tiré à peine, lâché doucement : le pli se referme.
+  await tirer(20)
+  expect(await ouvertes(), 'le pli s’est refermé').toBe(1)
+  // Tiré franchement : il passe la verticale, tombe, et découvre la bande suivante.
+  await tirer(110)
+  expect(await ouvertes(), 'un pli de plus').toBe(2)
+  // Un toucher : tout le reste se déplie, puis les actions arrivent.
+  await page.mouse.click(x, y + 10)
+  await expect(page.getByRole('button', { name: /Sceller au recueil/i })).toBeVisible({ timeout: 12_000 })
+  expect(await ouvertes()).toBe(5)
+  // Ouverte, la feuille n'a plus de paquet par-dessus.
+  expect(await page.evaluate(() => document.querySelectorAll('#feuillet-fin [style*="preserve-3d"]').length)).toBe(0)
 })

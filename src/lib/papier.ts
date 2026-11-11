@@ -52,12 +52,16 @@ export interface PapierDeFeuille {
   ombre: string
   /** La teinte de l'ombre qui couvre un volet encore debout. */
   ombreVolet: string
+  /** Le dos du papier, un rien plus terne : la face qu'on voit du paquet plié. */
+  dos: string
 }
 
 export function papierDeLaFeuille(fond: string, encre: string): PapierDeFeuille {
   const sombre = luminance(fond) < 0.18
+  const couleur = sombre ? melange(fond, encre, VERS_ENCRE) : melange(fond, '#ffffff', VERS_BLANC)
   return {
-    couleur: sombre ? melange(fond, encre, VERS_ENCRE) : melange(fond, '#ffffff', VERS_BLANC),
+    couleur,
+    dos: sombre ? melange(couleur, '#000000', 0.22) : melange(couleur, encre, 0.07),
     sombre,
     ombre: sombre
       ? '0 0 0 0.5px rgba(255,240,210,0.18), 0 14px 18px rgba(0,0,0,0.55)'
