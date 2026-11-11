@@ -474,6 +474,13 @@ Proposé :
 - Une planche témoin se fait avec `outils/planche.mjs` (`?t=` fige un
   instant).
 
+**Retour de l'auteur, même jour** : « ça va trop vite, le son est agaçant.
+La feuille doit déjà être dépliée. » Fait : le feuillet grandit jusqu'à la
+feuille ENTIÈRE, déjà dépliée (plus de plis qui s'ouvrent) ; plus aucun
+son à cet endroit ; le voyage dure 0,75 s au lieu de 0,38 (1,45 s en
+tout, le retour un peu plus d'une seconde). Le texte de la ligne s'efface
+pendant que celui de la feuille apparaît.
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.

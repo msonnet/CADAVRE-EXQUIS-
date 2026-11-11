@@ -25,6 +25,11 @@
   Le pied de la feuille porte la date, le compte et l'heure.
 
   Un appui pendant le mouvement le termine. `?t=600` fige l'instant 600 ms.
+
+  Second passage — l'auteur : « ça va trop vite, le son est agaçant. La
+  feuille doit déjà être dépliée. » Le feuillet grandit jusqu'à la feuille
+  ENTIÈRE, déjà dépliée : plus de plis qui s'ouvrent, plus de son, et le
+  voyage dure 0,75 s au lieu de 0,38 (1,45 s en tout).
 */
 :root { --ombre-glisse: 0 2px 3px rgba(60,40,10,0.14), 0 14px 22px -6px rgba(60,40,10,0.22); }
 :root[data-sombre="1"] { --ombre-glisse: 0 0 0 0.5px rgba(255,240,210,0.18), 0 16px 24px -4px rgba(0,0,0,0.6); }
@@ -68,11 +73,11 @@ body, .page { overflow-x: clip; }
 .actions .cadre { font-family: 'Raleway', sans-serif; font-size: 15px; letter-spacing: 0.16em; text-align: center; padding: 15px 0; border: 0.5px solid color-mix(in srgb, var(--encre) 30%, transparent); border-radius: 3px; margin-bottom: 10px; }
 
 /* Le feuillet qui voyage : une ligne du recueil devenue papier. */
-.glisse { position: absolute; left: 0; top: 0; z-index: 20; display: none; pointer-events: none; border-radius: 3px; }
+.glisse { position: absolute; left: 0; top: 0; z-index: 20; display: none; pointer-events: none; border-radius: 3px; overflow: hidden; }
 .glisse .fond { position: absolute; inset: 0; border-radius: 3px; background-color: var(--papier); background-image: var(--grain); background-size: 200px 200px; box-shadow: var(--ombre-glisse); }
 .glisse .comme-ligne, .glisse .comme-tete { position: absolute; left: 0; right: 0; top: 0; }
 .glisse .comme-ligne { padding: 13px 12px; }
-.glisse .comme-tete { padding: 16px 16px 0; }
+.glisse .comme-tete { padding: 0; }
 
 /* La barre de la maquette */
 .maquette {
@@ -130,16 +135,12 @@ body, .page { overflow-x: clip; }
 <nav class="maquette" aria-label="Réglages de la maquette">
   <span class="marque">MAQUETTE</span>
   <button type="button" id="ralenti">Ralenti</button>
-  <button type="button" id="son" aria-pressed="true">Son</button>
   <span class="sep"></span>
   <button type="button" data-ambiance="lin">Lin</button>
   <button type="button" data-ambiance="minuit">Minuit</button>
   <button type="button" data-ambiance="encre">Encre</button>
 </nav>
 
-<script type="application/json" id="fichiers-sons" data-autonome>
-{ "froissement": "../depli-au-doigt/sons/feuille-courte-ouverture.wav" }
-</script>
 
 <script>
 (function () {
@@ -184,8 +185,8 @@ body, .page { overflow-x: clip; }
       return { el: b, voile: b.querySelector('.voile'), html, h: 0 }
     })
     zone.append(empreinte, ...bandes.map(b => b.el))
-    // La tête du feuillet qui voyage : la même que la première bande.
-    glisse.querySelector('.comme-tete').innerHTML = bandes[0].html
+    // Le feuillet qui voyage porte la feuille entière, déjà dépliée.
+    glisse.querySelector('.comme-tete').innerHTML = bandes.map(b => b.el.outerHTML).join('')
     glisse.querySelector('.comme-ligne').innerHTML = htmlLigne(p)
   }
 
@@ -199,22 +200,22 @@ body, .page { overflow-x: clip; }
     zone.style.height = bandes.reduce((s, b) => s + b.h, 0) + 'px'
     de = rectDans(lignes[choisi])
     const z = rectDans(zone)
-    vers_ = { x: z.x, y: z.y, w: z.w, h: bandes[0].h }
+    vers_ = { x: z.x, y: z.y, w: z.w, h: z.h }
     hauteurPoeme = poeme.offsetHeight
   }
 
   // ── Le temps ─────────────────────────────────────────────────────────────
   /*
-    0 → 200     la ligne touchée devient papier et se soulève
-    40 → 260    le reste du recueil s'efface autour d'elle
-    180 → 560   le feuillet glisse à sa place et prend la largeur de la feuille ;
-                son texte passe de la ligne du recueil à la tête de la feuille
-    240 → 520   l'en-tête du feuillet arrive
-    540 → …     les plis s'ouvrent dessous, un tous les 90 ms, 300 ms chacun
-    fin − 300   les actions arrivent
+    0 → 320      la ligne touchée devient papier et se soulève
+    60 → 420     le reste du recueil s'efface autour d'elle
+    300 → 1050   le feuillet glisse à sa place et grandit jusqu'à la feuille
+                 entière, déjà dépliée ; le texte de la ligne s'efface
+                 (420 → 680), celui de la feuille apparaît (620 → 960)
+    420 → 900    l'en-tête du feuillet arrive
+    1050 → 1450  les actions arrivent
   */
-  const T = { pli: 540, ecart: 90, duree: 300 }
-  const DUREE = () => T.pli + (bandes.length - 2) * T.ecart + T.duree + 320
+  const T = { arrivee: 1050 }
+  const DUREE = () => 1450
   const glisseCourbe = M.bezier(0.3, 0, 0.2, 1)
   const autres = () => [...document.querySelectorAll('#recueil .haut-recueil, #recueil .entete, #recueil .filet-accent'), ...lignes.filter((_, i) => i !== choisi)]
   const entetePoeme = () => [...document.querySelectorAll('#poeme .haut-poeme, #poeme .entete, #poeme .filet-accent')]
@@ -224,78 +225,48 @@ body, .page { overflow-x: clip; }
     const p = (a, b) => M.part(t, a, b)
     const enCours = t > 0
     // Le recueil
-    recueil.classList.toggle('cache', t >= 560)
-    const fuite = M.lisse(p(40, 260))
+    recueil.classList.toggle('cache', t >= T.arrivee)
+    const fuite = M.lisse(p(60, 420))
     for (const e of autres()) { e.style.opacity = String(1 - fuite); e.style.transform = `translateY(${(6 * fuite).toFixed(2)}px)` }
     lignes[choisi].style.opacity = enCours ? '0' : '1'
     // La page du poème
     poeme.classList.toggle('cache', !enCours)
     poeme.style.visibility = enCours ? 'visible' : 'hidden'
     poeme.setAttribute('aria-hidden', String(t < DUREE()))
-    const arrivee = M.lisse(p(240, 520))
+    const arrivee = M.lisse(p(420, 900))
     for (const e of entetePoeme()) { e.style.opacity = String(arrivee); e.style.transform = `translateY(${(-6 * (1 - arrivee)).toFixed(2)}px)` }
     // Le feuillet qui voyage
-    const leve = M.sortieCube(p(0, 200)), v = glisseCourbe(p(180, 560))
-    const enVoyage = enCours && t < 560
+    const leve = M.sortieCube(p(0, 320)), v = glisseCourbe(p(300, T.arrivee))
+    const enVoyage = enCours && t < T.arrivee
     glisse.style.display = enVoyage ? 'block' : 'none'
     if (enVoyage) {
       const x = mix(de.x, vers_.x, v), y = mix(de.y, vers_.y, v), w = mix(de.w, vers_.w, v), h = mix(de.h, vers_.h, v)
       glisse.style.width = w.toFixed(2) + 'px'; glisse.style.height = h.toFixed(2) + 'px'
       glisse.style.transform = `translate3d(${x.toFixed(2)}px,${(y - 3 * leve * (1 - v)).toFixed(2)}px,0) scale(${(1 + 0.015 * leve * (1 - v)).toFixed(4)})`
       glisse.querySelector('.fond').style.opacity = String(leve)
-      glisse.querySelector('.comme-ligne').style.opacity = String(1 - M.lisse(p(260, 400)))
-      glisse.querySelector('.comme-tete').style.opacity = String(M.lisse(p(330, 480)))
+      glisse.querySelector('.comme-ligne').style.opacity = String(1 - M.lisse(p(420, 680)))
+      glisse.querySelector('.comme-tete').style.opacity = String(M.lisse(p(620, 960)))
     }
-    // La feuille : la tête est là quand le feuillet arrive ; les plis s'ouvrent.
+    // La feuille, déjà dépliée : elle prend la place du feuillet à son arrivée.
     let y = 0
-    bandes.forEach((b, i) => {
-      let angle = 0, visible = t >= 560
-      if (i > 0) {
-        const a = T.pli + (i - 1) * T.ecart, k = M.sortieElan(p(a, a + T.duree), 0.9)
-        angle = Math.min(4, -92 * (1 - k)); visible = t >= a
-      }
-      const proj = Math.max(0, Math.cos(angle * Math.PI / 180))
-      b.el.style.visibility = visible ? 'visible' : 'hidden'
-      b.el.style.transform = `translate3d(0px,${y.toFixed(2)}px,0px) perspective(900px) rotateX(${angle.toFixed(2)}deg)`
-      b.voile.style.opacity = (0.4 * (1 - proj)).toFixed(3)
-      if (visible) y += b.h * proj
+    const posee = t >= T.arrivee
+    bandes.forEach(b => {
+      b.el.style.visibility = posee ? 'visible' : 'hidden'
+      b.el.style.transform = `translate3d(0px,${y.toFixed(2)}px,0px)`
+      y += b.h
     })
     empreinte.style.height = y.toFixed(2) + 'px'
-    empreinte.style.opacity = t >= 560 ? '1' : '0'
+    empreinte.style.opacity = posee ? '1' : '0'
     const suite = M.lisse(p(DUREE() - 320, DUREE()))
     const actions = $('actions'); actions.style.opacity = String(suite); actions.style.transform = `translateY(${(8 * (1 - suite)).toFixed(2)}px)`
-    ecrans.style.minHeight = (t >= 560 ? hauteurPoeme : recueil.offsetHeight) + 'px'
+    ecrans.style.minHeight = (posee ? hauteurPoeme : recueil.offsetHeight) + 'px'
   }
-
-  // ── Le son : un froissement court, quand le premier pli s'ouvre ─────────
-  const Son = { ctx: null, b: null, permis: false, actif: true,
-    async charger() {
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC()
-        const src = JSON.parse($('fichiers-sons').textContent).froissement
-        let octets
-        if (src.startsWith('data:')) { const s = atob(src.slice(src.indexOf(',') + 1)); octets = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) octets[i] = s.charCodeAt(i); octets = octets.buffer }
-        else octets = await (await fetch(src)).arrayBuffer()
-        this.b = await new Promise((ok, ko) => this.ctx.decodeAudioData(octets, ok, ko))
-      } catch { /* page locale : pas de son */ }
-    },
-    reveiller() { this.permis = true; if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {}) },
-    jouer(force) {
-      if (!this.actif || !this.permis || !this.b || !this.ctx || this.ctx.state !== 'running') return
-      const s = this.ctx.createBufferSource(), g = this.ctx.createGain()
-      s.buffer = this.b; s.playbackRate.value = 1 + (Math.random() - 0.5) * 0.08; g.gain.value = force
-      s.connect(g); g.connect(this.ctx.destination); s.start()
-    },
-  }
-  for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) addEventListener(ev, () => Son.reveiller(), { capture: true, passive: true })
 
   // ── L'horloge : à l'aller, puis au retour, plus vite ─────────────────────
-  let vitesse = Temoin.params.vitesse, raf = 0, sens = 0, t = 0, tPrec = 0, sonne = false
+  let vitesse = Temoin.params.vitesse, raf = 0, sens = 0, t = 0, tPrec = 0
   function boucle(maintenant) {
     const dt = (maintenant - tPrec) * vitesse; tPrec = maintenant
-    const avant = t
-    t = M.borne(t + sens * dt * (sens < 0 ? 1.6 : 1), 0, DUREE())
-    if (sens > 0 && avant < T.pli && t >= T.pli && !sonne) { sonne = true; Son.jouer(0.36) }
+    t = M.borne(t + sens * dt * (sens < 0 ? 1.4 : 1), 0, DUREE())
     rendre(t)
     if ((sens > 0 && t < DUREE()) || (sens < 0 && t > 0)) raf = requestAnimationFrame(boucle)
     else { raf = 0; sens = 0; if (t === 0) remettreRecueil() }
@@ -305,7 +276,7 @@ body, .page { overflow-x: clip; }
 
   function ouvrir(i) {
     if (sens || t > 0) return
-    choisi = i; construireFeuille(POEMES[i]); mesurer(); sonne = false
+    choisi = i; construireFeuille(POEMES[i]); mesurer()
     if (reduit) { t = DUREE(); rendre(t); return }
     partir(1)
   }
@@ -329,12 +300,10 @@ body, .page { overflow-x: clip; }
 
   // ── La maquette ──────────────────────────────────────────────────────────
   const bAmb = [...document.querySelectorAll('[data-ambiance]')]
-  const marquer = () => { bAmb.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ambiance === Temoin.ambiance.id))); $('ralenti').setAttribute('aria-pressed', String(vitesse < 1)); $('son').setAttribute('aria-pressed', String(Son.actif)) }
+  const marquer = () => { bAmb.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ambiance === Temoin.ambiance.id))); $('ralenti').setAttribute('aria-pressed', String(vitesse < 1)) }
   bAmb.forEach(b => b.addEventListener('click', () => { Temoin.poserAmbiance(b.dataset.ambiance); if (bandes.length) bandes.forEach((x, i) => { x.el.querySelector('.relief').style.background = i ? Temoin.reliefDuPli((i + 1) % 2, Temoin.papier.sombre) : 'none' }); marquer() }))
   $('ralenti').addEventListener('click', () => { vitesse = vitesse < 1 ? 1 : 0.35; marquer() })
-  $('son').addEventListener('click', () => { Son.actif = !Son.actif; marquer() })
   marquer()
-  Son.charger()
 
   // Pour les planches : `?t=600` (ligne choisie : `&ligne=0`).
   ;(async () => {

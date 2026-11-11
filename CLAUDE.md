@@ -238,8 +238,9 @@ la vibration se fera à cette première installation, guidée pas à pas.
 
 **Point 3, les écrans qui s'enchaînent : maquette du 11 novembre, en
 attente de l'essai** (`scripts/temoins/recueil-feuille/maquette.html`) —
-la ligne du recueil devient un feuillet qui glisse à sa place et s'ouvre ;
-la page du poème montre le poème sur sa feuille.
+la ligne du recueil devient un feuillet qui glisse à sa place et grandit
+jusqu'à la feuille, déjà dépliée, sans son ; la page du poème montre le
+poème sur sa feuille.
 
 **Le chantier EffectCraft** — [`docs/chantier-effectcraft.md`](docs/chantier-effectcraft.md).
 Suspendu. Le cadre technique Lottie est en place (`src/components/Animation.tsx`,
