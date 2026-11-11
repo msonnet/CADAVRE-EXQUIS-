@@ -40,6 +40,11 @@
   un pli se pose, elle glisse pour centrer la pliure suivante, comme une
   caméra qui suit. Une fois tout ouvert, elle recule pour montrer le dessin
   entier, puis la lecture arrive dessous.
+
+  Quatrième passage : chaque main est nommée dans le coin de sa bande
+  (« TÊTE — NADJA »), déjà écrite quand le pli la découvre, comme le mot sur
+  le volet ; et quand un toucher déplie tout, le pli suivant part dès que le
+  précédent est posé, sans attendre que son bord ait fini de trembler.
 */
 :root { --trait: rgba(40, 28, 10, 0.22); --ombre-paquet: rgba(40, 28, 10, 0.34); }
 :root[data-sombre="1"] { --trait: rgba(40, 28, 10, 0.3); --ombre-paquet: rgba(0, 0, 0, 0.7); }
@@ -58,6 +63,8 @@ body { overflow: hidden; }
 /* Une bande du dessin, à plat, à sa place définitive. */
 .bande { background-color: var(--papier-dessin); overflow: hidden; }
 .bande img { display: block; width: 100%; height: 100%; }
+/* Le nom de la main, dans le coin de sa bande : écrit sur le papier. */
+.main { position: absolute; left: 10px; top: 10px; z-index: 3; font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 0.16em; color: var(--accent); background: color-mix(in srgb, var(--papier-dessin) 88%, transparent); padding: 3px 6px; border-radius: 2px; white-space: nowrap; }
 .bande.prolonge { box-shadow: 0 1px 0 var(--papier-dessin); }
 .bande.cachee { visibility: hidden; }
 .bande.premiere { border-radius: 2px 2px 0 0; }
@@ -153,7 +160,7 @@ body { overflow: hidden; }
     largeurMax: 460,    // px
     recouvre: 2,        // px — chaque lamelle passe sous la suivante : pas de jour entre elles
     pesanteur: 40, air: 3.5, rebond: 0.08, pose: 1.2,
-    poussee: 14, esquisse: 6, entrePlis: 120,
+    poussee: 14, esquisse: 6, entrePlis: 30,
     coursePli: 150,     // px — la course du doigt pour un pli entier
     lamelles: 10,
     raideur: 380, amortiPapier: 21, traine: 0.045, devance: 0.02, affaisse: 0.22, profil: 1.5, rebondBord: 0,
@@ -175,6 +182,7 @@ body { overflow: hidden; }
   // ── Le dessin ────────────────────────────────────────────────────────────
   const el = (classe, html) => { const e = document.createElement('div'); e.className = classe; if (html != null) e.innerHTML = html; return e }
   const img = i => `<img src="${FICHIERS['bande-' + (i + 1)]}" alt="" draggable="false">`
+  const contenuBande = i => img(i) + `<div class="main">${Temoin.DESSIN.mains[i].toUpperCase()}</div>`
   const N = 3
   let bandes = [], lamelles = [], ombre, empreinte, W = 200, HB = 233
   function face(classe) {
@@ -188,7 +196,7 @@ body { overflow: hidden; }
     empreinte = el('empreinte')
     bandes = Array.from({ length: N }, (_, i) => {
       const b = el('bande' + (i === 0 ? ' premiere' : '') + (i === N - 1 ? ' derniere' : ' prolonge'))
-      const relief = el('relief'), contenu = el('contenu', img(i)), pliure = el('pliure')
+      const relief = el('relief'), contenu = el('contenu', contenuBande(i)), pliure = el('pliure')
       b.append(relief, contenu, pliure)
       return { el: b, relief, top: 0, h: 0 }
     })
@@ -219,9 +227,16 @@ body { overflow: hidden; }
   }
 
   // ── La vue : elle centre la pliure en cours, et ne bouge pas sous le doigt ──
+  // La bande qu'on découvre est montrée ENTIÈRE, son nom compris ; la pliure
+  // tombe vers le milieu de l'écran. (Centrer la pliure coupait le haut de la
+  // bande, et le nom de la main avec.) Une fois tout ouvert, la vue descend
+  // jusqu'aux pieds avant de reculer.
+  let recule = false
   function cadre() {
+    const max = Math.max(0, N * HB - VH)
+    if (mode === 'ouvert') return max
     if (mode === 'repos' && k === 0 && th === 0) return 0   // le paquet fermé, entier
-    return M.borne((k + 1) * HB - 0.5 * VH, 0, Math.max(0, N * HB - VH))
+    return M.borne(Math.min((k + 1) * HB - 0.5 * VH, k * HB), 0, max)
   }
   function poserVue() {
     R.origine = cam + R.oeil * VH
@@ -252,7 +267,7 @@ body { overflow: hidden; }
       if (k !== kFace) {
         kFace = k
         const recto = k === N - 2
-        lamelles.forEach(l => { l.dessous.el.classList.toggle('recto', recto); l.dessous.contenu.innerHTML = recto ? img(N - 1) : '' })
+        lamelles.forEach(l => { l.dessous.el.classList.toggle('recto', recto); l.dessous.contenu.innerHTML = recto ? contenuBande(N - 1) : '' })
         scene.style.setProperty('--couches', (Math.min(3, N - 1 - k) * 2) + 'px')
       }
       const pres = Math.min(th, PI - th) / 0.5, e = pres >= 1 ? 1 : pres * pres * (3 - 2 * pres)
@@ -289,7 +304,7 @@ body { overflow: hidden; }
       scene.style.height = (yMax + 2).toFixed(2) + 'px'
     }
     invite.style.opacity = mode === 'ouvert' ? '0' : (0.62 * M.borne(1 - P() * 1.5)).toFixed(3)
-    if (mode !== 'ouvert') poserVue()
+    if (!recule) poserVue()
   }
 
   function pas(h) {
@@ -322,11 +337,14 @@ body { overflow: hidden; }
     // Le mouvement validé, au ralenti : le temps du papier s'écoule moins vite.
     if (dt > 0) for (let i = 0; i < n; i++) pas(h / R.lenteur)
     // La vue rattrape la pliure en cours ; pendant qu'on tire, elle reste où elle est.
-    if (mode !== 'tire' && mode !== 'ouvert') cam += (cadre() - cam) * (1 - Math.exp(-dt / R.suivi))
-    const calme = enchaine ? Math.abs(beta) < 0.02 && Math.abs(vbeta) < 0.6 : Math.abs(beta) < 0.003 && Math.abs(vbeta) < 0.05
+    if (mode !== 'tire' && !recule) cam += (cadre() - cam) * (1 - Math.exp(-dt / R.suivi))
+    // Quand un toucher déplie tout, le pli suivant part dès que le précédent
+    // est posé : attendre que son bord ait fini de trembler faisait un temps
+    // mort d'une demi-seconde entre deux plis.
+    const calme = enchaine ? Math.abs(beta) < 0.06 && Math.abs(vbeta) < 1.5 : Math.abs(beta) < 0.003 && Math.abs(vbeta) < 0.05
     if (mode === 'chute' && posee && calme) { beta = 0; vbeta = 0; posee = false; if (th >= PI) { k += 1; th = 0 } return poser() }
     rendre()
-    const vueBouge = mode !== 'tire' && mode !== 'ouvert' && Math.abs(cadre() - cam) > 0.4
+    const vueBouge = mode !== 'tire' && !recule && Math.abs(cadre() - cam) > 0.4
     const bouge = vueBouge || mode === 'chute' || mode === 'tire' || Math.abs(beta) > 0.002 || Math.abs(vbeta) > 0.02 || Math.abs(libre - (mode === 'tire' ? 0 : 1)) > 0.01
     if (bouge) demander(); else if (mode !== 'tire') { beta = 0; vbeta = 0; rendre() }
   }
@@ -343,7 +361,7 @@ body { overflow: hidden; }
     if (mode === 'ouvert') enchaine = false
     rendre()
     scene.classList.toggle('ouvert', mode === 'ouvert')
-    if (mode === 'ouvert') setTimeout(resserrer, reduit ? 0 : 800)   // on regarde les jambes un instant, puis la vue recule
+    if (mode === 'ouvert') { demander(); setTimeout(resserrer, reduit ? 0 : 900) }   // on regarde les jambes un instant, puis la vue recule
     else if (enchaine) setTimeout(() => { if (enchaine && mode === 'repos') lacher(R.poussee) }, R.entrePlis * R.lenteur)
   }
 
@@ -357,6 +375,7 @@ body { overflow: hidden; }
     if (mode !== 'ouvert') return
     const H = N * HB
     const s = echelleEnsemble(H)
+    recule = true
     boite.style.transition = 'transform 1.3s cubic-bezier(0.45, 0, 0.2, 1)'
     boite.style.transform = `translate3d(0px,0px,0px) scale(${s.toFixed(4)})`
     cam = 0
@@ -379,7 +398,7 @@ body { overflow: hidden; }
   function remettre() {
     minuteurs.forEach(clearTimeout); minuteurs = []
     enchaine = false; w = 0; beta = 0; vbeta = 0; libre = 1; posee = false; k = 0; th = 0; kFace = -1; mode = 'repos'
-    boite.style.transition = 'none'; cam = 0
+    boite.style.transition = 'none'; cam = 0; recule = false
     lecture.classList.remove('la'); continuer.classList.remove('la')
     scene.classList.remove('ouvert'); rendre()
   }
@@ -452,7 +471,7 @@ body { overflow: hidden; }
   })()
   // Pour la planche : l'état final, lecture comprise, sans attendre.
   function reduitLecture() {
-    mode = 'ouvert'; rendre(); scene.classList.add('ouvert')
+    mode = 'ouvert'; recule = true; rendre(); scene.classList.add('ouvert')
     boite.style.transition = 'none'
     const H = N * HB, s = echelleEnsemble(H)
     boite.style.transform = `translate3d(0px,0px,0px) scale(${s.toFixed(4)})`

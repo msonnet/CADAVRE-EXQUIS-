@@ -550,6 +550,17 @@ second pli vu par la tranche un instant. Trois améliorations proposées ;
   petit écran (320 × 568), la lecture et son invitation gardent d'abord
   leur place ; « toucher pour continuer » se place sous la lecture.
 
+Puis les deux autres améliorations, à la demande de l'auteur :
+- **Chaque main est nommée** dans le coin de sa bande (« TÊTE — NADJA »),
+  en petites capitales sur une étiquette de papier, déjà écrite quand le pli
+  la découvre, comme le mot sur le volet ; le nom des jambes arrive sur le
+  revers du dernier pli. Le cadrage montre désormais la bande découverte
+  ENTIÈRE (centrer la pliure coupait le haut, et le nom avec), et la vue
+  descend jusqu'aux pieds avant de reculer.
+- **Plus de temps mort** quand un toucher déplie tout : le pli suivant part
+  dès que le précédent est posé, sans attendre que son bord ait fini de
+  trembler. Immobile entre les deux plis : 200 ms au lieu d'environ 500.
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.
