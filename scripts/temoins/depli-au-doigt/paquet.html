@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le dépli au doigt</title>
+<link rel="stylesheet" href="../commun/polices.css">
+<link rel="stylesheet" href="../commun/base.css">
+<script src="../commun/kit.js"></script>
+<style>
+/*
+  Plan « moderne », points 1 et 4 — seconde maquette, 11 novembre.
+
+  L'auteur, sur la première (`accordeon.html`) : « le paquet n'est
+  pas assez serré. Rien ne doit être visible, comme si on jouait au jeu en
+  réel. » Ici la feuille arrive FERMÉE : un paquet de papier dont on ne voit
+  que le dos, blanc. On le tire vers soi : il se soulève, se dresse, passe la
+  verticale et retombe un pli plus bas, en découvrant le vers qu'il couvrait.
+  Un pli par vers, dans l'ordre du poème ; un seul geste continu peut en
+  ouvrir plusieurs.
+
+  Lâché, un pli tombe sous son POIDS (une vraie pesanteur, pas un ressort) :
+  du côté où il penche, avec deux petits rebonds. Avant la verticale, il se
+  referme ; après, il s'ouvre. Un toucher déplie tout, pli après pli.
+
+  Le dernier pli porte au revers le dernier vers et le pied : il arrive
+  écrit, comme le volet de la fin de partie.
+*/
+:root {
+  --lumiere: #ffffff;
+  --trait: rgba(40, 28, 10, 0.22);
+  --ombre-paquet: rgba(40, 28, 10, 0.34);
+}
+:root[data-sombre="1"] {
+  --lumiere: var(--encre);
+  --trait: rgba(0, 0, 0, 0.55);
+  --ombre-paquet: rgba(0, 0, 0, 0.7);
+}
+
+.page { padding-bottom: 104px; }
+/* Le pli dressé déborde un peu la page, et son ombre aussi : on les coupe au
+   bord de l'écran, sans quoi le téléphone dézoome. */
+body, .page { overflow-x: clip; }
+
+/* La table : une perspective commune. Les bandes sont à plat ; seul le
+   paquet est en 3D, et il est peint en dernier : rien à trier. */
+.scene {
+  position: relative;
+  margin: 0 0 6px;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  cursor: grab;
+  outline: none;
+}
+.scene.tient { cursor: grabbing; }
+.scene.ouvert { touch-action: auto; cursor: default; }
+.scene:focus-visible { outline: 1px dashed var(--accent); outline-offset: 8px; }
+.scene > * { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
+
+.empreinte { border-radius: 3px; box-shadow: var(--ombre-feuille); }
+
+/* Une bande de la feuille, à plat, à sa place définitive. */
+.bande {
+  padding: 0 16px;
+  background-color: var(--papier);
+  background-image: var(--grain);
+  background-size: 200px 200px;
+}
+.bande.prolonge { box-shadow: 0 1px 0 var(--papier); }
+.bande.cachee { visibility: hidden; }
+.tete { padding-top: 16px; border-radius: 3px 3px 0 0; }
+.bande.derniere { padding-bottom: 12px; border-radius: 0 0 3px 3px; }
+.bande > .contenu, .face > .contenu { position: relative; z-index: 1; }
+.bande > .relief, .bande > .pliure { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.bande > .pliure { bottom: auto; height: 2px; opacity: 0.42; z-index: 2; background: linear-gradient(to bottom, rgba(0,0,0,0.26) 0 1px, rgba(255,255,255,0.34) 1px 2px); }
+.tete > .pliure { display: none; }
+
+/* Le paquet : le reste de la feuille, plié. Deux faces dos à dos. */
+.paquet { transform-origin: 50% 100%; transform-style: preserve-3d; will-change: transform; z-index: 6; }
+.paquet.cache { visibility: hidden; }
+.face {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0; overflow: hidden;
+  padding: 0 16px;
+  background-color: var(--papier-dos);
+  background-image: var(--grain);
+  background-size: 200px 200px;
+  -webkit-backface-visibility: hidden; backface-visibility: hidden;
+}
+.face.dessus { transform: translateZ(0.5px); }
+.face.dessous { transform: rotateX(180deg) translateZ(0.5px); }
+/* Au dernier pli, le revers est le recto de la dernière bande. */
+.face.dessous.recto { background-color: var(--papier); padding-bottom: 12px; }
+/* Les plis du paquet, sur ses deux bords : de fins traits, un par épaisseur. */
+.face > .tranches { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 2; pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, var(--trait) 0 0.6px, transparent 0.6px 2px) top / 100% var(--couches, 6px) no-repeat,
+    repeating-linear-gradient(to top, var(--trait) 0 0.6px, transparent 0.6px 2px) bottom / 100% var(--couches, 6px) no-repeat; }
+.face.recto > .tranches { display: none; }
+.face > .teinte { position: absolute; left: 0; right: 0; top: 0; bottom: 0; opacity: 0; pointer-events: none; }
+.face > .teinte.claire { background: var(--lumiere); z-index: 0; }
+.face > .teinte.sombre { background: var(--ombre-volet); z-index: 3; }
+
+/* L'ombre du pli dressé, sur la table, en bas à droite. */
+.ombre { height: 100px; z-index: 5; opacity: 0; transform-origin: 0 0; filter: blur(3px);
+  background: linear-gradient(to bottom, var(--ombre-paquet), rgba(0,0,0,0)); }
+
+.invite {
+  margin: 10px 0 0; text-align: center;
+  font-family: 'Raleway', sans-serif; font-size: 12px; letter-spacing: 0.18em;
+  opacity: 0.62;
+}
+.suite { opacity: 0; transform: translateY(6px); transition: opacity 0.5s ease-out, transform 0.5s ease-out; margin-top: 14px; }
+.suite.la { opacity: 1; transform: none; }
+
+/* La barre de la maquette : hors du jeu, pour essayer. */
+.maquette {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 2px;
+  padding: 4px max(10px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--fond) 95%, transparent);
+  border-top: 0.5px solid var(--filet);
+  font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.maquette .marque { color: var(--accent); font-weight: 700; padding: 0 4px; }
+.maquette button { background: none; border: none; padding: 8px 5px; min-height: 38px; opacity: 0.6; cursor: pointer; letter-spacing: inherit; text-transform: inherit; }
+.maquette button[aria-pressed="true"] { opacity: 1; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
+.maquette button:focus-visible { outline: 1px solid var(--accent); }
+.maquette .sep { width: 0.5px; height: 14px; background: var(--encre); opacity: 0.22; margin: 0 3px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="entete"><span class="retour">← FEUILLET · FIN</span><span class="nom" data-nom-ambiance>LIN ÉCRU</span></div>
+  <hr class="filet-accent">
+  <h1 class="titre-affiche"><span>Le cadavre</span><span class="accent">est exquis</span></h1>
+  <hr class="filet">
+  <div class="scene" id="scene" role="button" tabindex="0" aria-label="Le poème, plié. Tirer vers le bas, ou toucher, pour le déplier."></div>
+  <p class="invite" id="invite" aria-hidden="true">— TIRER POUR DÉPLIER —</p>
+  <div class="suite" id="suite" hidden>
+    <button class="bouton-plein"><span>Sceller au recueil&nbsp;→</span></button>
+    <div class="onglets"><button>PARTAGER</button><button>COUTURES</button><button>IMAGE</button></div>
+    <div class="lien-centre">— NOUVELLE PARTIE —</div>
+  </div>
+</div>
+
+<nav class="maquette" aria-label="Réglages de la maquette">
+  <span class="marque">MAQUETTE</span>
+  <button id="replier" type="button">Replier</button>
+  <span class="sep"></span>
+  <button type="button" data-ambiance="lin">Lin</button>
+  <button type="button" data-ambiance="minuit">Minuit</button>
+  <button type="button" data-ambiance="encre">Encre</button>
+  <span class="sep"></span>
+  <button type="button" data-cas="court">3 vers</button>
+  <button type="button" data-cas="etoffe">5 vers</button>
+  <button type="button" data-cas="atelier">Atelier</button>
+</nav>
+
+<script>
+(function () {
+  'use strict'
+  const { M, LUMIERE } = Temoin
+  const q = Temoin.params.brut
+  const PI = Math.PI
+
+  // ── Les réglages : ce qu'on ajuste après l'essai sur le téléphone ────────
+  const R = {
+    perspective: 750,   // px — la distance de l'œil (le README : 700 à 1 100)
+    origine: 650,       // px — l'œil du joueur, vers le bas de l'écran, sous le haut de la feuille :
+                        // on tient le téléphone, le pli se dresse VERS SOI. (Essayé : l'œil
+                        // au-dessus de la feuille — le pli dressé n'était plus qu'un trait.)
+    pesanteur: 110,     // rad/s² — le poids du papier : plus fort, il tombe plus vite
+    air: 2.5,           // le freinage de l'air : le papier est léger
+    rebond: 0.3,        // ce qu'il garde de sa vitesse en touchant la table
+    pose: 1.2,          // rad/s — en dessous, il ne rebondit plus : il est posé
+    poussee: 20,        // rad/s — l'élan d'un pli qu'on ouvre d'un toucher
+    esquisse: 10,       // rad/s — l'élan du pli qui esquisse le geste (≈ 25°)
+    entrePlis: 70,      // ms — entre deux plis, quand un toucher déplie tout
+  }
+  // Pour comparer sur planche : `?oeil=-200&recul=750`.
+  if (q.has('oeil')) R.origine = Number(q.get('oeil'))
+  if (q.has('recul')) R.perspective = Number(q.get('recul'))
+  const reduit = Temoin.params.reduit || (q.get('reduit') !== '0' && matchMedia('(prefers-reduced-motion: reduce)').matches)
+
+  const scene = document.getElementById('scene')
+  const invite = document.getElementById('invite')
+  const suite = document.getElementById('suite')
+
+  // La lumière du kit : une seule, en haut à gauche, un peu devant la table.
+  const LY = LUMIERE[1], LZ = LUMIERE[2], E0 = LZ
+  // Où tombe l'ombre d'un point à la hauteur z : en bas à droite.
+  const OX = -LUMIERE[0] / LUMIERE[2], OY = -LUMIERE[1] / LUMIERE[2]
+
+  // ── La feuille ───────────────────────────────────────────────────────────
+  let cas = Temoin.cas
+  let bandes = [], N = 0, paquet, dessus, dessous, ombre, empreinte
+  const el = (classe, html) => { const e = document.createElement('div'); e.className = classe; if (html != null) e.innerHTML = html; return e }
+  const vers = (v, lettrine) => lettrine
+    ? `<p class="vers avec-lettrine"><span class="loge"><span class="lettrine">${v[0]}</span></span>${v.slice(1)}</p>`
+    : `<p class="vers">${v}</p>`
+  const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  let htmlDerniere = ''
+
+  function face(classe) {
+    const f = el('face ' + classe)
+    const claire = el('teinte claire'), contenu = el('contenu'), sombre = el('teinte sombre'), tranches = el('tranches')
+    f.append(claire, contenu, sombre, tranches)
+    return { el: f, claire, contenu, sombre }
+  }
+
+  function construire() {
+    const poeme = Temoin.POEMES[cas]
+    scene.textContent = ''
+    empreinte = el('empreinte')
+    // Une bande par volet : la première porte l'en-tête, la dernière le pied.
+    bandes = poeme.volets.map((vs, i) => {
+      const dernier = i === poeme.volets.length - 1
+      let html = vs.map((v, j) => vers(v, i === 0 && j === 0)).join('')
+      if (i === 0) html = `<div class="feuille-titre">CADAVRE EXQUIS · ${date}</div>` + html
+      if (dernier) html += `<div class="pied">${poeme.pied}</div>`
+      const b = el('bande' + (i === 0 ? ' tete' : '') + (dernier ? ' derniere' : ' prolonge'))
+      const relief = el('relief'), contenu = el('contenu', html), pliure = el('pliure')
+      b.append(relief, contenu, pliure)
+      if (dernier) htmlDerniere = html
+      return { el: b, relief, top: 0, h: 0 }
+    })
+    N = bandes.length
+    paquet = el('paquet'); dessus = face('dessus'); dessous = face('dessous')
+    paquet.append(dessus.el, dessous.el)
+    ombre = el('ombre')
+    scene.append(empreinte, ...bandes.map(b => b.el), ombre, paquet)
+    teindre()
+  }
+
+  // Les marques au repos : la feuille a été pliée en accordéon, creux et
+  // arête alternent d'un pli à l'autre.
+  function teindre() {
+    bandes.forEach((b, i) => { b.relief.style.background = i ? Temoin.reliefDuPli((i + 1) % 2, Temoin.papier.sombre) : 'none' })
+  }
+
+  function mesurer() {
+    let y = 0
+    for (const b of bandes) { b.el.style.transform = ''; b.h = b.el.offsetHeight; b.top = y; y += b.h }
+    for (const b of bandes) b.el.style.transform = `translate3d(0px,${b.top}px,0px)`
+    scene.style.perspective = R.perspective + 'px'
+    scene.style.perspectiveOrigin = `50% ${R.origine}px`
+  }
+
+  // ── L'état : un seul nombre ──────────────────────────────────────────────
+  /*
+    P, de 0 (le paquet fermé sur la première bande) à N − 1 (tout est ouvert).
+    Sa partie entière k : la bande que le paquet couvre ; sa partie décimale :
+    l'angle du pli en cours, θ = π·(P − k). À θ = 0 le paquet est couché sur
+    la bande k ; il tourne autour du bas de cette bande, se dresse vers l'œil
+    à θ = π/2, et se couche sur la bande k + 1 à θ = π.
+  */
+  let P = 0, w = 0                // la position, et la vitesse angulaire du pli en cours
+  let mode = 'repos'              // repos | tire | chute | ouvert
+  let enchaine = false            // un toucher : on déplie tout, pli après pli
+  let kFace = -1
+
+  const pliDe = p => Math.min(Math.floor(p + 1e-9), N - 2)
+
+  function rendre() {
+    const ouvert = P >= N - 1 - 1e-9
+    const k = ouvert ? N - 1 : pliDe(P)
+    const th = ouvert ? 0 : (P - k) * PI
+    bandes.forEach((b, i) => b.el.classList.toggle('cachee', i > k))
+    paquet.classList.toggle('cache', ouvert)
+    const sombre = Temoin.papier.sombre
+    if (ouvert) {
+      ombre.style.opacity = '0'
+      const fin = bandes[N - 1].top + bandes[N - 1].h
+      empreinte.style.height = fin + 'px'
+      scene.style.height = fin + 'px'
+    } else {
+      const a = bandes[k], b = bandes[k + 1]
+      const s = (1 - Math.cos(th)) / 2
+      const h = a.h + s * (b.h - a.h)
+      const charniere = a.top + a.h
+      // Le revers du dernier pli est la dernière bande, écrite.
+      if (k !== kFace) {
+        kFace = k
+        const recto = k === N - 2
+        dessous.el.classList.toggle('recto', recto)
+        dessous.contenu.innerHTML = recto ? htmlDerniere : ''
+        const couches = Math.min(3, N - 1 - k)
+        paquet.style.setProperty('--couches', (couches * 2) + 'px')
+      }
+      paquet.style.height = h.toFixed(2) + 'px'
+      paquet.style.transform = `translate3d(0px,${(charniere - h).toFixed(2)}px,0px) rotateX(${(-th).toFixed(5)}rad)`
+      // La lumière : le dessus se dresse dos à la lampe et s'éteint ; le
+      // revers, qui retombe, lui fait face et s'éclaire.
+      const sn = Math.sin(th), cs = Math.cos(th)
+      const Ed = Math.max(0, sn * LY + cs * LZ), Er = Math.max(0, -sn * LY - cs * LZ)
+      const kL = sombre ? 0.85 : 2.5, kO = sombre ? 0.7 : 0.42
+      dessus.sombre.style.opacity = Math.max(0, (E0 - Ed) * kO).toFixed(3)
+      dessus.claire.style.opacity = Math.max(0, (Ed - E0) * kL).toFixed(3)
+      dessous.sombre.style.opacity = Math.max(0, (E0 - Er) * kO).toFixed(3)
+      dessous.claire.style.opacity = Math.max(0, (Er - E0) * kL).toFixed(3)
+      // L'ombre du pli dressé : de la charnière jusqu'à l'ombre de son bord libre.
+      const z = h * sn, yLibre = charniere - h * cs
+      const long = yLibre + OY * z - charniere
+      ombre.style.opacity = (Math.min(1, sn * 2.5) * (sombre ? 0.9 : 0.75)).toFixed(3)
+      ombre.style.transform = `matrix(1,0,${(OX * z / 100).toFixed(4)},${(long / 100).toFixed(4)},0,${charniere.toFixed(2)})`
+      empreinte.style.height = charniere + 'px'
+      scene.style.height = (charniere + Math.max(0, -h * cs) + 2).toFixed(2) + 'px'
+    }
+    invite.style.opacity = mode === 'ouvert' ? '0' : (0.62 * M.borne(1 - P * 1.5)).toFixed(3)
+  }
+
+  // ── La pesanteur ─────────────────────────────────────────────────────────
+  /*
+    Un pli charnière en bas, sur une table : son poids le couche du côté où il
+    penche. θ'' = −g·cos θ − air·θ'. Contre la table, il rebondit en gardant
+    un peu de sa vitesse, puis se pose.
+  */
+  let raf = 0, tPrec = 0
+  function pas(dt) {
+    const k = pliDe(P)
+    let th = (P - k) * PI
+    const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
+    for (let i = 0; i < n; i++) {
+      w += (-R.pesanteur * Math.cos(th) - R.air * w) * h
+      th += w * h
+      if (th <= 0) { th = 0; if (Math.abs(w) < R.pose) { w = 0; P = k; return poser() } w = -R.rebond * w }
+      if (th >= PI) { th = PI; if (Math.abs(w) < R.pose) { w = 0; P = k + 1; return poser() } w = -R.rebond * w }
+    }
+    P = k + th / PI
+  }
+  function boucle(t) {
+    raf = 0
+    if (mode === 'chute') { pas(Math.min(0.05, Math.max(0, (t - tPrec) / 1000))); tPrec = t }
+    rendre()
+    if (mode === 'chute') demander()
+  }
+  function demander() { if (!raf) raf = requestAnimationFrame(boucle) }
+  function lacher(vitesse) {
+    w = M.borne(vitesse, -40, 40)
+    if (reduit) { P = (P - pliDe(P)) >= 0.5 || w > 0 ? pliDe(P) + 1 : pliDe(P); if (enchaine) P = N - 1; w = 0; poser(); return }
+    mode = 'chute'; tPrec = performance.now(); demander()
+  }
+  // Un pli s'est posé.
+  function poser() {
+    mode = P >= N - 1 - 1e-9 ? 'ouvert' : 'repos'
+    if (mode === 'ouvert') { P = N - 1; enchaine = false }
+    rendre()
+    scene.classList.toggle('ouvert', mode === 'ouvert')
+    scene.setAttribute('aria-label', mode === 'ouvert' ? 'Le poème' : 'Le poème, plié. Tirer vers le bas, ou toucher, pour le déplier.')
+    if (mode === 'ouvert') setTimeout(() => { if (mode === 'ouvert') { suite.hidden = false; requestAnimationFrame(() => requestAnimationFrame(() => suite.classList.add('la'))) } }, 180)
+    else if (enchaine) setTimeout(() => { if (enchaine && mode === 'repos') lacher(R.poussee) }, R.entrePlis)
+  }
+  function cacherSuite() { suite.classList.remove('la'); suite.hidden = true }
+  function toutDeplier() { if (mode === 'ouvert') return; enchaine = true; cacherSuite(); lacher(R.poussee) }
+
+  // ── Le doigt ─────────────────────────────────────────────────────────────
+  /*
+    Le doigt mène l'angle : la course d'un pli est la distance entre le milieu
+    de la bande qu'il couvre et le milieu de la suivante. Un geste continu
+    ouvre les plis l'un après l'autre ; on peut revenir en arrière.
+  */
+  const milieu = i => bandes[i].top + bandes[i].h / 2
+  function progresDe(y) {
+    if (y <= milieu(0)) return 0
+    if (y >= milieu(N - 1)) return N - 1
+    let k = 0
+    while (k < N - 2 && y > milieu(k + 1)) k++
+    return k + (y - milieu(k)) / (milieu(k + 1) - milieu(k))
+  }
+  const positionDe = p => { const k = pliDe(p); return milieu(k) + (p - k) * (milieu(k + 1) - milieu(k)) }
+
+  let doigt = null, touche = false
+  scene.addEventListener('pointerdown', e => {
+    if (mode === 'ouvert' || doigt) return
+    touche = true; enchaine = false
+    try { scene.setPointerCapture(e.pointerId) } catch { /* tant pis */ }
+    const t = performance.now()
+    doigt = { id: e.pointerId, y0: e.clientY, base: positionDe(P), t0: t, bouge: false, traces: [[t, P]] }
+    mode = 'tire'; w = 0
+    scene.classList.add('tient')
+    cacherSuite()
+    e.preventDefault()
+  })
+  scene.addEventListener('pointermove', e => {
+    if (!doigt || e.pointerId !== doigt.id) return
+    const dy = e.clientY - doigt.y0
+    if (Math.abs(dy) > 6) doigt.bouge = true
+    P = progresDe(doigt.base + dy)
+    const t = performance.now()
+    doigt.traces.push([t, P])
+    while (doigt.traces.length > 2 && t - doigt.traces[0][0] > 90) doigt.traces.shift()
+    demander()
+  })
+  function relacher(e) {
+    if (!doigt || e.pointerId !== doigt.id) return
+    const t = performance.now()
+    const [t1, p1] = doigt.traces[0], [t2, p2] = doigt.traces[doigt.traces.length - 1]
+    // La vitesse du pli en cours, en radians par seconde.
+    const vitesse = t2 - t1 > 8 && t - t2 < 60 && pliDe(p1) === pliDe(p2) ? (p2 - p1) / (t2 - t1) * 1000 * PI : 0
+    const tape = !doigt.bouge && t - doigt.t0 < 400
+    doigt = null
+    scene.classList.remove('tient')
+    if (tape) { toutDeplier(); return }
+    if (P >= N - 1 - 1e-9) { poser(); return }
+    lacher(vitesse)
+  }
+  scene.addEventListener('pointerup', relacher)
+  scene.addEventListener('pointercancel', relacher)
+  // Dans une vue web, le défilement natif ne doit pas reprendre le geste.
+  scene.addEventListener('touchmove', e => { if (mode !== 'ouvert') e.preventDefault() }, { passive: false })
+  scene.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && mode !== 'ouvert') { e.preventDefault(); touche = true; toutDeplier() }
+  })
+
+  // L'invitation : le paquet soulève son bord et retombe, deux fois au plus,
+  // si personne n'y touche.
+  function esquisse() { if (!touche && !reduit && mode === 'repos' && P === 0) lacher(R.esquisse) }
+
+  // ── La maquette ──────────────────────────────────────────────────────────
+  const boutons = [...document.querySelectorAll('.maquette [data-ambiance], .maquette [data-cas]')]
+  function marquer() {
+    for (const b of boutons) b.setAttribute('aria-pressed', String(b.dataset.ambiance ? b.dataset.ambiance === Temoin.ambiance.id : b.dataset.cas === cas))
+  }
+  function remettre() { cacherSuite(); enchaine = false; w = 0; P = 0; kFace = -1; mode = 'repos'; scene.classList.remove('ouvert'); rendre() }
+  document.getElementById('replier').addEventListener('click', () => { touche = true; remettre() })
+  for (const b of boutons) b.addEventListener('click', () => {
+    if (b.dataset.ambiance) { Temoin.poserAmbiance(b.dataset.ambiance); teindre(); rendre() }
+    else { cas = b.dataset.cas; construire(); mesurer(); remettre() }
+    marquer()
+  })
+  let largeur = 0
+  addEventListener('resize', () => { if (scene.clientWidth === largeur) return; largeur = scene.clientWidth; mesurer(); kFace = -1; rendre() })
+
+  // Pour les mesures et les planches : `?p=1.5` fige le paquet à mi-chemin du deuxième pli.
+  window.Depli = { R, get P() { return P }, get N() { return N }, get mode() { return mode }, toutDeplier, remettre, aller(p) { P = p; rendre() } }
+
+  construire()
+  marquer()
+  ;(async () => {
+    try { await document.fonts.ready } catch { /* tant pis */ }
+    mesurer(); largeur = scene.clientWidth
+    rendre()
+    if (q.has('p')) {
+      P = M.borne(Number(q.get('p')), 0, N - 1)
+      if (P >= N - 1) poser(); else rendre()
+      document.documentElement.dataset.temoin = 'fige'
+      return
+    }
+    document.documentElement.dataset.temoin = 'pose'
+    setTimeout(esquisse, 1100)
+    setTimeout(esquisse, 4600)
+  })()
+})()
+</script>
+</body>
+</html>

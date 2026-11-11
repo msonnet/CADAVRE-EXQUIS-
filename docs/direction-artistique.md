@@ -308,8 +308,36 @@ est dans `CLAUDE.md`).
 
 ### Points 1 et 4 : le dépli tiré du doigt, en 3D — maquette du 11 novembre
 
-**En attente de l'essai de l'auteur sur son téléphone.** Rien n'est
-intégré au jeu. Maquette : `scripts/temoins/depli-au-doigt/maquette.html`.
+Rien n'est intégré au jeu. Deux maquettes dans
+`scripts/temoins/depli-au-doigt/` : `accordeon.html` (la première),
+`paquet.html` (la seconde, **en attente de l'essai de l'auteur**).
+
+**Retour de l'auteur sur la première, 11 novembre** : la feuille tombe
+assez vite, mais « le paquet n'est pas assez serré. Rien ne doit être
+visible, comme si on jouait au jeu en réel ». Il partage la limite de
+l'Atelier.
+
+**La seconde — le paquet fermé** (`paquet.html`) :
+- La feuille arrive **fermée** : un paquet de papier dont on ne voit que
+  le dos, uni, avec de fins traits sur ses deux bords (l'épaisseur des
+  plis). Ni en-tête ni vers.
+- On le tire vers soi : le rabat se soulève, se dresse **vers le joueur**,
+  passe la verticale et retombe un pli plus bas en découvrant le vers
+  qu'il couvrait. Un pli par volet, dans l'ordre ; un geste continu en
+  ouvre plusieurs, et on peut revenir en arrière. Le dernier pli porte au
+  revers le dernier vers et le pied.
+- Lâché, un pli tombe **sous son poids** (une vraie pesanteur) du côté où
+  il penche, avec deux petits rebonds : avant la verticale il se referme,
+  après il s'ouvre. Lâché juste après la verticale, il touche la table en
+  un tiers de seconde. Un toucher déplie tout, pli après pli (moins de
+  deux secondes pour cinq vers).
+- **L'œil est placé du côté du joueur**, vers le bas de l'écran, comme
+  quand on tient le téléphone. Essayé et écarté : l'œil au-dessus de la
+  feuille, où le pli dressé n'était plus qu'un trait.
+- La limite de l'Atelier disparaît : son paquet arrive fermé comme les
+  autres, son rabat est seulement plus grand.
+
+La première — l'accordéon (`accordeon.html`) :
 
 - **La feuille arrive pliée en accordéon**, comme une bande de cadavre
   exquis repliée main après main : l'en-tête et le premier vers à plat
