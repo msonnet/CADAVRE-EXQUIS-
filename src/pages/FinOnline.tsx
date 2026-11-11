@@ -28,7 +28,8 @@ import { attribution, libelleMains, nomAffiche } from '../lib/attribution'
 import { lignesDuFeuillet } from '../lib/plis'
 import { corpsDuPoeme, TAILLE_CORPS, RETRAIT_DEBORD } from '../lib/composition'
 import { api } from '../lib/apiBase'
-import { tr } from '../i18n'
+import { tr, langueActuelle } from '../i18n'
+import { partieNue } from '../lib/corps'
 
 // Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
 const mouvementReduit = () =>
@@ -112,7 +113,6 @@ export default function FinOnline() {
 
   const { user, profile, loading: authLoading } = useAuth()
   const { jouer } = useSound()
-  const revelationPlayedRef = useRef(false)
 
   const [room, setRoom] = useState<Room | null>(null)
   const [players, setPlayers] = useState<RoomPlayer[]>([])
@@ -261,14 +261,8 @@ export default function FinOnline() {
     }
   }, [room?.mode])
 
-  // Son + haptique de révélation pour le mode dessin (le mode écrit le déclenche via la séquence)
-  useEffect(() => {
-    if (room?.mode === 'dessin' && revealReady && !revelationPlayedRef.current) {
-      revelationPlayedRef.current = true
-      jouer('revelation')
-      vibrer('devoilement')
-    }
-  }, [room?.mode, revealReady, jouer])
+  // Le dessin se déplie en silence (« définitivement le son ne me convient
+  // pas », 11 novembre) ; chaque pli posé vibre. Le mode écrit garde sa séquence.
 
   // Le filet, si la sortie du rideau ne prévient pas (onglet suspendu).
   useEffect(() => {
@@ -565,9 +559,16 @@ export default function FinOnline() {
             lectureAttendue={lectureEnCours}
             coutures={couturesDessin}
             nbBandes={contributions.length}
+            mains={[...contributions].sort((a, b) => a.case_index - b.case_index).map((c, i, tout) => {
+              const partie = (partieNue(i, tout.length, langueActuelle()) ?? `${tr('bande', 'band')} ${i + 1}`).toUpperCase()
+              const pseudo = players.find(p => p.player_id === c.player_id)?.pseudo
+              return pseudo ? `${partie} — ${pseudo.toUpperCase()}` : partie
+            })}
+            pied={`${tr('CADAVRE DESSINÉ', 'DRAWN CADAVRE')} · ${libelleMains(new Set(contributions.map(c => c.player_id)).size || players.length)} · ${new Date().toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}`}
             accent={accent}
             encre={encre}
             bg={bg}
+            onPliPose={() => vibrer('tick')}
             onTermine={() => setRevealDessinJoue(true)}
           />
         )}

@@ -1,6 +1,11 @@
 /**
  * La partition du dévoilement d'un cadavre dessiné — à l'écran.
  *
+ * Depuis le 11 novembre, l'écran ne balaie plus : le dessin arrive plié et
+ * se déplie au doigt (`RevealDessin`, `lib/paquet.ts`). Il prend d'ici les
+ * coutures (`bornes`, `couturesRegulieres`) — une bande par main ; la
+ * partition du balayage n'est plus jouée.
+ *
  * ── Ce qui était faux ─────────────────────────────────────────────────────
  *
  * La partition était écrite pour TROIS bandes, en tiers fixes, quel que soit

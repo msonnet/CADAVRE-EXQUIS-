@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { partition, fraction, finDuBalayage, couturesRegulieres, bornes } from '../lib/devoilementDessin'
+import { echelleEnsemble } from '../lib/paquet'
 
 /**
  * Le dévoilement d'un dessin s'arrête sur ses coutures, et le montre entier.
@@ -53,9 +54,13 @@ describe('la partition', () => {
 
 describe('l\'écran de dévoilement', () => {
   const src = readFileSync(join(__dirname, '../components/RevealDessin.tsx'), 'utf8')
-  it('ne rogne plus le dessin', () => {
+  // Le dessin se déplie désormais au doigt (11 novembre) : grand pendant les
+  // plis, puis la vue recule sur le dessin ENTIER — jamais rogné.
+  it('ne rogne plus le dessin : reculé, il tient entier dans l’écran', () => {
     expect(src).not.toMatch(/objectFit:\s*'cover'/)
-    expect(src).toMatch(/objectFit:\s*'contain'/)
+    for (const H of [300, 900, 1800, 4000]) {
+      for (const lecture of [true, false]) expect(H * echelleEnsemble(700, H, lecture)).toBeLessThanOrEqual(700)
+    }
   })
   it('n\'attend plus la lecture pour s\'ouvrir', () => {
     const fin = readFileSync(join(__dirname, '../pages/FinDessin.tsx'), 'utf8')

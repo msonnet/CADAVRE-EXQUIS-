@@ -56,6 +56,9 @@ export interface PapierDeFeuille {
   dos: string
 }
 
+const OMBRE_SUR_NUIT = '0 0 0 0.5px rgba(255,240,210,0.18), 0 14px 18px rgba(0,0,0,0.55)'
+const OMBRE_SUR_CLAIR = '0 1px 0.6px rgba(60,40,10,0.16), 0 12px 16px -2px rgba(60,40,10,0.15)'
+
 export function papierDeLaFeuille(fond: string, encre: string): PapierDeFeuille {
   const sombre = luminance(fond) < 0.18
   const couleur = sombre ? melange(fond, encre, VERS_ENCRE) : melange(fond, '#ffffff', VERS_BLANC)
@@ -63,10 +66,27 @@ export function papierDeLaFeuille(fond: string, encre: string): PapierDeFeuille 
     couleur,
     dos: sombre ? melange(couleur, '#000000', 0.22) : melange(couleur, encre, 0.07),
     sombre,
-    ombre: sombre
-      ? '0 0 0 0.5px rgba(255,240,210,0.18), 0 14px 18px rgba(0,0,0,0.55)'
-      : '0 1px 0.6px rgba(60,40,10,0.16), 0 12px 16px -2px rgba(60,40,10,0.15)',
+    ombre: sombre ? OMBRE_SUR_NUIT : OMBRE_SUR_CLAIR,
     ombreVolet: sombre ? '#000000' : '#1e1406',
+  }
+}
+
+/**
+ * Le papier du dessin plié : celui sur lequel on a dessiné (lisse, kraft,
+ * parchemin ou ardoise), posé sur la table de l'ambiance. Le papier décide
+ * de sa lumière et de son dos ; la table, de l'ombre qu'il y jette.
+ */
+export function papierDuDessin(papier: string, table: string): PapierDeFeuille & { ombrePaquet: string; lumiere?: string } {
+  const sombre = luminance(papier) < 0.18
+  const tableSombre = luminance(table) < 0.18
+  return {
+    couleur: papier,
+    dos: sombre ? melange(papier, '#000000', 0.22) : melange(papier, '#3a2c18', 0.08),
+    sombre,
+    ombre: tableSombre ? OMBRE_SUR_NUIT : OMBRE_SUR_CLAIR,
+    ombreVolet: sombre || tableSombre ? '#000000' : '#1e1406',
+    ombrePaquet: tableSombre ? 'rgba(0,0,0,0.7)' : 'rgba(40,28,10,0.34)',
+    lumiere: sombre ? '#e8e4dc' : undefined,
   }
 }
 

@@ -3,8 +3,8 @@ import { PLIURE } from './Papier'
 import { reliefDuPli } from '../lib/papier'
 import { mono } from '../lib/typo'
 import {
-  REGLAGES as R, etatInitial, pas, estCalme, poidsCourbe, angleA,
-  progres, pliDe, placer, progresDe, positionDe, type Mode, type EtatPli,
+  REGLAGES as R, REGLAGES_DESSIN as D, etatInitial, pas, estCalme, poidsCourbe, angleA,
+  progres, pliDe, placer, progresDe, positionDe, cadreDe, type Mode, type EtatPli,
 } from '../lib/paquet'
 
 /**
@@ -36,6 +36,15 @@ import {
  *   règle du jeu, « un appui pose le poème entier », tient toujours.
  * — Personne n'y touche : le paquet esquisse le geste deux fois, puis
  *   s'ouvre de lui-même au bout de huit secondes.
+ *
+ * ── Le dessin (`dessin`) ──────────────────────────────────────────────────
+ *
+ * La même feuille, six fois plus haute (`REGLAGES_DESSIN`, maquette validée
+ * le 11 novembre) : le doigt parcourt une course fixe par pli, le papier
+ * tombe au ralenti (`lenteur`), et une VUE le suit — elle ne bouge pas sous
+ * le doigt, puis glisse quand un pli se pose pour montrer la bande suivante
+ * entière (`cadreDe`). La vue est la boîte qui contient la feuille : c'est
+ * elle qu'on déplace. Une fois tout ouvert, la page la reprend.
  */
 
 export interface PapierPlie {
@@ -48,6 +57,21 @@ export interface PapierPlie {
   /** La teinte de l'ombre d'un pli qui se détourne de la lumière. */
   ombreVolet: string
   grain?: string
+  /** L'ombre que le rabat dressé jette sur la table (sinon : selon le papier). */
+  ombrePaquet?: string
+  /** La lumière sur un papier sombre (sinon : l'encre). */
+  lumiere?: string
+}
+
+export interface DessinPlie {
+  /** Le ralenti du papier (`lenteurDe`). */
+  lenteur: number
+  /** px (`perspectiveDe`). */
+  perspective: number
+  /** px — la hauteur de l'écran où la feuille se montre. */
+  hauteurVue: number
+  /** La boîte qui contient la feuille : la vue la déplace. */
+  boite: React.RefObject<HTMLDivElement | null>
 }
 
 interface Props {
@@ -67,6 +91,8 @@ interface Props {
   onPliPose?: () => void
   /** « — TIRER POUR DÉPLIER — » */
   invite: string
+  /** Le dessin : une grande feuille, une course fixe, une vue qui suit. */
+  dessin?: DessinPlie
 }
 
 // La lumière du jeu : une seule, en haut à gauche, un peu devant la table.
@@ -86,9 +112,11 @@ interface Face { lumiere: HTMLDivElement | null; ombre: HTMLDivElement | null; c
 interface Lamelle { el: HTMLDivElement | null; dessus: Face; dessous: Face }
 interface Doigt { id: number; y0: number; base: number; t0: number; bouge: boolean; traces: [number, number][]; p: number }
 
-export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuvert, onSauter, onPliPose, invite }: Props) {
+export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuvert, onSauter, onPliPose, invite, dessin }: Props) {
   const N = bandes.length
-  const S = R.lamelles
+  const S = dessin ? D.lamelles : R.lamelles
+  const recouvre = dessin ? D.recouvre : R.recouvre
+  const lenteur = dessin?.lenteur ?? 1
   const [ouvert, setOuvert] = useState(!!pose || N < 2)
   // Au dernier pli, le revers du rabat porte la dernière bande, écrite.
   const [recto, setRecto] = useState(false)
@@ -102,8 +130,8 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     el: null, dessus: { lumiere: null, ombre: null, contenu: null }, dessous: { lumiere: null, ombre: null, contenu: null },
   })))
   // Les fonctions de la page, toujours les dernières : la boucle les appelle hors de React.
-  const rappels = useRef({ onOuvert, onSauter, onPliPose })
-  rappels.current = { onOuvert, onSauter, onPliPose }
+  const rappels = useRef({ onOuvert, onSauter, onPliPose, dessin })
+  rappels.current = { onOuvert, onSauter, onPliPose, dessin }
 
   const m = useRef({
     e: etatInitial() as EtatPli,
@@ -114,10 +142,12 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     doigt: null as Doigt | null,
     minuteurs: [] as number[],
     recto: false,
+    /** La vue du dessin : le haut de l'écran, en pixels de la feuille. */
+    cam: 0,
   })
 
   const rgbOmbre = enRgb(papier.ombreVolet, '30,20,6')
-  const rgbLumiere = papier.sombre ? enRgb(encre, '255,255,255') : '255,255,255'
+  const rgbLumiere = papier.sombre ? enRgb(papier.lumiere ?? encre, '255,255,255') : '255,255,255'
   const kL = papier.sombre ? 0.85 : 2.5, kO = papier.sombre ? 0.7 : 0.42
 
   // ── La peinture : tout est écrit à la main, image par image ─────────────
@@ -148,8 +178,8 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     lamelles.current.forEach((l, i) => {
       if (!l.el) return
       const phi = angleA(e, (i + 0.5) / S, poids), lo = angleA(e, i / S, poids), hi = angleA(e, (i + 1) / S, poids)
-      l.el.style.height = `${(L + R.recouvre).toFixed(2)}px`
-      l.el.style.transform = `translate3d(0px,${(y - L - R.recouvre).toFixed(2)}px,${z.toFixed(2)}px) rotateX(${(-phi).toFixed(5)}rad)`
+      l.el.style.height = `${(L + recouvre).toFixed(2)}px`
+      l.el.style.transform = `translate3d(0px,${(y - L - recouvre).toFixed(2)}px,${z.toFixed(2)}px) rotateX(${(-phi).toFixed(5)}rad)`
       // La lumière, interpolée d'un bord à l'autre de la lamelle : pas de marches.
       const [od0, ld0] = voile(lum(lo)), [od1, ld1] = voile(lum(hi))
       if (l.dessus.ombre) l.dessus.ombre.style.background = degrade('to top', rgbOmbre, od0, od1)
@@ -171,6 +201,14 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       inviteEl.current.style.top = `${(bas(0) + 12).toFixed(0)}px`
       inviteEl.current.style.opacity = (0.62 * Math.max(0, Math.min(1, 1 - progres(e) * 1.5))).toFixed(3)
     }
+    poserVue()
+  }
+  // La vue du dessin : la boîte glisse, l'œil du joueur reste au même endroit de l'écran.
+  const poserVue = () => {
+    const d = rappels.current.dessin, st = m.current
+    if (!d) return
+    if (racine.current) racine.current.style.perspectiveOrigin = `50% ${(st.cam + D.oeil * d.hauteurVue).toFixed(1)}px`
+    if (d.boite.current) d.boite.current.style.transform = `translate3d(0px,${(-st.cam).toFixed(2)}px,0px) scale(1)`
   }
 
   // ── Le temps ────────────────────────────────────────────────────────────
@@ -184,9 +222,14 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     const dt = Math.min(0.05, Math.max(0, (t - st.tPrec) / 1000)); st.tPrec = t
     const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
     if (st.mode === 'tire') st.wDoigt *= Math.exp(-dt / 0.06)
-    if (dt > 0) for (let i = 0; i < n; i++) pas(e, h, st.mode, st.wDoigt)
+    // Le dessin : le mouvement validé, au ralenti — le temps du papier s'écoule moins vite.
+    if (dt > 0) for (let i = 0; i < n; i++) pas(e, h / lenteur, st.mode, st.wDoigt * lenteur)
+    // La vue rattrape la pliure en cours ; pendant qu'on tire, elle reste où elle est.
+    const d = rappels.current.dessin
+    const cible = d ? cadreDe(st.tops, st.hs, e.k, e.th, st.mode, d.hauteurVue) : 0
+    if (d && st.mode !== 'tire') st.cam += (cible - st.cam) * (1 - Math.exp(-dt / D.suivi))
     // Le pli et son bord sont posés : on passe à la bande suivante.
-    if (st.mode === 'chute' && e.posee && estCalme(e, st.enchaine)) {
+    if (st.mode === 'chute' && e.posee && estCalme(e, st.enchaine, !!d)) {
       e.beta = 0; e.vbeta = 0; e.posee = false
       if (e.th >= PI) { e.k += 1; e.th = 0; rappels.current.onPliPose?.() }
       poser()
@@ -195,7 +238,8 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
     peindre()
     const mode: Mode = st.mode
     const tire = mode === 'tire'
-    const bouge = tire || mode === 'chute' || Math.abs(e.beta) > 0.002 || Math.abs(e.vbeta) > 0.02
+    const vueBouge = !!d && !tire && Math.abs(cible - st.cam) > 0.4
+    const bouge = tire || vueBouge || mode === 'chute' || Math.abs(e.beta) > 0.002 || Math.abs(e.vbeta) > 0.02
       || Math.abs(e.libre - (tire ? 0 : 1)) > 0.01
     if (bouge) demander()
     else { e.beta = 0; e.vbeta = 0; peindre() }
@@ -215,7 +259,11 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       st.enchaine = false
       if (!st.fini) { st.fini = true; setOuvert(true); rappels.current.onOuvert?.() }
     } else if (st.enchaine) {
-      st.minuteurs.push(window.setTimeout(() => { if (st.enchaine && st.mode === 'repos') lacher(R.poussee) }, R.entrePlis))
+      const entre = dessin ? D.entrePlis * lenteur : R.entrePlis
+      st.minuteurs.push(window.setTimeout(() => { if (st.enchaine && st.mode === 'repos') lacher(R.poussee) }, entre))
+    } else if (dessin) {
+      // Le pli posé, la vue glisse pour montrer la bande suivante entière.
+      demander()
     }
   }
   const arreter = () => {
@@ -275,7 +323,9 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       st.touche = true; st.e.posee = false
       try { el.setPointerCapture(ev.pointerId) } catch { /* tant pis */ }
       const t = performance.now(), p = progres(st.e)
-      st.doigt = { id: ev.pointerId, y0: ev.clientY, base: positionDe(p, milieux()), t0: t, bouge: false, traces: [[t, p]], p }
+      // Le dessin : une course fixe par pli, à partir d'où en est le papier.
+      const base = dessin ? p : positionDe(p, milieux())
+      st.doigt = { id: ev.pointerId, y0: ev.clientY, base, t0: t, bouge: false, traces: [[t, p]], p }
       st.mode = 'tire'; st.e.w = 0; st.wDoigt = 0
       demander()
       ev.preventDefault()
@@ -285,7 +335,10 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       if (!d || ev.pointerId !== d.id) return
       const dy = ev.clientY - d.y0
       if (Math.abs(dy) > 6) d.bouge = true
-      const p = progresDe(d.base + dy / R.course, milieux()), t = performance.now()
+      const p = dessin
+        ? Math.max(0, Math.min(N - 1, d.base + dy / D.coursePli))
+        : progresDe(d.base + dy / R.course, milieux())
+      const t = performance.now()
       const tA = d.traces[d.traces.length - 1][0]
       st.wDoigt = 0.5 * st.wDoigt + 0.5 * ((p - d.p) / Math.max(0.004, (t - tA) / 1000) * PI)
       d.p = p
@@ -306,7 +359,8 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       if (progres(st.e) >= N - 1 - 1e-9) { st.e.k = N - 1; st.e.th = 0; poser(); return }
       // Couché pile sur une bande : rien ne tombe.
       if (st.e.th <= 1e-6 && Math.abs(vitesse) < 0.5) { st.e.th = 0; st.mode = 'repos'; demander(); return }
-      lacher(vitesse)
+      // La vitesse du doigt, dans le temps ralenti du papier.
+      lacher(vitesse * lenteur)
     }
     // Dans une vue web, le défilement natif ne doit pas reprendre le geste.
     const retenir = (ev: TouchEvent) => { if (st.mode !== 'ouvert') ev.preventDefault() }
@@ -365,7 +419,7 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       }}>
         <div ref={el => { f.lumiere = el }} style={couche} />
         {dessous && recto && (
-          <div ref={el => { f.contenu = el }} style={{ position: 'absolute', left: 0, right: 0, top: 0, padding: `0 ${bord}px 12px` }}>
+          <div ref={el => { f.contenu = el }} style={{ position: 'absolute', left: 0, right: 0, top: 0, padding: dessin ? 0 : `0 ${bord}px 12px` }}>
             {bandes[N - 1]}
           </div>
         )}
@@ -380,8 +434,8 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
       ref={racine}
       style={{
         position: 'relative',
-        perspective: ouvert ? undefined : `${R.perspective}px`,
-        perspectiveOrigin: ouvert ? undefined : `50% ${R.origine}px`,
+        perspective: ouvert ? undefined : `${dessin ? dessin.perspective : R.perspective}px`,
+        perspectiveOrigin: ouvert ? undefined : `50% ${dessin ? D.oeil * dessin.hauteurVue : R.origine}px`,
         touchAction: ouvert ? undefined : 'none',
         WebkitUserSelect: ouvert ? undefined : 'none', userSelect: ouvert ? undefined : 'none',
         WebkitTouchCallout: ouvert ? undefined : 'none',
@@ -397,7 +451,7 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
           data-volet-papier={i}
           style={{
             position: 'relative',
-            padding: `${i === 0 ? 16 : 0}px ${bord}px ${i === N - 1 ? 12 : 0}px`,
+            padding: dessin ? 0 : `${i === 0 ? 16 : 0}px ${bord}px ${i === N - 1 ? 12 : 0}px`,
             backgroundColor: papier.couleur, ...fond,
             borderRadius: N === 1 ? 3 : i === 0 ? '3px 3px 0 0' : i === N - 1 ? '0 0 3px 3px' : undefined,
             // Un pixel de papier sous la bande suivante : pas de jour entre deux plis.
@@ -405,9 +459,10 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
           }}
         >
           {/* Les marques au repos : la feuille a été pliée en accordéon. */}
-          {i > 0 && <div aria-hidden style={{ ...couche, background: reliefDuPli((i + 1) % 2, papier.sombre) }} />}
-          <div style={{ position: 'relative' }}>{contenu}</div>
-          {i > 0 && <div aria-hidden style={{ ...couche, bottom: 'auto', height: 2, opacity: 0.42, background: PLIURE }} />}
+          {/* Sur le dessin, le relief passe SUR le trait : l'image est opaque. */}
+          {i > 0 && <div aria-hidden style={{ ...couche, zIndex: dessin ? 2 : undefined, background: reliefDuPli((i + 1) % 2, papier.sombre) }} />}
+          <div style={{ position: 'relative', zIndex: dessin ? 1 : undefined }}>{contenu}</div>
+          {i > 0 && <div aria-hidden style={{ ...couche, zIndex: dessin ? 2 : undefined, bottom: 'auto', height: 2, opacity: dessin ? 0.5 : 0.42, background: PLIURE }} />}
         </div>
       ))}
       {!ouvert && (
@@ -415,7 +470,7 @@ export default function FeuillePliee({ bandes, papier, bord, encre, pose, onOuve
           <div ref={ombre} aria-hidden style={{
             position: 'absolute', left: 0, top: 0, width: '100%', height: 100, zIndex: 5, opacity: 0,
             transformOrigin: '0 0', filter: 'blur(3px)', pointerEvents: 'none',
-            background: `linear-gradient(to bottom, ${papier.sombre ? 'rgba(0,0,0,0.7)' : 'rgba(40,28,10,0.34)'}, rgba(0,0,0,0))`,
+            background: `linear-gradient(to bottom, ${papier.ombrePaquet ?? (papier.sombre ? 'rgba(0,0,0,0.7)' : 'rgba(40,28,10,0.34)')}, rgba(0,0,0,0))`,
           }} />
           {lamelles.current.map((l, i) => (
             <div

@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import RevealDessin from '../components/RevealDessin'
 import { Decor, useReve } from '../reve'
-import { useSound } from '../hooks/useSound'
 import { sauvegarderDessin, chargerBandesDessin } from '../db'
 import { usePartage } from '../hooks/usePartage'
 import { vibrer } from '../utils/haptics'
@@ -13,6 +12,7 @@ import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import { nomsDesBandes } from '../lib/table'
 import { partieNue } from '../lib/corps'
+import { libelleMains } from '../lib/attribution'
 import MurAbonnement from '../components/MurAbonnement'
 import { lireLeDessin } from '../api/lectureDessin'
 import type { Refus } from '../lib/acces'
@@ -91,8 +91,10 @@ export default function FinDessin() {
   const [mainsBandes, setMainsBandes] = useState<Array<{ partie: string; nom: string }> | null>(null)
   const [lectureEnCours, setLectureEnCours] = useState(false)
   const escListener = useRef<((e: KeyboardEvent) => void) | null>(null)
-  const { jouer } = useSound()
-  const revelationPlayedRef = useRef(false)
+  // Le dessin se déplie au doigt : le nom de chaque main est dans le coin de
+  // sa bande, la feuille a son bas. Le partage, la sauvegarde ne changent pas.
+  const [etiquettes, setEtiquettes] = useState<string[]>([])
+  const [nbMains, setNbMains] = useState(0)
 
   const c = seance?.colorSchema
   const accent = c?.second ?? '#1d3a8c'
@@ -115,14 +117,17 @@ export default function FinDessin() {
       }
       if (cancelled) return
       setNbBandes(bandes.length)
+      setNbMains(new Set(bandes.map(b => b.joueurNumero)).size)
       const noms = nomsDesBandes(bandes)
+      const langue = langueActuelle()
+      const parties = bandes.map((_, i) => (partieNue(i, bandes.length, langue) ?? `${tr('bande', 'band')} ${i + 1}`).toUpperCase())
       if (noms) {
-        const langue = langueActuelle()
         setMainsBandes(bandes.map((b, i) => ({
-          partie: (partieNue(i, bandes.length, langue) ?? `${tr('bande', 'band')} ${i + 1}`).toUpperCase(),
+          partie: parties[i],
           nom: noms[i] ?? `${tr('joueur', 'player')} ${b.joueurNumero}`,
         })))
       }
+      setEtiquettes(parties.map((p, i) => (noms?.[i] ? `${p} — ${noms[i]!.toUpperCase()}` : p)))
 
       setPhase('assemblage')
       const { url: img, coutures: c } = await assemblerDessin(bandes)
@@ -154,14 +159,8 @@ export default function FinDessin() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  // Jouer le son de révélation la première fois que le dessin assemblé apparaît
-  useEffect(() => {
-    if (phase === 'revele' && !revelationPlayedRef.current) {
-      revelationPlayedRef.current = true
-      jouer('revelation')
-      vibrer('devoilement')
-    }
-  }, [phase, jouer])
+  // Plus de son à la révélation : le dessin se déplie en silence (« définitivement
+  // le son ne me convient pas », 11 novembre) ; chaque pli posé vibre.
 
   async function reessayerVision() {
     if (!imageAssemblee) return
@@ -223,9 +222,12 @@ export default function FinDessin() {
             lectureAttendue={lectureEnCours}
             coutures={coutures}
             nbBandes={nbBandes}
+            mains={etiquettes}
+            pied={`${tr('CADAVRE DESSINÉ', 'DRAWN CADAVRE')} · ${libelleMains(nbMains || nbBandes)} · ${new Date().toLocaleDateString(tr('fr-FR', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}`}
             accent={accent}
             encre={encre}
             bg={bg}
+            onPliPose={() => vibrer('tick')}
             onTermine={() => setRevealJoue(true)}
           />
         )}

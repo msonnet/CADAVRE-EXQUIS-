@@ -138,7 +138,7 @@ défaites. Ce fichier-ci ne garde que l'état, les règles et la carte.
 | voix, registre, genre | « Le registre des voix », « La Découverte, et le genre des voix » | `api/_voices.ts`, `src/data/voiceIds.ts`, `RegistreVoix.tsx` |
 | galerie | « La galerie, une revue » | `Galerie.tsx`, `EntreeGalerie.tsx`, `src/lib/publier.ts` |
 | partage, affiche, vidéo | « Le partage — une porte, et une affiche qui tient » | `src/utils/partager.ts`, `src/lib/affiche.ts` |
-| dessiné, studio | « Le studio du dessiné », « La lecture du dessin » | `JeuDessin.tsx`, `src/lib/trait/`, `RevealDessin.tsx` |
+| dessiné, studio | « Le studio du dessiné », « La lecture du dessin », « Le dessin plié, au doigt » | `JeuDessin.tsx`, `src/lib/trait/`, `RevealDessin.tsx`, `FeuillePliee.tsx` |
 | salon en ligne, convenance | « Le lancement — ce qui relevait du code » | `src/lib/salonEnLigne.ts`, `src/lib/convenance.ts` |
 | couleurs, accueil | « Les couleurs des rubriques », « Les quatre pavés » | `src/reve/`, `src/lib/nuances.ts` |
 | conformité (Apple, DSA, AI Act) | « La conformité — 22 septembre » | `/conditions`, `api/signaler-vers.ts` |
@@ -246,12 +246,12 @@ la ligne du recueil devient un feuillet qui glisse à sa place et grandit
 jusqu'à la feuille, déjà dépliée, sans son ; la page du poème montre le
 poème sur sa feuille.
 
-**Point 4, la révélation du dessin en 3D : maquette du 11 novembre, en
-attente de l'essai** (`scripts/temoins/dessin-3d/maquette.html`) — le
-geste du dépli validé, appliqué au dessin : il arrive plié, chaque pli
-découvre la bande d'une main, sans son ; la feuille prend toute la largeur
-et la vue suit la pliure, puis recule sur le dessin entier avant la
-lecture. Reste ensuite du point 4 le relief discret
+**Point 4, la révélation du dessin en 3D : maquette validée, intégrée le
+11 novembre** (`scripts/temoins/dessin-3d/maquette.html` ; `RevealDessin.tsx`
+sur `FeuillePliee`, au dessiné local et au salon ; journal, « Le dessin
+plié, au doigt ») — il arrive plié, chaque pli découvre la bande d'une
+main, son nom dans le coin, sans son ; la vue suit, puis recule sur le
+dessin entier avant la lecture. Reste ensuite du point 4 le relief discret
 (boutons qui s'enfoncent, accueil qui bouge quand on incline le
 téléphone).
 
@@ -293,7 +293,7 @@ sont connectés sur l'ordinateur de l'auteur, pas dans les sessions cloud.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (867 tests unitaires) + Playwright (171 tests E2E, FR et EN)
+- Tests : Vitest (875 tests unitaires) + Playwright (174 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

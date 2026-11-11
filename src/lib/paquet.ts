@@ -137,10 +137,14 @@ export function pas(e: EtatPli, h: number, mode: Mode, wDoigt: number, R: Reglag
 
 /**
  * Le pli et son bord sont posés. Quand un toucher déplie tout, on n'attend
- * pas que le bord ait fini de trembler pour lancer le suivant.
+ * pas que le bord ait fini de trembler pour lancer le suivant — et pour une
+ * grande feuille (`large`, le dessin), moins encore : son bord tremble plus
+ * longtemps, et l'attendre faisait un temps mort d'une demi-seconde.
  */
-export const estCalme = (e: EtatPli, enchaine: boolean) =>
-  enchaine ? Math.abs(e.beta) < 0.02 && Math.abs(e.vbeta) < 0.6 : Math.abs(e.beta) < 0.003 && Math.abs(e.vbeta) < 0.05
+export const estCalme = (e: EtatPli, enchaine: boolean, large = false) =>
+  !enchaine ? Math.abs(e.beta) < 0.003 && Math.abs(e.vbeta) < 0.05
+    : large ? Math.abs(e.beta) < 0.06 && Math.abs(e.vbeta) < 1.5
+      : Math.abs(e.beta) < 0.02 && Math.abs(e.vbeta) < 0.6
 
 /** Le poids de la courbe : entière en chute, effacée contre la table sous le doigt. */
 export function poidsCourbe(e: EtatPli): number {
@@ -170,4 +174,72 @@ export function positionDe(p: number, milieux: number[]): number {
   if (n < 2) return milieux[0] ?? 0
   const i = pliDe(p, n)
   return milieux[i] + (p - i) * (milieux[i + 1] - milieux[i])
+}
+
+// ── Le dessin plié ──────────────────────────────────────────────────────────
+//
+// Maquette `scripts/temoins/dessin-3d/maquette.html`, validée par l'auteur le
+// 11 novembre : le même geste, sur une feuille six fois plus haute qu'un vers.
+// Trois mains, puis le BAS de la feuille, qui replie les jambes : trois plis,
+// trois découvertes. La feuille prend toute la largeur ; la vue la suit.
+
+export const REGLAGES_DESSIN = {
+  lamelles: 10,
+  /** px */
+  recouvre: 2,
+  /** ms — entre deux plis, quand un toucher déplie tout. */
+  entrePlis: 30,
+  /** px — la course du doigt pour un pli entier : une bande est trop haute
+   *  pour qu'on la parcoure d'un milieu à l'autre. */
+  coursePli: 150,
+  /** L'œil du joueur, à 55 % de la hauteur de l'écran. */
+  oeil: 0.55,
+  /** s — la vue rattrape la pliure suivante en un peu plus d'une demi-seconde. */
+  suivi: 0.3,
+  /** px — la largeur de la feuille, au plus. */
+  largeurMax: 460,
+  /** Une fois ouvert, le dessin entier occupe 68 % de la hauteur ; la lecture dessous. */
+  resserre: 0.68,
+  /** px — la place que garde la lecture sur un petit écran. */
+  placeLecture: 190,
+  /** ms — on regarde les jambes un instant… */
+  attenteJambes: 900,
+  /** ms — … puis la vue recule, plus lentement qu'un pli. */
+  recul: 1300,
+} as const
+
+/**
+ * Une grande feuille tombe plus lentement qu'une petite, comme un pendule plus
+ * long : le mouvement validé du poème est joué au ralenti, d'un facteur
+ * (hauteur du rabat / 60 px)^0,35 — « trop rapide » au premier essai. Plafonné.
+ */
+export const lenteurDe = (hauteurRabat: number) => Math.min(1.7, Math.max(1, Math.pow(hauteurRabat / 60, 0.35)))
+
+/** Un rabat plus grand se regarde de plus loin, sans quoi il sort de l'écran en se dressant. */
+export const perspectiveDe = (largeur: number) => Math.round(1300 * Math.sqrt(largeur / 200))
+
+/**
+ * Où se pose la vue (le haut de l'écran, en pixels de la feuille). La bande
+ * qu'on découvre est montrée ENTIÈRE, le nom de sa main compris, la pliure
+ * vers le milieu de l'écran (centrer la pliure coupait le haut de la bande).
+ * Le paquet fermé se montre entier ; ouvert, la vue reste sur les jambes.
+ */
+export function cadreDe(tops: number[], hs: number[], k: number, th: number, mode: Mode, hauteurVue: number): number {
+  const n = tops.length
+  if (n < 2) return 0
+  if (mode === 'ouvert') return tops[n - 2]
+  if (mode === 'repos' && k === 0 && th === 0) return 0
+  return Math.max(0, Math.min(tops[k] + hs[k] - 0.5 * hauteurVue, tops[k]))
+}
+
+/**
+ * L'échelle du dessin entier, une fois la vue reculée : 68 % de la hauteur,
+ * et sur un très petit écran la lecture garde d'abord sa place. Sans lecture
+ * à venir, le dessin prend l'écran.
+ */
+export function echelleEnsemble(hauteurVue: number, hauteurFeuille: number, avecLecture: boolean, D = REGLAGES_DESSIN): number {
+  if (hauteurFeuille <= 0) return 1
+  return avecLecture
+    ? Math.max(0.1, Math.min(1, (hauteurVue * D.resserre) / hauteurFeuille, (hauteurVue - D.placeLecture) / hauteurFeuille))
+    : Math.max(0.1, Math.min(1, (hauteurVue - 40) / hauteurFeuille))
 }

@@ -488,7 +488,9 @@ reste à l'intégrer au jeu.
 
 ### Point 4 : la révélation du dessin en 3D — maquette du 11 novembre
 
-**En attente de l'essai de l'auteur.** Rien n'est intégré au jeu.
+**Validée par l'auteur (« ok c'est »), intégrée au jeu le 11 novembre**, au
+dessiné local et au salon (`RevealDessin.tsx` sur `FeuillePliee` ; le
+journal, « Le dessin plié, au doigt »).
 Maquette : `scripts/temoins/dessin-3d/maquette.html` (le dessin témoin à
 trois mains du kit : `outils/rendre-dessin.mjs` le fabrique dans
 `assets/`, non suivi ; `autonome.mjs` le recopie dans la page publiée).

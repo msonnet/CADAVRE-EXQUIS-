@@ -343,6 +343,51 @@ plan « moderne », points 1 et 4 ; le cheminement est dans
   fermée, et le doigt la déplie pli par pli » (tiré à peine, il se referme ;
   tiré franchement, il découvre une bande ; un toucher déplie le reste).
 
+### Le dessin plié, au doigt — intégré le 11 novembre
+
+La maquette validée (`scripts/temoins/dessin-3d/maquette.html`, plan
+« moderne », point 4 ; cinq passages avec l'auteur, dans
+`docs/direction-artistique.md`) remplace le balayage de `RevealDessin`, au
+dessiné local (`FinDessin`) comme au salon (`FinOnline`).
+
+- **La même feuille que le poème** : `FeuillePliee` reçoit `dessin` — une
+  course fixe de 150 px par pli (une bande est six fois plus haute qu'un
+  vers), le papier au ralenti (`lenteurDe`, le pendule plus long), dix
+  lamelles, et une VUE qui suit : elle ne bouge pas sous le doigt, glisse
+  quand un pli se pose pour montrer la bande suivante entière, son nom
+  compris (`cadreDe`). Les réglages sont dans `REGLAGES_DESSIN`
+  (`lib/paquet.ts`), mesurés par `paquet.test.ts`.
+- **Les bandes sont celles de l'assemblage** : l'image assemblée est
+  découpée aux coutures qu'il rend ; chaque main est nommée dans le coin de
+  sa bande (« TÊTE — NADJA » ; la partie seule quand la table n'a pas de
+  prénoms ; au salon, le pseudo). Le BAS de la feuille porte « CADAVRE
+  DESSINÉ · 2 MAINS · date » et replie les jambes : trois mains, trois plis.
+- **Le papier est celui du dessin**, lu sur l'image même (une rangée de
+  pixels tout en bas, la marge sous le dernier trait, à la médiane) : lisse,
+  kraft, parchemin ou ardoise. L'ombre est celle de la table
+  (`papierDuDessin`). Le nom des mains prend l'accent de l'ambiance, ramené
+  au contraste du papier.
+- **Ouvert** : la vue reste 0,9 s sur les jambes, puis recule en 1,3 s sur
+  le dessin entier (68 % de la hauteur, la lecture garde au moins 190 px) ;
+  la lecture arrive dessous, puis « TOUCHER POUR CONTINUER » sous la
+  lecture. Sans lecture à venir, le dessin prend l'écran.
+- **Muet** : le son de révélation (`jouer('revelation')`) et la vibration
+  d'ensemble ne sont plus joués au dessin ; chaque pli posé vibre
+  (`vibrer('tick')`, Android tant que `@capacitor/haptics` n'est pas branché).
+- **Comme au poème** : un appui à côté du paquet, ou pendant que les plis
+  tombent, ou une touche, pose le dessin entier d'un coup — et cet appui ne
+  quitte pas la révélation dans la foulée ; il s'ouvre de lui-même au bout de
+  huit secondes ; mouvement réduit, rien à déplier.
+- **Les parcours** (`lecture-dessin.spec.ts`, six) : les trois anciens posent
+  d'abord le dessin. Le premier passait jusqu'ici sur la copie de « LA
+  LECTURE SE FAIT » de la page de fin, DESSOUS la révélation — il vise
+  maintenant celle de la révélation. Trois nouveaux : plié puis déplié d'un
+  toucher (noms, bas de feuille, lecture sous le dessin entier) ; tiré à
+  peine il se referme, un appui à côté pose tout sans quitter ; mouvement
+  réduit. `devoilementDessin.test.ts` mesurait `objectFit: 'contain'` dans
+  le texte du composant : il mesure désormais que le dessin reculé tient
+  entier dans l'écran.
+
 ## Les polices — auto-hébergées depuis le 11 septembre 2026
 
 Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.
