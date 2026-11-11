@@ -327,11 +327,13 @@ test('au recueil, la lettrine reste dans son vers', async ({ page }) => {
   await entrer(page)
   await page.waitForTimeout(1200)
 
+  // Le poème est sur sa feuille (11 novembre) : un vers est l'élément qui
+  // porte sa copie pour l'oreille.
   const gauches = await page.evaluate(() => {
-    const vers = [...document.querySelectorAll<HTMLElement>('#poeme-detail > div')].slice(1)
+    const vers = [...document.querySelectorAll<HTMLElement>('#poeme-detail span:has(> .lu-seul)')].slice(1)
     return vers.map(v => {
       const r = document.createRange()
-      r.selectNodeContents(v)
+      r.selectNodeContents(v.querySelector('[aria-hidden="true"]')!)
       return Math.round(r.getClientRects()[0].left)
     })
   })
@@ -371,7 +373,7 @@ test('au recueil, la lettrine fait une ligne, comme à la fin de partie', async 
   await entrer(page)
   await page.waitForTimeout(1200)
   const hauteurs = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('#poeme-detail > div')].map(v => v.getBoundingClientRect().height))
+    [...document.querySelectorAll<HTMLElement>('#poeme-detail span:has(> .lu-seul)')].map(v => v.getBoundingClientRect().height))
   expect(hauteurs.length).toBe(4)
   // « Je marche », vers court qui porte la lettrine, contre « un athanor ».
   expect(hauteurs[0], `vers à lettrine ${hauteurs[0]} contre ${hauteurs[2]}`).toBeLessThan(hauteurs[2] * 1.2)

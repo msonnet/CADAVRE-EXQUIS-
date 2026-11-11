@@ -69,6 +69,8 @@ interface Props {
   apres?: (i: number) => React.ReactNode
   /** La feuille de papier (`lib/papier.ts`). Absent : les volets transparents d'avant. */
   papier?: VoletPapier
+  /** Posé d'avance : la feuille arrive ouverte, rien à déplier (la page du poème, au recueil). */
+  pose?: boolean
   /** Le pied de la feuille, porté par le dernier volet : il arrive avec lui. */
   pied?: React.ReactNode
   /** L'en-tête de la feuille, porté par le premier volet (feuille pliée seulement). */
@@ -86,13 +88,13 @@ const OUVRANTS = /^[«»"'“”‘’]+/
 
 export default function PoemeDevoile({
   lignes, accent, actif, lettrine, onLettrine, onFini, style,
-  tailleLettrine = 'clamp(2.8rem, 10vw, 3.4rem)', apres, papier, pied, entete, onPliPose,
+  tailleLettrine = 'clamp(2.8rem, 10vw, 3.4rem)', apres, papier, pied, entete, onPliPose, pose,
 }: Props) {
   // La feuille pliée, qu'on déplie au doigt ; sans papier, l'ancien dépli.
   const paquet = !!papier
   const [saute, setSaute] = useState(false)
   const reduit = useMemo(mouvementReduit, [])
-  const immediat = saute || reduit
+  const immediat = !!pose || saute || reduit
 
   // Le premier vers cède sa première lettre à la lettrine.
   const ligne0 = (lignes[0]?.trim() ?? '').replace(OUVRANTS, '')

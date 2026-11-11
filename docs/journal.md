@@ -431,6 +431,44 @@ révélation qui apparaissait, et poussait le texte vers le haut.
   saut.
 - Le salon avait déjà son rideau de trois secondes (`FinOnline`) : inchangé.
 
+## Le recueil s'ouvre en feuille — 11 novembre
+
+La maquette retenue par l'auteur (`scripts/temoins/recueil-feuille/
+maquette.html`, plan « moderne », point 3 ; « c'est mieux, chantier
+suivant ») entre dans le jeu. **L'aller seulement** ; le retour (« ← MES
+POÈMES » qui refait le chemin à l'envers, plus vite) vient ensuite.
+
+- **La page du poème montre le poème sur SA feuille**, déjà dépliée, comme
+  à la fin de partie : la même `PoemeDevoile`, posée d'avance (`pose`), les
+  mêmes bandes une par main, le même papier, la même lettrine. L'en-tête
+  « CADAVRE EXQUIS · date » est en haut de la feuille, le compte, la forme
+  et l'heure à son pied ; « — LE CADAVRE — » s'en va, la feuille le dit.
+  **Un changement** : fermées, les coutures laissaient la phrase d'un seul
+  tenant au recueil (« Un pli par main », 30 septembre) ; la feuille porte
+  désormais toujours ses bandes, comme à la fin de partie. Les coutures,
+  ouvertes, se posent sous chaque vers, sur la feuille.
+- **Le voyage** (`lib/voyage.ts`, `FeuilletVoyageur.tsx`) : la ligne
+  touchée devient papier et se soulève, le reste du recueil s'efface autour
+  d'elle (0,38 s) ; la page du poème reprend la main, le feuillet glisse à
+  sa place en 0,75 s et grandit jusqu'à la feuille entière, le texte de la
+  ligne s'effaçant pendant que celui de la feuille apparaît ; l'en-tête
+  arrive, puis les actions (1,53 s en tout). Sans son. Un appui le
+  termine ; mouvement réduit, la page s'ouvre sans voyage ; « ⟡ COUTURES »
+  ouvre la page comme avant.
+- **Le relais vit en mémoire, pas dans l'historique** : revenu par
+  « précédent » ou rechargé, on ne rejoue rien. Le feuillet est un portail
+  au-dessus de tout, caché au lecteur d'écran — la page dessous est la
+  vraie.
+- **À dire à l'auteur** : un poème ILLUSTRÉ a son image au-dessus de la
+  feuille ; le feuillet glisse donc plus bas, vers le bas de l'écran. La
+  maquette n'avait pas d'illustration.
+- **Les parcours** : `carte-recueil.spec.ts` (trois de plus : le voyage, un
+  appui qui le termine, mouvement réduit). Deux mesures de
+  `fin-de-partie.spec.ts` lisaient les vers comme des lignes de texte nu
+  (`#poeme-detail > div`) : elles lisent désormais les vers de la feuille ;
+  ce qu'elles tiennent ne change pas (les vers partent du même bord ; la
+  lettrine fait une ligne, 42 px contre 36).
+
 ## Les polices — auto-hébergées depuis le 11 septembre 2026
 
 Toute la typographie venait de `fonts.googleapis.com` par un `<link>`.

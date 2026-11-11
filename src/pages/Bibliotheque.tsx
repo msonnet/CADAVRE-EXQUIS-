@@ -18,6 +18,12 @@ import { tr } from '../i18n'
 import { emporterFichier } from '../lib/emporter'
 import { lireEchos, lireReleve, ecrireReleve, releveDe } from '../lib/echos'
 import { libelleEchos, nouvelles, phraseCourrier, type Echos } from '../lib/galerie'
+import FeuilletVoyageur from '../components/FeuilletVoyageur'
+import { VOYAGE, part, lisse, confierVoyage, type Relais } from '../lib/voyage'
+import { papierDeLaFeuille, grainDuPapier } from '../lib/papier'
+
+const mouvementReduit = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 const NOMS_STRUCTURES: Record<string, string> = {
   'phrase-simple':    'Phrase courte',
@@ -108,6 +114,38 @@ export default function Bibliotheque() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const bg = c?.bg ?? '#f0e4cc'
+  // Le papier du feuillet qui voyage : celui de la feuille, sur la table de l'ambiance.
+  const feuille = papierDeLaFeuille(seance?.ambiance.bg ?? bg, encre)
+
+  // ── Le voyage du feuillet (`lib/voyage.ts`) ──
+  // La ligne touchée devient papier et se soulève, le reste du recueil
+  // s'efface autour d'elle ; puis la page du poème reprend le mouvement.
+  const [voyage, setVoyage] = useState<(Relais & { retrait: number }) | null>(null)
+  const contenuRef = useRef<HTMLDivElement>(null)
+  const metaDe = (poeme: Poeme) => [
+    poeme.origine === 'jour'
+      ? tr('POÈME DU JOUR', 'POEM OF THE DAY')
+      : poeme.origine === 'carnet'
+      ? tr('RECUEILLI PAR TOI', 'GATHERED BY YOU')
+      : (NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase(),
+    libelleMorceaux(poeme.structureId, poeme.cases.length),
+    ...(mainsDuPoeme(poeme) !== null ? [libelleMains(mainsDuPoeme(poeme)!)] : []),
+    formatDate(poeme.dateCreation).toUpperCase(),
+  ].join(' · ')
+  const ouvrirPoeme = (poeme: Poeme, bouton: HTMLElement) => {
+    const carte = bouton.closest('[data-carte]') as HTMLElement | null
+    if (voyage) return
+    if (!carte || mouvementReduit()) { navigate(`/bibliotheque/${poeme.id}`); return }
+    const r = carte.getBoundingClientRect(), b = bouton.getBoundingClientRect()
+    setVoyage({
+      id: poeme.id,
+      de: { x: r.left, y: r.top, w: r.width, h: r.height },
+      retrait: b.left - r.left,
+      titre: poeme.titre || premierVers(poeme) || tr('Sans titre', 'Untitled'),
+      meta: metaDe(poeme),
+      depart: performance.now(),
+    })
+  }
   const { etape: tutEtape, actif: tutActif, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
 
   useEffect(() => {
@@ -172,7 +210,23 @@ export default function Bibliotheque() {
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom overflow-hidden">
       <Decor variant="biblio" />
 
-      <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+      {voyage && (
+        <FeuilletVoyageur
+          {...voyage}
+          jusqua={VOYAGE.relais}
+          papier={feuille.couleur}
+          grain={grainDuPapier(feuille.sombre)}
+          sombre={feuille.sombre}
+          encre={encre}
+          onInstant={t => {
+            const f = lisse(part(t, VOYAGE.fuite)), el = contenuRef.current
+            if (el) { el.style.opacity = String(1 - f); el.style.transform = `translateY(${(6 * f).toFixed(2)}px)` }
+          }}
+          onFin={() => { confierVoyage(voyage); navigate(`/bibliotheque/${voyage.id}`) }}
+        />
+      )}
+
+      <div ref={contenuRef} style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
 
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
@@ -384,9 +438,10 @@ export default function Bibliotheque() {
                 {poemesFiltres.map((poeme, i) => (
                   <motion.div
                     key={poeme.id}
+                    data-carte
                     initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.04 }}
+                    animate={{ opacity: voyage?.id === poeme.id ? 0 : 1, y: 0 }}
+                    transition={voyage?.id === poeme.id ? { duration: 0 } : { delay: i * 0.04 }}
                     style={{
                       display: 'flex', alignItems: 'stretch', gap: 12,
                       borderBottom: `0.5px solid ${encre}12`,
@@ -415,7 +470,7 @@ export default function Bibliotheque() {
                     )}
                     <div style={{ flex: 1, minWidth: 0, paddingLeft: poeme.illustration?.url ? 0 : 12 }}>
                       <button
-                        onClick={() => { jouer('clic'); if (tutActif && tutEtape === T_BIBLIO) tutAvancer(); navigate(`/bibliotheque/${poeme.id}`) }}
+                        onClick={e => { jouer('clic'); if (tutActif && tutEtape === T_BIBLIO) tutAvancer(); ouvrirPoeme(poeme, e.currentTarget) }}
                         className={tutActif && tutEtape === T_BIBLIO && i === 0 ? 'tut-cible' : undefined}
                         style={{
                           ['--tut-ring' as string]: accent, ['--tut-glow' as string]: `${accent}8c`,
@@ -432,14 +487,7 @@ export default function Bibliotheque() {
                           {poeme.titre || premierVers(poeme) || tr('Sans titre', 'Untitled')}
                         </p>
                         <p style={{ ...mono, fontSize: 13, color: encre, opacity: 0.75 }}>
-                          {poeme.origine === 'jour'
-                            ? tr('POÈME DU JOUR', 'POEM OF THE DAY')
-                            : poeme.origine === 'carnet'
-                            ? tr('RECUEILLI PAR TOI', 'GATHERED BY YOU')
-                            : (NOMS_STRUCTURES[poeme.structureId] ?? poeme.structureId).toUpperCase()}
-                          {' · '}{libelleMorceaux(poeme.structureId, poeme.cases.length)}
-                          {mainsDuPoeme(poeme) !== null && <>{' · '}{libelleMains(mainsDuPoeme(poeme)!)}</>}
-                          {' · '}{formatDate(poeme.dateCreation).toUpperCase()}
+                          {metaDe(poeme)}
                         </p>
                         {ligneEchos(poeme.publication)}
                       </button>

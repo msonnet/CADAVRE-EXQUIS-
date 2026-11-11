@@ -102,3 +102,48 @@ test('les coutures s’ouvrent d’un seul geste depuis la carte', async ({ page
     /FONCTION|SYNTAGME|ADJECTIF|toi|voix|COUTURES/i.test(document.body.innerText))
   expect(ouvert, 'le panneau des coutures est déplié à l’arrivée').toBe(true)
 })
+
+// ── Le voyage du feuillet (plan « moderne », point 3, 11 novembre) ──────────
+
+const feuillet = (page: Page) => page.locator('body > div[aria-hidden="true"][style*="position: fixed"]')
+
+test('toucher un poème : la ligne devient un feuillet qui glisse jusqu’à sa feuille', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await preparer(page)
+  await page.getByRole('button', { name: /le vernis craquelé/ }).click()
+  // Le feuillet porte la ligne touchée, au-dessus de tout, hors du lecteur d'écran.
+  await expect(feuillet(page)).toHaveCount(1)
+  await expect(feuillet(page)).toContainText('le vernis craquelé')
+  await expect(page).toHaveURL(/\/bibliotheque\/a$/)
+  // Arrivé, il laisse la place à la vraie feuille, déjà dépliée — une bande par main.
+  await expect(feuillet(page)).toHaveCount(0, { timeout: 4000 })
+  await expect(page.locator('#poeme-detail [data-volet-papier]')).toHaveCount(5)
+  await expect(page.locator('#poeme-detail')).toBeVisible()
+  await expect(page.locator('#poeme-detail')).toContainText(/CADAVRE EXQUIS ·/)
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Partager le poème/ })).toBeVisible()
+  // Rien n'est resté à demi effacé.
+  const opacites = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[style*="opacity"]')]
+    .filter(e => e.closest('#poeme-detail') === null && e.querySelector('h1, button'))
+    .map(e => getComputedStyle(e).opacity))
+  expect(opacites.every(o => o === '1'), `opacités : ${opacites}`).toBe(true)
+})
+
+test('un appui pendant le voyage le termine', async ({ page }) => {
+  await preparer(page)
+  await page.getByRole('button', { name: /le vernis craquelé/ }).click()
+  await page.waitForTimeout(150)
+  await page.mouse.click(5, 5)
+  await expect(page).toHaveURL(/\/bibliotheque\/a$/, { timeout: 2000 })
+  await expect(feuillet(page)).toHaveCount(0, { timeout: 1500 })
+  await expect(page.locator('#poeme-detail')).toBeVisible()
+})
+
+test('mouvement réduit : la page du poème s’ouvre sans voyage', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await preparer(page)
+  await page.getByRole('button', { name: /le vernis craquelé/ }).click()
+  await expect(page).toHaveURL(/\/bibliotheque\/a$/)
+  await expect(feuillet(page)).toHaveCount(0)
+  await expect(page.locator('#poeme-detail [data-volet-papier]')).toHaveCount(5)
+})

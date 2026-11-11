@@ -130,6 +130,7 @@ défaites. Ce fichier-ci ne garde que l'état, les règles et la carte.
 | économie, encrier, flacons | « Modèle économique — l'abonnement » | `api/_acces.ts`, `src/lib/acces.ts`, `MurAbonnement.tsx` |
 | Atelier (gelé) | « L'Atelier — gelé le 27 août » | `src/lib/determinants.ts`, `formes.ts`, `metrique.ts`, `lexique.ts` |
 | carnet, reliure | « Le carnet — la récolte », « Le carnet compose » | `src/pages/Recolte.tsx`, `src/lib/reliure.ts` |
+| recueil, page du poème | « La carte du Recueil », « Le recueil s'ouvre en feuille » | `Bibliotheque.tsx`, `PoemeDetail.tsx`, `src/lib/voyage.ts`, `FeuilletVoyageur.tsx` |
 | dévoilement, feuille de papier | « Le dévoilement », « La feuille de papier », « La feuille pliée, au doigt » | `FeuillePliee.tsx`, `src/lib/paquet.ts`, `PoemeDevoile.tsx`, `Depli.tsx`, `src/lib/rythme.ts`, `src/lib/papier.ts` |
 | écriture, pli, rabat | « Le pli à l'écriture » | `Jeu.tsx`, `Papier.tsx`, `Rabat.tsx`, `src/lib/pli.ts` |
 | fin de partie, coutures | « La fin de partie — le poème parle d'abord » | `FinDePartie.tsx`, `src/lib/plis.ts`, `src/lib/composition.ts` |
@@ -240,11 +241,13 @@ sentira que dans l'application installée (`@capacitor/haptics`).
 L'auteur n'a jamais installé l'application sur son iPhone depuis Xcode :
 la vibration se fera à cette première installation, guidée pas à pas.
 
-**Point 3, les écrans qui s'enchaînent : maquette retenue le 11 novembre**
-(`scripts/temoins/recueil-feuille/maquette.html`, reste à l'intégrer) —
-la ligne du recueil devient un feuillet qui glisse à sa place et grandit
-jusqu'à la feuille, déjà dépliée, sans son ; la page du poème montre le
-poème sur sa feuille.
+**Point 3, les écrans qui s'enchaînent : maquette retenue, l'aller intégré
+le 11 novembre** (`scripts/temoins/recueil-feuille/maquette.html` ;
+`lib/voyage.ts`, `FeuilletVoyageur.tsx` ; journal, « Le recueil s'ouvre en
+feuille ») — la ligne du recueil devient un feuillet qui glisse à sa place
+et grandit jusqu'à la feuille, déjà dépliée, sans son ; la page du poème
+montre le poème sur sa feuille. Reste le retour (« ← MES POÈMES » à
+l'envers).
 
 **Point 4, la révélation du dessin en 3D : maquette validée, intégrée le
 11 novembre** (`scripts/temoins/dessin-3d/maquette.html` ; `RevealDessin.tsx`
@@ -293,7 +296,7 @@ sont connectés sur l'ordinateur de l'auteur, pas dans les sessions cloud.
 - Claude API (voix IA), fal.ai (illustrations FLUX)
 - Capacitor (iOS + Android natif)
 - i18n maison : `tr(fr, en)` + `langueActuelle()` (`src/i18n/`)
-- Tests : Vitest (879 tests unitaires) + Playwright (174 tests E2E, FR et EN)
+- Tests : Vitest (887 tests unitaires) + Playwright (177 tests E2E, FR et EN)
 
 ## Branche de développement
 `claude/cadavre-exquis-pwa-SlVtb` (= main)

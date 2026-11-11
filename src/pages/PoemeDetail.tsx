@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
@@ -25,7 +25,11 @@ import { useTutoriel, TUTORIEL_TOTAL, T_DETAIL } from '../hooks/useTutoriel'
 import { mono } from '../lib/typo'
 import { tr, langueActuelle } from '../i18n'
 import { lignesDuFeuillet } from '../lib/plis'
-import { styleVers, RETRAIT_DEBORD, incipitDe } from '../lib/composition'
+import { RETRAIT_DEBORD, incipitDe, corpsDuPoeme, TAILLE_CORPS } from '../lib/composition'
+import PoemeDevoile from '../components/PoemeDevoile'
+import FeuilletVoyageur from '../components/FeuilletVoyageur'
+import { VOYAGE, part, lisse, reprendreVoyage } from '../lib/voyage'
+import { papierDeLaFeuille, grainDuPapier } from '../lib/papier'
 
 // Lu à l'appel, comme dans PoemeDevoile : le réglage peut changer en cours de route.
 const mouvementReduit = () =>
@@ -84,6 +88,47 @@ export default function PoemeDetail() {
   const btnText = seance?.ambiance.buttonText ?? '#0f0805'
   const colorLabel = c?.name.toUpperCase() ?? ''
   const { etape: tutEtape, actif: tutActif, fete: tutFete, avancer: tutAvancer, terminer: tutTerminer } = useTutoriel()
+
+  // Le poème sur SA feuille, déjà dépliée, comme à la fin de partie.
+  const feuille = papierDeLaFeuille(seance?.ambiance.bg ?? fond, encre)
+  const grain = grainDuPapier(feuille.sombre)
+
+  // ── Le voyage du feuillet (`lib/voyage.ts`) ──
+  // Venu du recueil, le feuillet touché glisse jusqu'ici et grandit jusqu'à
+  // la feuille ; l'en-tête arrive, puis les actions. Sinon, rien de neuf.
+  const [voyage] = useState(() => (id ? reprendreVoyage(id) : null))
+  const [enVoyage, setEnVoyage] = useState(!!voyage)
+  const [posee, setPosee] = useState(!voyage)
+  const enteteRef = useRef<HTMLDivElement>(null)
+  const feuilleRef = useRef<HTMLDivElement>(null)
+  const suiteRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => { if (voyage) window.scrollTo(0, 0) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const voyageur = voyage && enVoyage && (
+    <FeuilletVoyageur
+      {...voyage}
+      jusqua={VOYAGE.fin}
+      papier={feuille.couleur}
+      grain={grain}
+      sombre={feuille.sombre}
+      encre={encre}
+      vers={() => {
+        const r = feuilleRef.current?.getBoundingClientRect()
+        return r && r.height > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : null
+      }}
+      feuille={() => feuilleRef.current}
+      onInstant={t => {
+        const a = lisse(part(t, VOYAGE.entete)), b = lisse(part(t, [VOYAGE.arrivee, VOYAGE.fin]))
+        const e = enteteRef.current, s = suiteRef.current
+        if (e) { e.style.opacity = String(a); e.style.transform = `translateY(${(-6 * (1 - a)).toFixed(2)}px)` }
+        if (s) { s.style.opacity = String(b); s.style.transform = `translateY(${(8 * (1 - b)).toFixed(2)}px)` }
+        if (t >= VOYAGE.arrivee) setPosee(true)
+      }}
+      onFin={() => {
+        for (const el of [enteteRef.current, suiteRef.current]) if (el) { el.style.opacity = ''; el.style.transform = '' }
+        setPosee(true); setEnVoyage(false)
+      }}
+    />
+  )
 
   useEffect(() => {
     // Un feuillet déjà publié a déjà fait ce que l'étape demande : le guide
@@ -245,6 +290,7 @@ export default function PoemeDetail() {
   if (chargement) {
     return (
       <PageTransition className="page-carnet flex items-center justify-center min-h-dvh">
+        {voyageur}
         <motion.span
           aria-label="Chargement…"
           style={{ fontSize: 22, color: accent }}
@@ -285,10 +331,10 @@ export default function PoemeDetail() {
   const feuillet = casesVisibles
     ? lignesDuFeuillet(poeme.structureId, poeme.cases.map(c => c.texte), texteCorrige)
     : null
-  const lignes = feuillet?.lignes ?? texteAffiche.split('\n')
-  const ligne0 = lignes[0]?.trim() ?? ''
-  const lettrine = ligne0.charAt(0).toLocaleUpperCase()
-  const resteLigne0 = ligne0.slice(1)
+  // La feuille porte le poème en ses bandes, une par main, comme à la fin de
+  // partie ; les coutures s'y posent sous chaque vers quand on les ouvre.
+  const lignes = lignesDuFeuillet(poeme.structureId, poeme.cases.map(c => c.texte), texteCorrige).lignes
+  const corps = corpsDuPoeme(lignes, poeme.structureId)
   // Un poème sans titre se nomme par son premier vers, comme dans toute
   // table des matières de poésie — et non « Sans titre » en gris fantôme.
   // Une phrase d'un seul tenant n'en garde que le début (`incipitDe`).
@@ -369,6 +415,7 @@ export default function PoemeDetail() {
   return (
     <PageTransition className="page-carnet relative flex flex-col min-h-dvh safe-top safe-bottom">
       <Decor variant="detail" />
+      {voyageur}
 
       {/* ── PLEIN ÉCRAN ILLUSTRATION ── */}
       <AnimatePresence>
@@ -413,6 +460,7 @@ export default function PoemeDetail() {
       </AnimatePresence>
 
       <div style={{ position: 'relative', zIndex: 10 }} className="flex flex-col flex-1">
+        <div ref={enteteRef} className="flex flex-col" style={enVoyage ? { opacity: 0 } : undefined}>
 
         {/* ── HEADER ── */}
         <div className="flex justify-between items-baseline">
@@ -539,66 +587,44 @@ export default function PoemeDetail() {
           </motion.div>
         )}
 
-        {/* ── POÈME ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.7 }}
-          style={{ marginBottom: 16 }}
-        >
-          <div style={{ ...mono, fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 10 }}>
-            {tr('— LE CADAVRE —', '— THE CORPSE —')}
-          </div>
-          {/*
-            Un vers par bloc, en retrait de débord (`lib/composition.ts`) :
-            les vers étaient des lignes coupées de `<br>`, et la suite d'un
-            vers trop long repartait du bord comme un vers nouveau.
-          */}
-          <div
-            id="poeme-detail"
-            style={{ fontFamily: "'Playfair Display', serif", color: encre, fontSize: 17, lineHeight: 1.7 }}
-          >
-            {lignes.map((ligne, j) => (
-              <React.Fragment key={j}>
-                {/* `flow-root` : le vers CONTIENT sa lettrine. Plus haute que la
-                    ligne, elle débordait sur le vers suivant, que son retrait
-                    négatif faisait alors partir à mi-chemin du flottant. */}
-                <div style={{ ...styleVers(j === 0 && !!lettrine), display: j === 0 && lettrine ? 'flow-root' : 'block' }}>
-                  {j === 0 && lettrine ? (
-                    <>
-                      {/* La lettrine pour l'œil, le premier mot entier pour l'oreille. */}
-                      <span aria-hidden="true">
-                        <span style={{ float: 'left', marginLeft: `-${RETRAIT_DEBORD}`, lineHeight: 0 }}>
-                          {/* UNE ligne de haut, comme à la fin de partie : la
-                              taille d'affiche faisait deux lignes au corps du
-                              recueil, et un premier vers court laissait un
-                              blanc sous lui. Le même poème avait deux
-                              lettrines selon l'écran. */}
-                          <span style={{
-                            display: 'inline-block',
-                            fontFamily: "'Bodoni Moda', serif", fontWeight: 900, fontStyle: 'normal',
-                            fontSize: '1.95em',
-                            lineHeight: 0.85, color: accent,
-                            marginRight: 6, marginTop: 2,
-                          }}>
-                            {lettrine}
-                          </span>
-                        </span>
-                        {resteLigne0}
-                      </span>
-                      <span className="sr-only lu-seul" data-lu={ligne0} />
-                    </>
-                  ) : (ligne || '\u00a0')}
-                </div>
-                {feuillet && couture(feuillet.cases[j], j)}
-              </React.Fragment>
-            ))}
-          </div>
-          <div style={{ ...mono, fontSize: 13, color: encre, opacity: 0.7, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}15` }}>
-            {dateStr} · {libelleMorceaux(poeme.structureId, voixCount)} · {structLabel.toUpperCase()} · {heureStr}
-          </div>
-        </motion.div>
+        </div>
 
+        {/* ── POÈME ── sur SA feuille, déjà dépliée, comme à la fin de partie
+            (plan « moderne », point 3 : maquette retenue le 11 novembre).
+            L'en-tête et la date sont écrits en haut de la feuille, le compte
+            et l'heure à son pied. */}
+        <div
+          ref={feuilleRef}
+          id="poeme-detail"
+          style={{ marginBottom: 22, visibility: posee ? undefined : 'hidden' }}
+        >
+          <PoemeDevoile
+            lignes={lignes}
+            accent={accent}
+            actif
+            pose
+            lettrine
+            apres={feuillet ? (j => couture(feuillet.cases[j], j)) : undefined}
+            entete={
+              <div style={{ ...mono, fontStyle: 'normal', fontSize: 13, color: accent, fontWeight: 700, letterSpacing: '0.22em', marginBottom: 12 }}>
+                CADAVRE EXQUIS · {dateStr}
+              </div>
+            }
+            pied={
+              <div style={{ ...mono, fontStyle: 'normal', fontSize: 13, lineHeight: 1.5, color: encre, opacity: 0.75, marginTop: 14, paddingTop: 8, borderTop: `0.5px solid ${encre}20` }}>
+                {libelleMorceaux(poeme.structureId, voixCount)} · {structLabel.toUpperCase()} · {heureStr}
+              </div>
+            }
+            papier={{ couleur: feuille.couleur, sombre: feuille.sombre, ombre: feuille.ombreVolet, grain, bord: 16, dos: feuille.dos, ombreFeuille: feuille.ombre }}
+            style={{
+              fontFamily: "'Playfair Display', serif", fontStyle: 'italic',
+              color: encre, fontSize: TAILLE_CORPS[corps], lineHeight: 1.6,
+              overflowWrap: 'break-word', wordBreak: 'break-word',
+            }}
+          />
+        </div>
+
+        <div ref={suiteRef} className="flex flex-col flex-1" style={enVoyage ? { opacity: 0 } : undefined}>
         <hr style={{ border: 'none', borderTop: `0.5px solid ${encre}`, opacity: 0.12, marginBottom: 16 }} />
 
         {/* ── ACTIONS PRINCIPALES ──
@@ -773,6 +799,7 @@ export default function PoemeDetail() {
           </AnimatePresence>
         </div>
 
+        </div>
       </div>
       <TutorielCoach
         visible={tutActif && tutEtape === T_DETAIL}
