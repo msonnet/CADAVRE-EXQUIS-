@@ -10,6 +10,9 @@
   balises <meta> du début — la forme qu'attend la publication d'une page, qui
   pose elle-même ce squelette. Le <title> reste en tête.
 
+  Les fichiers déclarés dans un bloc `<script type="application/json"
+  data-autonome>` (des sons) y sont recopiés aussi.
+
   La sortie pèse environ 700 Ko (les douze fichiers de police) : elle ne va pas
   dans le dépôt.
 */
@@ -34,6 +37,18 @@ html = html.replace(/<script src="([^"]+)"><\/script>/g, (_, src) => {
   const code = lire(src)
   if (code.includes('</script')) throw new Error(`${src} contient « </script » : il fermerait la balise`)
   return `<script>\n${code}\n</script>`
+})
+// Les fichiers déclarés dans un bloc `<script type="application/json" data-autonome>`
+// (des sons, par exemple) : chaque chemin devient une donnée.
+const TYPES = { wav: 'audio/wav', mp3: 'audio/mpeg', ogg: 'audio/ogg', m4a: 'audio/mp4', png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg' }
+html = html.replace(/(<script type="application\/json"[^>]*data-autonome[^>]*>)([\s\S]*?)(<\/script>)/g, (_, ouvre, json, ferme) => {
+  const fichiers = JSON.parse(json)
+  for (const [nom, chemin] of Object.entries(fichiers)) {
+    const ext = String(chemin).split('.').pop().toLowerCase()
+    if (!TYPES[ext]) continue
+    fichiers[nom] = `data:${TYPES[ext]};base64,${readFileSync(resolve(dossier, chemin)).toString('base64')}`
+  }
+  return `${ouvre}\n${JSON.stringify(fichiers)}\n${ferme}`
 })
 if (options.includes('--fragment')) {
   html = html

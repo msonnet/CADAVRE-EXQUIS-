@@ -11,20 +11,27 @@
 /*
   Plan « moderne », points 1 et 4 — seconde maquette, 11 novembre.
 
-  L'auteur, sur la première (`accordeon.html`) : « le paquet n'est
-  pas assez serré. Rien ne doit être visible, comme si on jouait au jeu en
-  réel. » Ici la feuille arrive FERMÉE : un paquet de papier dont on ne voit
-  que le dos, blanc. On le tire vers soi : il se soulève, se dresse, passe la
-  verticale et retombe un pli plus bas, en découvrant le vers qu'il couvrait.
-  Un pli par vers, dans l'ordre du poème ; un seul geste continu peut en
-  ouvrir plusieurs.
+  L'auteur, sur la première (`accordeon.html`) : « le paquet n'est pas assez
+  serré. Rien ne doit être visible, comme si on jouait au jeu en réel. » Ici
+  la feuille arrive FERMÉE : un paquet de papier dont on ne voit que le dos.
+  On le tire vers soi : il se soulève, se dresse, passe la verticale et
+  retombe un pli plus bas, en découvrant le vers qu'il couvrait. Un pli par
+  vers, dans l'ordre du poème ; un seul geste continu peut en ouvrir
+  plusieurs.
 
-  Lâché, un pli tombe sous son POIDS (une vraie pesanteur, pas un ressort) :
-  du côté où il penche, avec deux petits rebonds. Avant la verticale, il se
-  referme ; après, il s'ouvre. Un toucher déplie tout, pli après pli.
+  Lâché, un pli tombe sous son POIDS (une vraie pesanteur) du côté où il
+  penche. Un toucher déplie tout, pli après pli.
 
-  Le dernier pli porte au revers le dernier vers et le pied : il arrive
-  écrit, comme le volet de la fin de partie.
+  Troisième passage, à la demande de l'auteur (« travaille la souplesse et
+  le son d'un vrai pli ») :
+  — LA SOUPLESSE. Le rabat n'est plus une planche : huit lamelles qui
+    suivent une courbe. Mené au doigt, son bord libre devance ; en chute, il
+    traîne dans l'air ; tenu de biais, il s'affaisse. Le pli touche la
+    table, et son bord claque un instant après, avec un petit rebond.
+  — LE SON. De vraies prises de papier, CC0 (`sons/SOURCES.md`) : un
+    froissement quand le pli s'ouvre, un claquement quand il se pose, plus
+    fort s'il tombe vite. Deux jeux à comparer à l'oreille, « carte » et
+    « livre ». Rien ne sonne avant le premier toucher.
 */
 :root {
   --lumiere: #ffffff;
@@ -37,13 +44,14 @@
   --ombre-paquet: rgba(0, 0, 0, 0.7);
 }
 
-.page { padding-bottom: 104px; }
+.page { padding-bottom: 120px; }
 /* Le pli dressé déborde un peu la page, et son ombre aussi : on les coupe au
    bord de l'écran, sans quoi le téléphone dézoome. */
 body, .page { overflow-x: clip; }
 
-/* La table : une perspective commune. Les bandes sont à plat ; seul le
-   paquet est en 3D, et il est peint en dernier : rien à trier. */
+/* La table : une perspective commune. Les bandes sont à plat ; seules les
+   lamelles du rabat sont en 3D, et elles sont peintes par-dessus, de la plus
+   lointaine à la plus proche de l'œil. */
 .scene {
   position: relative;
   margin: 0 0 6px;
@@ -71,17 +79,17 @@ body, .page { overflow-x: clip; }
 .bande.cachee { visibility: hidden; }
 .tete { padding-top: 16px; border-radius: 3px 3px 0 0; }
 .bande.derniere { padding-bottom: 12px; border-radius: 0 0 3px 3px; }
-.bande > .contenu, .face > .contenu { position: relative; z-index: 1; }
+.bande > .contenu { position: relative; z-index: 1; }
 .bande > .relief, .bande > .pliure { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; }
 .bande > .pliure { bottom: auto; height: 2px; opacity: 0.42; z-index: 2; background: linear-gradient(to bottom, rgba(0,0,0,0.26) 0 1px, rgba(255,255,255,0.34) 1px 2px); }
 .tete > .pliure { display: none; }
 
-/* Le paquet : le reste de la feuille, plié. Deux faces dos à dos. */
-.paquet { transform-origin: 50% 100%; transform-style: preserve-3d; will-change: transform; z-index: 6; }
-.paquet.cache { visibility: hidden; }
+/* Le rabat : le reste de la feuille, plié, en lamelles. Chaque lamelle a
+   deux faces dos à dos ; elle tourne autour de son bord bas. */
+.lamelle { transform-origin: 50% 100%; transform-style: preserve-3d; will-change: transform; }
+.rabat-cache .lamelle { visibility: hidden; }
 .face {
   position: absolute; left: 0; right: 0; top: 0; bottom: 0; overflow: hidden;
-  padding: 0 16px;
   background-color: var(--papier-dos);
   background-image: var(--grain);
   background-size: 200px 200px;
@@ -90,16 +98,16 @@ body, .page { overflow-x: clip; }
 .face.dessus { transform: translateZ(0.5px); }
 .face.dessous { transform: rotateX(180deg) translateZ(0.5px); }
 /* Au dernier pli, le revers est le recto de la dernière bande. */
-.face.dessous.recto { background-color: var(--papier); padding-bottom: 12px; }
-/* Les plis du paquet, sur ses deux bords : de fins traits, un par épaisseur. */
-.face > .tranches { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 2; pointer-events: none;
-  background:
-    repeating-linear-gradient(to bottom, var(--trait) 0 0.6px, transparent 0.6px 2px) top / 100% var(--couches, 6px) no-repeat,
-    repeating-linear-gradient(to top, var(--trait) 0 0.6px, transparent 0.6px 2px) bottom / 100% var(--couches, 6px) no-repeat; }
+.face.recto { background-color: var(--papier); }
+.face > .contenu { position: absolute; left: 16px; right: 16px; top: 0; z-index: 1; }
+.face > .lumiere, .face > .ombre-face, .face > .tranches { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.face > .lumiere { z-index: 0; }
+.face > .ombre-face { z-index: 2; }
+/* Les plis du paquet sur ses deux bords : de fins traits, un par épaisseur. */
+.face > .tranches { z-index: 3; --l: repeating-linear-gradient(to bottom, var(--trait) 0 0.6px, transparent 0.6px 2px); }
 .face.recto > .tranches { display: none; }
-.face > .teinte { position: absolute; left: 0; right: 0; top: 0; bottom: 0; opacity: 0; pointer-events: none; }
-.face > .teinte.claire { background: var(--lumiere); z-index: 0; }
-.face > .teinte.sombre { background: var(--ombre-volet); z-index: 3; }
+.lamelle.charniere .dessus > .tranches, .lamelle.libre .dessous > .tranches { background: repeating-linear-gradient(to top, var(--trait) 0 0.6px, transparent 0.6px 2px) bottom / 100% var(--couches, 6px) no-repeat; }
+.lamelle.charniere .dessous > .tranches, .lamelle.libre .dessus > .tranches { background: repeating-linear-gradient(to bottom, var(--trait) 0 0.6px, transparent 0.6px 2px) top / 100% var(--couches, 6px) no-repeat; }
 
 /* L'ombre du pli dressé, sur la table, en bas à droite. */
 .ombre { height: 100px; z-index: 5; opacity: 0; transform-origin: 0 0; filter: blur(3px);
@@ -123,10 +131,13 @@ body, .page { overflow-x: clip; }
   font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
 }
 .maquette .marque { color: var(--accent); font-weight: 700; padding: 0 4px; }
+.maquette .legende { opacity: 0.45; padding: 0 2px 0 4px; }
 .maquette button { background: none; border: none; padding: 8px 5px; min-height: 38px; opacity: 0.6; cursor: pointer; letter-spacing: inherit; text-transform: inherit; }
 .maquette button[aria-pressed="true"] { opacity: 1; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
 .maquette button:focus-visible { outline: 1px solid var(--accent); }
 .maquette .sep { width: 0.5px; height: 14px; background: var(--encre); opacity: 0.22; margin: 0 3px; }
+.maquette .ligne { flex-basis: 100%; height: 0; }
+@media (max-width: 359px) { .maquette button { padding: 8px 3px; } .maquette .legende { display: none; } }
 </style>
 </head>
 <body>
@@ -151,11 +162,26 @@ body, .page { overflow-x: clip; }
   <button type="button" data-ambiance="lin">Lin</button>
   <button type="button" data-ambiance="minuit">Minuit</button>
   <button type="button" data-ambiance="encre">Encre</button>
-  <span class="sep"></span>
+  <span class="ligne"></span>
   <button type="button" data-cas="court">3 vers</button>
   <button type="button" data-cas="etoffe">5 vers</button>
   <button type="button" data-cas="atelier">Atelier</button>
+  <span class="sep"></span>
+  <span class="legende">Son</span>
+  <button type="button" data-son="carte">Carte</button>
+  <button type="button" data-son="livre">Livre</button>
+  <button type="button" data-son="sans">Sans</button>
 </nav>
+
+<!-- Les prises de papier. `outils/autonome.mjs` les recopie dans la page. -->
+<script type="application/json" id="fichiers-sons" data-autonome>
+{
+  "carte-ouverture": "sons/carte-ouverture.wav",
+  "carte-pose": "sons/carte-pose.wav",
+  "livre-ouverture": "sons/livre-ouverture.wav",
+  "livre-pose": "sons/livre-pose.wav"
+}
+</script>
 
 <script>
 (function () {
@@ -172,11 +198,22 @@ body, .page { overflow-x: clip; }
                         // au-dessus de la feuille — le pli dressé n'était plus qu'un trait.)
     pesanteur: 110,     // rad/s² — le poids du papier : plus fort, il tombe plus vite
     air: 2.5,           // le freinage de l'air : le papier est léger
-    rebond: 0.3,        // ce qu'il garde de sa vitesse en touchant la table
+    rebond: 0.15,       // ce que le pli garde de sa vitesse en touchant la table
     pose: 1.2,          // rad/s — en dessous, il ne rebondit plus : il est posé
     poussee: 20,        // rad/s — l'élan d'un pli qu'on ouvre d'un toucher
     esquisse: 10,       // rad/s — l'élan du pli qui esquisse le geste (≈ 25°)
-    entrePlis: 70,      // ms — entre deux plis, quand un toucher déplie tout
+    entrePlis: 40,      // ms — entre deux plis, quand un toucher déplie tout
+    // La souplesse
+    lamelles: 8,        // le rabat en huit lamelles
+    raideur: 1000,      // la raideur du papier : sa vibration propre, ≈ 5 fois par seconde
+    amortiPapier: 19,   // il ne vibre pas longtemps
+    traine: 0.03,       // rad par rad/s — en chute, le bord libre traîne dans l'air
+    devance: 0.02,      // rad par rad/s — mené au doigt, le bord libre devance
+    affaisse: 0.22,     // rad — tenu de biais, il s'affaisse sous son poids
+    profil: 1.5,        // la courbe se marque vers le bord libre
+    rebondBord: 0.3,    // le bord libre qui claque sur la table rebondit un peu
+    // Le son
+    volume: 0.9,
   }
   // Pour comparer sur planche : `?oeil=-200&recul=750`.
   if (q.has('oeil')) R.origine = Number(q.get('oeil'))
@@ -192,9 +229,63 @@ body, .page { overflow-x: clip; }
   // Où tombe l'ombre d'un point à la hauteur z : en bas à droite.
   const OX = -LUMIERE[0] / LUMIERE[2], OY = -LUMIERE[1] / LUMIERE[2]
 
+  // ── Le son ───────────────────────────────────────────────────────────────
+  /*
+    Web Audio : des tampons décodés une fois, joués sans délai. Le contexte
+    naît suspendu ; le premier toucher le réveille (Safari l'exige). Chaque
+    lecture varie d'un rien (±4 % de vitesse) pour qu'un pli ne sonne jamais
+    deux fois pareil.
+  */
+  const Son = {
+    ctx: null, tampons: {}, jeu: ['carte', 'livre', 'sans'].includes(q.get('son')) ? q.get('son') : 'carte', dernier: {},
+    permis: false,   // rien ne sonne avant le premier geste de la personne, même si le navigateur le permettrait
+    async charger() {
+      const AC = window.AudioContext || window.webkitAudioContext
+      if (!AC) return
+      try { this.ctx = new AC() } catch { return }
+      let fichiers = {}
+      try { fichiers = JSON.parse(document.getElementById('fichiers-sons').textContent) } catch { return }
+      await Promise.all(Object.entries(fichiers).map(async ([nom, src]) => {
+        try {
+          let octets
+          if (src.startsWith('data:')) {
+            const b = atob(src.slice(src.indexOf(',') + 1)); octets = new Uint8Array(b.length)
+            for (let i = 0; i < b.length; i++) octets[i] = b.charCodeAt(i)
+            octets = octets.buffer
+          } else octets = await (await fetch(src)).arrayBuffer()
+          this.tampons[nom] = await new Promise((ok, ko) => this.ctx.decodeAudioData(octets, ok, ko))
+        } catch { /* une page ouverte en fichier local : pas de son, tant pis */ }
+      }))
+    },
+    reveiller() {
+      this.permis = true
+      const c = this.ctx
+      if (!c || c.state === 'running') return
+      c.resume().catch(() => {})
+      // Safari : un tampon muet joué dans le geste achève de déverrouiller.
+      try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0) } catch { /* rien */ }
+    },
+    jouer(nom, force) {
+      const c = this.ctx
+      if (!this.permis || this.jeu === 'sans' || !c || c.state !== 'running' || force < 0.05) return
+      const t = performance.now()
+      if (t - (this.dernier[nom] || 0) < 45) return
+      this.dernier[nom] = t
+      const b = this.tampons[`${this.jeu}-${nom}`]
+      if (!b) return
+      const s = c.createBufferSource(), g = c.createGain()
+      s.buffer = b
+      s.playbackRate.value = 1 + (Math.random() - 0.5) * 0.08
+      g.gain.value = R.volume * Math.min(1, force)
+      s.connect(g); g.connect(c.destination)
+      s.start()
+    },
+  }
+  for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'keydown', 'click']) addEventListener(ev, () => Son.reveiller(), { capture: true, passive: true })
+
   // ── La feuille ───────────────────────────────────────────────────────────
   let cas = Temoin.cas
-  let bandes = [], N = 0, paquet, dessus, dessous, ombre, empreinte
+  let bandes = [], N = 0, lamelles = [], ombre, empreinte
   const el = (classe, html) => { const e = document.createElement('div'); e.className = classe; if (html != null) e.innerHTML = html; return e }
   const vers = (v, lettrine) => lettrine
     ? `<p class="vers avec-lettrine"><span class="loge"><span class="lettrine">${v[0]}</span></span>${v.slice(1)}</p>`
@@ -204,9 +295,9 @@ body, .page { overflow-x: clip; }
 
   function face(classe) {
     const f = el('face ' + classe)
-    const claire = el('teinte claire'), contenu = el('contenu'), sombre = el('teinte sombre'), tranches = el('tranches')
-    f.append(claire, contenu, sombre, tranches)
-    return { el: f, claire, contenu, sombre }
+    const lumiere = el('lumiere'), contenu = el('contenu'), ombreFace = el('ombre-face'), tranches = el('tranches')
+    f.append(lumiere, contenu, ombreFace, tranches)
+    return { el: f, lumiere, contenu, ombre: ombreFace }
   }
 
   function construire() {
@@ -226,17 +317,26 @@ body, .page { overflow-x: clip; }
       return { el: b, relief, top: 0, h: 0 }
     })
     N = bandes.length
-    paquet = el('paquet'); dessus = face('dessus'); dessous = face('dessous')
-    paquet.append(dessus.el, dessous.el)
+    lamelles = Array.from({ length: R.lamelles }, (_, i) => {
+      const l = el('lamelle' + (i === 0 ? ' charniere' : '') + (i === R.lamelles - 1 ? ' libre' : ''))
+      const dessus = face('dessus'), dessous = face('dessous')
+      l.append(dessus.el, dessous.el)
+      return { el: l, dessus, dessous }
+    })
     ombre = el('ombre')
-    scene.append(empreinte, ...bandes.map(b => b.el), ombre, paquet)
+    scene.append(empreinte, ...bandes.map(b => b.el), ombre, ...lamelles.map(l => l.el))
+    kFace = -1
     teindre()
   }
 
   // Les marques au repos : la feuille a été pliée en accordéon, creux et
   // arête alternent d'un pli à l'autre.
+  let rgbOmbre = '30,20,6', rgbLumiere = '255,255,255'
   function teindre() {
     bandes.forEach((b, i) => { b.relief.style.background = i ? Temoin.reliefDuPli((i + 1) % 2, Temoin.papier.sombre) : 'none' })
+    const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(',')
+    rgbOmbre = rgb(Temoin.papier.ombreVolet)
+    rgbLumiere = Temoin.papier.sombre ? rgb(Temoin.ambiance.encre) : '255,255,255'
   }
 
   function mesurer() {
@@ -247,27 +347,36 @@ body, .page { overflow-x: clip; }
     scene.style.perspectiveOrigin = `50% ${R.origine}px`
   }
 
-  // ── L'état : un seul nombre ──────────────────────────────────────────────
+  // ── L'état ───────────────────────────────────────────────────────────────
   /*
-    P, de 0 (le paquet fermé sur la première bande) à N − 1 (tout est ouvert).
-    Sa partie entière k : la bande que le paquet couvre ; sa partie décimale :
-    l'angle du pli en cours, θ = π·(P − k). À θ = 0 le paquet est couché sur
-    la bande k ; il tourne autour du bas de cette bande, se dresse vers l'œil
-    à θ = π/2, et se couche sur la bande k + 1 à θ = π.
-  */
-  let P = 0, w = 0                // la position, et la vitesse angulaire du pli en cours
-  let mode = 'repos'              // repos | tire | chute | ouvert
-  let enchaine = false            // un toucher : on déplie tout, pli après pli
-  let kFace = -1
+    k : la bande que le rabat couvre (N − 1 : tout est ouvert). θ : l'angle
+    du pli en cours. À θ = 0 le rabat est couché sur la bande k ; il tourne
+    autour du bas de cette bande, se dresse à θ = π/2, se couche sur la
+    bande k + 1 à θ = π. Pour le doigt, un seul nombre : P = k + θ/π.
 
+    β : la courbure du papier, en radians au bord libre. Elle suit une cible
+    (le bord qui traîne, devance ou s'affaisse) par un ressort amorti : c'est
+    ce ressort qui fait la souplesse.
+  */
+  let k = 0, th = 0, w = 0
+  let beta = 0, vbeta = 0, libre = 1   // libre : 1 en chute, 0 au doigt (la courbe s'efface contre la table)
+  let mode = 'repos'                   // repos | tire | chute | ouvert
+  let posee = false                    // le pli a touché la table ; on attend que son bord se pose
+  let enchaine = false                 // un toucher : on déplie tout, pli après pli
+  let wDoigt = 0                       // la vitesse du pli mené au doigt, lissée
+  let kFace = -1, arme = true, kArme = -1
+
+  const P = () => k + th / PI
   const pliDe = p => Math.min(Math.floor(p + 1e-9), N - 2)
+  function placer(p) { p = M.borne(p, 0, N - 1); if (p >= N - 1) { k = N - 2; th = PI } else { k = pliDe(p); th = (p - k) * PI } }
+
+  // La courbure à une place s du rabat (0 : la charnière, 1 : le bord libre).
+  function angleA(s, poids) { return M.borne(th + beta * poids * Math.pow(s, R.profil), 0, PI) }
 
   function rendre() {
-    const ouvert = P >= N - 1 - 1e-9
-    const k = ouvert ? N - 1 : pliDe(P)
-    const th = ouvert ? 0 : (P - k) * PI
+    const ouvert = k >= N - 1
     bandes.forEach((b, i) => b.el.classList.toggle('cachee', i > k))
-    paquet.classList.toggle('cache', ouvert)
+    scene.classList.toggle('rabat-cache', ouvert)
     const sombre = Temoin.papier.sombre
     if (ouvert) {
       ombre.style.opacity = '0'
@@ -278,73 +387,146 @@ body, .page { overflow-x: clip; }
       const a = bandes[k], b = bandes[k + 1]
       const s = (1 - Math.cos(th)) / 2
       const h = a.h + s * (b.h - a.h)
+      const S = lamelles.length, L = h / S
       const charniere = a.top + a.h
       // Le revers du dernier pli est la dernière bande, écrite.
       if (k !== kFace) {
         kFace = k
         const recto = k === N - 2
-        dessous.el.classList.toggle('recto', recto)
-        dessous.contenu.innerHTML = recto ? htmlDerniere : ''
-        const couches = Math.min(3, N - 1 - k)
-        paquet.style.setProperty('--couches', (couches * 2) + 'px')
+        lamelles.forEach((l, i) => {
+          l.dessous.el.classList.toggle('recto', recto)
+          l.dessous.contenu.innerHTML = recto ? htmlDerniere : ''
+        })
+        scene.style.setProperty('--couches', (Math.min(3, N - 1 - k) * 2) + 'px')
       }
-      paquet.style.height = h.toFixed(2) + 'px'
-      paquet.style.transform = `translate3d(0px,${(charniere - h).toFixed(2)}px,0px) rotateX(${(-th).toFixed(5)}rad)`
-      // La lumière : le dessus se dresse dos à la lampe et s'éteint ; le
-      // revers, qui retombe, lui fait face et s'éclaire.
-      const sn = Math.sin(th), cs = Math.cos(th)
-      const Ed = Math.max(0, sn * LY + cs * LZ), Er = Math.max(0, -sn * LY - cs * LZ)
+      // Contre la table, la courbe s'efface sous le doigt (sinon le papier
+      // sauterait d'un pli à l'autre) ; en chute, elle est entière.
+      const pres = Math.min(th, PI - th) / 0.5, e = pres >= 1 ? 1 : pres * pres * (3 - 2 * pres)
+      const poids = e + (1 - e) * libre
       const kL = sombre ? 0.85 : 2.5, kO = sombre ? 0.7 : 0.42
-      dessus.sombre.style.opacity = Math.max(0, (E0 - Ed) * kO).toFixed(3)
-      dessus.claire.style.opacity = Math.max(0, (Ed - E0) * kL).toFixed(3)
-      dessous.sombre.style.opacity = Math.max(0, (E0 - Er) * kO).toFixed(3)
-      dessous.claire.style.opacity = Math.max(0, (Er - E0) * kL).toFixed(3)
-      // L'ombre du pli dressé : de la charnière jusqu'à l'ombre de son bord libre.
-      const z = h * sn, yLibre = charniere - h * cs
-      const long = yLibre + OY * z - charniere
-      ombre.style.opacity = (Math.min(1, sn * 2.5) * (sombre ? 0.9 : 0.75)).toFixed(3)
+      const lum = phi => Math.max(0, Math.sin(phi) * LY + Math.cos(phi) * LZ)
+      const voile = (E) => [Math.max(0, (E0 - E) * kO), Math.max(0, (E - E0) * kL)]
+      const grad = (dir, rgb, a0, a1) => `linear-gradient(${dir}, rgba(${rgb},${a0.toFixed(3)}), rgba(${rgb},${a1.toFixed(3)}))`
+      let y = charniere, z = 0, yMax = charniere
+      const profondeurs = []
+      lamelles.forEach((l, i) => {
+        const phi = angleA((i + 0.5) / S, poids), lo = angleA(i / S, poids), hi = angleA((i + 1) / S, poids)
+        l.el.style.height = (L + 0.8).toFixed(2) + 'px'
+        l.el.style.transform = `translate3d(0px,${(y - L - 0.8).toFixed(2)}px,${z.toFixed(2)}px) rotateX(${(-phi).toFixed(5)}rad)`
+        // La lumière, interpolée d'un bord à l'autre de la lamelle : pas de marches.
+        const [od0, ld0] = voile(lum(lo)), [od1, ld1] = voile(lum(hi))
+        l.dessus.ombre.style.background = grad('to top', rgbOmbre, od0, od1)
+        l.dessus.lumiere.style.background = grad('to top', rgbLumiere, ld0, ld1)
+        const lumR = phi => Math.max(0, -Math.sin(phi) * LY - Math.cos(phi) * LZ)
+        const [or0, lr0] = voile(lumR(lo)), [or1, lr1] = voile(lumR(hi))
+        l.dessous.ombre.style.background = grad('to bottom', rgbOmbre, or0, or1)
+        l.dessous.lumiere.style.background = grad('to bottom', rgbLumiere, lr0, lr1)
+        // Au revers, chaque lamelle montre sa tranche du texte, et le grain
+        // du papier se raccorde d'une lamelle à l'autre.
+        l.dessous.contenu.style.top = (-i * L).toFixed(2) + 'px'
+        l.dessous.el.style.backgroundPosition = `0 ${(-i * L).toFixed(2)}px`
+        l.dessus.el.style.backgroundPosition = `0 ${(-((S - 1 - i) * L - 0.8)).toFixed(2)}px`
+        const y2 = y - L * Math.cos(phi), z2 = z + L * Math.sin(phi)
+        const yc = (y + y2) / 2, zc = (z + z2) / 2
+        profondeurs.push([(yc - R.origine) ** 2 + (R.perspective - zc) ** 2, l.el])
+        y = y2; z = z2; yMax = Math.max(yMax, y)
+      })
+      // Peindre de la plus lointaine à la plus proche de l'œil.
+      profondeurs.sort((p1, p2) => p2[0] - p1[0]).forEach(([, e2], i) => { e2.style.zIndex = String(6 + i) })
+      // L'ombre du rabat : de la charnière jusqu'à l'ombre de son bord libre.
+      const long = y + OY * z - charniere
+      ombre.style.opacity = (Math.min(1, Math.sin(th) * 2.5) * (sombre ? 0.9 : 0.75)).toFixed(3)
       ombre.style.transform = `matrix(1,0,${(OX * z / 100).toFixed(4)},${(long / 100).toFixed(4)},0,${charniere.toFixed(2)})`
       empreinte.style.height = charniere + 'px'
-      scene.style.height = (charniere + Math.max(0, -h * cs) + 2).toFixed(2) + 'px'
+      scene.style.height = (yMax + 2).toFixed(2) + 'px'
     }
-    invite.style.opacity = mode === 'ouvert' ? '0' : (0.62 * M.borne(1 - P * 1.5)).toFixed(3)
+    invite.style.opacity = mode === 'ouvert' ? '0' : (0.62 * M.borne(1 - P() * 1.5)).toFixed(3)
   }
 
-  // ── La pesanteur ─────────────────────────────────────────────────────────
+  // ── La pesanteur et la souplesse ─────────────────────────────────────────
   /*
-    Un pli charnière en bas, sur une table : son poids le couche du côté où il
-    penche. θ'' = −g·cos θ − air·θ'. Contre la table, il rebondit en gardant
-    un peu de sa vitesse, puis se pose.
+    Le pli : charnière en bas, sur une table. Son poids le couche du côté où
+    il penche : θ'' = −g·cos θ − air·θ'. Contre la table, il rebondit peu.
+    Le papier : β suit sa cible par un ressort ; la table arrête le bord
+    libre, qui claque et rebondit un peu.
   */
-  let raf = 0, tPrec = 0
-  function pas(dt) {
-    const k = pliDe(P)
-    let th = (P - k) * PI
-    const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
-    for (let i = 0; i < n; i++) {
+  function pas(h) {
+    if (mode === 'chute' && !posee) {
       w += (-R.pesanteur * Math.cos(th) - R.air * w) * h
       th += w * h
-      if (th <= 0) { th = 0; if (Math.abs(w) < R.pose) { w = 0; P = k; return poser() } w = -R.rebond * w }
-      if (th >= PI) { th = PI; if (Math.abs(w) < R.pose) { w = 0; P = k + 1; return poser() } w = -R.rebond * w }
+      if (th <= 0 || th >= PI) {
+        const choc = Math.abs(w)
+        th = th <= 0 ? 0 : PI
+        Son.jouer('pose', Math.pow(Math.min(1, choc / 16), 0.9))
+        if (choc < R.pose) { w = 0; posee = true } else w = -R.rebond * w
+      }
     }
-    P = k + th / PI
+    const v = mode === 'tire' ? wDoigt : w
+    let cible = mode === 'tire' ? M.borne(R.devance * v, -0.5, 0.5) : mode === 'chute' ? M.borne(-R.traine * v, -0.7, 0.7) : 0
+    if (mode === 'tire' || mode === 'chute') cible -= R.affaisse * Math.sin(2 * th)
+    vbeta += (R.raideur * (cible - beta) - R.amortiPapier * vbeta) * h
+    beta += vbeta * h
+    if (mode === 'chute') {
+      // La table arrête le bord libre.
+      const contre = (th >= PI && beta > 0) ? 1 : (th <= 0 && beta < 0) ? -1 : 0
+      if (contre) {
+        const choc = Math.abs(vbeta)
+        if (contre * vbeta > 0) { Son.jouer('pose', 0.3 * Math.min(1, choc / 6)); vbeta = -R.rebondBord * vbeta }
+        beta = 0
+      }
+    }
+    libre += ((mode === 'tire' ? 0 : 1) - libre) * Math.min(1, h / 0.08)
   }
+
+  // Le froissement : un pli qui quitte la table, une fois par pli.
+  function surveiller(v) {
+    if (k !== kArme) { kArme = k; arme = true }   // un nouveau pli commence
+    if (th <= 0.02 || th >= PI - 0.02) arme = true
+    if (arme && th > 0.15 && th < PI - 0.15) {
+      arme = false
+      Son.jouer('ouverture', M.borne(0.35 + Math.abs(v) / 25, 0.35, 1))
+    }
+  }
+
+  let raf = 0, tPrec = 0
   function boucle(t) {
     raf = 0
-    if (mode === 'chute') { pas(Math.min(0.05, Math.max(0, (t - tPrec) / 1000))); tPrec = t }
+    const dt = Math.min(0.05, Math.max(0, (t - tPrec) / 1000)); tPrec = t
+    const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
+    if (mode === 'tire') wDoigt *= Math.exp(-dt / 0.06)
+    for (let i = 0; i < n; i++) pas(h)
+    surveiller(mode === 'tire' ? wDoigt : w)
+    // Le pli et son bord sont posés : on passe à la bande suivante. Quand un
+    // toucher déplie tout, on n'attend pas que le bord ait fini de trembler.
+    const calme = enchaine ? Math.abs(beta) < 0.02 && Math.abs(vbeta) < 0.6 : Math.abs(beta) < 0.003 && Math.abs(vbeta) < 0.05
+    if (mode === 'chute' && posee && calme) {
+      beta = 0; vbeta = 0; posee = false
+      if (th >= PI) { k += 1; th = 0 }
+      return poser()
+    }
     rendre()
-    if (mode === 'chute') demander()
+    const bouge = mode === 'chute' || mode === 'tire' || Math.abs(beta) > 0.002 || Math.abs(vbeta) > 0.02 || Math.abs(libre - (mode === 'tire' ? 0 : 1)) > 0.01
+    if (bouge) demander()
+    else if (mode !== 'tire') { beta = 0; vbeta = 0; rendre() }
   }
-  function demander() { if (!raf) raf = requestAnimationFrame(boucle) }
+  function demander() { if (!raf) { tPrec = performance.now(); raf = requestAnimationFrame(boucle) } }
+
   function lacher(vitesse) {
     w = M.borne(vitesse, -40, 40)
-    if (reduit) { P = (P - pliDe(P)) >= 0.5 || w > 0 ? pliDe(P) + 1 : pliDe(P); if (enchaine) P = N - 1; w = 0; poser(); return }
-    mode = 'chute'; tPrec = performance.now(); demander()
+    posee = false
+    if (k >= N - 1) return poser()
+    if (reduit) {
+      if (enchaine) { k = N - 1; th = 0 } else if (th >= PI / 2 || w > 0) { k += 1; th = 0 } else th = 0
+      w = 0; beta = 0; vbeta = 0
+      return poser()
+    }
+    mode = 'chute'; demander()
   }
   // Un pli s'est posé.
   function poser() {
-    mode = P >= N - 1 - 1e-9 ? 'ouvert' : 'repos'
-    if (mode === 'ouvert') { P = N - 1; enchaine = false }
+    if (k >= N - 2 && th >= PI) { k = N - 1; th = 0 }
+    mode = k >= N - 1 ? 'ouvert' : 'repos'
+    if (mode === 'ouvert') enchaine = false
     rendre()
     scene.classList.toggle('ouvert', mode === 'ouvert')
     scene.setAttribute('aria-label', mode === 'ouvert' ? 'Le poème' : 'Le poème, plié. Tirer vers le bas, ou toucher, pour le déplier.')
@@ -358,37 +540,45 @@ body, .page { overflow-x: clip; }
   /*
     Le doigt mène l'angle : la course d'un pli est la distance entre le milieu
     de la bande qu'il couvre et le milieu de la suivante. Un geste continu
-    ouvre les plis l'un après l'autre ; on peut revenir en arrière.
+    ouvre les plis l'un après l'autre ; on peut revenir en arrière. Chaque
+    fois que le rabat touche une bande en passant, il claque.
   */
   const milieu = i => bandes[i].top + bandes[i].h / 2
   function progresDe(y) {
     if (y <= milieu(0)) return 0
     if (y >= milieu(N - 1)) return N - 1
-    let k = 0
-    while (k < N - 2 && y > milieu(k + 1)) k++
-    return k + (y - milieu(k)) / (milieu(k + 1) - milieu(k))
+    let i = 0
+    while (i < N - 2 && y > milieu(i + 1)) i++
+    return i + (y - milieu(i)) / (milieu(i + 1) - milieu(i))
   }
-  const positionDe = p => { const k = pliDe(p); return milieu(k) + (p - k) * (milieu(k + 1) - milieu(k)) }
+  const positionDe = p => { const i = pliDe(p); return milieu(i) + (p - i) * (milieu(i + 1) - milieu(i)) }
 
   let doigt = null, touche = false
   scene.addEventListener('pointerdown', e => {
     if (mode === 'ouvert' || doigt) return
-    touche = true; enchaine = false
+    touche = true; enchaine = false; posee = false
     try { scene.setPointerCapture(e.pointerId) } catch { /* tant pis */ }
-    const t = performance.now()
-    doigt = { id: e.pointerId, y0: e.clientY, base: positionDe(P), t0: t, bouge: false, traces: [[t, P]] }
-    mode = 'tire'; w = 0
+    const t = performance.now(), p = P()
+    doigt = { id: e.pointerId, y0: e.clientY, base: positionDe(p), t0: t, bouge: false, traces: [[t, p]], p }
+    mode = 'tire'; w = 0; wDoigt = 0
     scene.classList.add('tient')
     cacherSuite()
+    demander()
     e.preventDefault()
   })
   scene.addEventListener('pointermove', e => {
     if (!doigt || e.pointerId !== doigt.id) return
     const dy = e.clientY - doigt.y0
     if (Math.abs(dy) > 6) doigt.bouge = true
-    P = progresDe(doigt.base + dy)
-    const t = performance.now()
-    doigt.traces.push([t, P])
+    const avant = doigt.p, p = progresDe(doigt.base + dy), t = performance.now()
+    // Le rabat touche une bande en passant : il claque, selon la vitesse.
+    const [tA] = doigt.traces[doigt.traces.length - 1]
+    const inst = (p - avant) / Math.max(0.004, (t - tA) / 1000) * PI
+    wDoigt = 0.5 * wDoigt + 0.5 * inst
+    if (Math.floor(avant + 1e-9) !== Math.floor(p + 1e-9) || (p !== avant && (p === 0 || p === N - 1))) Son.jouer('pose', Math.pow(Math.min(1, Math.abs(wDoigt) / 16), 0.9))
+    doigt.p = p
+    placer(p)
+    doigt.traces.push([t, p])
     while (doigt.traces.length > 2 && t - doigt.traces[0][0] > 90) doigt.traces.shift()
     demander()
   })
@@ -402,7 +592,9 @@ body, .page { overflow-x: clip; }
     doigt = null
     scene.classList.remove('tient')
     if (tape) { toutDeplier(); return }
-    if (P >= N - 1 - 1e-9) { poser(); return }
+    if (P() >= N - 1 - 1e-9) { k = N - 1; th = 0; poser(); return }
+    // Couché pile sur une bande : rien ne tombe.
+    if (th <= 1e-6 && Math.abs(vitesse) < 0.5) { th = 0; mode = 'repos'; demander(); return }
     lacher(vitesse)
   }
   scene.addEventListener('pointerup', relacher)
@@ -415,35 +607,39 @@ body, .page { overflow-x: clip; }
 
   // L'invitation : le paquet soulève son bord et retombe, deux fois au plus,
   // si personne n'y touche.
-  function esquisse() { if (!touche && !reduit && mode === 'repos' && P === 0) lacher(R.esquisse) }
+  function esquisse() { if (!touche && !reduit && mode === 'repos' && k === 0 && th === 0) lacher(R.esquisse) }
 
   // ── La maquette ──────────────────────────────────────────────────────────
-  const boutons = [...document.querySelectorAll('.maquette [data-ambiance], .maquette [data-cas]')]
+  const boutons = [...document.querySelectorAll('.maquette [data-ambiance], .maquette [data-cas], .maquette [data-son]')]
   function marquer() {
-    for (const b of boutons) b.setAttribute('aria-pressed', String(b.dataset.ambiance ? b.dataset.ambiance === Temoin.ambiance.id : b.dataset.cas === cas))
+    for (const b of boutons) b.setAttribute('aria-pressed', String(
+      b.dataset.ambiance ? b.dataset.ambiance === Temoin.ambiance.id : b.dataset.cas ? b.dataset.cas === cas : b.dataset.son === Son.jeu))
   }
-  function remettre() { cacherSuite(); enchaine = false; w = 0; P = 0; kFace = -1; mode = 'repos'; scene.classList.remove('ouvert'); rendre() }
+  function remettre() { cacherSuite(); enchaine = false; w = 0; beta = 0; vbeta = 0; libre = 1; posee = false; k = 0; th = 0; kFace = -1; mode = 'repos'; scene.classList.remove('ouvert'); rendre() }
   document.getElementById('replier').addEventListener('click', () => { touche = true; remettre() })
   for (const b of boutons) b.addEventListener('click', () => {
     if (b.dataset.ambiance) { Temoin.poserAmbiance(b.dataset.ambiance); teindre(); rendre() }
-    else { cas = b.dataset.cas; construire(); mesurer(); remettre() }
+    else if (b.dataset.cas) { cas = b.dataset.cas; construire(); mesurer(); remettre() }
+    else { Son.jeu = b.dataset.son; Son.reveiller(); Son.jouer('pose', 0.7) }
     marquer()
   })
   let largeur = 0
   addEventListener('resize', () => { if (scene.clientWidth === largeur) return; largeur = scene.clientWidth; mesurer(); kFace = -1; rendre() })
 
-  // Pour les mesures et les planches : `?p=1.5` fige le paquet à mi-chemin du deuxième pli.
-  window.Depli = { R, get P() { return P }, get N() { return N }, get mode() { return mode }, toutDeplier, remettre, aller(p) { P = p; rendre() } }
+  // Pour les mesures et les planches : `?p=1.5` fige le rabat à mi-chemin du
+  // deuxième pli ; `&courbe=-0.5` lui donne une courbure (en radians).
+  window.Depli = { R, Son, get P() { return P() }, get N() { return N }, get mode() { return mode }, get courbe() { return beta }, toutDeplier, remettre }
 
   construire()
   marquer()
+  Son.charger()
   ;(async () => {
     try { await document.fonts.ready } catch { /* tant pis */ }
     mesurer(); largeur = scene.clientWidth
     rendre()
     if (q.has('p')) {
-      P = M.borne(Number(q.get('p')), 0, N - 1)
-      if (P >= N - 1) poser(); else rendre()
+      const p = M.borne(Number(q.get('p')), 0, N - 1)
+      if (p >= N - 1) { k = N - 1; th = 0; poser() } else { placer(p); beta = Number(q.get('courbe') || 0); rendre() }
       document.documentElement.dataset.temoin = 'fige'
       return
     }

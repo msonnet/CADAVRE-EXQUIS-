@@ -337,6 +337,30 @@ l'Atelier.
 - La limite de l'Atelier disparaît : son paquet arrive fermé comme les
   autres, son rabat est seulement plus grand.
 
+**Retour de l'auteur sur la seconde** : « c'est mieux, travaille la
+souplesse et le son d'un vrai pli ». Fait le 11 novembre, dans
+`paquet.html` (même adresse de maquette) :
+- **La souplesse.** Le rabat n'est plus une planche mais huit lamelles qui
+  suivent une courbe, la lumière interpolée de l'une à l'autre (pas de
+  marches). Mené au doigt, le bord libre devance ; en chute, il traîne dans
+  l'air ; tenu de biais, il s'affaisse. La courbure suit sa cible par un
+  ressort amorti (environ 5 vibrations par seconde, vite éteintes). Le pli
+  touche la table, son bord claque un instant après et rebondit un peu ; le
+  pli lui-même ne rebondit presque plus. Contre la table, sous le doigt, la
+  courbe s'efface, sans quoi le papier sauterait d'un pli à l'autre.
+- **Le son.** De vraies prises de papier, CC0, d'OpenGameArt (le détail,
+  les coupes et le traitement : `scripts/temoins/depli-au-doigt/sons/SOURCES.md`).
+  Un froissement quand un pli quitte la table, un claquement quand il se
+  pose, plus fort s'il tombe vite, et un second, doux, quand le bord libre
+  retombe. Deux jeux à comparer à l'oreille : « carte » (une carte qu'on
+  déplie et qu'on referme) et « livre » (une page qu'on tourne). Rien ne
+  sonne avant le premier geste. Le bruit filtré du 1er octobre n'est pas
+  repris : il avait été retiré parce qu'il sonnait mal.
+- Un toucher déplie tout en deux secondes environ (cinq vers), chaque pli
+  avec son froissement et son claquement.
+- **Non entendu par moi** : les sons ont été choisis et coupés sur la forme
+  de leur onde, pas à l'oreille. L'auteur juge.
+
 La première — l'accordéon (`accordeon.html`) :
 
 - **La feuille arrive pliée en accordéon**, comme une bande de cadavre
