@@ -389,6 +389,13 @@ matière et non le volume : **Page** (une page tournée, Kenney), **Feuille**
 de la même famille. Page est le son par défaut, en attendant le choix de
 l'auteur. Détail : `sons/SOURCES.md`.
 
+**L'auteur choisit « Feuille »** et demande si on peut retoucher le son.
+Les autres prises sont retirées. Trois variantes de la feuille à comparer,
+une seule retouche chacune, au même niveau : **Douce** (craquements
+rabotés, aigu dur adouci, entrée plus lente), **Courte** (la première
+moitié, 0,28 s), **Légère** (trois demi-tons plus haut, même durée : un
+papier plus fin). La feuille telle quelle reste le son par défaut.
+
 La première — l'accordéon (`accordeon.html`) :
 
 - **La feuille arrive pliée en accordéon**, comme une bande de cadavre

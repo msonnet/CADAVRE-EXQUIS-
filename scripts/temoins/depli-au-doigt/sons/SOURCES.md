@@ -38,5 +38,17 @@ claquement »)** : les deux claquements, `carte-pose.wav` (la carte qu'on
 referme, `snd_close_map.wav` 0,755 → 0,93 s) et `livre-pose.wav`
 (`book_flip.1.ogg` 0,505 → 0,66 s). Ils restent dans l'histoire du dépôt.
 
+**11 novembre, fin d'après-midi — l'auteur choisit « Feuille ».** Les
+autres sont retirés de la maquette et du dossier (ils restent dans
+l'histoire du dépôt). Trois variantes de la feuille, même coupe, une seule
+retouche chacune, toutes ramenées à −24 dB de moyenne :
+
+| extrait | retouche |
+|---|---|
+| `feuille-ouverture.wav` | aucune (la prise telle qu'elle a été choisie) |
+| `feuille-douce-ouverture.wav` | compresseur rapide (seuil −34 dB, 5:1, attaque 0,5 ms) qui rabote les craquements de 4 dB, passe-bas doux à 9 kHz, entrée en 45 ms et sortie en 100 ms |
+| `feuille-courte-ouverture.wav` | coupe 0,03 → 0,31 s : la première moitié, avant le second craquement |
+| `feuille-legere-ouverture.wav` | trois demi-tons plus haut à durée égale, passe-haut à 350 Hz : un papier plus fin |
+
 Écartées : les « Various paper sound effects » de Luckius (CC0 aussi), qui
 portent un souffle de fond constant.

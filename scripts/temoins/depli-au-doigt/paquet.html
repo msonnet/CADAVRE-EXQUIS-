@@ -34,7 +34,11 @@
     que celui-ci ? » Trois prises plus fines à comparer à l'oreille, au même
     niveau que l'ancienne (« Avant », la carte routière) : « Page » (une page
     tournée), « Feuille » (une feuille qu'on manie), « Glissé » (une carte à
-    jouer qu'on fait glisser).
+    jouer qu'on fait glisser). L'auteur choisit « Feuille ».
+    Sixième passage : trois variantes de la feuille, une seule retouche
+    chacune — « Douce » (craquements rabotés, aigu dur adouci, entrée plus
+    lente), « Courte » (la première moitié, 0,28 s), « Légère » (trois
+    demi-tons plus haut, même durée : un papier plus fin).
 
   Quatrième passage — l'auteur : « trop rapide, bruit trop fort et oublie
   le claquement ». La chute est deux fois plus lente, le doigt mène le pli
@@ -176,20 +180,20 @@ body, .page { overflow-x: clip; }
   <button type="button" data-cas="atelier">Atelier</button>
   <span class="ligne"></span>
   <span class="legende">Son</span>
-  <button type="button" data-son="carte">Avant</button>
-  <button type="button" data-son="page">Page</button>
   <button type="button" data-son="feuille">Feuille</button>
-  <button type="button" data-son="glisse">Glissé</button>
+  <button type="button" data-son="feuille-douce">Douce</button>
+  <button type="button" data-son="feuille-courte">Courte</button>
+  <button type="button" data-son="feuille-legere">Légère</button>
   <button type="button" data-son="sans">Sans</button>
 </nav>
 
 <!-- Les prises de papier. `outils/autonome.mjs` les recopie dans la page. -->
 <script type="application/json" id="fichiers-sons" data-autonome>
 {
-  "carte-ouverture": "sons/carte-ouverture.wav",
-  "page-ouverture": "sons/page-ouverture.wav",
   "feuille-ouverture": "sons/feuille-ouverture.wav",
-  "glisse-ouverture": "sons/glisse-ouverture.wav"
+  "feuille-douce-ouverture": "sons/feuille-douce-ouverture.wav",
+  "feuille-courte-ouverture": "sons/feuille-courte-ouverture.wav",
+  "feuille-legere-ouverture": "sons/feuille-legere-ouverture.wav"
 }
 </script>
 
@@ -249,7 +253,7 @@ body, .page { overflow-x: clip; }
     deux fois pareil.
   */
   const Son = {
-    ctx: null, tampons: {}, jeu: ['carte', 'page', 'feuille', 'glisse', 'sans'].includes(q.get('son')) ? q.get('son') : 'page', dernier: {},
+    ctx: null, tampons: {}, jeu: ['feuille', 'feuille-douce', 'feuille-courte', 'feuille-legere', 'sans'].includes(q.get('son')) ? q.get('son') : 'feuille', dernier: {},
     permis: false,   // rien ne sonne avant le premier geste de la personne, même si le navigateur le permettrait
     async charger() {
       const AC = window.AudioContext || window.webkitAudioContext
