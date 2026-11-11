@@ -398,8 +398,10 @@ papier plus fin). La feuille telle quelle reste le son par défaut.
 
 **Validé par l'auteur, 11 novembre : la maquette `paquet.html`, avec le
 son « Courte »** (`sons/feuille-courte-ouverture.wav`). Le chantier passe
-au point suivant ; l'intégration au jeu reste à faire (fin de partie, puis
-salon et poème du jour).
+au point suivant. Le son a ensuite été retiré, définitivement : le dépli
+est muet. **Intégré à la fin de partie le 11 novembre** (`FeuillePliee.tsx`,
+`lib/paquet.ts` ; le journal, « La feuille pliée, au doigt ») ; restent le
+salon et le poème du jour.
 
 La première — l'accordéon (`accordeon.html`) :
 
