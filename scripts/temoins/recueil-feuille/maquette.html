@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le recueil qui s'ouvre</title>
+<link rel="stylesheet" href="../commun/polices.css">
+<link rel="stylesheet" href="../commun/base.css">
+<script src="../commun/kit.js"></script>
+<style>
+/*
+  Plan « moderne », point 3 : les écrans qui s'enchaînent. Maquette du
+  11 novembre.
+
+  Aujourd'hui, toucher un poème du Recueil fait un fondu de page (0,45 s,
+  `PageTransition`) : l'écran s'efface, l'autre apparaît. Ici, la ligne
+  touchée DEVIENT un feuillet de papier : elle se soulève, glisse à sa place
+  sur la page du poème en prenant la largeur de la feuille, puis les plis
+  s'ouvrent dessous, un à un. Le reste du recueil s'efface autour d'elle,
+  l'en-tête du feuillet arrive. « ← MES POÈMES » refait le chemin à
+  l'envers, plus vite.
+
+  Proposé en même temps : la page du poème montre le poème sur SA FEUILLE,
+  comme la fin de partie (validée le 8 novembre), et non plus en texte nu.
+  Le pied de la feuille porte la date, le compte et l'heure.
+
+  Un appui pendant le mouvement le termine. `?t=600` fige l'instant 600 ms.
+*/
+:root { --ombre-glisse: 0 2px 3px rgba(60,40,10,0.14), 0 14px 22px -6px rgba(60,40,10,0.22); }
+:root[data-sombre="1"] { --ombre-glisse: 0 0 0 0.5px rgba(255,240,210,0.18), 0 16px 24px -4px rgba(0,0,0,0.6); }
+
+body, .page { overflow-x: clip; }
+.ecrans { position: relative; min-height: 100dvh; }
+.ecran { position: absolute; left: 0; right: 0; top: 0; }
+.ecran.cache { visibility: hidden; }
+.ecran .page { min-height: 0; padding-bottom: 120px; }
+
+.surtitre { font-family: 'Raleway', sans-serif; font-size: 13px; letter-spacing: 0.22em; color: var(--accent); font-weight: 700; margin: 22px 0 10px; }
+.grand { font-family: 'Bodoni Moda', serif; font-weight: 900; font-size: 40px; line-height: 1.05; margin: 0 0 6px; letter-spacing: -0.01em; }
+.grand .accent { color: var(--accent); }
+.sous { font-family: 'Playfair Display', serif; font-size: 20px; margin: 0 0 14px; opacity: 0.9; }
+.compte { font-family: 'Raleway', sans-serif; font-size: 13px; letter-spacing: 0.18em; color: var(--accent); margin: 0 0 14px; }
+.recherche { border-left: 2px solid var(--accent); background: color-mix(in srgb, var(--encre) 5%, transparent); padding: 14px 20px; font-family: 'Playfair Display', serif; font-style: italic; font-size: 19px; opacity: 0.55; margin-bottom: 16px; }
+.liste { border-top: 0.5px solid var(--filet); }
+.ligne { position: relative; padding: 13px 12px; border-bottom: 0.5px solid var(--filet); cursor: pointer; -webkit-user-select: none; user-select: none; }
+:is(.ligne, .comme-ligne) .titre { font-family: 'Playfair Display', serif; font-size: 17px; line-height: 1.35; margin: 0 0 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+:is(.ligne, .comme-ligne) .meta { font-family: 'Raleway', sans-serif; font-size: 13px; letter-spacing: 0.12em; opacity: 0.75; margin: 0 0 6px; }
+:is(.ligne, .comme-ligne) .coutures { font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 0.16em; color: var(--accent); opacity: 0.7; }
+
+/* La page du poème */
+.titre-feuillet { font-family: 'Playfair Display', serif; font-style: italic; font-size: 30px; line-height: 1.2; margin: 0 0 4px; }
+.nommer { font-family: 'Raleway', sans-serif; font-size: 13px; letter-spacing: 0.18em; opacity: 0.7; margin: 0 0 14px; }
+.zone-feuille { position: relative; margin: 6px 0 22px; }
+.zone-feuille > * { position: absolute; left: 0; right: 0; top: 0; }
+.empreinte { border-radius: 3px; box-shadow: var(--ombre-feuille); }
+.bande { padding: 0 16px; background-color: var(--papier); background-image: var(--grain); background-size: 200px 200px; transform-origin: 50% 0; }
+.bande.prolonge { box-shadow: 0 1px 0 var(--papier); }
+.bande.tete { padding-top: 16px; border-radius: 3px 3px 0 0; }
+.bande.derniere { padding-bottom: 12px; border-radius: 0 0 3px 3px; }
+.bande > .relief, .bande > .pliure, .bande > .voile { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.bande > .contenu { position: relative; z-index: 1; }
+.bande > .pliure { bottom: auto; height: 2px; opacity: 0.42; z-index: 2; background: linear-gradient(to bottom, rgba(0,0,0,0.26) 0 1px, rgba(255,255,255,0.34) 1px 2px); }
+.bande.tete > .pliure { display: none; }
+.bande > .voile { z-index: 3; background: var(--ombre-volet); opacity: 0; }
+.actions .rangee { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 0.5px solid var(--filet); border-bottom: 0.5px solid var(--filet); margin-bottom: 14px; }
+.actions .rangee span { font-family: 'Raleway', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-align: center; padding: 16px 0; }
+.actions .rangee span + span { border-left: 0.5px solid var(--filet); }
+.actions .cadre { font-family: 'Raleway', sans-serif; font-size: 15px; letter-spacing: 0.16em; text-align: center; padding: 15px 0; border: 0.5px solid color-mix(in srgb, var(--encre) 30%, transparent); border-radius: 3px; margin-bottom: 10px; }
+
+/* Le feuillet qui voyage : une ligne du recueil devenue papier. */
+.glisse { position: absolute; left: 0; top: 0; z-index: 20; display: none; pointer-events: none; border-radius: 3px; }
+.glisse .fond { position: absolute; inset: 0; border-radius: 3px; background-color: var(--papier); background-image: var(--grain); background-size: 200px 200px; box-shadow: var(--ombre-glisse); }
+.glisse .comme-ligne, .glisse .comme-tete { position: absolute; left: 0; right: 0; top: 0; }
+.glisse .comme-ligne { padding: 13px 12px; }
+.glisse .comme-tete { padding: 16px 16px 0; }
+
+/* La barre de la maquette */
+.maquette {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 2px;
+  padding: 4px max(10px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--fond) 95%, transparent); border-top: 0.5px solid var(--filet);
+  font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.maquette .marque { color: var(--accent); font-weight: 700; padding: 0 4px; }
+.maquette button { background: none; border: none; padding: 8px 5px; min-height: 38px; opacity: 0.6; cursor: pointer; letter-spacing: inherit; text-transform: inherit; }
+.maquette button[aria-pressed="true"] { opacity: 1; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
+.maquette .sep { width: 0.5px; height: 14px; background: var(--encre); opacity: 0.22; margin: 0 3px; }
+</style>
+</head>
+<body>
+<div class="ecrans" id="ecrans">
+  <section class="ecran recueil" id="recueil">
+    <div class="page">
+      <div class="entete"><span class="retour">← ACCUEIL</span><span class="nom" data-nom-ambiance>LIN ÉCRU</span></div>
+      <hr class="filet-accent">
+      <div class="haut-recueil">
+        <div class="surtitre">— LE RECUEIL —</div>
+        <h1 class="grand">Mes <span class="accent">poèmes</span></h1>
+        <p class="sous">Ta bibliothèque personnelle</p>
+        <p class="compte">4 POÈMES</p>
+        <div class="recherche">Rechercher…</div>
+      </div>
+      <div class="liste" id="liste"></div>
+    </div>
+  </section>
+
+  <section class="ecran poeme cache" id="poeme" aria-hidden="true">
+    <div class="page">
+      <div class="entete"><span class="retour" id="retour" role="button" tabindex="0" style="cursor:pointer">← MES POÈMES</span><span class="nom" data-nom-ambiance>LIN ÉCRU</span></div>
+      <hr class="filet-accent">
+      <div class="haut-poeme">
+        <div class="surtitre">— FEUILLET —</div>
+        <p class="titre-feuillet" id="titreFeuillet"></p>
+        <p class="nommer">TOUCHER POUR NOMMER</p>
+        <hr class="filet">
+      </div>
+      <div class="zone-feuille" id="zone"></div>
+      <div class="actions" id="actions">
+        <div class="rangee"><span>PARTAGER</span><span>IMPRIMER</span><span>COUTURES</span></div>
+        <div class="cadre">↓ EXPORTER PDF</div>
+        <div class="cadre">✦ PUBLIER DANS LA GALERIE</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glisse" id="glisse"><div class="fond"></div><div class="comme-ligne"></div><div class="comme-tete"></div></div>
+</div>
+
+<nav class="maquette" aria-label="Réglages de la maquette">
+  <span class="marque">MAQUETTE</span>
+  <button type="button" id="ralenti">Ralenti</button>
+  <button type="button" id="son" aria-pressed="true">Son</button>
+  <span class="sep"></span>
+  <button type="button" data-ambiance="lin">Lin</button>
+  <button type="button" data-ambiance="minuit">Minuit</button>
+  <button type="button" data-ambiance="encre">Encre</button>
+</nav>
+
+<script type="application/json" id="fichiers-sons" data-autonome>
+{ "froissement": "../depli-au-doigt/sons/feuille-courte-ouverture.wav" }
+</script>
+
+<script>
+(function () {
+  'use strict'
+  const { M } = Temoin
+  const q = Temoin.params.brut
+  const $ = id => document.getElementById(id)
+  const ecrans = $('ecrans'), recueil = $('recueil'), poeme = $('poeme'), liste = $('liste'), zone = $('zone'), glisse = $('glisse')
+  const reduit = Temoin.params.reduit || matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  // ── Les poèmes du recueil ────────────────────────────────────────────────
+  const jour = n => new Date(Date.now() - n * 86400000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  const POEMES = [
+    { volets: Temoin.POEMES.etoffe.volets, structure: 'PHRASE ÉTOFFÉE', heure: '06:58', jour: 0 },
+    { volets: Temoin.POEMES.court.volets, structure: 'PHRASE COURTE', heure: '22:15', jour: 1 },
+    { volets: [['Un horloger'], ['apprivoise'], ['la fumée bleue'], ['au fond'], ['des tiroirs']], structure: 'PHRASE ÉTOFFÉE', heure: '21:14', jour: 2 },
+    { volets: [['La lune'], ['mord'], ['un violon de cire']], structure: 'PHRASE COURTE', heure: '23:40', jour: 3 },
+  ].map(p => ({ ...p, texte: p.volets.flat().join(' '), n: p.volets.flat().length }))
+
+  const htmlLigne = p => `<p class="titre">${p.texte}</p><p class="meta">${p.structure} · ${p.n} FRAGMENTS · ${jour(p.jour)}</p><span class="coutures">⟡ COUTURES</span>`
+  liste.innerHTML = POEMES.map((p, i) => `<div class="ligne" data-i="${i}" role="button" tabindex="0">${htmlLigne(p)}</div>`).join('')
+  const lignes = [...liste.children]
+
+  // ── La feuille du poème ──────────────────────────────────────────────────
+  const vers = (v, lettrine) => lettrine
+    ? `<p class="vers avec-lettrine"><span class="loge"><span class="lettrine">${v[0]}</span></span>${v.slice(1)}</p>`
+    : `<p class="vers">${v}</p>`
+  let bandes = [], empreinte, choisi = 0
+  function construireFeuille(p) {
+    $('titreFeuillet').textContent = p.volets.flat().slice(0, 3).join(' ') + '…'
+    zone.textContent = ''
+    empreinte = document.createElement('div'); empreinte.className = 'empreinte'
+    bandes = p.volets.map((vs, i) => {
+      const dernier = i === p.volets.length - 1
+      let html = vs.map((v, j) => vers(v, i === 0 && j === 0)).join('')
+      if (i === 0) html = `<div class="feuille-titre">CADAVRE EXQUIS · ${jour(p.jour)}</div>` + html
+      if (dernier) html += `<div class="pied">${p.n} FRAGMENTS · ${p.structure} · ${p.heure}</div>`
+      const b = document.createElement('div')
+      b.className = 'bande' + (i === 0 ? ' tete' : '') + (dernier ? ' derniere' : ' prolonge')
+      b.innerHTML = `<div class="relief"></div><div class="contenu">${html}</div><div class="pliure"></div><div class="voile"></div>`
+      b.querySelector('.relief').style.background = i ? Temoin.reliefDuPli((i + 1) % 2, Temoin.papier.sombre) : 'none'
+      return { el: b, voile: b.querySelector('.voile'), html, h: 0 }
+    })
+    zone.append(empreinte, ...bandes.map(b => b.el))
+    // La tête du feuillet qui voyage : la même que la première bande.
+    glisse.querySelector('.comme-tete').innerHTML = bandes[0].html
+    glisse.querySelector('.comme-ligne').innerHTML = htmlLigne(p)
+  }
+
+  // ── Les mesures ──────────────────────────────────────────────────────────
+  let de = null, vers_ = null, hauteurPoeme = 0
+  const rectDans = (el) => { const r = el.getBoundingClientRect(), e = ecrans.getBoundingClientRect(); return { x: r.left - e.left, y: r.top - e.top, w: r.width, h: r.height } }
+  function mesurer() {
+    poeme.classList.remove('cache')
+    poeme.style.visibility = 'hidden'
+    for (const b of bandes) { b.el.style.transform = ''; b.h = b.el.offsetHeight }
+    zone.style.height = bandes.reduce((s, b) => s + b.h, 0) + 'px'
+    de = rectDans(lignes[choisi])
+    const z = rectDans(zone)
+    vers_ = { x: z.x, y: z.y, w: z.w, h: bandes[0].h }
+    hauteurPoeme = poeme.offsetHeight
+  }
+
+  // ── Le temps ─────────────────────────────────────────────────────────────
+  /*
+    0 → 200     la ligne touchée devient papier et se soulève
+    40 → 260    le reste du recueil s'efface autour d'elle
+    180 → 560   le feuillet glisse à sa place et prend la largeur de la feuille ;
+                son texte passe de la ligne du recueil à la tête de la feuille
+    240 → 520   l'en-tête du feuillet arrive
+    540 → …     les plis s'ouvrent dessous, un tous les 90 ms, 300 ms chacun
+    fin − 300   les actions arrivent
+  */
+  const T = { pli: 540, ecart: 90, duree: 300 }
+  const DUREE = () => T.pli + (bandes.length - 2) * T.ecart + T.duree + 320
+  const glisseCourbe = M.bezier(0.3, 0, 0.2, 1)
+  const autres = () => [...document.querySelectorAll('#recueil .haut-recueil, #recueil .entete, #recueil .filet-accent'), ...lignes.filter((_, i) => i !== choisi)]
+  const entetePoeme = () => [...document.querySelectorAll('#poeme .haut-poeme, #poeme .entete, #poeme .filet-accent')]
+  const mix = (a, b, v) => a + (b - a) * v
+
+  function rendre(t) {
+    const p = (a, b) => M.part(t, a, b)
+    const enCours = t > 0
+    // Le recueil
+    recueil.classList.toggle('cache', t >= 560)
+    const fuite = M.lisse(p(40, 260))
+    for (const e of autres()) { e.style.opacity = String(1 - fuite); e.style.transform = `translateY(${(6 * fuite).toFixed(2)}px)` }
+    lignes[choisi].style.opacity = enCours ? '0' : '1'
+    // La page du poème
+    poeme.classList.toggle('cache', !enCours)
+    poeme.style.visibility = enCours ? 'visible' : 'hidden'
+    poeme.setAttribute('aria-hidden', String(t < DUREE()))
+    const arrivee = M.lisse(p(240, 520))
+    for (const e of entetePoeme()) { e.style.opacity = String(arrivee); e.style.transform = `translateY(${(-6 * (1 - arrivee)).toFixed(2)}px)` }
+    // Le feuillet qui voyage
+    const leve = M.sortieCube(p(0, 200)), v = glisseCourbe(p(180, 560))
+    const enVoyage = enCours && t < 560
+    glisse.style.display = enVoyage ? 'block' : 'none'
+    if (enVoyage) {
+      const x = mix(de.x, vers_.x, v), y = mix(de.y, vers_.y, v), w = mix(de.w, vers_.w, v), h = mix(de.h, vers_.h, v)
+      glisse.style.width = w.toFixed(2) + 'px'; glisse.style.height = h.toFixed(2) + 'px'
+      glisse.style.transform = `translate3d(${x.toFixed(2)}px,${(y - 3 * leve * (1 - v)).toFixed(2)}px,0) scale(${(1 + 0.015 * leve * (1 - v)).toFixed(4)})`
+      glisse.querySelector('.fond').style.opacity = String(leve)
+      glisse.querySelector('.comme-ligne').style.opacity = String(1 - M.lisse(p(260, 400)))
+      glisse.querySelector('.comme-tete').style.opacity = String(M.lisse(p(330, 480)))
+    }
+    // La feuille : la tête est là quand le feuillet arrive ; les plis s'ouvrent.
+    let y = 0
+    bandes.forEach((b, i) => {
+      let angle = 0, visible = t >= 560
+      if (i > 0) {
+        const a = T.pli + (i - 1) * T.ecart, k = M.sortieElan(p(a, a + T.duree), 0.9)
+        angle = Math.min(4, -92 * (1 - k)); visible = t >= a
+      }
+      const proj = Math.max(0, Math.cos(angle * Math.PI / 180))
+      b.el.style.visibility = visible ? 'visible' : 'hidden'
+      b.el.style.transform = `translate3d(0px,${y.toFixed(2)}px,0px) perspective(900px) rotateX(${angle.toFixed(2)}deg)`
+      b.voile.style.opacity = (0.4 * (1 - proj)).toFixed(3)
+      if (visible) y += b.h * proj
+    })
+    empreinte.style.height = y.toFixed(2) + 'px'
+    empreinte.style.opacity = t >= 560 ? '1' : '0'
+    const suite = M.lisse(p(DUREE() - 320, DUREE()))
+    const actions = $('actions'); actions.style.opacity = String(suite); actions.style.transform = `translateY(${(8 * (1 - suite)).toFixed(2)}px)`
+    ecrans.style.minHeight = (t >= 560 ? hauteurPoeme : recueil.offsetHeight) + 'px'
+  }
+
+  // ── Le son : un froissement court, quand le premier pli s'ouvre ─────────
+  const Son = { ctx: null, b: null, permis: false, actif: true,
+    async charger() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC()
+        const src = JSON.parse($('fichiers-sons').textContent).froissement
+        let octets
+        if (src.startsWith('data:')) { const s = atob(src.slice(src.indexOf(',') + 1)); octets = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) octets[i] = s.charCodeAt(i); octets = octets.buffer }
+        else octets = await (await fetch(src)).arrayBuffer()
+        this.b = await new Promise((ok, ko) => this.ctx.decodeAudioData(octets, ok, ko))
+      } catch { /* page locale : pas de son */ }
+    },
+    reveiller() { this.permis = true; if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {}) },
+    jouer(force) {
+      if (!this.actif || !this.permis || !this.b || !this.ctx || this.ctx.state !== 'running') return
+      const s = this.ctx.createBufferSource(), g = this.ctx.createGain()
+      s.buffer = this.b; s.playbackRate.value = 1 + (Math.random() - 0.5) * 0.08; g.gain.value = force
+      s.connect(g); g.connect(this.ctx.destination); s.start()
+    },
+  }
+  for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) addEventListener(ev, () => Son.reveiller(), { capture: true, passive: true })
+
+  // ── L'horloge : à l'aller, puis au retour, plus vite ─────────────────────
+  let vitesse = Temoin.params.vitesse, raf = 0, sens = 0, t = 0, tPrec = 0, sonne = false
+  function boucle(maintenant) {
+    const dt = (maintenant - tPrec) * vitesse; tPrec = maintenant
+    const avant = t
+    t = M.borne(t + sens * dt * (sens < 0 ? 1.6 : 1), 0, DUREE())
+    if (sens > 0 && avant < T.pli && t >= T.pli && !sonne) { sonne = true; Son.jouer(0.36) }
+    rendre(t)
+    if ((sens > 0 && t < DUREE()) || (sens < 0 && t > 0)) raf = requestAnimationFrame(boucle)
+    else { raf = 0; sens = 0; if (t === 0) remettreRecueil() }
+  }
+  function partir(s) { sens = s; if (!raf) { tPrec = performance.now(); raf = requestAnimationFrame(boucle) } }
+  function remettreRecueil() { for (const e of autres()) { e.style.opacity = ''; e.style.transform = '' } lignes.forEach(l => { l.style.opacity = '' }); poeme.classList.add('cache'); poeme.style.visibility = 'hidden' }
+
+  function ouvrir(i) {
+    if (sens || t > 0) return
+    choisi = i; construireFeuille(POEMES[i]); mesurer(); sonne = false
+    if (reduit) { t = DUREE(); rendre(t); return }
+    partir(1)
+  }
+  function revenir() {
+    if (sens > 0) { t = DUREE(); rendre(t); sens = 0; cancelAnimationFrame(raf); raf = 0 }
+    if (reduit) { t = 0; rendre(0); remettreRecueil(); return }
+    partir(-1)
+  }
+  lignes.forEach((l, i) => {
+    l.addEventListener('click', () => ouvrir(i))
+    l.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(i) } })
+  })
+  $('retour').addEventListener('click', revenir)
+  $('retour').addEventListener('keydown', e => { if (e.key === 'Enter') revenir() })
+  // Un appui pendant le mouvement le termine.
+  addEventListener('pointerdown', e => {
+    if (!sens || e.target.closest('.maquette')) return
+    cancelAnimationFrame(raf); raf = 0
+    t = sens > 0 ? DUREE() : 0; rendre(t); if (t === 0) remettreRecueil(); sens = 0
+  }, { capture: true })
+
+  // ── La maquette ──────────────────────────────────────────────────────────
+  const bAmb = [...document.querySelectorAll('[data-ambiance]')]
+  const marquer = () => { bAmb.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ambiance === Temoin.ambiance.id))); $('ralenti').setAttribute('aria-pressed', String(vitesse < 1)); $('son').setAttribute('aria-pressed', String(Son.actif)) }
+  bAmb.forEach(b => b.addEventListener('click', () => { Temoin.poserAmbiance(b.dataset.ambiance); if (bandes.length) bandes.forEach((x, i) => { x.el.querySelector('.relief').style.background = i ? Temoin.reliefDuPli((i + 1) % 2, Temoin.papier.sombre) : 'none' }); marquer() }))
+  $('ralenti').addEventListener('click', () => { vitesse = vitesse < 1 ? 1 : 0.35; marquer() })
+  $('son').addEventListener('click', () => { Son.actif = !Son.actif; marquer() })
+  marquer()
+  Son.charger()
+
+  // Pour les planches : `?t=600` (ligne choisie : `&ligne=0`).
+  ;(async () => {
+    try { await document.fonts.ready } catch { /* tant pis */ }
+    if (q.has('t')) {
+      choisi = Number(q.get('ligne') || 0); construireFeuille(POEMES[choisi]); mesurer()
+      t = Math.min(Number(q.get('t')), DUREE()); rendre(t)
+      document.documentElement.dataset.temoin = 'fige'
+      return
+    }
+    document.documentElement.dataset.temoin = 'pose'
+  })()
+  window.Recueil = { ouvrir, revenir, get t() { return t }, get duree() { return DUREE() } }
+})()
+</script>
+</body>
+</html>

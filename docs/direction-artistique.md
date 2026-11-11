@@ -432,6 +432,48 @@ La première — l'accordéon (`accordeon.html`) :
 - Les réglages (angle du paquet, ressort, seuil, perspective) sont en tête
   du script, `R`, pour être ajustés après l'essai.
 
+### Point 2 : la vibration — en attente de l'application installée
+
+Une page web ne fait plus vibrer un iPhone : l'astuce de l'interrupteur de
+Safari (`<input type="checkbox" switch>`) marchait d'iOS 17.4 à 26.4 ;
+WebKit l'a réservée aux vrais gestes en janvier 2025 (bogue 285120), puis
+Apple l'a fermée avec iOS 26.5. Un pli qui tombe seul ne peut donc pas
+vibrer dans une maquette. Décision de l'auteur, 11 novembre : passer au
+point 3, et faire la vibration à la première installation de
+l'application sur son iPhone (jamais faite : à guider pas à pas).
+Aujourd'hui `src/utils/haptics.ts` n'appelle que `navigator.vibrate`
+(Android seulement).
+
+### Point 3 : les écrans qui s'enchaînent — maquette du 11 novembre
+
+**En attente de l'essai de l'auteur.** Rien n'est intégré au jeu.
+Maquette : `scripts/temoins/recueil-feuille/maquette.html`.
+
+Relevé avant (l'écran réel, photographié le 11 novembre) : le Recueil est
+une liste de lignes (le premier vers, une ligne de détails, ⟡ COUTURES),
+et toucher une ligne fait un fondu de page (`PageTransition`, 0,45 s, la
+page s'efface puis l'autre apparaît). La page du poème montre le texte nu,
+sans feuille.
+
+Proposé :
+- **La ligne touchée devient un feuillet de papier** : le papier apparaît
+  sous le texte, elle se soulève un peu (une ombre), le reste du recueil
+  s'efface autour d'elle.
+- **Le feuillet glisse à sa place** sur la page du poème en prenant la
+  largeur de la feuille ; son texte passe de la ligne du recueil à la tête
+  de la feuille (CADAVRE EXQUIS · date, la lettrine). L'en-tête du feuillet
+  arrive en même temps.
+- **Les plis s'ouvrent dessous**, un tous les 90 ms (le dépli d'avant, en
+  plus vif : c'est un poème qu'on connaît déjà), avec le froissement court
+  au premier pli. Puis les actions.
+- **La page du poème montre le poème sur sa feuille**, comme la fin de
+  partie, et non plus en texte nu ; le pied porte la date, le compte et
+  l'heure.
+- **« ← MES POÈMES » refait le chemin à l'envers**, plus vite (0,9 s).
+  Un appui pendant le mouvement le termine. Environ 1,4 s à l'aller.
+- Une planche témoin se fait avec `outils/planche.mjs` (`?t=` fige un
+  instant).
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.
