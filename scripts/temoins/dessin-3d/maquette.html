@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le dessin qui se déplie</title>
+<link rel="stylesheet" href="../commun/polices.css">
+<link rel="stylesheet" href="../commun/base.css">
+<script src="../commun/kit.js"></script>
+<style>
+/*
+  Plan « moderne », point 4 : la vraie 3D au bon endroit — la révélation du
+  dessin. Maquette du 11 novembre.
+
+  Aujourd'hui (`RevealDessin.tsx`), le dessin entier se découvre de haut en
+  bas derrière une ligne de balayage colorée qui s'arrête aux coutures, puis
+  il remonte et la lecture prend la place libérée.
+
+  Ici, le même geste que le dépli du poème, validé le 11 novembre
+  (`depli-au-doigt/paquet.html`) : le dessin arrive PLIÉ, un paquet dont on
+  ne voit que le dos du papier ; on le tire vers soi, chaque pli se dresse
+  et retombe sous son poids en découvrant la bande d'une main — la tête,
+  puis le corps ; le dernier pli porte au revers les jambes. Même pesanteur,
+  même souplesse du papier, même froissement court, aucun claquement. Puis
+  le dessin remonte et se resserre, la lecture arrive dessous.
+
+  Seule différence de réglage : une bande de dessin est six fois plus haute
+  qu'un vers, alors le doigt parcourt une distance fixe par pli (150 px)
+  au lieu de la hauteur de la bande.
+*/
+:root { --trait: rgba(40, 28, 10, 0.22); --ombre-paquet: rgba(40, 28, 10, 0.34); }
+:root[data-sombre="1"] { --trait: rgba(40, 28, 10, 0.3); --ombre-paquet: rgba(0, 0, 0, 0.7); }
+
+html, body { height: 100%; }
+body { overflow: hidden; }
+.revelation { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+.boite { transform-origin: 50% 0; transition: transform 1s cubic-bezier(0.16, 0.84, 0.24, 1); }
+.scene { position: relative; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: grab; outline: none; }
+.scene.tient { cursor: grabbing; }
+.scene.ouvert { cursor: default; }
+.scene:focus-visible { outline: 1px dashed var(--accent); outline-offset: 8px; }
+.scene > * { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
+.empreinte { border-radius: 2px; box-shadow: var(--ombre-feuille); }
+
+/* Une bande du dessin, à plat, à sa place définitive. */
+.bande { background-color: var(--papier-dessin); overflow: hidden; }
+.bande img { display: block; width: 100%; height: 100%; }
+.bande.prolonge { box-shadow: 0 1px 0 var(--papier-dessin); }
+.bande.cachee { visibility: hidden; }
+.bande.premiere { border-radius: 2px 2px 0 0; }
+.bande.derniere { border-radius: 0 0 2px 2px; }
+.bande > .contenu { position: relative; z-index: 1; height: 100%; }
+.bande > .relief, .bande > .pliure { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 2; }
+.bande > .pliure { bottom: auto; height: 2px; opacity: 0.5; background: linear-gradient(to bottom, rgba(0,0,0,0.26) 0 1px, rgba(255,255,255,0.34) 1px 2px); }
+.bande.premiere > .pliure { display: none; }
+
+/* Le rabat : le reste du dessin, plié, en lamelles à deux faces. */
+.lamelle { transform-origin: 50% 100%; transform-style: preserve-3d; will-change: transform; }
+.rabat-cache .lamelle { visibility: hidden; }
+.face { position: absolute; left: 0; right: 0; top: 0; bottom: 0; overflow: hidden; background-color: var(--papier-dos-dessin); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.face.dessus { transform: translateZ(0.5px); }
+.face.dessous { transform: rotateX(180deg) translateZ(0.5px); }
+.face.recto { background-color: var(--papier-dessin); }
+.face > .contenu { position: absolute; left: 0; right: 0; top: 0; z-index: 1; }
+.face > .contenu img { display: block; width: 100%; }
+.face > .lumiere, .face > .ombre-face, .face > .tranches { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.face > .lumiere { z-index: 0; }
+.face > .ombre-face { z-index: 2; }
+.face > .tranches { z-index: 3; }
+.face.recto > .tranches { display: none; }
+.lamelle.charniere .dessus > .tranches, .lamelle.libre .dessous > .tranches { background: repeating-linear-gradient(to top, var(--trait) 0 0.6px, transparent 0.6px 2px) bottom / 100% var(--couches, 4px) no-repeat; }
+.lamelle.charniere .dessous > .tranches, .lamelle.libre .dessus > .tranches { background: repeating-linear-gradient(to bottom, var(--trait) 0 0.6px, transparent 0.6px 2px) top / 100% var(--couches, 4px) no-repeat; }
+.ombre { height: 100px; z-index: 5; opacity: 0; transform-origin: 0 0; filter: blur(4px); background: linear-gradient(to bottom, var(--ombre-paquet), rgba(0,0,0,0)); }
+
+.invite { margin: 12px 0 0; text-align: center; font-family: 'Raleway', sans-serif; font-size: 12px; letter-spacing: 0.18em; opacity: 0.62; }
+.lecture { position: absolute; left: 28px; right: 28px; text-align: center; opacity: 0; transform: translateY(8px); transition: opacity 0.7s, transform 0.7s; }
+.lecture.la { opacity: 1; transform: none; }
+.lecture .surtitre { font-family: 'Raleway', sans-serif; font-size: 13px; letter-spacing: 0.28em; color: var(--accent); font-weight: 700; margin-bottom: 12px; }
+.lecture .texte { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(1.05rem, 4.6vw, 1.35rem); line-height: 1.5; opacity: 0.92; }
+.lecture .attente { font-family: 'Raleway', sans-serif; font-size: 12px; letter-spacing: 0.24em; animation: pouls 2.2s ease-in-out infinite; }
+@keyframes pouls { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+.continuer { position: absolute; left: 0; right: 0; bottom: calc(104px + env(safe-area-inset-bottom, 0px)); text-align: center; font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 0.3em; opacity: 0; transition: opacity 0.8s; }
+.continuer.la { opacity: 0.6; }
+
+.maquette {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 2px;
+  padding: 4px max(10px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--fond) 95%, transparent); border-top: 0.5px solid var(--filet);
+  font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.maquette .marque { color: var(--accent); font-weight: 700; padding: 0 4px; }
+.maquette button { background: none; border: none; padding: 8px 5px; min-height: 38px; opacity: 0.6; cursor: pointer; letter-spacing: inherit; text-transform: inherit; }
+.maquette button[aria-pressed="true"] { opacity: 1; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
+.maquette .sep { width: 0.5px; height: 14px; background: var(--encre); opacity: 0.22; margin: 0 3px; }
+</style>
+</head>
+<body>
+<div class="revelation" id="revelation">
+  <div class="boite" id="boite">
+    <div class="scene" id="scene" role="button" tabindex="0" aria-label="Le dessin, plié. Tirer vers le bas, ou toucher, pour le déplier."></div>
+  </div>
+  <p class="invite" id="invite" aria-hidden="true">— TIRER POUR DÉPLIER —</p>
+  <div class="lecture" id="lecture" role="status"></div>
+  <p class="continuer" id="continuer">TOUCHER POUR CONTINUER</p>
+</div>
+
+<nav class="maquette" aria-label="Réglages de la maquette">
+  <span class="marque">MAQUETTE</span>
+  <button id="replier" type="button">Replier</button>
+  <button id="son" type="button" aria-pressed="true">Son</button>
+  <span class="sep"></span>
+  <button type="button" data-ambiance="lin">Lin</button>
+  <button type="button" data-ambiance="minuit">Minuit</button>
+  <button type="button" data-ambiance="encre">Encre</button>
+</nav>
+
+<!-- Le dessin témoin et le son validé. `outils/autonome.mjs` les recopie dans la page. -->
+<script type="application/json" id="fichiers" data-autonome>
+{
+  "bande-1": "../assets/dessin-bande-1.png",
+  "bande-2": "../assets/dessin-bande-2.png",
+  "bande-3": "../assets/dessin-bande-3.png",
+  "froissement": "../depli-au-doigt/sons/feuille-courte-ouverture.wav"
+}
+</script>
+
+<script>
+(function () {
+  'use strict'
+  const { M, LUMIERE } = Temoin
+  const q = Temoin.params.brut
+  const PI = Math.PI
+  const FICHIERS = JSON.parse(document.getElementById('fichiers').textContent)
+
+  // ── Les réglages : ceux du dépli validé, sauf la course du doigt ─────────
+  const R = {
+    perspective: 1300,  // px — un rabat de dessin est haut : l'œil recule un peu
+    origine: 450,       // px — l'œil du joueur, sous le haut du dessin. (À 650 et 1 000,
+                        // le premier rabat dressé sortait par le haut de l'écran.)
+    recouvre: 2,        // px — chaque lamelle passe sous la suivante : pas de jour entre elles
+    pesanteur: 40, air: 3.5, rebond: 0.08, pose: 1.2,
+    poussee: 14, esquisse: 6, entrePlis: 120,
+    coursePli: 150,     // px — la course du doigt pour un pli entier
+    lamelles: 10,
+    raideur: 380, amortiPapier: 21, traine: 0.045, devance: 0.02, affaisse: 0.22, profil: 1.5, rebondBord: 0,
+    volume: 0.4,
+    resserre: 0.6,      // une fois ouvert, le dessin occupe 60 % de la hauteur ; la lecture dessous
+  }
+  const reduit = Temoin.params.reduit || (q.get('reduit') !== '0' && matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const $ = id => document.getElementById(id)
+  const scene = $('scene'), boite = $('boite'), invite = $('invite'), lecture = $('lecture'), continuer = $('continuer')
+
+  // Le papier du studio, clair sur toutes les ambiances, et son dos un rien plus terne.
+  const PAPIER = Temoin.DESSIN.papier
+  document.documentElement.style.setProperty('--papier-dessin', PAPIER)
+  document.documentElement.style.setProperty('--papier-dos-dessin', Temoin.melange(PAPIER, '#3a2c18', 0.08))
+
+  const LY = LUMIERE[1], LZ = LUMIERE[2], E0 = LZ
+  const OX = -LUMIERE[0] / LUMIERE[2], OY = -LUMIERE[1] / LUMIERE[2]
+
+  // ── Le son : le froissement court, validé ────────────────────────────────
+  const Son = { ctx: null, b: null, permis: false, actif: true,
+    async charger() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC()
+        const src = FICHIERS.froissement; let o
+        if (src.startsWith('data:')) { const s = atob(src.slice(src.indexOf(',') + 1)); o = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) o[i] = s.charCodeAt(i); o = o.buffer }
+        else o = await (await fetch(src)).arrayBuffer()
+        this.b = await new Promise((ok, ko) => this.ctx.decodeAudioData(o, ok, ko))
+      } catch { /* page locale : pas de son */ }
+    },
+    reveiller() { this.permis = true; const c = this.ctx; if (c && c.state !== 'running') { c.resume().catch(() => {}); try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0) } catch { /* rien */ } } },
+    jouer(force) {
+      const c = this.ctx
+      if (!this.actif || !this.permis || !this.b || !c || c.state !== 'running') return
+      const s = c.createBufferSource(), g = c.createGain()
+      s.buffer = this.b; s.playbackRate.value = 1 + (Math.random() - 0.5) * 0.08; g.gain.value = R.volume * Math.min(1, force)
+      s.connect(g); g.connect(c.destination); s.start()
+    },
+  }
+  for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'keydown', 'click']) addEventListener(ev, () => Son.reveiller(), { capture: true, passive: true })
+
+  // ── Le dessin ────────────────────────────────────────────────────────────
+  const el = (classe, html) => { const e = document.createElement('div'); e.className = classe; if (html != null) e.innerHTML = html; return e }
+  const img = i => `<img src="${FICHIERS['bande-' + (i + 1)]}" alt="" draggable="false">`
+  const N = 3
+  let bandes = [], lamelles = [], ombre, empreinte, W = 200, HB = 233
+  function face(classe) {
+    const f = el('face ' + classe)
+    const lumiere = el('lumiere'), contenu = el('contenu'), ombreFace = el('ombre-face'), tranches = el('tranches')
+    f.append(lumiere, contenu, ombreFace, tranches)
+    return { el: f, lumiere, contenu, ombre: ombreFace }
+  }
+  function construire() {
+    scene.textContent = ''
+    empreinte = el('empreinte')
+    bandes = Array.from({ length: N }, (_, i) => {
+      const b = el('bande' + (i === 0 ? ' premiere' : '') + (i === N - 1 ? ' derniere' : ' prolonge'))
+      const relief = el('relief'), contenu = el('contenu', img(i)), pliure = el('pliure')
+      b.append(relief, contenu, pliure)
+      return { el: b, relief, top: 0, h: 0 }
+    })
+    lamelles = Array.from({ length: R.lamelles }, (_, i) => {
+      const l = el('lamelle' + (i === 0 ? ' charniere' : '') + (i === R.lamelles - 1 ? ' libre' : ''))
+      const dessus = face('dessus'), dessous = face('dessous')
+      l.append(dessus.el, dessous.el)
+      return { el: l, dessus, dessous }
+    })
+    ombre = el('ombre')
+    scene.append(empreinte, ...bandes.map(b => b.el), ombre, ...lamelles.map(l => l.el))
+    bandes.forEach((b, i) => { b.relief.style.background = i ? Temoin.reliefDuPli((i + 1) % 2, false) : 'none' })
+  }
+  // La feuille tient en entier dans l'écran, comme aujourd'hui : jamais coupée.
+  function mesurer() {
+    const dispo = innerHeight - 14 - 150
+    W = Math.floor(Math.min(innerWidth - 40, dispo / N * 720 / 840))
+    HB = W * 840 / 720
+    scene.style.width = W + 'px'
+    bandes.forEach((b, i) => { b.h = HB; b.top = i * HB; b.el.style.height = HB + 'px'; b.el.style.transform = `translate3d(0px,${b.top}px,0px)` })
+    scene.style.perspective = R.perspective + 'px'
+    scene.style.perspectiveOrigin = `50% ${R.origine}px`
+  }
+
+  // ── L'état : celui du dépli validé ───────────────────────────────────────
+  let k = 0, th = 0, w = 0, beta = 0, vbeta = 0, libre = 1
+  let mode = 'repos', posee = false, enchaine = false, wDoigt = 0, kFace = -1, arme = true, kArme = -1
+  const P = () => k + th / PI
+  const pliDe = p => Math.min(Math.floor(p + 1e-9), N - 2)
+  function placer(p) { p = M.borne(p, 0, N - 1); if (p >= N - 1) { k = N - 2; th = PI } else { k = pliDe(p); th = (p - k) * PI } }
+  const angleA = (s, poids) => M.borne(th + beta * poids * Math.pow(s, R.profil), 0, PI)
+  let rgbOmbre = '30,20,6'
+  const grad = (dir, rgb, a0, a1) => `linear-gradient(${dir}, rgba(${rgb},${a0.toFixed(3)}), rgba(${rgb},${a1.toFixed(3)}))`
+
+  function rendre() {
+    const ouvert = k >= N - 1
+    bandes.forEach((b, i) => b.el.classList.toggle('cachee', i > k))
+    scene.classList.toggle('rabat-cache', ouvert)
+    if (ouvert) {
+      ombre.style.opacity = '0'
+      empreinte.style.height = N * HB + 'px'; scene.style.height = N * HB + 'px'
+    } else {
+      const s = (1 - Math.cos(th)) / 2, h = HB, S = lamelles.length, L = h / S
+      const charniere = (k + 1) * HB
+      if (k !== kFace) {
+        kFace = k
+        const recto = k === N - 2
+        lamelles.forEach(l => { l.dessous.el.classList.toggle('recto', recto); l.dessous.contenu.innerHTML = recto ? img(N - 1) : '' })
+        scene.style.setProperty('--couches', (Math.min(3, N - 1 - k) * 2) + 'px')
+      }
+      const pres = Math.min(th, PI - th) / 0.5, e = pres >= 1 ? 1 : pres * pres * (3 - 2 * pres)
+      const poids = e + (1 - e) * libre
+      const lum = phi => Math.max(0, Math.sin(phi) * LY + Math.cos(phi) * LZ)
+      const lumR = phi => Math.max(0, -Math.sin(phi) * LY - Math.cos(phi) * LZ)
+      const voile = E => [Math.max(0, (E0 - E) * 0.42), Math.max(0, (E - E0) * 2.5)]
+      let y = charniere, z = 0, yMax = charniere
+      const profondeurs = []
+      lamelles.forEach((l, i) => {
+        const phi = angleA((i + 0.5) / S, poids), lo = angleA(i / S, poids), hi = angleA((i + 1) / S, poids)
+        l.el.style.height = (L + R.recouvre).toFixed(2) + 'px'
+        l.el.style.transform = `translate3d(0px,${(y - L - R.recouvre).toFixed(2)}px,${z.toFixed(2)}px) rotateX(${(-phi).toFixed(5)}rad)`
+        const [od0, ld0] = voile(lum(lo)), [od1, ld1] = voile(lum(hi))
+        l.dessus.ombre.style.background = grad('to top', rgbOmbre, od0, od1)
+        l.dessus.lumiere.style.background = grad('to top', '255,255,255', ld0, ld1)
+        const [or0, lr0] = voile(lumR(lo)), [or1, lr1] = voile(lumR(hi))
+        l.dessous.ombre.style.background = grad('to bottom', rgbOmbre, or0, or1)
+        l.dessous.lumiere.style.background = grad('to bottom', '255,255,255', lr0, lr1)
+        l.dessous.contenu.style.top = (-i * L).toFixed(2) + 'px'
+        const y2 = y - L * Math.cos(phi), z2 = z + L * Math.sin(phi)
+        profondeurs.push([((y + y2) / 2 - R.origine) ** 2 + (R.perspective - (z + z2) / 2) ** 2, l.el])
+        y = y2; z = z2; yMax = Math.max(yMax, y)
+      })
+      profondeurs.sort((a, b) => b[0] - a[0]).forEach(([, e2], i) => { e2.style.zIndex = String(6 + i) })
+      const long = y + OY * z - charniere
+      ombre.style.opacity = (Math.min(1, Math.sin(th) * 2.5) * 0.8).toFixed(3)
+      ombre.style.transform = `matrix(1,0,${(OX * z / 100).toFixed(4)},${(long / 100).toFixed(4)},0,${charniere.toFixed(2)})`
+      empreinte.style.height = charniere + 'px'
+      scene.style.height = (yMax + 2).toFixed(2) + 'px'
+    }
+    invite.style.opacity = mode === 'ouvert' ? '0' : (0.62 * M.borne(1 - P() * 1.5)).toFixed(3)
+  }
+
+  function pas(h) {
+    if (mode === 'chute' && !posee) {
+      w += (-R.pesanteur * Math.cos(th) - R.air * w) * h
+      th += w * h
+      if ((th <= 0 && w < 0) || (th >= PI && w > 0)) {
+        const choc = Math.abs(w)
+        th = th <= 0 ? 0 : PI
+        if (choc < R.pose) { w = 0; posee = true } else w = -R.rebond * w
+      }
+    }
+    const v = mode === 'tire' ? wDoigt : w
+    let cible = mode === 'tire' ? M.borne(R.devance * v, -0.5, 0.5) : mode === 'chute' ? M.borne(-R.traine * v, -0.7, 0.7) : 0
+    if (mode === 'tire' || mode === 'chute') cible -= R.affaisse * Math.sin(2 * th)
+    vbeta += (R.raideur * (cible - beta) - R.amortiPapier * vbeta) * h
+    beta += vbeta * h
+    if (mode === 'chute') {
+      const contre = (th >= PI && beta > 0) ? 1 : (th <= 0 && beta < 0) ? -1 : 0
+      if (contre) { if (contre * vbeta > 0) vbeta = -R.rebondBord * vbeta; beta = 0 }
+    }
+    libre += ((mode === 'tire' ? 0 : 1) - libre) * Math.min(1, h / 0.08)
+  }
+  function surveiller(v) {
+    if (k !== kArme) { kArme = k; arme = true }
+    if (th <= 0.02 || th >= PI - 0.02) arme = true
+    if (arme && th > 0.15 && th < PI - 0.15) { arme = false; Son.jouer(M.borne(0.3 + Math.abs(v) / 30, 0.3, 0.8)) }
+  }
+  let raf = 0, tPrec = 0
+  function boucle(t) {
+    raf = 0
+    const dt = Math.min(0.05, Math.max(0, (t - tPrec) / 1000)); tPrec = t
+    const n = Math.max(1, Math.ceil(dt * 480)), h = dt / n
+    if (mode === 'tire') wDoigt *= Math.exp(-dt / 0.06)
+    if (dt > 0) for (let i = 0; i < n; i++) pas(h)
+    surveiller(mode === 'tire' ? wDoigt : w)
+    const calme = enchaine ? Math.abs(beta) < 0.02 && Math.abs(vbeta) < 0.6 : Math.abs(beta) < 0.003 && Math.abs(vbeta) < 0.05
+    if (mode === 'chute' && posee && calme) { beta = 0; vbeta = 0; posee = false; if (th >= PI) { k += 1; th = 0 } return poser() }
+    rendre()
+    const bouge = mode === 'chute' || mode === 'tire' || Math.abs(beta) > 0.002 || Math.abs(vbeta) > 0.02 || Math.abs(libre - (mode === 'tire' ? 0 : 1)) > 0.01
+    if (bouge) demander(); else if (mode !== 'tire') { beta = 0; vbeta = 0; rendre() }
+  }
+  function demander() { if (!raf) { tPrec = performance.now(); raf = requestAnimationFrame(boucle) } }
+  function lacher(vitesse) {
+    w = M.borne(vitesse, -40, 40); posee = false
+    if (k >= N - 1) return poser()
+    if (reduit) { if (enchaine) { k = N - 1; th = 0 } else if (th >= PI / 2 || w > 0) { k += 1; th = 0 } else th = 0; w = 0; beta = 0; vbeta = 0; return poser() }
+    mode = 'chute'; demander()
+  }
+  function poser() {
+    if (k >= N - 2 && th >= PI) { k = N - 1; th = 0 }
+    mode = k >= N - 1 ? 'ouvert' : 'repos'
+    if (mode === 'ouvert') enchaine = false
+    rendre()
+    scene.classList.toggle('ouvert', mode === 'ouvert')
+    if (mode === 'ouvert') setTimeout(resserrer, reduit ? 0 : 450)
+    else if (enchaine) setTimeout(() => { if (enchaine && mode === 'repos') lacher(R.poussee) }, R.entrePlis)
+  }
+
+  // ── Une fois ouvert : le dessin remonte, la lecture arrive dessous ───────
+  let minuteurs = []
+  function resserrer() {
+    if (mode !== 'ouvert') return
+    const H = N * HB, dispo = innerHeight - 14 - 104
+    const s = Math.min(1, (dispo * R.resserre) / H)
+    boite.style.transform = `scale(${s.toFixed(4)})`
+    lecture.style.top = (14 + H * s + 26) + 'px'
+    lecture.innerHTML = '<div class="attente">— LA LECTURE SE FAIT —</div>'
+    lecture.classList.add('la')
+    minuteurs.push(setTimeout(() => {
+      lecture.classList.remove('la')
+      minuteurs.push(setTimeout(() => {
+        lecture.innerHTML = `<div class="surtitre">— LECTURE —</div><div class="texte">« ${Temoin.DESSIN.lecture} »</div>`
+        lecture.classList.add('la')
+        minuteurs.push(setTimeout(() => continuer.classList.add('la'), 1600))
+      }, 300))
+    }, reduit ? 0 : 1600))
+  }
+  function remettre() {
+    minuteurs.forEach(clearTimeout); minuteurs = []
+    enchaine = false; w = 0; beta = 0; vbeta = 0; libre = 1; posee = false; k = 0; th = 0; kFace = -1; mode = 'repos'
+    boite.style.transform = ''; lecture.classList.remove('la'); continuer.classList.remove('la')
+    scene.classList.remove('ouvert'); rendre()
+  }
+
+  // ── Le doigt : une course fixe par pli ───────────────────────────────────
+  let doigt = null, touche = false
+  scene.addEventListener('pointerdown', e => {
+    if (mode === 'ouvert' || doigt) return
+    touche = true; enchaine = false; posee = false
+    try { scene.setPointerCapture(e.pointerId) } catch { /* tant pis */ }
+    const t = performance.now(), p = P()
+    doigt = { id: e.pointerId, y0: e.clientY, p0: p, p, t0: t, bouge: false, traces: [[t, p]] }
+    mode = 'tire'; w = 0; wDoigt = 0
+    scene.classList.add('tient'); demander(); e.preventDefault()
+  })
+  scene.addEventListener('pointermove', e => {
+    if (!doigt || e.pointerId !== doigt.id) return
+    const dy = e.clientY - doigt.y0
+    if (Math.abs(dy) > 6) doigt.bouge = true
+    const p = M.borne(doigt.p0 + dy / R.coursePli, 0, N - 1), t = performance.now()
+    const [tA] = doigt.traces[doigt.traces.length - 1]
+    wDoigt = 0.5 * wDoigt + 0.5 * ((p - doigt.p) / Math.max(0.004, (t - tA) / 1000) * PI)
+    doigt.p = p; placer(p)
+    doigt.traces.push([t, p]); while (doigt.traces.length > 2 && t - doigt.traces[0][0] > 90) doigt.traces.shift()
+    demander()
+  })
+  function relacher(e) {
+    if (!doigt || e.pointerId !== doigt.id) return
+    const t = performance.now()
+    const [t1, p1] = doigt.traces[0], [t2, p2] = doigt.traces[doigt.traces.length - 1]
+    const vitesse = t2 - t1 > 8 && t - t2 < 60 && pliDe(p1) === pliDe(p2) ? (p2 - p1) / (t2 - t1) * 1000 * PI : 0
+    const tape = !doigt.bouge && t - doigt.t0 < 400
+    doigt = null; scene.classList.remove('tient')
+    if (tape) { enchaine = true; return lacher(R.poussee) }
+    if (P() >= N - 1 - 1e-9) { k = N - 1; th = 0; return poser() }
+    if (th <= 1e-6 && Math.abs(vitesse) < 0.5) { th = 0; mode = 'repos'; return demander() }
+    lacher(vitesse)
+  }
+  scene.addEventListener('pointerup', relacher)
+  scene.addEventListener('pointercancel', relacher)
+  scene.addEventListener('touchmove', e => { if (mode !== 'ouvert') e.preventDefault() }, { passive: false })
+  scene.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && mode !== 'ouvert') { e.preventDefault(); touche = true; enchaine = true; lacher(R.poussee) } })
+  function esquisse() { if (!touche && !reduit && mode === 'repos' && k === 0 && th === 0) lacher(R.esquisse) }
+
+  // ── La maquette ──────────────────────────────────────────────────────────
+  const bAmb = [...document.querySelectorAll('[data-ambiance]')]
+  const marquer = () => { bAmb.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ambiance === Temoin.ambiance.id))); $('son').setAttribute('aria-pressed', String(Son.actif)) }
+  bAmb.forEach(b => b.addEventListener('click', () => { Temoin.poserAmbiance(b.dataset.ambiance); rgbOmbre = [1, 3, 5].map(i => parseInt(Temoin.papier.ombreVolet.slice(i, i + 2), 16)).join(','); marquer() }))
+  $('replier').addEventListener('click', () => { touche = true; remettre() })
+  $('son').addEventListener('click', () => { Son.actif = !Son.actif; marquer() })
+  rgbOmbre = [1, 3, 5].map(i => parseInt(Temoin.papier.ombreVolet.slice(i, i + 2), 16)).join(',')
+  marquer()
+  addEventListener('resize', () => { mesurer(); kFace = -1; rendre() })
+
+  window.Depli = { R, get P() { return P() }, get mode() { return mode }, get courbe() { return beta }, remettre, toutDeplier: () => { enchaine = true; lacher(R.poussee) } }
+
+  construire()
+  Son.charger()
+  ;(async () => {
+    try { await document.fonts.ready } catch { /* tant pis */ }
+    mesurer(); rendre()
+    if (q.has('p')) {
+      const p = M.borne(Number(q.get('p')), 0, N - 1)
+      if (p >= N - 1) { k = N - 1; th = 0; reduitLecture() } else { placer(p); beta = Number(q.get('courbe') || 0); rendre() }
+      document.documentElement.dataset.temoin = 'fige'
+      return
+    }
+    document.documentElement.dataset.temoin = 'pose'
+    setTimeout(esquisse, 1100)
+    setTimeout(esquisse, 4600)
+  })()
+  // Pour la planche : l'état final, lecture comprise, sans attendre.
+  function reduitLecture() {
+    mode = 'ouvert'; rendre(); scene.classList.add('ouvert')
+    boite.style.transition = 'none'
+    const H = N * HB, s = Math.min(1, ((innerHeight - 118) * R.resserre) / H)
+    boite.style.transform = `scale(${s.toFixed(4)})`
+    lecture.style.transition = 'none'; lecture.style.top = (14 + H * s + 26) + 'px'
+    lecture.innerHTML = `<div class="surtitre">— LECTURE —</div><div class="texte">« ${Temoin.DESSIN.lecture} »</div>`
+    lecture.classList.add('la'); continuer.classList.add('la')
+  }
+})()
+</script>
+</body>
+</html>

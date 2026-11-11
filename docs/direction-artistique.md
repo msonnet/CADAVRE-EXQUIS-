@@ -481,6 +481,37 @@ son à cet endroit ; le voyage dure 0,75 s au lieu de 0,38 (1,45 s en
 tout, le retour un peu plus d'une seconde). Le texte de la ligne s'efface
 pendant que celui de la feuille apparaît.
 
+**L'auteur, même jour : « c'est mieux. Chantier suivant. »** Retenu ;
+reste à l'intégrer au jeu.
+
+### Point 4 : la révélation du dessin en 3D — maquette du 11 novembre
+
+**En attente de l'essai de l'auteur.** Rien n'est intégré au jeu.
+Maquette : `scripts/temoins/dessin-3d/maquette.html` (le dessin témoin à
+trois mains du kit : `outils/rendre-dessin.mjs` le fabrique dans
+`assets/`, non suivi ; `autonome.mjs` le recopie dans la page publiée).
+
+Relevé avant (`RevealDessin.tsx`) : le dessin entier se découvre de haut
+en bas derrière une ligne de balayage colorée qui s'arrête aux coutures ;
+puis il remonte et se resserre, la lecture prend la place libérée.
+
+Proposé — le geste du dépli validé, appliqué au dessin :
+- **Le dessin arrive plié**, un paquet dont on ne voit que le dos du papier
+  du studio, clair sur toutes les ambiances.
+- **On le tire vers soi** : chaque pli se dresse et retombe sous son poids
+  en découvrant la bande d'une main, la tête puis le corps ; le dernier
+  pli porte au revers les jambes. Un toucher déplie tout (1,7 s).
+- **Les réglages du dépli validé** : même pesanteur, même souplesse, le
+  froissement court, aucun claquement. Deux différences, parce qu'une
+  bande de dessin est six fois plus haute qu'un vers : le doigt parcourt
+  150 px par pli (et non la hauteur de la bande), et l'œil est un peu plus
+  loin (1 300 px, à 450 px sous le haut du dessin) — à 1 000 et 650, le
+  premier rabat dressé sortait par le haut de l'écran. Les lamelles se
+  recouvrent de 2 px : à cette taille, 0,8 px laissait des stries.
+- **Puis comme aujourd'hui** : le dessin remonte et se resserre (60 % de
+  la hauteur), « — LA LECTURE SE FAIT — », la lecture, « TOUCHER POUR
+  CONTINUER ». Le dessin reste entier à l'écran, jamais coupé.
+
 ## Écarté, ou en suspens
 
 - **Un visage pour les voix** : écarté par l'auteur.

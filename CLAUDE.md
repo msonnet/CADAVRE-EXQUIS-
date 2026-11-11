@@ -236,11 +236,18 @@ sentira que dans l'application installée (`@capacitor/haptics`).
 L'auteur n'a jamais installé l'application sur son iPhone depuis Xcode :
 la vibration se fera à cette première installation, guidée pas à pas.
 
-**Point 3, les écrans qui s'enchaînent : maquette du 11 novembre, en
-attente de l'essai** (`scripts/temoins/recueil-feuille/maquette.html`) —
+**Point 3, les écrans qui s'enchaînent : maquette retenue le 11 novembre**
+(`scripts/temoins/recueil-feuille/maquette.html`, reste à l'intégrer) —
 la ligne du recueil devient un feuillet qui glisse à sa place et grandit
 jusqu'à la feuille, déjà dépliée, sans son ; la page du poème montre le
 poème sur sa feuille.
+
+**Point 4, la révélation du dessin en 3D : maquette du 11 novembre, en
+attente de l'essai** (`scripts/temoins/dessin-3d/maquette.html`) — le
+geste du dépli validé, appliqué au dessin : il arrive plié, chaque pli
+découvre la bande d'une main. Reste ensuite du point 4 le relief discret
+(boutons qui s'enfoncent, accueil qui bouge quand on incline le
+téléphone).
 
 **Le chantier EffectCraft** — [`docs/chantier-effectcraft.md`](docs/chantier-effectcraft.md).
 Suspendu. Le cadre technique Lottie est en place (`src/components/Animation.tsx`,
