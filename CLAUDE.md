@@ -222,8 +222,17 @@ voir son README) :
 5. **Plus tard, un widget** « poème du jour » sur l'écran d'accueil de
    l'iPhone (code natif Swift, chantier à part).
 
-Première maquette à faire : **le dépli tiré du doigt, en 3D** (points 1 et
-4 ensemble), à envoyer à l'auteur pour qu'il l'essaie sur son téléphone.
+**Points 1 et 4, le dépli tiré du doigt en 3D : maquette validée le
+11 novembre** (`scripts/temoins/depli-au-doigt/paquet.html`, son
+« feuille courte »). Le paquet arrive fermé, chaque pli se dresse vers le
+joueur et retombe sous son poids, le papier se courbe, un froissement
+quand un pli s'ouvre, aucun claquement. Tout le cheminement (quatre
+retours de l'auteur) est dans `docs/direction-artistique.md`, « Le plan
+moderne ». **Reste à l'intégrer au jeu.**
+
+**Point 2, la vibration** : une page web ne peut plus faire vibrer un
+iPhone (Apple a fermé la dernière astuce avec iOS 26.5) ; elle ne se
+sentira que dans l'application installée (`@capacitor/haptics`).
 
 **Le chantier EffectCraft** — [`docs/chantier-effectcraft.md`](docs/chantier-effectcraft.md).
 Suspendu. Le cadre technique Lottie est en place (`src/components/Animation.tsx`,

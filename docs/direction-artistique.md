@@ -396,6 +396,11 @@ rabotés, aigu dur adouci, entrée plus lente), **Courte** (la première
 moitié, 0,28 s), **Légère** (trois demi-tons plus haut, même durée : un
 papier plus fin). La feuille telle quelle reste le son par défaut.
 
+**Validé par l'auteur, 11 novembre : la maquette `paquet.html`, avec le
+son « Courte »** (`sons/feuille-courte-ouverture.wav`). Le chantier passe
+au point suivant ; l'intégration au jeu reste à faire (fin de partie, puis
+salon et poème du jour).
+
 La première — l'accordéon (`accordeon.html`) :
 
 - **La feuille arrive pliée en accordéon**, comme une bande de cadavre

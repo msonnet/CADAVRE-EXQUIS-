@@ -39,6 +39,7 @@
     chacune — « Douce » (craquements rabotés, aigu dur adouci, entrée plus
     lente), « Courte » (la première moitié, 0,28 s), « Légère » (trois
     demi-tons plus haut, même durée : un papier plus fin).
+    L'auteur choisit « Courte », le 11 novembre : c'est le son par défaut.
 
   Quatrième passage — l'auteur : « trop rapide, bruit trop fort et oublie
   le claquement ». La chute est deux fois plus lente, le doigt mène le pli
@@ -253,7 +254,7 @@ body, .page { overflow-x: clip; }
     deux fois pareil.
   */
   const Son = {
-    ctx: null, tampons: {}, jeu: ['feuille', 'feuille-douce', 'feuille-courte', 'feuille-legere', 'sans'].includes(q.get('son')) ? q.get('son') : 'feuille', dernier: {},
+    ctx: null, tampons: {}, jeu: ['feuille', 'feuille-douce', 'feuille-courte', 'feuille-legere', 'sans'].includes(q.get('son')) ? q.get('son') : 'feuille-courte', dernier: {},
     permis: false,   // rien ne sonne avant le premier geste de la personne, même si le navigateur le permettrait
     async charger() {
       const AC = window.AudioContext || window.webkitAudioContext
